@@ -2,7 +2,6 @@
 #define DO_DLPI
 #define DIRTY
 #define INTERVALS
-#define SUNOS4
 #endif /* lint */
 /****************************************************************/
 /*								*/
@@ -22,8 +21,8 @@
 /****************************************************************/
 
 #ifdef DO_DLPI
-char	nettest_dlpi_id[]="@(#)nettest_dlpi.c (c) Copyright 1993, \
-Hewlett-Packard Company. Version 1.9";
+char	nettest_dlpi_id[]="\
+@(#)nettest_dlpi.c (c) Copyright 1993,1995 Hewlett-Packard Co. Version 2.0";
 
 #include <sys/types.h>
 #include <fcntl.h>
@@ -175,10 +174,6 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
   float	remote_cpu_utilization;
   float	remote_service_demand;
   double	thruput;
-  
-#ifdef SUNOS4
-  struct        sigaction action;
-#endif /* SUNOS4 */
   
   struct	dlpi_co_stream_request_struct	*dlpi_co_stream_request;
   struct	dlpi_co_stream_response_struct	*dlpi_co_stream_response;
@@ -421,20 +416,7 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
     /* The user wanted to end the test after a period of time. */
     times_up = 0;
     bytes_remaining = 0;
-#ifdef SUNOS4
-    /* on some systems (SunOS 4.blah), system calls are restarted. we do */
-    /* not want that for a request/response test */
-    action.sa_handler = catcher;
-    action.sa_flags = SA_INTERRUPT;
-    if (sigaction(SIGALRM, &action, NULL) < 0) {
-      fprintf(where,"recv_udp_stream: error creating alarm signal.\n");
-      fflush(where);
-      exit(1);
-    }
-#else /* SUNOS4 */
-    signal(SIGALRM, catcher);
-#endif /* SUNOS4 */
-    alarm(test_time);
+    start_timer(test_time);
   }
   else {
     /* The tester wanted to send a number of bytes. */
@@ -719,10 +701,6 @@ int
   int   dirty_count;
   int   clean_count;
   int   i;
-  
-#ifdef SUNOS4
-  struct        sigaction action;
-#endif /* SUNOS4 */
   
   struct	dlpi_co_stream_request_struct	*dlpi_co_stream_request;
   struct	dlpi_co_stream_response_struct	*dlpi_co_stream_response;
@@ -1078,10 +1056,6 @@ int send_dlpi_co_rr(remote_host)
   float	remote_service_demand;
   double	thruput;
   
-#ifdef SUNOS4
-  struct        sigaction action;
-#endif /* SUNOS4 */
-  
   struct	dlpi_co_rr_request_struct	*dlpi_co_rr_request;
   struct	dlpi_co_rr_response_struct	*dlpi_co_rr_response;
   struct	dlpi_co_rr_results_struct	*dlpi_co_rr_result;
@@ -1322,20 +1296,7 @@ int send_dlpi_co_rr(remote_host)
     /* The user wanted to end the test after a period of time. */
     times_up = 0;
     trans_remaining = 0;
-#ifdef SUNOS4
-    /* on some systems (SunOS 4.blah), system calls are restarted. we do */
-    /* not want that for a request/response test */
-    action.sa_handler = catcher;
-    action.sa_flags = SA_INTERRUPT;
-    if (sigaction(SIGALRM, &action, NULL) < 0) {
-      fprintf(where,"recv_udp_stream: error creating alarm signal.\n");
-      fflush(where);
-      exit(1);
-    }
-#else /* SUNOS4 */
-    signal(SIGALRM, catcher);
-#endif /* SUNOS4 */
-    alarm(test_time);
+    start_timer(test_time);
   }
   else {
     /* The tester wanted to send a number of bytes. */
@@ -1670,10 +1631,6 @@ frames  bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
   int	i;
 #endif /* DIRTY */
   
-#ifdef SUNOS4
-  struct        sigaction action;
-#endif /* SUNOS4 */
-  
   struct	dlpi_cl_stream_request_struct	*dlpi_cl_stream_request;
   struct	dlpi_cl_stream_response_struct	*dlpi_cl_stream_response;
   struct	dlpi_cl_stream_results_struct	*dlpi_cl_stream_results;
@@ -1861,20 +1818,7 @@ frames  bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
   
   
   /* set up the timer to call us after test_time	*/
-#ifdef SUNOS4
-  /* on some systems (SunOS 4.blah), system calls are restarted. we do */
-  /* not want that for a request/response test */
-  action.sa_handler = catcher;
-  action.sa_flags = SA_INTERRUPT;
-  if (sigaction(SIGALRM, &action, NULL) < 0) {
-    fprintf(where,"recv_udp_stream: error creating alarm signal.\n");
-    fflush(where);
-    exit(1);
-  }
-#else /* SUNOS4 */
-  signal(SIGALRM, catcher);
-#endif /* SUNOS4 */
-  alarm(test_time);
+  start_timer(test_time);
   
   /* Get the start count for the idle counter and the start time */
   
@@ -2113,10 +2057,6 @@ int
   int	messages_recvd = 0;
   int	measure_cpu;
   
-#ifdef SUNOS4
-  struct        sigaction action;
-#endif /* SUNOS4 */
-  
   struct	dlpi_cl_stream_request_struct	*dlpi_cl_stream_request;
   struct	dlpi_cl_stream_response_struct	*dlpi_cl_stream_response;
   struct	dlpi_cl_stream_results_struct	*dlpi_cl_stream_results;
@@ -2167,7 +2107,13 @@ int
 			  (long ) dlpi_cl_stream_request->recv_alignment -1) & 
 			 ~((long) dlpi_cl_stream_request->recv_alignment - 1));
   message_ptr = message_ptr + dlpi_cl_stream_request->recv_offset;
-  recv_message.maxlen = 4096;
+
+  if (dlpi_cl_stream_request->message_size > 0) {
+    recv_message.maxlen = dlpi_cl_stream_request->message_size;
+  }
+  else {
+    recv_message.maxlen = 4096;
+  }
   recv_message.len    = 0;
   recv_message.buf    = message_ptr;
   
@@ -2284,20 +2230,7 @@ int
   /* message of less than send_size bytes... */
   
   times_up = 0;
-#ifdef SUNOS4
-  /* on some systems (SunOS 4.blah), system calls are restarted. we do */
-  /* not want that for a request/response test */
-  action.sa_handler = catcher;
-  action.sa_flags = SA_INTERRUPT;
-  if (sigaction(SIGALRM, &action, NULL) < 0) {
-    fprintf(where,"recv_udp_stream: error creating alarm signal.\n");
-    fflush(where);
-    exit(1);
-  }
-#else /* SUNOS4 */
-  signal(SIGALRM, catcher);
-#endif /* SUNOS4 */
-  alarm(test_time + PAD_TIME);
+  start_timer(test_time + PAD_TIME);
   
   if (debug) {
     fprintf(where,"recv_dlpi_cl_stream: about to enter inner sanctum.\n");
@@ -2467,10 +2400,6 @@ Send   Recv    Send   Recv\n\
   struct	timeval		recv_time;
   struct	timeval		sleep_timeval;
 #endif /* INTERVALS */
-  
-#ifdef SUNOS4
-  struct        sigaction action;
-#endif /* SUNOS4 */
   
   struct	dlpi_cl_rr_request_struct	*dlpi_cl_rr_request;
   struct	dlpi_cl_rr_response_struct	*dlpi_cl_rr_response;
@@ -2726,20 +2655,7 @@ Send   Recv    Send   Recv\n\
     /* The user wanted to end the test after a period of time. */
     times_up = 0;
     trans_remaining = 0;
-#ifdef SUNOS4
-    /* on some systems (SunOS 4.blah), system calls are restarted. we do */
-    /* not want that for a request/response test */
-    action.sa_handler = catcher;
-    action.sa_flags = SA_INTERRUPT;
-    if (sigaction(SIGALRM, &action, NULL) < 0) {
-      fprintf(where,"recv_udp_stream: error creating alarm signal.\n");
-      fflush(where);
-      exit(1);
-    }
-#else /* SUNOS4 */
-    signal(SIGALRM, catcher);
-#endif /* SUNOS4 */
-    alarm(test_time);
+    start_timer(test_time);
   }
   else {
     /* The tester wanted to send a number of bytes. */
@@ -3057,10 +2973,6 @@ int
   int	trans_remaining;
   float	elapsed_time;
   
-#ifdef SUNOS4
-  struct        sigaction action;
-#endif /* SUNOS4 */
-  
   struct	dlpi_cl_rr_request_struct	*dlpi_cl_rr_request;
   struct	dlpi_cl_rr_response_struct	*dlpi_cl_rr_response;
   struct	dlpi_cl_rr_results_struct	*dlpi_cl_rr_results;
@@ -3243,20 +3155,7 @@ int
   if (dlpi_cl_rr_request->test_length > 0) {
     times_up = 0;
     trans_remaining = 0;
-#ifdef SUNOS4
-    /* on some systems (SunOS 4.blah), system calls are restarted. we do */
-    /* not want that for a request/response test */
-    action.sa_handler = catcher;
-    action.sa_flags = SA_INTERRUPT;
-    if (sigaction(SIGALRM, &action, NULL) < 0) {
-      fprintf(where,"recv_udp_stream: error creating alarm signal.\n");
-      fflush(where);
-      exit(1);
-    }
-#else /* SUNOS4 */
-    signal(SIGALRM, catcher);
-#endif /* SUNOS4 */
-    alarm(dlpi_cl_rr_request->test_length + PAD_TIME);
+    start_timer(dlpi_cl_rr_request->test_length + PAD_TIME);
   }
 else {
   times_up = 1;
@@ -3395,10 +3294,6 @@ int
   int	request_bytes_remaining;
   int	timed_out = 0;
   float	elapsed_time;
-  
-#ifdef SUNOS4
-  struct        sigaction action;
-#endif /* SUNOS4 */
   
   struct	dlpi_co_rr_request_struct	*dlpi_co_rr_request;
   struct	dlpi_co_rr_response_struct	*dlpi_co_rr_response;
@@ -3631,20 +3526,7 @@ int
   if (dlpi_co_rr_request->test_length > 0) {
     times_up = 0;
     trans_remaining = 0;
-#ifdef SUNOS4
-    /* on some systems (SunOS 4.blah), system calls are restarted. we do */
-    /* not want that for a request/response test */
-    action.sa_handler = catcher;
-    action.sa_flags = SA_INTERRUPT;
-    if (sigaction(SIGALRM, &action, NULL) < 0) {
-      fprintf(where,"recv_udp_stream: error creating alarm signal.\n");
-      fflush(where);
-      exit(1);
-    }
-#else /* SUNOS4 */
-    signal(SIGALRM, catcher);
-#endif /* SUNOS4 */
-    alarm(dlpi_co_rr_request->test_length + PAD_TIME);
+    start_timer(dlpi_co_rr_request->test_length + PAD_TIME);
   }
 else {
   times_up = 1;
@@ -3794,7 +3676,7 @@ char	*argv[];
   /* second will leave the first untouched. To change only the */
   /* first, use the form first, (see the routine break_args.. */
   
-#define DLPI_ARGS "D:hM:m:p:r:W:w:"
+#define DLPI_ARGS "D:hM:m:p:r:s:W:w:"
   
   while ((c= getopt(argc, argv, DLPI_ARGS)) != EOF) {
     switch (c) {

@@ -78,6 +78,15 @@
 #define		FORE_RR_RESPONSE	53
 #define		FORE_RR_RESULTS		54
 
+#define         DO_HIPPI_STREAM         55
+#define         HIPPI_STREAM_RESPONSE   56
+#define         HIPPI_STREAM_RESULTS    57
+
+#define		DO_HIPPI_RR		52
+#define		HIPPI_RR_RESPONSE	53
+#define		HIPPI_RR_RESULTS	54
+
+
 struct netperf_request_struct {
 	int	request_type;
 	int	test_specific_data[MAXSPECDATA];
@@ -95,6 +104,15 @@ struct ring_elt {
   char *buffer_ptr;       /* the aligned and offset pointer */
 };
 
+ /* the diferent codes to denote the type of CPU utilization */
+ /* methods used */
+#define CPU_UNKNOWN     0
+#define HP_IDLE_COUNTER 1
+#define PSTAT           2
+#define TIMES           3
+#define LOOPER          4
+#define GETRUSAGE       5
+
 #ifndef NETLIB
 
 extern	struct netperf_request_struct *netperf_request;
@@ -102,6 +120,7 @@ extern	struct netperf_response_struct *netperf_response;
 
 extern	char	libfmt;
 
+extern  int     cpu_method;
 extern  int     server_sock;
 extern  int     times_up;
 
@@ -118,6 +137,13 @@ extern  struct ring_elt *allocate_buffer_ring();
 extern  int     dl_connect();
 extern  int     dl_bind();
 extern  int     dl_open();
+extern  char    format_cpu_method();
+extern unsigned int convert();
+extern  int     loops_per_msec;
+
+ /* these are all for the confidence interval stuff */
+extern double confidence;
+
 #endif
 
  /* if your system has bcopy and bzero, include it here, otherwise, we */
@@ -129,8 +155,12 @@ extern  int     dl_open();
 
 #ifndef HAVE_BCOPY
 #define bcopy(s,d,h) memcpy((d),(s),(h))
-#endif
+#endif /* HAVE_BCOPY */
 
 #ifndef HAVE_BZERO
 #define bzero(p,h) memset((p),0,(h))
-#endif
+#endif /* HAVE_BZERO */
+
+#ifndef HAVE_MIN
+#define min(a,b) ((a < b) ? a : b)
+#endif /* HAVE_MIN */

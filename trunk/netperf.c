@@ -1,7 +1,7 @@
 
 /*
  
-              Copyright (C) 1993 Hewlett-Packard Company
+            Copyright (C) 1993,1994 Hewlett-Packard Company
                          ALL RIGHTS RESERVED.
  
   The enclosed software and documention includes copyrighted works of
@@ -42,8 +42,8 @@
       MODIFICATION, OR DISTRIBUTION OF THE SOFTWARE OR DOCUMENTATION.
  
 */
-char	netperf_id[]="@(#)netperf.c (c) Copyright 1993, \
-Hewlett-Packard Company.	Version 1.9";
+char	netperf_id[]="\
+@(#)netperf.c (c) Copyright 1993, 1994 Hewlett-Packard Company. Version 2.0";
 
 #include <stdio.h>
 #include "netsh.h"
@@ -65,6 +65,7 @@ scan_cmd_line(argc,argv);
 
 if (debug) {
 	dump_globals();
+	install_signal_catchers();
 }
 
 if (debug) {
@@ -132,12 +133,23 @@ else if (strcmp(test_name,"FORE_RR") == 0) {
 	send_fore_rr(host_name);
 }
 #endif /* DO_FORE */
+#ifdef DO_HIPPI
+else if (strcmp(test_name,"HIPPI_STREAM") == 0) {
+	send_hippi_stream(host_name);
+}
+else if (strcmp(test_name,"HIPPI_RR") == 0) {
+	send_hippi_rr(host_name);
+}
+#endif /* DO_HIPPI */
 else {
 	printf("The test you requested is unknown to this netperf.\n");
 	printf("Please verify that you have the correct test name, \n");
 	printf("and that test family has been compiled into this netperf.\n");
 	exit(1);
 }
+
+shutdown_control();
+
 return(0);
 }
 

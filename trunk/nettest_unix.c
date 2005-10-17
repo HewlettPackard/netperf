@@ -2,11 +2,10 @@
 #define DO_UNIX
 #define DIRTY
 #define INTERVALS
-#define SUNOS4
 #endif /* lint */
 #ifdef DO_UNIX
-char	nettest_unix_id[]="@(#)nettest_unix.c (c) Copyright 1994, \
-Hewlett-Packard Company. Version 1.9";
+char	nettest_unix_id[]="\
+@(#)nettest_unix.c (c) Copyright 1994, 1995 Hewlett-Packard Co. Version 2.0";
      
 /****************************************************************/
 /*								*/
@@ -545,21 +544,7 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
     /* The user wanted to end the test after a period of time. */
     times_up = 0;
     bytes_remaining = 0;
-#ifdef SUNOS4
-    /* on some systems (SunOS 4.blah), system calls are restarted. we do */
-    /* not want that */
-    action.sa_handler = catcher;
-    action.sa_flags = SA_INTERRUPT;
-    if (sigaction(SIGALRM, &action, NULL) < 0) {
-      fprintf(where,"send_stream_stream: error creating alarm signal.\n");
-      fprintf(where,"errno %d\n",errno);
-      fflush(where);
-      exit(1);
-    }
-#else /* SUNOS4 */
-    signal(SIGALRM,catcher);
-#endif /* SUNOS4 */
-    alarm(test_time);
+    start_timer(test_time);
   }
   else {
     /* The tester wanted to send a number of bytes. */
@@ -1367,20 +1352,7 @@ Send   Recv    Send   Recv\n\
     /* The user wanted to end the test after a period of time. */
     times_up = 0;
     trans_remaining = 0;
-#ifdef SUNOS4
-    /* on some systems (SunOS 4.blah), system calls are restarted. we do */
-    /* not want that for a request/response test */
-    action.sa_handler = catcher;
-    action.sa_flags = SA_INTERRUPT;
-    if (sigaction(SIGALRM, &action, NULL) < 0) {
-      fprintf(where,"send_stream_rr: error creating alarm signal.\n");
-      fflush(where);
-      exit(1);
-    }
-#else /* SUNOS4 */
-    signal(SIGALRM,catcher);
-#endif /* SUNOS4 */
-    alarm(test_time);
+    start_timer(test_time);
   }
   else {
     /* The tester wanted to send a number of bytes. */
@@ -1834,20 +1806,7 @@ bytes   bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
   }
   
   /* set up the timer to call us after test_time	*/
-#ifdef SUNOS4
-  /* on some systems (SunOS 4.blah), system calls are restarted. we do */
-  /* not want that for a request/response test */
-  action.sa_handler = catcher;
-  action.sa_flags = SA_INTERRUPT;
-  if (sigaction(SIGALRM, &action, NULL) < 0) {
-    fprintf(where,"send_dg_stream: error creating alarm signal.\n");
-    fflush(where);
-    exit(1);
-  }
-#else /* SUNOS4 */
-  signal(SIGALRM, catcher);
-#endif /* SUNOS4 */
-  alarm(test_time);
+  start_timer(test_time);
   
   /* Get the start count for the idle counter and the start time */
   
@@ -2243,21 +2202,7 @@ recv_dg_stream()
   /* message of less than send_size bytes... */
   
   times_up = 0;
-#ifdef SUNOS4
-  /* on some systems (SunOS 4.blah), system calls are restarted. we do */
-  /* not want that for a request/response test */
-  action.sa_handler = catcher;
-  action.sa_flags = SA_INTERRUPT;
-  if (sigaction(SIGALRM, &action, NULL) < 0) {
-    fprintf(where,"recv_dg_stream: error creating alarm signal.\n");
-    fflush(where);
-    exit(1);
-  }
-#else /* SUNOS4 */
-  signal(SIGALRM,catcher);
-#endif /* SUNOS4 */
-
-  alarm(test_time + PAD_TIME);
+  start_timer(test_time + PAD_TIME);
   
   if (debug) {
     fprintf(where,"recv_dg_stream: about to enter inner sanctum.\n");
@@ -2603,20 +2548,7 @@ Send   Recv    Send   Recv\n\
     /* The user wanted to end the test after a period of time. */
     times_up = 0;
     trans_remaining = 0;
-#ifdef SUNOS4 
-    /* on some systems (SunOS 4.blah), system calls are restarted. we do */
-    /* not want that for a request/response test */
-    action.sa_handler = catcher;
-    action.sa_flags = SA_INTERRUPT;
-    if (sigaction(SIGALRM, &action, NULL) < 0) {
-      fprintf(where,"send_dg_rr: error creating alarm signal.\n");
-      fflush(where);
-      exit(1);
-    }
-#else /* SUNOS4 */
-    signal(SIGALRM, catcher);
-#endif /* SUNOS4 */
-    alarm(test_time);
+    start_timer(test_time);
   }
   else {
     /* The tester wanted to send a number of bytes. */
@@ -3091,20 +3023,7 @@ recv_dg_rr()
   if (dg_rr_request->test_length > 0) {
     times_up = 0;
     trans_remaining = 0;
-#ifdef SUNOS4 
-    /* on some systems (SunOS 4.blah), system calls are restarted. we do */
-    /* not want that for a request/response test */
-    action.sa_handler = catcher;
-    action.sa_flags = SA_INTERRUPT; 
-    if (sigaction(SIGALRM, &action, NULL) < 0) {
-      fprintf(where,"recv_dg_rr: error creating alarm signal.\n");
-      fflush(where);
-      exit(1);
-    }
-#else /* SUNOS4 */
-    signal(SIGALRM, catcher);
-#endif /* SUNOS4 */
-    alarm(dg_rr_request->test_length + PAD_TIME);
+    start_timer(dg_rr_request->test_length + PAD_TIME);
   }
   else {
     times_up = 1;
@@ -3427,20 +3346,7 @@ recv_stream_rr()
   if (stream_rr_request->test_length > 0) {
     times_up = 0;
     trans_remaining = 0;
-#ifdef SUNOS4
-    /* on some systems (SunOS 4.blah), system calls are restarted. we do */
-    /* not want that for a request/response test */
-    action.sa_handler = catcher;
-    action.sa_flags = SA_INTERRUPT;
-    if (sigaction(SIGALRM, &action, NULL) < 0) {
-      fprintf(where,"recv_stream_rr: error creating alarm signal.\n");
-      fflush(where);
-      exit(1);
-    }
-#else /* SUNOS4 */
-    signal(SIGALRM, catcher);
-#endif /* SUNOS4 */
-    alarm(stream_rr_request->test_length + PAD_TIME);
+    start_timer(stream_rr_request->test_length + PAD_TIME);
   }
   else {
     times_up = 1;

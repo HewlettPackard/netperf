@@ -37,35 +37,35 @@ extern short	test_port;		/* where is the test waiting    */
 
 /* output controlling variables                                         */
 extern int
-	debug,			/* debugging level			*/
-	print_headers,		/* do/don't print test headers		*/
-	verbosity;		/* verbosity level			*/
+  debug,		/* debugging level			*/
+  print_headers,	/* do/don't print test headers		*/
+  verbosity;		/* verbosity level			*/
 
 /* the end-test conditions for the tests - either transactions, bytes,  */
 /* or time. different vars used for clarity - space is cheap ;-)        */
 extern int	
-	test_time,		/* test ends by time			*/
-	test_bytes,		/* test ends on byte count		*/
-	test_trans;		/* test ends on tran count		*/
+  test_time,		/* test ends by time			*/
+  test_len_ticks,
+  test_bytes,		/* test ends on byte count		*/
+  test_trans;		/* test ends on tran count		*/
 
 /* the alignment conditions for the tests				*/
 extern int
-	local_recv_align,	/* alignment for local receives		*/
-	local_send_align,	/* alignment for local sends		*/
-	remote_recv_align,	/* alignment for remote receives	*/
-	remote_send_align,	/* alignment for remote sends		*/
-	local_send_offset,
-	local_recv_offset,
-	remote_send_offset,
-	remote_recv_offset;
+  local_recv_align,	/* alignment for local receives		*/
+  local_send_align,	/* alignment for local sends		*/
+  remote_recv_align,	/* alignment for remote receives	*/
+  remote_send_align,	/* alignment for remote sends		*/
+  local_send_offset,
+  local_recv_offset,
+  remote_send_offset,
+  remote_recv_offset;
 
 #ifdef INTERVALS
-extern	int
-	interval_usecs;
-extern  int
-	interval_wate;
-extern	int
-	interval_burst;
+extern	int          interval_usecs;
+extern  int          interval_wate;
+extern	int	     interval_burst;
+extern  int          demo_mode;
+extern  unsigned int units_this_tick;
 #endif /* INTERVALS */
 
 #ifdef DIRTY
@@ -75,6 +75,12 @@ extern int	loc_dirty_count;
 extern int	loc_clean_count;
 #endif /* DIRTY */
 
+/* stuff for confidence intervals */
+
+extern int  confidence_level;
+extern int  iteration_min;
+extern int  iteration_max;
+extern double interval;
 
 /* stuff to controll the bufferspace "width" */
 extern int	send_width;
@@ -91,6 +97,9 @@ extern float
 
 extern	char	
   test_name[BUFSIZ];
+
+extern char
+  fill_file[BUFSIZ];
 
 #ifdef DO_DLPI
 

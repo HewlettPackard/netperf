@@ -45,11 +45,12 @@ struct	tcp_stream_response_struct {
 };
 
 struct tcp_stream_results_struct {
-  double bytes_received;
-  int	 recv_calls;	
-  float	 elapsed_time;	/* how long the test ran */
-  float	 cpu_util;	/* -1 if not measured */
-  float	 serv_dem;	/* -1 if not measured */
+  double         bytes_received;
+  unsigned int	 recv_calls;	
+  float	         elapsed_time;	/* how long the test ran */
+  float	         cpu_util;	/* -1 if not measured */
+  float	         serv_dem;	/* -1 if not measured */
+  int            cpu_method;    /* how was cpu util measured? */
 };
 
 struct	tcp_rr_request_struct {
@@ -83,12 +84,13 @@ struct	tcp_rr_response_struct {
 };
 
 struct tcp_rr_results_struct {
-  int	bytes_received;	/* ignored initially */
-  int	recv_calls;	/* ignored initially */
-  int	trans_received;	/* not ignored  */
-  float	elapsed_time;	/* how long the test ran */
-  float	cpu_util;	/* -1 if not measured */
-  float	serv_dem;	/* -1 if not measured */
+  unsigned int  bytes_received;	/* ignored initially */
+  unsigned int	recv_calls;	/* ignored initially */
+  unsigned int	trans_received;	/* not ignored  */
+  float	        elapsed_time;	/* how long the test ran */
+  float	        cpu_util;	/* -1 if not measured */
+  float	        serv_dem;	/* -1 if not measured */
+  int           cpu_method;    /* how was cpu util measured? */
 };
 
 struct	tcp_conn_rr_request_struct {
@@ -123,12 +125,13 @@ struct	tcp_conn_rr_response_struct {
 };
 
 struct tcp_conn_rr_results_struct {
-  int	bytes_received;	/* ignored initially */
-  int	recv_calls;	/* ignored initially */
-  int	trans_received;	/* not ignored  */
+  unsigned int	bytes_received;	/* ignored initially */
+  unsigned int	recv_calls;	/* ignored initially */
+  unsigned int	trans_received;	/* not ignored  */
   float	elapsed_time;	/* how long the test ran */
   float	cpu_util;	/* -1 if not measured */
   float	serv_dem;	/* -1 if not measured */
+  int   cpu_method;    /* how was cpu util measured? */
 };
 
 struct	udp_stream_request_struct {
@@ -157,10 +160,11 @@ struct	udp_stream_response_struct {
 };
 
 struct	udp_stream_results_struct {
-  int	messages_recvd;
-  int	bytes_received;
-  float	elapsed_time;
-  float	cpu_util;
+  unsigned int	messages_recvd;
+  unsigned int	bytes_received;
+  float	        elapsed_time;
+  float	        cpu_util;
+  int           cpu_method;    /* how was cpu util measured? */
 };
 
 
@@ -195,11 +199,12 @@ struct	udp_rr_response_struct {
 };
 
 struct udp_rr_results_struct {
-  int	bytes_received;	/* ignored initially */
-  int	recv_calls;	/* ignored initially */
-  int	trans_received;	/* not ignored  */
-  float	elapsed_time;	/* how long the test ran */
-  float	cpu_util;	/* -1 if not measured */
-  float	serv_dem;	/* -1 if not measured */
+  unsigned int	bytes_received;	/* ignored initially */
+  unsigned int	recv_calls;	/* ignored initially */
+  unsigned int	trans_received;	/* not ignored  */
+  float	        elapsed_time;	/* how long the test ran */
+  float	        cpu_util;	/* -1 if not measured */
+  float	        serv_dem;	/* -1 if not measured */
+  int           cpu_method;    /* how was cpu util measured? */
 };
 

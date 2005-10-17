@@ -1,6 +1,6 @@
 
-char	netsh_id[]="@(#)netsh.c (c) Copyright 1993, Hewlett-Packard Company.\
-	Version 1.9";
+char	netsh_id[]="\
+@(#)netsh.c (c) Copyright 1993, 1994 Hewlett-Packard Company. Version 2.0";
 
 
 /****************************************************************/
@@ -53,7 +53,7 @@ double atof();
  /* Some of the args take optional parameters. Since we are using */
  /* getopt to parse the command line, we will tell getopt that they do */
  /* not take parms, and then look for them ourselves */
-#define GLOBAL_CMD_LINE_ARGS "A:a:Ccdf:H:hl:O:o:P:p:t:v:W:"
+#define GLOBAL_CMD_LINE_ARGS "A:a:b:CcdDf:F:H:hi:I:l:O:o:P:p:t:v:W:w:"
 
 /************************************************************************/
 /*									*/
@@ -82,6 +82,9 @@ char	host_name[HOSTNAMESIZE];	/* remote host name or ip addr  */
 char    test_name[64];			/* which test to run 		*/
 short	test_port;			/* where is the test waiting    */
 
+/* the source of data for filling the buffers */
+char    fill_file[BUFSIZ];
+
 /* output controlling variables                                         */
 int
   debug,			/* debugging level */
@@ -101,6 +104,8 @@ float
 /* or time. different vars used for clarity - space is cheap ;-)        */
 int	
   test_time,		/* test ends by time			*/
+  test_len_ticks,       /* how many times will the timer go off before */
+			/* the test is over? */
   test_bytes,		/* test ends on byte count		*/
   test_trans;		/* test ends on tran count		*/
 
@@ -118,8 +123,11 @@ int
 #ifdef INTERVALS
 int
   interval_usecs,
-  interval_wate;
-interval_burst;
+  interval_wate,
+  interval_burst;
+
+int demo_mode;
+double units_this_tick;
 #endif /* INTERVALS */
 
 #ifdef DIRTY
@@ -128,6 +136,14 @@ int	loc_clean_count;
 int	rem_dirty_count;
 int	rem_clean_count;
 #endif /* DIRTY */
+
+ /* some of the vairables for confidence intervals... */
+
+int  confidence_level;
+int  iteration_min;
+int  iteration_max;
+
+double interval;
 
  /* stuff to control the "width" of the buffer rings for sending and */
  /* receiving data */
@@ -152,8 +168,12 @@ Global options:\n\
     -C [cpu_rate]     Report remote CPU usage\n\
     -d                Increase debugging output\n\
     -f G|M|K|g|m|k    Set the output units\n\
+    -F fill_file      Pre-fill buffers with data from fill_file\n\
     -h                Display this text\n\
     -H name|ip        Specify the target machine\n\
+    -i max,min        Specify the max and min number of iterations (15,1)\n\
+    -I lvl[,intvl]    Specify confidence level (95 or 99) (99) \n\
+                      and confidence interval in percentage (10)\n\
     -l testlen        Specify test duration (>0 secs) (<0 bytes|trans)\n\
     -o send,recv      Set the local send,recv buffer offsets\n\
     -O send,recv      Set the remote send,recv buffer offset\n\
@@ -243,7 +263,15 @@ set_defaults()
   rem_dirty_count = 0;
   rem_clean_count = 0;
 #endif /* DIRTY */
-  
+
+ /* some of the vairables for confidence intervals... */
+
+  confidence_level = 99;
+  iteration_min = 1;
+  iteration_max = 1;
+  interval = 0.05; /* five percent? */
+
+  strcpy(fill_file,"");
 }
      
 
@@ -293,33 +321,79 @@ scan_cmd_line(argc, argv)
       /* set local alignments */
       break_args(optarg,arg1,arg2);
       if (arg1[0]) {
-	local_send_align = atoi(arg1);
+	local_send_align = convert(arg1);
       }
       if (arg2[0])
-	local_recv_align = atoi(arg2);
+	local_recv_align = convert(arg2);
       break;
     case 'A':
       /* set remote alignments */
       break_args(optarg,arg1,arg2);
       if (arg1[0]) {
-	remote_send_align = atoi(arg1);
+	remote_send_align = convert(arg1);
       }
       if (arg2[0])
-	remote_recv_align = atoi(arg2);
+	remote_recv_align = convert(arg2);
+      break;
+    case 'd':
+      debug++;
+      break;
+    case 'D':
+#if (defined INTERVALS) && (defined _HPUX_SOURCE)
+      demo_mode++;
+#else /* INTERVALS _HPUX_SOURCE */
+      printf("Sorry, Demo Mode requires -DINTERVALS compilation \n");
+      printf("as well as a mechanism to dynamically select syscall \n");
+      printf("restart or interruption. I only know how to do this \n");
+      printf("for HP-UX. Please examine the code in netlib.c:catcher() \n");
+      printf("and let me know of more standard alternatives. \n");
+      printf("                             Rick Jones <raj@cup.hp.com>\n");
+      exit(1);
+#endif /* INTERVALS _HPUX_SOURCE */
       break;
     case 'f':
       /* set the thruput formatting */
       libfmt = *optarg;
+      break;
+    case 'F':
+      /* set the fill_file variable for pre-filling buffers */
+      strcpy(fill_file,optarg);
+      break;
+    case 'i':
+      /* set the iterations min and max for confidence intervals */
+      break_args(optarg,arg1,arg2);
+      if (arg1[0]) {
+	iteration_max = convert(arg1);
+      }
+      if (arg2[0] ) {
+	iteration_min = convert(arg2);
+      }
+      /* limit maximum to 30 iterations */
+      if(iteration_max>30) iteration_max=30;
+      break;
+    case 'I':
+      /* set the confidence level (95 or 99) and width */
+      break_args(optarg,arg1,arg2);
+      if (arg1[0]) {
+	confidence_level = convert(arg1);
+      }
+      if((confidence_level != 95) && (confidence_level != 99)){
+	printf("Only 95%% and 99%% confidence level is supported\n");
+	exit(1);
+      }
+      if (arg2[0] ) {
+	interval = (double) convert(arg2)/100;
+      }
       break;
     case 'k':
       /* local dirty and clean counts */
 #ifdef DIRTY
       break_args(optarg,arg1,arg2);
       if (arg1[0]) {
-	loc_dirty_count = atoi(arg1);
+	loc_dirty_count = convert(arg1);
       }
       if (arg2[0] ) {
-	loc_clean_count = atoi(arg2);
+	loc_clean_count = convert(arg2);
       }
 #else
       printf("I don't know how to get dirty.\n");
@@ -330,10 +404,10 @@ scan_cmd_line(argc, argv)
 #ifdef DIRTY
       break_args(optarg,arg1,arg2);
       if (arg1[0]) {
-	rem_dirty_count = atoi(arg1);
+	rem_dirty_count = convert(arg1);
       }
       if (arg2[0] ) {
-	rem_clean_count = atoi(arg2);
+	rem_clean_count = convert(arg2);
       }
 #else
       printf("I don't know how to get dirty.\n");
@@ -343,22 +417,22 @@ scan_cmd_line(argc, argv)
       /* set the local offsets */
       break_args(optarg,arg1,arg2);
       if (arg1[0])
-	local_send_offset = atoi(arg1);
+	local_send_offset = convert(arg1);
       if (arg2[0])
-	local_recv_offset = atoi(arg2);
+	local_recv_offset = convert(arg2);
       break;
     case 'O':
       /* set the remote offsets */
       break_args(optarg,arg1,arg2);
       if (arg1[0]) 
-	remote_send_offset = atoi(arg1);
+	remote_send_offset = convert(arg1);
       if (arg2[0])
-	remote_recv_offset = atoi(arg2);
+	remote_recv_offset = convert(arg2);
       break;
     case 'P':
       /* to print or not to print, that is */
       /* the header question */
-      print_headers = atoi(optarg);
+      print_headers = convert(optarg);
       break;
     case 't':
       /* set the test name */
@@ -369,14 +443,14 @@ scan_cmd_line(argc, argv)
       /* be the number of send_size buffers malloc'd in the tests */  
       break_args(optarg,arg1,arg2);
       if (arg1[0]) 
-	send_width = atoi(arg1);
+	send_width = convert(arg1);
       if (arg2[0])
-	recv_width = atoi(arg2);
+	recv_width = convert(arg2);
       break;
     case 'l':
       /* determine test end conditions */
       /* assume a timed test */
-      test_time = atoi(optarg);
+      test_time = convert(optarg);
       test_bytes = test_trans = 0;
       if (test_time < 0) {
 	test_bytes = -1 * test_time;
@@ -384,12 +458,9 @@ scan_cmd_line(argc, argv)
 	test_time = 0;
       }
       break;
-    case 'd':
-      debug++;
-      break;
     case 'v':
       /* say how much to say */
-      verbosity = atoi(optarg);
+      verbosity = convert(optarg);
       break;
     case 'c':
       /* measure local cpu usage please. the user */
@@ -413,7 +484,7 @@ scan_cmd_line(argc, argv)
       break;
     case 'p':
       /* specify an alternate port number */
-      test_port = (short) atoi(optarg);
+      test_port = (short) convert(optarg);
       break;
     case 'H':
       /* save-off the host identifying information */
@@ -425,8 +496,8 @@ scan_cmd_line(argc, argv)
       /* second, and that the packet rate is */
       /* expressed in packets per second. */
 #ifdef INTERVALS
-      interval_usecs = 1000000 / atoi(optarg);
-      interval_wate  = atoi(optarg);
+      interval_usecs = 1000000 / convert(optarg);
+      interval_wate  = convert(optarg);
 #else
       fprintf(where,
 	      "Packet rate control is not compiled in.\n");
@@ -436,7 +507,7 @@ scan_cmd_line(argc, argv)
       /* we want to have a burst so many packets per */
       /* interval. */
 #ifdef INTERVALS
-      interval_burst = atoi(optarg);
+      interval_burst = convert(optarg);
 #else
       fprintf(where,
 	      "Packet burst size is not compiled in. \n");
@@ -451,6 +522,7 @@ scan_cmd_line(argc, argv)
   if (optind != argc) {
     if ((strcmp(test_name,"TCP_STREAM") == 0) || 
 	(strcmp(test_name,"TCP_RR") == 0) ||
+	(strcmp(test_name,"TCP_CRR") == 0) ||
 	(strcmp(test_name,"TCP_ARR") == 0) ||
 	(strcmp(test_name,"UDP_STREAM") == 0) ||
 	(strcmp(test_name,"UDP_RR") == 0))
@@ -480,6 +552,13 @@ scan_cmd_line(argc, argv)
 	     (strcmp(test_name,"FORE_STREAM") == 0))
       {
 	scan_fore_args(argc, argv);
+      }
+#endif /* DO_FORE */
+#ifdef DO_HIPPI
+    else if ((strcmp(test_name,"HIPPI_RR") == 0) ||
+	     (strcmp(test_name,"HIPPI_STREAM") == 0))
+      {
+	scan_hippi_args(argc, argv);
       }
 #endif /* DO_FORE */
   }
