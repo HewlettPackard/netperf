@@ -3029,9 +3029,9 @@ recv_dg_rr()
   while ((!times_up) || (trans_remaining > 0)) {
     
     /* receive the request from the other side */
-    fprintf(where,"socket %d ptr %lx size %d\n",
+    fprintf(where,"socket %d ptr %p size %d\n",
 	    s_data,
-	    (unsigned long)recv_ring->buffer_ptr,
+	    recv_ring->buffer_ptr,
 	    dg_rr_request->request_size);
     fflush(where);
     if (recvfrom(s_data,
@@ -3350,7 +3350,7 @@ recv_stream_rr()
     /* receive the request from the other side */
     if (debug) {
       fprintf(where,"about to receive for trans %d\n",trans_received);
-      fprintf(where,"temp_message_ptr is %lx\n",(unsigned long)temp_message_ptr);
+      fprintf(where,"temp_message_ptr is %p\n",temp_message_ptr);
       fflush(where);
     }
     while(request_bytes_remaining > 0) {

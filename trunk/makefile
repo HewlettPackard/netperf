@@ -1,10 +1,13 @@
 #
-# @(#)Makefile	2.0PL3	07/26/95
+# @(#)Makefile	2.1pl1	02/28/96
 #
 # Makefile to build netperf benchmark tool
 #
 # for those folks running csh, this may help with makes
 #SHELL="/bin/sh"
+
+#what version of netperf is this for?
+VERSION = 2.1pl1
 
 #
 # This tells the script where the executables and scripts are supposed
@@ -33,7 +36,7 @@ NETPERF_HOME = /opt/netperf
 # You may safely ignore that warning.
 #
 
-CC = cc -O
+CC = cc
 
 # Adding flags to CFLAGS enables some non-mainline features. For
 # more information, please consult the source code.
@@ -44,14 +47,15 @@ CC = cc -O
 #               time spent in send()
 # -DINTERVALS - include code to allow pacing of sends in a UDP or TCP 
 #               test. this may have unexpected results on non-HP-UX
-#               systems as I have not learned how to emulated the
+#               systems as I have not learned how to emulate the
 #               functionality found within the __hpux defines in
 #               the catcher() routine of netlib.c
 # -DDO_DLPI   - include code to test the DLPI interface (may also 
 #               require changes to LIBS. see below)
 # -DDO_UNIX   - include code to test Unix Domain sockets
 # -DDO_FORE   - include code to test the Fore ATM API (requires 
-#               -DFORE_KLUDGE and -I/usr/fore/include)
+#               -DFORE_KLUDGE and -I/usr/fore/include).  Also, add
+#               -DFORE_FT400 if you're running FT 4.0.0 or above.
 # -DDO_HIPPI  - include code to test the HP HiPPI LLA interface. if 
 #               you just want vanilla HP LLA, then also add
 #               -DBUTNOTHIPPI
@@ -76,9 +80,10 @@ CC = cc -O
 #               remarkably close to the clockrate of the machine :)
 # -DDO_IPV6   - Include tests which use a sockets interface to IPV6.
 #               The control connection remains IPV4
+# -U__hpux    - Use this when compiling _on_ HP-UX *for* an HP-RT system
 
 LOG_FILE=DEBUG_LOG_FILE="\"/tmp/netperf.debug\""
-CFLAGS = -D$(LOG_FILE) -DUSE_LOOPER
+CFLAGS = -O -Ae -D$(LOG_FILE) -DUSE_LOOPER 
 
 # Some platforms, and some options, require additional libraries.
 # you can add to the "LIBS =" line to accomplish this. if you find
@@ -194,18 +199,35 @@ deinstall:
 netperf_src.shar: $(SHAR_SOURCE_FILES)
 	shar -bcCsZ $(SHAR_SOURCE_FILES) > netperf_src.shar
 
-netperf.shar:	$(SHAR_SOURCE_FILES) $(SHAR_EXE_FILES) $(SHAR_SCRIPT_FILES)
-	shar -bcCsZ $(SHAR_SOURCE_FILES) $(SHAR_EXE_FILES) \
-		$(SHAR_SCRIPT_FILES) > netperf.shar
+shar:		netperf.shar
+netperf.shar:	netperf-$(VERSION).shar
 
+netperf-$(VERSION).shar: ${SHAR_EXE_FILES} ${SHAR_SCRIPT_FILES} \
+                        ${SHAR_SOURCE_FILES}
+	rm -rf netperf-${VERSION} netperf-${VERSION}.shar
+	mkdir netperf-${VERSION}
+	cp ${SHAR_EXE_FILES} ${SHAR_SCRIPT_FILES} ${SHAR_SOURCE_FILES} \
+		netperf-${VERSION}
+	shar -cCsZv netperf-${VERSION} > netperf-${VERSION}.shar 
+     
 netperf.zip:    $(ZIP_SOURCE_FILES) $(SHAR_EXE_FILES)
 	zip netperf.zip $(ZIP_SOURCE_FILES) $(SHAR_EXE_FILES)
 
-netperf.tar:	$(SHAR_EXE_FILES) \
-		$(SHAR_SCRIPT_FILES) $(SHAR_SOURCE_FILES)
-	tar -cf netperf.tar $(SHAR_EXE_FILES) \
-		$(SHAR_SCRIPT_FILES) $(SHAR_SOURCE_FILES)
-	gzip netperf.tar
+tar:		netperf.tar.gz
+netperf.tar:	netperf-$(VERSION).tar
+netperf.tar.gz:	netperf-$(VERSION).tar.gz
+
+netperf-$(VERSION).tar: ${SHAR_EXE_FILES} ${SHAR_SCRIPT_FILES} \
+                        ${SHAR_SOURCE_FILES}
+	rm -rf netperf-${VERSION} netperf-${VERSION}.tar
+	mkdir netperf-${VERSION}
+	cp ${SHAR_EXE_FILES} ${SHAR_SCRIPT_FILES} ${SHAR_SOURCE_FILES} \
+		netperf-${VERSION}
+	tar -cf netperf-${VERSION}.tar netperf-${VERSION} 
+     
+netperf-$(VERSION).tar.gz: netperf-$(VERSION).tar
+	rm -f netperf-${VERSION}.tar.gz
+	gzip -9f netperf-${VERSION}.tar
 
 netperf-scaf.tar:	$(SHAR_EXE_FILES) \
 			$(SHAR_SCRIPT_FILES) \
@@ -220,3 +242,15 @@ netperf-scaf.shar:	$(SHAR_EXE_FILES) \
 			$(SCAF_FILES)
 	shar -bcCsZ $(SHAR_EXE_FILES) \
 		$(SHAR_SCRIPT_FILES) $(SCAF_FILES) > netperf-scaf.shar
+
+#netperf.shar:	$(SHAR_SOURCE_FILES) $(SHAR_EXE_FILES) $(SHAR_SCRIPT_FILES)
+#	shar -bcCsZ $(SHAR_SOURCE_FILES) $(SHAR_EXE_FILES) \
+#		$(SHAR_SCRIPT_FILES) > netperf.shar
+
+#netperf.tar:	$(SHAR_EXE_FILES) \
+#		$(SHAR_SCRIPT_FILES) $(SHAR_SOURCE_FILES)
+#	tar -cf netperf.tar $(SHAR_EXE_FILES) \
+#		$(SHAR_SCRIPT_FILES) $(SHAR_SOURCE_FILES)
+#	gzip netperf.tar
+
+

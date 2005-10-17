@@ -1,5 +1,5 @@
 char	netlib_id[]="\
-@(#)netlib.c (c) Copyright 1993, 1994 Hewlett-Packard Company. Version 2.1";
+@(#)netlib.c (c) Copyright 1993, 1994 Hewlett-Packard Company. Version 2.1PL1";
 
 /****************************************************************/
 /*								*/
@@ -255,6 +255,8 @@ float	lib_elapsed,
 	lib_local_cpu_util,
 	lib_remote_cpu_util;
 
+float   lib_local_per_cpu_util[MAXCPUS];
+
 int	*request_array;
 int	*response_array;
 
@@ -507,11 +509,19 @@ get_num_cpus()
   }
 
 #else
+#if defined(__sun) && defined(__SVR4)
+ /* must be Solaris ? */
+#include <unistd.h>
+
+  temp_cpus = sysconf(_SC_NPROCESSORS_ONLN);
+
+#else
 
   /* we need to know some other ways to do this, or just fall-back on */
   /* a global command line option - raj 4/95 */
   temp_cpus = shell_num_cpus;
 
+#endif /* __sun && __SVR4 */
 #endif /*  __hpux */
 
   if (temp_cpus > MAXCPUS) {
@@ -851,17 +861,23 @@ start_itimer( interval_len_msec )
 void
 netlib_init()
 {
+  int i;
+
   where		   = stdout;
 
   request_array = (int *)(&netperf_request);
   response_array = (int *)(&netperf_response);
 
+  for (i = 0; i<= MAXCPUS; i++) {
+    lib_local_per_cpu_util[i] = 0.0;
+  }
+
   if (debug) {
     fprintf(where,
-	    "netlib_init: request_array at 0x%x\n",
+	    "netlib_init: request_array at %p\n",
 	    request_array);
     fprintf(where,
-	    "netlib_init: response_array at 0x%x\n",
+	    "netlib_init: response_array at %p\n",
 	    response_array);
 
     fflush(where);
@@ -1269,7 +1285,7 @@ send_request()
     dump_request();
 
     fprintf(where,
-	    "\nsend_request: about to send %d bytes from %x\n",
+	    "\nsend_request: about to send %ld bytes from %p\n",
 	    sizeof(netperf_request),
 	    &netperf_request);
     fflush(where);
@@ -1307,7 +1323,7 @@ send_response()
 
   if (debug > 1) {
     fprintf(where,
-	    "send_response: contents of %d ints before htonl\n",
+	    "send_response: contents of %u ints before htonl\n",
 	    sizeof(netperf_response)/4);
     dump_response();
   }
@@ -1327,7 +1343,7 @@ send_response()
 	    "send_response: contents after htonl\n");
     dump_response();
     fprintf(where,
-	    "about to send %d bytes from %x\n",
+	    "about to send %u bytes from %p\n",
 	    sizeof(netperf_response),
 	    &netperf_response);
     fflush(where);
@@ -1652,7 +1668,7 @@ calibrate_looper(times,wait_time)
 	/* I know that there are situations where compilers know about */
 	/* long long, but the library fucntions do not... raj 4/95 */
 	fprintf(where,
-		"\tfirstcnt[%d] = 0x%8.8x%8.8x secondcnt[%d] = 0x%8.8x%8.8x\n",
+		"\tfirstcnt[%d] = 0x%8.8lx%8.8lx secondcnt[%d] = 0x%8.8lx%8.8lx\n",
 		j,
 		firstcnt[j],
 		firstcnt[j],
@@ -1869,27 +1885,34 @@ short int	port;
   /* it would seem that while HP-UX will allow an IP address (as a */
   /* string) in a call to gethostbyname, other, less enlightened */
   /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
-  if ((hp = gethostbyname(hostname)) == NULL) {
-    if ((addr = inet_addr(hostname)) == -1) {
+  /* order changed to check for IP address first. raj 7/96 */
+
+  if ((addr = inet_addr(hostname)) == -1) {
+    /* it was not an IP address, try it as a name */
+    if ((hp = gethostbyname(hostname)) == NULL) {
+      /* we have no idea what it is */
       fprintf(where,
-	      "establish_control: could not resolve the name %s\n",
+	      "establish_control: could not resolve the destination %s\n",
 	      hostname);
       fflush(where);
       exit(1);
     }
-    server.sin_addr.s_addr = addr;
-    server.sin_family = AF_INET;
+    else {
+      /* it was a valid hostname */
+      bcopy(hp->h_addr,
+	    (char *)&server.sin_addr,
+	    hp->h_length);
+      server.sin_family = hp->h_addrtype;
+    }
   }
   else {
-    bcopy(hp->h_addr,
-	  (char *)&server.sin_addr,
-	  hp->h_length);
-    server.sin_family = hp->h_addrtype;
-  }
-  
-  
+    /* it was a valid IP address */
+    server.sin_addr.s_addr = addr;
+    server.sin_family = AF_INET;
+  }    
+
   if (debug > 1) {
-    fprintf(where,"got the host info... \n");
+    fprintf(where,"resolved the destination... \n");
     fflush(where);
   }
   
@@ -1899,7 +1922,7 @@ short int	port;
     fflush(stdout);
   }
   
-  netlib_control = socket(hp->h_addrtype,
+  netlib_control = socket(server.sin_family,
 			  SOCK_STREAM,
 			  tcp_proto_num);
   
@@ -1917,6 +1940,11 @@ short int	port;
 	      (struct sockaddr *)&server, 
 	      sizeof(server)) <0){
     perror("establish_control: control socket connect failed");
+    fprintf(stderr,
+	    "Are you sure there is a netserver running on %s at port %d?\n",
+	    hostname,
+	    port);
+    fflush(stderr);
     exit(1);
   }
   if (debug) {
@@ -2202,7 +2230,9 @@ if (measure_cpu) {
 #else
   /* now go through and kill-off all the child processes */
   for (i = 0; i < lib_num_loc_cpus; i++){
-    kill(lib_idle_pids[i],SIGQUIT);
+    /* SIGKILL can leave core files behind - thanks to Steinar Haug */
+    /* for pointing that out. */
+    kill(lib_idle_pids[i],SIGTERM);
   }
   /* reap the children */
   while(waitpid(-1, NULL, WNOHANG) > 0) { }
@@ -2357,8 +2387,10 @@ calc_cpu_util(elapsed_time)
   long diff;
 #endif
 #endif
+#ifndef USE_LOOPER
   int	cpu_time_ticks;
   long	ticks_sec;
+#endif
   int	i;
   
 
@@ -2398,8 +2430,9 @@ calc_cpu_util(elapsed_time)
 	      i,
 	      actual_rate);
     }
-    lib_local_cpu_util += (lib_local_maxrate - actual_rate) /
+    lib_local_per_cpu_util[i] = (lib_local_maxrate - actual_rate) /
       lib_local_maxrate * 100;
+    lib_local_cpu_util += lib_local_per_cpu_util[i];
   }
   /* we want the average across all n processors */
   lib_local_cpu_util /= (float)lib_num_loc_cpus;
@@ -2426,15 +2459,16 @@ calc_cpu_util(elapsed_time)
 	diff = lib_end_count[i] - lib_start_count[i] + LONG_LONG_MAX;
       }
       actual_rate = (float) diff / lib_elapsed;
-      temp_util = (lib_local_maxrate - actual_rate) /
+      lib_local_per_cpu_util[i] = (lib_local_maxrate - actual_rate) /
 	lib_local_maxrate * 100;
-      lib_local_cpu_util += temp_util;
+      lib_local_cpu_util += lib_local_per_cpu_util[i];
       if (debug) {
 	fprintf(where,
-		"calc_cpu_util: actual_rate on cpu %d is %f cpu %6.2f\n",
+		"calc_cpu_util: actual_rate on cpu %d is %g max_rate %g cpu %6.2f\n",
 		i,
 		actual_rate,
-		temp_util);
+		lib_local_maxrate,
+		lib_local_per_cpu_util[i]);
       }
     }
     /* we want the average across all n processors */
@@ -2696,8 +2730,8 @@ bind_to_processor(child_num)
   return;
 
 #else
-#ifdef __sun
- /* this may also get SunOS, which may not have this stuff? */
+#if defined(__sun) && defined(__SVR4)
+ /* should only be Solaris */
 #include <sys/processor.h>
 #include <sys/procset.h>
 
@@ -2724,7 +2758,7 @@ bind_to_processor(child_num)
   return;
 #else
   return;
-#endif /* __sun */
+#endif /* __sun && _SVR4 */
 #endif /* __hpux */
 }
 
@@ -2787,7 +2821,7 @@ sit_and_spin(child_index)
       /* nice and low. also, by making system calls, it may be easier */
       /* for us to be pre-empted by something that needs to do useful */
       /* work - like the thread of execution actually sending and */
-      /* receiveing data across the network :) */
+      /* receiving data across the network :) */
 #ifdef _AIX
       int pid,prio;
 
@@ -2809,7 +2843,7 @@ sit_and_spin(child_index)
 #ifdef WIN32
       SetThreadPriority(GetCurrentThread(),THREAD_PRIORITY_IDLE);
 #else /* WIN32 */
-#ifdef __sun
+#if defined(__sun) && defined(__SVR4)
 #include <sys/types.h>
 #include <sys/priocntl.h>
 #include <sys/rtpriocntl.h>
@@ -2821,9 +2855,9 @@ sit_and_spin(child_index)
       /* can help, I'd love to hear from you. in the meantime, we will */
       /* rely on nice(39). raj 2/26/96 */
       nice(39);
-#else /* __sun */
+#else /* __sun && __SVR4 */
       nice(39);
-#endif /* __sun */
+#endif /* __sun && _SVR4 */
 #endif /* WIN32 */
 #endif /* __sgi */
 #endif /* _AIX */
@@ -2859,6 +2893,10 @@ start_looper_processes()
   /* to create a memory mapped region so we can see all the counting */
   /* rates of the loopers */
 
+  /* could we just use an anonymous memory region for this? it is */
+  /* possible that using a mmap()'ed "real" file, while convenient for */
+  /* debugging, could result in some filesystem activity - like */
+  /* metadata updates? raj 4/96 */
   lib_idle_fd = open("/tmp/netperf_cpu",O_RDWR | O_CREAT | O_EXCL);
   
   if (lib_idle_fd == -1) {
@@ -2905,10 +2943,10 @@ start_looper_processes()
   
 
   if (debug > 1) {
-    fprintf(where,"num CPUs %d, file_size %d, lib_base_pointer 0x%8.0lx\n",
+    fprintf(where,"num CPUs %d, file_size %d, lib_base_pointer %p\n",
 	    lib_num_loc_cpus,
 	    file_size,
-	    (unsigned long)lib_base_pointer);
+	    lib_base_pointer);
     fflush(where);
   }
 
@@ -2934,9 +2972,9 @@ start_looper_processes()
 				      (NETPERF_PAGE_SIZE * 
 				       PAGES_PER_CHILD * i));
       if (debug) {
-	fprintf(where,"lib_idle_address[%d] is %8.8lx\n",
+	fprintf(where,"lib_idle_address[%d] is %p\n",
 		i,
-		(unsigned long)lib_idle_address[i]);
+		lib_idle_address[i]);
 	fflush(where);
       }
     }
@@ -2970,9 +3008,9 @@ start_looper_processes()
 				    (NETPERF_PAGE_SIZE * 
 				     PAGES_PER_CHILD * i));
     if (debug) {
-      fprintf(where,"lib_idle_address[%d] is %8.8lx\n",
+      fprintf(where,"lib_idle_address[%d] is %p\n",
 	      i,
-	      (unsigned long)lib_idle_address[i]);
+	      lib_idle_address[i]);
       fflush(where);
     }
   }

@@ -225,6 +225,7 @@ extern  int     server_sock;
 extern  int     times_up;
 extern  FILE    *where;
 extern  int     loops_per_msec;
+extern  float   lib_local_per_cpu_util[];
   
 extern  void    netlib_init();
 extern  void    install_signal_catchers();

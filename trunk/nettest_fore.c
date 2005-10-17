@@ -36,6 +36,9 @@ char	nettest_fore[]="\
 #include <time.h>
 #include <malloc.h>
 
+#ifdef FORE_FT400
+#include <fore/types.h>
+#endif
 #include <fore_atm/fore_atm_user.h>
      
 #include "netlib.h"
@@ -1470,7 +1473,7 @@ Send   Recv    Send   Recv\n\
       remote_service_demand  = calc_service_demand((double) nummessages*1024,
 						   0.0,
 						   remote_cpu_utilization,
-						   fore_rr_results->num_cpus);
+						   fore_rr_result->num_cpus);
     }
     else {
       remote_cpu_utilization = -1.0;

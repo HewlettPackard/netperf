@@ -67,3 +67,8 @@ The initial port of netperf (1.9PL4) to Windows NT 3.51.
 Robin Callender <robin_callender@VNET.IBM.COM>
 The PPC binaries for the 1.9PL4 port of netperf to NT and for assorted
 code clean-ups and help with CPU utilization measurements.
+
+"Todd J. Derr" <tjd@fore.com>
+For offering to take-on support of the Fore ATM API files with 2.1 and
+for his help in making the tar files and such more user-friendly
+
