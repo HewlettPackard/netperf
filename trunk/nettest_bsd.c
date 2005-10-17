@@ -1,6 +1,6 @@
 #ifndef lint
 char	nettest_id[]="\
-@(#)nettest_bsd.c (c) Copyright 1993, 1994 Hewlett-Packard Co. Version 2.1pl1";
+@(#)nettest_bsd.c (c) Copyright 1993, 1994 Hewlett-Packard Co. Version 2.1pl2";
 #else
 #define DIRTY
 #define HISTOGRAM
@@ -5144,7 +5144,7 @@ newport:
 		 req_size,
 		 0)) != req_size) {
 #ifdef WIN32
-      if (len == SOCKET_ERROR && WSAGetLastError() == WSAEINTR ){
+      if (len == SOCKET_ERROR && WSAGetLastError() == WSAEINTR ) {
 #else
       if (errno == EINTR) {
 #endif /* WIN32 */
@@ -5161,15 +5161,58 @@ newport:
     /* receive the response */
     rsp_bytes_left = rsp_size;
     temp_message_ptr  = recv_ring->buffer_ptr;
-    while(rsp_bytes_left > 0) {
-      if((rsp_bytes_recvd=recv(send_socket,
+
+    while((rsp_bytes_recvd=recv(send_socket,
 			       temp_message_ptr,
 			       rsp_bytes_left,
-			       0)) < 0) {
+			       0)) > 0) {
+      rsp_bytes_left -= rsp_bytes_recvd;
+      /* if we allow rsp_bytes_left to go to zero, we may mistankenly */
+      /* detect connection close - ask for zero bytes, get zero */
+      /* bytes... so, make sure that we always ask for at least one */
+      /* byte. raj 10/96 */
+      if (rsp_bytes_left == 0) rsp_bytes_left = 1;
+      temp_message_ptr += rsp_bytes_recvd;
+    }
+
+    /* our exit from the while loop should generally be when */
+    /* tmp_bytes_recvd is equal to zero, which implies the connection */
+    /* has been closed by the server side. By waiting until we get the */
+    /* zero return we can avoid race conditions that stick us with the */
+    /* TIME_WAIT connection and not the server. raj 8/96 */
+
+    if (rsp_bytes_recvd == 0) {
+      /* connection close, call close. we assume that the requisite */
+      /* number of bytes have been received */
+      recv_ring = recv_ring->next;
+
+#ifdef HISTOGRAM
+      gettimeofday(&time_two,NULL);
+      HIST_add(time_hist,delta_micro(&time_one,&time_two));
+#endif /* HISTOGRAM */
+
+      nummessages++;          
+      if (trans_remaining) {
+	trans_remaining--;
+      }
+    
+      if (debug > 3) {
+	fprintf(where,
+		"Transaction %d completed on local port %d\n",
+		nummessages,
+		ntohs(myaddr->sin_port));
+	fflush(where);
+      }
+
+      close(send_socket);
+
+    }
+    else {
+      /* it was less than zero - an error occured */
 #ifdef WIN32
-	if (rsp_bytes_recvd == SOCKET_ERROR && WSAGetLastError() == WSAEINTR) {
+      if (rsp_bytes_recvd == SOCKET_ERROR && WSAGetLastError() == WSAEINTR) {
 #else
-	if (errno == EINTR) {
+      if (errno == EINTR) {
 #endif /* WIN32 */
 	  /* We hit the end of a timed test. */
 	  timed_out = 1;
@@ -5177,47 +5220,10 @@ newport:
 	}
 	perror("send_tcp_conn_rr: data recv error");
 	exit(1);
-      }
-      rsp_bytes_left -= rsp_bytes_recvd;
-      temp_message_ptr  += rsp_bytes_recvd;
-    }	
-    recv_ring = recv_ring->next;
-
-    if (timed_out) {
-      /* we may have been in a nested while loop - we need */
-      /* another call to break. */
-      break;
     }
-
-    /* we will have gotten a zero in the receive loop which will be */
-    /* the server  telling us that there is no more data. we can */
-    /* simply call close on the socket instead of going through a */
-    /* shutdown call first. if someone has information indicating that */
-    /* www browsers actually call shutdown, and *then* close, I would */
-    /* like to hear about it raj 10/95 */
-
-    close(send_socket);
-
-#ifdef HISTOGRAM
-    gettimeofday(&time_two,NULL);
-    HIST_add(time_hist,delta_micro(&time_one,&time_two));
-#endif /* HISTOGRAM */
-
-    nummessages++;          
-    if (trans_remaining) {
-      trans_remaining--;
-    }
-    
-    if (debug > 3) {
-      fprintf(where,
-	      "Transaction %d completed on local port %d\n",
-	      nummessages,
-	      ntohs(myaddr->sin_port));
-      fflush(where);
-    }
-
-
+      
   }
+
   
   /* this call will always give us the elapsed time for the test, and */
   /* will also store-away the necessaries for cpu utilization */
