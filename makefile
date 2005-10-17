@@ -7,7 +7,7 @@
 #SHELL="/bin/sh"
 
 #what version of netperf is this for?
-VERSION = 2.3
+VERSION = 2.3pl1
 
 #
 # This tells the script where the executables and scripts are supposed
@@ -109,6 +109,8 @@ CC = cc
 #                   TENTH_MSEC are lumped into the 0 bucket of TENTH_MSEC
 #                   and the row retains the TENTH_MSEC lable instead of
 #                   the new HUNDRED_USEC
+# -DHPUX_NETSERVER_AFFINITY - enable specifying CPU binding info for the
+#                   netserver via the netperf command line with -T
 
 LOG_FILE=DEBUG_LOG_FILE="\"/tmp/netperf.debug\""
 CFLAGS = -O -D$(LOG_FILE) -DNEED_MAKEFILE_EDIT

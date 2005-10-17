@@ -2,7 +2,7 @@
 #error you must first edit and customize the makefile to your platform
 #endif /* NEED_MAKEFILE_EDIT */
 char	netsh_id[]="\
-@(#)netsh.c (c) Copyright 1993-2004 Hewlett-Packard Company. Version 2.3";
+@(#)netsh.c (c) Copyright 1993-2004 Hewlett-Packard Company. Version 2.3pl1";
 
 
 /****************************************************************/
@@ -87,7 +87,7 @@ double atof(const char *);
  /* Some of the args take optional parameters. Since we are using */
  /* getopt to parse the command line, we will tell getopt that they do */
  /* not take parms, and then look for them ourselves */
-#define GLOBAL_CMD_LINE_ARGS "A:a:b:CcdDf:F:H:hi:I:l:n:O:o:P:p:t:v:W:w:46"
+#define GLOBAL_CMD_LINE_ARGS "A:a:b:CcdDf:F:H:hi:I:l:n:O:o:P:p:t:T:v:W:w:46"
 
 /************************************************************************/
 /*									*/
@@ -226,6 +226,7 @@ Global options:\n\
     -p port           Specify netserver port number\n\
     -P 0|1            Don't/Do display test headers\n\
     -t testname       Specify test to perform\n\
+    -T cpu            Request remote netserver be bound to cpu\n\
     -v verbosity      Specify the verbosity level\n\
     -W send,recv      Set the number of send,recv buffers\n\
 \n\
@@ -487,6 +488,11 @@ scan_cmd_line(int argc, char *argv[])
     case 't':
       /* set the test name */
       strcpy(test_name,optarg);
+      break;
+    case 'T':
+      /* We want to set the processor on which netserver */
+      /* will run on the remote system. */
+      proc_affinity = convert(optarg);
       break;
     case 'W':
       /* set the "width" of the user space data buffer ring. This will */

@@ -125,3 +125,8 @@ Fixes for getaddrinfo error returns
 David Mosberger
 Workaround for the Linux getsockopt() bug that returns more than that
 for which one asked.
+
+Stephen Burger
+Code to implement the netserver CPU binding.
+
+
