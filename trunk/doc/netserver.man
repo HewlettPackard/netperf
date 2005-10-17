@@ -1,4 +1,4 @@
-.TH netserver 8L ""
+.TH netserver 1 ""
 .SH NAME
 
 netserver \- a network performance benchmark server

@@ -1,14 +1,10 @@
-#ifdef NEED_MAKEFILE_EDIT
-#error you must first edit and customize the makefile to your platform
-#endif /* NEED_MAKEFILE_EDIT */
-
 /*
  
-	   Copyright (C) 1993-2003 Hewlett-Packard Company
+	   Copyright (C) 1993-2005 Hewlett-Packard Company
                          ALL RIGHTS RESERVED.
  
-  The enclosed software and documention includes copyrighted works of
-  Hewlett-Packard Co. For as long as you comply with the following
+  The enclosed software and documentation includes copyrighted works
+  of Hewlett-Packard Co. For as long as you comply with the following
   limitations, you are hereby authorized to (i) use, reproduce, and
   modify the software and documentation, and to (ii) distribute the
   software and documentation, including modifications, for
@@ -46,7 +42,7 @@
  
 */
 char	netserver_id[]="\
-@(#)netserver.c (c) Copyright 1993-2004 Hewlett-Packard Co. Version 2.3";
+@(#)netserver.c (c) Copyright 1993-2004 Hewlett-Packard Co. Version 2.4.0";
 
  /***********************************************************************/
  /*									*/
@@ -66,6 +62,16 @@ char	netserver_id[]="\
 /*	Global include files						*/
 /*									*/
 /************************************************************************/
+#include <config.h>
+#if HAVE_STRING_H
+# if !STDC_HEADERS && HAVE_MEMORY_H
+#  include <memory.h>
+# endif
+# include <string.h>
+#endif
+#if HAVE_STRINGS_H
+# include <strings.h>
+#endif
 #include <sys/types.h>
 #include <stdio.h>
 #ifndef WIN32
@@ -79,6 +85,7 @@ char	netserver_id[]="\
 #ifdef WIN32
 #include <time.h>
 #include <winsock2.h>
+/* we need to find some other way to decide to include ws2 */
 #ifdef DO_IPV6
 #include <ws2tcpip.h>
 #endif  /* DO_IPV6 */
@@ -97,7 +104,6 @@ char	netserver_id[]="\
 #include <sys/wait.h>
 #endif /* DONT_WAIT */
 #endif /* WIN32 */
-#include <string.h>
 #include <stdlib.h>
 #ifdef __VMS
 #include <tcpip$inetdef.h> 
@@ -106,21 +112,21 @@ char	netserver_id[]="\
 #include "netlib.h"
 #include "nettest_bsd.h"
 
-#ifdef DO_UNIX
+#ifdef WANT_UNIX
 #include "nettest_unix.h"
-#endif /* DO_UNIX */
+#endif /* WANT_UNIX */
 
-#ifdef DO_DLPI
+#ifdef WANT_DLPI
 #include "nettest_dlpi.h"
-#endif /* DO_DLPI */
-
-#ifdef DO_IPV6
-#include "nettest_ipv6.h"
-#endif /* DO_IPV6 */
+#endif /* WANT_DLPI */
 
 #ifdef DO_DNS
 #include "nettest_dns.h"
 #endif /* DO_DNS */
+
+#ifdef WANT_SCTP
+#include "nettest_sctp.h"
+#endif
 
 #include "netsh.h"
 
@@ -129,20 +135,20 @@ char	netserver_id[]="\
 #define DEBUG_LOG_FILE "/tmp/netperf.debug"
 #else
 #define DEBUG_LOG_FILE "c:\\temp\\netperf.debug"
-#endif  // WIN32
+#endif  /* WIN32 */
 #endif /* DEBUG_LOG_FILE */
 
  /* some global variables */
 
 FILE	*afp;
-short	listen_port_num;
+char    listen_port[10];
 extern	char	*optarg;
 extern	int	optind, opterr;
 
 #ifndef WIN32
-#define SERVER_ARGS "dn:p:v:46"
+#define SERVER_ARGS "dL:n:p:v:46"
 #else
-#define SERVER_ARGS "dn:p:v:46I:i:"
+#define SERVER_ARGS "dL:n:p:v:46I:i:"
 #endif
 
  /* This routine implements the "main event loop" of the netperf	*/
@@ -159,30 +165,27 @@ process_requests()
   
   while (1) {
     recv_request();
-//  dump_request already present in recv_request; redundant?
-//    if (debug)
-//      dump_request();
-    
+
     switch (netperf_request.content.request_type) {
       
     case DEBUG_ON:
       netperf_response.content.response_type = DEBUG_OK;
-//  dump_request already present in recv_request; redundant?
+      /*  dump_request already present in recv_request; redundant? */
       if (!debug) {
-		debug++;
-		dump_request();
-	  }
+	debug++;
+	dump_request();
+      }
       send_response();
       break;
       
     case DEBUG_OFF:
       if (debug)
-		debug--;
+	debug--;
       netperf_response.content.response_type = DEBUG_OK;
       send_response();
-	  //+*+SAF why???
-	  if (!debug) 
-	      fclose(where);
+      /* +SAF why??? */
+      if (!debug) 
+	fclose(where);
       break;
       
     case CPU_CALIBRATE:
@@ -196,15 +199,15 @@ process_requests()
 	fprintf(where,"rate is %g\n",temp_rate);
 	fflush(where);
       }
-
+      
       /* we need the cpu_start, cpu_stop in the looper case to kill the */
       /* child proceses raj 7/95 */
-
+      
 #ifdef USE_LOOPER
       cpu_start(1);
       cpu_stop(1,&temp_rate);
 #endif /* USE_LOOPER */
-
+      
       send_response();
       break;
       
@@ -248,7 +251,7 @@ process_requests()
       recv_udp_rr();
       break;
       
-#ifdef DO_DLPI
+#ifdef WANT_DLPI
 
     case DO_DLPI_CO_RR:
       recv_dlpi_co_rr();
@@ -266,9 +269,9 @@ process_requests()
       recv_dlpi_cl_stream();
       break;
 
-#endif /* DO_DLPI */
+#endif /* WANT_DLPI */
 
-#ifdef DO_UNIX
+#ifdef WANT_UNIX
 
     case DO_STREAM_STREAM:
       recv_stream_stream();
@@ -286,33 +289,9 @@ process_requests()
       recv_dg_rr();
       break;
       
-#endif /* DO_UNIX */
+#endif /* WANT_UNIX */
 
-#ifdef DO_FORE
-
-    case DO_FORE_STREAM:
-      recv_fore_stream();
-      break;
-      
-    case DO_FORE_RR:
-      recv_fore_rr();
-      break;
-      
-#endif /* DO_FORE */
-
-#ifdef DO_HIPPI
-
-    case DO_HIPPI_STREAM:
-      recv_hippi_stream();
-      break;
-      
-    case DO_HIPPI_RR:
-      recv_hippi_rr();
-      break;
-      
-#endif /* DO_HIPPI */
-
-#ifdef DO_XTI
+#ifdef WANT_XTI
     case DO_XTI_TCP_STREAM:
       recv_xti_tcp_stream();
       break;
@@ -329,53 +308,31 @@ process_requests()
       recv_xti_udp_rr();
       break;
 
-#endif /* DO_XTI */
-#ifdef DO_LWP
-    case DO_LWPSTR_STREAM:
-      recv_lwpstr_stream();
-      break;
-      
-    case DO_LWPSTR_RR:
-      recv_lwpstr_rr();
-      break;
-      
-    case DO_LWPDG_STREAM:
-      recv_lwpdg_stream();
-      break;
-      
-    case DO_LWPDG_RR:
-      recv_lwpdg_rr();
-      break;
-
-#endif /* DO_LWP */
-#ifdef DO_IPV6
-    case DO_TCPIPV6_STREAM:
-      recv_tcpipv6_stream();
-      break;
-      
-    case DO_TCPIPV6_RR:
-      recv_tcpipv6_rr();
-      break;
-      
-    case DO_TCPIPV6_CRR:
-      recv_tcpipv6_conn_rr();
-      break;
-      
-    case DO_UDPIPV6_STREAM:
-      recv_udpipv6_stream();
-      break;
-      
-    case DO_UDPIPV6_RR:
-      recv_udpipv6_rr();
-      break;
-
-#endif /* DO_IPV6 */
+#endif /* WANT_XTI */
 
 #ifdef DO_DNS
     case DO_DNS_RR:
       recv_dns_rr();
       break;
 #endif /* DO_DNS */
+
+#ifdef WANT_SCTP
+    case DO_SCTP_STREAM:
+      recv_sctp_stream();
+      break;
+      
+    case DO_SCTP_STREAM_MANY:
+      recv_sctp_stream_1toMany();
+      break;
+
+    case DO_SCTP_RR:
+      recv_sctp_rr();
+      break;
+
+    case DO_SCTP_RR_MANY:
+      recv_sctp_rr_1toMany();
+      break;
+#endif
 
     default:
       fprintf(where,"unknown test number %d\n",
@@ -389,86 +346,141 @@ process_requests()
   }
 }
 
-/*********************************************************************/
-/*				       		                     */
-/*	set_up_server()						     */
-/*								     */
-/* set-up the server listen socket. we only call this routine if the */
-/* user has specified a port number on the command line.             */
-/*								     */
-/*********************************************************************/
+/*	
+ set_up_server()
+
+ set-up the server listen socket. we only call this routine if the 
+ user has specified a port number on the command line or we believe we
+ are not a child of inetd or its platform-specific equivalent */
+
 /*KC*/
 
-void set_up_server(int af)
+void 
+set_up_server(char hostname[], char port[], int af)
 { 
-  struct sockaddr 	*server;
-  struct sockaddr_in 	server4 = {0};
-  struct sockaddr 	peeraddr;
-#ifdef DO_IPV6
-  struct sockaddr_in6 	server6 = {0};
-#endif
+
+  struct addrinfo     hints;
+  struct addrinfo     *local_res;
+  struct addrinfo     *local_res_temp;
+
+  struct sockaddr_storage     peeraddr;
+  socklen_t                 peeraddr_len = sizeof(peeraddr);
   
   SOCKET server_control;
-  int sockaddr_len;
   int on=1;
+  int count;
+  int error;
+  int not_listening;
 
-  if (af == AF_INET) {
-	server4.sin_port = htons(listen_port_num);
-	server4.sin_addr.s_addr = INADDR_ANY;
-	server4.sin_family = AF_INET;
- 	sockaddr_len = sizeof(struct sockaddr_in);
-	server = (struct sockaddr *) &server4;
+  if (debug) {
+    fprintf(stderr,
+            "set_up_server called with host '%s' port '%s' remfam %d\n",
+            hostname,
+	    port,
+            af);
+    fflush(stderr);
   }
-#ifdef DO_IPV6
+
+  memset(&hints,0,sizeof(hints));
+  hints.ai_family = af;
+  hints.ai_socktype = SOCK_STREAM;
+  hints.ai_protocol = IPPROTO_TCP;
+  hints.ai_flags = AI_PASSIVE;
+
+  count = 0;
+  do {
+    error = getaddrinfo((char *)hostname,
+                        (char *)port,
+                        &hints,
+                        &local_res);
+    count += 1;
+    if (error == EAI_AGAIN) {
+      if (debug) {
+        fprintf(stderr,"Sleeping on getaddrinfo EAI_AGAIN\n");
+        fflush(stderr);
+      }
+      sleep(1);
+    }
+  } while ((error == EAI_AGAIN) && (count <= 5));
+
+  if (error) {
+    fprintf(stderr,
+	    "set_up_server: could not resolve remote '%s' port '%s' af %d",
+	    hostname,
+	    port,
+	    af);
+    fprintf(stderr,"\n\tgetaddrinfo returned %d %s\n",
+	    error,
+	    gai_strerror(error));
+    exit(-1);
+  }
+
+  if (debug) {
+    dump_addrinfo(stderr, local_res, hostname, port, af);
+  }
+
+  not_listening = 1;
+  local_res_temp = local_res;
+
+  while((local_res_temp != NULL) && (not_listening)) {
+
+    fprintf(stderr,
+	    "Starting netserver at port %s\n",
+	    port);
+
+    server_control = socket(local_res_temp->ai_family,SOCK_STREAM,0);
+
+    if (server_control == INVALID_SOCKET) {
+      perror("set_up_server could not allocate a socket");
+      exit(-1);
+    }
+
+    /* happiness and joy, keep going */
+    if (setsockopt(server_control, 
+		   SOL_SOCKET, 
+		   SO_REUSEADDR, 
+		   (char *)&on , 
+		   sizeof(on)) == SOCKET_ERROR) {
+      if (debug) {
+	perror("warning: set_up_server could not set SO_REUSEADDR");
+      }
+    }
+    /* still happy and joyful */
+
+    if ((bind (server_control, 
+	       local_res_temp->ai_addr, 
+	       local_res_temp->ai_addrlen) != SOCKET_ERROR) &&
+	(listen (server_control,5) != SOCKET_ERROR))  {
+      not_listening = 0;
+      break;
+    }
+    else {
+      /* we consider a bind() or listen() failure a transient and try
+	 the next address */
+      if (debug) {
+	perror("warning: set_up_server failed a bind or listen call\n");
+      }
+      local_res_temp = local_res_temp->ai_next;
+      continue;
+    }
+  }
+
+  if (not_listening) {
+    fprintf(stderr,
+	    "set_up_server could not establish a listen endpoint for %s port %s with family %s\n",
+	    host_name,
+	    port,
+	    inet_ftos(af));
+    fflush(stderr);
+    exit(-1);
+  }
   else {
-	server6.sin6_port = htons(listen_port_num);
-	server6.sin6_family = AF_INET6;
-#ifndef IN6_CLEAR_IN6ADDR 
-#define IN6_CLEAR_IN6ADDR(x) 	memset(&(x), 0, sizeof(struct in6_addr))
-#endif
-	IN6_CLEAR_IN6ADDR(server6.sin6_addr);
- 	sockaddr_len = sizeof(struct sockaddr_in6);
-	server = (struct sockaddr *) &server6;
+    printf("Starting netserver at hostname %s port %s and family %d\n",
+	   hostname,
+	   port,
+	   af);
   }
-#else
-  else {
-	fprintf(stderr,
-		"netserver: IPv6 is not supported\n");
-	fflush(stderr);
-	exit(1);
-  }
-#endif
 
-  printf("Starting netserver at port %d\n",listen_port_num);
-
-  server_control = socket(server->sa_family,SOCK_STREAM,0);
-
-  if (server_control == INVALID_SOCKET)
-    {
-      perror("server_set_up: creating the socket");
-      exit(1);
-    }
-  if (setsockopt(server_control, 
-		 SOL_SOCKET, 
-		 SO_REUSEADDR, 
-		 (char *)&on , 
-		 sizeof(on)) == SOCKET_ERROR)
-    {
-      perror("server_set_up: SO_REUSEADDR");
-      exit(1);
-    }
-
-  if (bind (server_control, server, sockaddr_len) == SOCKET_ERROR)
-    {
-      perror("server_set_up: binding the socket");
-      exit (1);
-    }
-  if (listen (server_control,5) == SOCKET_ERROR)
-    {
-      perror("server_set_up: listening");
-      exit(1);
-    }
-  
   /*
     setpgrp();
     */
@@ -503,10 +515,10 @@ void set_up_server(int af)
       for (;;)
 	{
 	  if ((server_sock=accept(server_control,
-				  &peeraddr,
-				  &sockaddr_len)) == INVALID_SOCKET)
+				  (struct sockaddr *)&peeraddr,
+				  &peeraddr_len)) == INVALID_SOCKET)
 	    {
-	      printf("server_control: accept failed\n");
+	      printf("server_control: accept failed errno %d\n",errno);
 	      exit(1);
 	    }
 #if defined(MPE) || defined(__VMS)
@@ -527,14 +539,14 @@ void set_up_server(int af)
 			memset(&si, 0 , sizeof(STARTUPINFO));
 			si.cb = sizeof(STARTUPINFO);
 
-			// Pass the server_sock as stdin for the new process.
-			// Hopefully this will continue to be created with the OBJ_INHERIT attribute.
+			/* Pass the server_sock as stdin for the new process. */
+			/* Hopefully this will continue to be created with the OBJ_INHERIT attribute. */
 			si.hStdInput = (HANDLE)server_sock;
 			si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
 			si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
 			si.dwFlags = STARTF_USESTDHANDLES;
 
-			// Build cmdline for child process
+			/* Build cmdline for child process */
 			strcpy(cmdline, program);
 			if (verbosity > 1) {
 				snprintf(&cmdline[strlen(cmdline)], sizeof(cmdline) - strlen(cmdline), " -v %d", verbosity);
@@ -546,15 +558,15 @@ void set_up_server(int af)
 			snprintf(&cmdline[strlen(cmdline)], sizeof(cmdline) - strlen(cmdline), " -i %x", (int)(UINT_PTR)server_control);
 			snprintf(&cmdline[strlen(cmdline)], sizeof(cmdline) - strlen(cmdline), " -i %x", (int)(UINT_PTR)where);
 
-			b = CreateProcess(NULL,	 // Application Name
+			b = CreateProcess(NULL,	 /* Application Name */
 					cmdline,
-					NULL,    // Process security attributes
-					NULL,    // Thread security attributes
-					TRUE,    // Inherit handles
-					0,	   // Creation flags  //PROCESS_QUERY_INFORMATION, 
-					NULL,    // Enviornment
-					NULL,    // Current directory
-					&si,	   // StartupInfo
+					NULL,    /* Process security attributes */
+					NULL,    /* Thread security attributes */
+					TRUE,    /* Inherit handles */
+					0,	   /* Creation flags  PROCESS_QUERY_INFORMATION,  */
+					NULL,    /* Enviornment */
+					NULL,    /* Current directory */
+					&si,	   /* StartupInfo */
 					&pi);
 			if (!b)
 			{
@@ -562,13 +574,13 @@ void set_up_server(int af)
 				exit(1);
 			}
 
-			// We don't need the thread or process handles any more; let them
-			// go away on their own timeframe.
+			/* We don't need the thread or process handles any more; let them */
+			/* go away on their own timeframe. */
 
 			CloseHandle(pi.hThread);
 			CloseHandle(pi.hProcess);
 
-			// And close the server_sock since the child will own it.
+			/* And close the server_sock since the child will own it. */
 
 			close(server_sock);
 		}
@@ -613,25 +625,32 @@ void set_up_server(int af)
 }
 
 #ifdef WIN32
-  // With Win2003, WinNT's POSIX subsystem is gone and hence so is fork.
 
-  // But hopefully the kernel support will continue to exist for some time.
+  /* With Win2003, WinNT's POSIX subsystem is gone and hence so is */
+  /* fork. */
 
-  // We are not counting on the child address space copy_on_write support, since it isn't exposed
-  // except through the NT native APIs (which is not public).
+  /* But hopefully the kernel support will continue to exist for some */
+  /* time. */
 
-  // We will try to use the InheritHandles flag in CreateProcess.  It is in the public API, though
-  // it is documented as "must be FALSE".
+  /* We are not counting on the child address space copy_on_write */
+  /* support, since it isn't exposed except through the NT native APIs */
+  /* (which is not public). */
 
-  // So where we would have forked, we will now create a new process.
-  // I have added a set of command line switches to specify a list of handles that the
-  // child should close since they shouldn't have been inherited ("-i#"), and a single switch to specify
-  // the handle for the server_sock ("I#").
+  /* We will try to use the InheritHandles flag in CreateProcess.  It */
+  /* is in the public API, though it is documented as "must be FALSE". */
 
-  // A better alternative would be to re-write NetPerf to be multi-threaded; i.e., move all of 
-  // the various NetPerf global variables in to thread specific structures.
-  // But this is a bigger effort than I want to tackle at this time.
-  // (And I doubt that the HP-UX author sees value in this effort).
+  /* So where we would have forked, we will now create a new process. */
+  /* I have added a set of command line switches to specify a list of */
+  /* handles that the child should close since they shouldn't have */
+  /* been inherited ("-i#"), and a single switch to specify the handle */
+  /* for the server_sock ("I#"). */
+
+  /* A better alternative would be to re-write NetPerf to be */
+  /* multi-threaded; i.e., move all of the various NetPerf global */
+  /* variables in to thread specific structures.  But this is a bigger */
+  /* effort than I want to tackle at this time.  (And I doubt that the */
+  /* HP-UX author sees value in this effort). */
+
 #endif
 
 int _cdecl
@@ -639,12 +658,14 @@ main(int argc, char *argv[])
 {
 
   int	c;
+  int   not_inetd = 0;
 #ifdef WIN32
   BOOL  child = FALSE;
 #endif
+  char arg1[BUFSIZ], arg2[BUFSIZ];
 
-struct sockaddr name;
-  int namelen = sizeof(name);
+  struct sockaddr name;
+  socklen_t namelen = sizeof(name);
   
 
 #ifdef WIN32
@@ -657,10 +678,10 @@ struct sockaddr name;
 	}
 #endif /* WIN32 */
 
-	// Save away the program name
+	/* Save away the program name */
 	program = (char *)malloc(strlen(argv[0]) + 1);
 	if (program == NULL) {
-		printf("malloc(%ld) failed!\n", strlen(argv[0]) + 1);
+		printf("malloc(%d) failed!\n", strlen(argv[0]) + 1);
 		return 1 ;
 	}
 	strcpy(program, argv[0]);
@@ -669,6 +690,11 @@ struct sockaddr name;
   
   /* Scan the command line to see if we are supposed to set-up our own */
   /* listen socket instead of relying on inetd. */
+
+  /* first set a copy of initial values */
+  strncpy(local_host_name,"0.0.0.0",sizeof(local_host_name));
+  local_address_family = AF_UNSPEC;
+  strncpy(listen_port,TEST_PORT,sizeof(listen_port));
 
   while ((c = getopt(argc, argv, SERVER_ARGS)) != EOF) {
     switch (c) {
@@ -680,10 +706,24 @@ struct sockaddr name;
       /* we want to set the debug file name sometime */
       debug++;
       break;
-    case 'p':
-      /* we want to open a listen socket at a */
-      /* specified port number */
-      listen_port_num = (short)atoi(optarg);
+    case 'L':
+      not_inetd = 1;
+      break_args_explicit(optarg,arg1,arg2);
+      if (arg1[0]) {
+	strncpy(local_host_name,arg1,sizeof(local_host_name));
+      }
+      if (arg2[0]) {
+	local_address_family = parse_address_family(arg2);
+	/* if only the address family was set, we may need to set the
+	   local_host_name accordingly. since our defaults are IPv4
+	   this should only be necessary if we have IPv6 support raj
+	   2005-02-07 */  
+#if defined (AF_INET6)
+	if (!arg1[0]) {
+	  strncpy(local_host_name,"::0",sizeof(local_host_name));
+	}
+#endif
+      }
       break;
     case 'n':
       shell_num_cpus = atoi(optarg);
@@ -697,36 +737,45 @@ struct sockaddr name;
 	exit(1);
       }
       break;
-#ifdef DO_IPV6
+    case 'p':
+      /* we want to open a listen socket at a */
+      /* specified port number */
+      strncpy(listen_port,optarg,sizeof(listen_port));
+      not_inetd = 1;
+      break;
     case '4':
-      af = AF_INET;
+      local_address_family = AF_INET;
       break;
     case '6':
-      af = AF_INET6;
-      break;
+#if defined(AF_INET6)
+      local_address_family = AF_INET6;
+      strncpy(local_host_name,"::0",sizeof(local_host_name));
+#else
+      local_address_family = AF_UNSPEC;
 #endif
+      break;
     case 'v':
       /* say how much to say */
       verbosity = atoi(optarg);
       break;
 #ifdef WIN32
-//+*+SAF
+/*+*+SAF */
 	case 'I':
 		child = TRUE;
-		// This is the handle we expect to inherit.
-		//+*+SAF server_sock = (HANDLE)atoi(optarg);
+		/* This is the handle we expect to inherit. */
+		/*+*+SAF server_sock = (HANDLE)atoi(optarg); */
 		break;
 	case 'i':
-		// This is a handle we should NOT inherit.
-		//+*+SAF CloseHandle((HANDLE)atoi(optarg));
+		/* This is a handle we should NOT inherit. */
+		/*+*+SAF CloseHandle((HANDLE)atoi(optarg)); */
 		break;
 #endif
 
     }
   }
 
-  //+*+SAF I need a better way to find inherited handles I should close!
-  //+*+SAF Use DuplicateHandle to force inheritable attribute (or reset it)?
+  /* +*+SAF I need a better way to find inherited handles I should close! */
+  /* +*+SAF Use DuplicateHandle to force inheritable attribute (or reset it)? */
 
 /*  unlink(DEBUG_LOG_FILE); */
 #ifndef WIN32
@@ -749,7 +798,7 @@ struct sockaddr name;
 		  exit(1);
 	  }
 
-	  // Just in case there are some errant printfs...
+	  /* Just in case there are some errant printfs... */
 	  CloseHandle(GetStdHandle(STD_OUTPUT_HANDLE));
 	  if (!SetStdHandle(STD_OUTPUT_HANDLE, where)) {
 		  perror("SetStdHandle failed");
@@ -771,43 +820,43 @@ struct sockaddr name;
   }
 #endif
 
-  /* if we were given a port number, then we should open a */
-  /* socket and hang listens off of it. otherwise, we should go */
-  /* straight into processing requests. the do_listen() routine */
-  /* will sit in an infinite loop accepting connections and */
-  /* forking child processes. the child processes will call */
-  /* process_requests */
+  /* if we are not a child of an inetd or the like, then we should
+   open a socket and hang listens off of it. otherwise, we should go
+   straight into processing requests. the do_listen() routine will sit
+   in an infinite loop accepting connections and forking child
+   processes. the child processes will call process_requests */
   
   /* If fd 0 is not a socket then assume we're not being called */
   /* from inetd and start server socket on the default port. */
   /* this enhancement comes from vwelch@ncsa.uiuc.edu (Von Welch) */
-
-  if (listen_port_num) {
+  if (not_inetd) {
     /* the user specified a port number on the command line */
-    set_up_server(af);
+    set_up_server(local_host_name,listen_port,local_address_family);
   }
 #ifdef WIN32
-  // OK, with Win2003 WinNT's POSIX subsystem is gone, and hence so is fork.
-  // But hopefully the kernel support will continue to exist for some time.
-  // We are not counting on the address space copy_on_write support, since it isn't 
-  // exposed except through the NT native APIs (which are not public).
-  // We will try to use the InheritHandles flag in CreateProcess though since this 
-  // is public and is used for more than just POSIX so hopefully it won't go away.
+  /* OK, with Win2003 WinNT's POSIX subsystem is gone, and hence so is */
+  /* fork.  But hopefully the kernel support will continue to exist */
+  /* for some time.  We are not counting on the address space */
+  /* copy_on_write support, since it isn't exposed except through the */
+  /* NT native APIs (which are not public).  We will try to use the */
+  /* InheritHandles flag in CreateProcess though since this is public */
+  /* and is used for more than just POSIX so hopefully it won't go */
+  /* away. */
   else if (TRUE) {
-	  if (child) {
-		process_requests();
-	  } else {
-		listen_port_num = TEST_PORT;
-		set_up_server(af);
-	  }
+    if (child) {
+      process_requests();
+    } else {
+      strncpy(listen_port,TEST_PORT,sizeof(listen_port));
+      set_up_server(local_host_name,listen_port,local_address_family);
+    }
   }
 #endif
 #if !defined(__VMS)
   else if (getsockname(0, &name, &namelen) == SOCKET_ERROR) {
     /* we may not be a child of inetd */
-	  if (errno == ENOTSOCK) {
-	  listen_port_num = TEST_PORT;
-      set_up_server(af);
+    if (errno == ENOTSOCK) {
+      strncpy(listen_port,TEST_PORT,sizeof(listen_port));
+      set_up_server(local_host_name,listen_port,local_address_family);
     }
   }
 #endif /* !defined(__VMS) */

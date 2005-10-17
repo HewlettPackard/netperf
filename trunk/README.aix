@@ -1,0 +1,13 @@
+Pseudo-random things about netperf on AIX:
+
+While it _should_ not be necessary in the release bits, the rc bits
+for netperf 2.4.0 required:
+
+    configure may need:
+
+    CFLAGS="-qcpluscmt -lperfstat"
+
+    until such time as Rick Jones can figure-out or be told how to
+    automagically add those using the configure script (hint hint :)
+
+The release bits should be OK without the above.

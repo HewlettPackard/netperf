@@ -4,8 +4,8 @@ char	nettest_dns_id[]="\
 @(#)nettest_dns.c (c) Copyright 1997,2004 Hewlett-Packard Co. Version 2.2pl6";
 #else
 #define DIRTY
-#define HISTOGRAM
-#define INTERVALS
+#define WANT_HISTOGRAM
+#define WANT_INTERVALS
 #endif /* lint */
 
 /****************************************************************/
@@ -35,6 +35,9 @@ char	nettest_dns_id[]="\
  /* this presumes that the netserver process will be running on the */
  /* same machine as the DNS server :) raj 7/97 */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include <sys/types.h>
 #include <fcntl.h>
@@ -66,7 +69,7 @@ char	nettest_dns_id[]="\
 #include "pinc\nameser.h"
 #include "pinc\res.h"
 #include "pinc\resolv.h"
-//#include "pinc\resolvp.h"
+/*#include "pinc\resolvp.h" */
 #define close(x)	closesocket(x)
 #endif /* WIN32 */
 
@@ -74,12 +77,12 @@ char	nettest_dns_id[]="\
 #include "netsh.h"
 #include "nettest_dns.h"
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
 #ifdef __sgi
 #include <sys/time.h>
 #endif /* __sgi */
 #include "hist.h"
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
 
 
@@ -94,7 +97,7 @@ static  char  request_file[1024];
 
 static  unsigned int dns_server_addr = INADDR_ANY;
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
 #ifdef HAVE_GETHRTIME
 hrtime_t time_one;
 hrtime_t time_two;
@@ -103,7 +106,7 @@ static struct timeval time_one;
 static struct timeval time_two;
 #endif /* HAVE_GETHRTIME */
 static HIST time_hist;
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
 
 char dns_usage[] = "\n\
@@ -195,10 +198,10 @@ secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\n";
   u_char        server_response[1024]; /* where the data goes */
   int	        len = sizeof(server_response);
 
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
   int	interval_count;
   sigset_t signal_set;
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
 
   dns_rr_request = 
     (struct dns_rr_request_struct *)netperf_request.content.test_specific_data;
@@ -242,9 +245,9 @@ secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\n";
   }
 
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
   time_hist = HIST_new();
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
   if ( print_headers ) {
     fprintf(where,"DNS REQUEST/RESPONSE TEST");
@@ -255,12 +258,12 @@ secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\n";
 	      interval/0.02,
 	      confidence_level);
       }
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     fprintf(where," : histogram");
-#endif /* HISTOGRAM */
-#ifdef INTERVALS
+#endif /* WANT_HISTOGRAM */
+#ifdef WANT_INTERVALS
     fprintf(where," : interval");
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
     fprintf(where,"\n");
   }
   
@@ -392,7 +395,7 @@ secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\n";
     
     cpu_start(local_cpu_usage);
 
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
     if ((interval_burst) || (demo_mode)) {
       /* zero means that we never pause, so we never should need the */
       /* interval timer, unless we are in demo_mode */
@@ -407,15 +410,15 @@ secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\n";
       fflush(where);
       exit(1);
     }
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
     
     while (!times_up) {
       
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
       /* timestamp just before our call to  gethostbyname or */
       /* gethostbyaddr, and then again just  after the call. raj 7/97 */
       HIST_timestamp(&time_one);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
       
       /* until we implement the file, just request a fixed name. the */
       /* file will include what we are to request, and an indication */
@@ -437,11 +440,11 @@ secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\n";
 	fflush(where);
       }
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
       HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
-#endif /* HISTOGRAM */
-#ifdef INTERVALS      
+#endif /* WANT_HISTOGRAM */
+#ifdef WANT_INTERVALS      
       if (demo_mode) {
 	units_this_tick += 1;
       }
@@ -462,7 +465,7 @@ secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\n";
 	}
 	interval_count = interval_burst;
       }
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
       
       numtrans++;          
       
@@ -678,11 +681,11 @@ secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\n";
   /* confidence intervals is yet to be determined... raj 11/94 */
   if (verbosity > 1) {
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     fprintf(where,"\nHistogram of request/response times\n");
     fflush(where);
     HIST_report(time_hist);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
   }
   
@@ -762,8 +765,8 @@ recv_dns_rr()
   /* 95 and NT and is closer to what netperf expects from Unix signals */
   /* and such would be appreciated raj 1/96 */
 
-  //+*+SAF Unfortunately, there is no s_data socket to close out in the DNS API case...
-  //+*+ SAF win_kludge_socket = s_data;
+  /*+*+SAF Unfortunately, there is no s_data socket to close out in the DNS API case... */
+  /*+*+ SAF win_kludge_socket = s_data; */
 #endif /* WIN32 */
 
   if (debug) {
@@ -800,21 +803,21 @@ recv_dns_rr()
     HANDLE hSleep = INVALID_HANDLE_VALUE;
 	DWORD ErrorCode;
 
-	// Create the dummy "Sleep" event object
+	/* Create the dummy "Sleep" event object */
 	hSleep = CreateEvent( 
-		(LPSECURITY_ATTRIBUTES) NULL,	  // no security
-		TRUE,	 // manual reset event
-		FALSE,   // init. state = reset
-		(void *)NULL);  // unnamed event object
+		(LPSECURITY_ATTRIBUTES) NULL,	  /* no security */
+		TRUE,	 /* manual reset event */
+		FALSE,   /* init. state = reset */
+		(void *)NULL);  /* unnamed event object */
 	if (hSleep == (HANDLE) INVALID_HANDLE_VALUE)
 	{
 		perror("CreateEvent failure");
 		exit(1);
 	}
 
-	// Wait on this event (which will never be signaled) for test_length + PAD_TIME seconds.
+	/* Wait on this event (which will never be signaled) for test_length + PAD_TIME seconds. */
 
-	ErrorCode = WaitForSingleObject(hSleep, (dns_rr_request->test_length + PAD_TIME)*1000);  //Lint
+	ErrorCode = WaitForSingleObject(hSleep, (dns_rr_request->test_length + PAD_TIME)*1000);  /*Lint */
 	if (ErrorCode == WAIT_FAILED)
 	{
 		perror("WaitForSingleObject failed");
@@ -826,7 +829,7 @@ recv_dns_rr()
   /* reached */
   
   cpu_stop(dns_rr_request->measure_cpu,&elapsed_time);
-#endif  // WIN32
+#endif  /* WIN32 */
 
   /* we ended the test by time, which was at least 2 seconds */
   /* longer than we wanted to run. so, we want to subtract */

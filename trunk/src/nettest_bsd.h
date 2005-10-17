@@ -5,6 +5,15 @@
  /* This file contains the test-specific definitions for netperf's BSD */
  /* sockets tests */
 
+/* well boys and girls, seems that while AF_INET is "2" and AF_UNSPEC
+   is "0" the world over, AF_INET6 is different values depending on
+   the platform... grrr.  On HP-UX 11i it is "22" and on Linux 2.6 it
+   is "10" sooooo... we have to define our own space for netperf to
+   enable us to pass values around from machine to machine. raj
+   2005-02-08 */
+#define NF_UNSPEC 0
+#define NF_INET   4
+#define NF_INET6  6
 
 struct	tcp_stream_request_struct {
   int	send_buf_size;
@@ -31,9 +40,7 @@ struct	tcp_stream_request_struct {
   int   port;           /* the port to which the recv side should bind
 			   to allow netperf to run through those evil
 			   firewall things */
-  int   ipaddress;      /* the IP address to which the recv side
-			   should bind to allow netperf to run through
-			   those evil firewall things */
+  int   ipfamily;       /* the address family of ipaddress */
 };
 
 struct	tcp_stream_response_struct {
@@ -84,9 +91,7 @@ struct	tcp_maerts_request_struct {
   int   port;           /* the port to which the recv side should bind
 			   to allow netperf to run through those evil
 			   firewall things */
-  int   ipaddress;      /* the IP address to which the recv side
-			   should bind to allow netperf to run through
-			   those evil firewall things */
+  int   ipfamily;
 };
 
 struct	tcp_maerts_response_struct {
@@ -131,9 +136,7 @@ struct	tcp_rr_request_struct {
   int   port;           /* the port to which the recv side should bind
 			   to allow netperf to run through those evil
 			   firewall things */
-  int   ipaddress;      /* the IP address to which the recv side
-			   should bind to allow netperf to run through
-			   those evil firewall things */
+  int   ipfamily;
 };
 
 struct	tcp_rr_response_struct {
@@ -178,9 +181,7 @@ struct	tcp_conn_rr_request_struct {
   int   port;           /* the port to which the recv side should bind
 			   to allow netperf to run through those evil
 			   firewall things */
-  int   ipaddress;      /* the IP address to which the recv side
-			   should bind to allow netperf to run through
-			   those evil firewall things */
+  int   ipfamily;
 };
 
 
@@ -226,9 +227,7 @@ struct	tcp_tran_rr_request_struct {
   int   port;           /* the port to which the recv side should bind
 			   to allow netperf to run through those evil
 			   firewall things */
-  int   ipaddress;      /* the IP address to which the recv side
-			   should bind to allow netperf to run through
-			   those evil firewall things */
+  int   ipfamily;
 };
 
 
@@ -271,9 +270,7 @@ struct	udp_stream_request_struct {
   int   port;           /* the port to which the recv side should bind
 			   to allow netperf to run through those evil
 			   firewall things */
-  int   ipaddress;      /* the IP address to which the recv side
-			   should bind to allow netperf to run through
-			   those evil firewall things */
+  int   ipfamily;
 };
 
 struct	udp_stream_response_struct {
@@ -316,9 +313,7 @@ struct	udp_rr_request_struct {
   int   port;           /* the port to which the recv side should bind
 			   to allow netperf to run through those evil
 			   firewall things */
-  int   ipaddress;      /* the IP address to which the recv side
-			   should bind to allow netperf to run through
-			   those evil firewall things */
+  int   ipfamily;
 };
 
 struct	udp_rr_response_struct {
@@ -363,9 +358,7 @@ struct	tcp_cc_request_struct {
   int   port;           /* the port to which the recv side should bind
 			   to allow netperf to run through those evil
 			   firewall things */
-  int   ipaddress;      /* the IP address to which the recv side
-			   should bind to allow netperf to run through
-			   those evil firewall things */
+  int   ipfamily;
 };
 
 
@@ -392,8 +385,51 @@ struct tcp_cc_results_struct {
   int           num_cpus;      /* how many CPUs had the remote? */
 };
 
-extern void scan_sockets_args(int argc, char *argv[]);
+extern int   rss_size_req,     /* requested remote socket send buffer size */
+	     rsr_size_req,     /* requested remote socket recv buffer size */
+	     rss_size,         /* remote socket send buffer size       */
+	     rsr_size,         /* remote socket recv buffer size       */
+	     lss_size_req,     /* requested local socket send buffer size */
+	     lsr_size_req,     /* requested local socket recv buffer size */
+	     lss_size,         /* local  socket send buffer size       */
+	     lsr_size,         /* local  socket recv buffer size       */
+	     req_size,         /* request size                         */
+	     rsp_size,         /* response size                        */
+	     send_size,        /* how big are individual sends         */
+	     recv_size,        /* how big are individual receives      */
+	     loc_nodelay,          /* don't/do use NODELAY locally         */
+	     rem_nodelay,          /* don't/do use NODELAY remotely        */
+	     loc_sndavoid,         /* avoid send copies locally            */
+	     loc_rcvavoid,         /* avoid recv copies locally            */
+	     rem_sndavoid,         /* avoid send copies remotely           */
+	     rem_rcvavoid;         /* avoid recv_copies remotely           */
 
+
+extern void scan_sockets_args(int argc, char *argv[]);
+extern struct addrinfo *complete_addrinfo(char *controlhost, 
+				   char *data_address, 
+				   char *port, 
+				   int family, 
+				   int type, 
+				   int protocol, 
+				   int flags);
+extern void complete_addrinfos(struct addrinfo **remote,
+			       struct addrinfo **local, 
+			       char remote_host[], 
+			       int type, 
+			       int protocol, 
+			       int flags);
+extern int af_to_nf(int af);
+extern int nf_to_af(int nf);
+extern void print_top_test_header(char test_name[], 
+				  struct addrinfo *source, 
+				  struct addrinfo *destination);
+extern void set_port_number(struct addrinfo *res, 
+			    unsigned short port);
+extern void set_hostname_and_port(char *hostname, 
+				  char *portstr, 
+				  int family, 
+				  int port);
 extern void send_tcp_stream(char remote_host[]);
 extern void send_tcp_maerts(char remote_host[]);
 extern void send_tcp_rr(char remote_host[]);
@@ -413,6 +449,14 @@ extern void recv_udp_rr();
 extern void loc_cpu_rate();
 extern void rem_cpu_rate();
 
+#ifdef HAVE_ICSC_EXS
+extern void send_exs_tcp_stream(char remotehost[]);
+#endif /* HAVE_ICSC_EXS */
+
 #ifdef HAVE_SENDFILE
 extern void sendfile_tcp_stream(char remotehost[]);
 #endif /* HAVE_SENDFILE */
+
+#if !defined(HAVE_STRUCT_SOCKADDR_STORAGE) && !defined(sockaddr_storage)
+#define sockaddr_storage sockaddr_in
+#endif

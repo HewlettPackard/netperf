@@ -27,7 +27,7 @@ fi
 NETHOME=.
 
 # at what port will netserver be waiting? If you decide to run
-# netserver at a differnet port than the default of 12865, then set
+# netserver at a different port than the default of 12865, then set
 # the value of PORT apropriately
 #PORT="-p some_other_portnum"
 PORT=""
@@ -41,7 +41,7 @@ TEST_TIME=60
 STATS_STUFF="-i 10,2 -I 99,5"
 
 # The socket sizes that we will be testing
-SOCKET_SIZES="57344 32768 8192"
+SOCKET_SIZES="128K 57344 32768 8192"
 
 # The send sizes that we will be using
 SEND_SIZES="4096 8192 32768"

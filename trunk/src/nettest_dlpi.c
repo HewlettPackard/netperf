@@ -1,7 +1,7 @@
 #ifdef lint
-#define DO_DLPI
+#define WANT_DLPI
 #define DIRTY
-#define INTERVALS
+#define WANT_INTERVALS
 #endif /* lint */
 /****************************************************************/
 /*								*/
@@ -20,7 +20,9 @@
 /*								*/
 /****************************************************************/
 
-#ifdef DO_DLPI
+#include <config.h>
+
+#ifdef WANT_DLPI
 char	nettest_dlpi_id[]="\
 @(#)nettest_dlpi.c (c) Copyright 1993,1995,2004 Hewlett-Packard Co. Version 2.2pl6";
 
@@ -136,9 +138,9 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
   
   float			elapsed_time;
   
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
   int interval_count;
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
   
   /* what we want is to have a buffer space that is at least one */
   /* send-size greater than our send window. this will insure that we */
@@ -471,11 +473,11 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
     }
     send_ring = send_ring->next;
     send_message.buf = send_ring->buffer_ptr;
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
     for (interval_count = 0;
 	 interval_count < interval_wate;
 	 interval_count++);
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
     
     if (debug > 4) {
       fprintf(where,"netperf: send_clpi_co_stream: putmsg called ");
@@ -1636,9 +1638,9 @@ frames  bytes    secs            #      #   %s/sec   %%       us/KB\n\n";
   int 	data_descriptor;
   
   
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
   int	interval_count;
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
 #ifdef DIRTY
   int	i;
 #endif /* DIRTY */
@@ -1845,9 +1847,9 @@ frames  bytes    secs            #      #   %s/sec   %%       us/KB\n\n";
   
   cpu_start(local_cpu_usage);
   
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
   interval_count = interval_burst;
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
   
   /* Send datagrams like there was no tomorrow */
   while (!times_up) {
@@ -1894,7 +1896,7 @@ frames  bytes    secs            #      #   %s/sec   %%       us/KB\n\n";
     /* data buffer...since there was a successful send */
     
     
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
     /* in this case, the interval count is the count-down couter */
     /* to decide to sleep for a little bit */
     if ((interval_burst) && (--interval_count == 0)) {
@@ -1907,7 +1909,7 @@ frames  bytes    secs            #      #   %s/sec   %%       us/KB\n\n";
       interval_count = interval_burst;
     }
     
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
     
   }
   
@@ -2414,7 +2416,7 @@ Send   Recv    Send   Recv\n\
   float	remote_service_demand;
   double thruput;
   
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
   /* timing stuff */
 #define	MAX_KEPT_TIMES	1024
   int	time_index = 0;
@@ -2426,7 +2428,7 @@ Send   Recv    Send   Recv\n\
   struct	timeval		send_time;
   struct	timeval		recv_time;
   struct	timeval		sleep_timeval;
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
   
   struct	dlpi_cl_rr_request_struct	*dlpi_cl_rr_request;
   struct	dlpi_cl_rr_response_struct	*dlpi_cl_rr_response;
@@ -2440,14 +2442,14 @@ Send   Recv    Send   Recv\n\
     (struct dlpi_cl_rr_results_struct *)netperf_response.content.test_specific_data;
   
   /* we want to zero out the times, so we can detect unused entries. */
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
   time_index = 0;
   while (time_index < MAX_KEPT_TIMES) {
     kept_times[time_index] = 0;
     time_index += 1;
   }
   time_index = 0;
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
   
   if (print_headers) {
     fprintf(where,"DLPI CL REQUEST/RESPONSE TEST\n");
@@ -2719,9 +2721,9 @@ Send   Recv    Send   Recv\n\
   /* the send buffer and the receive buffer should be the same buffer. */
   while ((!times_up) || (trans_remaining > 0)) {
     /* send the request */
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
     gettimeofday(&send_time,&dummy_zone);
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
     if(putmsg(send_descriptor,
 	      &sctl_message,
 	      &send_message,
@@ -2758,7 +2760,7 @@ Send   Recv    Send   Recv\n\
       fflush(where);
       exit(1);
     }
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
     gettimeofday(&recv_time,&dummy_zone);
     
     /* now we do some arithmatic on the two timevals */
@@ -2793,7 +2795,7 @@ Send   Recv    Send   Recv\n\
     
     /* now up the time index */
     time_index = (time_index +1)%MAX_KEPT_TIMES;
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
     nummessages++;          
     if (trans_remaining) {
       trans_remaining--;
@@ -2968,7 +2970,7 @@ Send   Recv    Send   Recv\n\
     /* UDP statistics, the alignments of the sends and receives */
     /* and all that sort of rot... */
     
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
     kept_times[MAX_KEPT_TIMES] = 0;
     time_index = 0;
     while (time_index < MAX_KEPT_TIMES) {
@@ -3789,4 +3791,4 @@ void
 }
 
 
-#endif /* DO_DLPI */
+#endif /* WANT_DLPI */

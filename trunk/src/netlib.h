@@ -1,6 +1,17 @@
 /*
-        Copyright (C) 1993-2003 Hewlett-Packard Company
+        Copyright (C) 1993-2005 Hewlett-Packard Company
 */
+
+#include <config.h>
+#if defined(HAVE_SYS_SOCKET_H)
+# include <sys/socket.h>
+#endif
+#if defined(HAVE_NETDB_H)
+# include <netdb.h>
+#endif
+#if !defined(HAVE_GETADDRINFO) || !defined(HAVE_GETNAMEINFO)
+# include "missing/getaddrinfo.h"
+#endif
 
 #define PAD_TIME 4
 /* library routine specifc defines                                      */
@@ -8,7 +19,7 @@
                                         /* can tests send...            */
 #define         MAXTIMES        4       /* how many times may we loop   */
                                         /* to calibrate                 */
-#define         MAXCPUS         64      /* how many CPU's can we track */
+#define         MAXCPUS         256     /* how many CPU's can we track */
 #define         MAXMESSAGESIZE  65536
 #define         MAXALIGNMENT    16384
 #define         MAXOFFSET        4096
@@ -168,6 +179,30 @@
 #define         DNS_RR_RESPONSE            401
 #define         DNS_RR_RESULTS             402
 
+#define         DO_SCTP_STREAM             500
+#define         SCTP_STREAM_RESPONSE       501
+#define         SCTP_STREAM_RESULT         502
+
+#define         DO_SCTP_STREAM_MANY        510
+#define         SCTP_STREAM_MANY_RESPONSE  511
+#define         SCTP_STREAM_MANY_RESULT    512
+
+#define         DO_SCTP_RR                 520
+#define         SCTP_RR_RESPONSE           521
+#define         SCTP_RR_RESULT             502
+
+#define         DO_SCTP_RR_MANY            530
+#define         SCTP_RR_MANY_RESPONSE      531
+#define         SCTP_RR_MANY_RESULT        532
+
+#if HAVE_INTTYPES_H
+# include <inttypes.h>
+#else
+# if HAVE_STDINT_H
+#  include <stdint.h>
+# endif
+#endif
+
 enum sock_buffer{
   SEND_BUFFER,
   RECV_BUFFER
@@ -203,38 +238,41 @@ struct ring_elt {
   char *buffer_ptr;       /* the aligned and offset pointer */
 };
 
-//+*+ SAF  Sorry about the hacks with errno; NT made me do it :(
-// WinNT does define an errno.
-// It is mostly a legacy from the XENIX days.
-// Depending upon the version of the C run time that is linked in,
-// it is either a simple variable (like UNIX code expects),
-// but more likely it is the address of a procedure to return the error number.
-// So any code that sets errno is likely to be overwriting the 
-// address of this procedure.
-// Worse, only a tiny fraction of NT's errors get set through errno.
+/* +*+ SAF  Sorry about the hacks with errno; NT made me do it :(
 
-// So I have changed the netperf code to use a define Set_errno when that
-// is it's intent.  On non-windows platforms this is just an assignment to errno.
-// But on NT this calls SetLastError.
+ WinNT does define an errno.
+ It is mostly a legacy from the XENIX days.
 
-// I also define errno (now only used on right side of assignments)
-// on NT to be GetLastError.
+ Depending upon the version of the C run time that is linked in, it is
+ either a simple variable (like UNIX code expects), but more likely it
+ is the address of a procedure to return the error number.  So any
+ code that sets errno is likely to be overwriting the address of this
+ procedure.  Worse, only a tiny fraction of NT's errors get set
+ through errno.
 
-// Similarly, perror is defined on NT, but it only accesses the same XENIX errors
-// that errno covers.  So on NT this is redefined to be Perror and it expands
-// all GetLastError texts.
+ So I have changed the netperf code to use a define Set_errno when
+ that is it's intent.  On non-windows platforms this is just an
+ assignment to errno.  But on NT this calls SetLastError.
+
+ I also define errno (now only used on right side of assignments)
+ on NT to be GetLastError.
+
+ Similarly, perror is defined on NT, but it only accesses the same
+ XENIX errors that errno covers.  So on NT this is redefined to be
+ Perror and it expands all GetLastError texts. */
+
 
 #ifdef WIN32
-// INVALID_SOCKET == INVALID_HANDLE_VALUE == (unsigned int)(~0)
-// SOCKET_ERROR == -1
+/* INVALID_SOCKET == INVALID_HANDLE_VALUE == (unsigned int)(~0) */
+/* SOCKET_ERROR == -1 */
 #define ENOTSOCK WSAENOTSOCK
 #define EINTR    WSAEINTR
 #define ENOBUFS  WSAENOBUFS
 #define EWOULDBLOCK    WSAEWOULDBLOCK
 
 #ifdef errno
-// delete the one from stdlib.h 
-//#define errno       (*_errno())
+/* delete the one from stdlib.h  */
+/*#define errno       (*_errno()) */
 #undef errno
 #endif
 #define errno GetLastError()
@@ -249,9 +287,9 @@ extern void PrintWin32Error(FILE *stream, LPSTR text);
 #define NT_PERF
 #endif
 #else
-// Really shouldn't use manifest constants!
-//+*+SAF There are other examples of "== -1" and "<0" that probably
-//+*+SAF should be cleaned up as well.
+/* Really shouldn't use manifest constants! */
+/*+*+SAF There are other examples of "== -1" and "<0" that probably */
+/*+*+SAF should be cleaned up as well. */
 #define INVALID_SOCKET -1
 #define SOCKET_ERROR -1
 
@@ -261,18 +299,32 @@ extern void PrintWin32Error(FILE *stream, LPSTR text);
 #define Print_errno(stream, text) fprintf((stream), "%s  errno %d\n", (text), errno)
 #endif
 
-// Robin & Rick's kludge to try to have a timer signal EINTR by closing 
-// the socket from another thread can also return several other errors.
-// Let's define a macro to hide all of this.
+/* Robin & Rick's kludge to try to have a timer signal EINTR by closing  */
+/* the socket from another thread can also return several other errors. */
+/* Let's define a macro to hide all of this. */
 
 #ifndef WIN32
 #define SOCKET_EINTR(return_value) (errno == EINTR)
+#define SOCKET_EADDRINUSE(return_value) (errno == EADDRINUSE)
+#define SOCKET_EADDRNOTAVAIL(return_value) (errno == EADDRNOTAVAIL)
+
 #else
+
+/* not quite sure I like the extra cases for WIN32 but that is what my
+   WIN32 expert sugested.  I'm not sure what WSA's to put for
+   EADDRINUSE */
+
 #define SOCKET_EINTR(return_value) \
 		(((return_value) == SOCKET_ERROR) && \
 	     ((errno == EINTR) || \
 	      (errno == WSAECONNABORTED) || \
 	      (errno == WSAECONNRESET) ))
+#define SOCKET_EADDRINUSE(return_value) \
+		(((return_value) == SOCKET_ERROR) && \
+	     ((errno == EADDRINUSE) ))
+#define SOCKET_EADDRNOTAVAIL(return_value) \
+		(((return_value) == SOCKET_ERROR) && \
+	     ((errno == EADDRNOTAVAIL) ))
 #endif
 
 #ifdef HAVE_SENDFILE
@@ -312,6 +364,7 @@ struct sendfile_ring_elt {
 #define PROC_STAT       8
 #define SYSCTL          9
 #define PERFSTAT       10
+#define KSTAT_10       11
 
 #define BADCH ('?')
 
@@ -332,9 +385,25 @@ extern int optopt;		/* */
 extern  SOCKET     win_kludge_socket;
 #endif /* WIN32 */
 
-extern  int   proc_affinity;
+extern  int   local_proc_affinity, remote_proc_affinity;
+
+/* these are to allow netperf to be run easily through those evil,
+   end-to-end breaking things known as firewalls */
+extern char local_data_port[10];
+extern char remote_data_port[10];
+
+extern char *local_data_address;
+extern char *remote_data_address;
+
+extern int local_data_family;
+extern int remote_data_family;
+
 extern  union netperf_request_struct netperf_request;
 extern  union netperf_response_struct netperf_response;
+
+extern  float    lib_local_cpu_util;
+extern  float    lib_elapsed;
+extern  float    lib_local_maxrate;
 
 extern  char    libfmt;
 
@@ -347,8 +416,14 @@ extern  int     loops_per_msec;
 extern  float   lib_local_per_cpu_util[];
   
 extern  void    netlib_init();
+extern  int     netlib_get_page_size();
 extern  void    install_signal_catchers();
-extern  void    establish_control(char hostname[], short int port);
+extern  void    establish_control(char hostname[], 
+				  char port[], 
+				  int af,
+				  char local_hostname[],
+				  char local_port[],
+				  int local_af);
 extern  void    shutdown_control();
 extern  void    init_stat();
 extern  void    send_request();
@@ -356,6 +431,8 @@ extern  void    recv_response();
 extern  void    send_response();
 extern  void    recv_request();
 extern  void    dump_request();
+extern  void    dump_addrinfo(FILE *dumploc, struct addrinfo *info,
+			      char *host, char *port, int family);
 extern  void    start_timer(int time);
 extern  void    stop_timer();
 extern  void    cpu_start(int measure_cpu);
@@ -380,18 +457,26 @@ extern  void    set_sock_buffer(int sd,
 				int *effective_sizep);
 extern  char   *format_units();
 
+extern  char    *inet_ftos(int family);
+extern  char    *inet_ttos(int type);
+extern  char    *inet_ptos(int protocol);
 extern  double  ntohd(double net_double);
 extern  double  htond(double host_double);
+extern  int     inet_nton(int af, const void *src, char *dst, int cnt);
 extern  void    libmain();
 extern  double  calc_thruput(double units_received);
+extern  double  calc_thruput_interval(double units_received,double elapsed);
 extern  float   calibrate_local_cpu(float local_cpu_rate);
 extern  float   calibrate_remote_cpu();
+extern  void    bind_to_specific_processor(int processor_affinity);
 #ifndef WIN32
-// WIN32 requires that at least one of the file sets to select be non-null.
-// Since msec_sleep routine is only called by nettest_dlpi & nettest_unix, 
-// let's duck this issue.
+
+/* WIN32 requires that at least one of the file sets to select be
+ non-null.  Since msec_sleep routine is only called by nettest_dlpi &
+ nettest_unix, let's duck this issue. */
+
 extern int msec_sleep( int msecs );
-#endif  // WIN32
+#endif  /* WIN32 */
 extern  float   calc_cpu_util(float elapsed_time);
 extern  float	calc_service_demand(double units_sent,
 			  float elapsed_time,
@@ -403,6 +488,9 @@ extern  void    catcher(int, siginfo_t *,void *);
 extern  void    catcher(int);
 #endif /* __hpux */
 extern  struct ring_elt *allocate_buffer_ring();
+#ifdef HAVE_ICSC_EXS
+extern  struct ring_elt *allocate_exs_buffer_ring();
+#endif /* HAVE_ICSC_EXS */
 #ifdef HAVE_SENDFILE
 extern  struct sendfile_ring_elt *alloc_sendfile_buf_ring();
 #endif /* HAVE_SENDFILE */
@@ -425,16 +513,18 @@ extern double confidence;
 
 #ifdef WIN32
 #if 0
-// Should really use safe string functions; but not for now...
+/* Should really use safe string functions; but not for now... */
 #include <strsafe.h>
-// Microsoft has deprecated _snprintf; it isn't guarenteed to null terminate the result buffer.
-// They want us to call StringCbPrintf instead; it always null terminates the string.
+/* Microsoft has deprecated _snprintf; it isn't guarenteed to null terminate the result buffer. */
+/* They want us to call StringCbPrintf instead; it always null terminates the string. */
 #endif
 
 #define snprintf _snprintf
 #endif
 
-// Define a macro to align a buffer with an offset from a power of 2 boundary.
+/* Define a macro to align a buffer with an offset from a power of 2
+   boundary. */
+
 #ifndef WIN32
 #define ULONG_PTR unsigned long
 #endif
@@ -469,3 +559,7 @@ extern double confidence;
 #ifndef HAVE_MIN
 #define min(a,b) ((a < b) ? a : b)
 #endif /* HAVE_MIN */
+
+#ifdef USE_PERFSTAT
+# include <libperfstat.h>
+#endif

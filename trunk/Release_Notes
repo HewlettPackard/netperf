@@ -1,3 +1,209 @@
+These are the Release Notes for Revision 2.4.0 of netperf:
+
+Things changed in this release:
+
+*) Netperf has been converted to use a configure script.  Yes boys and
+   girls, after 12 years of distributing netperf with just a makefile
+   I have finally bitten the bullet and cast my fate to autoconf,
+   automake, etc.  To get the most basic netperf built all you should
+   need to do is:
+
+   cd to the netperf directory
+   ./configure
+   make
+   and perhaps
+   make install
+
+   (Note, I've not done much with make install - I'm hemming and
+   hawing over what the default installation location should be)
+
+   Please keep in mind that this is the first time I've tried to use
+   autoconf et al. I am sure there are things that should be done
+   differently and would welcome any and all constructive criticisms.
+
+   I suspect there are several places where I've not fully
+   demonstrated being of the autoconf body - particulary as pertains
+   to include files being in "#if mumble #endif" blocks.  Fixes would
+   be most welcome.
+
+*) Speaking of becomming one with various GNU tools, work on a new
+   netperf manual has begun, with the source being a texinfo document
+   that is converted to "all" the other formats.  This resides in doc/
+   .
+
+*) The platform-specific parts of CPU utilization measurement have
+   been broken-out into separate .c files and selected at configure
+   time a la the pcap_mumble files of tcpdump.  This makes
+   src/netlib.c _much_ easier to read and the addition of new CPU
+   utilization mechanisms much easier.
+
+*) New HP-UX 11.23 and Solaris 10 CPU utilization measurement
+   mechanisms (called pstatnew and kstat10 respectively) need no
+   calibration step.  Both have variations on microstate accounting.
+   HP-UX 11.23 still identifies the method in the headers as 'P' for
+   pstat.  The kstat10 method is identified as 'M' for Microstate.
+
+   Scripts which make calibration runs with LOC_CPU and REM_CPU may
+   continue to do so, they will just run forty to eighty seconds
+   faster on platforms with the calibration-free CPU util mechanisms.
+
+*) Automatic detection of CPU utilization mechanism for HP-UX, Linux,
+   AIX, *BSD and Solaris.  If you do not like what the configure
+   script selects, you can use --enable-cpuutil=<foo> .
+
+*) The "times" (aka 'T') CPU utilization mechanism has been removed.
+   It was never very accurate at all, only showing CPU time charged to
+   the process, and with interrupts and other network processing it is
+   rarely chaged to a or the correct process.  It and other methods
+   may remain in the format_cpu_method() routine of src/netlib.c for
+   historical purposes only.
+
+*) CAVEAT - the "kstat" mechanism is KNOWN TO BE BOGUS for Solaris.
+   It does not include time spent processing interrupts, and
+   networking benchmarks will generate at least a few of those...
+   This affects _ALL_ versions of Solaris with kstat.
+
+   So, do NOT trust any CPU util figures where netperf says the method
+   was 'K' for kstat - unless perhaps it reports 100% CPU util.
+
+   Solaris 10 takes a step in the right direction adding microstate
+   accounting similar to what netperf uses on HP-UX 11.23.  HOWEVER,
+   Solaris 10's accounting for user/kernel/idle is done in _parallel_
+   with interrupt, which means they overlap. Doubleplusungood. Netperf
+   attempts to compensate for that with some handwaving
+   (src/netcpu_kstat10.c)
+
+*) Initial support for SCTP has been added with the SCTP_STREAM and
+   SCTP_RR tests.  These tests use the libsctp mechanisms for
+   increased portability.  It has been explained that libsctp should
+   not impart all that much overhead and it does make things rather
+   simpler.
+
+*) Netperf now uses getaddrinfo() to resolve hostnames and IP
+   addresses. A replacement getaddrinfo() is provided for those
+   platforms where the configure script cannot tell that getaddrinfo
+   is present.   
+
+   There are cases where a host's getaddrinfo call may return results
+   that ignore the hints for protocol.  Netperf catches these and
+   reports a warning so you can pester your OS source for fixes.
+
+   Solaris getaddrinfo() seems to return results with SCTP procotol
+   cleared.
+
+   Mac OS X getaddrinfo botches when the service/port is specified as
+   "0" so one must specify a port number on the netperf command line.
+
+   AIX 5.something getaddrinfo has a different but similar problem
+   with "0" as a port/service name as well.
+
+   Linux 2.6 and HP-UX 11i getaddrinfo seem to be fine - at least as
+   far as netperf goes :)
+
+*) A "Demo Mode" has been added to the main BSD Sockets/TCP/UDP tests:
+   TCP_STREAM, TCP_MAERTS, TCP_SENDFILE, TCP_RR, TCP_CC, TCP_CRR and
+   UDP_RR. It has not been added to UDP_STREAM.  This mode is enabled
+   with --enable-demo when configuring netperf, which activates a
+   global "-D" option.  By default, -D will cause interim results
+   (throughput or transactions/s only, not CPU util) from the
+   netperf's perspective to be emitted no sooner than once per second.
+   An optional parameter can specify another interval in units
+   (floating point) of seconds:
+
+      -D 1.5
+
+   will make the reporting interval at least 1.5 seconds.
+
+   This mode makes no use of explicit interval timers since that can
+   be so, well fun on different platforms.  Instead, an initial guess
+   of how many units of work must be done to consume the desired
+   reporting interval is made, and that guess is refined throughout
+   the entire test.  If something happens to dramatically slow-down
+   the test, the reproting interval may become must larger for a few
+   intervals.  When things speed-up it is detected very quickly.  As
+   with the --enable-historgram support, if gethrtime() is available
+   on the platform, it will be used in lieu of gettimeofday().  In any
+   case, the number of calls to gettimeofday()/gethrtime() is much,
+   Much, MUCH smaller than for --enable-histogram so while there may
+   be a measurable effect on the results, it should be rather small.
+
+*) The global -H option has been enhanced to take an optional address
+   family specification for the control connection:
+
+   -H <remote>,<family>
+
+   Unlike other comma-separated options, where specifying only one
+   thing will set both, here specifying only one thing will be
+   ass-u-me-d to be the <remote> and will leave <family> defaulted
+   (AF_UNSPEC).   Family can be specified as "4" or "inet" for
+   AF_INET, "6" or "inet6" for AF_INET6.
+
+*) A new global -L option has been added to specify the local name/IP
+   and/or address family for the control connection:
+
+   -L <local>,<family>
+
+   Unlike other comma-separated options, where specifying only one
+   thing will set both, here specifying only one thing will be
+   ass-u-me-d to be the <local> and will leave <family> defaulted
+   (AF_UNSPEC).  Family can be specified as "4" or "inet" for
+   AF_INET, "6" or "inet6" for AF_INET6.
+
+*) Test-specific -H and -L options are present for the TCP, UDP and
+   SCTP tests, which are now (intended to be) IP protocol version
+   agnostic.
+
+*) Global -4 and -6 options will set the both the local and remote
+   address family to either AF_INET or AF_INET6 respectively.
+
+*) Test-specific -4 and -6 options have been added for TCP, UDP and
+   SCTP tests.
+
+*) Since the basic TCP UDP and SCTP tests are no longer IPv4-only, the
+   nettest_ipv6.[ch] files are only included in the source
+   distribution for historical interest.
+
+*) The main test banners for the TCP, UDP and SCTP tests have been
+   enhanced to give both local and remote addressing information for
+   the data connection.
+
+*) Compilation under Windows is likely FUBAR at this point.  I _hope_
+   to start trying to do builds under the DDK soon, but am not sure
+   when I'll be able to start.  Any and all assistance you can give
+   there would be most welcome.
+
+*) Various and sundry fixes.  TCP_RR should no longer go into an
+   infinite loop when you abort netperf.  I'm sure there are others.
+
+*) Unix domain socket tests are compiled-in with --enable-unix=yes at
+   configure time.
+
+*) DLPI tests are compiled-in with --enable-dlpi=yes at configure
+   time.
+
+*) XTI tests are compiled-in with --enable-xti=yes at configure time. 
+
+Things not changed in this release:
+
+*) Seems like everything has changed :)
+
+These are the Release Notes for Revision 2.3pl2 of netperf:
+
+Things changed in this release
+
+*) One can bind netperf or netserver to specific CPUs with the -T
+   option. This is a generalization of some HP-UX and netserver specific
+   work from 2.3pl1.
+
+*) Extend the kludge to workaround the Linux setsockopt/getsockopt
+   bizzarreness to the socket buffer sizes for the remote side in
+   addition to the local side.
+
+*) Fix the lack of initialization of times_up in recv_tcp_maerts()
+   that caused confidence intervals to fail miserably.
+
+*) Other misc fixes - than you to all of you who sent them.
+
 These are the Release Notes for revision 2.3pl1 of netperf:
 
 Things changed in this release
