@@ -5,7 +5,7 @@
 #endif /* lint */
 #ifdef DO_UNIX
 char	nettest_unix_id[]="\
-@(#)nettest_unix.c (c) Copyright 1994-2004 Hewlett-Packard Co. Version 2.2pl5";
+@(#)nettest_unix.c (c) Copyright 1994-2004 Hewlett-Packard Co. Version 2.3";
      
 /****************************************************************/
 /*								*/
@@ -51,6 +51,7 @@ char	nettest_unix_id[]="\
 #endif /* WIN32 */
 #include <string.h>
 #include <time.h>
+#include <sys/time.h>
 #if ! defined(__bsdi__) && ! defined(_APPLE_)
 #include <malloc.h>
 #else
@@ -74,6 +75,8 @@ static char
 static int	
   rss_size,		/* remote socket send buffer size	*/
   rsr_size,		/* remote socket recv buffer size	*/
+  lss_size_req,		/* requested local socket send buffer size */
+  lsr_size_req,		/* requested local socket recv buffer size */
   lss_size,		/* local  socket send buffer size 	*/
   lsr_size,		/* local  socket recv buffer size 	*/
   req_size = 1,		/* request size                   	*/
@@ -110,6 +113,8 @@ init_test_vars()
 {
   rss_size  = 0;
   rsr_size  = 0;
+  lss_size_req = 0;
+  lsr_size_req = 0;
   lss_size  = 0;
   lsr_size  = 0;
   req_size  = 1;
@@ -166,82 +171,8 @@ create_unix_socket(int family, int type)
   /* their values are. If we cannot touch the socket buffer in any way, */
   /* we will set the values to -1 to indicate that.  */
   
-#ifdef SO_SNDBUF
-  if (lss_size > 0) {
-    if(setsockopt(temp_socket, SOL_SOCKET, SO_SNDBUF,
-		  (char *)&lss_size, sizeof(int)) == SOCKET_ERROR) {
-      fprintf(where,
-	      "netperf: create_unix_socket: SO_SNDBUF option: errno %d\n",
-	      errno);
-      fflush(where);
-      exit(1);
-    }
-    if (debug > 1) {
-      fprintf(where,
-	      "netperf: create_unix_socket: SO_SNDBUF of %d requested.\n",
-	      lss_size);
-      fflush(where);
-    }
-  }
-  if (lsr_size > 0) {
-    if(setsockopt(temp_socket, SOL_SOCKET, SO_RCVBUF,
-		  (char *)&lsr_size, sizeof(int)) == SOCKET_ERROR) {
-      fprintf(where,
-	      "netperf: create_unix_socket: SO_RCVBUF option: errno %d\n",
-	      errno);
-      fflush(where);
-      exit(1);
-    }
-    if (debug > 1) {
-      fprintf(where,
-	      "netperf: create_unix_socket: SO_SNDBUF of %d requested.\n",
-	      lss_size);
-      fflush(where);
-    }
-  }
-  
-  
-  /* Now, we will find-out what the size actually became, and report */
-  /* that back to the user. If the call fails, we will just report a -1 */
-  /* back to the initiator for the recv buffer size. */
-  
-  sock_opt_len = sizeof(int);
-  if (getsockopt(temp_socket,
-		 SOL_SOCKET,	
-		 SO_SNDBUF,
-		 (char *)&lss_size,
-		 &sock_opt_len) == SOCKET_ERROR) {
-    fprintf(where,
-	    "netperf: create_unix_socket: getsockopt SO_SNDBUF: errno %d\n",
-	    errno);
-    fflush(where);
-    lss_size = -1;
-  }
-  if (getsockopt(temp_socket,
-		 SOL_SOCKET,	
-		 SO_RCVBUF,
-		 (char *)&lsr_size,
-		 &sock_opt_len) == SOCKET_ERROR) {
-    fprintf(where,
-	    "netperf: create_unix_socket: getsockopt SO_SNDBUF: errno %d\n",
-	    errno);
-    fflush(where);
-    lsr_size = -1;
-  }
-  
-  if (debug) {
-    fprintf(where,"netperf: create_unix_socket: socket sizes determined...\n");
-    fprintf(where,"                       send: %d recv: %d\n",
-	    lss_size,lsr_size);
-    fflush(where);
-  }
-  
-#else /* SO_SNDBUF */
-  
-  lss_size = -1;
-  lsr_size = -1;
-  
-#endif /* SO_SNDBUF */
+  set_sock_buffer(temp_socket, SEND_BUFFER, lss_size_req, &lss_size);
+  set_sock_buffer(temp_socket, RECV_BUFFER, lsr_size_req, &lsr_size);
 
   return(temp_socket);
 
@@ -851,8 +782,8 @@ recv_stream_stream()
   /* variables, so set the globals based on the values in the request. */
   /* once the socket has been created, we will set the response values */
   /* based on the updated value of those globals. raj 7/94 */
-  lss_size = stream_stream_request->send_buf_size;
-  lsr_size = stream_stream_request->recv_buf_size;
+  lss_size_req = stream_stream_request->send_buf_size;
+  lsr_size_req = stream_stream_request->recv_buf_size;
 
   s_listen = create_unix_socket(AF_UNIX,
 				SOCK_STREAM);
@@ -2894,8 +2825,8 @@ recv_dg_rr()
   /* variables, so set the globals based on the values in the request. */
   /* once the socket has been created, we will set the response values */
   /* based on the updated value of those globals. raj 7/94 */
-  lss_size = dg_rr_request->send_buf_size;
-  lsr_size = dg_rr_request->recv_buf_size;
+  lss_size_req = dg_rr_request->send_buf_size;
+  lsr_size_req = dg_rr_request->recv_buf_size;
 
   s_data = create_unix_socket(AF_UNIX,
 			      SOCK_DGRAM);
@@ -3182,8 +3113,8 @@ recv_stream_rr()
   /* variables, so set the globals based on the values in the request. */
   /* once the socket has been created, we will set the response values */
   /* based on the updated value of those globals. raj 7/94 */
-  lss_size = stream_rr_request->send_buf_size;
-  lsr_size = stream_rr_request->recv_buf_size;
+  lss_size_req = stream_rr_request->send_buf_size;
+  lsr_size_req = stream_rr_request->recv_buf_size;
   
   s_listen = create_unix_socket(AF_UNIX,
 				SOCK_STREAM);
@@ -3446,9 +3377,9 @@ scan_unix_args(int argc, char *argv[])
       /* set local socket sizes */
       break_args(optarg,arg1,arg2);
       if (arg1[0])
-	lss_size = atoi(arg1);
+	lss_size_req = atoi(arg1);
       if (arg2[0])
-	lsr_size = atoi(arg2);
+	lsr_size_req = atoi(arg2);
       break;
     case 'S':
       /* set remote socket sizes */

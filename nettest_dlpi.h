@@ -144,6 +144,7 @@ struct	dlpi_cl_stream_results_struct {
   int	bytes_received;
   float	elapsed_time;
   float	cpu_util;
+  int   num_cpus;
 };
 
 

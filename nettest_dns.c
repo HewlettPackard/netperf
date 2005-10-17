@@ -1,7 +1,7 @@
 #ifdef DO_DNS
 #ifndef lint
 char	nettest_dns_id[]="\
-@(#)nettest_dns.c (c) Copyright 1997,2004 Hewlett-Packard Co. Version 2.2pl5";
+@(#)nettest_dns.c (c) Copyright 1997,2004 Hewlett-Packard Co. Version 2.2pl6";
 #else
 #define DIRTY
 #define HISTOGRAM
@@ -95,8 +95,13 @@ static  char  request_file[1024];
 static  unsigned int dns_server_addr = INADDR_ANY;
 
 #ifdef HISTOGRAM
+#ifdef HAVE_GETHRTIME
+hrtime_t time_one;
+hrtime_t time_two;
+#else
 static struct timeval time_one;
 static struct timeval time_two;
+#endif /* HAVE_GETHRTIME */
 static HIST time_hist;
 #endif /* HISTOGRAM */
 
@@ -409,7 +414,7 @@ secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\n";
 #ifdef HISTOGRAM
       /* timestamp just before our call to  gethostbyname or */
       /* gethostbyaddr, and then again just  after the call. raj 7/97 */
-      gettimeofday(&time_one,NULL);
+      HIST_timestamp(&time_one);
 #endif /* HISTOGRAM */
       
       /* until we implement the file, just request a fixed name. the */
@@ -433,7 +438,7 @@ secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\n";
       }
 
 #ifdef HISTOGRAM
-      gettimeofday(&time_two,NULL);
+      HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
 #endif /* HISTOGRAM */
 #ifdef INTERVALS      

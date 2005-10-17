@@ -14,8 +14,8 @@ is a benchmark that can be used to measure various aspects of
 networking performance.
 Currently, its focus is on bulk data transfer and request/response
 performance using either TCP or UDP, and the Berkeley Sockets
-interface. In addition, tests for DLPI, the Fore ATM API, Unix Domain
-Sockets, and HP HiPPI LLA may be conditionally compiled-in.
+interface. In addition, tests for DLPI, and Unix Domain
+Sockets, tests for IPv6 may be conditionally compiled-in.
 
 .SS GLOBAL OPTIONS
 
@@ -41,7 +41,7 @@ Increase the quantity of debugging output displayed during
 a test (possibly at the expense of performance).
 .TP
 .B \-f GMKgmk
-Change the units of measure for stream tests. Capital letters are
+Change the units of measure for *_STREAM tests. Capital letters are
 powers of two, lowercase are powers of ten.
 .TP
 .B \-F fill_file
@@ -72,8 +72,7 @@ or the number of bytes for a stream test.
 .TP
 .B \-n numcpus
 Specify the number of CPU's in the system on those systems for which
-netperf has no way to find the number of CPU's programatically. (all
-but HP-UX)
+netperf has no way to find the number of CPU's programatically. 
 .TP
 .B \-o sizespec
 Set an offset from the alignment specified with -a.
@@ -96,6 +95,7 @@ Valid testnames are (but not always compiled-in):
 .RS
 .nf
 .I TCP_STREAM
+.I TCP_MAERTS
 .I TCP_RR
 .I TCP_CRR
 .I UDP_STREAM
@@ -113,10 +113,6 @@ Valid testnames are (but not always compiled-in):
 .I STREAM_RR
 .I DG_STREAM
 .I DG_RR
-.I FORE_STREAM
-.I FORE_RR
-.I HIPPI_STREAM
-.I HIPPI_RR
 .I LOC_CPU
 .I REM_CPU
 .fi
@@ -137,8 +133,9 @@ Display a usage string based on the test name set with -t, and exit.
 
 Please consult the netperf manual
 .I 
-Netperf: A Network Performance Benchamrk 
-(netperf.ps) for more information.
+Netperf: A Network Performance Benchmark 
+(netperf.ps) for more information. Or you can join and mail to 
+netperf-talk@netperf.org.
 
 .SH BUGS 
 There is a fairly large list of known defects and misfeatures in the
@@ -151,7 +148,7 @@ Jones <raj@cup.hp.com>.
 .I
 Netperf: A Network Performance Benchmark
 .br
-http://www.cup.hp.com/netperf/NetperfPage.html
+http://www.netperf.org/
 
 .SH AUTHORS
 HP Information Networks Division - Networking Performance Team.

@@ -27,8 +27,7 @@ Display a usage string, and exit.
 .TP
 .B \-n numcpus
 Specify the number of CPU's in the system on those systems for which
-netperf has no way to find the number of CPU's programatically. (all
-but HP-UX)
+netperf has no way to find the number of CPU's programatically. 
 .TP
 .B \-p portnum
 Listen on the specified port.
@@ -43,7 +42,7 @@ No known bugs at this time. If you think you have found a bug, please send email
 .I
 Netperf: A Network Performance Benchmark
 .br
-http://www.cup.hp.com/netperf/NetperfPage.html
+http://www.netperf.org/
 
 .SH AUTHORS
 HP Information Networks Division - Networking Performance Team.

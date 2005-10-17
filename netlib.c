@@ -2,7 +2,7 @@
 #error you must first edit and customize the makefile to your platform
 #endif /* NEED_MAKEFILE_EDIT */
 char    netlib_id[]="\
-@(#)netlib.c (c) Copyright 1993-2003 Hewlett-Packard Company. Version 2.2pl5";
+@(#)netlib.c (c) Copyright 1993-2004 Hewlett-Packard Company. Version 2.3";
 
 /****************************************************************/
 /*                                                              */
@@ -79,6 +79,7 @@ char    netlib_id[]="\
 #include <sys/stat.h>
 #include <sys/times.h>
 #ifndef MPE
+#include <time.h>
 #include <sys/time.h>
 #endif /* MPE */
 #include <sys/socket.h>
@@ -2799,6 +2800,55 @@ fprintf(where,"hello world\n");
 fprintf(where,"debug: %d\n",debug);
 }
 
+
+void
+set_sock_buffer (int sd, enum sock_buffer which, int requested_size, int *effective_sizep)
+{
+#ifdef SO_SNDBUF
+  int optname = (which == SEND_BUFFER) ? SO_SNDBUF : SO_RCVBUF;
+  int sock_opt_len;
+
+  if (requested_size > 0) {
+    if (setsockopt(sd, SOL_SOCKET, optname,
+		   (char *)&requested_size, sizeof(int)) < 0) {
+      fprintf(where, "netperf: set_sock_buffer: %s option: errno %d\n",
+	      (which == SEND_BUFFER) ? "SO_SNDBUF" : "SO_RCVBUF",
+	      errno);
+      fflush(where);
+      exit(1);
+    }
+    if (debug > 1) {
+      fprintf(where, "netperf: set_sock_buffer: %s of %d requested.\n",
+	      (which == SEND_BUFFER) ? "SO_SNDBUF" : "SO_RCVBUF",
+	      requested_size);
+      fflush(where);
+    }
+  }
+
+  /* Now, we will find-out what the size actually became, and report */
+  /* that back to the user. If the call fails, we will just report a -1 */
+  /* back to the initiator for the recv buffer size. */
+
+  sock_opt_len = sizeof(int);
+  if (getsockopt(sd, SOL_SOCKET, optname, (char *)effective_sizep,
+		 &sock_opt_len) < 0) {
+    fprintf(where, "netperf: set_sock_buffer: getsockopt %s: errno %d\n",
+	    (which == SEND_BUFFER) ? "SO_SNDBUF" : "SO_RCVBUF", errno);
+    fflush(where);
+    *effective_sizep = -1;
+  }
+
+  if (debug) {
+    fprintf(where, "netperf: set_sock_buffer: "
+	    "%s socket size determined to be %d\n",
+	    (which == SEND_BUFFER) ? "send" : "receive", *effective_sizep);
+    fflush(where);
+  }
+#else /* SO_SNDBUF */
+  *effective_size = -1;
+#endif /* SO_SNDBUF */
+}
+
 /****************************************************************/
 /*                                                              */
 /*      establish_control()                                     */
@@ -2852,7 +2902,7 @@ establish_control(char hostname[], short int port)
   hints.ai_family = af;
   hints.ai_socktype = SOCK_STREAM;
   hints.ai_flags = AI_PASSIVE;
-  if (getaddrinfo(hostname, pbuf, &hints, &res) > 0) {
+  if (getaddrinfo(hostname, pbuf, &hints, &res) != 0) {
       fprintf(where,
               "establish_control: could not resolve the destination %s\n",
               hostname);
@@ -4166,7 +4216,9 @@ msec_sleep( int msecs )
 
    Given a time difference in microseconds, increment one of 61
    different buckets: 
-   
+
+   0 - 9 in increments of 1 usec
+   0 - 9 in increments of 10 usecs
    0 - 9 in increments of 100 usecs
    1 - 9 in increments of 1 msec
    1 - 9 in increments of 10 msecs
@@ -4181,13 +4233,15 @@ msec_sleep( int msecs )
    request-response latencies).
    
    Colin Low  10/6/93
+   Rick Jones 2004-06-15 extend to unit and ten usecs
 */
 
 /* #include "sys.h" */
 
 /*#define HIST_TEST*/
 
-HIST HIST_new(void){
+HIST 
+HIST_new(void){
    HIST h;
    if((h = (HIST) malloc(sizeof(struct histogram_struct))) == NULL) {
      perror("HIST_new - malloc failed");
@@ -4197,10 +4251,13 @@ HIST HIST_new(void){
    return h;
 }
 
-void HIST_clear(HIST h){
+void 
+HIST_clear(HIST h){
    int i;
    for(i = 0; i < 10; i++){
-      h->tenth_msec[i] = 0;
+      h->unit_usec[i] = 0;
+      h->ten_usec[i] = 0;
+      h->hundred_usec[i] = 0;
       h->unit_msec[i] = 0;
       h->ten_msec[i] = 0;
       h->hundred_msec[i] = 0;
@@ -4211,46 +4268,72 @@ void HIST_clear(HIST h){
    h->total = 0;
 }
 
-void HIST_add(register HIST h, int time_delta){
+void 
+HIST_add(register HIST h, int time_delta){
    register int val;
    h->total++;
-   val = time_delta/100;
-   if(val <= 9) h->tenth_msec[val]++;
+   val = time_delta;
+   if(val <= 9) h->unit_usec[val]++;
    else {
-      val = val/10;
-      if(val <= 9) h->unit_msec[val]++;
-      else {
-         val = val/10;
-         if(val <= 9) h->ten_msec[val]++;
-         else {
-            val = val/10;
-            if(val <= 9) h->hundred_msec[val]++;
-            else {
+     val = val/10;
+     if(val <= 9) h->ten_usec[val]++;
+     else {
+       val = val/10;
+       if(val <= 9) h->hundred_usec[val]++;
+       else {
+	 val = val/10;
+	 if(val <= 9) h->unit_msec[val]++;
+	 else {
+	   val = val/10;
+	   if(val <= 9) h->ten_msec[val]++;
+	   else {
+	     val = val/10;
+	     if(val <= 9) h->hundred_msec[val]++;
+	     else {
                val = val/10;
                if(val <= 9) h->unit_sec[val]++;
                else {
-                   val = val/10;
-                   if(val <= 9) h->ten_sec[val]++;
-                   else h->ridiculous++;
+		 val = val/10;
+		 if(val <= 9) h->ten_sec[val]++;
+		 else h->ridiculous++;
                }
-            }
-         }
-      }
+	     }
+	   }
+	 }
+       }
+     }
    }
 }
 
 #define RB_printf printf
 
-void output_row(FILE *fd, char *title, int *row){
+void 
+output_row(FILE *fd, char *title, int *row){
    register int i;
    RB_printf("%s", title);
    for(i = 0; i < 10; i++) RB_printf(": %4d", row[i]);
    RB_printf("\n");
 }
 
+int
+sum_row(int *row) {
+  int sum;
+  int i;
+  for (i = 0; i < 10; i++) sum += row[i];
+  return(sum);
+}
 
-void HIST_report(HIST h){
-   output_row(stdout, "TENTH_MSEC    ", h->tenth_msec);
+void 
+HIST_report(HIST h){
+#ifndef OLD_HISTOGRAM
+   output_row(stdout, "UNIT_USEC     ", h->unit_usec);
+   output_row(stdout, "TEN_USEC      ", h->ten_usec);
+   output_row(stdout, "HUNDRED_USEC  ", h->hundred_usec);
+#else
+   h->hundred_usec[0] += sum_row(h->unit_usec);
+   h->hundred_usec[0] += sum_row(h->ten_usec);
+   output_row(stdout, "TENTH_MSEC    ", h->hundred_usec);
+#endif
    output_row(stdout, "UNIT_MSEC     ", h->unit_msec);
    output_row(stdout, "TEN_MSEC      ", h->ten_msec);
    output_row(stdout, "HUNDRED_MSEC  ", h->hundred_msec);
@@ -4258,6 +4341,31 @@ void HIST_report(HIST h){
    output_row(stdout, "TEN_SEC       ", h->ten_sec);
    RB_printf(">100_SECS: %d\n", h->ridiculous);
    RB_printf("HIST_TOTAL:      %d\n", h->total);
+}
+
+#ifdef HAVE_GETHRTIME
+
+void
+HIST_timestamp(hrtime_t *timestamp)
+{
+  *timestamp = gethrtime();
+}
+
+int
+delta_micro(hrtime_t *begin, hrtime_t *end)
+{
+  long nsecs;
+
+  nsecs = (*end) - (*begin);
+  return(nsecs/1000);
+}
+
+#else
+
+void
+HIST_timestamp(struct timeval *timestamp)
+{
+  gettimeofday(timestamp,NULL);
 }
 
  /* return the difference (in micro seconds) between two timeval */
@@ -4282,7 +4390,7 @@ delta_micro(struct timeval *begin,struct timeval *end)
   return(usecs);
 
 }
-
+#endif /* HAVE_GETHRTIME */
 #endif /* HISTOGRAM */
 
 #ifdef DO_DLPI

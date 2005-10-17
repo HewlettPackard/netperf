@@ -46,7 +46,7 @@
  
 */
 char	netserver_id[]="\
-@(#)netserver.c (c) Copyright 1993-2003 Hewlett-Packard Co. Version 2.2pl3";
+@(#)netserver.c (c) Copyright 1993-2004 Hewlett-Packard Co. Version 2.3";
 
  /***********************************************************************/
  /*									*/
