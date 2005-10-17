@@ -22,7 +22,7 @@
 
 #ifdef DO_DLPI
 char	nettest_dlpi_id[]="\
-@(#)nettest_dlpi.c (c) Copyright 1993,1995 Hewlett-Packard Co. Version 2.0";
+@(#)nettest_dlpi.c (c) Copyright 1993,1995 Hewlett-Packard Co. Version 2.0PL1";
 
 #include <sys/types.h>
 #include <fcntl.h>
@@ -74,7 +74,7 @@ char dlpi_usage[] = "\n\
 Usage: netperf [global options] -- [test options] \n\
 \n\
 CO/CL DLPI Test Options:\n\
-    -D devfile        Set the name of the DLPI device file\n\
+    -D dev[,dev]      Set the local/remote DLPI device file name\n\
     -h                Display this text\n\
     -M bytes          Set the recv size (DLCO_STREAM, DLCL_STREAM)\n\
     -m bytes          Set the send size (DLCO_STREAM, DLCL_STREAM)\n\

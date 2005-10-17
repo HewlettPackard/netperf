@@ -60,6 +60,12 @@ if [ $# -eq 1 ]; then
   REM_HOST=$1
 fi
 
+# at what port will netserver be waiting? If you decide to run
+# netserver at a differnet port than the default of 12865, then set
+# the value of PORT apropriately
+#PORT="-p some_other_portnum"
+PORT=""
+
 # How accurate we want the estimate of performance: 
 #      maximum and minimum test iterations (-i)
 #      confidence level (99 or 95) and interval (percent)
@@ -77,12 +83,12 @@ BITBUCKET="/dev/null"
 # and put the values into shell vars.
 
 case $LOC_CPU in
-\-c) LOC_RATE=`$NETHOME/netperf -t LOC_CPU`;;
+\-c) LOC_RATE=`$NETHOME/netperf $PORT -t LOC_CPU`;;
 *) LOC_RATE=""
 esac
 
 case $REM_CPU in
-\-C) REM_RATE=`$NETHOME/netperf -t REM_CPU -H $REM_HOST`;;
+\-C) REM_RATE=`$NETHOME/netperf $PORT -t REM_CPU -H $REM_HOST`;;
 *) REM_RATE=""
 esac
 
@@ -94,11 +100,11 @@ esac
 
 WARM_TIME="10"
 
-$NETHOME/netperf -l $WARM_TIME -t TCP_STREAM -H $REM_HOST -- \
+$NETHOME/netperf $PORT -l $WARM_TIME -t TCP_STREAM -H $REM_HOST -- \
   -s 32768 -S 32768 -m 4096 > ${BITBUCKET}
-$NETHOME/netperf -l $WARM_TIME -t TCP_STREAM -H $REM_HOST -- \
+$NETHOME/netperf $PORT -l $WARM_TIME -t TCP_STREAM -H $REM_HOST -- \
   -s 32768 -S 32768 -m 96 > ${BITBUCKET}
-$NETHOME/netperf -l $WARM_TIME -t TCP_RR -H $REM_HOST -- \
+$NETHOME/netperf $PORT -l $WARM_TIME -t TCP_RR -H $REM_HOST -- \
   -r 1,1 > ${BITBUCKET}
 
 # The warm-ups are complete, so perform the real tests first, the
@@ -108,11 +114,11 @@ $NETHOME/netperf -l $WARM_TIME -t TCP_RR -H $REM_HOST -- \
 echo
 echo ------------------------------------
 echo Testing with the following command line:
-echo $NETHOME/netperf -t TCP_STREAM -l $TIME -H $REM_HOST \
+echo $NETHOME/netperf $PORT -t TCP_STREAM -l $TIME -H $REM_HOST \
   $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
   -s 57344 -S 57344 -m 4096
 echo
-$NETHOME/netperf -t TCP_STREAM -l $TIME -H $REM_HOST \
+$NETHOME/netperf $PORT -t TCP_STREAM -l $TIME -H $REM_HOST \
   $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
   -s 57344 -S 57344 -m 4096
 echo
@@ -121,11 +127,11 @@ echo
 echo
 echo ------------------------------------
 echo Testing with the following command line:
-echo $NETHOME/netperf -t TCP_STREAM -l $TIME -H $REM_HOST \
+echo $NETHOME/netperf $PORT -t TCP_STREAM -l $TIME -H $REM_HOST \
  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
  -s 32768 -S 32768 -m 4096 
 echo
-$NETHOME/netperf -t TCP_STREAM -l $TIME -H $REM_HOST \
+$NETHOME/netperf $PORT -t TCP_STREAM -l $TIME -H $REM_HOST \
  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
  -s 32768 -S 32768 -m 4096 
 echo
@@ -134,11 +140,11 @@ echo
 echo
 echo ------------------------------------
 echo Testing with the following command line:
-echo $NETHOME/netperf -t UDP_STREAM -l $TIME -H $REM_HOST \
+echo $NETHOME/netperf $PORT -t UDP_STREAM -l $TIME -H $REM_HOST \
  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
  -s 32768 -S 32768 -m 4096
 echo
-$NETHOME/netperf -t UDP_STREAM -l $TIME -H $REM_HOST \
+$NETHOME/netperf $PORT -t UDP_STREAM -l $TIME -H $REM_HOST \
  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
  -s 32768 -S 32768 -m 4096
 echo
@@ -147,11 +153,11 @@ echo
 echo
 echo ------------------------------------
 echo Testing with the following command line:
-echo $NETHOME/netperf -t UDP_STREAM -l $TIME -H $REM_HOST \
+echo $NETHOME/netperf $PORT -t UDP_STREAM -l $TIME -H $REM_HOST \
  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
  -s 32768 -S 32768 -m 1024
 echo
-$NETHOME/netperf -t UDP_STREAM -l $TIME -H $REM_HOST \
+$NETHOME/netperf $PORT -t UDP_STREAM -l $TIME -H $REM_HOST \
  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
  -s 32768 -S 32768 -m 1024
 echo
@@ -160,11 +166,11 @@ echo
 echo
 echo ------------------------------------
 echo Testing with the following command line:
-echo $NETHOME/netperf -t TCP_RR -l $TIME -H $REM_HOST \
+echo $NETHOME/netperf $PORT -t TCP_RR -l $TIME -H $REM_HOST \
  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
  -r 1,1
 echo
-$NETHOME/netperf -t TCP_RR -l $TIME -H $REM_HOST \
+$NETHOME/netperf $PORT -t TCP_RR -l $TIME -H $REM_HOST \
  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
  -r 1,1
 echo
@@ -173,11 +179,11 @@ echo
 echo ------------------------------------
 echo Testing with the following command line:
 # a single-byte UDP_RR
-echo $NETHOME/netperf -t UDP_RR -l $TIME -H $REM_HOST \
+echo $NETHOME/netperf $PORT -t UDP_RR -l $TIME -H $REM_HOST \
  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
  -r 1,1
 echo
-$NETHOME/netperf -t UDP_RR -l $TIME -H $REM_HOST \
+$NETHOME/netperf $PORT -t UDP_RR -l $TIME -H $REM_HOST \
  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
  -r 1,1
 echo
@@ -186,12 +192,12 @@ echo
 echo
 echo ------------------------------------
 echo Testing with the following command line:
-echo $NETHOME/netperf -t UDP_RR -l $TIME -H $REM_HOST \
+echo $NETHOME/netperf $PORT -t UDP_RR -l $TIME -H $REM_HOST \
  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
  -r 516,4
 echo
-$NETHOME/netperf -t UDP_RR -l $TIME -H $REM_HOST \
- $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE #STATS_STUFF -- -r 516,4
+$NETHOME/netperf $PORT -t UDP_RR -l $TIME -H $REM_HOST \
+ $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- -r 516,4
 
 # and that's that
 echo

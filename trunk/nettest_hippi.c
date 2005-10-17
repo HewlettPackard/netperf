@@ -5,7 +5,7 @@
 #endif /* lint */
 #ifdef DO_HIPPI
 char	nettest_hippi[]="\
-@(#)nettest_hippi.c (c) Copyright 1994, 1995 Hewlett-Packard Co. Version 2.0";
+@(#)nettest_hippi.c (c) Copyright 1994, 1995 Hewlett-Packard Co. Version 2.0PL1";
      
 /****************************************************************/
 /*								*/

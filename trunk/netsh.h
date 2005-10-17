@@ -1,5 +1,5 @@
 /*
-        Copyright (C) 1993, Hewlett-Packard Company
+        Copyright (C) 1993,1995 Hewlett-Packard Company
 */
 
 /* libraried performance include file 				*/

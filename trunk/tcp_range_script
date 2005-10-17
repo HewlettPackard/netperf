@@ -34,11 +34,17 @@ if [ $# -eq 1 ]; then
   REM_HOST=$1
 fi
 
+# at what port will netserver be waiting? If you decide to run
+# netserver at a differnet port than the default of 12865, then set
+# the value of PORT apropriately
+#PORT="-p some_other_portnum"
+PORT=""
+
 # where is netperf, and are there any "constant" options such as 
 # the netserver port number
 #NETHOME=/usr/etc/net_perf
 NETHOME="."
-NETPERF=$NETHOME/netperf
+NETPERF=$NETHOME/netperf $PORT
 
 # How accurate we want the estimate of performance: 
 #      maximum and minimum test iterations (-i)
