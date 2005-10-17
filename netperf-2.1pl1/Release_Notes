@@ -1,0 +1,77 @@
+
+These are the Release Notes for the 2.1 revision of netperf:
+
+Things Changed in this release:
+
+*) The XTI (Version 2 of the spec) tests are now documented in the
+   manual. 
+
+*) The TCP_CRR (Connect Request/Response) test is now documented in
+   the manual, including a description of how it mimics the behaviour
+   of http (the protocol underlying the WWW).
+
+*) Support for for Windows NT 3.51 OS in the BSD Sockets tests (ok, so
+   they are really Winsock in that case :). Other test suites may be
+   ported as required/desired/appropriate. 
+
+*) Tests for TCP and UDP, using the IPv6 extensions to BSD sockets are
+   included in this release. They are included by adding -DUSE_IPv6 to
+   the makefile and recompiling.
+
+*) Support for a "long long" datatype should only be required for
+   -DUSE_PSTAT compilation which is an HP-UX only thing. The
+   *unbundled* HP compilers from at least "HP92453-01 A.09.61 HP C
+   Compiler" and later should have the required support. The bundled
+   compiler may not. GCC should work - check the archives listed in
+   the comp.sys.hp.hpux FAQ for copies. The FAQ is archived on
+   rtfm.mit.edu under the path pub/usenet/comp.sys.hp.hpux.
+
+*) A "proper" fix for double data type alignment has been included.
+
+*) A new script is included with this release which can be used to
+   measure aggregate TCP_RR performance (multiple, concurrent
+   instances of the TCP_RR test). A related use of this script would
+   be measuring MP scaling. A single-byte TCP_RR test is good for this
+   purpose for two reasons:
+
+      1) it excercises the control/protocol paths heavily without
+         using much in the way of data copies which may be easier to
+         scale.
+      2) most systems can easily saturate cards with bandwidth, but
+         not so easily with request/response
+
+   Of course, feedback on this is most welcome.
+
+*) When measuring CPU utilization, the units for service demand have
+   been changed from milliseconds (designated ms) of CPU per unit (KB
+   or Transaction) to microseconds (desginated us).
+
+*) For accurate reporting of service demand, netperf needs to know the
+   number of CPU's present on a system. On some systems (HP-UX), this
+   is automatic. For others (All), it is necessary to add a global "-n
+   <numcpu>" option to both netperf and netserver.
+
+   !! IF THIS IS LEFT-OUT CPU UTILIZATION AND SERVICE DEMAND FOR !!
+	     !! MULTI-PROCESSOR SYSTEMS WILL BE WRONG. !!
+
+   If you know of ways to programatically determine the number of
+   active CPUs on a system, please let the author Rick Jones
+   <raj@cup.hp.com> know.
+
+*) other things I've probably forgotten :)
+
+Things Not Changed in this release:
+
+*) The ancillary test suites are essentially unchanged - DLPI,
+   HiPPI/LLA, Unix Domain, and Fore ATM API. Unless there is much
+   interest expressed in these tests, 2.1 may be the last release in
+   which they are included. The order of retirement would likely be
+   Unix Domain, HiPPI/LLA, Fore ATM API, and then DLPI.
+
+Miscelaneous Comments:
+
+*) The -DUSE_LOOPER CPU utilization _seems_ to be nice and low-impact
+   on HP-UX, Digital Unix, and IRIX. It does not yet seem to be
+   low-impact on Solaris (I need an example of priocntl usage), AIX
+   (setpri only works if you are root), and NT (not sure of the
+   reason). Help with those problems would be most appreciated.
