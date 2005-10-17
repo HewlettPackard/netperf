@@ -41,6 +41,8 @@ struct	hippi_stream_results_struct {
   int	bytes_received;
   float	elapsed_time;
   float	cpu_util;
+  int   cpu_method;
+  int   num_cpus;
 };
 
 
@@ -83,5 +85,7 @@ struct hippi_rr_results_struct {
   float	elapsed_time;	/* how long the test ran */
   float	cpu_util;	/* -1 if not measured */
   float	serv_dem;	/* -1 if not measured */
+  int   cpu_method;
+  int   num_cpus;
 };
 

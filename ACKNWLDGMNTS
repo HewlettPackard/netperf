@@ -5,8 +5,8 @@ feel free to include an email address. I would like to apologize in
 advance to anyone I've forgotten to include.
 
 Rick Jones <raj@cup.hp.com>
-Initial packaging and release of netperf. "Editorial" continuity for
-subsequent releases
+Responsible for initial packaging and release of netperf and
+"editorial" continuity for subsequent releases. 
 
 Karen Choy
 Code to allow netserver to run as a standalone daemon. 
@@ -60,3 +60,10 @@ A bunch of clean-up for the *BSD OSes
 
 Serge Pachkovsky <ps@ocisgi7.unizh.ch>
 Code for low-priority soaker process for AIX and SGI
+
+The fine folks at Adaptec
+The initial port of netperf (1.9PL4) to Windows NT 3.51.
+
+Robin Callender <robin_callender@VNET.IBM.COM>
+The PPC binaries for the 1.9PL4 port of netperf to NT and for assorted
+code clean-ups and help with CPU utilization measurements.

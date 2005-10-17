@@ -43,10 +43,37 @@
  
 */
 char	netperf_id[]="\
-@(#)netperf.c (c) Copyright 1993, 1994 Hewlett-Packard Company. Version 2.0PL2";
+@(#)netperf.c (c) Copyright 1993, 1994 Hewlett-Packard Company. Version 2.1";
 
 #include <stdio.h>
+#include <stdlib.h>
+
+#ifdef WIN32
+#include <windows.h>
+#include <winsock.h>
+#endif /* WIN32 */
+
 #include "netsh.h"
+#include "netlib.h"
+#include "nettest_bsd.h"
+#ifdef DO_UNIX
+#include "nettest_unix.h"
+#endif /* DO_UNIX */
+#ifdef DO_FORE
+#include "nettest_fore.h"
+#endif /* DO_FORE */
+#ifdef DO_HIPPI
+#include "nettest_hippi.h"
+#endif /* DO_HIPPI */
+#ifdef DO_XTI
+#include "nettest_xti.h"
+#endif /* DO_XTI */
+#ifdef DO_DLPI
+#include "nettest_dlpi.h"
+#endif /* DO_DLPI */
+#ifdef DO_IPV6
+#include "nettest_ipv6.h"
+#endif /* DO_IPV6 */
 
  /* this file contains the main for the netperf program. all the other */
  /* routines can be found in the file netsh.c */
@@ -58,6 +85,16 @@ int	argc;
 char	*argv[];
 
 {
+
+#ifdef WIN32
+	WSADATA	wsa_data ;
+
+	/* Initialise the wsock lib ( version 1.1 ) */
+	if ( WSAStartup(0x0101,&wsa_data) == SOCKET_ERROR ){
+		printf("WSAStartup() fauled : %d\n",GetLastError()) ;
+		return 1 ;
+	}
+#endif /* WIN32 */
 
 netlib_init();
 set_defaults();
@@ -179,6 +216,23 @@ else if (strcmp(test_name,"LWPDG_RR") == 0) {
 	send_lwpdg_rr(host_name);
 }
 #endif /* DO_LWP */
+#ifdef DO_IPV6
+else if (strcmp(test_name,"TCPIPV6_STREAM") == 0) {
+	send_tcpipv6_stream(host_name);
+}
+else if (strcmp(test_name,"TCPIPV6_RR") == 0) {
+	send_tcpipv6_rr(host_name);
+}
+else if (strcmp(test_name,"TCPIPV6_CRR") == 0) {
+	send_tcpipv6_rr(host_name);
+}
+else if (strcmp(test_name,"UDPIPV6_STREAM") == 0) {
+	send_udpipv6_stream(host_name);
+}
+else if (strcmp(test_name,"UDPIPV6_RR") == 0) {
+	send_udpipv6_rr(host_name);
+}
+#endif /* DO_IPV6 */
 else {
 	printf("The test you requested is unknown to this netperf.\n");
 	printf("Please verify that you have the correct test name, \n");

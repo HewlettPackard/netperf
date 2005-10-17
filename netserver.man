@@ -7,6 +7,7 @@ netserver \- a network performance benchmark server
 
 .B netserver
 [-P portnum]
+[-n numcpus]
 
 .SH DESCRIPTION
 .B Netserver
@@ -24,6 +25,11 @@ the -p option should not be used.
 .B \-h
 Display a usage string, and exit.
 .TP
+.B \-n numcpus
+Specify the number of CPU's in the system on those systems for which
+netperf has no way to find the number of CPU's programatically. (all
+but HP-UX)
+.TP
 .B \-p portnum
 Listen on the specified port.
 This is used when running as a standalone daemon.
@@ -36,6 +42,8 @@ No known bugs at this time. If you think you have found a bug, please send email
 .br
 .I
 Netperf: A Network Performance Benchmark
+.br
+http://www.cup.hp.com/netperf/NetperfPage.html
 
 .SH AUTHORS
 HP Information Networks Division - Networking Performance Team.

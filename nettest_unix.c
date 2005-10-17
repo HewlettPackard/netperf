@@ -5,7 +5,7 @@
 #endif /* lint */
 #ifdef DO_UNIX
 char	nettest_unix_id[]="\
-@(#)nettest_unix.c (c) Copyright 1994, 1995 Hewlett-Packard Co. Version 2.0PL2";
+@(#)nettest_unix.c (c) Copyright 1994, 1995 Hewlett-Packard Co. Version 2.1";
      
 /****************************************************************/
 /*								*/
@@ -39,11 +39,15 @@ char	nettest_unix_id[]="\
 #include <errno.h>
 #include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
+#ifndef __bsdi__
 #include <malloc.h>
+#endif
      
 #include "netlib.h"
 #include "netsh.h"
@@ -309,7 +313,7 @@ bytes  bytes   bytes    secs.    %s/sec  \n\n";
 Recv   Send    Send                          Utilization    Service Demand\n\
 Socket Socket  Message  Elapsed              Send   Recv    Send    Recv\n\
 Size   Size    Size     Time     Throughput  local  remote  local   remote\n\
-bytes  bytes   bytes    secs.    %-8.8s/s  %%      %%       ms/KB   ms/KB\n\n";
+bytes  bytes   bytes    secs.    %-8.8s/s  %%      %%       us/KB   us/KB\n\n";
   
   char *cpu_fmt_0 =
     "%6.3f\n";
@@ -337,12 +341,13 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
   /* the size of the local senc socket buffer. We will want to deal */
   /* with alignment and offset concerns as well. */
   
+#ifdef DIRTY
   int	*message_int_ptr;
-  int	message_offset;
+#endif
 
   struct ring_elt *send_ring;
   
-  int	len;
+  int	len = 0;
   int	nummessages;
   int	send_socket;
   int	bytes_remaining;
@@ -362,18 +367,16 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
   
   struct	sockaddr_un	server;
   
-  struct        sigaction       action;
-
   struct	stream_stream_request_struct	*stream_stream_request;
   struct	stream_stream_response_struct	*stream_stream_response;
   struct	stream_stream_results_struct	*stream_stream_result;
   
   stream_stream_request  = 
-    (struct stream_stream_request_struct *)netperf_request->test_specific_data;
+    (struct stream_stream_request_struct *)netperf_request.content.test_specific_data;
   stream_stream_response =
-    (struct stream_stream_response_struct *)netperf_response->test_specific_data;
+    (struct stream_stream_response_struct *)netperf_response.content.test_specific_data;
   stream_stream_result   = 
-    (struct stream_stream_results_struct *)netperf_response->test_specific_data;
+    (struct stream_stream_results_struct *)netperf_response.content.test_specific_data;
   
   /* since we are now disconnected from the code that established the */
   /* control socket, and since we want to be able to use different */
@@ -464,7 +467,7 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
   /* default should be used. Alignment is the exception, it will */
   /* default to 1, which will be no alignment alterations. */
   
-  netperf_request->request_type		=	DO_STREAM_STREAM;
+  netperf_request.content.request_type		=	DO_STREAM_STREAM;
   stream_stream_request->send_buf_size	=	rss_size;
   stream_stream_request->recv_buf_size	=	rsr_size;
   stream_stream_request->receive_size	=	recv_size;
@@ -505,7 +508,7 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
   
   recv_response();
   
-  if (!netperf_response->serv_errno) {
+  if (!netperf_response.content.serv_errno) {
     if (debug)
       fprintf(where,"remote listen done.\n");
     rsr_size	        =	stream_stream_response->recv_buf_size;
@@ -517,7 +520,7 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
     strcpy(server.sun_path,stream_stream_response->unix_path);
   }
   else {
-    errno = netperf_response->serv_errno;
+    errno = netperf_response.content.serv_errno;
     perror("netperf: send_stream_stream: remote error");
     exit(1);
   }
@@ -642,12 +645,12 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
   /* wasn't supposed to care, it will return obvious values. */
   
   recv_response();
-  if (!netperf_response->serv_errno) {
+  if (!netperf_response.content.serv_errno) {
     if (debug)
       fprintf(where,"remote results obtained\n");
   }
   else {
-    errno = netperf_response->serv_errno;
+    errno = netperf_response.content.serv_errno;
     perror("netperf: remote error");
     
     exit(1);
@@ -680,7 +683,8 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
       local_cpu_utilization	= calc_cpu_util(0.0);
       local_service_demand	= calc_service_demand(bytes_sent,
 						      0.0,
-						      0.0);
+						      0.0,
+						      0);
     }
     else {
       local_cpu_utilization	= -1.0;
@@ -696,7 +700,8 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
       remote_cpu_utilization	= stream_stream_result->cpu_util;
       remote_service_demand	= calc_service_demand(bytes_sent,
 						      0.0,
-						      remote_cpu_utilization);
+						      remote_cpu_utilization,
+						      stream_stream_result->num_cpus);
     }
     else {
       remote_cpu_utilization = -1.0;
@@ -797,7 +802,7 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
 /* implemented as one routine. I could break things-out somewhat, but */
 /* didn't feel it was necessary. */
 
-int 
+void
 recv_stream_stream()
 {
   
@@ -805,29 +810,30 @@ recv_stream_stream()
   int	s_listen,s_data;
   int 	addrlen;
   int	len;
-  int	measure_cpu;
-  int	receive_calls;
+  int	receive_calls = 0;
   float	elapsed_time;
   double   bytes_received;
   
   struct ring_elt *recv_ring;
 
+#ifdef DIRTY
   char	*message_ptr;
   int   *message_int_ptr;
   int   dirty_count;
   int   clean_count;
   int   i;
+#endif
   
   struct	stream_stream_request_struct	*stream_stream_request;
   struct	stream_stream_response_struct	*stream_stream_response;
   struct	stream_stream_results_struct	*stream_stream_results;
   
   stream_stream_request	= 
-    (struct stream_stream_request_struct *)netperf_request->test_specific_data;
+    (struct stream_stream_request_struct *)netperf_request.content.test_specific_data;
   stream_stream_response	= 
-    (struct stream_stream_response_struct *)netperf_response->test_specific_data;
+    (struct stream_stream_response_struct *)netperf_response.content.test_specific_data;
   stream_stream_results	= 
-    (struct stream_stream_results_struct *)netperf_response->test_specific_data;
+    (struct stream_stream_results_struct *)netperf_response.content.test_specific_data;
   
   if (debug) {
     fprintf(where,"netserver: recv_stream_stream: entered...\n");
@@ -852,7 +858,7 @@ recv_stream_stream()
     fflush(where);
   }
   
-  netperf_response->response_type = STREAM_STREAM_RESPONSE;
+  netperf_response.content.response_type = STREAM_STREAM_RESPONSE;
   
   if (debug) {
     fprintf(where,"recv_stream_stream: the response type is set...\n");
@@ -897,7 +903,7 @@ recv_stream_stream()
 				SOCK_STREAM);
   
   if (s_listen < 0) {
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
   }
@@ -916,7 +922,7 @@ recv_stream_stream()
   if (bind(s_listen,
 	   (struct sockaddr *)&myaddr_un,
 	   sizeof(myaddr_un)) == -1) {
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     fprintf(where,"could not bind to path\n");
     close(s_listen);
     send_response();
@@ -962,7 +968,7 @@ recv_stream_stream()
   
   /* Now, let's set-up the socket to listen for connections */
   if (listen(s_listen, 5) == -1) {
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
     
@@ -974,7 +980,7 @@ recv_stream_stream()
   if (getsockname(s_listen, 
 		  (struct sockaddr *)&myaddr_un,
 		  &addrlen) == -1){
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
     
@@ -985,7 +991,7 @@ recv_stream_stream()
   /* returned to the sender also implicitly telling the sender that the */
   /* socket buffer sizing has been done. */
   strcpy(stream_stream_response->unix_path,myaddr_un.sun_path);
-  netperf_response->serv_errno   = 0;
+  netperf_response.content.serv_errno   = 0;
   
   /* But wait, there's more. If the initiator wanted cpu measurements, */
   /* then we must call the calibrate routine, which will return the max */
@@ -1048,9 +1054,9 @@ recv_stream_stream()
 #endif /* DIRTY */
   bytes_received = 0.0;
 
-  while (len = recv(s_data, recv_ring->buffer_ptr, recv_size, 0)) {
-    if (len == -1) {
-      netperf_response->serv_errno = errno;
+  while ((len = recv(s_data, recv_ring->buffer_ptr, recv_size, 0)) != 0) {
+    if (len < 0) {
+      netperf_response.content.serv_errno = errno;
       send_response();
       exit(1);
     }
@@ -1082,7 +1088,7 @@ recv_stream_stream()
   /* we have received all the data sent. raj 4/93 */
 
   if (shutdown(s_data,1) == -1) {
-      netperf_response->serv_errno = errno;
+      netperf_response.content.serv_errno = errno;
       send_response();
       exit(1);
     }
@@ -1123,7 +1129,7 @@ recv_stream_stream()
  /* this routine implements the sending (netperf) side of the STREAM_RR */
  /* test. */
 
-int 
+void
 send_stream_rr(remote_host)
      char	remote_host[];
 {
@@ -1146,7 +1152,7 @@ bytes  Bytes  bytes    bytes   secs.    per sec   \n\n";
 Local /Remote\n\
 Socket Size   Request Resp.  Elapsed Trans.   CPU    CPU    S.dem   S.dem\n\
 Send   Recv   Size    Size   Time    Rate     local  remote local   remote\n\
-bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      ms/Tr   ms/Tr\n\n";
+bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      us/Tr   us/Tr\n\n";
   
   char *cpu_fmt_0 =
     "%6.3f\n";
@@ -1188,18 +1194,16 @@ Send   Recv    Send   Recv\n\
   
   struct	sockaddr_un	server;
   
-  struct        sigaction       action;
-
   struct	stream_rr_request_struct	*stream_rr_request;
   struct	stream_rr_response_struct	*stream_rr_response;
   struct	stream_rr_results_struct	*stream_rr_result;
   
   stream_rr_request = 
-    (struct stream_rr_request_struct *)netperf_request->test_specific_data;
+    (struct stream_rr_request_struct *)netperf_request.content.test_specific_data;
   stream_rr_response=
-    (struct stream_rr_response_struct *)netperf_response->test_specific_data;
+    (struct stream_rr_response_struct *)netperf_response.content.test_specific_data;
   stream_rr_result	=
-    (struct stream_rr_results_struct *)netperf_response->test_specific_data;
+    (struct stream_rr_results_struct *)netperf_response.content.test_specific_data;
   
   /* since we are now disconnected from the code that established the */
   /* control socket, and since we want to be able to use different */
@@ -1275,7 +1279,7 @@ Send   Recv    Send   Recv\n\
   /* default should be used. Alignment is the exception, it will */
   /* default to 8, which will be no alignment alterations. */
   
-  netperf_request->request_type	=	DO_STREAM_RR;
+  netperf_request.content.request_type	=	DO_STREAM_RR;
   stream_rr_request->recv_buf_size	=	rsr_size;
   stream_rr_request->send_buf_size	=	rss_size;
   stream_rr_request->recv_alignment=	remote_recv_align;
@@ -1313,7 +1317,7 @@ Send   Recv    Send   Recv\n\
   
   recv_response();
   
-  if (!netperf_response->serv_errno) {
+  if (!netperf_response.content.serv_errno) {
     if (debug)
       fprintf(where,"remote listen done.\n");
     rsr_size	=	stream_rr_response->recv_buf_size;
@@ -1324,7 +1328,7 @@ Send   Recv    Send   Recv\n\
     strcpy(server.sun_path,stream_rr_response->unix_path);
   }
   else {
-    errno = netperf_response->serv_errno;
+    errno = netperf_response.content.serv_errno;
     perror("netperf: remote error");
     
     exit(1);
@@ -1451,12 +1455,12 @@ Send   Recv    Send   Recv\n\
   /* wasn't supposed to care, it will return obvious values. */
   
   recv_response();
-  if (!netperf_response->serv_errno) {
+  if (!netperf_response.content.serv_errno) {
     if (debug)
       fprintf(where,"remote results obtained\n");
   }
   else {
-    errno = netperf_response->serv_errno;
+    errno = netperf_response.content.serv_errno;
     perror("netperf: remote error");
     
     exit(1);
@@ -1494,8 +1498,9 @@ Send   Recv    Send   Recv\n\
       /* multiply the number of transaction by 1024 to get */
       /* "good" numbers */
       local_service_demand  = calc_service_demand((double) nummessages*1024,
-						      0.0,
-						      0.0);
+						  0.0,
+						  0.0,
+						  0);
     }
     else {
       local_cpu_utilization	= -1.0;
@@ -1514,7 +1519,8 @@ Send   Recv    Send   Recv\n\
       /* "good" numbers */
       remote_service_demand = calc_service_demand((double) nummessages*1024,
 						  0.0,
-						  remote_cpu_utilization);
+						  remote_cpu_utilization,
+						  stream_rr_result->num_cpus);
     }
     else {
       remote_cpu_utilization = -1.0;
@@ -1637,7 +1643,7 @@ bytes   bytes    secs            #      #   %s/sec\n\n";
   char *cpu_title =
     "Socket  Message  Elapsed      Messages                   CPU     Service\n\
 Size    Size     Time         Okay Errors   Throughput   Util    Demand\n\
-bytes   bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
+bytes   bytes    secs            #      #   %s/sec   %%       us/KB\n\n";
   
   char *cpu_fmt_0 =
     "%6.2f\n";
@@ -1658,7 +1664,6 @@ bytes   bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
   
   
   int	len;
-  int	*message_int_ptr;
   struct ring_elt *send_ring;
   int	failed_sends;
   int	failed_cows;
@@ -1670,20 +1675,19 @@ bytes   bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
   int	interval_count;
 #endif /* INTERVALS */
 #ifdef DIRTY
+  int	*message_int_ptr;
   int	i;
 #endif /* DIRTY */
   
   struct	sockaddr_un	server;
   
-  struct        sigaction       action;
-
   struct	dg_stream_request_struct	*dg_stream_request;
   struct	dg_stream_response_struct	*dg_stream_response;
   struct	dg_stream_results_struct	*dg_stream_results;
   
-  dg_stream_request	= (struct dg_stream_request_struct *)netperf_request->test_specific_data;
-  dg_stream_response	= (struct dg_stream_response_struct *)netperf_response->test_specific_data;
-  dg_stream_results	= (struct dg_stream_results_struct *)netperf_response->test_specific_data;
+  dg_stream_request	= (struct dg_stream_request_struct *)netperf_request.content.test_specific_data;
+  dg_stream_response	= (struct dg_stream_response_struct *)netperf_response.content.test_specific_data;
+  dg_stream_results	= (struct dg_stream_results_struct *)netperf_response.content.test_specific_data;
   
   /* since we are now disconnected from the code that established the */
   /* control socket, and since we want to be able to use different */
@@ -1758,7 +1762,7 @@ bytes   bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
   /* Of course this is a datagram service so no connection is actually */
   /* set up, the server just sets up the socket and binds it. */
   
-  netperf_request->request_type = DO_DG_STREAM;
+  netperf_request.content.request_type = DO_DG_STREAM;
   dg_stream_request->recv_buf_size	= rsr_size;
   dg_stream_request->message_size	= send_size;
   dg_stream_request->recv_alignment	= remote_recv_align;
@@ -1773,12 +1777,12 @@ bytes   bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
   
   recv_response();
   
-  if (!netperf_response->serv_errno) {
+  if (!netperf_response.content.serv_errno) {
     if (debug)
       fprintf(where,"send_dg_stream: remote data connection done.\n");
   }
   else {
-    errno = netperf_response->serv_errno;
+    errno = netperf_response.content.serv_errno;
     perror("send_dg_stream: error on remote");
     exit(1);
   }
@@ -1890,12 +1894,12 @@ bytes   bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
   
   /* Get the statistics from the remote end	*/
   recv_response();
-  if (!netperf_response->serv_errno) {
+  if (!netperf_response.content.serv_errno) {
     if (debug)
       fprintf(where,"send_dg_stream: remote results obtained\n");
   }
   else {
-    errno = netperf_response->serv_errno;
+    errno = netperf_response.content.serv_errno;
     perror("send_dg_stream: error on remote");
     exit(1);
   }
@@ -1927,7 +1931,8 @@ bytes   bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
       local_cpu_utilization	= calc_cpu_util(0.0);
       local_service_demand	= calc_service_demand(bytes_sent,
 						      0.0,
-						      0.0);
+						      0.0,
+						      0);
     }
     else {
       local_cpu_utilization	= -1.0;
@@ -1947,7 +1952,8 @@ bytes   bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
       remote_cpu_utilization	= dg_stream_results->cpu_util;
       remote_service_demand	= calc_service_demand(bytes_recvd,
 						      0.0,
-						      remote_cpu_utilization);
+						      remote_cpu_utilization,
+						      dg_stream_results->num_cpus);
     }
     else {
       remote_cpu_utilization	= -1.0;
@@ -2027,34 +2033,30 @@ bytes   bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
  /* this routine implements the receive side (netserver) of the */
  /* DG_STREAM performance test. */
 
-int
+void
 recv_dg_stream()
 {
   struct ring_elt *recv_ring;
 
-  struct sockaddr_un myaddr_un,  
-                     peeraddr_un;
+  struct sockaddr_un myaddr_un;
   int	s_data;
-  int	len;
+  int	len = 0;
   int	bytes_received = 0;
   float	elapsed_time;
   
   int	message_size;
   int	messages_recvd = 0;
-  int	measure_cpu;
   
-  struct        sigaction     action;
-
   struct	dg_stream_request_struct	*dg_stream_request;
   struct	dg_stream_response_struct	*dg_stream_response;
   struct	dg_stream_results_struct	*dg_stream_results;
   
   dg_stream_request  = 
-    (struct dg_stream_request_struct *)netperf_request->test_specific_data;
+    (struct dg_stream_request_struct *)netperf_request.content.test_specific_data;
   dg_stream_response = 
-    (struct dg_stream_response_struct *)netperf_response->test_specific_data;
+    (struct dg_stream_response_struct *)netperf_response.content.test_specific_data;
   dg_stream_results  = 
-    (struct dg_stream_results_struct *)netperf_response->test_specific_data;
+    (struct dg_stream_results_struct *)netperf_response.content.test_specific_data;
   
   if (debug) {
     fprintf(where,"netserver: recv_dg_stream: entered...\n");
@@ -2079,7 +2081,7 @@ recv_dg_stream()
     fflush(where);
   }
   
-  netperf_response->response_type = DG_STREAM_RESPONSE;
+  netperf_response.content.response_type = DG_STREAM_RESPONSE;
   
   if (debug > 2) {
     fprintf(where,"recv_dg_stream: the response type is set...\n");
@@ -2135,7 +2137,7 @@ recv_dg_stream()
 			      SOCK_DGRAM);
   
   if (s_data < 0) {
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
   }
@@ -2150,7 +2152,7 @@ recv_dg_stream()
   if (bind(s_data,
 	   (struct sockaddr *)&myaddr_un,
 	   sizeof(myaddr_un)) == -1) {
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
   }
@@ -2162,7 +2164,7 @@ recv_dg_stream()
   /* socket buffer sizing has been done. */
   
   strcpy(dg_stream_response->unix_path,myaddr_un.sun_path);
-  netperf_response->serv_errno   = 0;
+  netperf_response.content.serv_errno   = 0;
   
   /* But wait, there's more. If the initiator wanted cpu measurements, */
   /* then we must call the calibrate routine, which will return the max */
@@ -2215,7 +2217,7 @@ recv_dg_stream()
 		    message_size, 
 		    0)) != message_size) {
       if ((len == -1) && (errno != EINTR)) {
-	netperf_response->serv_errno = errno;
+	netperf_response.content.serv_errno = errno;
 	send_response();
 	exit(1);
       }
@@ -2261,7 +2263,7 @@ recv_dg_stream()
     fflush(where);
   }
   
-  netperf_response->response_type		= DG_STREAM_RESULTS;
+  netperf_response.content.response_type		= DG_STREAM_RESULTS;
   dg_stream_results->bytes_received	= bytes_received;
   dg_stream_results->messages_recvd	= messages_recvd;
   dg_stream_results->elapsed_time	= elapsed_time;
@@ -2282,7 +2284,8 @@ recv_dg_stream()
   
 }
 
-int send_dg_rr(remote_host)
+void
+send_dg_rr(remote_host)
      char	remote_host[];
 {
   
@@ -2304,7 +2307,7 @@ bytes  Bytes  bytes    bytes   secs.    per sec   \n\n";
 Local /Remote\n\
 Socket Size   Request Resp.  Elapsed Trans.   CPU    CPU    S.dem   S.dem\n\
 Send   Recv   Size    Size   Time    Rate     local  remote local   remote\n\
-bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      ms/Tr   ms/Tr\n\n";
+bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      us/Tr   us/Tr\n\n";
   
   char *cpu_fmt_0 =
     "%6.3f\n";
@@ -2314,13 +2317,6 @@ bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      ms/Tr   ms/Tr\n\n"
   
   char *cpu_fmt_1_line_2 = "\
 %-6d %-6d\n";
-  
-  char *ksink_fmt = "\
-Alignment      Offset\n\
-Local  Remote  Local  Remote\n\
-Send   Recv    Send   Recv\n\
-%5d  %5d   %5d  %5d";
-  
   
   float			elapsed_time;
   
@@ -2360,20 +2356,18 @@ Send   Recv    Send   Recv\n\
   struct	timeval		sleep_timeval;
 #endif
   
-  struct	sockaddr_un	server, peeraddr_un, myaddr_un;
+  struct	sockaddr_un	server, myaddr_un;
   
-  struct        sigaction       action;
-
   struct	dg_rr_request_struct	*dg_rr_request;
   struct	dg_rr_response_struct	*dg_rr_response;
   struct	dg_rr_results_struct	*dg_rr_result;
   
   dg_rr_request	= 
-    (struct dg_rr_request_struct *)netperf_request->test_specific_data;
+    (struct dg_rr_request_struct *)netperf_request.content.test_specific_data;
   dg_rr_response=
-    (struct dg_rr_response_struct *)netperf_response->test_specific_data;
+    (struct dg_rr_response_struct *)netperf_response.content.test_specific_data;
   dg_rr_result	=
-    (struct dg_rr_results_struct *)netperf_response->test_specific_data;
+    (struct dg_rr_results_struct *)netperf_response.content.test_specific_data;
   
   /* we want to zero out the times, so we can detect unused entries. */
 #ifdef INTERVALS
@@ -2461,7 +2455,7 @@ Send   Recv    Send   Recv\n\
   /* default should be used. Alignment is the exception, it will */
   /* default to 8, which will be no alignment alterations. */
   
-  netperf_request->request_type	=	DO_DG_RR;
+  netperf_request.content.request_type	=	DO_DG_RR;
   dg_rr_request->recv_buf_size	=	rsr_size;
   dg_rr_request->send_buf_size	=	rss_size;
   dg_rr_request->recv_alignment	=	remote_recv_align;
@@ -2499,7 +2493,7 @@ Send   Recv    Send   Recv\n\
   
   recv_response();
   
-  if (!netperf_response->serv_errno) {
+  if (!netperf_response.content.serv_errno) {
     if (debug)
       fprintf(where,"remote listen done.\n");
     rsr_size	=	dg_rr_response->recv_buf_size;
@@ -2510,7 +2504,7 @@ Send   Recv    Send   Recv\n\
     strcpy(server.sun_path,dg_rr_response->unix_path);
   }
   else {
-    errno = netperf_response->serv_errno;
+    errno = netperf_response.content.serv_errno;
     perror("netperf: remote error");
     
     exit(1);
@@ -2671,12 +2665,12 @@ Send   Recv    Send   Recv\n\
   /* wasn't supposed to care, it will return obvious values. */
   
   recv_response();
-  if (!netperf_response->serv_errno) {
+  if (!netperf_response.content.serv_errno) {
     if (debug)
       fprintf(where,"remote results obtained\n");
   }
   else {
-    errno = netperf_response->serv_errno;
+    errno = netperf_response.content.serv_errno;
     perror("netperf: remote error");
     
     exit(1);
@@ -2712,7 +2706,8 @@ Send   Recv    Send   Recv\n\
       /* "good" numbers */
       local_service_demand  = calc_service_demand((double) nummessages*1024,
 						  0.0,
-						  0.0);
+						  0.0,
+						  0);
     }
     else {
       local_cpu_utilization	= -1.0;
@@ -2731,7 +2726,8 @@ Send   Recv    Send   Recv\n\
       /* "good" numbers */
       remote_service_demand  = calc_service_demand((double) nummessages*1024,
 						   0.0,
-						   remote_cpu_utilization);
+						   remote_cpu_utilization,
+						   dg_rr_result->num_cpus);
     }
     else {
       remote_cpu_utilization = -1.0;
@@ -2842,7 +2838,7 @@ Send   Recv    Send   Recv\n\
 
  /* this routine implements the receive side (netserver) of a DG_RR */
  /* test. */
-int 
+void
 recv_dg_rr()
 {
   
@@ -2853,23 +2849,20 @@ recv_dg_rr()
   peeraddr_un;
   int	s_data;
   int 	addrlen;
-  int	measure_cpu;
-  int	trans_received;
+  int	trans_received = 0;
   int	trans_remaining;
   float	elapsed_time;
   
-  struct        sigaction       action;
-
   struct	dg_rr_request_struct	*dg_rr_request;
   struct	dg_rr_response_struct	*dg_rr_response;
   struct	dg_rr_results_struct	*dg_rr_results;
   
   dg_rr_request  = 
-    (struct dg_rr_request_struct *)netperf_request->test_specific_data;
+    (struct dg_rr_request_struct *)netperf_request.content.test_specific_data;
   dg_rr_response = 
-    (struct dg_rr_response_struct *)netperf_response->test_specific_data;
+    (struct dg_rr_response_struct *)netperf_response.content.test_specific_data;
   dg_rr_results  = 
-    (struct dg_rr_results_struct *)netperf_response->test_specific_data;
+    (struct dg_rr_results_struct *)netperf_response.content.test_specific_data;
   
   if (debug) {
     fprintf(where,"netserver: recv_dg_rr: entered...\n");
@@ -2894,7 +2887,7 @@ recv_dg_rr()
     fflush(where);
   }
   
-  netperf_response->response_type = DG_RR_RESPONSE;
+  netperf_response.content.response_type = DG_RR_RESPONSE;
   
   if (debug) {
     fprintf(where,"recv_dg_rr: the response type is set...\n");
@@ -2962,7 +2955,7 @@ recv_dg_rr()
 			      SOCK_DGRAM);
   
   if (s_data < 0) {
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
     
     exit(1);
@@ -2978,7 +2971,7 @@ recv_dg_rr()
   if (bind(s_data,
 	   (struct sockaddr *)&myaddr_un,
 	   sizeof(myaddr_un)) == -1) {
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     unlink(myaddr_un.sun_path);
     close(s_data);
     send_response();
@@ -2991,7 +2984,7 @@ recv_dg_rr()
   /* socket buffer sizing has been done. */
   
   strcpy(dg_rr_response->unix_path,myaddr_un.sun_path);
-  netperf_response->serv_errno   = 0;
+  netperf_response.content.serv_errno   = 0;
   
   /* But wait, there's more. If the initiator wanted cpu measurements, */
   /* then we must call the calibrate routine, which will return the max */
@@ -3036,9 +3029,9 @@ recv_dg_rr()
   while ((!times_up) || (trans_remaining > 0)) {
     
     /* receive the request from the other side */
-    fprintf(where,"socket %d ptr %x size %d\n",
+    fprintf(where,"socket %d ptr %lx size %d\n",
 	    s_data,
-	    recv_ring->buffer_ptr,
+	    (unsigned long)recv_ring->buffer_ptr,
 	    dg_rr_request->request_size);
     fflush(where);
     if (recvfrom(s_data,
@@ -3051,7 +3044,7 @@ recv_dg_rr()
 	/* we must have hit the end of test time. */
 	break;
       }
-      netperf_response->serv_errno = errno;
+      netperf_response.content.serv_errno = errno;
       fprintf(where,"error on recvfrom errno %d\n",errno);
       fflush(where);
       send_response();
@@ -3071,7 +3064,7 @@ recv_dg_rr()
 	/* we have hit end of test time. */
 	break;
       }
-      netperf_response->serv_errno = errno;
+      netperf_response.content.serv_errno = errno;
       fprintf(where,"error on recvfrom errno %d\n",errno);
       fflush(where);
       unlink(myaddr_un.sun_path);
@@ -3137,7 +3130,7 @@ recv_dg_rr()
  /* this routine implements the receive (netserver) side of a STREAM_RR */
  /* test */
 
-int 
+void
 recv_stream_rr()
 {
   
@@ -3148,9 +3141,8 @@ recv_stream_rr()
   peeraddr_un;
   int	s_listen,s_data;
   int 	addrlen;
-  int	measure_cpu;
   char	*temp_message_ptr;
-  int	trans_received;
+  int	trans_received = 0;
   int	trans_remaining;
   int	bytes_sent;
   int	request_bytes_recvd;
@@ -3158,18 +3150,16 @@ recv_stream_rr()
   int	timed_out = 0;
   float	elapsed_time;
   
-  struct        sigaction    action;
-
   struct	stream_rr_request_struct	*stream_rr_request;
   struct	stream_rr_response_struct	*stream_rr_response;
   struct	stream_rr_results_struct	*stream_rr_results;
   
   stream_rr_request = 
-    (struct stream_rr_request_struct *)netperf_request->test_specific_data;
+    (struct stream_rr_request_struct *)netperf_request.content.test_specific_data;
   stream_rr_response =
-    (struct stream_rr_response_struct *)netperf_response->test_specific_data;
+    (struct stream_rr_response_struct *)netperf_response.content.test_specific_data;
   stream_rr_results =
-    (struct stream_rr_results_struct *)netperf_response->test_specific_data;
+    (struct stream_rr_results_struct *)netperf_response.content.test_specific_data;
   
   if (debug) {
     fprintf(where,"netserver: recv_stream_rr: entered...\n");
@@ -3194,7 +3184,7 @@ recv_stream_rr()
     fflush(where);
   }
   
-  netperf_response->response_type = STREAM_RR_RESPONSE;
+  netperf_response.content.response_type = STREAM_RR_RESPONSE;
   
   if (debug) {
     fprintf(where,"recv_stream_rr: the response type is set...\n");
@@ -3257,7 +3247,7 @@ recv_stream_rr()
 				SOCK_STREAM);
   
   if (s_listen < 0) {
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
     
     exit(1);
@@ -3273,7 +3263,7 @@ recv_stream_rr()
   if (bind(s_listen,
 	   (struct sockaddr *)&myaddr_un,
 	   sizeof(myaddr_un)) == -1) {
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     unlink(myaddr_un.sun_path);
     close(s_listen);
     send_response();
@@ -3283,7 +3273,7 @@ recv_stream_rr()
   
   /* Now, let's set-up the socket to listen for connections */
   if (listen(s_listen, 5) == -1) {
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
     
@@ -3295,7 +3285,7 @@ recv_stream_rr()
   /* socket buffer sizing has been done. */
   
   strcpy(stream_rr_response->unix_path,myaddr_un.sun_path);
-  netperf_response->serv_errno   = 0;
+  netperf_response.content.serv_errno   = 0;
   
   /* But wait, there's more. If the initiator wanted cpu measurements, */
   /* then we must call the calibrate routine, which will return the max */
@@ -3360,7 +3350,7 @@ recv_stream_rr()
     /* receive the request from the other side */
     if (debug) {
       fprintf(where,"about to receive for trans %d\n",trans_received);
-      fprintf(where,"temp_message_ptr is %x\n",temp_message_ptr);
+      fprintf(where,"temp_message_ptr is %lx\n",(unsigned long)temp_message_ptr);
       fflush(where);
     }
     while(request_bytes_remaining > 0) {
@@ -3373,7 +3363,7 @@ recv_stream_rr()
 	  timed_out = 1;
 	  break;
 	}
-	netperf_response->serv_errno = errno;
+	netperf_response.content.serv_errno = errno;
 	send_response();
 	exit(1);
       }
@@ -3413,7 +3403,7 @@ recv_stream_rr()
 	fflush(where);						
 	break;
       }
-      netperf_response->serv_errno = 997;
+      netperf_response.content.serv_errno = 997;
       send_response();
       exit(1);
     }
@@ -3488,7 +3478,6 @@ scan_unix_args(argc, argv)
 
 {
 #define UNIX_ARGS "hm:M:p:r:s:S:"
-  extern int	optind, opterrs;  /* index of first unused arg 	*/
   extern char	*optarg;	  /* pointer to option string	*/
   
   int		c;

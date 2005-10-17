@@ -1,8 +1,11 @@
 #
-# @(#)Makefile	2.0PL2	07/14/95
+# @(#)Makefile	2.0PL3	07/26/95
 #
 # Makefile to build netperf benchmark tool
 #
+# for those folks running csh, this may help with makes
+#SHELL="/bin/sh"
+
 #
 # This tells the script where the executables and scripts are supposed
 # to go. Some people might be used to "/usr/etc/net_perf", but
@@ -18,15 +21,17 @@ NETPERF_HOME = /opt/netperf
 # /bin/cc              - the location on HP-UX 9.X and previous
 # /usr/bin/cc          - the location on HP-UX 10.0 and some other
 #                        platforms (IRIX, OSF/1)
-# /usr/ucb/cc          - the bundled C compiler under Solaris (?)
-# /opt/SUNWspro/bin/cc - the unbundled C compiler under Solaris (?)
+# /opt/SUNWspro/bin/cc - the unbundled C compiler under Solaris
 # cc                   - if your paths are set, this may be all you 
 #                        need
 # 
 # one most systems, netperf spends very little time in user code, and
 # most of its time in the kernel, so I *suspect* that different
-# optimization levels wont make very much of a difference. however,
-# might as well compile -O
+# optimization levels won't make very much of a difference. however,
+# might as well compile -O... If you are using the HP-UX unbundled
+# compiler, this will generate a warning about an unsupported option.
+# You may safely ignore that warning.
+#
 
 CC = cc -O
 
@@ -69,6 +74,8 @@ CC = cc -O
 #               measurement. Astute observers will notice that the
 #               LOC_CPU and REM_CPU rates with this method look
 #               remarkably close to the clockrate of the machine :)
+# -DDO_IPV6   - Include tests which use a sockets interface to IPV6.
+#               The control connection remains IPV4
 
 LOG_FILE=DEBUG_LOG_FILE="\"/tmp/netperf.debug\""
 CFLAGS = -D$(LOG_FILE) -DUSE_LOOPER
@@ -87,11 +94,12 @@ CFLAGS = -D$(LOG_FILE) -DUSE_LOOPER
 # -lsys5                - on Digital Unix (OSF) this helps insure that
 #                         netserver processes are reaped?
 # -lm                   - required for ALL platforms
+# -lxti                 - required for -DDO_XTI on HP_UX 10.X
 
 LIBS= -lm
 
 # ---------------------------------------------------------------
-# it shoud not be the case that anything below this line needs to
+# it should not be the case that anything below this line needs to
 # be changed. if it does, please let me know.
 # rick jones <raj@cup.hp.com>
 
@@ -104,8 +112,15 @@ SHAR_SOURCE_FILES = netlib.c netlib.h netperf.c netserver.c \
 		    nettest_fore.c nettest_fore.h \
 		    nettest_hippi.c nettest_hippi.h \
                     nettest_xti.c nettest_xti.h \
+                    nettest_ipv6.c nettest_ipv6.h \
                     hist.h \
-		    makefile
+		    makefile makefile.win32
+
+ZIP_SOURCE_FILES  = netlib.c netlib.h netperf.c netserver.c \
+		    netsh.c netsh.h \
+		    nettest_bsd.c nettest_bsd.h \
+                    hist.h \
+		    makefile.win32
 
 SHAR_EXE_FILES    = ACKNWLDGMNTS COPYRIGHT README Release_Notes \
                     netperf.ps \
@@ -113,15 +128,15 @@ SHAR_EXE_FILES    = ACKNWLDGMNTS COPYRIGHT README Release_Notes \
 
 SHAR_SCRIPT_FILES = tcp_stream_script udp_stream_script \
                     tcp_rr_script udp_rr_script tcp_range_script \
-                    snapshot_script
+                    snapshot_script arr_script
 
 NETSERVER_OBJS	  = netserver.o nettest_bsd.o nettest_dlpi.o \
                     nettest_unix.o netlib.o netsh.o nettest_fore.o \
-		    nettest_hippi.o nettest_xti.o
+		    nettest_hippi.o nettest_xti.o nettest_ipv6.o
 
 NETPERF_OBJS	  = netperf.o netsh.o netlib.o nettest_bsd.o \
                     nettest_dlpi.o nettest_unix.o nettest_fore.o \
-		    nettest_hippi.o nettest_xti.o
+		    nettest_hippi.o nettest_xti.o nettest_ipv6.o
 
 NETPERF_SCRIPTS   = tcp_range_script tcp_stream_script tcp_rr_script \
                     udp_stream_script udp_rr_script \
@@ -156,6 +171,8 @@ nettest_hippi.o: nettest_hippi.c nettest_hippi.h netlib.h netsh.h makefile
 
 nettest_xti.o:   nettest_xti.c nettest_xti.h netlib.h netsh.h makefile
 
+nettest_ipv6.o:  nettest_ipv6.c nettest_ipv6.h netlib.h netsh.h makefile
+
 netserver.o:	netserver.c nettest_bsd.h netlib.h makefile
 
 install:	netperf netserver
@@ -168,7 +185,7 @@ clean:
 	rm -f *.o netperf netserver core
 
 extraclean:
-	rm -f *.o netperf netserver core netperf.tar.Z netperf.shar \
+	rm -f *.o netperf netserver core netperf.tar.gz netperf.shar \
 	netperf_src.shar
 
 deinstall:
@@ -181,11 +198,14 @@ netperf.shar:	$(SHAR_SOURCE_FILES) $(SHAR_EXE_FILES) $(SHAR_SCRIPT_FILES)
 	shar -bcCsZ $(SHAR_SOURCE_FILES) $(SHAR_EXE_FILES) \
 		$(SHAR_SCRIPT_FILES) > netperf.shar
 
+netperf.zip:    $(ZIP_SOURCE_FILES) $(SHAR_EXE_FILES)
+	zip netperf.zip $(ZIP_SOURCE_FILES) $(SHAR_EXE_FILES)
+
 netperf.tar:	$(SHAR_EXE_FILES) \
 		$(SHAR_SCRIPT_FILES) $(SHAR_SOURCE_FILES)
 	tar -cf netperf.tar $(SHAR_EXE_FILES) \
 		$(SHAR_SCRIPT_FILES) $(SHAR_SOURCE_FILES)
-	compress netperf.tar
+	gzip netperf.tar
 
 netperf-scaf.tar:	$(SHAR_EXE_FILES) \
 			$(SHAR_SCRIPT_FILES) \

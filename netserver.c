@@ -43,7 +43,7 @@
  
 */
 char	netserver_id[]="\
-@(#)netserver.c (c) Copyright 1993, 1994 Hewlett-Packard Co. Version 2.0PL2";
+@(#)netserver.c (c) Copyright 1993, 1994 Hewlett-Packard Co. Version 2.1";
 
  /***********************************************************************/
  /*									*/
@@ -67,22 +67,44 @@ char	netserver_id[]="\
 #include <stdio.h>
 #include <errno.h>
 #include <signal.h>
+#ifndef WIN32
 #include <sys/ipc.h>
+#endif /* WIN32 */
 #include <fcntl.h>
+#ifdef WIN32
+#include <time.h>
+#include <windows.h>
+#include <winsock.h>
+#else
 #include <sys/time.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <netinet/in.h>
 #include <netdb.h>
-#include <string.h>
-
+#include <unistd.h>
 #ifndef DONT_WAIT
 #include <sys/wait.h>
 #endif /* DONT_WAIT */
+#endif /* WIN32 */
+#include <string.h>
+#include <stdlib.h>
 
 #include "netlib.h"
 #include "nettest_bsd.h"
+
+#ifdef DO_UNIX
+#include "nettest_unix.h"
+#endif /* DO_UNIX */
+
+#ifdef DO_DLPI
 #include "nettest_dlpi.h"
+#endif /* DO_DLPI */
+
+#ifdef DO_IPV6
+#include "nettest_ipv6.h"
+#endif /* DO_IPV6 */
+
 #include "netsh.h"
 
 #ifndef DEBUG_LOG_FILE
@@ -96,7 +118,7 @@ short	listen_port_num;
 extern	char	*optarg;
 extern	int	optind, opterr;
 
-#define SERVER_ARGS "dp:"
+#define SERVER_ARGS "dn:p:"
 
  /* This routine implements the "main event loop" of the netperf	*/
  /* server code. Code above it will have set-up the control connection	*/
@@ -115,10 +137,10 @@ process_requests()
     if (debug)
       dump_request();
     
-    switch (netperf_request->request_type) {
+    switch (netperf_request.content.request_type) {
       
     case DEBUG_ON:
-      netperf_response->response_type = DEBUG_OK;
+      netperf_response.content.response_type = DEBUG_OK;
       if (!debug)
 	debug++;
       dump_request();
@@ -128,19 +150,20 @@ process_requests()
     case DEBUG_OFF:
       if (debug)
 	debug--;
-      netperf_response->response_type = DEBUG_OK;
+      netperf_response.content.response_type = DEBUG_OK;
       fclose(where);
       send_response();
       break;
       
     case CPU_CALIBRATE:
-      netperf_response->response_type = CPU_CALIBRATE;
+      netperf_response.content.response_type = CPU_CALIBRATE;
       temp_rate = calibrate_local_cpu(0.0);
       bcopy((char *)&temp_rate,
-	    (char *)netperf_response->test_specific_data,
+	    (char *)netperf_response.content.test_specific_data,
 	    sizeof(temp_rate));
       if (debug) {
-	fprintf(where,"netserver: sending CPU information\n");
+	fprintf(where,"netserver: sending CPU information:");
+	fprintf(where,"rate is %g\n",temp_rate);
 	fflush(where);
       }
 
@@ -284,12 +307,34 @@ process_requests()
       break;
 
 #endif /* DO_LWP */
+#ifdef DO_IPV6
+    case DO_TCPIPV6_STREAM:
+      recv_tcpipv6_stream();
+      break;
+      
+    case DO_TCPIPV6_RR:
+      recv_tcpipv6_rr();
+      break;
+      
+    case DO_TCPIPV6_CRR:
+      recv_tcpipv6_conn_rr();
+      break;
+      
+    case DO_UDPIPV6_STREAM:
+      recv_udpipv6_stream();
+      break;
+      
+    case DO_UDPIPV6_RR:
+      recv_udpipv6_rr();
+      break;
+
+#endif /* DO_IPV6 */
 
     default:
       fprintf(where,"unknown test number %d\n",
-	      netperf_request->request_type);
+	      netperf_request.content.request_type);
       fflush(where);
-      netperf_response->serv_errno=998;
+      netperf_response.content.serv_errno=998;
       send_response();
       break;
       
@@ -309,13 +354,11 @@ process_requests()
 
 void set_up_server()
 { 
-  struct  servent         *sp;            /* server entity           */
   struct sockaddr_in 	server;
   struct sockaddr_in 	peeraddr;
 
   int server_control;
   int peeraddr_len;
-  int ppid,pid;
   
   server.sin_port = htons(listen_port_num);
   server.sin_addr.s_addr = INADDR_ANY;
@@ -324,7 +367,11 @@ void set_up_server()
   printf("Starting netserver at port %d\n",listen_port_num);
 
   server_control = socket (AF_INET,SOCK_STREAM,0);
+#ifdef WIN32
+  if (server_control == INVALID_SOCKET)
+#else
   if (server_control < 0)
+#endif /* WIN32 */
     {
       perror("server_set_up: creating the socket");
       exit(1);
@@ -346,6 +393,7 @@ void set_up_server()
     setpgrp();
     */
 
+#ifndef WIN32
   switch (fork())
     {
     case -1:  	
@@ -356,7 +404,11 @@ void set_up_server()
       /* stdin/stderr should use fclose */
       fclose(stdin);
       fclose(stderr);
+#if defined(__NetBSD__) || defined(__bsdi__) || defined(sun)
+      setsid();
+#else
       setpgrp();
+#endif
 
  /* some OS's have SIGCLD defined as SIGCHLD */
 #ifndef SIGCLD
@@ -365,6 +417,8 @@ void set_up_server()
 
       signal(SIGCLD, SIG_IGN);
       
+#endif /* WIN32 */
+
       for (;;)
 	{
 	  peeraddr_len = sizeof(peeraddr);
@@ -375,6 +429,16 @@ void set_up_server()
 	      printf("server_control: accept failed\n");
 	      exit(1);
 	    }
+#ifdef WIN32
+	/*
+	 * Since we cannot fork this process , we cant fire any threads
+	 * as they all share the same global data . So we better allow
+	 * one request at at time 
+	 */
+	    process_requests() ;
+	}
+#else
+
 	  signal(SIGCLD, SIG_IGN);
 	  
 	  switch (fork())
@@ -409,21 +473,32 @@ void set_up_server()
       exit (0);
       
     }
-  
+#endif /* WIN32 */  
 }
 
 
+int
 main(argc, argv)
 int argc;
 char *argv[];
 {
-  struct protoent *pp;
-  char	*debug_file;
+
   int	c;
 
   struct sockaddr name;
   int namelen = sizeof(name);
   
+
+#ifdef WIN32
+	WSADATA	wsa_data ;
+
+	/* Initialise the wsock lib ( version 1.1 ) */
+	if ( WSAStartup(0x0101,&wsa_data) == SOCKET_ERROR ){
+		printf("WSAStartup() fauled : %d\n",GetLastError()) ;
+		return 1 ;
+	}
+#endif /* WIN32 */
+
   netlib_init();
   
   /* Scan the command line to see if we are supposed to set-up our own */
@@ -444,6 +519,19 @@ char *argv[];
       /* specified port number */
       listen_port_num = atoi(optarg);
       break;
+    case 'n':
+      shell_num_cpus = atoi(optarg);
+      if (shell_num_cpus > MAXCPUS) {
+	fprintf(stderr,
+		"netserver: This version can only support %d CPUs. Please",
+		MAXCPUS);
+	fprintf(stderr,
+		"           increase MAXCPUS in netlib.h and recompile.\n");
+	fflush(stderr);
+	exit(1);
+      }
+      break;
+
     }
   }
 
@@ -473,8 +561,12 @@ char *argv[];
   }
   else if (getsockname(server_sock, &name, &namelen) == -1) {
     /* we may not be a chile of inetd */
-    if (errno == ENOTSOCK) {
-      listen_port_num = TEST_PORT;
+#ifdef WIN32
+	  if (WSAGetLastError() == WSAENOTSOCK) {
+#else 
+	  if (errno == ENOTSOCK) {
+#endif /* WIN32 */
+	  listen_port_num = TEST_PORT;
       set_up_server();
     }
   }
@@ -482,4 +574,5 @@ char *argv[];
     /* we are probably a child of inetd */
     process_requests();
   }
+  return(0);
 }

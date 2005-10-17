@@ -6,11 +6,11 @@
 #
 # TCP Stream test with 56KB socket buffers and 4KB sends
 # TCP Stream test with 32KB socket buffers and 4KB sends
-# UDP Stream test with 32KB socket buffers and 4KB sends
-# UDP Stream test with 32KB socket buffers and 1KB sends
 # TCP Request/Response test with 1 byte requests and 1 byte responses
 # UDP Request/Response test with 1 byte requests and 1 byte responses
 # UDP Request/Response test with 516 byte requests and 4 byte responses
+# UDP Stream test with 32KB socket buffers and 4KB sends
+# UDP Stream test with 32KB socket buffers and 1KB sends
 #
 # All tests will run for sixty seconds. Confidence intervals are used
 # to insure the repeatability of the test. This means that the soonest
@@ -144,34 +144,6 @@ $NETHOME/netperf $PORT -t TCP_STREAM -l $TIME -H $REM_HOST \
  -s 32768 -S 32768 -m 4096 
 echo
 echo
-# a 32x4 UDP_STREAM test
-echo Starting 32x4  UDP_STREAM tests at `date` >&2
-echo
-echo ------------------------------------
-echo Testing with the following command line:
-echo $NETHOME/netperf $PORT -t UDP_STREAM -l $TIME -H $REM_HOST \
- $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
- -s 32768 -S 32768 -m 4096
-echo
-$NETHOME/netperf $PORT -t UDP_STREAM -l $TIME -H $REM_HOST \
- $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
- -s 32768 -S 32768 -m 4096
-echo
-echo
-# a 32x1 UDP_STREAM test
-echo Starting 32x1  UDP_STREAM tests at `date` >&2
-echo
-echo ------------------------------------
-echo Testing with the following command line:
-echo $NETHOME/netperf $PORT -t UDP_STREAM -l $TIME -H $REM_HOST \
- $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
- -s 32768 -S 32768 -m 1024
-echo
-$NETHOME/netperf $PORT -t UDP_STREAM -l $TIME -H $REM_HOST \
- $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
- -s 32768 -S 32768 -m 1024
-echo
-echo
 # a single-byte TCP_RR
 echo Starting 1,1   TCP_RR     tests at `date` >&2
 echo
@@ -211,6 +183,34 @@ echo $NETHOME/netperf $PORT -t UDP_RR -l $TIME -H $REM_HOST \
 echo
 $NETHOME/netperf $PORT -t UDP_RR -l $TIME -H $REM_HOST \
  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- -r 516,4
+# a 32x4 UDP_STREAM test
+echo Starting 32x4  UDP_STREAM tests at `date` >&2
+echo
+echo ------------------------------------
+echo Testing with the following command line:
+echo $NETHOME/netperf $PORT -t UDP_STREAM -l $TIME -H $REM_HOST \
+ $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
+ -s 32768 -S 32768 -m 4096
+echo
+$NETHOME/netperf $PORT -t UDP_STREAM -l $TIME -H $REM_HOST \
+ $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
+ -s 32768 -S 32768 -m 4096
+echo
+echo
+# a 32x1 UDP_STREAM test
+echo Starting 32x1  UDP_STREAM tests at `date` >&2
+echo
+echo ------------------------------------
+echo Testing with the following command line:
+echo $NETHOME/netperf $PORT -t UDP_STREAM -l $TIME -H $REM_HOST \
+ $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
+ -s 32768 -S 32768 -m 1024
+echo
+$NETHOME/netperf $PORT -t UDP_STREAM -l $TIME -H $REM_HOST \
+ $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
+ -s 32768 -S 32768 -m 1024
+echo
+echo
 
 # and that's that
 echo Tests completed at `date` >&2

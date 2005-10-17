@@ -1,6 +1,5 @@
-
 char	netsh_id[]="\
-@(#)netsh.c (c) Copyright 1993, 1994 Hewlett-Packard Company. Version 2.0PL2";
+@(#)netsh.c (c) Copyright 1993, 1994 Hewlett-Packard Company. Version 2.1";
 
 
 /****************************************************************/
@@ -10,23 +9,35 @@ char	netsh_id[]="\
 /****************************************************************/
 
 #include <sys/types.h>
+#ifndef WIN32
+#include <unistd.h>
 #include <sys/ipc.h>
+#endif /* WIN32 */
 #include <fcntl.h>
 #include <errno.h>
 #include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <ctype.h>
+ /* the following four includes should not be needed ?*/
+#ifdef notdef
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#endif /* notdef */
+
 #ifndef STRINGS
 #include <string.h>
 #else /* STRINGS */
 #include <strings.h>
 #endif /* STRINGS */
 
+#ifdef WIN32
+extern	int	getopt(int , char **, char *) ;
+#else
 double atof();
+#endif /* WIN32 */
 
 /**********************************************************************/
 /*                                                                    */
@@ -37,7 +48,13 @@ double atof();
 #define  NETSH
 #include "netsh.h"
 #include "netlib.h"
-
+#include "nettest_bsd.h"
+#ifdef DO_UNIX
+#include "nettest_unix.h"
+#endif /* DO_UNIX */
+#ifdef DO_IPV6
+#include "nettest_ipv6.h"
+#endif /* DO_IPV6 */
 /************************************************************************/
 /*									*/
 /*	Global constants  and macros					*/
@@ -181,6 +198,7 @@ Global options:\n\
     -l testlen        Specify test duration (>0 secs) (<0 bytes|trans)\n\
     -o send,recv      Set the local send,recv buffer offsets\n\
     -O send,recv      Set the remote send,recv buffer offset\n\
+    -n numcpu         Set the number of processors for CPU util\n\
     -p port           Specify netserver port number\n\
     -P 0|1            Don't/Do display test headers\n\
     -t testname       Specify test to perform\n\
@@ -210,15 +228,15 @@ char	*s, *arg1, *arg2;
   if (ns) {
     /* there was a comma arg2 should be the second arg*/
     *ns++ = '\0';
-    while (*arg2++ = *ns++);
+    while ((*arg2++ = *ns++) != '\0');
   }
   else {
     /* there was not a comma, we can use ns as a temp s */
     /* and arg2 should be the same value as arg1 */
     ns = s;
-    while (*arg2++ = *ns++);
+    while ((*arg2++ = *ns++) != '\0');
   };
-  while (*arg1++ = *s++);
+  while ((*arg1++ = *s++) != '\0');
 }
 
 void
@@ -238,8 +256,8 @@ set_defaults()
   local_cpu_usage	= 0;/* measure local cpu		*/
   remote_cpu_usage	= 0;/* what do you think ;-)		*/
   
-  local_cpu_rate	= 0.0;
-  remote_cpu_rate	= 0.0;
+  local_cpu_rate	= (float)0.0;
+  remote_cpu_rate	= (float)0.0;
   
   /* the end-test conditions for the tests - either transactions, bytes,  */
   /* or time. different vars used for clarity - space is cheap ;-)        */
@@ -298,7 +316,7 @@ scan_cmd_line(argc, argv)
      char	*argv[];
 
 {
-  extern int	optind, opterrs;  /* index of first unused arg 	*/
+  extern int	optind;           /* index of first unused arg 	*/
   extern char	*optarg;	  /* pointer to option string	*/
   
   int		c;
@@ -476,7 +494,7 @@ scan_cmd_line(argc, argv)
       /* optional parm */
       if (isdigit(argv[optind][0])){
 	/* there was an optional parm */
-	local_cpu_rate = atof(argv[optind]);
+	local_cpu_rate = (float)atof(argv[optind]);
 	optind++;
       }
       local_cpu_usage++;
@@ -485,7 +503,7 @@ scan_cmd_line(argc, argv)
       /* measure remote cpu usage please */
       if (isdigit(argv[optind][0])){
 	/* there was an optional parm */
-	remote_cpu_rate = atof(argv[optind]);
+	remote_cpu_rate = (float)atof(argv[optind]);
 	optind++;
       }
       remote_cpu_usage++;
@@ -584,14 +602,24 @@ scan_cmd_line(argc, argv)
       }
 #endif /* DO_XTI */
 #ifdef DO_LWP
-    else if ((strcmp(test_name,"XTI_LWPSTR_RR") == 0) ||
-	     (strcmp(test_name,"XTI_LWPSTR_STREAM") == 0) ||
-	     (strcmp(test_name,"XTI_LWPDG_RR") == 0) ||
-	     (strcmp(test_name,"XTI_LWPDG_STREAM") == 0))
+    else if ((strcmp(test_name,"LWPSTR_RR") == 0) ||
+	     (strcmp(test_name,"LWPSTR_STREAM") == 0) ||
+	     (strcmp(test_name,"LWPDG_RR") == 0) ||
+	     (strcmp(test_name,"LWPDG_STREAM") == 0))
       {
 	scan_lwp_args(argc, argv);
       }
 #endif /* DO_LWP */
+#ifdef DO_IPV6
+    else if ((strcmp(test_name,"TCPIPV6_RR") == 0) ||
+	     (strcmp(test_name,"TCPIPV6_CRR") == 0) ||
+	     (strcmp(test_name,"TCPIPV6_STREAM") == 0) ||
+	     (strcmp(test_name,"UDPIPV6_RR") == 0) ||
+	     (strcmp(test_name,"UDPIPV6_STREAM") == 0))
+      {
+	scan_ipv6_args(argc, argv);
+      }
+#endif /* DO_IPV6 */
   }
 }
 

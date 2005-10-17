@@ -57,6 +57,8 @@ struct dlpi_co_stream_results_struct {
   float	elapsed_time;	/* how long the test ran */
   float	cpu_util;	/* -1 if not measured */
   float	serv_dem;	/* -1 if not measured */
+  int   cpu_method;     /* how was CPU util measured? */
+  int   num_cpus;       /* how many CPUs were there? */
 };
 
 struct	dlpi_co_rr_request_struct {
@@ -101,6 +103,8 @@ struct dlpi_co_rr_results_struct {
   float	elapsed_time;	/* how long the test ran */
   float	cpu_util;	/* -1 if not measured */
   float	serv_dem;	/* -1 if not measured */
+  int   cpu_method;     /* how was CPU util measured? */
+  int   num_cpus;       /* how many CPUs were there? */
 };
 
 struct	dlpi_cl_stream_request_struct {
@@ -188,4 +192,6 @@ struct dlpi_cl_rr_results_struct {
   float	elapsed_time;	/* how long the test ran */
   float	cpu_util;	/* -1 if not measured */
   float	serv_dem;	/* -1 if not measured */
+  int   cpu_method;     /* how was CPU util measured? */
+  int   num_cpus;       /* how many CPUs were there? */
 };
