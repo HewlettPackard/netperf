@@ -1,0 +1,81 @@
+#!/bin/sh
+#
+# This is an example script for using netperf. Feel free to modify it 
+# as necessary, but I would suggest that you copy this one first.
+#
+#
+
+# this points me to different revs of netperf
+NETHOME=/usr/local/netperf
+
+# The name of the remote machine
+REM_HOST="localhost"
+
+# The test length (in seconds)
+TEST_TIME=60
+
+# The socket sizes that we will be testing - using zero will let it 
+# be the system default.
+SOCKET_SIZES="0"
+
+# The request,response sizes that we will be using. The netperf
+# command parser will treat "1" the same as "1,1" - I use 1,1 to
+# remember that it is "request,response"
+RR_SIZES="1,1 64,64 100,200 128,8192"
+
+# Do you want local cpu usage? Use the line that defines LOC_CPU as "-c"
+# Otherwise, define it as ""
+#LOC_CPU="-c"
+LOC_CPU=""
+
+# Do you want remote cpu usage? Use the line that defines REM_CPU as "-C"
+# Otherwise, define it as ""
+#REM_CPU="-C"
+REM_CPU=""
+
+# If we are measuring CPU utilization, then we can save beaucoup
+# time by saving the results of the CPU calibration and passing
+# them in during the real tests. So, we execute the new CPU "tests"
+# of netperf and put the values into shell vars.
+case $LOC_CPU in
+\-c) LOC_RATE=`$NETHOME/netperf -t LOC_CPU`;;
+*) LOC_RATE=""
+esac
+
+case $REM_CPU in
+\-C) REM_RATE=`$NETHOME/netperf -t REM_CPU -H $REM_HOST`;;
+*) REM_RATE=""
+esac
+
+# This disables header display
+NO_HDR="-P 0"
+
+# we will repeat the test points five times to give a better feel for 
+# variability. previously, we repeated three times
+
+for SOCKET_SIZE in $SOCKET_SIZES
+	do
+	for RR_SIZE in $RR_SIZES
+		do
+		echo
+		echo
+		echo Testing with $SOCKET_SIZE byte sockets and $RR_SIZE byte req/rep
+		echo ------------------------------------------------------
+		echo
+		$NETHOME/netperf -l $TEST_TIME -H $REM_HOST \
+		  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE -t TCP_RR -- \
+                  -r $RR_SIZE -s $SOCKET_SIZE -S $SOCKET_SIZE
+		$NETHOME/netperf -l $TEST_TIME -H $REM_HOST \
+                  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE -t TCP_RR $NO_HDR --\
+                   -r $RR_SIZE -s $SOCKET_SIZE -S $SOCKET_SIZE
+		$NETHOME/netperf -l $TEST_TIME -H $REM_HOST \
+                  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE -t TCP_RR $NO_HDR --\
+                   -r $RR_SIZE -s $SOCKET_SIZE -S $SOCKET_SIZE
+		$NETHOME/netperf -l $TEST_TIME -H $REM_HOST \
+                  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE -t TCP_RR $NO_HDR --\
+                   -r $RR_SIZE -s $SOCKET_SIZE -S $SOCKET_SIZE
+		$NETHOME/netperf -l $TEST_TIME -H $REM_HOST \
+                  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE -t TCP_RR $NO_HDR --\
+                   -r $RR_SIZE -s $SOCKET_SIZE -S $SOCKET_SIZE
+		done
+	done
