@@ -5,7 +5,6 @@
  /* This file contains the test-specific definitions for netperf's BSD */
  /* sockets tests */
 
-#define PAD_TIME 4
 
 struct	tcp_stream_request_struct {
   int	send_buf_size;
@@ -47,6 +46,53 @@ struct	tcp_stream_response_struct {
 struct tcp_stream_results_struct {
   double         bytes_received;
   unsigned int	 recv_calls;	
+  float	         elapsed_time;	/* how long the test ran */
+  float	         cpu_util;	/* -1 if not measured */
+  float	         serv_dem;	/* -1 if not measured */
+  int            cpu_method;    /* how was cpu util measured? */
+  int            num_cpus;      /* how many CPUs had the remote? */
+};
+
+struct	tcp_maerts_request_struct {
+  int	send_buf_size;
+  int	recv_buf_size;	/* how big does the client want it - the */
+			/* receive socket buffer that is */ 
+  int	send_size;      /* how many bytes do we want netserver to send
+			   at one time? */
+  int	send_alignment; /* what is the alignment of the send */
+			/* buffer? */ 
+  int	send_offset;    /* and at what offset from that alignment? */ 
+  int	no_delay;       /* do we disable the nagle algorithm for send */
+			/* coalescing? */ 
+  int	measure_cpu;	/* does the client want server cpu utilization */
+			/* measured? */ 
+  float	cpu_rate;	/* do we know how fast the cpu is already? */ 
+  int	test_length;	/* how long is the test?		*/
+  int	so_rcvavoid;    /* do we want the remote to avoid copies on */
+			/* receives? */ 
+  int	so_sndavoid;    /* do we want the remote to avoid send copies? */
+  int   dirty_count;    /* how many integers in the send buffer */
+			/* should be made dirty before calling recv? */  
+  int   clean_count;    /* how many integers should be read from the */
+			/* recv buffer before calling recv? */ 
+};
+
+struct	tcp_maerts_response_struct {
+  int	recv_buf_size;	/* how big does the client want it	*/
+  int	send_size;
+  int	no_delay;
+  int	measure_cpu;	/* does the client want server cpu	*/
+  int	test_length;	/* how long is the test?		*/
+  int	send_buf_size;
+  int	data_port_number;	/* connect to me here	*/
+  float	cpu_rate;		/* could we measure	*/
+  int	so_rcvavoid;	/* could the remote avoid receive copies? */ 
+  int	so_sndavoid;	/* could the remote avoid send copies? */
+};
+
+struct tcp_maerts_results_struct {
+  double         bytes_sent;
+  unsigned int	 send_calls;	
   float	         elapsed_time;	/* how long the test ran */
   float	         cpu_util;	/* -1 if not measured */
   float	         serv_dem;	/* -1 if not measured */

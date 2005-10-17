@@ -5,8 +5,6 @@
  /* This file contains the test-specific definitions for netperf's BSD */
  /* sockets tests */
 
-#define PAD_TIME 2
-
 struct	tcpipv6_stream_request_struct {
   int	send_buf_size;
   int	recv_buf_size;	/* how big does the client want it - the */
@@ -51,6 +49,7 @@ struct tcpipv6_stream_results_struct {
   float	         cpu_util;	/* -1 if not measured */
   float	         serv_dem;	/* -1 if not measured */
   int            cpu_method;    /* how was cpu util measured? */
+  int            num_cpus;      /* how many CPUs had the remote? */
 };
 
 struct	tcpipv6_rr_request_struct {
@@ -91,6 +90,7 @@ struct tcpipv6_rr_results_struct {
   float	        cpu_util;	/* -1 if not measured */
   float	        serv_dem;	/* -1 if not measured */
   int           cpu_method;    /* how was cpu util measured? */
+  int           num_cpus;      /* how many CPUs had the remote? */
 };
 
 struct	tcpipv6_conn_rr_request_struct {
@@ -132,7 +132,8 @@ struct tcpipv6_conn_rr_results_struct {
   float	cpu_util;	/* -1 if not measured */
   float	serv_dem;	/* -1 if not measured */
   int   cpu_method;    /* how was cpu util measured? */
-};
+  int   num_cpus;      /* how many CPUs had the remote? */}
+;
 
 struct	tcpipv6_tran_rr_request_struct {
   int	recv_buf_size;	/* how big does the client want it	*/
@@ -173,6 +174,7 @@ struct tcpipv6_tran_rr_results_struct {
   float	cpu_util;	/* -1 if not measured */
   float	serv_dem;	/* -1 if not measured */
   int   cpu_method;    /* how was cpu util measured? */
+  int   num_cpus;      /* how many CPUs had the remote? */
 };
 
 struct	udpipv6_stream_request_struct {
@@ -206,6 +208,7 @@ struct	udpipv6_stream_results_struct {
   float	        elapsed_time;
   float	        cpu_util;
   int           cpu_method;    /* how was cpu util measured? */
+  int           num_cpus;      /* how many CPUs had the remote? */
 };
 
 
@@ -247,6 +250,7 @@ struct udpipv6_rr_results_struct {
   float	        cpu_util;	/* -1 if not measured */
   float	        serv_dem;	/* -1 if not measured */
   int           cpu_method;    /* how was cpu util measured? */
+  int           num_cpus;      /* how many CPUs had the remote? */
 };
 
 extern void scan_sockets_args();

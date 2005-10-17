@@ -5,7 +5,7 @@
 #endif /* lint */
 #ifdef DO_UNIX
 char	nettest_unix_id[]="\
-@(#)nettest_unix.c (c) Copyright 1994, 1995 Hewlett-Packard Co. Version 2.1pl4";
+@(#)nettest_unix.c (c) Copyright 1994, 1995 Hewlett-Packard Co. Version 2.2pl1";
      
 /****************************************************************/
 /*								*/

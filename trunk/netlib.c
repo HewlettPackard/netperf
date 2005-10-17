@@ -1,5 +1,5 @@
 char	netlib_id[]="\
-@(#)netlib.c (c) Copyright 1993, 1994 Hewlett-Packard Company. Version 2.2";
+@(#)netlib.c (c) Copyright 1993, 1994 Hewlett-Packard Company. Version 2.2pl1";
 
 /****************************************************************/
 /*								*/
@@ -55,6 +55,9 @@ char	netlib_id[]="\
  /* If you have trouble compiling you may want to add "sys/" raj 10/95 */
 #include <limits.h>
 #include <signal.h>
+#ifdef MPE
+#  define NSIG _NSIG
+#endif /* MPE */
 #include <sys/types.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -71,14 +74,18 @@ char	netlib_id[]="\
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/times.h>
+#ifndef MPE
 #include <sys/time.h>
+#endif /* MPE */
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <errno.h>
 #include <sys/utsname.h>
+#ifndef MPE
 #include <sys/param.h>
+#endif /* MPE */
 
 #ifdef USE_LOOPER
 #include <sys/mman.h>
@@ -213,6 +220,12 @@ long
 			       interface. at least I think that is
 			       what this is :) raj 8/2000 */
 #else
+#ifdef USE_PROC_STAT
+long
+  lib_start_count[MAXCPUS],   /* idle counter initial value per-cpu     */
+  lib_end_count[MAXCPUS];     /* idle counter final value per-cpu      */
+
+#else
 #ifdef USE_LOOPER
 
 long
@@ -236,6 +249,7 @@ int
   lib_idle_fd;
   
 #endif /* USE_LOOPER */
+#endif /* USE_PROC_STAT */
 #endif /* USE_KSTAT */
 #endif /* USE_PSTAT */  
 
@@ -525,24 +539,17 @@ get_num_cpus()
   }
 
 #else
-#if defined(__sun) && defined(__SVR4)
- /* must be Solaris ? */
-#include <unistd.h>
-
+  /* MW: <unistd.h> was included for non-Windows systems above. */
+  /* Thus if _SC_NPROC_ONLN is defined, we should be able to use sysconf. */
+#ifdef _SC_NPROCESSORS_ONLN
   temp_cpus = sysconf(_SC_NPROCESSORS_ONLN);
 
-#else
-#if defined __sgi
-
-  temp_cpus = sysconf(_SC_NPROC_ONLN);
-
-#else /* not __sgi */
+#else /* no _SC_NPROCESSORS_ONLN */
   /* we need to know some other ways to do this, or just fall-back on */
   /* a global command line option - raj 4/95 */
   temp_cpus = shell_num_cpus;
 
-#endif /* __sgi */
-#endif /* __sun && __SVR4 */
+#endif /* _SC_NPROCESSORS_ONLN */
 #endif /*  __hpux */
 
   if (temp_cpus > MAXCPUS) {
@@ -1254,6 +1261,9 @@ format_cpu_method(method)
     break;
   case NT_METHOD:
     method_char = 'N';
+    break;
+  case PROC_STAT:
+    method_char = 'S';
     break;
   default:
     method_char = '?';
@@ -1982,6 +1992,69 @@ calibrate_kstat(times,wait_time)
 }
 #endif /* USE_KSTAT */
 
+#ifdef USE_PROC_STAT
+
+/* The max. length of one line of /proc/stat cpu output */
+#define CPU_LINE_LENGTH ((8 * sizeof (long) / 3 + 1) * 4 + 8)
+#define PROC_STAT_FILE_NAME "/proc/stat"
+#define N_CPU_LINES(nr) (nr == 1 ? 1 : 1 + nr)
+
+static int proc_stat_fd = -1;
+static char* proc_stat_buf = NULL;
+static int proc_stat_buflen = 0;
+
+static long
+calibrate_proc_stat ()
+{
+  if (proc_stat_fd < 0) {
+    proc_stat_fd = open (PROC_STAT_FILE_NAME, O_RDONLY, NULL);
+    if (proc_stat_fd < 0) {
+      fprintf (stderr, "Cannot open %s!\n", PROC_STAT_FILE_NAME);
+      exit (1);
+    };
+  };
+
+  if (!proc_stat_buf) {
+    proc_stat_buflen = N_CPU_LINES (lib_num_loc_cpus) * CPU_LINE_LENGTH;
+    proc_stat_buf = malloc (proc_stat_buflen);
+    if (!proc_stat_buf) {
+      fprintf (stderr, "Cannot allocate buffer memory!\n");
+      exit (1);
+    };
+  };
+
+  return sysconf (_SC_CLK_TCK);
+}
+
+static void
+proc_stat_cpu_idle (long *res)
+{
+  int space;
+  int i;
+  int n = lib_num_loc_cpus;
+  char *p = proc_stat_buf;
+
+  lseek (proc_stat_fd, 0, SEEK_SET);
+  read (proc_stat_fd, p, proc_stat_buflen);
+
+  /* Skip first line (total) on SMP */
+  if (n > 1) p = strchr (p, '\n');
+
+  /* Idle time is the 4th space-separated token */
+  for (i = 0; i < n; i++) {
+    for (space = 0; space < 4; space ++) {
+      p = strchr (p, ' ');
+      while (*++p == ' ');
+    };
+
+    res[i] = strtoul (p, &p, 10);
+    p = strchr (p, '\n');
+  };
+
+}
+
+#endif /* USE_PROC_STAT */
+
 #ifdef USE_LOOPER
 
  /* calibrate_looper */
@@ -2150,7 +2223,7 @@ calibrate_pstat(times,wait_time)
       }
     }
     else {
-      fprintf(where,"pstat_getprocessor failure errno %d\n");
+      fprintf(where,"pstat_getprocessor failure errno %d\n",errno);
       fflush(where);
       exit(1);
     }
@@ -2240,7 +2313,11 @@ fprintf(where,"debug: %d\n",debug);
 /* possible so we can change them without affecting anyone...	*/
 /****************************************************************/
 
+#ifdef DO_IPV6
+struct	sockaddr_storage	server; /* remote host address          */
+#else
 struct	sockaddr_in	server;         /* remote host address          */
+#endif
 struct	servent		*sp;            /* server entity                */
 struct	hostent		*hp;            /* host entity                  */
 
@@ -2251,6 +2328,11 @@ short int	port;
 {
 
   unsigned int addr;
+  int salen;
+#ifdef DO_IPV6
+  struct addrinfo hints, *res;
+  char pbuf[10];
+#endif
 
   if (debug > 1) {
     fprintf(where,"establish_control: entered with %s and %d\n",
@@ -2266,6 +2348,23 @@ short int	port;
   
   bzero((char *)&server,
 	sizeof(server));
+
+#ifdef DO_IPV6
+  snprintf(pbuf, sizeof(pbuf), "%d", port);
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_family = af;
+  hints.ai_socktype = SOCK_STREAM;
+  hints.ai_flags = AI_PASSIVE;
+  if (getaddrinfo(hostname, pbuf, &hints, &res) > 0) {
+      fprintf(where,
+	      "establish_control: could not resolve the destination %s\n",
+	      hostname);
+      fflush(where);
+      exit(1);
+  }
+  memcpy(&server, res->ai_addr, res->ai_addrlen);
+  salen = res->ai_addrlen;
+#else
   server.sin_port = htons(port);
 
   /* it would seem that while HP-UX will allow an IP address (as a */
@@ -2296,7 +2395,9 @@ short int	port;
     server.sin_addr.s_addr = addr;
     server.sin_family = AF_INET;
   }    
-
+  salen = sizeof(server);
+#endif
+  
   if (debug > 1) {
     fprintf(where,"resolved the destination... \n");
     fflush(where);
@@ -2308,7 +2409,7 @@ short int	port;
     fflush(stdout);
   }
   
-  netlib_control = socket(server.sin_family,
+  netlib_control = socket(af,
 			  SOCK_STREAM,
 			  tcp_proto_num);
   
@@ -2324,7 +2425,7 @@ short int	port;
   
   if (connect(netlib_control, 
 	      (struct sockaddr *)&server, 
-	      sizeof(server)) <0){
+	      salen) <0){
     perror("establish_control: control socket connect failed");
     fprintf(stderr,
 	    "Are you sure there is a netserver running on %s at port %d?\n",
@@ -2504,6 +2605,10 @@ cpu_start(measure_cpu)
       lib_start_count[i] = *lib_idle_address[i];
     }
 #else
+#ifdef USE_PROC_STAT
+    cpu_method = PROC_STAT;
+    proc_stat_cpu_idle (lib_start_count);
+#else
 #ifdef USE_KSTAT
     cpu_method = KSTAT;
 
@@ -2600,6 +2705,7 @@ cpu_start(measure_cpu)
 #endif /* WIN32 */
 #endif /* USE_PSTAT */
 #endif /* USE_KSTAT */
+#endif /* USE_PROC_STAT */
 #endif /* USE_LOOPER */
   }
 }
@@ -2644,6 +2750,9 @@ if (measure_cpu) {
 	  lib_num_loc_cpus));
   unlink("/tmp/netperf_cpu");
 #endif /* WIN32 */
+#else
+#ifdef USE_PROC_STAT
+  proc_stat_cpu_idle (lib_end_count);
 #else
 #ifdef USE_KSTAT
   for (i = 0; i < lib_num_loc_cpus; i++){
@@ -2722,6 +2831,7 @@ if (measure_cpu) {
 #endif /* WIN32 */
 #endif /* USE_PSTAT */
 #endif /* USE_KSTAT */
+#endif /* USE_PROC_STAT */
 #endif /* USE_LOOPER */
 }
 
@@ -2816,7 +2926,7 @@ calc_cpu_util(elapsed_time)
     correction_factor = (float) 1.0;
   }
   
-#if defined (USE_LOOPER)  || defined (USE_KSTAT)
+#if defined (USE_LOOPER)  || defined (USE_KSTAT) || defined (USE_PROC_STAT)
   for (i = 0; i < lib_num_loc_cpus; i++) {
 
     /* it would appear that on some systems, in loopback, nice is
@@ -3462,6 +3572,9 @@ calibrate_local_cpu(local_cpu_rate)
     /* 0.0 to indicate that times or getrusage should be used. raj */
     /* 4/95 */
     lib_local_maxrate = (float)0.0;
+#ifdef USE_PROC_STAT
+    lib_local_maxrate = calibrate_proc_stat ();
+#endif
 #ifdef USE_LOOPER    
     lib_local_maxrate = calibrate_looper(4,10);
 #endif

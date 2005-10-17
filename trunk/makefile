@@ -1,5 +1,5 @@
 #
-# @(#)Makefile	2.1pl1	02/28/96
+# @(#)Makefile	2.1pl2	2002/06/04
 #
 # Makefile to build netperf benchmark tool
 #
@@ -7,7 +7,7 @@
 #SHELL="/bin/sh"
 
 #what version of netperf is this for?
-VERSION = 2.2alpha
+VERSION = 2.2pl2
 
 #
 # This tells the script where the executables and scripts are supposed
@@ -27,6 +27,7 @@ NETPERF_HOME = /opt/netperf
 # /opt/SUNWspro/bin/cc - the unbundled C compiler under Solaris
 # cc                   - if your paths are set, this may be all you 
 #                        need
+# gcc                  - There is a gcc for MPE/iX
 # 
 # one most systems, netperf spends very little time in user code, and
 # most of its time in the kernel, so I *suspect* that different
@@ -75,6 +76,9 @@ CC = cc
 #               remarkably close to the clockrate of the machine :)
 # -DUSE_KSTAT - If used on Solaris 2.mumble, this will make CPU
 #               utilization measurements using the kstat interface.
+# -DUSE_PROC_STAT - For use on linux systems with CPU utilization info in
+#               /proc/stat. Provides a fairly accurate CPU load measurement
+#               without affecting measurement.
 # -DDO_IPV6   - Include tests which use a sockets interface to IPV6.
 #               The control connection remains IPV4
 # -U__hpux    - Use this when compiling _on_ HP-UX *for* an HP-RT system
@@ -83,9 +87,11 @@ CC = cc
 #               of a DNS server.
 # -DHAVE_SENDFILE - Include the TCP_SENDFILE test to test the perf of
 #               sending data using sendfile() instead of send().
+# -D_POSIX_SOURCE -D_SOCKET_SOURCE -DMPE - these are required for MPE/ix
+#
 
 LOG_FILE=DEBUG_LOG_FILE="\"/tmp/netperf.debug\""
-CFLAGS = -Ae -O -D$(LOG_FILE) -DUSE_PSTAT -DHAVE_SENDFILE
+CFLAGS = -Ae -O -D$(LOG_FILE) -DUSE_PSTAT -DHAVE_SENDFILE -DDO_FIRST_BURST
 
 # Some platforms, and some options, require additional libraries.
 # you can add to the "LIBS =" line to accomplish this. if you find
@@ -102,6 +108,8 @@ CFLAGS = -Ae -O -D$(LOG_FILE) -DUSE_PSTAT -DHAVE_SENDFILE
 #                         netserver processes are reaped?
 # -lm                   - required for ALL platforms
 # -lxti                 - required for -DDO_XTI on HP_UX 10.X
+# -L/POSIXC60/lib -lunix -lm -lsocket - for MPE/iX
+# -lkstat               - required for -DUSE_KSTAT on Solaris
 
 LIBS= -lm
 
@@ -182,6 +190,7 @@ nettest_dns.o:  nettest_dns.c nettest_dns.h netlib.h netsh.h makefile
 netserver.o:	netserver.c nettest_bsd.h netlib.h makefile
 
 install:	netperf netserver
+		mkdir -p $(NETPERF_HOME)
 		chmod -w *.[ch]
 		chmod +x $(NETPERF_SCRIPTS)
 		@if [ ! -d $(NETPERF_HOME) ]; then \

@@ -1,7 +1,7 @@
 
 /*
  
-	   Copyright (C) 1993-2000 Hewlett-Packard Company
+	   Copyright (C) 1993-2001 Hewlett-Packard Company
                          ALL RIGHTS RESERVED.
  
   The enclosed software and documention includes copyrighted works of
@@ -43,7 +43,7 @@
  
 */
 char	netserver_id[]="\
-@(#)netserver.c (c) Copyright 1993-2000 Hewlett-Packard Co. Version 2.2";
+@(#)netserver.c (c) Copyright 1993-2000 Hewlett-Packard Co. Version 2.2pl1";
 
  /***********************************************************************/
  /*									*/
@@ -76,7 +76,9 @@ char	netserver_id[]="\
 #include <windows.h>
 #include <winsock.h>
 #else
+#ifndef MPE
 #include <sys/time.h>
+#endif /* MPE */
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -122,7 +124,7 @@ short	listen_port_num;
 extern	char	*optarg;
 extern	int	optind, opterr;
 
-#define SERVER_ARGS "dn:p:"
+#define SERVER_ARGS "dn:p:46"
 
  /* This routine implements the "main event loop" of the netperf	*/
  /* server code. Code above it will have set-up the control connection	*/
@@ -184,6 +186,10 @@ process_requests()
       
     case DO_TCP_STREAM:
       recv_tcp_stream();
+      break;
+      
+    case DO_TCP_MAERTS:
+      recv_tcp_maerts();
       break;
       
     case DO_TCP_RR:
@@ -369,21 +375,49 @@ process_requests()
 /*********************************************************************/
 /*KC*/
 
-void set_up_server()
+void set_up_server(int af)
 { 
-  struct sockaddr_in 	server;
-  struct sockaddr_in 	peeraddr;
+  struct sockaddr 	*server;
+  struct sockaddr_in 	server4;
+  struct sockaddr 	peeraddr;
+#ifdef DO_IPV6
+  struct sockaddr_in6 	server6;
+#endif
 
   int server_control;
-  int peeraddr_len;
+  int sockaddr_len;
   
-  server.sin_port = htons(listen_port_num);
-  server.sin_addr.s_addr = INADDR_ANY;
-  server.sin_family = AF_INET;
-  
+  if (af == AF_INET) {
+	server4.sin_port = htons(listen_port_num);
+	server4.sin_addr.s_addr = INADDR_ANY;
+	server4.sin_family = AF_INET;
+ 	sockaddr_len = sizeof(struct sockaddr_in);
+	server = (struct sockaddr *) &server4;
+  }
+#ifdef DO_IPV6
+  else {
+	server6.sin6_port = htons(listen_port_num);
+	server6.sin6_family = AF_INET6;
+#ifndef IN6_CLEAR_IN6ADDR 
+#define IN6_CLEAR_IN6ADDR(x) 	memset(&(x), 0, sizeof(struct in6_addr))
+#endif
+	IN6_CLEAR_IN6ADDR(server6.sin6_addr);
+ 	sockaddr_len = sizeof(struct sockaddr_in6);
+	server = (struct sockaddr *) &server6;
+  }
+#else
+  else {
+	fprintf(stderr,
+		"netserver: IPv6 is not supported\n");
+	fflush(stderr);
+	exit(1);
+  }
+#endif
+
   printf("Starting netserver at port %d\n",listen_port_num);
 
-  server_control = socket (AF_INET,SOCK_STREAM,0);
+  server_control = socket(server->sa_family,SOCK_STREAM,0);
+
 #ifdef WIN32
   if (server_control == INVALID_SOCKET)
 #else
@@ -393,9 +427,7 @@ void set_up_server()
       perror("server_set_up: creating the socket");
       exit(1);
     }
-  if (bind (server_control,
-	    (struct sockaddr *)&server, 
-	    sizeof(struct sockaddr_in)) == -1)
+  if (bind (server_control, server, sockaddr_len) == -1)
     {
       perror("server_set_up: binding the socket");
       exit (1);
@@ -410,7 +442,7 @@ void set_up_server()
     setpgrp();
     */
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(MPE)
   switch (fork())
     {
     case -1:  	
@@ -421,12 +453,12 @@ void set_up_server()
       /* stdin/stderr should use fclose */
       fclose(stdin);
       fclose(stderr);
- /* can I just use setsid on all systems? raj 4/96 */
-#if defined(__NetBSD__) || defined(__bsdi__) || defined(sun) || defined(__FREEBSD__) || defined(__FreeBSD__) || defined (__OpenBSD__)
+ 
+#ifndef NO_SETSID
       setsid();
 #else
       setpgrp();
-#endif
+#endif /* NO_SETSID */
 
  /* some OS's have SIGCLD defined as SIGCHLD */
 #ifndef SIGCLD
@@ -439,15 +471,14 @@ void set_up_server()
 
       for (;;)
 	{
-	  peeraddr_len = sizeof(peeraddr);
 	  if ((server_sock=accept(server_control,
-				  (struct sockaddr *)&peeraddr,
-				  &peeraddr_len)) == -1)
+				  &peeraddr,
+				  &sockaddr_len)) == -1)
 	    {
 	      printf("server_control: accept failed\n");
 	      exit(1);
 	    }
-#ifdef WIN32
+#if defined(WIN32) || defined(MPE)
 	/*
 	 * Since we cannot fork this process , we cant fire any threads
 	 * as they all share the same global data . So we better allow
@@ -456,7 +487,6 @@ void set_up_server()
 	    process_requests() ;
 	}
 #else
-
 	  signal(SIGCLD, SIG_IGN);
 	  
 	  switch (fork())
@@ -502,6 +532,7 @@ char *argv[];
 {
 
   int	c;
+  int	af = AF_INET;
 
   struct sockaddr name;
   int namelen = sizeof(name);
@@ -549,7 +580,14 @@ char *argv[];
 	exit(1);
       }
       break;
-
+#ifdef DO_IPV6
+    case '4':
+      af = AF_INET;
+      break;
+    case '6':
+      af = AF_INET6;
+      break;
+#endif
     }
   }
 
@@ -575,7 +613,7 @@ char *argv[];
 
   if (listen_port_num) {
     /* the user specified a port number on the command line */
-    set_up_server();
+    set_up_server(af);
   }
   else if (getsockname(0, &name, &namelen) == -1) {
     /* we may not be a child of inetd */
@@ -585,7 +623,7 @@ char *argv[];
 	  if (errno == ENOTSOCK) {
 #endif /* WIN32 */
 	  listen_port_num = TEST_PORT;
-      set_up_server();
+      set_up_server(af);
     }
   }
   else {

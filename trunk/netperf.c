@@ -1,7 +1,7 @@
 
 /*
  
-            Copyright (C) 1993,1994,1995 Hewlett-Packard Company
+	   Copyright (C) 1993-2001 Hewlett-Packard Company
                          ALL RIGHTS RESERVED.
  
   The enclosed software and documention includes copyrighted works of
@@ -43,7 +43,7 @@
  
 */
 char	netperf_id[]="\
-@(#)netperf.c (c) Copyright 1993, 1994 Hewlett-Packard Company. Version 2.2";
+@(#)netperf.c (c) Copyright 1993, 1994 Hewlett-Packard Company. Version 2.2pl1";
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -118,6 +118,9 @@ establish_control(host_name,test_port);
 
 if (strcmp(test_name,"TCP_STREAM") == 0) {
 	send_tcp_stream(host_name);
+}
+else if (strcmp(test_name,"TCP_MAERTS") == 0) {
+	send_tcp_maerts(host_name);
 }
 #ifdef HAVE_SENDFILE
 else if (strcmp(test_name,"TCP_SENDFILE") == 0) {

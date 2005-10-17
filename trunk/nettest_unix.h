@@ -5,8 +5,6 @@
  /* This file contains the test-specific definitions for netperf's */
  /* DLPI tests */
 
-#define PAD_TIME 2
-
 struct	stream_stream_request_struct {
   int	recv_buf_size;
   int	send_buf_size;

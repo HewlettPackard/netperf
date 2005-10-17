@@ -1,5 +1,5 @@
 char	netsh_id[]="\
-@(#)netsh.c (c) Copyright 1993-2000 Hewlett-Packard Company. Version 2.2";
+@(#)netsh.c (c) Copyright 1993-2000 Hewlett-Packard Company. Version 2.2pl1";
 
 
 /****************************************************************/
@@ -20,12 +20,10 @@ char	netsh_id[]="\
 #include <stdlib.h>
 #include <ctype.h>
  /* the following four includes should not be needed ?*/
-#ifdef notdef
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
-#endif /* notdef */
 
 #ifndef STRINGS
 #include <string.h>
@@ -51,6 +49,7 @@ double atof();
 #include "nettest_bsd.h"
 #ifdef DO_UNIX
 #include "nettest_unix.h"
+#include "sys/socket.h"
 #endif /* DO_UNIX */
 #ifdef DO_IPV6
 #include "nettest_ipv6.h"
@@ -70,7 +69,7 @@ double atof();
  /* Some of the args take optional parameters. Since we are using */
  /* getopt to parse the command line, we will tell getopt that they do */
  /* not take parms, and then look for them ourselves */
-#define GLOBAL_CMD_LINE_ARGS "A:a:b:CcdDf:F:H:hi:I:l:n:O:o:P:p:t:v:W:w:"
+#define GLOBAL_CMD_LINE_ARGS "A:a:b:CcdDf:F:H:hi:I:l:n:O:o:P:p:t:v:W:w:46"
 
 /************************************************************************/
 /*									*/
@@ -170,6 +169,9 @@ double interval;
  /* receiving data */
 int	send_width;
 int     recv_width;
+
+/* address family */
+int	af = AF_INET;
 
 char netserver_usage[] = "\n\
 Usage: netserver [options] \n\
@@ -550,6 +552,7 @@ scan_cmd_line(argc, argv)
 #ifdef HAVE_SENDFILE
 	(strcmp(test_name,"TCP_SENDFILE") == 0) ||
 #endif /* HAVE_SENDFILE */
+	(strcmp(test_name,"TCP_MAERTS") == 0) ||
 	(strcmp(test_name,"TCP_RR") == 0) ||
 	(strcmp(test_name,"TCP_CRR") == 0) ||
 #ifdef DO_1644
@@ -630,7 +633,20 @@ scan_cmd_line(argc, argv)
       }
 #endif /* DO_DNS */
   }
+
+#ifdef DO_IPV6
+  /* address family check */   
+  if ((strcmp(test_name,"TCPIPV6_RR") == 0) ||
+      (strcmp(test_name,"TCPIPV6_CRR") == 0) ||
+      (strcmp(test_name,"TCPIPV6_STREAM") == 0) ||
+      (strcmp(test_name,"UDPIPV6_RR") == 0) ||
+      (strcmp(test_name,"UDPIPV6_STREAM") == 0))
+    {
+      af = AF_INET6;
+    }
+#endif /* DO_IPV6 */
 }
+
 
 void
 dump_globals()
