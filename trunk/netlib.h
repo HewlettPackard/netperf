@@ -332,6 +332,7 @@ extern int optopt;		/* */
 extern  SOCKET     win_kludge_socket;
 #endif /* WIN32 */
 
+extern  int   proc_affinity;
 extern  union netperf_request_struct netperf_request;
 extern  union netperf_response_struct netperf_response;
 

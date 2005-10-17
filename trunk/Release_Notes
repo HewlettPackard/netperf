@@ -1,3 +1,18 @@
+These are the Release Notes for revision 2.3pl1 of netperf:
+
+Things changed in this release
+
+*) The bind() call in create_data_socket() in the file nettest_bsd.c
+   is no longer conditional on the user's specifying an IP address or
+   port number to which the data socket should be bound.  This fixes
+   the "connection refused" errors in the UDP tests.
+
+*) Some experimental code to allow one to specify a CPU to which the
+   remote netserver should be bound.  This is intended to allow one to
+   get greater certainty (as in confidence intervals) on SMP
+   systems. At present the functionality is HP-UX specific.
+   Submittals of changes for a more general approach are welcomed.
+
 These are the Release Notes for revision 2.3 of netperf:
 
 Things changed in this release

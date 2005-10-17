@@ -409,6 +409,9 @@ SOCKET  server_sock = INVALID_SOCKET;
 
 int     tcp_proto_num;
 
+/* global variable to hold the value for processor affinity */
+int     proc_affinity = -1;
+
  /* in the past, I was overlaying a structure on an array of ints. now */
  /* I am going to have a "real" structure, and point an array of ints */
  /* at it. the real structure will be forced to the same alignment as */
@@ -1627,7 +1630,16 @@ send_request()
     fprintf(where,"entered send_request...contents before htonl:\n");
     dump_request();
   }
-  
+
+ #ifdef HPUX_NETSERVER_AFFINITY
+
+  /* pass the processor affinity request value to netserver */
+  /* this is a kludge and I know it.  sgb 8/11/04           */
+
+  netperf_request.content.dummy = proc_affinity;
+
+#endif
+ 
   /* put the entire request array into network order. We do this */
   /* arbitrarily rather than trying to figure-out just how much */
   /* of the request array contains real information. this should */
@@ -1800,9 +1812,25 @@ if (tot_bytes_recvd < buflen) {
   exit(1);
 }
 
-if (debug > 1) {
-  dump_request();
-}
+ if (debug > 1) {
+   dump_request();
+ } 
+
+#ifdef HPUX_NETSERVER_AFFINITY
+#include <sys/mpctl.h>
+
+  /* get the processor affinity request value from netperf */
+  /* this is a kludge and I know it.  sgb 8/11/04          */
+
+  proc_affinity = netperf_request.content.dummy;
+
+  if (proc_affinity != -1) {
+    /* don't care about the status of the mpctl call so don't check it */
+    mpctl(MPC_SETPROCESS_FORCE, proc_affinity, getpid());
+  } 
+
+#endif
+
 }
 
  /***********************************************************************/
