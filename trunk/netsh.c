@@ -2,7 +2,7 @@
 #error you must first edit and customize the makefile to your platform
 #endif /* NEED_MAKEFILE_EDIT */
 char	netsh_id[]="\
-@(#)netsh.c (c) Copyright 1993-2004 Hewlett-Packard Company. Version 2.2pl5";
+@(#)netsh.c (c) Copyright 1993-2004 Hewlett-Packard Company. Version 2.3";
 
 
 /****************************************************************/
@@ -46,7 +46,7 @@ char	netsh_id[]="\
 #ifdef WIN32
 extern	int	getopt(int , char **, char *) ;
 #else
-double atof();
+double atof(const char *);
 #endif /* WIN32 */
 
 /**********************************************************************/

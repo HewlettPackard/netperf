@@ -27,6 +27,9 @@ struct	tcpipv6_stream_request_struct {
 			/* should be made dirty before calling recv? */  
   int   clean_count;    /* how many integers should be read from the */
 			/* recv buffer before calling recv? */ 
+  int   port;           /* the port to which the recv side should bind
+			   to allow netperf to run through those evil
+			   firewall things */
 };
 
 struct	tcpipv6_stream_response_struct {
@@ -68,6 +71,9 @@ struct	tcpipv6_rr_request_struct {
   int	so_rcvavoid;    /* do we want the remote to avoid receive */
 			/* copies? */ 
   int	so_sndavoid;    /* do we want the remote to avoid send copies? */
+  int   port;           /* the port to which the recv side should bind
+			   to allow netperf to run through those evil
+			   firewall things */
 };
 
 struct	tcpipv6_rr_response_struct {
@@ -122,6 +128,9 @@ struct	tcpipv6_conn_rr_response_struct {
   float	cpu_rate;		/* could we measure	*/
   int	so_rcvavoid;	/* could the remote avoid receive copies? */
   int	so_sndavoid;	/* could the remote avoid send copies? */
+  int   port;           /* the port to which the recv side should bind
+			   to allow netperf to run through those evil
+			   firewall things */
 };
 
 struct tcpipv6_conn_rr_results_struct {
@@ -151,6 +160,9 @@ struct	tcpipv6_tran_rr_request_struct {
   int	so_rcvavoid;    /* do we want the remote to avoid receive */
 			/* copies? */ 
   int	so_sndavoid;    /* do we want the remote to avoid send copies? */
+  int   port;           /* the port to which the recv side should bind
+			   to allow netperf to run through those evil
+			   firewall things */
 };
 
 
@@ -189,6 +201,9 @@ struct	udpipv6_stream_request_struct {
   int	so_rcvavoid;    /* do we want the remote to avoid receive */
 			/* copies? */ 
   int	so_sndavoid;    /* do we want the remote to avoid send copies? */
+  int   port;           /* the port to which the recv side should bind
+			   to allow netperf to run through those evil
+			   firewall things */
 };
 
 struct	udpipv6_stream_response_struct {
@@ -228,6 +243,9 @@ struct	udpipv6_rr_request_struct {
   int	so_rcvavoid;    /* do we want the remote to avoid receive */
 			/* copies? */ 
   int	so_sndavoid;    /* do we want the remote to avoid send copies? */
+  int   port;           /* the port to which the recv side should bind
+			   to allow netperf to run through those evil
+			   firewall things */
 };
 
 struct	udpipv6_rr_response_struct {

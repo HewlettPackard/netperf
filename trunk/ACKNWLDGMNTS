@@ -115,3 +115,13 @@ Fixes for -DHISTOGRAM and -DUNIX on Mac OS X, updates to usage strings
 
 Spencer Frink
 Fixes and Cleanup for WIN32
+
+Nicholas Thomas
+Fixes for DLPI on SVR4 Streams under Linux
+
+Dave Craig
+Fixes for getaddrinfo error returns
+
+David Mosberger
+Workaround for the Linux getsockopt() bug that returns more than that
+for which one asked.

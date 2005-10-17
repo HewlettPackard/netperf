@@ -168,6 +168,10 @@
 #define         DNS_RR_RESPONSE            401
 #define         DNS_RR_RESULTS             402
 
+enum sock_buffer{
+  SEND_BUFFER,
+  RECV_BUFFER
+};
 
  /* some of the fields in these structures are going to be doubles and */
  /* such. so, we probably want to ensure that they will start on */
@@ -369,6 +373,10 @@ extern  void	retrieve_confident_values(float *elapsed_time,
 			  float *local_service_demand,
 			  float *remote_service_demand);
 extern  void    display_confidence();
+extern  void    set_sock_buffer(int sd,
+				enum sock_buffer which,
+				int requested_size,
+				int *effective_sizep);
 extern  char   *format_units();
 
 extern  double  ntohd(double net_double);

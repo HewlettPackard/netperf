@@ -1,3 +1,51 @@
+These are the Release Notes for revision 2.3 of netperf:
+
+Things changed in this release
+
+*) The user can now specify local and/or remote port numbers for the
+   data connection using the -P test-specific option.  This is to
+   support those folks who want to run netperf through those evil,
+   end-to-end-breaking things known as firewalls... :)  This changes
+   the format of some of the control messages, hence the bump in the
+   update number in the VUF. While it may be possible to mix 2.3 and
+   pre-2.3 netperf and netserver, it is not supported.
+
+*) The user can now specify local and/or remote IP addresses for the
+   data connection using the -I test-specific option.  This is to
+   support those folks who want to run netperf through those evil,
+   end-to-end-breaking things known as firewalls... :) This changes
+   the format of some of the control messages, hence the bump in the
+   update number in the VUF. While it may be possible to mix 2.3 and
+   pre-2.3 netperf and netserver, it is not supported.
+
+*) Set DL_mumble  message priorities in the DLPI tests
+
+*) Fix error return check for getaddrinfo()
+
+*) Those systems with gethrtime() can define -DHAVE_GETHRTIME to use
+   gethrtime() instead of gettimeofday() and reduce the measurement
+   overhead when enabling the -DHISTOGRAM functionality.
+
+*) The default for -DHISTOGRAM compilation now adds a UNIT_USEC and
+   TEN_USEC row and renames TENTH_MSEC to HUNDRED_USEC.  If you want
+   the old behaviour add -DOLD_HISTOGRAM to CFLAGS.
+
+*) Add missing '!' in the recv_udp*_stream so we recognize the end of 
+   a timed test correctly.
+
+*) Replace "||" with "&&" to fix an infinite loop in
+   recv_tcp_conn_rr() most likely introduced in 2.2pl5. 
+
+*) Code has been added to kludge around the bug in Linux getsockopt()
+   where it almost always returns twice the value for which one
+   asks unlike virtually every other stack on the face of the
+   planet. This was doing some unpleasant things to tests in which
+   confidence intervals were requested. 
+
+Things not changed in this release
+
+*) Lots :)
+
 These are the Release Notes for revision 2.2pl5 of netperf:
 
 Things changed in this release

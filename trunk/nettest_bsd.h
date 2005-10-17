@@ -28,6 +28,12 @@ struct	tcp_stream_request_struct {
 			/* should be made dirty before calling recv? */  
   int   clean_count;    /* how many integers should be read from the */
 			/* recv buffer before calling recv? */ 
+  int   port;           /* the port to which the recv side should bind
+			   to allow netperf to run through those evil
+			   firewall things */
+  int   ipaddress;      /* the IP address to which the recv side
+			   should bind to allow netperf to run through
+			   those evil firewall things */
 };
 
 struct	tcp_stream_response_struct {
@@ -75,6 +81,12 @@ struct	tcp_maerts_request_struct {
 			/* should be made dirty before calling recv? */  
   int   clean_count;    /* how many integers should be read from the */
 			/* recv buffer before calling recv? */ 
+  int   port;           /* the port to which the recv side should bind
+			   to allow netperf to run through those evil
+			   firewall things */
+  int   ipaddress;      /* the IP address to which the recv side
+			   should bind to allow netperf to run through
+			   those evil firewall things */
 };
 
 struct	tcp_maerts_response_struct {
@@ -116,6 +128,12 @@ struct	tcp_rr_request_struct {
   int	so_rcvavoid;    /* do we want the remote to avoid receive */
 			/* copies? */ 
   int	so_sndavoid;    /* do we want the remote to avoid send copies? */
+  int   port;           /* the port to which the recv side should bind
+			   to allow netperf to run through those evil
+			   firewall things */
+  int   ipaddress;      /* the IP address to which the recv side
+			   should bind to allow netperf to run through
+			   those evil firewall things */
 };
 
 struct	tcp_rr_response_struct {
@@ -157,6 +175,12 @@ struct	tcp_conn_rr_request_struct {
   int	so_rcvavoid;    /* do we want the remote to avoid receive */
 			/* copies? */ 
   int	so_sndavoid;    /* do we want the remote to avoid send copies? */
+  int   port;           /* the port to which the recv side should bind
+			   to allow netperf to run through those evil
+			   firewall things */
+  int   ipaddress;      /* the IP address to which the recv side
+			   should bind to allow netperf to run through
+			   those evil firewall things */
 };
 
 
@@ -199,6 +223,12 @@ struct	tcp_tran_rr_request_struct {
   int	so_rcvavoid;    /* do we want the remote to avoid receive */
 			/* copies? */ 
   int	so_sndavoid;    /* do we want the remote to avoid send copies? */
+  int   port;           /* the port to which the recv side should bind
+			   to allow netperf to run through those evil
+			   firewall things */
+  int   ipaddress;      /* the IP address to which the recv side
+			   should bind to allow netperf to run through
+			   those evil firewall things */
 };
 
 
@@ -238,6 +268,12 @@ struct	udp_stream_request_struct {
   int	so_rcvavoid;    /* do we want the remote to avoid receive */
 			/* copies? */ 
   int	so_sndavoid;    /* do we want the remote to avoid send copies? */
+  int   port;           /* the port to which the recv side should bind
+			   to allow netperf to run through those evil
+			   firewall things */
+  int   ipaddress;      /* the IP address to which the recv side
+			   should bind to allow netperf to run through
+			   those evil firewall things */
 };
 
 struct	udp_stream_response_struct {
@@ -277,6 +313,12 @@ struct	udp_rr_request_struct {
   int	so_rcvavoid;    /* do we want the remote to avoid receive */
 			/* copies? */ 
   int	so_sndavoid;    /* do we want the remote to avoid send copies? */
+  int   port;           /* the port to which the recv side should bind
+			   to allow netperf to run through those evil
+			   firewall things */
+  int   ipaddress;      /* the IP address to which the recv side
+			   should bind to allow netperf to run through
+			   those evil firewall things */
 };
 
 struct	udp_rr_response_struct {
@@ -318,6 +360,12 @@ struct	tcp_cc_request_struct {
   int	so_rcvavoid;    /* do we want the remote to avoid receive */
 			/* copies? */ 
   int	so_sndavoid;    /* do we want the remote to avoid send copies? */
+  int   port;           /* the port to which the recv side should bind
+			   to allow netperf to run through those evil
+			   firewall things */
+  int   ipaddress;      /* the IP address to which the recv side
+			   should bind to allow netperf to run through
+			   those evil firewall things */
 };
 
 

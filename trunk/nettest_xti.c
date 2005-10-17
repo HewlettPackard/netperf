@@ -4,7 +4,7 @@
 #ifdef DO_XTI
 #ifndef lint
 char	nettest_xti_id[]="\
-@(#)nettest_xti.c (c) Copyright 1995,2004 Hewlett-Packard Co. Version 2.2pl5";
+@(#)nettest_xti.c (c) Copyright 1995,2004 Hewlett-Packard Co. Version 2.2pl6";
 #else
 #define DIRTY
 #define HISTOGRAM
@@ -98,8 +98,13 @@ static int
 static struct t_info info_struct;
 
 #ifdef HISTOGRAM
+#ifdef HAVE_GETHRTIME
+hrtime_t time_one;
+hrtime_t time_two;
+#else
 static struct timeval time_one;
 static struct timeval time_two;
+#endif /* HAVE_GETHRTIME */
 static HIST time_hist;
 #endif /* HISTOGRAM */
 
@@ -914,7 +919,7 @@ Size (bytes)\n\
 #ifdef HISTOGRAM
       /* timestamp just before we go into send and then again just after */
       /* we come out raj 8/94 */
-      gettimeofday(&time_one,NULL);
+      HIST_timestamp(&time_one);
 #endif /* HISTOGRAM */
       
       if((len=t_snd(send_socket,
@@ -936,7 +941,7 @@ Size (bytes)\n\
 
 #ifdef HISTOGRAM
       /* timestamp the exit from the send call and update the histogram */
-      gettimeofday(&time_two,NULL);
+      HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
 #endif /* HISTOGRAM */      
 
@@ -2093,7 +2098,7 @@ Send   Recv    Send   Recv\n\
 #ifdef HISTOGRAM
       /* timestamp just before our call to send, and then again just */
       /* after the receive raj 8/94 */
-      gettimeofday(&time_one,NULL);
+      HIST_timestamp(&time_one);
 #endif /* HISTOGRAM */
       
       if((len=t_snd(send_socket,
@@ -2149,7 +2154,7 @@ Send   Recv    Send   Recv\n\
       }
       
 #ifdef HISTOGRAM
-      gettimeofday(&time_two,NULL);
+      HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
 #endif /* HISTOGRAM */
 #ifdef INTERVALS      
@@ -2798,7 +2803,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
 #endif /* DIRTY */
       
 #ifdef HISTOGRAM
-      gettimeofday(&time_one,NULL);
+      HIST_timestamp(&time_one);
 #endif /* HISTOGRAM */
       
       if ((t_sndudata(data_socket,
@@ -2823,7 +2828,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
       
 #ifdef HISTOGRAM
       /* get the second timestamp */
-      gettimeofday(&time_two,NULL);
+      HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
 #endif /* HISTOGRAM */
 #ifdef INTERVALS      
@@ -3828,7 +3833,7 @@ Send   Recv    Send   Recv\n\
     while ((!times_up) || (trans_remaining > 0)) {
       /* send the request */
 #ifdef HISTOGRAM
-      gettimeofday(&time_one,NULL);
+      HIST_timestamp(&time_one);
 #endif
       if((t_sndudata(send_socket,
 		     &send_unitdata)) != 0) {
@@ -3882,7 +3887,7 @@ Send   Recv    Send   Recv\n\
       recv_ring = recv_ring->next;
       
 #ifdef HISTOGRAM
-      gettimeofday(&time_two,NULL);
+      HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
       
       /* at this point, we may wish to sleep for some period of */

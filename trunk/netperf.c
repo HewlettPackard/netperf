@@ -45,7 +45,7 @@
  
 */
 char	netperf_id[]="\
-@(#)netperf.c (c) Copyright 1993-2003 Hewlett-Packard Company. Version 2.2pl3";
+@(#)netperf.c (c) Copyright 1993-2004 Hewlett-Packard Company. Version 2.3";
 
 #include <stdio.h>
 #include <stdlib.h>

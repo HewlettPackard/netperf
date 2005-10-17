@@ -1,5 +1,5 @@
 #
-# @(#)Makefile	2.1pl5	2004/03/12
+# @(#)Makefile	2.3	2004/06/15
 #
 # Makefile to build netperf benchmark tool
 #
@@ -7,7 +7,7 @@
 #SHELL="/bin/sh"
 
 #what version of netperf is this for?
-VERSION = 2.2pl5
+VERSION = 2.3
 
 #
 # This tells the script where the executables and scripts are supposed
@@ -102,6 +102,13 @@ CC = cc
 #                CPU utilization
 # -DUSE_PERFSTAT - Use the perfstat call on AIX to calculate CPU util
 #
+# -DHAVE_GETHRTIME - use gethrtime() instead of gettimeofday() for the
+#                    histogram functionality
+# -DOLD_HISTOGRAM - retain the output format and semantics of pre-2.2pl6
+#                   -DHISTOGRAM functionality. Namely any times less than 
+#                   TENTH_MSEC are lumped into the 0 bucket of TENTH_MSEC
+#                   and the row retains the TENTH_MSEC lable instead of
+#                   the new HUNDRED_USEC
 
 LOG_FILE=DEBUG_LOG_FILE="\"/tmp/netperf.debug\""
 CFLAGS = -O -D$(LOG_FILE) -DNEED_MAKEFILE_EDIT

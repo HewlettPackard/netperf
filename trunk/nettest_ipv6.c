@@ -1,7 +1,7 @@
 #ifdef DO_IPV6
 #ifndef lint
 char	nettest_ipv6_id[]="\
-@(#)nettest_ipv6.c (c) Copyright 1995-2004 Hewlett-Packard Co. Version 2.2pl5";
+@(#)nettest_ipv6.c (c) Copyright 1995-2004 Hewlett-Packard Co. Version 2.3";
 #else
 #define DIRTY
 #define HISTOGRAM
@@ -81,6 +81,8 @@ char	nettest_ipv6_id[]="\
 static int	
   rss_size,		/* remote socket send buffer size	*/
   rsr_size,		/* remote socket recv buffer size	*/
+  lss_size_req,		/* requested local socket send buffer size */
+  lsr_size_req,		/* requested local socket recv buffer size */
   lss_size,		/* local  socket send buffer size 	*/
   lsr_size,		/* local  socket recv buffer size 	*/
   req_size = 1,		/* request size                   	*/
@@ -108,8 +110,13 @@ int
   rem_rcvavoid;		/* avoid recv_copies remotely		*/
 
 #ifdef HISTOGRAM
+#ifdef HAVE_GETHRTIME
+hrtime_t time_one;
+hrtime_t time_two;
+#else
 static struct timeval time_one;
 static struct timeval time_two;
+#endif /* HAVE_GETHRTIME */
 static HIST time_hist;
 #endif /* HISTOGRAM */
 
@@ -192,7 +199,7 @@ get_tcp_info(SOCKET socket, int *mss)
 	    "netperf: get_tcp_info: getsockopt TCP_MAXSEG: errno %d\n",
 	    errno);
     fflush(where);
-    lss_size = -1;
+    *mss = -1;
   }
 #else
   *mss = -1;
@@ -247,82 +254,8 @@ create_data_socket(int family, int type)
   /* their values are. If we cannot touch the socket buffer in any way, */
   /* we will set the values to -1 to indicate that.  */
   
-#ifdef SO_SNDBUF
-  if (lss_size > 0) {
-    if(setsockopt(temp_socket, SOL_SOCKET, SO_SNDBUF,
-		  (char *)&lss_size, sizeof(int)) == SOCKET_ERROR) {
-      fprintf(where,
-	      "netperf: create_data_socket: SO_SNDBUF option: errno %d\n",
-	      errno);
-      fflush(where);
-      exit(1);
-    }
-    if (debug > 1) {
-      fprintf(where,
-	      "netperf: create_data_socket: SO_SNDBUF of %d requested.\n",
-	      lss_size);
-      fflush(where);
-    }
-  }
-  if (lsr_size > 0) {
-    if(setsockopt(temp_socket, SOL_SOCKET, SO_RCVBUF,
-		  (char *)&lsr_size, sizeof(int)) == SOCKET_ERROR) {
-      fprintf(where,
-	      "netperf: create_data_socket: SO_RCVBUF option: errno %d\n",
-	      errno);
-      fflush(where);
-      exit(1);
-    }
-    if (debug > 1) {
-      fprintf(where,
-	      "netperf: create_data_socket: SO_SNDBUF of %d requested.\n",
-	      lss_size);
-      fflush(where);
-    }
-  }
-  
-  
-  /* Now, we will find-out what the size actually became, and report */
-  /* that back to the user. If the call fails, we will just report a -1 */
-  /* back to the initiator for the recv buffer size. */
-  
-  sock_opt_len = sizeof(int);
-  if (getsockopt(temp_socket,
-		 SOL_SOCKET,	
-		 SO_SNDBUF,
-		 (char *)&lss_size,
-		 &sock_opt_len) == SOCKET_ERROR) {
-    fprintf(where,
-	    "netperf: create_data_socket: getsockopt SO_SNDBUF: errno %d\n",
-	    errno);
-    fflush(where);
-    lss_size = -1;
-  }
-  if (getsockopt(temp_socket,
-		 SOL_SOCKET,	
-		 SO_RCVBUF,
-		 (char *)&lsr_size,
-		 &sock_opt_len) == SOCKET_ERROR) {
-    fprintf(where,
-	    "netperf: create_data_socket: getsockopt SO_SNDBUF: errno %d\n",
-	    errno);
-    fflush(where);
-    lsr_size = -1;
-  }
-  
-  if (debug) {
-    fprintf(where,"netperf: create_data_socket: socket sizes determined...\n");
-    fprintf(where,"                       send: %d recv: %d\n",
-	    lss_size,lsr_size);
-    fflush(where);
-  }
-  
-#else /* SO_SNDBUF */
-  
-  lss_size = -1;
-  lsr_size = -1;
-  
-#endif /* SO_SNDBUF */
+  set_sock_buffer(temp_socket, SEND_BUFFER, lss_size_req, &lss_size);
+  set_sock_buffer(temp_socket, RECV_BUFFER, lsr_size_req, &lsr_size);
 
   /* now, we may wish to enable the copy avoidance features on the */
   /* local system. of course, this may not be possible... */
@@ -808,7 +741,7 @@ Size (bytes)\n\
 #ifdef HISTOGRAM
       /* timestamp just before we go into send and then again just after */
       /* we come out raj 8/94 */
-      gettimeofday(&time_one,NULL);
+      HIST_timestamp(&time_one);
 #endif /* HISTOGRAM */
       
       if((len=send(send_socket,
@@ -826,7 +759,7 @@ Size (bytes)\n\
 
 #ifdef HISTOGRAM
       /* timestamp the exit from the send call and update the histogram */
-      gettimeofday(&time_two,NULL);
+      HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
 #endif /* HISTOGRAM */      
 
@@ -1229,8 +1162,8 @@ recv_tcpipv6_stream()
   /* variables, so set the globals based on the values in the request. */
   /* once the socket has been created, we will set the response values */
   /* based on the updated value of those globals. raj 7/94 */
-  lss_size = tcpipv6_stream_request->send_buf_size;
-  lsr_size = tcpipv6_stream_request->recv_buf_size;
+  lss_size_req = tcpipv6_stream_request->send_buf_size;
+  lsr_size_req = tcpipv6_stream_request->recv_buf_size;
   loc_nodelay = tcpipv6_stream_request->no_delay;
   loc_rcvavoid = tcpipv6_stream_request->so_rcvavoid;
   loc_sndavoid = tcpipv6_stream_request->so_sndavoid;
@@ -1832,7 +1765,7 @@ Send   Recv    Send   Recv\n\
 #ifdef HISTOGRAM
       /* timestamp just before our call to send, and then again just */
       /* after the receive raj 8/94 */
-      gettimeofday(&time_one,NULL);
+      HIST_timestamp(&time_one);
 #endif /* HISTOGRAM */
       
       if((len=send(send_socket,
@@ -1878,7 +1811,7 @@ Send   Recv    Send   Recv\n\
       }
       
 #ifdef HISTOGRAM
-      gettimeofday(&time_two,NULL);
+      HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
 #endif /* HISTOGRAM */
 #ifdef INTERVALS      
@@ -2472,7 +2405,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
 #endif /* DIRTY */
       
 #ifdef HISTOGRAM
-      gettimeofday(&time_one,NULL);
+      HIST_timestamp(&time_one);
 #endif /* HISTOGRAM */
       
       if ((len=send(data_socket,
@@ -2498,7 +2431,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
       
 #ifdef HISTOGRAM
       /* get the second timestamp */
-      gettimeofday(&time_two,NULL);
+      HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
 #endif /* HISTOGRAM */
 #ifdef INTERVALS      
@@ -2977,7 +2910,7 @@ recv_udpipv6_stream()
 		    0)) != message_size) 
 #endif
 	{
-      if ((len == SOCKET_ERROR) && SOCKET_EINTR(len)) {
+      if ((len == SOCKET_ERROR) && !SOCKET_EINTR(len)) {
 	netperf_response.content.serv_errno = errno;
 	send_response();
 	exit(1);
@@ -3388,7 +3321,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
     while ((!times_up) || (trans_remaining > 0)) {
       /* send the request */
 #ifdef HISTOGRAM
-      gettimeofday(&time_one,NULL);
+      HIST_timestamp(&time_one);
 #endif
       if((len=send(send_socket,
 		   send_ring->buffer_ptr,
@@ -3420,7 +3353,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
       recv_ring = recv_ring->next;
       
 #ifdef HISTOGRAM
-      gettimeofday(&time_two,NULL);
+      HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
       
       /* at this point, we may wish to sleep for some period of */
@@ -3817,8 +3750,8 @@ recv_udpipv6_rr()
   /* variables, so set the globals based on the values in the request. */
   /* once the socket has been created, we will set the response values */
   /* based on the updated value of those globals. raj 7/94 */
-  lss_size = udpipv6_rr_request->send_buf_size;
-  lsr_size = udpipv6_rr_request->recv_buf_size;
+  lss_size_req = udpipv6_rr_request->send_buf_size;
+  lsr_size_req = udpipv6_rr_request->recv_buf_size;
   loc_rcvavoid = udpipv6_rr_request->so_rcvavoid;
   loc_sndavoid = udpipv6_rr_request->so_sndavoid;
 
@@ -4133,8 +4066,8 @@ recv_tcpipv6_rr()
   /* variables, so set the globals based on the values in the request. */
   /* once the socket has been created, we will set the response values */
   /* based on the updated value of those globals. raj 7/94 */
-  lss_size = tcpipv6_rr_request->send_buf_size;
-  lsr_size = tcpipv6_rr_request->recv_buf_size;
+  lss_size_req = tcpipv6_rr_request->send_buf_size;
+  lsr_size_req = tcpipv6_rr_request->recv_buf_size;
   loc_nodelay = tcpipv6_rr_request->no_delay;
   loc_rcvavoid = tcpipv6_rr_request->so_rcvavoid;
   loc_sndavoid = tcpipv6_rr_request->so_sndavoid;
@@ -4684,7 +4617,7 @@ Send   Recv    Send   Recv\n\
 #ifdef HISTOGRAM
     /* timestamp just before our call to create the socket, and then */
     /* again just after the receive raj 3/95 */
-    gettimeofday(&time_one,NULL);
+    HIST_timestamp(&time_one);
 #endif /* HISTOGRAM */
 
     /* set up the data socket */
@@ -4832,7 +4765,7 @@ newport:
     close(send_socket);
 
 #ifdef HISTOGRAM
-    gettimeofday(&time_two,NULL);
+    HIST_timestamp(&time_two);
     HIST_add(time_hist,delta_micro(&time_one,&time_two));
 #endif /* HISTOGRAM */
 
@@ -5164,8 +5097,8 @@ recv_tcpipv6_conn_rr()
   /* variables, so set the globals based on the values in the request. */
   /* once the socket has been created, we will set the response values */
   /* based on the updated value of those globals. raj 7/94 */
-  lss_size = tcpipv6_conn_rr_request->send_buf_size;
-  lsr_size = tcpipv6_conn_rr_request->recv_buf_size;
+  lss_size_req = tcpipv6_conn_rr_request->send_buf_size;
+  lsr_size_req = tcpipv6_conn_rr_request->recv_buf_size;
   loc_nodelay = tcpipv6_conn_rr_request->no_delay;
   loc_rcvavoid = tcpipv6_conn_rr_request->so_rcvavoid;
   loc_sndavoid = tcpipv6_conn_rr_request->so_sndavoid;
@@ -5756,7 +5689,7 @@ Send   Recv    Send   Recv\n\
 #ifdef HISTOGRAM
     /* timestamp just before our call to create the socket, and then */
     /* again just after the receive raj 3/95 */
-    gettimeofday(&time_one,NULL);
+    HIST_timestamp(&time_one);
 #endif /* HISTOGRAM */
 
     /* set up the data socket - is this really necessary or can I just */
@@ -5888,7 +5821,7 @@ newport:
     close(send_socket);
 
 #ifdef HISTOGRAM
-    gettimeofday(&time_two,NULL);
+    HIST_timestamp(&time_two);
     HIST_add(time_hist,delta_micro(&time_one,&time_two));
 #endif /* HISTOGRAM */
 
@@ -6222,8 +6155,8 @@ recv_tcpipv6_tran_rr()
   /* variables, so set the globals based on the values in the request. */
   /* once the socket has been created, we will set the response values */
   /* based on the updated value of those globals. raj 7/94 */
-  lss_size = tcpipv6_tran_rr_request->send_buf_size;
-  lsr_size = tcpipv6_tran_rr_request->recv_buf_size;
+  lss_size_req = tcpipv6_tran_rr_request->send_buf_size;
+  lsr_size_req = tcpipv6_tran_rr_request->recv_buf_size;
   loc_nodelay = tcpipv6_tran_rr_request->no_delay;
   loc_rcvavoid = tcpipv6_tran_rr_request->so_rcvavoid;
   loc_sndavoid = tcpipv6_tran_rr_request->so_sndavoid;
@@ -6866,7 +6799,7 @@ Send   Recv    Send   Recv\n\
 #ifdef HISTOGRAM
       /* timestamp just before our call to send, and then again just */
       /* after the receive raj 8/94 */
-      gettimeofday(&time_one,NULL);
+      HIST_timestamp(&time_one);
 #endif /* HISTOGRAM */
 
       /* even though this is a non-blocking socket, we will assume for */
@@ -6922,7 +6855,7 @@ Send   Recv    Send   Recv\n\
       }
       
 #ifdef HISTOGRAM
-      gettimeofday(&time_two,NULL);
+      HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
 #endif /* HISTOGRAM */
 #ifdef INTERVALS      
@@ -7312,8 +7245,8 @@ recv_tcp_nbrr()
   /* variables, so set the globals based on the values in the request. */
   /* once the socket has been created, we will set the response values */
   /* based on the updated value of those globals. raj 7/94 */
-  lss_size = tcpipv6_rr_request->send_buf_size;
-  lsr_size = tcpipv6_rr_request->recv_buf_size;
+  lss_size_req = tcpipv6_rr_request->send_buf_size;
+  lsr_size_req = tcpipv6_rr_request->recv_buf_size;
   loc_nodelay = tcpipv6_rr_request->no_delay;
   loc_rcvavoid = tcpipv6_rr_request->so_rcvavoid;
   loc_sndavoid = tcpipv6_rr_request->so_sndavoid;
@@ -7615,9 +7548,9 @@ scan_ipv6_args(int argc, char *argv[])
       /* set local socket sizes */
       break_args(optarg,arg1,arg2);
       if (arg1[0])
-	lss_size = convert(arg1);
+	lss_size_req = convert(arg1);
       if (arg2[0])
-	lsr_size = convert(arg2);
+	lsr_size_req = convert(arg2);
       break;
     case 'S':
       /* set remote socket sizes */

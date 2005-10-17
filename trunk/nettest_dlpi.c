@@ -22,7 +22,7 @@
 
 #ifdef DO_DLPI
 char	nettest_dlpi_id[]="\
-@(#)nettest_dlpi.c (c) Copyright 1993,1995,2004 Hewlett-Packard Co. Version 2.2pl5";
+@(#)nettest_dlpi.c (c) Copyright 1993,1995,2004 Hewlett-Packard Co. Version 2.2pl6";
 
 #include <sys/types.h>
 #include <fcntl.h>
@@ -100,7 +100,7 @@ comma.\n";
 
 
 void 
-  send_dlpi_co_stream()
+send_dlpi_co_stream()
 {
   
   char *tput_title = "\
@@ -1825,6 +1825,11 @@ frames  bytes    secs            #      #   %s/sec   %%       us/KB\n\n";
   data_req->dl_dest_addr_length = dlpi_cl_stream_response->station_addr_len;
   /* there is a dl_priority structure too, but I am ignoring it for */
   /* the time being. */
+  /* however... it is best to put some value in there lest some code
+     get grumpy about it - fix from Nicolas Thomas */
+  data_req->dl_priority.dl_min = DL_QOS_DONT_CARE;
+  data_req->dl_priority.dl_max = DL_QOS_DONT_CARE;
+
   sctl_message.len = sizeof(dl_unitdata_req_t) + 
     data_req->dl_dest_addr_length;
   
@@ -2665,6 +2670,11 @@ Send   Recv    Send   Recv\n\
     /* the time being. */
     sctl_message.len = sizeof(dl_unitdata_req_t) + 
       data_req->dl_dest_addr_length;
+    /* famous last words - some DLPI providers get unhappy if the
+       priority stuff is not initialized.  fix from Nicolas Thomas. */
+    data_req->dl_priority.dl_min = DL_QOS_DONT_CARE;
+    data_req->dl_priority.dl_max = DL_QOS_DONT_CARE;
+
   }
   else {
     Set_errno(netperf_response.content.serv_errno);
@@ -3233,6 +3243,11 @@ else {
 	  data_ind->dl_src_addr_length);
     data_req->dl_dest_addr_length = data_ind->dl_src_addr_length;
     data_req->dl_primitive = DL_UNITDATA_REQ;
+    /* be sure to initialize the priority fields. fix from Nicholas
+       Thomas */
+    data_req->dl_priority.dl_min = DL_QOS_DONT_CARE;
+    data_req->dl_priority.dl_max = DL_QOS_DONT_CARE;
+
     sctl_message.len = sizeof(dl_unitdata_req_t) +
       data_ind->dl_src_addr_length;
     if(putmsg(data_descriptor,

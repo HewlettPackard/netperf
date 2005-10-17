@@ -3,7 +3,7 @@
 #endif /* NEED_MAKEFILE_EDIT */
 #ifndef lint
 char	nettest_id[]="\
-@(#)nettest_bsd.c (c) Copyright 1993-2004 Hewlett-Packard Co. Version 2.2pl5";
+@(#)nettest_bsd.c (c) Copyright 1993-2004 Hewlett-Packard Co. Version 2.3";
 #else
 #define DIRTY
 #define HISTOGRAM
@@ -100,6 +100,8 @@ int first_burst_size=0;
 static int	
   rss_size,		/* remote socket send buffer size	*/
   rsr_size,		/* remote socket recv buffer size	*/
+  lss_size_req,		/* requested local socket send buffer size */
+  lsr_size_req,		/* requested local socket recv buffer size */
   lss_size,		/* local  socket send buffer size 	*/
   lsr_size,		/* local  socket recv buffer size 	*/
   req_size = 1,		/* request size                   	*/
@@ -116,6 +118,13 @@ static  char  remote_cpu_method;
 static int client_port_min = 5000;
 static int client_port_max = 65535;
 
+/* these are to allow netperf to be run easily through those evil,
+   end-to-end breaking things known as firewalls */
+static int local_data_port = 0;
+static int remote_data_port = 0;
+static in_addr_t local_data_ip = INADDR_ANY;
+static in_addr_t remote_data_ip = INADDR_ANY;
+
  /* different options for the sockets				*/
 
 int
@@ -131,8 +140,13 @@ int
   rem_rcvavoid;		/* avoid recv_copies remotely		*/
 
 #ifdef HISTOGRAM
+#ifdef HAVE_GETHRTIME
+hrtime_t time_one;
+hrtime_t time_two;
+#else
 static struct timeval time_one;
 static struct timeval time_two;
+#endif /* HAVE_GETHRTIME */
 static HIST time_hist;
 #endif /* HISTOGRAM */
 
@@ -144,9 +158,11 @@ TCP/UDP BSD Sockets Test Options:\n\
     -C                Set TCP_CORK when available\n\
     -D [L][,R]        Set TCP_NODELAY locally and/or remotely (TCP_*)\n\
     -h                Display this text\n\
+    -I local[,remote] Set the local/remote IP addresses for the data socket\n\
     -m bytes          Set the send size (TCP_STREAM, UDP_STREAM)\n\
     -M bytes          Set the recv size (TCP_STREAM, UDP_STREAM)\n\
     -p min[,max]      Set the min/max port numbers for TCP_CRR, TCP_TRR\n\
+    -P local[,remote] Set the local/remote port for the data socket\n\
     -r req,[rsp]      Set request/response sizes (TCP_RR, UDP_RR)\n\
     -s send[,recv]    Set local socket send/recv buffer sizes\n\
     -S send[,recv]    Set remote socket send/recv buffer sizes\n\
@@ -184,13 +200,56 @@ get_tcp_info(SOCKET socket, int *mss)
 	    "netperf: get_tcp_info: getsockopt TCP_MAXSEG: errno %d\n",
 	    errno);
     fflush(where);
-    lss_size = -1;
+    *mss = -1;
   }
 #else
   *mss = -1;
 #endif /* TCP_MAXSEG */
 }
+
+static
+complete_sockaddr(struct sockaddr_in *server, char *remote_host, int ip_address) 
+{
+  unsigned int addr;
+  struct hostent *hp;
 
+  /* it would seem that while HP-UX will allow an IP address (as a */
+  /* string) in a call to gethostbyname, other, less enlightened */
+  /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
+  /* order changed to check for IP address first. raj 7/96 */
+  /* however, if the user provided a remote IP address with the -I
+     option we will honour that above all else. raj 2004-06-15 */
+
+  if (ip_address) {
+    server->sin_addr.s_addr = ip_address;
+    server->sin_family = AF_INET;
+  }
+  else {
+    if ((addr = inet_addr(remote_host)) == SOCKET_ERROR) {
+      /* it was not an IP address, try it as a name */
+      if ((hp = gethostbyname(remote_host)) == NULL) {
+	/* we have no idea what it is */
+	fprintf(where,
+		"complete_sockaddr: could not resolve the destination %s\n",
+		remote_host);
+	fflush(where);
+	exit(1);
+      }
+      else {
+	/* it was a valid remote_host */
+	bcopy(hp->h_addr,
+	      (char *)&server->sin_addr,
+	      hp->h_length);
+	server->sin_family = hp->h_addrtype;
+      }
+    }
+    else {
+      /* it was a valid IP address */
+      server->sin_addr.s_addr = addr;
+      server->sin_family = AF_INET;
+    }    
+  }
+}
 
  /* This routine will create a data (listen) socket with the apropriate */
  /* options set and return it to the caller. this replaces all the */
@@ -201,7 +260,7 @@ get_tcp_info(SOCKET socket, int *mss)
  /* and type will be either SOCK_STREAM or SOCK_DGRAM */
 static
 SOCKET
-create_data_socket(int family, int type)
+create_data_socket(int family, int type, int address, unsigned short port)
 {
 
   SOCKET temp_socket;
@@ -226,97 +285,25 @@ create_data_socket(int family, int type)
     fflush(where);
   }
   
-  /* Modify the local socket size. The reason we alter the send buffer */
-  /* size here rather than when the connection is made is to take care */
-  /* of decreases in buffer size. Decreasing the window size after */
-  /* connection establishment is a TCP no-no. Also, by setting the */
-  /* buffer (window) size before the connection is established, we can */
-  /* control the TCP MSS (segment size). The MSS is never more that 1/2 */
-  /* the minimum receive buffer size at each half of the connection. */
-  /* This is why we are altering the receive buffer size on the sending */
-  /* size of a unidirectional transfer. If the user has not requested */
-  /* that the socket buffers be altered, we will try to find-out what */
-  /* their values are. If we cannot touch the socket buffer in any way, */
-  /* we will set the values to -1 to indicate that.  */
+  /* Modify the local socket size. The reason we alter the send buffer
+   size here rather than when the connection is made is to take care
+   of decreases in buffer size. Decreasing the window size after
+   connection establishment is a TCP no-no. Also, by setting the
+   buffer (window) size before the connection is established, we can
+   control the TCP MSS (segment size). The MSS is never (well, should
+   never be) more that 1/2 the minimum receive buffer size at each
+   half of the connection.  This is why we are altering the receive
+   buffer size on the sending size of a unidirectional transfer. If
+   the user has not requested that the socket buffers be altered, we
+   will try to find-out what their values are. If we cannot touch the
+   socket buffer in any way, we will set the values to -1 to indicate
+   that.  */
   
-#ifdef SO_SNDBUF
-  if (lss_size > 0) {
-    if(setsockopt(temp_socket, SOL_SOCKET, SO_SNDBUF,
-		  (char *)&lss_size, sizeof(int)) == SOCKET_ERROR) {
-      fprintf(where,
-	      "netperf: create_data_socket: SO_SNDBUF option: errno %d\n",
-	      errno);
-      fflush(where);
-      exit(1);
-    }
-    if (debug > 1) {
-      fprintf(where,
-	      "netperf: create_data_socket: SO_SNDBUF of %d requested.\n",
-	      lss_size);
-      fflush(where);
-    }
-  }
-  if (lsr_size > 0) {
-    if(setsockopt(temp_socket, SOL_SOCKET, SO_RCVBUF,
-		  (char *)&lsr_size, sizeof(int)) == SOCKET_ERROR) {
-      fprintf(where,
-	      "netperf: create_data_socket: SO_RCVBUF option: errno %d\n",
-	      errno);
-      fflush(where);
-      exit(1);
-    }
-    if (debug > 1) {
-      fprintf(where,
-	      "netperf: create_data_socket: SO_RCVBUF of %d requested.\n",
-	      lsr_size);
-      fflush(where);
-    }
-  }
-  
-  
-  /* Now, we will find-out what the size actually became, and report */
-  /* that back to the user. If the call fails, we will just report a -1 */
-  /* back to the initiator for the recv buffer size. */
-  
-  sock_opt_len = sizeof(int);
-  if (getsockopt(temp_socket,
-		 SOL_SOCKET,	
-		 SO_SNDBUF,
-		 (char *)&lss_size,
-		 &sock_opt_len) == SOCKET_ERROR) {
-    fprintf(where,
-	    "netperf: create_data_socket: getsockopt SO_SNDBUF: errno %d\n",
-	    errno);
-    fflush(where);
-    lss_size = -1;
-  }
-  if (getsockopt(temp_socket,
-		 SOL_SOCKET,	
-		 SO_RCVBUF,
-		 (char *)&lsr_size,
-		 &sock_opt_len) == SOCKET_ERROR) {
-    fprintf(where,
-	    "netperf: create_data_socket: getsockopt SO_RCVBUF: errno %d\n",
-	    errno);
-    fflush(where);
-    lsr_size = -1;
-  }
-  
-  if (debug) {
-    fprintf(where,
-	    "netperf: create_data_socket: socket sizes determined...\n");
-    fprintf(where,
-	    "                       send: %d recv: %d\n",
-	    lss_size,lsr_size);
-    fflush(where);
-  }
-  
-#else /* SO_SNDBUF */
-  
-  lss_size = -1;
-  lsr_size = -1;
-  
-#endif /* SO_SNDBUF */
+  /* all the oogy nitty gritty stuff moved from here into the routine
+     being called below, per patches from davidm to workaround the bug
+     in Linux getsockopt().  raj 2004-06-15 */
+  set_sock_buffer (temp_socket, SEND_BUFFER, lss_size_req, &lss_size);
+  set_sock_buffer (temp_socket, RECV_BUFFER, lsr_size_req, &lsr_size);
 
   /* now, we may wish to enable the copy avoidance features on the */
   /* local system. of course, this may not be possible... */
@@ -389,6 +376,36 @@ create_data_socket(int family, int type)
   
 #endif /* TCP_NODELAY */
 
+  if ((address) || (port)) {
+    struct sockaddr_in temp;
+    int    on  = 1;
+
+    if (setsockopt(temp_socket,
+		   SOL_SOCKET,
+		   SO_REUSEADDR,
+		   &on,
+		   sizeof(on)) < 0) {
+      fprintf(where,
+	      "netperf: create_data_socket: SO_REUSEADDR failled %d\n",
+	      errno);
+      fflush(where);
+    }
+
+    bzero(&temp,sizeof(struct sockaddr));
+    temp.sin_port = htons(port);
+    temp.sin_family = AF_INET;
+    temp.sin_addr.s_addr = address;
+    if (bind(temp_socket,
+	     (struct sockaddr *)&temp,
+	     sizeof(struct sockaddr_in)) < 0) {
+      fprintf(where,
+	      "netperf: create_data_socket: data socket bind failed errno %d\n",
+	      errno);
+      fprintf(where," port: %d\n",ntohs(temp.sin_port));
+      fflush(where);
+    }
+  }
+
   return(temp_socket);
 
 }
@@ -403,84 +420,9 @@ create_data_socket(int family, int type)
 void
 kludge_socket_options(int temp_socket)
 {
-#ifdef SO_SNDBUF
-  if (lss_size > 0) {
-    if(setsockopt(temp_socket, SOL_SOCKET, SO_SNDBUF,
-		  (char *)&lss_size, sizeof(int)) == SOCKET_ERROR) {
-      fprintf(where,
-	      "netperf: kludge_socket_options: SO_SNDBUF option: errno %d\n",
-	      errno);
-      fflush(where);
-      exit(1);
-    }
-    if (debug > 1) {
-      fprintf(where,
-	      "netperf: kludge_socket_options: SO_SNDBUF of %d requested.\n",
-	      lss_size);
-      fflush(where);
-    }
-  }
-  if (lsr_size > 0) {
-    if(setsockopt(temp_socket, SOL_SOCKET, SO_RCVBUF,
-		  (char *)&lsr_size, sizeof(int)) == SOCKET_ERROR) {
-      fprintf(where,
-	      "netperf: kludge_socket_options: SO_RCVBUF option: errno %d\n",
-	      errno);
-      fflush(where);
-      exit(1);
-    }
-    if (debug > 1) {
-      fprintf(where,
-	      "netperf: kludge_socket_options: SO_SNDBUF of %d requested.\n",
-	      lss_size);
-      fflush(where);
-    }
-  }
-  
-  
-  /* Now, we will find-out what the size actually became, and report */
-  /* that back to the user. If the call fails, we will just report a -1 */
-  /* back to the initiator for the recv buffer size. */
-  
-  sock_opt_len = sizeof(int);
-  if (getsockopt(temp_socket,
-		 SOL_SOCKET,	
-		 SO_SNDBUF,
-		 (char *)&lss_size,
-		 &sock_opt_len) == SOCKET_ERROR) {
-    fprintf(where,
-	    "netperf: kludge_socket_options: getsockopt SO_SNDBUF: errno %d\n",
-	    errno);
-    fflush(where);
-    lss_size = -1;
-  }
-  if (getsockopt(temp_socket,
-		 SOL_SOCKET,	
-		 SO_RCVBUF,
-		 (char *)&lsr_size,
-		 &sock_opt_len) == SOCKET_ERROR) {
-    fprintf(where,
-	    "netperf: kludge_socket_options: getsockopt SO_SNDBUF: errno %d\n",
-	    errno);
-    fflush(where);
-    lsr_size = -1;
-  }
-  
-  if (debug) {
-    fprintf(where,
-	    "netperf: kludge_socket_options: socket sizes determined...\n");
-    fprintf(where,
-	    "                       send: %d recv: %d\n",
-	    lss_size,lsr_size);
-    fflush(where);
-  }
-  
-#else /* SO_SNDBUF */
-  
-  lss_size = -1;
-  lsr_size = -1;
-  
-#endif /* SO_SNDBUF */
+
+  set_sock_buffer(temp_socket, SEND_BUFFER, lss_size_req, &lss_size);
+  set_sock_buffer(temp_socket, RECV_BUFFER, lsr_size_req, &lsr_size);
 
   /* now, we may wish to enable the copy avoidance features on the */
   /* local system. of course, this may not be possible... */
@@ -641,35 +583,7 @@ Size (bytes)\n\
   bzero((char *)&server,
 	sizeof(server));
   
-  /* it would seem that while HP-UX will allow an IP address (as a */
-  /* string) in a call to gethostbyname, other, less enlightened */
-  /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
-  /* order changed to check for IP address first. raj 7/96 */
-
-  if ((addr = inet_addr(remote_host)) == SOCKET_ERROR) {
-    /* it was not an IP address, try it as a name */
-    if ((hp = gethostbyname(remote_host)) == NULL) {
-      /* we have no idea what it is */
-      fprintf(where,
-	      "establish_control: could not resolve the destination %s\n",
-	      remote_host);
-      fflush(where);
-      exit(1);
-    }
-    else {
-      /* it was a valid remote_host */
-      bcopy(hp->h_addr,
-	    (char *)&server.sin_addr,
-	    hp->h_length);
-      server.sin_family = hp->h_addrtype;
-    }
-  }
-  else {
-    /* it was a valid IP address */
-    server.sin_addr.s_addr = addr;
-    server.sin_family = AF_INET;
-  }    
-  
+  complete_sockaddr(&server, remote_host, remote_data_ip);
   
   if ( print_headers ) {
     /* we want to have some additional, interesting information in */
@@ -728,7 +642,9 @@ Size (bytes)\n\
     
     /*set up the data socket                        */
     send_socket = create_data_socket(AF_INET, 
-				     SOCK_STREAM);
+				     SOCK_STREAM,
+				     local_data_ip,
+				     local_data_port);
     
     if (send_socket == INVALID_SOCKET){
       perror("netperf: send_tcp_stream: tcp stream data socket");
@@ -815,11 +731,11 @@ Size (bytes)\n\
     tcp_stream_request->so_rcvavoid	=	rem_rcvavoid;
     tcp_stream_request->so_sndavoid	=	rem_sndavoid;
 #ifdef DIRTY
-    tcp_stream_request->dirty_count       =       rem_dirty_count;
-    tcp_stream_request->clean_count       =       rem_clean_count;
+    tcp_stream_request->dirty_count     =       rem_dirty_count;
+    tcp_stream_request->clean_count     =       rem_clean_count;
 #endif /* DIRTY */
-    
-    
+    tcp_stream_request->port            =    (int)remote_data_port;
+    tcp_stream_request->ipaddress       =    remote_data_ip;
     if (debug > 1) {
       fprintf(where,
 	      "netperf: send_tcp_stream: requesting TCP stream test\n");
@@ -865,13 +781,14 @@ Size (bytes)\n\
       
       exit(1);
     }
-    
+
     /*Connect up to the remote port on the data socket  */
     if (connect(send_socket, 
 		(struct sockaddr *)&server,
 		sizeof(server)) == INVALID_SOCKET){
       perror("netperf: send_tcp_stream: data socket connect failed");
-      printf(" port: %d\n",ntohs(server.sin_port));
+      fprintf(stderr," port: %d\n",ntohs(server.sin_port));
+      fflush(stderr);
       exit(1);
     }
 
@@ -963,7 +880,7 @@ Size (bytes)\n\
 #ifdef HISTOGRAM
       /* timestamp just before we go into send and then again just after */
       /* we come out raj 8/94 */
-      gettimeofday(&time_one,NULL);
+      HIST_timestamp(&time_one);
 #endif /* HISTOGRAM */
       
       if((len=send(send_socket,
@@ -981,7 +898,7 @@ Size (bytes)\n\
 
 #ifdef HISTOGRAM
       /* timestamp the exit from the send call and update the histogram */
-      gettimeofday(&time_two,NULL);
+      HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
 #endif /* HISTOGRAM */      
 
@@ -1405,36 +1322,8 @@ Size (bytes)\n\
   
   bzero((char *)&server,
 	sizeof(server));
-  
-  /* it would seem that while HP-UX will allow an IP address (as a */
-  /* string) in a call to gethostbyname, other, less enlightened */
-  /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
-  /* order changed to check for IP address first. raj 7/96 */
 
-  if ((addr = inet_addr(remote_host)) == SOCKET_ERROR) {
-    /* it was not an IP address, try it as a name */
-    if ((hp = gethostbyname(remote_host)) == NULL) {
-      /* we have no idea what it is */
-      fprintf(where,
-	      "establish_control: could not resolve the destination %s\n",
-	      remote_host);
-      fflush(where);
-      exit(1);
-    }
-    else {
-      /* it was a valid remote_host */
-      bcopy(hp->h_addr,
-	    (char *)&server.sin_addr,
-	    hp->h_length);
-      server.sin_family = hp->h_addrtype;
-    }
-  }
-  else {
-    /* it was a valid IP address */
-    server.sin_addr.s_addr = addr;
-    server.sin_family = AF_INET;
-  }    
-  
+  complete_sockaddr(&server, remote_host, remote_data_ip);
   
   if ( print_headers ) {
     /* we want to have some additional, interesting information in */
@@ -1493,7 +1382,9 @@ Size (bytes)\n\
     
     /*set up the data socket                        */
     recv_socket = create_data_socket(AF_INET, 
-				     SOCK_STREAM);
+				     SOCK_STREAM,
+				     local_data_ip,
+				     local_data_port);
     
     if (recv_socket == INVALID_SOCKET){
       perror("netperf: send_tcp_maerts: tcp stream data socket");
@@ -1583,7 +1474,8 @@ Size (bytes)\n\
     tcp_maerts_request->dirty_count       =       rem_dirty_count;
     tcp_maerts_request->clean_count       =       rem_clean_count;
 #endif /* DIRTY */
-    
+    tcp_maerts_request->port            = (int) remote_data_port;
+    tcp_maerts_request->ipaddress       = remote_data_ip;
     
     if (debug > 1) {
       fprintf(where,
@@ -1727,7 +1619,7 @@ Size (bytes)\n\
 #ifdef HISTOGRAM
       /* timestamp just before we go into recv and then again just after */
       /* we come out raj 8/94 */
-      gettimeofday(&time_one,NULL);
+      HIST_timestamp(&time_one);
 #endif /* HISTOGRAM */
     
     while ((len=recv(recv_socket,
@@ -1736,7 +1628,7 @@ Size (bytes)\n\
 		   0)) > 0 ) {
 #ifdef HISTOGRAM
       /* timestamp the exit from the recv call and update the histogram */
-      gettimeofday(&time_two,NULL);
+      HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
 #endif /* HISTOGRAM */      
 
@@ -1773,6 +1665,13 @@ Size (bytes)\n\
       if (bytes_remaining) {
 	bytes_remaining -= recv_size;
       }
+
+#ifdef HISTOGRAM
+      /* make sure we timestamp just before we go into recv  */
+      /* raj 2004-06-15 */
+      HIST_timestamp(&time_one);
+#endif /* HISTOGRAM */
+    
     }
 
     if ((len < 0) || SOCKET_EINTR(len)) {
@@ -2193,35 +2092,8 @@ Size (bytes)\n\
   bzero((char *)&server,
 	sizeof(server));
   
-  /* it would seem that while HP-UX will allow an IP address (as a */
-  /* string) in a call to gethostbyname, other, less enlightened */
-  /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
-  /* order changed to check for IP address first. raj 7/96 */
+  complete_sockaddr(&server, remote_host, remote_data_ip);
 
-  if ((addr = inet_addr(remote_host)) == SOCKET_ERROR) {
-    /* it was not an IP address, try it as a name */
-    if ((hp = gethostbyname(remote_host)) == NULL) {
-      /* we have no idea what it is */
-      fprintf(where,
-	      "establish_control: could not resolve the destination %s\n",
-	      remote_host);
-      fflush(where);
-      exit(1);
-    }
-    else {
-      /* it was a valid remote_host */
-      bcopy(hp->h_addr,
-	    (char *)&server.sin_addr,
-	    hp->h_length);
-      server.sin_family = hp->h_addrtype;
-    }
-  }
-  else {
-    /* it was a valid IP address */
-    server.sin_addr.s_addr = addr;
-    server.sin_family = AF_INET;
-  }    
-  
   if ( print_headers ) {
     /* we want to have some additional, interesting information in */
     /* the headers. we know some of it here, but not all, so we will */
@@ -2283,7 +2155,9 @@ Size (bytes)\n\
     
     /* set up the data socket */
     send_socket = create_data_socket(AF_INET, 
-				     SOCK_STREAM);
+				     SOCK_STREAM,
+				     local_data_ip,
+				     local_data_port);
     if (send_socket == INVALID_SOCKET){
       perror("netperf: sendfile_tcp_stream: tcp stream data socket");
       exit(1);
@@ -2542,7 +2416,7 @@ if (send_width == 0) {
       /* timestamp just before we go into sendfile() and then again just
          after we come out raj 08/2000 */
       
-      gettimeofday(&time_one,NULL);
+      HIST_timestamp(&time_one);
 #endif /* HISTOGRAM */
       
       /* you can look at netlib.h for a description of the fields we
@@ -2599,7 +2473,7 @@ if (send_width == 0) {
 #ifdef HISTOGRAM
       /* timestamp the exit from the send call and update the histogram */
       
-      gettimeofday(&time_two,NULL);
+      HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
 
 #endif /* HISTOGRAM */      
@@ -3029,56 +2903,24 @@ recv_tcp_stream()
     fflush(where);
   }
 
-  /* Let's clear-out our sockaddr for the sake of cleanlines. Then we */
-  /* can put in OUR values !-) At some point, we may want to nail this */
-  /* socket to a particular network-level address, but for now, */
-  /* INADDR_ANY should be just fine. */
-  
-  bzero((char *)&myaddr_in,
-	sizeof(myaddr_in));
-  myaddr_in.sin_family      = AF_INET;
-  myaddr_in.sin_addr.s_addr = INADDR_ANY;
-  myaddr_in.sin_port        = 0;
-  
-  /* Grab a socket to listen on, and then listen on it. */
-  
-  if (debug) {
-    fprintf(where,"recv_tcp_stream: grabbing a socket...\n");
-    fflush(where);
-  }
-  
   /* create_data_socket expects to find some things in the global */
   /* variables, so set the globals based on the values in the request. */
   /* once the socket has been created, we will set the response values */
   /* based on the updated value of those globals. raj 7/94 */
-  lss_size = tcp_stream_request->send_buf_size;
-  lsr_size = tcp_stream_request->recv_buf_size;
+  lss_size_req = tcp_stream_request->send_buf_size;
+  lsr_size_req = tcp_stream_request->recv_buf_size;
   loc_nodelay = tcp_stream_request->no_delay;
   loc_rcvavoid = tcp_stream_request->so_rcvavoid;
   loc_sndavoid = tcp_stream_request->so_sndavoid;
 
   s_listen = create_data_socket(AF_INET,
-				SOCK_STREAM);
+				SOCK_STREAM,
+				tcp_stream_request->ipaddress,
+				tcp_stream_request->port);
   
   if (s_listen == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
     send_response();
-    exit(1);
-  }
-  
-  /* Let's get an address assigned to this socket so we can tell the */
-  /* initiator how to reach the data socket. There may be a desire to */
-  /* nail this socket to a specific IP address in a multi-homed, */
-  /* multi-connection situation, but for now, we'll ignore the issue */
-  /* and concentrate on single connection testing. */
-  
-  if (bind(s_listen,
-	   (struct sockaddr *)&myaddr_in,
-	   sizeof(myaddr_in)) == SOCKET_ERROR) {
-    netperf_response.content.serv_errno = errno;
-    close(s_listen);
-    send_response();
-    
     exit(1);
   }
   
@@ -3389,17 +3231,6 @@ recv_tcp_maerts()
     fflush(where);
   }
 
-  /* Let's clear-out our sockaddr for the sake of cleanlines. Then we */
-  /* can put in OUR values !-) At some point, we may want to nail this */
-  /* socket to a particular network-level address, but for now, */
-  /* INADDR_ANY should be just fine. */
-  
-  bzero((char *)&myaddr_in,
-	sizeof(myaddr_in));
-  myaddr_in.sin_family      = AF_INET;
-  myaddr_in.sin_addr.s_addr = INADDR_ANY;
-  myaddr_in.sin_port        = 0;
-  
   /* Grab a socket to listen on, and then listen on it. */
   
   if (debug) {
@@ -3411,34 +3242,20 @@ recv_tcp_maerts()
   /* variables, so set the globals based on the values in the request. */
   /* once the socket has been created, we will set the response values */
   /* based on the updated value of those globals. raj 7/94 */
-  lss_size = tcp_maerts_request->send_buf_size;
-  lsr_size = tcp_maerts_request->recv_buf_size;
+  lss_size_req = tcp_maerts_request->send_buf_size;
+  lsr_size_req = tcp_maerts_request->recv_buf_size;
   loc_nodelay = tcp_maerts_request->no_delay;
   loc_rcvavoid = tcp_maerts_request->so_rcvavoid;
   loc_sndavoid = tcp_maerts_request->so_sndavoid;
 
   s_listen = create_data_socket(AF_INET,
-				SOCK_STREAM);
+				SOCK_STREAM,
+				tcp_maerts_request->ipaddress,
+				tcp_maerts_request->port);
   
   if (s_listen == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
     send_response();
-    exit(1);
-  }
-  
-  /* Let's get an address assigned to this socket so we can tell the */
-  /* initiator how to reach the data socket. There may be a desire to */
-  /* nail this socket to a specific IP address in a multi-homed, */
-  /* multi-connection situation, but for now, we'll ignore the issue */
-  /* and concentrate on single connection testing. */
-  
-  if (bind(s_listen,
-	   (struct sockaddr *)&myaddr_in,
-	   sizeof(myaddr_in)) == SOCKET_ERROR) {
-    netperf_response.content.serv_errno = errno;
-    close(s_listen);
-    send_response();
-    
     exit(1);
   }
   
@@ -3786,35 +3603,8 @@ Send   Recv    Send   Recv\n\
   bzero((char *)&server,
 	sizeof(server));
   
-  /* it would seem that while HP-UX will allow an IP address (as a */
-  /* string) in a call to gethostbyname, other, less enlightened */
-  /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
-  /* order changed to check for IP address first. raj 7/96 */
+  complete_sockaddr(&server, remote_host, remote_data_ip);
 
-  if ((addr = inet_addr(remote_host)) == SOCKET_ERROR) {
-    /* it was not an IP address, try it as a name */
-    if ((hp = gethostbyname(remote_host)) == NULL) {
-      /* we have no idea what it is */
-      fprintf(where,
-	      "establish_control: could not resolve the destination %s\n",
-	      remote_host);
-      fflush(where);
-      exit(1);
-    }
-    else {
-      /* it was a valid remote_host */
-      bcopy(hp->h_addr,
-	    (char *)&server.sin_addr,
-	    hp->h_length);
-      server.sin_family = hp->h_addrtype;
-    }
-  }
-  else {
-    /* it was a valid IP address */
-    server.sin_addr.s_addr = addr;
-    server.sin_family = AF_INET;
-  }    
-  
   if ( print_headers ) {
     fprintf(where,"TCP REQUEST/RESPONSE TEST");
     fprintf(where," to %s", remote_host);
@@ -3894,7 +3684,9 @@ Send   Recv    Send   Recv\n\
     
     /*set up the data socket                        */
     send_socket = create_data_socket(AF_INET, 
-				     SOCK_STREAM);
+				     SOCK_STREAM,
+				     local_data_ip,
+				     local_data_port);
   
     if (send_socket == INVALID_SOCKET){
       perror("netperf: send_tcp_rr: tcp stream data socket");
@@ -3944,7 +3736,9 @@ Send   Recv    Send   Recv\n\
     else {
       tcp_rr_request->test_length	=	test_trans * -1;
     }
-    
+    tcp_rr_request->port                =      (int)remote_data_port;
+    tcp_rr_request->ipaddress           =      remote_data_ip;
+
     if (debug > 1) {
       fprintf(where,"netperf: send_tcp_rr: requesting TCP rr test\n");
     }
@@ -3985,7 +3779,7 @@ Send   Recv    Send   Recv\n\
       
       exit(1);
     }
-    
+
     /*Connect up to the remote port on the data socket  */
     if (connect(send_socket, 
 		(struct sockaddr *)&server,
@@ -4071,7 +3865,7 @@ Send   Recv    Send   Recv\n\
 #ifdef HISTOGRAM
       /* timestamp just before our call to send, and then again just */
       /* after the receive raj 8/94 */
-      gettimeofday(&time_one,NULL);
+      HIST_timestamp(&time_one);
 #endif /* HISTOGRAM */
       
       if((len=send(send_socket,
@@ -4117,7 +3911,7 @@ Send   Recv    Send   Recv\n\
       }
       
 #ifdef HISTOGRAM
-      gettimeofday(&time_two,NULL);
+      HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
 #endif /* HISTOGRAM */
 #ifdef INTERVALS      
@@ -4486,36 +4280,8 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
   bzero((char *)&server,
 	sizeof(server));
   
-  /* it would seem that while HP-UX will allow an IP address (as a */
-  /* string) in a call to gethostbyname, other, less enlightened */
-  /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
-  /* order changed to check for IP address first. raj 7/96 */
+  complete_sockaddr(&server, remote_host, remote_data_ip);
 
-  if ((addr = inet_addr(remote_host)) == SOCKET_ERROR) {
-    /* it was not an IP address, try it as a name */
-    if ((hp = gethostbyname(remote_host)) == NULL) {
-      /* we have no idea what it is */
-      fprintf(where,
-	      "establish_control: could not resolve the destination %s\n",
-	      remote_host);
-      fflush(where);
-      exit(1);
-    }
-    else {
-      /* it was a valid remote_host */
-      bcopy(hp->h_addr,
-	    (char *)&server.sin_addr,
-	    hp->h_length);
-      server.sin_family = hp->h_addrtype;
-    }
-  }
-  else {
-    /* it was a valid IP address */
-    server.sin_addr.s_addr = addr;
-    server.sin_family = AF_INET;
-  }    
-
-  
   if ( print_headers ) {
     fprintf(where,"UDP UNIDIRECTIONAL SEND TEST");
     fprintf(where," to %s", remote_host);
@@ -4570,7 +4336,9 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     
     /*set up the data socket			*/
     data_socket = create_data_socket(AF_INET,
-				     SOCK_DGRAM);
+				     SOCK_DGRAM,
+				     local_data_ip,
+				     local_data_port);
     
     if (data_socket == INVALID_SOCKET){
       perror("udp_send: data socket");
@@ -4627,7 +4395,9 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     udp_stream_request->test_length    = test_time;
     udp_stream_request->so_rcvavoid    = rem_rcvavoid;
     udp_stream_request->so_sndavoid    = rem_sndavoid;
-    
+    udp_stream_request->port           = (int)remote_data_port;
+    udp_stream_request->ipaddress      = remote_data_ip;
+
     send_request();
     
     recv_response();
@@ -4652,7 +4422,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     rsr_size        = udp_stream_response->recv_buf_size;
     rss_size        = udp_stream_response->send_buf_size;
     remote_cpu_rate = udp_stream_response->cpu_rate;
-    
+
     /* We "connect" up to the remote post to allow is to use the send */
     /* call instead of the sendto call. Presumeably, this is a little */
     /* simpler, and a little more efficient. I think that it also means */
@@ -4729,7 +4499,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
 #endif /* DIRTY */
       
 #ifdef HISTOGRAM
-      gettimeofday(&time_one,NULL);
+      HIST_timestamp(&time_one);
 #endif /* HISTOGRAM */
       
       if ((len=send(data_socket,
@@ -4756,7 +4526,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
       
 #ifdef HISTOGRAM
       /* get the second timestamp */
-      gettimeofday(&time_two,NULL);
+      HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
 #endif /* HISTOGRAM */
 #ifdef INTERVALS      
@@ -5090,17 +4860,6 @@ recv_udp_stream()
     fflush(where);
   }
   
-  /* Let's clear-out our sockaddr for the sake of cleanlines. Then we */
-  /* can put in OUR values !-) At some point, we may want to nail this */
-  /* socket to a particular network-level address, but for now, */
-  /* INADDR_ANY should be just fine. */
-  
-  bzero((char *)&myaddr_in,
-	sizeof(myaddr_in));
-  myaddr_in.sin_family      = AF_INET;
-  myaddr_in.sin_addr.s_addr = INADDR_ANY;
-  myaddr_in.sin_port        = 0;
-  
   /* Grab a socket to listen on, and then listen on it. */
   
   if (debug > 1) {
@@ -5117,23 +4876,11 @@ recv_udp_stream()
   loc_sndavoid = udp_stream_request->so_sndavoid;
     
   s_data = create_data_socket(AF_INET,
-			      SOCK_DGRAM);
+			      SOCK_DGRAM,
+			      udp_stream_request->ipaddress,
+			      udp_stream_request->port);
   
   if (s_data == INVALID_SOCKET) {
-    netperf_response.content.serv_errno = errno;
-    send_response();
-    exit(1);
-  }
-  
-  /* Let's get an address assigned to this socket so we can tell the */
-  /* initiator how to reach the data socket. There may be a desire to */
-  /* nail this socket to a specific IP address in a multi-homed, */
-  /* multi-connection situation, but for now, we'll ignore the issue */
-  /* and concentrate on single connection testing. */
-  
-  if (bind(s_data,
-	   (struct sockaddr *)&myaddr_in,
-	   sizeof(myaddr_in)) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
@@ -5233,7 +4980,7 @@ recv_udp_stream()
 		    0)) != message_size) 
 #endif
 	{
-      if ((len == SOCKET_ERROR) && SOCKET_EINTR(len)) {
+      if ((len == SOCKET_ERROR) && !SOCKET_EINTR(len)) {
         netperf_response.content.serv_errno = errno;
 	    send_response();
 	    exit(1);
@@ -5392,35 +5139,8 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
   bzero((char *)&server,
 	sizeof(server));
   
-  /* it would seem that while HP-UX will allow an IP address (as a */
-  /* string) in a call to gethostbyname, other, less enlightened */
-  /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
-  /* order changed to check for IP address first. raj 7/96 */
+  complete_sockaddr(&server, remote_host, remote_data_ip);
 
-  if ((addr = inet_addr(remote_host)) == SOCKET_ERROR) {
-    /* it was not an IP address, try it as a name */
-    if ((hp = gethostbyname(remote_host)) == NULL) {
-      /* we have no idea what it is */
-      fprintf(where,
-	      "send_udp_rr: could not resolve the destination %s\n",
-	      remote_host);
-      fflush(where);
-      exit(1);
-    }
-    else {
-      /* it was a valid remote_host */
-      bcopy(hp->h_addr,
-	    (char *)&server.sin_addr,
-	    hp->h_length);
-      server.sin_family = hp->h_addrtype;
-    }
-  }
-  else {
-    /* it was a valid IP address */
-    server.sin_addr.s_addr = addr;
-    server.sin_family = AF_INET;
-  }    
-  
   if ( print_headers ) {
     fprintf(where,"UDP REQUEST/RESPONSE TEST");
         fprintf(where," to %s", remote_host);
@@ -5494,7 +5214,9 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
     
     /*set up the data socket                        */
     send_socket = create_data_socket(AF_INET, 
-				     SOCK_DGRAM);
+				     SOCK_DGRAM,
+				     local_data_ip,
+				     local_data_port);
     
     if (send_socket == INVALID_SOCKET){
       perror("netperf: send_udp_rr: udp rr data socket");
@@ -5545,7 +5267,8 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
     else {
       udp_rr_request->test_length	= test_trans * -1;
     }
-    
+    udp_rr_request->port                = (int) remote_data_port;
+
     if (debug > 1) {
       fprintf(where,"netperf: send_udp_rr: requesting UDP r/r test\n");
     }
@@ -5584,7 +5307,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
       fflush(where);
       exit(1);
     }
-    
+
     /* Connect up to the remote port on the data socket. This will set */
     /* the default destination address on this socket. With UDP, this */
     /* does make a performance difference as we may not have to do as */
@@ -5664,7 +5387,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
     while ((!times_up) || (trans_remaining > 0)) {
       /* send the request */
 #ifdef HISTOGRAM
-      gettimeofday(&time_one,NULL);
+      HIST_timestamp(&time_one);
 #endif
       if((len=send(send_socket,
 		   send_ring->buffer_ptr,
@@ -5697,7 +5420,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
       recv_ring = recv_ring->next;
       
 #ifdef HISTOGRAM
-      gettimeofday(&time_two,NULL);
+      HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
       
       /* at this point, we may wish to sleep for some period of */
@@ -6072,17 +5795,6 @@ recv_udp_rr()
     fflush(where);
   }
   
-  /* Let's clear-out our sockaddr for the sake of cleanlines. Then we */
-  /* can put in OUR values !-) At some point, we may want to nail this */
-  /* socket to a particular network-level address, but for now, */
-  /* INADDR_ANY should be just fine. */
-  
-  bzero((char *)&myaddr_in,
-	sizeof(myaddr_in));
-  myaddr_in.sin_family      = AF_INET;
-  myaddr_in.sin_addr.s_addr = INADDR_ANY;
-  myaddr_in.sin_port        = 0;
-  
   /* Grab a socket to listen on, and then listen on it. */
   
   if (debug) {
@@ -6095,32 +5807,18 @@ recv_udp_rr()
   /* variables, so set the globals based on the values in the request. */
   /* once the socket has been created, we will set the response values */
   /* based on the updated value of those globals. raj 7/94 */
-  lss_size = udp_rr_request->send_buf_size;
-  lsr_size = udp_rr_request->recv_buf_size;
+  lss_size_req = udp_rr_request->send_buf_size;
+  lsr_size_req = udp_rr_request->recv_buf_size;
   loc_rcvavoid = udp_rr_request->so_rcvavoid;
   loc_sndavoid = udp_rr_request->so_sndavoid;
 
   s_data = create_data_socket(AF_INET,
-			      SOCK_DGRAM);
+			      SOCK_DGRAM,
+			      INADDR_ANY,
+			      udp_rr_request->port);
   
   if (s_data == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
-    send_response();
-    
-    exit(1);
-  }
-  
-  /* Let's get an address assigned to this socket so we can tell the */
-  /* initiator how to reach the data socket. There may be a desire to */
-  /* nail this socket to a specific IP address in a multi-homed, */
-  /* multi-connection situation, but for now, we'll ignore the issue */
-  /* and concentrate on single connection testing. */
-  
-  if (bind(s_data,
-	   (struct sockaddr *)&myaddr_in,
-	   sizeof(myaddr_in)) == SOCKET_ERROR) {
-    netperf_response.content.serv_errno = errno;
-    close(s_data);
     send_response();
     
     exit(1);
@@ -6392,17 +6090,6 @@ recv_tcp_rr()
 				   tcp_rr_request->recv_offset);
 
   
-  /* Let's clear-out our sockaddr for the sake of cleanlines. Then we */
-  /* can put in OUR values !-) At some point, we may want to nail this */
-  /* socket to a particular network-level address, but for now, */
-  /* INADDR_ANY should be just fine. */
-  
-  bzero((char *)&myaddr_in,
-	sizeof(myaddr_in));
-  myaddr_in.sin_family      = AF_INET;
-  myaddr_in.sin_addr.s_addr = INADDR_ANY;
-  myaddr_in.sin_port        = 0;
-  
   /* Grab a socket to listen on, and then listen on it. */
   
   if (debug) {
@@ -6414,33 +6101,19 @@ recv_tcp_rr()
   /* variables, so set the globals based on the values in the request. */
   /* once the socket has been created, we will set the response values */
   /* based on the updated value of those globals. raj 7/94 */
-  lss_size = tcp_rr_request->send_buf_size;
-  lsr_size = tcp_rr_request->recv_buf_size;
+  lss_size_req = tcp_rr_request->send_buf_size;
+  lsr_size_req = tcp_rr_request->recv_buf_size;
   loc_nodelay = tcp_rr_request->no_delay;
   loc_rcvavoid = tcp_rr_request->so_rcvavoid;
   loc_sndavoid = tcp_rr_request->so_sndavoid;
   
   s_listen = create_data_socket(AF_INET,
-				SOCK_STREAM);
+				SOCK_STREAM,
+				tcp_rr_request->ipaddress,
+				tcp_rr_request->port);
   
   if (s_listen == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
-    send_response();
-    
-    exit(1);
-  }
-  
-  /* Let's get an address assigned to this socket so we can tell the */
-  /* initiator how to reach the data socket. There may be a desire to */
-  /* nail this socket to a specific IP address in a multi-homed, */
-  /* multi-connection situation, but for now, we'll ignore the issue */
-  /* and concentrate on single connection testing. */
-  
-  if (bind(s_listen,
-	   (struct sockaddr *)&myaddr_in,
-	   sizeof(myaddr_in)) == SOCKET_ERROR) {
-    netperf_response.content.serv_errno = errno;
-    close(s_listen);
     send_response();
     
     exit(1);
@@ -6459,7 +6132,8 @@ recv_tcp_rr()
   /* now get the port number assigned by the system  */
   addrlen = sizeof(myaddr_in);
   if (getsockname(s_listen,
-		  (struct sockaddr *)&myaddr_in, &addrlen) == SOCKET_ERROR){
+		  (struct sockaddr *)&myaddr_in, 
+		  &addrlen) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -6815,36 +6489,8 @@ Send   Recv    Send   Recv\n\
 	sizeof(struct sockaddr_in));
   myaddr->sin_family = AF_INET;
 
-  /* it would seem that while HP-UX will allow an IP address (as a */
-  /* string) in a call to gethostbyname, other, less enlightened */
-  /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
-  /* order changed to check for IP address first. raj 7/96 */
+  complete_sockaddr(&server, remote_host, remote_data_ip);
 
-  if ((addr = inet_addr(remote_host)) == SOCKET_ERROR) {
-    /* it was not an IP address, try it as a name */
-    if ((hp = gethostbyname(remote_host)) == NULL) {
-      /* we have no idea what it is */
-      fprintf(where,
-	      "establish_control: could not resolve the destination %s\n",
-	      remote_host);
-      fflush(where);
-      exit(1);
-    }
-    else {
-      /* it was a valid remote_host */
-      bcopy(hp->h_addr,
-	    (char *)&server.sin_addr,
-	    hp->h_length);
-      server.sin_family = hp->h_addrtype;
-    }
-  }
-  else {
-    /* it was a valid IP address */
-    server.sin_addr.s_addr = addr;
-    server.sin_family = AF_INET;
-  }    
-  
-  
   if ( print_headers ) {
     fprintf(where,"TCP Connect/Request/Response TEST");
     fprintf(where," to %s", remote_host);
@@ -6939,7 +6585,8 @@ Send   Recv    Send   Recv\n\
   else {
     tcp_conn_rr_request->test_length	=	test_trans * -1;
   }
-  
+  tcp_conn_rr_request->port             = (int)remote_data_port;
+
   if (debug > 1) {
     fprintf(where,"netperf: send_tcp_conn_rr: requesting TCP crr test\n");
   }
@@ -7032,12 +6679,14 @@ Send   Recv    Send   Recv\n\
 #ifdef HISTOGRAM
     /* timestamp just before our call to create the socket, and then */
     /* again just after the receive raj 3/95 */
-    gettimeofday(&time_one,NULL);
+    HIST_timestamp(&time_one);
 #endif /* HISTOGRAM */
 
     /* set up the data socket */
     send_socket = create_data_socket(AF_INET, 
-				     SOCK_STREAM);
+				     SOCK_STREAM,
+				     local_data_ip,
+				     local_data_port);
   
     if (send_socket == INVALID_SOCKET) {
       perror("netperf: send_tcp_conn_rr: tcp stream data socket");
@@ -7182,7 +6831,7 @@ newport:
       recv_ring = recv_ring->next;
 
 #ifdef HISTOGRAM
-      gettimeofday(&time_two,NULL);
+      HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
 #endif /* HISTOGRAM */
 
@@ -7508,17 +7157,6 @@ recv_tcp_conn_rr()
     fflush(where);
   }
   
-  /* Let's clear-out our sockaddr for the sake of cleanlines. Then we */
-  /* can put in OUR values !-) At some point, we may want to nail this */
-  /* socket to a particular network-level address, but for now, */
-  /* INADDR_ANY should be just fine. */
-  
-  bzero((char *)&myaddr_in,
-	sizeof(myaddr_in));
-  myaddr_in.sin_family      = AF_INET;
-  myaddr_in.sin_addr.s_addr = INADDR_ANY;
-  myaddr_in.sin_port        = 0;
-  
   /* Grab a socket to listen on, and then listen on it. */
   
   if (debug) {
@@ -7530,39 +7168,22 @@ recv_tcp_conn_rr()
   /* variables, so set the globals based on the values in the request. */
   /* once the socket has been created, we will set the response values */
   /* based on the updated value of those globals. raj 7/94 */
-  lss_size = tcp_conn_rr_request->send_buf_size;
-  lsr_size = tcp_conn_rr_request->recv_buf_size;
+  lss_size_req = tcp_conn_rr_request->send_buf_size;
+  lsr_size_req = tcp_conn_rr_request->recv_buf_size;
   loc_nodelay = tcp_conn_rr_request->no_delay;
   loc_rcvavoid = tcp_conn_rr_request->so_rcvavoid;
   loc_sndavoid = tcp_conn_rr_request->so_sndavoid;
   
   s_listen = create_data_socket(AF_INET,
-				SOCK_STREAM);
+				SOCK_STREAM,
+				tcp_conn_rr_request->ipaddress,
+				tcp_conn_rr_request->port);
   
   if (s_listen == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
     send_response();
     if (debug) {
       fprintf(where,"could not create data socket\n");
-      fflush(where);
-    }
-    exit(1);
-  }
-
-  /* Let's get an address assigned to this socket so we can tell the */
-  /* initiator how to reach the data socket. There may be a desire to */
-  /* nail this socket to a specific IP address in a multi-homed, */
-  /* multi-connection situation, but for now, we'll ignore the issue */
-  /* and concentrate on single connection testing. */
-  
-  if (bind(s_listen,
-	   (struct sockaddr *)&myaddr_in,
-	   sizeof(myaddr_in)) == SOCKET_ERROR) {
-    netperf_response.content.serv_errno = errno;
-    close(s_listen);
-    send_response();
-    if (debug) {
-      fprintf(where,"could not bind\n");
       fflush(where);
     }
     exit(1);
@@ -7700,7 +7321,7 @@ recv_tcp_conn_rr()
     request_bytes_remaining	= tcp_conn_rr_request->request_size;
     
     /* receive the request from the other side */
-    while (!times_up || (request_bytes_remaining > 0)) {
+    while (!times_up && (request_bytes_remaining > 0)) {
       if((request_bytes_recvd=recv(s_data,
 				   temp_message_ptr,
 				   request_bytes_remaining,
@@ -7928,35 +7549,8 @@ Send   Recv    Send   Recv\n\
 	sizeof(struct sockaddr_in));
   myaddr->sin_family = AF_INET;
 
-  /* it would seem that while HP-UX will allow an IP address (as a */
-  /* string) in a call to gethostbyname, other, less enlightened */
-  /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
-  /* order changed to check for IP address first. raj 7/96 */
+  complete_sockaddr(&server, remote_host, remote_data_ip);
 
-  if ((addr = inet_addr(remote_host)) == SOCKET_ERROR) {
-    /* it was not an IP address, try it as a name */
-    if ((hp = gethostbyname(remote_host)) == NULL) {
-      /* we have no idea what it is */
-      fprintf(where,
-	      "establish_control: could not resolve the destination %s\n",
-	      remote_host);
-      fflush(where);
-      exit(1);
-    }
-    else {
-      /* it was a valid remote_host */
-      bcopy(hp->h_addr,
-	    (char *)&server.sin_addr,
-	    hp->h_length);
-      server.sin_family = hp->h_addrtype;
-    }
-  }
-  else {
-    /* it was a valid IP address */
-    server.sin_addr.s_addr = addr;
-    server.sin_family = AF_INET;
-  }    
-  
   if ( print_headers ) {
     fprintf(where,"TCP Transactional/Request/Response TEST");
     fprintf(where," to %s", remote_host);
@@ -8146,7 +7740,7 @@ Send   Recv    Send   Recv\n\
 #ifdef HISTOGRAM
     /* timestamp just before our call to create the socket, and then */
     /* again just after the receive raj 3/95 */
-    gettimeofday(&time_one,NULL);
+    HIST_timestamp(&time_one);
 #endif /* HISTOGRAM */
 
     /* set up the data socket - is this really necessary or can I just */
@@ -8280,7 +7874,7 @@ newport:
     close(send_socket);
 
 #ifdef HISTOGRAM
-    gettimeofday(&time_two,NULL);
+    HIST_timestamp(&time_two);
     HIST_add(time_hist,delta_micro(&time_one,&time_two));
 #endif /* HISTOGRAM */
 
@@ -8601,7 +8195,7 @@ recv_tcp_tran_rr()
 	sizeof(myaddr_in));
   myaddr_in.sin_family      = AF_INET;
   myaddr_in.sin_addr.s_addr = INADDR_ANY;
-  myaddr_in.sin_port        = 0;
+  myaddr_in.sin_port        = htons((unsigned short)tcp_tran_rr_request->port);
   
   /* Grab a socket to listen on, and then listen on it. */
   
@@ -8614,8 +8208,8 @@ recv_tcp_tran_rr()
   /* variables, so set the globals based on the values in the request. */
   /* once the socket has been created, we will set the response values */
   /* based on the updated value of those globals. raj 7/94 */
-  lss_size = tcp_tran_rr_request->send_buf_size;
-  lsr_size = tcp_tran_rr_request->recv_buf_size;
+  lss_size_req = tcp_tran_rr_request->send_buf_size;
+  lsr_size_req = tcp_tran_rr_request->recv_buf_size;
   loc_nodelay = tcp_tran_rr_request->no_delay;
   loc_rcvavoid = tcp_tran_rr_request->so_rcvavoid;
   loc_sndavoid = tcp_tran_rr_request->so_sndavoid;
@@ -9012,35 +8606,8 @@ Send   Recv    Send   Recv\n\
   bzero((char *)&server,
 	sizeof(server));
   
-  /* it would seem that while HP-UX will allow an IP address (as a */
-  /* string) in a call to gethostbyname, other, less enlightened */
-  /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
-  /* order changed to check for IP address first. raj 7/96 */
+  complete_sockaddr(&server, remote_host, remote_data_ip);
 
-  if ((addr = inet_addr(remote_host)) == SOCKET_ERROR) {
-    /* it was not an IP address, try it as a name */
-    if ((hp = gethostbyname(remote_host)) == NULL) {
-      /* we have no idea what it is */
-      fprintf(where,
-	      "establish_control: could not resolve the destination %s\n",
-	      remote_host);
-      fflush(where);
-      exit(1);
-    }
-    else {
-      /* it was a valid remote_host */
-      bcopy(hp->h_addr,
-	    (char *)&server.sin_addr,
-	    hp->h_length);
-      server.sin_family = hp->h_addrtype;
-    }
-  }
-  else {
-    /* it was a valid IP address */
-    server.sin_addr.s_addr = addr;
-    server.sin_family = AF_INET;
-  }    
-  
   if ( print_headers ) {
     fprintf(where,"TCP Non-Blocking REQUEST/RESPONSE TEST");
     fprintf(where," to %s", remote_host);
@@ -9286,7 +8853,7 @@ Send   Recv    Send   Recv\n\
 #ifdef HISTOGRAM
       /* timestamp just before our call to send, and then again just */
       /* after the receive raj 8/94 */
-      gettimeofday(&time_one,NULL);
+      HIST_timestamp(&time_one);
 #endif /* HISTOGRAM */
 
       /* even though this is a non-blocking socket, we will assume for */
@@ -9343,7 +8910,7 @@ Send   Recv    Send   Recv\n\
       }
       
 #ifdef HISTOGRAM
-      gettimeofday(&time_two,NULL);
+      HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
 #endif /* HISTOGRAM */
 #ifdef INTERVALS      
@@ -9721,7 +9288,7 @@ recv_tcp_nbrr()
 	sizeof(myaddr_in));
   myaddr_in.sin_family      = AF_INET;
   myaddr_in.sin_addr.s_addr = INADDR_ANY;
-  myaddr_in.sin_port        = 0;
+  myaddr_in.sin_port        = htons((unsigned_short)tcp_rr_request->port);
   
   /* Grab a socket to listen on, and then listen on it. */
   
@@ -9734,8 +9301,8 @@ recv_tcp_nbrr()
   /* variables, so set the globals based on the values in the request. */
   /* once the socket has been created, we will set the response values */
   /* based on the updated value of those globals. raj 7/94 */
-  lss_size = tcp_rr_request->send_buf_size;
-  lsr_size = tcp_rr_request->recv_buf_size;
+  lss_size_req = tcp_rr_request->send_buf_size;
+  lsr_size_req = tcp_rr_request->recv_buf_size;
   loc_nodelay = tcp_rr_request->no_delay;
   loc_rcvavoid = tcp_rr_request->so_rcvavoid;
   loc_sndavoid = tcp_rr_request->so_sndavoid;
@@ -10107,36 +9674,8 @@ Send   Recv    Send   Recv\n\
 	sizeof(struct sockaddr_in));
   myaddr->sin_family = AF_INET;
 
-  /* it would seem that while HP-UX will allow an IP address (as a */
-  /* string) in a call to gethostbyname, other, less enlightened */
-  /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
-  /* order changed to check for IP address first. raj 7/96 */
+  complete_sockaddr(&server, remote_host, remote_data_ip);
 
-  if ((addr = inet_addr(remote_host)) == SOCKET_ERROR) {
-    /* it was not an IP address, try it as a name */
-    if ((hp = gethostbyname(remote_host)) == NULL) {
-      /* we have no idea what it is */
-      fprintf(where,
-	      "establish_control: could not resolve the destination %s\n",
-	      remote_host);
-      fflush(where);
-      exit(1);
-    }
-    else {
-      /* it was a valid remote_host */
-      bcopy(hp->h_addr,
-	    (char *)&server.sin_addr,
-	    hp->h_length);
-      server.sin_family = hp->h_addrtype;
-    }
-  }
-  else {
-    /* it was a valid IP address */
-    server.sin_addr.s_addr = addr;
-    server.sin_family = AF_INET;
-  }    
-  
-  
   if ( print_headers ) {
     fprintf(where,"TCP Connect/Close TEST");
     fprintf(where," to %s", remote_host);
@@ -10219,7 +9758,8 @@ Send   Recv    Send   Recv\n\
   else {
     tcp_cc_request->test_length	=	test_trans * -1;
   }
-  
+  tcp_cc_request->port          = (int)remote_data_port;
+
   if (debug > 1) {
     fprintf(where,"netperf: send_tcp_cc: requesting TCP crr test\n");
   }
@@ -10312,12 +9852,14 @@ Send   Recv    Send   Recv\n\
 #ifdef HISTOGRAM
     /* timestamp just before our call to create the socket, and then */
     /* again just after the receive raj 3/95 */
-    gettimeofday(&time_one,NULL);
+    HIST_timestamp(&time_one);
 #endif /* HISTOGRAM */
 
     /* set up the data socket */
     send_socket = create_data_socket(AF_INET, 
-				     SOCK_STREAM);
+				     SOCK_STREAM,
+				     local_data_ip,
+				     local_data_port);
 
     if (send_socket == INVALID_SOCKET) {
       perror("netperf: send_tcp_cc: tcp stream data socket");
@@ -10428,7 +9970,7 @@ newport:
       /* number of bytes have been received */
 
 #ifdef HISTOGRAM
-      gettimeofday(&time_two,NULL);
+      HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
 #endif /* HISTOGRAM */
 
@@ -10759,7 +10301,7 @@ recv_tcp_cc()
 	sizeof(myaddr_in));
   myaddr_in.sin_family      = AF_INET;
   myaddr_in.sin_addr.s_addr = INADDR_ANY;
-  myaddr_in.sin_port        = 0;
+  myaddr_in.sin_port        = htons((unsigned short)tcp_cc_request->port);
   
   /* Grab a socket to listen on, and then listen on it. */
   
@@ -10772,14 +10314,16 @@ recv_tcp_cc()
   /* variables, so set the globals based on the values in the request. */
   /* once the socket has been created, we will set the response values */
   /* based on the updated value of those globals. raj 7/94 */
-  lss_size = tcp_cc_request->send_buf_size;
-  lsr_size = tcp_cc_request->recv_buf_size;
+  lss_size_req = tcp_cc_request->send_buf_size;
+  lsr_size_req = tcp_cc_request->recv_buf_size;
   loc_nodelay = tcp_cc_request->no_delay;
   loc_rcvavoid = tcp_cc_request->so_rcvavoid;
   loc_sndavoid = tcp_cc_request->so_sndavoid;
   
   s_listen = create_data_socket(AF_INET,
-				SOCK_STREAM);
+				SOCK_STREAM,
+				INADDR_ANY,
+				tcp_cc_request->port);
   
   if (s_listen == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
@@ -11015,7 +10559,7 @@ scan_sockets_args(int argc, char *argv[])
 
 {
 
-#define SOCKETS_ARGS "b:CDhm:M:p:r:s:S:Vw:W:z"
+#define SOCKETS_ARGS "b:CDhI:m:M:p:P:r:s:S:Vw:W:z"
 
   extern char	*optarg;	  /* pointer to option string	*/
   
@@ -11058,13 +10602,20 @@ scan_sockets_args(int argc, char *argv[])
       loc_nodelay = 1;
       rem_nodelay = 1;
       break;
+    case 'I':
+      break_args(optarg,arg1,arg2);
+      if (arg1[0])
+	local_data_ip = inet_addr(arg1);
+      if (arg2[0])
+	remote_data_ip = inet_addr(arg2);
+      break;
     case 's':
       /* set local socket sizes */
       break_args(optarg,arg1,arg2);
       if (arg1[0])
-	lss_size = convert(arg1);
+	lss_size_req = convert(arg1);
       if (arg2[0])
-	lsr_size = convert(arg2);
+	lsr_size_req = convert(arg2);
       break;
     case 'S':
       /* set remote socket sizes */
@@ -11098,6 +10649,16 @@ scan_sockets_args(int argc, char *argv[])
 	client_port_min = atoi(arg1);
       if (arg2[0])	
 	client_port_max = atoi(arg2);
+      break;
+    case 'P':
+      /* set the local and remote data port numbers for the tests to
+	 allow them to run through those blankety blank end-to-end
+	 breaking firewalls. raj 2004-06-15 */
+      break_args(optarg,arg1,arg2);
+      if (arg1[0])
+	local_data_port = atoi(arg1);
+      if (arg2[0])	
+	remote_data_port = atoi(arg2);
       break;
     case 't':
       /* set the test name */
