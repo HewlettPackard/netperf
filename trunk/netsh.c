@@ -1,6 +1,6 @@
 
 char	netsh_id[]="\
-@(#)netsh.c (c) Copyright 1993, 1994 Hewlett-Packard Company. Version 2.0PL1";
+@(#)netsh.c (c) Copyright 1993, 1994 Hewlett-Packard Company. Version 2.0PL2";
 
 
 /****************************************************************/
@@ -53,7 +53,7 @@ double atof();
  /* Some of the args take optional parameters. Since we are using */
  /* getopt to parse the command line, we will tell getopt that they do */
  /* not take parms, and then look for them ourselves */
-#define GLOBAL_CMD_LINE_ARGS "A:a:b:CcdDf:F:H:hi:I:l:O:o:P:p:t:v:W:w:"
+#define GLOBAL_CMD_LINE_ARGS "A:a:b:CcdDf:F:H:hi:I:l:n:O:o:P:p:t:v:W:w:"
 
 /************************************************************************/
 /*									*/
@@ -100,6 +100,9 @@ int
 float			       
   local_cpu_rate,
   remote_cpu_rate;
+
+int
+  shell_num_cpus=1;
 
 /* the end-test conditions for the tests - either transactions, bytes,  */
 /* or time. different vars used for clarity - space is cheap ;-)        */
@@ -371,6 +374,7 @@ scan_cmd_line(argc, argv)
       }
       /* limit maximum to 30 iterations */
       if(iteration_max>30) iteration_max=30;
+      if(iteration_min>30) iteration_min=30;
       break;
     case 'I':
       /* set the confidence level (95 or 99) and width */
@@ -413,6 +417,9 @@ scan_cmd_line(argc, argv)
 #else
       printf("I don't know how to get dirty.\n");
 #endif /* DIRTY */
+      break;
+    case 'n':
+      shell_num_cpus = atoi(optarg);
       break;
     case 'o':
       /* set the local offsets */
@@ -527,6 +534,9 @@ scan_cmd_line(argc, argv)
 #ifdef DO_1644
 	(strcmp(test_name,"TCP_TRR") == 0) ||
 #endif /* DO_1644 */
+#ifdef DO_NBRR
+	(strcmp(test_name,"TCP_TRR") == 0) ||
+#endif /* DO_NBRR */
 	(strcmp(test_name,"UDP_STREAM") == 0) ||
 	(strcmp(test_name,"UDP_RR") == 0))
       {

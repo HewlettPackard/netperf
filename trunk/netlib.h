@@ -111,6 +111,10 @@
 #define         TCP_TRR_RESPONSE        71
 #define         TCP_TRR_RESULTS         72
 
+#define         DO_TCP_NBRR             73
+#define         TCP_NBRR_RESPONSE       74
+#define         TCP_NBRR_RESULTS        75
+
 #define         DO_LWPSTR_STREAM           100
 #define         LWPSTR_STREAM_RESPONSE     110
 #define         LWPSTR_STREAM_RESULTS      120

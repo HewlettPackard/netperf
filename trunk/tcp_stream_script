@@ -38,7 +38,7 @@ TEST_TIME=60
 # How accurate we want the estimate of performance: 
 #      maximum and minimum test iterations (-i)
 #      confidence level (99 or 95) and interval (percent)
-STATS_STUFF="-i 10,2 -I 99,10"
+STATS_STUFF="-i 10,2 -I 99,5"
 
 # The socket sizes that we will be testing
 SOCKET_SIZES="57344 32768 8192"

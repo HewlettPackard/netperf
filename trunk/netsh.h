@@ -95,6 +95,9 @@ extern float
   local_cpu_rate,
   remote_cpu_rate;
 
+extern int
+  shell_num_cpus;
+
 extern	char	
   test_name[BUFSIZ];
 

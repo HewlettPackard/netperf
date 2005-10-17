@@ -1,5 +1,5 @@
 #
-# @(#)Makefile	2.0PL1	02/08/95
+# @(#)Makefile	2.0PL2	07/14/95
 #
 # Makefile to build netperf benchmark tool
 #
@@ -22,15 +22,18 @@ NETPERF_HOME = /opt/netperf
 # /opt/SUNWspro/bin/cc - the unbundled C compiler under Solaris (?)
 # cc                   - if your paths are set, this may be all you 
 #                        need
+# 
+# one most systems, netperf spends very little time in user code, and
+# most of its time in the kernel, so I *suspect* that different
+# optimization levels wont make very much of a difference. however,
+# might as well compile -O
 
-CC = cc
+CC = cc -O
 
 # Adding flags to CFLAGS enables some non-mainline features. For
 # more information, please consult the source code.
-# -Ae         - enable ANSI C on HP-UX with namespace extensions
-# -DUSE_PSTAT - use pstat to get CPU utilization on HP-UX when the
-#               kernel idle counter is not present. otherwise, the
-#               times() call is used, which can be VERY INACCURATE
+# -Ae         - enable ANSI C on HP-UX with namespace extensions. ANSI
+#               compilation is required for -DHISTOGRAM
 # -DDIRTY     - include code to dirty buffers before calls to send
 # -DHISTOGRAM - include code to keep a histogram of r/r times or
 #               time spent in send()
@@ -49,9 +52,26 @@ CC = cc
 #               -DBUTNOTHIPPI
 # -D$(LOG_FILE) Specifies where netserver should put its debug output 
 #               when debug is enabled
+# -DUSE_LOOPER- use looper or soaker processes to measure CPU
+#               utilization. these will be forked-off at the
+#               beginning. if you are running this way, it is
+#               important to see how much impact these have on the
+#               measurement. A loopback test on uniprocessor should be
+#               able to consume ~100% of the CPU, and the difference
+#               between throughput with USE_LOOPER CPU and without
+#               should be small for a real network. if it is not, then
+#               some work proably needs to be done on reducing the
+#               priority of the looper processes.
+# -DUSE_PSTAT - If used on HP-UX 10.0 and later, this will make CPU
+#               utilization measurements with some information
+#               returned byt he 10.X pstat() call. This is very
+#               accurate, and should have no impact on the
+#               measurement. Astute observers will notice that the
+#               LOC_CPU and REM_CPU rates with this method look
+#               remarkably close to the clockrate of the machine :)
 
 LOG_FILE=DEBUG_LOG_FILE="\"/tmp/netperf.debug\""
-CFLAGS = -D$(LOG_FILE)
+CFLAGS = -D$(LOG_FILE) -DUSE_LOOPER
 
 # Some platforms, and some options, require additional libraries.
 # you can add to the "LIBS =" line to accomplish this. if you find
@@ -61,7 +81,11 @@ CFLAGS = -D$(LOG_FILE)
 # -lsocket -lnsl -lelf  - required for Solaris 2.3 (2.4?)
 # -L/usr/fore/lib -latm - required on all platforms for the Fore
 #                         ATM API tests
-# -lelf                 - on IRIX 5.2 to resolve nlist
+# -lelf                 - on IRIX 5.2 to resolve nlist. with 2.0PL1
+#                         and later, this should not be needed since
+#                         netperf no longer uses nlist()
+# -lsys5                - on Digital Unix (OSF) this helps insure that
+#                         netserver processes are reaped?
 # -lm                   - required for ALL platforms
 
 LIBS= -lm
@@ -83,7 +107,7 @@ SHAR_SOURCE_FILES = netlib.c netlib.h netperf.c netserver.c \
                     hist.h \
 		    makefile
 
-SHAR_EXE_FILES    = ACKNWLDGMNTS COPYRIGHT README \
+SHAR_EXE_FILES    = ACKNWLDGMNTS COPYRIGHT README Release_Notes \
                     netperf.ps \
 		    netperf.man netserver.man
 

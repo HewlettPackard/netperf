@@ -23,7 +23,9 @@
 #
 # usage: snapshot_script hostname [CPU]
 #
-
+# mod 6/29/95 - echo progress information to stderr so that we can 
+#               see forward progress even when the results are 
+#               re-directed to a file
 #
 # First, let us set-up some of the defaults
 #
@@ -77,6 +79,9 @@ TIME="60"
 # where is the bitbucket?
 BITBUCKET="/dev/null"
 
+# announce start of test
+echo Netperf snapshot script started at `date` >&2
+
 # If we are measuring CPU utilization, then we can save beaucoup time
 # by saving the results of the CPU calibration and passing them in
 # during the real tests. So, we execute the new CPU "tests" of netperf
@@ -110,6 +115,8 @@ $NETHOME/netperf $PORT -l $WARM_TIME -t TCP_RR -H $REM_HOST -- \
 # The warm-ups are complete, so perform the real tests first, the
 # stream tests, then the request/response
 
+echo Starting 56x4  TCP_STREAM tests at `date` >&2
+
 # a 56x4 TCP_STREAM test
 echo
 echo ------------------------------------
@@ -124,6 +131,7 @@ $NETHOME/netperf $PORT -t TCP_STREAM -l $TIME -H $REM_HOST \
 echo
 echo
 # a 32x4 TCP_STREAM test
+echo Starting 32x4  TCP_STREAM tests at `date` >&2
 echo
 echo ------------------------------------
 echo Testing with the following command line:
@@ -137,6 +145,7 @@ $NETHOME/netperf $PORT -t TCP_STREAM -l $TIME -H $REM_HOST \
 echo
 echo
 # a 32x4 UDP_STREAM test
+echo Starting 32x4  UDP_STREAM tests at `date` >&2
 echo
 echo ------------------------------------
 echo Testing with the following command line:
@@ -150,6 +159,7 @@ $NETHOME/netperf $PORT -t UDP_STREAM -l $TIME -H $REM_HOST \
 echo
 echo
 # a 32x1 UDP_STREAM test
+echo Starting 32x1  UDP_STREAM tests at `date` >&2
 echo
 echo ------------------------------------
 echo Testing with the following command line:
@@ -163,6 +173,7 @@ $NETHOME/netperf $PORT -t UDP_STREAM -l $TIME -H $REM_HOST \
 echo
 echo
 # a single-byte TCP_RR
+echo Starting 1,1   TCP_RR     tests at `date` >&2
 echo
 echo ------------------------------------
 echo Testing with the following command line:
@@ -175,6 +186,7 @@ $NETHOME/netperf $PORT -t TCP_RR -l $TIME -H $REM_HOST \
  -r 1,1
 echo
 echo
+echo Starting 1,1   UDP_RR     tests at `date` >&2
 echo
 echo ------------------------------------
 echo Testing with the following command line:
@@ -189,6 +201,7 @@ $NETHOME/netperf $PORT -t UDP_RR -l $TIME -H $REM_HOST \
 echo
 echo
 # a UDP_RR test much like tftp
+echo Starting 512,4 UDP_RR     tests at `date` >&2
 echo
 echo ------------------------------------
 echo Testing with the following command line:
@@ -200,6 +213,8 @@ $NETHOME/netperf $PORT -t UDP_RR -l $TIME -H $REM_HOST \
  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- -r 516,4
 
 # and that's that
+echo Tests completed at `date` >&2
+
 echo
 echo If you wish to submit these results to the netperf database at
 echo http://www.cup.hp.com/netperf/NetperfPage.html, please submit each

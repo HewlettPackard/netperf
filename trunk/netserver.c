@@ -43,7 +43,7 @@
  
 */
 char	netserver_id[]="\
-@(#)netserver.c (c) Copyright 1993, 1994 Hewlett-Packard Co. Version 2.0PL1";
+@(#)netserver.c (c) Copyright 1993, 1994 Hewlett-Packard Co. Version 2.0PL2";
 
  /***********************************************************************/
  /*									*/
@@ -139,6 +139,16 @@ process_requests()
       bcopy((char *)&temp_rate,
 	    (char *)netperf_response->test_specific_data,
 	    sizeof(temp_rate));
+      if (debug) {
+	fprintf(where,"netserver: sending CPU information\n");
+	fflush(where);
+      }
+
+      /* we need the cpu_start, cpu_stop in the looper case to kill the */
+      /* child proceses raj 7/95 */
+      cpu_start(1);
+      cpu_stop(1,&temp_rate);
+
       send_response();
       break;
       
@@ -159,6 +169,12 @@ process_requests()
       recv_tcp_tran_rr();
       break;
 #endif /* DO_1644 */
+      
+#ifdef DO_NBRR
+    case DO_TCP_NBRR:
+      recv_tcp_nbrr();
+      break;
+#endif /* DO_NBRR */
       
     case DO_UDP_STREAM:
       recv_udp_stream();
@@ -305,6 +321,8 @@ void set_up_server()
   server.sin_addr.s_addr = INADDR_ANY;
   server.sin_family = AF_INET;
   
+  printf("Starting netserver at port %d\n",listen_port_num);
+
   server_control = socket (AF_INET,SOCK_STREAM,0);
   if (server_control < 0)
     {
@@ -403,7 +421,8 @@ char *argv[];
   char	*debug_file;
   int	c;
 
-  int spin = 1;
+  struct sockaddr name;
+  int namelen = sizeof(name);
   
   netlib_init();
   
@@ -424,15 +443,14 @@ char *argv[];
       /* we want to open a listen socket at a */
       /* specified port number */
       listen_port_num = atoi(optarg);
-      printf("Starting netserver at port %d\n",listen_port_num);
       break;
     }
   }
+
+/*  unlink(DEBUG_LOG_FILE); */
   
   if ((where = fopen(DEBUG_LOG_FILE, "w")) == NULL) {
-    if (listen_port_num) {
-      perror("netserver: debug file");
-    }
+    perror("netserver: debug file");
     exit(1);
   }
   
@@ -445,10 +463,23 @@ char *argv[];
   /* forking child processes. the child processes will call */
   /* process_requests */
   
+  /* If fd 0 is not a socket then assume we're not being called */
+  /* from inetd and start server socket on the default port. */
+  /* this enhancement comes from vwelch@ncsa.uiuc.edu (Von Welch) */
+
   if (listen_port_num) {
+    /* the user specified a port number on the command line */
     set_up_server();
   }
+  else if (getsockname(server_sock, &name, &namelen) == -1) {
+    /* we may not be a chile of inetd */
+    if (errno == ENOTSOCK) {
+      listen_port_num = TEST_PORT;
+      set_up_server();
+    }
+  }
   else {
+    /* we are probably a child of inetd */
     process_requests();
-  };
+  }
 }
