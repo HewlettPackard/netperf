@@ -1,5 +1,5 @@
 #
-# @(#)Makefile	2.1pl3	2003/02/11
+# @(#)Makefile	2.1pl4	2003/03/04
 #
 # Makefile to build netperf benchmark tool
 #
@@ -7,7 +7,7 @@
 #SHELL="/bin/sh"
 
 #what version of netperf is this for?
-VERSION = 2.2pl3
+VERSION = 2.2pl4
 
 #
 # This tells the script where the executables and scripts are supposed
@@ -86,13 +86,17 @@ CC = cc
 # -DDO_DNS    - Include tests (experimental) that measure the performance
 #               of a DNS server.
 # -DHAVE_SENDFILE - Include the TCP_SENDFILE test to test the perf of
-#               sending data using sendfile() instead of send().
+#               sending data using sendfile() instead of send(). Depending
+#               on the platform, you may need to add a -lsendfile - see
+#               the comments about LIBS below
 # -D_POSIX_SOURCE -D_SOCKET_SOURCE -DMPE - these are required for MPE/ix
 #
 # -DNEED_MAKEFILE_EDIT - this is the "cannary in the coal mine" to
 #               tell people that they need to edit the makefile for 
 #               their platform.  REMOVE THIS once you have edited
 #               the makefile for your platform
+# -DUSE_SYSCTL - Use sysctl() on FreeBSD (perhaps other BSDs) to calculate
+#                CPU utilization
 
 LOG_FILE=DEBUG_LOG_FILE="\"/tmp/netperf.debug\""
 CFLAGS = -O -D$(LOG_FILE) -DNEED_MAKEFILE_EDIT
@@ -114,6 +118,7 @@ CFLAGS = -O -D$(LOG_FILE) -DNEED_MAKEFILE_EDIT
 # -lxti                 - required for -DDO_XTI on HP_UX 10.X
 # -L/POSIXC60/lib -lunix -lm -lsocket - for MPE/iX
 # -lkstat               - required for -DUSE_KSTAT on Solaris
+# -lsendfile            - required for -DHAVE_SENDFILE on Solaris 9
 
 LIBS= -lm
 
@@ -147,7 +152,7 @@ SHAR_EXE_FILES    = ACKNWLDGMNTS COPYRIGHT README Release_Notes \
 
 SHAR_SCRIPT_FILES = tcp_stream_script udp_stream_script \
                     tcp_rr_script udp_rr_script tcp_range_script \
-                    snapshot_script arr_script
+                    snapshot_script arr_script packet_byte_script
 
 NETSERVER_OBJS	  = netserver.o nettest_bsd.o nettest_dlpi.o \
                     nettest_unix.o netlib.o netsh.o  \
