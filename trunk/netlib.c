@@ -1,5 +1,5 @@
 char	netlib_id[]="\
-@(#)netlib.c (c) Copyright 1993, 1994 Hewlett-Packard Company. Version 2.1PL1";
+@(#)netlib.c (c) Copyright 1993, 1994 Hewlett-Packard Company. Version 2.2";
 
 /****************************************************************/
 /*								*/
@@ -121,6 +121,11 @@ char	netlib_id[]="\
 #include <sys/pstat.h>
 #endif /* USE_PSTAT */
 
+#ifdef USE_KSTAT
+#include <kstat.h>
+#include <sys/sysinfo.h>
+#endif /* USE_KSTAT */
+
  /* not all systems seem to have the sysconf for page size. for those */
  /* which do not, we will assume that the page size is 8192 bytes. */
  /* this should be more than enough to be sure that there is no page */
@@ -198,6 +203,16 @@ long long
   *lib_base_pointer;
 
 #else 
+#ifdef USE_KSTAT
+long
+  lib_start_count[MAXCPUS],  /* idle counter initial value per-cpu      */
+  lib_end_count[MAXCPUS];    /* idle counter final value per-cpu	*/
+
+  kstat_t *cpu_ks[MAXCPUS]; /* the addresses that kstat will need to
+			       pull the cpu info from the kstat
+			       interface. at least I think that is
+			       what this is :) raj 8/2000 */
+#else
 #ifdef USE_LOOPER
 
 long
@@ -221,6 +236,7 @@ int
   lib_idle_fd;
   
 #endif /* USE_LOOPER */
+#endif /* USE_KSTAT */
 #endif /* USE_PSTAT */  
 
 int	lib_use_idle;
@@ -260,9 +276,9 @@ float   lib_local_per_cpu_util[MAXCPUS];
 int	*request_array;
 int	*response_array;
 
-int	netlib_control;
+int	netlib_control = -1;
 
-int	server_sock;
+int	server_sock = -1;
 
 int	tcp_proto_num;
 
@@ -516,11 +532,16 @@ get_num_cpus()
   temp_cpus = sysconf(_SC_NPROCESSORS_ONLN);
 
 #else
+#if defined __sgi
 
+  temp_cpus = sysconf(_SC_NPROC_ONLN);
+
+#else /* not __sgi */
   /* we need to know some other ways to do this, or just fall-back on */
   /* a global command line option - raj 4/95 */
   temp_cpus = shell_num_cpus;
 
+#endif /* __sgi */
 #endif /* __sun && __SVR4 */
 #endif /*  __hpux */
 
@@ -671,7 +692,7 @@ install_signal_catchers()
 
   for (i = 1; i <= NSIG; i++) {
     if (i != SIGALRM) {
-      if (sigaction(SIGALRM,&action,NULL) != 0) {
+      if (sigaction(i,&action,NULL) != 0) {
 	fprintf(where,
 		"Could not install signal catcher for sig %d, errno %d\n",
 		i,
@@ -868,7 +889,7 @@ netlib_init()
   request_array = (int *)(&netperf_request);
   response_array = (int *)(&netperf_response);
 
-  for (i = 0; i<= MAXCPUS; i++) {
+  for (i = 0; i < MAXCPUS; i++) {
     lib_local_per_cpu_util[i] = 0.0;
   }
 
@@ -999,6 +1020,101 @@ allocate_buffer_ring(width, buffer_size, alignment, offset)
 
   return(first_link); /* it's a circle, doesn't matter which we return */
 }
+
+#ifdef HAVE_SENDFILE
+/* this routine will construct a ring of sendfile_ring_elt structs
+   that the routine sendfile_tcp_stream() will use to get parameters
+   to its calls to sendfile(). It will setup the ring to point at the
+   file specified in the global -F option that is already used to
+   pre-fill buffers in the send() case. 08/2000 */
+
+struct sendfile_ring_elt *
+alloc_sendfile_buf_ring(int width,
+			int buffer_size,
+			int alignment,
+			int offset)
+
+{
+
+  struct sendfile_ring_elt *first_link = NULL;
+  struct sendfile_ring_elt *temp_link  = NULL;
+  struct sendfile_ring_elt *prev_link;
+  
+  int i;
+  int fildes;
+  struct stat statbuf;
+
+  /* if the user has not specified a file with the -F option, we will
+     fail the test. otherwise, go ahead and try to open the
+     file. 08/2000 */
+  if (strcmp(fill_file,"") == 0) {
+    perror("alloc_sendfile_buf_ring: fill_file must be specified for sendfile option");
+    exit(1);
+  }
+  else {
+    fildes = open(fill_file , O_RDONLY);
+    if (fildes == -1){
+      perror("alloc_sendfile_buf_ring: Could not open requested file");
+      exit(1);
+    }
+  }
+  
+  /* make sure there is enough file there to allow us to make a
+     complete ring. that way we do not need additional logic in the
+     ring setup to deal with wrap-around issues. we might want that
+     someday, but not just now. 08/2000 */
+  if (stat(fill_file,&statbuf) != 0) {
+    perror("alloc_sendfile_buf_ring: could not stat file");
+    exit(1);
+  }
+  if (statbuf.st_size < (width * buffer_size)) {
+    /* the file is too short */
+    fprintf(stderr,"alloc_sendfile_buf_ring: specified file too small.\n");
+    fprintf(stderr,"file must be larger than send_width * send_size\n");
+    fflush(stderr);
+    exit(1);
+  }
+
+  prev_link = NULL;
+  for (i = 1; i <= width; i++) {
+    /* get the ring element. we should probably make sure the malloc() 
+     was successful, but for now we'll just let the code bomb
+     mysteriously. 08/2000 */
+
+    temp_link = (struct sendfile_ring_elt *)
+      malloc(sizeof(struct sendfile_ring_elt));
+
+    /* remember the first one so we can close the ring at the end */
+
+    if (i == 1) {
+      first_link = temp_link;
+    }
+
+    /* now fill-in the fields of the structure with the apropriate
+       stuff. just how should we deal with alignment and offset I
+       wonder? until something better comes-up, I think we will just
+       ignore them. 08/2000 */
+
+    temp_link->fildes = fildes;      /* from which file do we send? */
+    temp_link->offset = offset;      /* starting at which offset? */
+    offset += buffer_size;           /* get ready for the next elt */
+    temp_link->length = buffer_size; /* how many bytes to send */
+    temp_link->hdtrl = NULL;         /* no header or trailer */
+    temp_link->flags = 0;            /* no flags */
+
+    /* is where the buffer fill code went. */
+
+    temp_link->next = prev_link;
+    prev_link = temp_link;
+  }
+  /* close the ring */
+  first_link->next = temp_link;
+  
+  return(first_link); /* it's a dummy ring */
+}
+
+#endif /* HAVE_SENDFILE */
+
 
  /***********************************************************************/
  /*									*/
@@ -1123,6 +1239,9 @@ format_cpu_method(method)
     break;
   case PSTAT:
     method_char = 'P';
+    break;
+  case KSTAT:
+    method_char = 'K';
     break;
   case TIMES:
     method_char = 'T';
@@ -1595,6 +1714,273 @@ lo_32(big_int)
 #endif /* USE_PSTAT */
 
 
+#ifdef USE_KSTAT
+
+#define UPDKCID(nk,ok) \
+if (nk == -1) { \
+  perror("kstat_read "); \
+  exit(1); \
+} \
+if (nk != ok)\
+  goto kcid_changed;
+
+static kstat_ctl_t *kc = NULL;
+static kid_t kcid = 0;
+
+/* do the initial open of the kstat interface, get the chain id's all
+   straightened-out and set-up the addresses for get_kstat_idle to do
+   its thing.  liberally borrowed from the sources to TOP. raj 8/2000 */
+
+int
+open_kstat()
+{
+  kstat_t *ks;
+  kid_t nkcid;
+  int i;
+  int changed = 0;
+  static int ncpu = 0;
+
+  kstat_named_t *kn;
+
+  if (debug) {
+    fprintf(where,"open_kstat: enter\n");
+    fflush(where);
+  }
+  
+  /*
+   * 0. kstat_open
+   */
+  
+  if (!kc)
+    {
+      kc = kstat_open();
+      if (!kc)
+        {
+	  perror("kstat_open ");
+	  exit(1);
+        }
+      changed = 1;
+      kcid = kc->kc_chain_id;
+    }
+#ifdef rickwasstupid
+  else {
+    fprintf(where,"open_kstat double open!\n");
+    fflush(where);
+    exit(1);
+  }
+#endif
+
+  /* keep doing it until no more changes */
+ kcid_changed:
+
+  if (debug) {
+    fprintf(where,"passing kcid_changed\n");
+    fflush(where);
+  }
+  
+  /*
+   * 1.  kstat_chain_update
+   */
+  nkcid = kstat_chain_update(kc);
+  if (nkcid)
+    {
+      /* UPDKCID will abort if nkcid is -1, so no need to check */
+      changed = 1;
+      kcid = nkcid;
+    }
+  UPDKCID(nkcid,0);
+
+  if (debug) {
+    fprintf(where,"kstat_lookup for unix/system_misc\n");
+    fflush(where);
+  }
+  
+  ks = kstat_lookup(kc, "unix", 0, "system_misc");
+  if (kstat_read(kc, ks, 0) == -1) {
+    perror("kstat_read");
+    exit(1);
+  }
+  
+  
+  if (changed) {
+    
+    /*
+     * 2. get data addresses
+     */
+    
+    ncpu = 0;
+    
+    kn = kstat_data_lookup(ks, "ncpus");
+    if (kn && kn->value.ui32 > lib_num_loc_cpus) {
+      fprintf(stderr,"number of CPU's mismatch!");
+      exit(1);
+    }
+    
+    for (ks = kc->kc_chain; ks;
+	 ks = ks->ks_next)
+      {
+	if (strncmp(ks->ks_name, "cpu_stat", 8) == 0)
+	  {
+	    nkcid = kstat_read(kc, ks, NULL);
+	    /* if kcid changed, pointer might be invalid. we'll deal
+	       wtih changes at this stage, but will not accept them
+	       when we are actually in the middle of reading
+	       values. hopefully this is not going to be a big
+	       issue. raj 8/2000 */
+	    UPDKCID(nkcid, kcid);
+	    
+	    if (debug) {
+	      fprintf(where,"cpu_ks[%d] getting %p\n",ncpu,ks);
+	      fflush(where);
+	    }
+
+	    cpu_ks[ncpu] = ks;
+	    ncpu++;
+	    if (ncpu > lib_num_loc_cpus)
+	      {
+		/* with the check above, would we ever hit this? */
+		fprintf(stderr, 
+			"kstat finds too many cpus %d: should be %d\n",
+			ncpu,lib_num_loc_cpus);
+		exit(1);
+	      }
+	  }
+      }
+    /* note that ncpu could be less than ncpus, but that's okay */
+    changed = 0;
+  }
+}
+
+/* return the value of the idle tick counter for the specified CPU */
+long
+get_kstat_idle(cpu)
+     int cpu;
+{
+  cpu_stat_t cpu_stat;
+  kid_t nkcid;
+
+  if (debug) {
+    fprintf(where,
+	    "get_kstat_idle reading with kc %x and ks %p\n",
+	    kc,
+	    cpu_ks[cpu]);
+  }
+
+  nkcid = kstat_read(kc, cpu_ks[cpu], &cpu_stat);
+  /* if kcid changed, pointer might be invalid, fail the test */
+  UPDKCID(nkcid, kcid);
+
+  return(cpu_stat.cpu_sysinfo.cpu[CPU_IDLE]);
+
+ kcid_changed:
+  perror("kcid changed midstream and I cannot deal with that!");
+  exit(1);
+}
+
+/* calibrate_kstat */
+/* find the rate at which the kstat idle counter increments on this
+   platform. for the kstat mechanism, this might seem a triffle silly, 
+   but this is more in keeping with what the rest of netperf does, so
+   we will stick with it. raj 8/2000 */
+
+float
+calibrate_kstat(times,wait_time)
+     int times;
+     int wait_time;
+{
+
+  long	
+    firstcnt[MAXCPUS],
+    secondcnt[MAXCPUS];
+
+  float	
+    elapsed,
+    temp_rate,
+    rate[MAXTIMES],
+    local_maxrate;
+
+  long	
+    sec,
+    usec;
+
+  int	
+    i,
+    j;
+  
+  struct  timeval time1, time2 ;
+  struct  timezone tz;
+  
+  if (debug) {
+    fprintf(where,"calling open_kstat from calibrate_kstat\n");
+    fflush(where);
+  }
+
+  open_kstat();
+
+  if (times > MAXTIMES) {
+    times = MAXTIMES;
+  }
+
+  local_maxrate = (float)-1.0;
+  
+  for(i = 0; i < times; i++) {
+    rate[i] = (float)0.0;
+    for (j = 0; j < lib_num_loc_cpus; j++) {
+      firstcnt[j] = get_kstat_idle(j);
+    }
+    gettimeofday (&time1, &tz);
+    sleep(wait_time);
+    gettimeofday (&time2, &tz);
+
+    if (time2.tv_usec < time1.tv_usec)
+      {
+	time2.tv_usec += 1000000;
+	time2.tv_sec -=1;
+      }
+    sec = time2.tv_sec - time1.tv_sec;
+    usec = time2.tv_usec - time1.tv_usec;
+    elapsed = (float)sec + ((float)usec/(float)1000000.0);
+    
+    if(debug) {
+      fprintf(where, "Calibration for kstat counter run: %d\n",i);
+      fprintf(where,"\tsec = %ld usec = %ld\n",sec,usec);
+      fprintf(where,"\telapsed time = %g\n",elapsed);
+    }
+
+    for (j = 0; j < lib_num_loc_cpus; j++) {
+      secondcnt[j] = get_kstat_idle(j);
+      if(debug) {
+	/* I know that there are situations where compilers know about */
+	/* long long, but the library functions do not... raj 4/95 */
+	fprintf(where,
+		"\tfirstcnt[%d] = 0x%8.8lx%8.8lx secondcnt[%d] = 0x%8.8lx%8.8lx\n",
+		j,
+		firstcnt[j],
+		firstcnt[j],
+		j,
+		secondcnt[j],
+		secondcnt[j]);
+      }
+      /* we assume that it would wrap no more than once. we also */
+      /* assume that the result of subtracting will "fit" raj 4/95 */
+      temp_rate = (secondcnt[j] >= firstcnt[j]) ?
+	(float)(secondcnt[j] - firstcnt[j])/elapsed : 
+	  (float)(secondcnt[j]-firstcnt[j]+MAXLONG)/elapsed;
+      if (temp_rate > rate[i]) rate[i] = temp_rate;
+      if(debug) {
+	fprintf(where,"\trate[%d] = %g\n",i,rate[i]);
+	fflush(where);
+      }
+      if (local_maxrate < rate[i]) local_maxrate = rate[i];
+    }
+  }
+  if(debug) {
+    fprintf(where,"\tlocal maxrate = %g per sec. \n",local_maxrate);
+    fflush(where);
+  }
+  return local_maxrate;
+}
+#endif /* USE_KSTAT */
 
 #ifdef USE_LOOPER
 
@@ -1764,7 +2150,7 @@ calibrate_pstat(times,wait_time)
       }
     }
     else {
-      fprintf(where,"pstat_setprocessor failure errno %d\n");
+      fprintf(where,"pstat_getprocessor failure errno %d\n");
       fflush(where);
       exit(1);
     }
@@ -2118,6 +2504,20 @@ cpu_start(measure_cpu)
       lib_start_count[i] = *lib_idle_address[i];
     }
 #else
+#ifdef USE_KSTAT
+    cpu_method = KSTAT;
+
+    if (debug) {
+      fprintf(where,"calling open_kstat from cpu_start\n");
+      fflush(where);
+    }
+
+    open_kstat();
+
+    for (i = 0; i < lib_num_loc_cpus; i++){
+      lib_start_count[i] = get_kstat_idle(i);
+    }
+#else
 #ifdef	USE_PSTAT
     cpu_method = PSTAT;
 #ifdef PSTAT_IPCINFO
@@ -2199,6 +2599,7 @@ cpu_start(measure_cpu)
     times(&times_data1);
 #endif /* WIN32 */
 #endif /* USE_PSTAT */
+#endif /* USE_KSTAT */
 #endif /* USE_LOOPER */
   }
 }
@@ -2243,6 +2644,11 @@ if (measure_cpu) {
 	  lib_num_loc_cpus));
   unlink("/tmp/netperf_cpu");
 #endif /* WIN32 */
+#else
+#ifdef USE_KSTAT
+  for (i = 0; i < lib_num_loc_cpus; i++){
+    lib_end_count[i] = get_kstat_idle(i);
+  }
 #else
 #ifdef	USE_PSTAT
 #ifdef PSTAT_IPCINFO
@@ -2315,6 +2721,7 @@ if (measure_cpu) {
   times(&times_data2);
 #endif /* WIN32 */
 #endif /* USE_PSTAT */
+#endif /* USE_KSTAT */
 #endif /* USE_LOOPER */
 }
 
@@ -2409,14 +2816,17 @@ calc_cpu_util(elapsed_time)
     correction_factor = (float) 1.0;
   }
   
-#ifdef USE_LOOPER
+#if defined (USE_LOOPER)  || defined (USE_KSTAT)
   for (i = 0; i < lib_num_loc_cpus; i++) {
 
-    /* it would appear that on some systems, in loopback, nice */
-    /* is *very* effective, causing the looper process to stop */
-    /* dead in its tracks. if this happens, we need to ensure  */
-    /* that the calculation does not go south. raj 6/95        */
-    if (lib_end_count[i] == lib_start_count[i]) {
+    /* it would appear that on some systems, in loopback, nice is
+     *very* effective, causing the looper process to stop dead in its
+     tracks. if this happens, we need to ensure that the calculation
+     does  not go south. raj 6/95 and if we run completely out of
+     idle, the same  thing could in theory happen to the USE_KSTAT
+     path. raj 8/2000 */ 
+ 
+   if (lib_end_count[i] == lib_start_count[i]) {
       lib_end_count[i]++;
     }
     
@@ -3055,6 +3465,9 @@ calibrate_local_cpu(local_cpu_rate)
 #ifdef USE_LOOPER    
     lib_local_maxrate = calibrate_looper(4,10);
 #endif
+#ifdef USE_KSTAT
+    lib_local_maxrate = calibrate_kstat(4,10);
+#endif /* USE_KSTAT */
 #ifdef USE_PSTAT
 #ifdef PSTAT_IPCINFO
     /* one version of pstat needs calibration */

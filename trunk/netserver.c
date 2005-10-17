@@ -1,7 +1,7 @@
 
 /*
  
-            Copyright (C) 1993,1994,1995 Hewlett-Packard Company
+	   Copyright (C) 1993-2000 Hewlett-Packard Company
                          ALL RIGHTS RESERVED.
  
   The enclosed software and documention includes copyrighted works of
@@ -43,7 +43,7 @@
  
 */
 char	netserver_id[]="\
-@(#)netserver.c (c) Copyright 1993, 1994 Hewlett-Packard Co. Version 2.1PL1";
+@(#)netserver.c (c) Copyright 1993-2000 Hewlett-Packard Co. Version 2.2";
 
  /***********************************************************************/
  /*									*/
@@ -104,6 +104,10 @@ char	netserver_id[]="\
 #ifdef DO_IPV6
 #include "nettest_ipv6.h"
 #endif /* DO_IPV6 */
+
+#ifdef DO_DNS
+#include "nettest_dns.h"
+#endif /* DO_DNS */
 
 #include "netsh.h"
 
@@ -169,8 +173,11 @@ process_requests()
 
       /* we need the cpu_start, cpu_stop in the looper case to kill the */
       /* child proceses raj 7/95 */
+
+#ifdef USE_LOOPER
       cpu_start(1);
       cpu_stop(1,&temp_rate);
+#endif /* USE_LOOPER */
 
       send_response();
       break;
@@ -185,6 +192,10 @@ process_requests()
       
     case DO_TCP_CRR:
       recv_tcp_conn_rr();
+      break;
+      
+    case DO_TCP_CC:
+      recv_tcp_cc();
       break;
       
 #ifdef DO_1644
@@ -330,6 +341,12 @@ process_requests()
 
 #endif /* DO_IPV6 */
 
+#ifdef DO_DNS
+    case DO_DNS_RR:
+      recv_dns_rr();
+      break;
+#endif /* DO_DNS */
+
     default:
       fprintf(where,"unknown test number %d\n",
 	      netperf_request.content.request_type);
@@ -405,7 +422,7 @@ void set_up_server()
       fclose(stdin);
       fclose(stderr);
  /* can I just use setsid on all systems? raj 4/96 */
-#if defined(__NetBSD__) || defined(__bsdi__) || defined(sun) || defined(__FREEBSD__)
+#if defined(__NetBSD__) || defined(__bsdi__) || defined(sun) || defined(__FREEBSD__) || defined(__FreeBSD__) || defined (__OpenBSD__)
       setsid();
 #else
       setpgrp();
@@ -560,8 +577,8 @@ char *argv[];
     /* the user specified a port number on the command line */
     set_up_server();
   }
-  else if (getsockname(server_sock, &name, &namelen) == -1) {
-    /* we may not be a chile of inetd */
+  else if (getsockname(0, &name, &namelen) == -1) {
+    /* we may not be a child of inetd */
 #ifdef WIN32
 	  if (WSAGetLastError() == WSAENOTSOCK) {
 #else 
@@ -573,6 +590,7 @@ char *argv[];
   }
   else {
     /* we are probably a child of inetd */
+    server_sock = 0;
     process_requests();
   }
   return(0);

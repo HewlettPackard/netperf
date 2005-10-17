@@ -5,7 +5,7 @@
 #endif /* lint */
 #ifdef DO_UNIX
 char	nettest_unix_id[]="\
-@(#)nettest_unix.c (c) Copyright 1994, 1995 Hewlett-Packard Co. Version 2.1";
+@(#)nettest_unix.c (c) Copyright 1994, 1995 Hewlett-Packard Co. Version 2.1pl4";
      
 /****************************************************************/
 /*								*/
@@ -75,11 +75,6 @@ static int
 
  /* different options for the sockets				*/
 
-int
-  loc_sndavoid,		/* avoid send copies locally		*/
-  loc_rcvavoid,		/* avoid recv copies locally		*/
-  rem_sndavoid,		/* avoid send copies remotely		*/
-  rem_rcvavoid;		/* avoid recv_copies remotely		*/
 
 char unix_usage[] = "\n\
 Usage: netperf [global options] -- [test options] \n\
@@ -242,45 +237,6 @@ create_unix_socket(family, type)
   
 #endif /* SO_SNDBUF */
 
-  /* now, we may wish to enable the copy avoidance features on the */
-  /* local system. of course, this may not be possible... */
-  
-#ifdef SO_RCV_COPYAVOID
-  if (loc_rcvavoid) {
-    if (setsockopt(temp_socket,
-		   SOL_SOCKET,
-		   SO_RCV_COPYAVOID,
-		   &loc_rcvavoid,
-		   sizeof(int)) < 0) {
-      fprintf(where,
-	      "netperf: create_unix_socket: Could not enable receive copy avoidance");
-      fflush(where);
-      loc_rcvavoid = 0;
-    }
-  }
-#else
-  /* it wasn't compiled in... */
-  loc_rcvavoid = 0;
-#endif /* SO_RCV_COPYAVOID */
-
-#ifdef SO_SND_COPYAVOID
-  if (loc_sndavoid) {
-    if (setsockopt(temp_socket,
-		   SOL_SOCKET,
-		   SO_SND_COPYAVOID,
-		   &loc_sndavoid,
-		   sizeof(int)) < 0) {
-      fprintf(where,
-	      "netperf: create_unix_socket: Could not enable send copy avoidance");
-      fflush(where);
-      loc_sndavoid = 0;
-    }
-  }
-#else
-  /* it was not compiled in... */
-  loc_sndavoid = 0;
-#endif
-  
   return(temp_socket);
 
 }
@@ -481,8 +437,6 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
   else {
     stream_stream_request->test_length	=	test_bytes;
   }
-  stream_stream_request->so_rcvavoid	=	rem_rcvavoid;
-  stream_stream_request->so_sndavoid	=	rem_sndavoid;
 #ifdef DIRTY
   stream_stream_request->dirty_count    =       rem_dirty_count;
   stream_stream_request->clean_count    =       rem_clean_count;
@@ -515,8 +469,6 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
     rss_size	        =	stream_stream_response->send_buf_size;
     remote_cpu_usage    =	stream_stream_response->measure_cpu;
     remote_cpu_rate     = 	stream_stream_response->cpu_rate;
-    rem_rcvavoid	=	stream_stream_response->so_rcvavoid;
-    rem_sndavoid	=	stream_stream_response->so_sndavoid;
     strcpy(server.sun_path,stream_stream_response->unix_path);
   }
   else {
@@ -896,8 +848,6 @@ recv_stream_stream()
   /* based on the updated value of those globals. raj 7/94 */
   lss_size = stream_stream_request->send_buf_size;
   lsr_size = stream_stream_request->recv_buf_size;
-  loc_rcvavoid = stream_stream_request->so_rcvavoid;
-  loc_sndavoid = stream_stream_request->so_sndavoid;
 
   s_listen = create_unix_socket(AF_UNIX,
 				SOCK_STREAM);
@@ -1010,8 +960,6 @@ recv_stream_stream()
   /* the socket parms from the globals */
   stream_stream_response->send_buf_size = lss_size;
   stream_stream_response->recv_buf_size = lsr_size;
-  stream_stream_response->so_rcvavoid = loc_rcvavoid;
-  stream_stream_response->so_sndavoid = loc_sndavoid;
   stream_stream_response->receive_size = recv_size;
 
   send_response();
@@ -1290,8 +1238,6 @@ Send   Recv    Send   Recv\n\
   stream_rr_request->response_size	=	rsp_size;
   stream_rr_request->measure_cpu	=	remote_cpu_usage;
   stream_rr_request->cpu_rate	=	remote_cpu_rate;
-  stream_rr_request->so_rcvavoid	=	rem_rcvavoid;
-  stream_rr_request->so_sndavoid	=	rem_sndavoid;
   if (test_time) {
     stream_rr_request->test_length	=	test_time;
   }
@@ -1770,8 +1716,6 @@ bytes   bytes    secs            #      #   %s/sec   %%       us/KB\n\n";
   dg_stream_request->measure_cpu	= remote_cpu_usage;
   dg_stream_request->cpu_rate		= remote_cpu_rate;
   dg_stream_request->test_length	= test_time;
-  dg_stream_request->so_rcvavoid	= rem_rcvavoid;
-  dg_stream_request->so_sndavoid	= rem_sndavoid;
   
   send_request();
   
@@ -2130,8 +2074,6 @@ recv_dg_stream()
   /* once the socket has been created, we will set the response values */
   /* based on the updated value of those globals. raj 7/94 */
   lsr_size = dg_stream_request->recv_buf_size;
-  loc_rcvavoid = dg_stream_request->so_rcvavoid;
-  loc_sndavoid = dg_stream_request->so_sndavoid;
     
   s_data = create_unix_socket(AF_UNIX,
 			      SOCK_DGRAM);
@@ -2190,8 +2132,6 @@ recv_dg_stream()
   /* the socket parms from the globals */
   dg_stream_response->send_buf_size = lss_size;
   dg_stream_response->recv_buf_size = lsr_size;
-  dg_stream_response->so_rcvavoid = loc_rcvavoid;
-  dg_stream_response->so_sndavoid = loc_sndavoid;
 
   send_response();
   
@@ -2466,8 +2406,6 @@ bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      us/Tr   us/Tr\n\n"
   dg_rr_request->response_size	=	rsp_size;
   dg_rr_request->measure_cpu	=	remote_cpu_usage;
   dg_rr_request->cpu_rate	=	remote_cpu_rate;
-  dg_rr_request->so_rcvavoid	=	rem_rcvavoid;
-  dg_rr_request->so_sndavoid	=	rem_sndavoid;
   if (test_time) {
     dg_rr_request->test_length	=	test_time;
   }
@@ -2948,8 +2886,6 @@ recv_dg_rr()
   /* based on the updated value of those globals. raj 7/94 */
   lss_size = dg_rr_request->send_buf_size;
   lsr_size = dg_rr_request->recv_buf_size;
-  loc_rcvavoid = dg_rr_request->so_rcvavoid;
-  loc_sndavoid = dg_rr_request->so_sndavoid;
 
   s_data = create_unix_socket(AF_UNIX,
 			      SOCK_DGRAM);
@@ -3002,8 +2938,6 @@ recv_dg_rr()
   /* the socket parms from the globals */
   dg_rr_response->send_buf_size = lss_size;
   dg_rr_response->recv_buf_size = lsr_size;
-  dg_rr_response->so_rcvavoid = loc_rcvavoid;
-  dg_rr_response->so_sndavoid = loc_sndavoid;
  
   send_response();
   
@@ -3240,8 +3174,6 @@ recv_stream_rr()
   /* based on the updated value of those globals. raj 7/94 */
   lss_size = stream_rr_request->send_buf_size;
   lsr_size = stream_rr_request->recv_buf_size;
-  loc_rcvavoid = stream_rr_request->so_rcvavoid;
-  loc_sndavoid = stream_rr_request->so_sndavoid;
   
   s_listen = create_unix_socket(AF_UNIX,
 				SOCK_STREAM);
@@ -3304,8 +3236,6 @@ recv_stream_rr()
   /* the socket parms from the globals */
   stream_rr_response->send_buf_size = lss_size;
   stream_rr_response->recv_buf_size = lsr_size;
-  stream_rr_response->so_rcvavoid = loc_rcvavoid;
-  stream_rr_response->so_sndavoid = loc_sndavoid;
 
   send_response();
   

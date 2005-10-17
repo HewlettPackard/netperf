@@ -20,6 +20,10 @@
 */
 #ifndef _HIST_INCLUDED
 #define _HIST_INCLUDED
+
+#ifdef IRIX
+#include <sys/time.h>
+#endif /* IRIX */
    
 struct histogram_struct {
    int tenth_msec[10];

@@ -1,7 +1,7 @@
 #ifdef DO_XTI
 #ifndef lint
 char	nettest_xti_id[]="\
-@(#)nettest_xti.c (c) Copyright 1995 Hewlett-Packard Co. Version 2.1pl1";
+@(#)nettest_xti.c (c) Copyright 1995 Hewlett-Packard Co. Version 2.1pl4";
 #else
 #define DIRTY
 #define HISTOGRAM
@@ -51,6 +51,9 @@ char	nettest_xti_id[]="\
 #include "nettest_xti.h"
 
 #ifdef HISTOGRAM
+#ifdef __sgi
+#include <sys/time.h>
+#endif /* __sgi */
 #include "hist.h"
 #endif /* HISTOGRAM */
 
