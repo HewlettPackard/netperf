@@ -1,0 +1,51 @@
+This file is here for people to list their contributions to the
+netperf benchmark. When you enhance or fix something, put your name
+and a description of the what/where/whey/why/how here. If you like,
+feel free to include an email address. I would like to apologize in
+advance to anyone I've forgotten to include.
+
+Rick Jones <raj@cup.hp.com>
+Initial packaging and release of netperf. "Editorial" continuity for
+subsequent releases
+
+Karen Choy
+Code to allow netserver to run as a standalone daemon. 
+
+Dave Shield <daves@csc.liv.ac.uk>
+Wrote the first revision of the netperf and netserver manpages.
+
+Sarr Blumson <sarr@citi.umich.edu>
+Fixes for AIX 3.1 and 3.2. Also fixes for Solaris 2.1 without
+realizing it ;-) 
+
+Jeff Smits <jgs@usl.com>
+Fixes for TCP_RR and UDP_RR on sytems with an htonl that is not a no-op.
+
+Warren Burnett <somewhere in Kansas>
+Example code for DLPI tests.
+
+Several Folks
+Code to tell SunOS 4 to *not* restart system calls on receipt of a
+signal. 
+
+Fore Systems Inc.
+Manpages for the FORE API and question answering
+
+David Channin
+Access to systems running the Fore ATM API
+
+Jonathan Stone <jonathan@DSG.Stanford.EDU>
+Include file fixes for Ultrix
+
+Bruce Barnett <barnett@grymoire.crd.ge.com>
+Bunches of warnings fixes and lint picks for Solaris 2.3
+
+Herman Dierks et al <dierks@austin.ibm.com>
+Code to calculate confidence intervals for tests
+
+Hal Murray <murray@pa.dec.com>
+Helpful suggestions for the scripts to make them more compatible with
+the netperf database (http://www.cup.hp.com/netperf/NetperfPage.html).
+His prompting finally got me off my whatever to put the confidence
+interval stuff from the guys at IBM into netperf
+
