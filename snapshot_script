@@ -30,11 +30,14 @@
 # mod 5/27/96 - switch from NETHOME to NETPERF and take the user's value
 #               if it is already set
 #
+# mod 8/12/96 - fix the default netperf command variable so it finds the
+#               executable and not the directory...
+#
 # First, let us set-up some of the defaults
 #
 # where is netperf installed, there are a few possible places:
 
-NETPERF_CMD=${NETPERF_CMD:=/opt/netperf}
+NETPERF_CMD=${NETPERF_CMD:=/opt/netperf/netperf}
 
 
 # there should be no more than two parms passed

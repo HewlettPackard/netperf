@@ -7,7 +7,7 @@
 #SHELL="/bin/sh"
 
 #what version of netperf is this for?
-VERSION = 2.1pl1
+VERSION = 2.1pl2
 
 #
 # This tells the script where the executables and scripts are supposed
