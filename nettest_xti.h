@@ -5,8 +5,6 @@
  /* This file contains the test-specific definitions for netperf's BSD */
  /* sockets tests */
 
-#define PAD_TIME 2
-
 struct	xti_tcp_stream_request_struct {
   int	send_buf_size;
   int	recv_buf_size;	/* how big does the client want it - the */

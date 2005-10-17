@@ -84,3 +84,6 @@ UDP_RR tests...
 
 Charles Harris
 Initial prototype of the TCP_SENDFILE test support
+
+Philip Pishioneri of Cornel
+Conversion of the netperf.ps manul to PDF format.

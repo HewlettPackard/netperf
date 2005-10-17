@@ -94,6 +94,9 @@ extern double interval;
 extern int	send_width;
 extern int      recv_width;
 
+/* address family */
+extern int	af;
+
 /* different options for other things					*/
 extern int
   local_cpu_usage,

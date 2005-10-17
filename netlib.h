@@ -2,6 +2,7 @@
         Copyright (C) 1993-1995 Hewlett-Packard Company
 */
 
+#define PAD_TIME 4
 /* library routine specifc defines                                      */
 #define         MAXSPECDATA     62      /* how many ints worth of data  */
                                         /* can tests send...            */
@@ -131,13 +132,17 @@
 #define         UDPIPV6_RR_RESPONSE         86
 #define         UDPIPV6_RR_RESULTS          87
 
-#define         DO_TCPIPV6_CRR               88
-#define         TCPIPV6_CRR_RESPONSE         89
-#define         TCPIPV6_CRR_RESULTS          90
+#define         DO_TCPIPV6_CRR              88
+#define         TCPIPV6_CRR_RESPONSE        89
+#define         TCPIPV6_CRR_RESULTS         90
 
-#define         DO_TCPIPV6_TRR               91
-#define         TCPIPV6_TRR_RESPONSE         92
-#define         TCPIPV6_TRR_RESULTS          93
+#define         DO_TCPIPV6_TRR              91
+#define         TCPIPV6_TRR_RESPONSE        92
+#define         TCPIPV6_TRR_RESULTS         93
+
+#define         DO_TCP_MAERTS               94
+#define         TCP_MAERTS_RESPONSE         95
+#define         TCP_MAERTS_RESULTS          96
 
 #define         DO_LWPSTR_STREAM           100
 #define         LWPSTR_STREAM_RESPONSE     110
@@ -147,21 +152,21 @@
 #define         LWPSTR_RR_RESPONSE         140
 #define         LWPSTR_RR_RESULTS          150
 
-#define         DO_LWPDG_STREAM           160
-#define         LWPDG_STREAM_RESPONSE     170
-#define         LWPDG_STREAM_RESULTS      180
+#define         DO_LWPDG_STREAM            160
+#define         LWPDG_STREAM_RESPONSE      170
+#define         LWPDG_STREAM_RESULTS       180
 
-#define         DO_LWPDG_RR               190
-#define         LWPDG_RR_RESPONSE         200
-#define         LWPDG_RR_RESULTS          210
+#define         DO_LWPDG_RR                190
+#define         LWPDG_RR_RESPONSE          200
+#define         LWPDG_RR_RESULTS           210
 
-#define         DO_TCP_CC             300
-#define         TCP_CC_RESPONSE       301
-#define         TCP_CC_RESULTS        302
+#define         DO_TCP_CC                  300
+#define         TCP_CC_RESPONSE            301
+#define         TCP_CC_RESULTS             302
 
-#define         DO_DNS_RR             400
-#define         DNS_RR_RESPONSE       401
-#define         DNS_RR_RESULTS        402
+#define         DO_DNS_RR                  400
+#define         DNS_RR_RESPONSE            401
+#define         DNS_RR_RESULTS             402
 
 
  /* some of the fields in these structures are going to be doubles and */
@@ -228,6 +233,7 @@ struct sendfile_ring_elt {
 #define GETRUSAGE       5
 #define NT_METHOD       6
 #define KSTAT           7
+#define PROC_STAT       8
 
 #define BADCH ('?')
 

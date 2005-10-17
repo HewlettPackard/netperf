@@ -5,8 +5,6 @@
  /* This file contains the test-specific definitions for netperf's DNS */
  /* performance tests */
 
-#define PAD_TIME 2
-
  /* For the first iteration of this suite, netperf will rely on the */
  /* gethostbyname() and gethostbyaddr() calls instead of making DNS */
  /* calls directly. Later, when there is more time, this may be */
