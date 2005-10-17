@@ -1,5 +1,8 @@
+#ifdef NEED_MAKEFILE_EDIT
+#error you must first edit and customize the makefile to your platform
+#endif /* NEED_MAKEFILE_EDIT */
 char	netsh_id[]="\
-@(#)netsh.c (c) Copyright 1993-2000 Hewlett-Packard Company. Version 2.2pl1";
+@(#)netsh.c (c) Copyright 1993-2003 Hewlett-Packard Company. Version 2.2pl3";
 
 
 /****************************************************************/
@@ -11,7 +14,9 @@ char	netsh_id[]="\
 #include <sys/types.h>
 #ifndef WIN32
 #include <unistd.h>
+#ifndef __VMS
 #include <sys/ipc.h>
+#endif /* __VMS */
 #endif /* WIN32 */
 #include <fcntl.h>
 #include <errno.h>
@@ -59,12 +64,6 @@ double atof();
 /*	Global constants  and macros					*/
 /*									*/
 /************************************************************************/
-
- /* This define is only needed for HP-UX 7.x and earlier... */
-#ifdef HP
-#define bcopy(s,d,h) memcpy((d),(s),(h))
-#define bzero(p,h) memset((p),0,(h))
-#endif /* HP */
 
  /* Some of the args take optional parameters. Since we are using */
  /* getopt to parse the command line, we will tell getopt that they do */
@@ -548,86 +547,86 @@ scan_cmd_line(argc, argv)
   /* test specific options. this is a bit kludgy and if anyone has */
   /* a better solution, i would love to see it */
   if (optind != argc) {
-    if ((strcmp(test_name,"TCP_STREAM") == 0) || 
+    if ((strcasecmp(test_name,"TCP_STREAM") == 0) || 
 #ifdef HAVE_SENDFILE
-	(strcmp(test_name,"TCP_SENDFILE") == 0) ||
+	(strcasecmp(test_name,"TCP_SENDFILE") == 0) ||
 #endif /* HAVE_SENDFILE */
-	(strcmp(test_name,"TCP_MAERTS") == 0) ||
-	(strcmp(test_name,"TCP_RR") == 0) ||
-	(strcmp(test_name,"TCP_CRR") == 0) ||
+	(strcasecmp(test_name,"TCP_MAERTS") == 0) ||
+	(strcasecmp(test_name,"TCP_RR") == 0) ||
+	(strcasecmp(test_name,"TCP_CRR") == 0) ||
 #ifdef DO_1644
-	(strcmp(test_name,"TCP_TRR") == 0) ||
+	(strcasecmp(test_name,"TCP_TRR") == 0) ||
 #endif /* DO_1644 */
 #ifdef DO_NBRR
-	(strcmp(test_name,"TCP_TRR") == 0) ||
+	(strcasecmp(test_name,"TCP_TRR") == 0) ||
 #endif /* DO_NBRR */
-	(strcmp(test_name,"UDP_STREAM") == 0) ||
-	(strcmp(test_name,"UDP_RR") == 0))
+	(strcasecmp(test_name,"UDP_STREAM") == 0) ||
+	(strcasecmp(test_name,"UDP_RR") == 0))
       {
 	scan_sockets_args(argc, argv);
       }
 #ifdef DO_DLPI
-    else if ((strcmp(test_name,"DLCO_RR") == 0) ||
-	     (strcmp(test_name,"DLCL_RR") == 0) ||
-	     (strcmp(test_name,"DLCO_STREAM") == 0) ||
-	     (strcmp(test_name,"DLCL_STREAM") == 0))
+    else if ((strcasecmp(test_name,"DLCO_RR") == 0) ||
+	     (strcasecmp(test_name,"DLCL_RR") == 0) ||
+	     (strcasecmp(test_name,"DLCO_STREAM") == 0) ||
+	     (strcasecmp(test_name,"DLCL_STREAM") == 0))
       {
 	scan_dlpi_args(argc, argv);
       }
 #endif /* DO_DLPI */
 #ifdef DO_UNIX
-    else if ((strcmp(test_name,"STREAM_RR") == 0) ||
-	     (strcmp(test_name,"DG_RR") == 0) ||
-	     (strcmp(test_name,"STREAM_STREAM") == 0) ||
-	     (strcmp(test_name,"DG_STREAM") == 0))
+    else if ((strcasecmp(test_name,"STREAM_RR") == 0) ||
+	     (strcasecmp(test_name,"DG_RR") == 0) ||
+	     (strcasecmp(test_name,"STREAM_STREAM") == 0) ||
+	     (strcasecmp(test_name,"DG_STREAM") == 0))
       {
 	scan_unix_args(argc, argv);
       }
 #endif /* DO_UNIX */
 #ifdef DO_FORE
-    else if ((strcmp(test_name,"FORE_RR") == 0) ||
-	     (strcmp(test_name,"FORE_STREAM") == 0))
+    else if ((strcasecmp(test_name,"FORE_RR") == 0) ||
+	     (strcasecmp(test_name,"FORE_STREAM") == 0))
       {
 	scan_fore_args(argc, argv);
       }
 #endif /* DO_FORE */
 #ifdef DO_HIPPI
-    else if ((strcmp(test_name,"HIPPI_RR") == 0) ||
-	     (strcmp(test_name,"HIPPI_STREAM") == 0))
+    else if ((strcasecmp(test_name,"HIPPI_RR") == 0) ||
+	     (strcasecmp(test_name,"HIPPI_STREAM") == 0))
       {
 	scan_hippi_args(argc, argv);
       }
 #endif /* DO_HIPPI */
 #ifdef DO_XTI
-    else if ((strcmp(test_name,"XTI_TCP_RR") == 0) ||
-	     (strcmp(test_name,"XTI_TCP_STREAM") == 0) ||
-	     (strcmp(test_name,"XTI_UDP_RR") == 0) ||
-	     (strcmp(test_name,"XTI_UDP_STREAM") == 0))
+    else if ((strcasecmp(test_name,"XTI_TCP_RR") == 0) ||
+	     (strcasecmp(test_name,"XTI_TCP_STREAM") == 0) ||
+	     (strcasecmp(test_name,"XTI_UDP_RR") == 0) ||
+	     (strcasecmp(test_name,"XTI_UDP_STREAM") == 0))
       {
 	scan_xti_args(argc, argv);
       }
 #endif /* DO_XTI */
 #ifdef DO_LWP
-    else if ((strcmp(test_name,"LWPSTR_RR") == 0) ||
-	     (strcmp(test_name,"LWPSTR_STREAM") == 0) ||
-	     (strcmp(test_name,"LWPDG_RR") == 0) ||
-	     (strcmp(test_name,"LWPDG_STREAM") == 0))
+    else if ((strcasecmp(test_name,"LWPSTR_RR") == 0) ||
+	     (strcasecmp(test_name,"LWPSTR_STREAM") == 0) ||
+	     (strcasecmp(test_name,"LWPDG_RR") == 0) ||
+	     (strcasecmp(test_name,"LWPDG_STREAM") == 0))
       {
 	scan_lwp_args(argc, argv);
       }
 #endif /* DO_LWP */
 #ifdef DO_IPV6
-    else if ((strcmp(test_name,"TCPIPV6_RR") == 0) ||
-	     (strcmp(test_name,"TCPIPV6_CRR") == 0) ||
-	     (strcmp(test_name,"TCPIPV6_STREAM") == 0) ||
-	     (strcmp(test_name,"UDPIPV6_RR") == 0) ||
-	     (strcmp(test_name,"UDPIPV6_STREAM") == 0))
+    else if ((strcasecmp(test_name,"TCPIPV6_RR") == 0) ||
+	     (strcasecmp(test_name,"TCPIPV6_CRR") == 0) ||
+	     (strcasecmp(test_name,"TCPIPV6_STREAM") == 0) ||
+	     (strcasecmp(test_name,"UDPIPV6_RR") == 0) ||
+	     (strcasecmp(test_name,"UDPIPV6_STREAM") == 0))
       {
 	scan_ipv6_args(argc, argv);
       }
 #endif /* DO_IPV6 */
 #ifdef DO_DNS
-    else if (strcmp(test_name,"DNS_RR") == 0)
+    else if (strcasecmp(test_name,"DNS_RR") == 0)
       {
 	scan_dns_args(argc, argv);
       }
@@ -636,11 +635,11 @@ scan_cmd_line(argc, argv)
 
 #ifdef DO_IPV6
   /* address family check */   
-  if ((strcmp(test_name,"TCPIPV6_RR") == 0) ||
-      (strcmp(test_name,"TCPIPV6_CRR") == 0) ||
-      (strcmp(test_name,"TCPIPV6_STREAM") == 0) ||
-      (strcmp(test_name,"UDPIPV6_RR") == 0) ||
-      (strcmp(test_name,"UDPIPV6_STREAM") == 0))
+  if ((strcasecmp(test_name,"TCPIPV6_RR") == 0) ||
+      (strcasecmp(test_name,"TCPIPV6_CRR") == 0) ||
+      (strcasecmp(test_name,"TCPIPV6_STREAM") == 0) ||
+      (strcasecmp(test_name,"UDPIPV6_RR") == 0) ||
+      (strcasecmp(test_name,"UDPIPV6_STREAM") == 0))
     {
       af = AF_INET6;
     }

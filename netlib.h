@@ -1,5 +1,5 @@
 /*
-        Copyright (C) 1993-1995 Hewlett-Packard Company
+        Copyright (C) 1993-2003 Hewlett-Packard Company
 */
 
 #define PAD_TIME 4
@@ -295,7 +295,11 @@ extern  float   calibrate_local_cpu();
 extern  float   calibrate_remote_cpu();
 extern  float   calc_cpu_util();
 extern  float   calc_service_demand();
-extern  void    catcher();
+#if defined(__hpux)
+extern  void    catcher(int, siginfo_t *,void *);
+#else
+extern  void    catcher(int);
+#endif /* __hpux */
 extern  struct ring_elt *allocate_buffer_ring();
 #ifdef HAVE_SENDFILE
 extern  struct sendfile_ring_elt *alloc_sendfile_buf_ring();
@@ -313,7 +317,7 @@ extern double confidence;
 
  /* if your system has bcopy and bzero, include it here, otherwise, we */
  /* will try to use memcpy aand memset. fix from Bruce Barnett @ GE. */
-#ifdef hpux
+#if defined(hpux) || defined (__VMS)
 #define HAVE_BCOPY
 #define HAVE_BZERO
 #endif

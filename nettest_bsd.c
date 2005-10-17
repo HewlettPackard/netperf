@@ -1,6 +1,9 @@
+#ifdef NEED_MAKEFILE_EDIT
+#error you must first edit and customize the makefile to your platform
+#endif /* NEED_MAKEFILE_EDIT */
 #ifndef lint
 char	nettest_id[]="\
-@(#)nettest_bsd.c (c) Copyright 1993, 1994 Hewlett-Packard Co. Version 2.2pl1";
+@(#)nettest_bsd.c (c) Copyright 1993-2003 Hewlett-Packard Co. Version 2.2pl3";
 #else
 #define DIRTY
 #define HISTOGRAM
@@ -52,11 +55,14 @@ char	nettest_id[]="\
 #endif /* NOSTDLIBH */
 
 #ifndef WIN32
+#if !defined(__VMS)
 #include <sys/ipc.h>
+#endif /* !defined(__VMS) */
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
+#include <arpa/inet.h>
 #include <netdb.h>
 #else /* WIN32 */
 #include <process.h>
@@ -79,6 +85,10 @@ char	nettest_id[]="\
 #ifdef DO_FIRST_BURST
 int first_burst_size=0;
 #endif /* DO_FIRST_BURST */
+
+#if defined(HAVE_SENDFILE) && defined(__linux)
+#include <sys/sendfile.h>
+#endif /* HAVE_SENDFILE && __linux */
 
 
 
@@ -109,6 +119,10 @@ static int client_port_max = 65535;
 int
   loc_nodelay,		/* don't/do use NODELAY	locally		*/
   rem_nodelay,		/* don't/do use NODELAY remotely	*/
+#ifdef TCP_CORK
+  loc_tcpcork=0,        /* don't/do use TCP_CORK locally        */
+  rem_tcpcork=0,        /* don't/do use TCP_CORK remotely       */
+#endif /* TCP_CORK */
   loc_sndavoid,		/* avoid send copies locally		*/
   loc_rcvavoid,		/* avoid recv copies locally		*/
   rem_sndavoid,		/* avoid send copies remotely		*/
@@ -125,6 +139,7 @@ char sockets_usage[] = "\n\
 Usage: netperf [global options] -- [test options] \n\
 \n\
 TCP/UDP BSD Sockets Test Options:\n\
+    -C                Set TCP_CORK when available\n\
     -D [L][,R]        Set TCP_NODELAY locally and/or remotely (TCP_*)\n\
     -h                Display this text\n\
     -m bytes          Set the send size (TCP_STREAM, UDP_STREAM)\n\
@@ -2050,7 +2065,9 @@ Size (bytes)\n\
 }
 
 
-#ifdef HAVE_SENDFILE
+#if defined(HAVE_SENDFILE) 
+
+#if defined(QUICK_SENDPATH)
 
    /*
     * a temporary stub for the sendpath() system call
@@ -2067,7 +2084,7 @@ sendpath(int s, char *path, off_t offset, size_t nbytes,
   {
     return syscall(SYS_sendpath, s, path, offset, nbytes, hdtrl, flags);
   }
-
+#endif /* QUICK_SENDPATH */
 
 /* This routine implements the TCP unidirectional data transfer test
    (a.k.a. stream) for the sockets interface using the sendfile()
@@ -2163,6 +2180,14 @@ Size (bytes)\n\
   struct	sockaddr_in	server;
   unsigned      int             addr;
   int		file_size;
+
+#if defined(__linux)
+  off_t     scratch_offset;   /* the linux sendfile() call will update
+				 the offset variable, which is
+				 something we do _not_ want to happen
+				 to the value in the send_ring! so, we
+				 have to use a scratch variable. */
+#endif /* __linux */
   
   struct	tcp_stream_request_struct	*tcp_stream_request;
   struct	tcp_stream_response_struct	*tcp_stream_response;
@@ -2286,7 +2311,27 @@ Size (bytes)\n\
     if (debug) {
       fprintf(where,"sendfile_tcp_stream: send_socket obtained...\n");
     }
-    
+
+#if defined(TCP_CORK)
+
+    if (loc_tcpcork != 0) {
+      /* the user wishes for us to set TCP_CORK on the socket */
+      int one = 1;
+      if (setsockopt(send_socket,
+		     getprotobyname("tcp")->p_proto,
+		     TCP_CORK,
+		     (char *)&one,
+		     sizeof(one)) < 0) {
+	perror("netperf: sendfile_tcp_stream: tcp_cork");
+	exit(1);
+      }
+      if (debug) {
+	fprintf(where,"sendfile_tcp_stream: tcp_cork...\n");
+      }
+    }
+
+#endif /* TCP_CORK */    
+
     /* at this point, we have either retrieved the socket buffer sizes, */
     /* or have tried to set them, so now, we may want to set the send */
     /* size based on that (because the user either did not use a -m */
@@ -2528,7 +2573,13 @@ if (send_width == 0) {
 			send_ring->length,
 			send_ring->hdtrl,
 			send_ring->flags)) != send_size) {
-#else
+#elif defined(__linux)
+	scratch_offset = send_ring->offset;
+	if ((len=sendfile(send_socket, 
+			  send_ring->fildes, 
+			  &scratch_offset,   /* modified after the call! */
+			  send_ring->length)) != send_size) {
+#else /* original sendile HP-UX and then BSD */
       if ((len=sendfile(send_socket, 
 			send_ring->fildes, 
 			send_ring->offset,
@@ -3197,6 +3248,10 @@ recv_tcp_stream()
 
     /* more to the next buffer in the recv_ring */
     recv_ring = recv_ring->next;
+
+#ifdef PAUSE
+    sleep(1);
+#endif /* PAUSE */
 
 #ifdef DIRTY
     message_int_ptr = (int *)(recv_ring->buffer_ptr);
@@ -11087,7 +11142,8 @@ scan_sockets_args(argc, argv)
 
 {
 
-#define SOCKETS_ARGS "b:Dhm:M:p:r:s:S:Vw:W:z"
+#define SOCKETS_ARGS "b:CDhm:M:p:r:s:S:Vw:W:z"
+
   extern char	*optarg;	  /* pointer to option string	*/
   
   int		c;
@@ -11114,6 +11170,15 @@ scan_sockets_args(argc, argv)
 #else /* DO_FIRST_BURST */
       printf("Initial request burst functionality not compiled-in!\n");
 #endif /* DO_FIRST_BURST */
+      break;
+    case 'C':
+#ifdef TCP_CORK
+      /* set TCP_CORK */
+      loc_tcpcork = 1;
+      rem_tcpcork = 1; /* however, at first, we ony have cork affect loc */
+#else 
+      printf("WARNING: TCP_CORK not available on this platform!\n");
+#endif /* TCP_CORK */
       break;
     case 'D':
       /* set the TCP nodelay flag */

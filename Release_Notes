@@ -1,3 +1,48 @@
+These are the Release Notes for revisoin 2.2pl3 of netperf:
+
+Things changed in this release
+
+*) I started practicing what I preach and will set SO_REUSEADDR before
+   netserver tries to bind to its well-known port.
+
+*) Initial port to OpenVMS.  This includes support for the OVMS
+   Auxilliary server (inetd replacement).  See README.ovms for more
+   details on what is involved in compiling and running netperf under
+   OpenVMS.
+
+*) Testname comparisons are now case insensitive.  This is a side
+   effect of OpenVMS downshifting commandlines to lowercase.  I made
+   the change and decided it was OK to keep it that way, even though
+   for OpenVMS one _has_ to set the right defines to disable that
+   downshifting or the command-line options will not work. For example
+   "-H" will become "-h" which isn't quite the same thing...
+
+*) Misc fixes for nettest_ipv6.c.
+
+*) Support for sendfile() under Linux
+
+Thins I would like to have changed but did not know how or didn't have
+time:
+
+*) Allow netserver to run as a standalone daemon under OpenVMS
+*) Allow netserver to run as a standalone daemon under Windows
+*) Rediscover an inetd-like facility for Windows
+*) Figure-out how to get low-overhead, accurate, per-CPU utilization
+   figures under OpenVMS
+*) Get the UDP_RR and UDP_STREAM tests to work under OpenVMS, and get
+   the TCP_RR test to work based on time rather than transaction
+   count.  There is some bug (possibly in OpenVMS?) where the SIGALRM
+   fires, but a socket call will not return an EINTR.
+
+Things that changed prior to this release:
+
+*) Addition of the TCP_MAERTS test - this is a TCP_STREAM test where
+   the data flows from the netserver to the netperf rather than from
+   the netperf to the netserver.  This can be useful in those
+   situations where netperf (netserver) is installed on a remote
+   system, but the tester has no shell access and wishes to get
+   performance data for the path from netserver to netperf.
+
 These are the Release Notes for the 2.2 revision of netperf:
 
 Things changed in this release

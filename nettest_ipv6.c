@@ -1,7 +1,7 @@
 #ifdef DO_IPV6
 #ifndef lint
 char	nettest_ipv6_id[]="\
-@(#)nettest_ipv6.c (c) Copyright 1995 Hewlett-Packard Co. Version 2.2pl1";
+@(#)nettest_ipv6.c (c) Copyright 1995-2003 Hewlett-Packard Co. Version 2.2pl3";
 #else
 #define DIRTY
 #define HISTOGRAM
@@ -5449,11 +5449,11 @@ Send   Recv    Send   Recv\n\
   struct	tcpipv6_tran_rr_results_struct	*tcpipv6_tran_rr_result;
   
   tcpipv6_tran_rr_request = 
-    (struct tcpipv6_tran_rr_request_struct *)netperf_request.test_specific_data;
+    (struct tcpipv6_tran_rr_request_struct *)netperf_request.content.test_specific_data;
   tcpipv6_tran_rr_response = 
-    (struct tcpipv6_tran_rr_response_struct *)netperf_response.test_specific_data;
+    (struct tcpipv6_tran_rr_response_struct *)netperf_response.content.test_specific_data;
   tcpipv6_tran_rr_result =
-    (struct tcpipv6_tran_rr_results_struct *)netperf_response.test_specific_data;
+    (struct tcpipv6_tran_rr_results_struct *)netperf_response.content.test_specific_data;
   
   
 #ifdef HISTOGRAM
@@ -5575,7 +5575,7 @@ Send   Recv    Send   Recv\n\
   /* default should be used. Alignment is the exception, it will */
   /* default to 8, which will be no alignment alterations. */
   
-  netperf_request.request_type	        =	DO_TCPIPV6_TRR;
+  netperf_request.content.request_type	        =	DO_TCPIPV6_TRR;
   tcpipv6_tran_rr_request->recv_buf_size	=	rsr_size;
   tcpipv6_tran_rr_request->send_buf_size	=	rss_size;
   tcpipv6_tran_rr_request->recv_alignment	=	remote_recv_align;
@@ -5614,7 +5614,7 @@ Send   Recv    Send   Recv\n\
   
   recv_response();
   
-  if (!netperf_response.serv_errno) {
+  if (!netperf_response.content.serv_errno) {
     rsr_size	=	tcpipv6_tran_rr_response->recv_buf_size;
     rss_size	=	tcpipv6_tran_rr_response->send_buf_size;
     rem_nodelay	=	tcpipv6_tran_rr_response->no_delay;
@@ -5630,7 +5630,7 @@ Send   Recv    Send   Recv\n\
     }
   }
   else {
-    errno = netperf_response.serv_errno;
+    errno = netperf_response.content.serv_errno;
     perror("netperf: remote error");
     
     exit(1);
@@ -5850,12 +5850,12 @@ newport:
   /* wasn't supposed to care, it will return obvious values. */
   
   recv_response();
-  if (!netperf_response.serv_errno) {
+  if (!netperf_response.content.serv_errno) {
     if (debug)
       fprintf(where,"remote results obtained\n");
   }
   else {
-    errno = netperf_response.serv_errno;
+    errno = netperf_response.content.serv_errno;
     perror("netperf: remote error");
     
     exit(1);
@@ -6061,11 +6061,11 @@ recv_tcpipv6_tran_rr()
   struct	tcpipv6_tran_rr_results_struct	*tcpipv6_tran_rr_results;
   
   tcpipv6_tran_rr_request = 
-    (struct tcpipv6_tran_rr_request_struct *)netperf_request.test_specific_data;
+    (struct tcpipv6_tran_rr_request_struct *)netperf_request.content.test_specific_data;
   tcpipv6_tran_rr_response = 
-    (struct tcpipv6_tran_rr_response_struct *)netperf_response.test_specific_data;
+    (struct tcpipv6_tran_rr_response_struct *)netperf_response.content.test_specific_data;
   tcpipv6_tran_rr_results = 
-    (struct tcpipv6_tran_rr_results_struct *)netperf_response.test_specific_data;
+    (struct tcpipv6_tran_rr_results_struct *)netperf_response.content.test_specific_data;
   
   if (debug) {
     fprintf(where,"netserver: recv_tcpipv6_tran_rr: entered...\n");
@@ -6090,7 +6090,7 @@ recv_tcpipv6_tran_rr()
     fflush(where);
   }
   
-  netperf_response.response_type = TCPIPV6_TRR_RESPONSE;
+  netperf_response.content.response_type = TCPIPV6_TRR_RESPONSE;
   
   if (debug) {
     fprintf(where,"recv_tcpipv6_tran_rr: the response type is set...\n");
@@ -6161,7 +6161,7 @@ recv_tcpipv6_tran_rr()
 				SOCK_STREAM);
   
   if (s_listen < 0) {
-    netperf_response.serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
     if (debug) {
       fprintf(where,"could not create data socket\n");
@@ -6179,7 +6179,7 @@ recv_tcpipv6_tran_rr()
   if (bind(s_listen,
 	   (struct sockaddr *)&myaddr_in,
 	   sizeof(myaddr_in)) == -1) {
-    netperf_response.serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
     if (debug) {
@@ -6200,14 +6200,14 @@ recv_tcpipv6_tran_rr()
 	    "recv_tcpipv6_tran_rr: could not set TCP_NOPUSH errno %d\n",
 	    errno);
     fflush(where);
-    netperf_response.serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
   }
 
   /* Now, let's set-up the socket to listen for connections */
   if (listen(s_listen, 5) == -1) {
-    netperf_response.serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
     if (debug) {
@@ -6222,7 +6222,7 @@ recv_tcpipv6_tran_rr()
   if (getsockname(s_listen,
 		  (struct sockaddr *)&myaddr_in,
 		  &addrlen) == -1){
-    netperf_response.serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
     if (debug) {
@@ -6242,7 +6242,7 @@ recv_tcpipv6_tran_rr()
 	    tcpipv6_tran_rr_response->data_port_number);
     fflush(where);
   }
-  netperf_response.serv_errno   = 0;
+  netperf_response.content.serv_errno   = 0;
   
   /* But wait, there's more. If the initiator wanted cpu measurements, */
   /* then we must call the calibrate routine, which will return the max */
@@ -6333,7 +6333,7 @@ recv_tcpipv6_tran_rr()
 	  timed_out = 1;
 	  break;
 	}
-	netperf_response.serv_errno = errno;
+	netperf_response.content.serv_errno = errno;
 	send_response();
 	exit(1);
       }
@@ -6366,7 +6366,7 @@ recv_tcpipv6_tran_rr()
 	fflush(where);						
 	break;
       }
-      netperf_response.serv_errno = 99;
+      netperf_response.content.serv_errno = 99;
       send_response();
       exit(1);
     }
@@ -6511,11 +6511,11 @@ Send   Recv    Send   Recv\n\
 #endif /* INTERVALS */
 
   tcpipv6_rr_request = 
-    (struct tcpipv6_rr_request_struct *)netperf_request.test_specific_data;
+    (struct tcpipv6_rr_request_struct *)netperf_request.content.test_specific_data;
   tcpipv6_rr_response=
-    (struct tcpipv6_rr_response_struct *)netperf_response.test_specific_data;
+    (struct tcpipv6_rr_response_struct *)netperf_response.content.test_specific_data;
   tcpipv6_rr_result	=
-    (struct tcpipv6_rr_results_struct *)netperf_response.test_specific_data;
+    (struct tcpipv6_rr_results_struct *)netperf_response.content.test_specific_data;
   
 #ifdef HISTOGRAM
   time_hist = HIST_new();
@@ -6702,7 +6702,7 @@ Send   Recv    Send   Recv\n\
   
     recv_response();
   
-    if (!netperf_response.serv_errno) {
+    if (!netperf_response.content.serv_errno) {
       if (debug)
 	fprintf(where,"remote listen done.\n");
       rsr_size          = tcpipv6_rr_response->recv_buf_size;
@@ -6715,7 +6715,7 @@ Send   Recv    Send   Recv\n\
       server.sin6_port   = htons(server.sin6_port);
     }
     else {
-      errno = netperf_response.serv_errno;
+      errno = netperf_response.content.serv_errno;
       perror("netperf: remote error");
       
       exit(1);
@@ -6912,12 +6912,12 @@ Send   Recv    Send   Recv\n\
     /* wasn't supposed to care, it will return obvious values. */
     
     recv_response();
-    if (!netperf_response.serv_errno) {
+    if (!netperf_response.content.serv_errno) {
       if (debug)
 	fprintf(where,"remote results obtained\n");
     }
     else {
-      errno = netperf_response.serv_errno;
+      errno = netperf_response.content.serv_errno;
       perror("netperf: remote error");
       
       exit(1);
@@ -7154,11 +7154,11 @@ recv_tcp_nbrr()
   struct	tcpipv6_rr_results_struct	*tcpipv6_rr_results;
   
   tcpipv6_rr_request = 
-    (struct tcpipv6_rr_request_struct *)netperf_request.test_specific_data;
+    (struct tcpipv6_rr_request_struct *)netperf_request.content.test_specific_data;
   tcpipv6_rr_response =
-    (struct tcpipv6_rr_response_struct *)netperf_response.test_specific_data;
+    (struct tcpipv6_rr_response_struct *)netperf_response.content.test_specific_data;
   tcpipv6_rr_results =
-    (struct tcpipv6_rr_results_struct *)netperf_response.test_specific_data;
+    (struct tcpipv6_rr_results_struct *)netperf_response.content.test_specific_data;
   
   if (debug) {
     fprintf(where,"netserver: recv_tcp_nbrr: entered...\n");
@@ -7183,7 +7183,7 @@ recv_tcp_nbrr()
     fflush(where);
   }
   
-  netperf_response.response_type = TCPIPV6_RR_RESPONSE;
+  netperf_response.content.response_type = TCPIPV6_RR_RESPONSE;
   
   if (debug) {
     fprintf(where,"recv_tcp_nbrr: the response type is set...\n");
@@ -7252,7 +7252,7 @@ recv_tcp_nbrr()
 				SOCK_STREAM);
   
   if (s_listen < 0) {
-    netperf_response.serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
     
     exit(1);
@@ -7267,7 +7267,7 @@ recv_tcp_nbrr()
   if (bind(s_listen,
 	   (struct sockaddr *)&myaddr_in,
 	   sizeof(myaddr_in)) == -1) {
-    netperf_response.serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
     
@@ -7276,7 +7276,7 @@ recv_tcp_nbrr()
   
   /* Now, let's set-up the socket to listen for connections */
   if (listen(s_listen, 5) == -1) {
-    netperf_response.serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
     
@@ -7288,7 +7288,7 @@ recv_tcp_nbrr()
   addrlen = sizeof(myaddr_in);
   if (getsockname(s_listen,
 		  (struct sockaddr *)&myaddr_in, &addrlen) == -1){
-    netperf_response.serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
     
@@ -7300,7 +7300,7 @@ recv_tcp_nbrr()
   /* socket buffer sizing has been done. */
   
   tcpipv6_rr_response->data_port_number = (int) ntohs(myaddr_in.sin6_port);
-  netperf_response.serv_errno   = 0;
+  netperf_response.content.serv_errno   = 0;
   
   /* But wait, there's more. If the initiator wanted cpu measurements, */
   /* then we must call the calibrate routine, which will return the max */
@@ -7391,7 +7391,7 @@ recv_tcp_nbrr()
 	  continue;
 	}
 	else {
-	  netperf_response.serv_errno = errno;
+	  netperf_response.content.serv_errno = errno;
 	  send_response();
 	  exit(1);
 	}
@@ -7424,7 +7424,7 @@ recv_tcp_nbrr()
 	fflush(where);						
 	break;
       }
-      netperf_response.serv_errno = 992;
+      netperf_response.content.serv_errno = 992;
       send_response();
       exit(1);
     }

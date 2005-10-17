@@ -1,5 +1,8 @@
+#ifdef NEED_MAKEFILE_EDIT
+#error you must first edit and customize the makefile to your platform
+#endif /* NEED_MAKEFILE_EDIT */
 char	netlib_id[]="\
-@(#)netlib.c (c) Copyright 1993, 1994 Hewlett-Packard Company. Version 2.2pl1";
+@(#)netlib.c (c) Copyright 1993-2003 Hewlett-Packard Company. Version 2.2pl3";
 
 /****************************************************************/
 /*								*/
@@ -83,7 +86,7 @@ char	netlib_id[]="\
 #include <netdb.h>
 #include <errno.h>
 #include <sys/utsname.h>
-#ifndef MPE
+#if !defined(MPE) && !defined(__VMS)
 #include <sys/param.h>
 #endif /* MPE */
 
@@ -178,13 +181,14 @@ char	netlib_id[]="\
 /*							       	*/
 /****************************************************************/
 
-#ifdef WIN32
+#if defined(WIN32) || defined(__VMS)
 struct	timezone {
 	int 	dummy ;
 	} ;
-
+#ifndef __VMS
 int     win_kludge_socket = 0;
-#endif /* WIN32 */
+#endif /* __VMS */
+#endif /* WIN32 || __VMS */
 
 #ifndef LONG_LONG_MAX
 #define LONG_LONG_MAX 9223372036854775807LL
@@ -588,15 +592,15 @@ gettimeofday( struct timeval *tv , struct timezone *not_used )
 /************************************************************************/
 
 void
-#ifdef __hpux
+#if defined(__hpux) 
 catcher(sig, code, scp)
      int sig;
      int code;
      struct sigcontext *scp;
-#else /* __hpux */
+#else 
 catcher(sig)
      int sig;
-#endif /* __hpux */
+#endif /* __hpux || __VMS */
 {
 
 #ifdef __hpux
