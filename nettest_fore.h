@@ -39,6 +39,7 @@ struct	fore_stream_results_struct {
   int	bytes_received;
   float	elapsed_time;
   float	cpu_util;
+  int 	num_cpus;	/* how many CPUs had the remote? */
 };
 
 
@@ -80,5 +81,6 @@ struct fore_rr_results_struct {
   float	elapsed_time;	/* how long the test ran */
   float	cpu_util;	/* -1 if not measured */
   float	serv_dem;	/* -1 if not measured */
+  int 	num_cpus;	/* how many CPUs had the remote? */
 };
 

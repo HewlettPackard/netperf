@@ -43,7 +43,7 @@
  
 */
 char	netserver_id[]="\
-@(#)netserver.c (c) Copyright 1993, 1994 Hewlett-Packard Co. Version 2.1";
+@(#)netserver.c (c) Copyright 1993, 1994 Hewlett-Packard Co. Version 2.1PL1";
 
  /***********************************************************************/
  /*									*/
@@ -404,7 +404,8 @@ void set_up_server()
       /* stdin/stderr should use fclose */
       fclose(stdin);
       fclose(stderr);
-#if defined(__NetBSD__) || defined(__bsdi__) || defined(sun)
+ /* can I just use setsid on all systems? raj 4/96 */
+#if defined(__NetBSD__) || defined(__bsdi__) || defined(sun) || defined(__FREEBSD__)
       setsid();
 #else
       setpgrp();

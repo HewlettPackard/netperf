@@ -27,13 +27,14 @@
 #               see forward progress even when the results are 
 #               re-directed to a file
 #
+# mod 5/27/96 - switch from NETHOME to NETPERF and take the user's value
+#               if it is already set
+#
 # First, let us set-up some of the defaults
 #
 # where is netperf installed, there are a few possible places:
 
-NETHOME="."
-#NETHOME="/usr/local/netperf"
-#NETHOME="/opt/netperf"
+NETPERF_CMD=${NETPERF_CMD:=/opt/netperf}
 
 
 # there should be no more than two parms passed
@@ -65,8 +66,8 @@ fi
 # at what port will netserver be waiting? If you decide to run
 # netserver at a differnet port than the default of 12865, then set
 # the value of PORT apropriately
-#PORT="-p some_other_portnum"
-PORT=""
+#NETPERF_PORT="-p some_other_portnum"
+NETPERF_PORT=${NETPERF_PORT:=""}
 
 # How accurate we want the estimate of performance: 
 #      maximum and minimum test iterations (-i)
@@ -74,7 +75,7 @@ PORT=""
 STATS_STUFF="-i 10,3 -I 99,5"
 
 # length in time of the test - should be 60 seconds
-TIME="60"
+NETPERF_TIME=${NETPERF_TIME:=60}
 
 # where is the bitbucket?
 BITBUCKET="/dev/null"
@@ -88,12 +89,12 @@ echo Netperf snapshot script started at `date` >&2
 # and put the values into shell vars.
 
 case $LOC_CPU in
-\-c) LOC_RATE=`$NETHOME/netperf $PORT -t LOC_CPU`;;
+\-c) LOC_RATE=`$NETPERF_CMD $NETPERF_PORT -t LOC_CPU`;;
 *) LOC_RATE=""
 esac
 
 case $REM_CPU in
-\-C) REM_RATE=`$NETHOME/netperf $PORT -t REM_CPU -H $REM_HOST`;;
+\-C) REM_RATE=`$NETPERF_CMD $NETPERF_PORT -t REM_CPU -H $REM_HOST`;;
 *) REM_RATE=""
 esac
 
@@ -105,11 +106,11 @@ esac
 
 WARM_TIME="10"
 
-$NETHOME/netperf $PORT -l $WARM_TIME -t TCP_STREAM -H $REM_HOST -- \
+$NETPERF_CMD $NETPERF_PORT -l $WARM_TIME -t TCP_STREAM -H $REM_HOST -- \
   -s 32768 -S 32768 -m 4096 > ${BITBUCKET}
-$NETHOME/netperf $PORT -l $WARM_TIME -t TCP_STREAM -H $REM_HOST -- \
+$NETPERF_CMD $NETPERF_PORT -l $WARM_TIME -t TCP_STREAM -H $REM_HOST -- \
   -s 32768 -S 32768 -m 96 > ${BITBUCKET}
-$NETHOME/netperf $PORT -l $WARM_TIME -t TCP_RR -H $REM_HOST -- \
+$NETPERF_CMD $NETPERF_PORT -l $WARM_TIME -t TCP_RR -H $REM_HOST -- \
   -r 1,1 > ${BITBUCKET}
 
 # The warm-ups are complete, so perform the real tests first, the
@@ -121,11 +122,11 @@ echo Starting 56x4  TCP_STREAM tests at `date` >&2
 echo
 echo ------------------------------------
 echo Testing with the following command line:
-echo $NETHOME/netperf $PORT -t TCP_STREAM -l $TIME -H $REM_HOST \
+echo $NETPERF_CMD $NETPERF_PORT -t TCP_STREAM -l $NETPERF_TIME -H $REM_HOST \
   $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
   -s 57344 -S 57344 -m 4096
 echo
-$NETHOME/netperf $PORT -t TCP_STREAM -l $TIME -H $REM_HOST \
+$NETPERF_CMD $NETPERF_PORT -t TCP_STREAM -l $NETPERF_TIME -H $REM_HOST \
   $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
   -s 57344 -S 57344 -m 4096
 echo
@@ -135,11 +136,11 @@ echo Starting 32x4  TCP_STREAM tests at `date` >&2
 echo
 echo ------------------------------------
 echo Testing with the following command line:
-echo $NETHOME/netperf $PORT -t TCP_STREAM -l $TIME -H $REM_HOST \
+echo $NETPERF_CMD $NETPERF_PORT -t TCP_STREAM -l $NETPERF_TIME -H $REM_HOST \
  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
  -s 32768 -S 32768 -m 4096 
 echo
-$NETHOME/netperf $PORT -t TCP_STREAM -l $TIME -H $REM_HOST \
+$NETPERF_CMD $NETPERF_PORT -t TCP_STREAM -l $NETPERF_TIME -H $REM_HOST \
  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
  -s 32768 -S 32768 -m 4096 
 echo
@@ -149,11 +150,11 @@ echo Starting 1,1   TCP_RR     tests at `date` >&2
 echo
 echo ------------------------------------
 echo Testing with the following command line:
-echo $NETHOME/netperf $PORT -t TCP_RR -l $TIME -H $REM_HOST \
+echo $NETPERF_CMD $NETPERF_PORT -t TCP_RR -l $NETPERF_TIME -H $REM_HOST \
  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
  -r 1,1
 echo
-$NETHOME/netperf $PORT -t TCP_RR -l $TIME -H $REM_HOST \
+$NETPERF_CMD $NETPERF_PORT -t TCP_RR -l $NETPERF_TIME -H $REM_HOST \
  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
  -r 1,1
 echo
@@ -163,11 +164,11 @@ echo
 echo ------------------------------------
 echo Testing with the following command line:
 # a single-byte UDP_RR
-echo $NETHOME/netperf $PORT -t UDP_RR -l $TIME -H $REM_HOST \
+echo $NETPERF_CMD $NETPERF_PORT -t UDP_RR -l $NETPERF_TIME -H $REM_HOST \
  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
  -r 1,1
 echo
-$NETHOME/netperf $PORT -t UDP_RR -l $TIME -H $REM_HOST \
+$NETPERF_CMD $NETPERF_PORT -t UDP_RR -l $NETPERF_TIME -H $REM_HOST \
  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
  -r 1,1
 echo
@@ -177,22 +178,22 @@ echo Starting 512,4 UDP_RR     tests at `date` >&2
 echo
 echo ------------------------------------
 echo Testing with the following command line:
-echo $NETHOME/netperf $PORT -t UDP_RR -l $TIME -H $REM_HOST \
+echo $NETPERF_CMD $NETPERF_PORT -t UDP_RR -l $NETPERF_TIME -H $REM_HOST \
  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
  -r 516,4
 echo
-$NETHOME/netperf $PORT -t UDP_RR -l $TIME -H $REM_HOST \
+$NETPERF_CMD $NETPERF_PORT -t UDP_RR -l $NETPERF_TIME -H $REM_HOST \
  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- -r 516,4
 # a 32x4 UDP_STREAM test
 echo Starting 32x4  UDP_STREAM tests at `date` >&2
 echo
 echo ------------------------------------
 echo Testing with the following command line:
-echo $NETHOME/netperf $PORT -t UDP_STREAM -l $TIME -H $REM_HOST \
+echo $NETPERF_CMD $NETPERF_PORT -t UDP_STREAM -l $NETPERF_TIME -H $REM_HOST \
  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
  -s 32768 -S 32768 -m 4096
 echo
-$NETHOME/netperf $PORT -t UDP_STREAM -l $TIME -H $REM_HOST \
+$NETPERF_CMD $NETPERF_PORT -t UDP_STREAM -l $NETPERF_TIME -H $REM_HOST \
  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
  -s 32768 -S 32768 -m 4096
 echo
@@ -202,11 +203,11 @@ echo Starting 32x1  UDP_STREAM tests at `date` >&2
 echo
 echo ------------------------------------
 echo Testing with the following command line:
-echo $NETHOME/netperf $PORT -t UDP_STREAM -l $TIME -H $REM_HOST \
+echo $NETPERF_CMD $NETPERF_PORT -t UDP_STREAM -l $NETPERF_TIME -H $REM_HOST \
  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
  -s 32768 -S 32768 -m 1024
 echo
-$NETHOME/netperf $PORT -t UDP_STREAM -l $TIME -H $REM_HOST \
+$NETPERF_CMD $NETPERF_PORT -t UDP_STREAM -l $NETPERF_TIME -H $REM_HOST \
  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF -- \
  -s 32768 -S 32768 -m 1024
 echo
