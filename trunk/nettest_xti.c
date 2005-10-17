@@ -1,3 +1,6 @@
+#ifdef NEED_MAKEFILE_EDIT
+#error you must first edit and customize the makefile to your platform
+#endif /* NEED_MAKEFILE_EDIT */
 #ifdef DO_XTI
 #ifndef lint
 char	nettest_xti_id[]="\

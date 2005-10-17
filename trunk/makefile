@@ -1,5 +1,5 @@
 #
-# @(#)Makefile	2.1pl2	2002/06/04
+# @(#)Makefile	2.1pl3	2003/02/11
 #
 # Makefile to build netperf benchmark tool
 #
@@ -7,7 +7,7 @@
 #SHELL="/bin/sh"
 
 #what version of netperf is this for?
-VERSION = 2.2pl2
+VERSION = 2.2pl3
 
 #
 # This tells the script where the executables and scripts are supposed
@@ -89,9 +89,13 @@ CC = cc
 #               sending data using sendfile() instead of send().
 # -D_POSIX_SOURCE -D_SOCKET_SOURCE -DMPE - these are required for MPE/ix
 #
+# -DNEED_MAKEFILE_EDIT - this is the "cannary in the coal mine" to
+#               tell people that they need to edit the makefile for 
+#               their platform.  REMOVE THIS once you have edited
+#               the makefile for your platform
 
 LOG_FILE=DEBUG_LOG_FILE="\"/tmp/netperf.debug\""
-CFLAGS = -Ae -O -D$(LOG_FILE) -DUSE_PSTAT -DHAVE_SENDFILE -DDO_FIRST_BURST
+CFLAGS = -O -D$(LOG_FILE) -DNEED_MAKEFILE_EDIT
 
 # Some platforms, and some options, require additional libraries.
 # you can add to the "LIBS =" line to accomplish this. if you find
@@ -138,7 +142,8 @@ ZIP_SOURCE_FILES  = netlib.c netlib.h netperf.c netserver.c \
 
 SHAR_EXE_FILES    = ACKNWLDGMNTS COPYRIGHT README Release_Notes \
                     netperf.ps \
-		    netperf.man netserver.man
+		    netperf.man netserver.man \
+		    README.ovms netserver_run.com 
 
 SHAR_SCRIPT_FILES = tcp_stream_script udp_stream_script \
                     tcp_rr_script udp_rr_script tcp_range_script \

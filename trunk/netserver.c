@@ -1,7 +1,10 @@
+#ifdef NEED_MAKEFILE_EDIT
+#error you must first edit and customize the makefile to your platform
+#endif /* NEED_MAKEFILE_EDIT */
 
 /*
  
-	   Copyright (C) 1993-2001 Hewlett-Packard Company
+	   Copyright (C) 1993-2003 Hewlett-Packard Company
                          ALL RIGHTS RESERVED.
  
   The enclosed software and documention includes copyrighted works of
@@ -43,7 +46,7 @@
  
 */
 char	netserver_id[]="\
-@(#)netserver.c (c) Copyright 1993-2000 Hewlett-Packard Co. Version 2.2pl1";
+@(#)netserver.c (c) Copyright 1993-2003 Hewlett-Packard Co. Version 2.2pl3";
 
  /***********************************************************************/
  /*									*/
@@ -67,9 +70,9 @@ char	netserver_id[]="\
 #include <stdio.h>
 #include <errno.h>
 #include <signal.h>
-#ifndef WIN32
+#if !defined(WIN32) && !defined(__VMS)
 #include <sys/ipc.h>
-#endif /* WIN32 */
+#endif /* !defined(WIN32) && !defined(__VMS) */
 #include <fcntl.h>
 #ifdef WIN32
 #include <time.h>
@@ -91,7 +94,10 @@ char	netserver_id[]="\
 #endif /* WIN32 */
 #include <string.h>
 #include <stdlib.h>
-
+#ifdef __VMS
+#include <tcpip$inetdef.h> 
+#include <unixio.h> 
+#endif /* __VMS */
 #include "netlib.h"
 #include "nettest_bsd.h"
 
@@ -383,10 +389,11 @@ void set_up_server(int af)
 #ifdef DO_IPV6
   struct sockaddr_in6 	server6;
 #endif
-
+  
   int server_control;
   int sockaddr_len;
-  
+  int on=1;
+
   if (af == AF_INET) {
 	server4.sin_port = htons(listen_port_num);
 	server4.sin_addr.s_addr = INADDR_ANY;
@@ -427,6 +434,16 @@ void set_up_server(int af)
       perror("server_set_up: creating the socket");
       exit(1);
     }
+  if (setsockopt(server_control, 
+		 SOL_SOCKET, 
+		 SO_REUSEADDR, 
+		 &on , 
+		 sizeof(on)) == -1)
+    {
+      perror("server_set_up: SO_REUSEADDR");
+      exit(1);
+    }
+
   if (bind (server_control, server, sockaddr_len) == -1)
     {
       perror("server_set_up: binding the socket");
@@ -442,7 +459,7 @@ void set_up_server(int af)
     setpgrp();
     */
 
-#if !defined(WIN32) && !defined(MPE)
+#if !defined(WIN32) && !defined(MPE) && !defined(__VMS)
   switch (fork())
     {
     case -1:  	
@@ -478,16 +495,16 @@ void set_up_server(int af)
 	      printf("server_control: accept failed\n");
 	      exit(1);
 	    }
-#if defined(WIN32) || defined(MPE)
-	/*
-	 * Since we cannot fork this process , we cant fire any threads
-	 * as they all share the same global data . So we better allow
-	 * one request at at time 
-	 */
-	    process_requests() ;
+#if defined(WIN32) || defined(MPE) || defined(__VMS)
+	  /*
+	   * Since we cannot fork this process , we cant fire any threads
+	   * as they all share the same global data . So we better allow
+	   * one request at at time 
+	   */
+	  process_requests() ;
 	}
 #else
-	  signal(SIGCLD, SIG_IGN);
+      signal(SIGCLD, SIG_IGN);
 	  
 	  switch (fork())
 	    {
@@ -527,14 +544,14 @@ void set_up_server(int af)
 
 int
 main(argc, argv)
-int argc;
-char *argv[];
+     int argc;
+     char *argv[];
 {
 
   int	c;
   int	af = AF_INET;
 
-  struct sockaddr name;
+struct sockaddr name;
   int namelen = sizeof(name);
   
 
@@ -615,6 +632,7 @@ char *argv[];
     /* the user specified a port number on the command line */
     set_up_server(af);
   }
+#if !defined(__VMS)
   else if (getsockname(0, &name, &namelen) == -1) {
     /* we may not be a child of inetd */
 #ifdef WIN32
@@ -626,9 +644,20 @@ char *argv[];
       set_up_server(af);
     }
   }
+#endif /* !defined(__VMS) */
   else {
-    /* we are probably a child of inetd */
+    /* we are probably a child of inetd, or are being invoked via the
+       VMS auxilliarly server mechanism */
+#if !defined(__VMS)
     server_sock = 0;
+#else
+    if ( (server_sock = socket(TCPIP$C_AUXS, SOCK_STREAM, 0)) < 0 ) 
+    { 
+      perror("Failed to grab aux server socket" ); 
+      exit(1); 
+    } 
+  
+#endif /* !defined(__VMS) */
     process_requests();
   }
   return(0);

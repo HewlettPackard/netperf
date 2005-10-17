@@ -1,4 +1,6 @@
-
+#ifdef NEED_MAKEFILE_EDIT
+#error you must first edit and customize the makefile to your platform
+#endif /* NEED_MAKEFILE_EDIT */
 /*
  
 	   Copyright (C) 1993-2001 Hewlett-Packard Company
@@ -43,7 +45,7 @@
  
 */
 char	netperf_id[]="\
-@(#)netperf.c (c) Copyright 1993, 1994 Hewlett-Packard Company. Version 2.2pl1";
+@(#)netperf.c (c) Copyright 1993-2003 Hewlett-Packard Company. Version 2.2pl3";
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -116,139 +118,139 @@ if (debug) {
 
 establish_control(host_name,test_port);
 
-if (strcmp(test_name,"TCP_STREAM") == 0) {
+if (strcasecmp(test_name,"TCP_STREAM") == 0) {
 	send_tcp_stream(host_name);
 }
-else if (strcmp(test_name,"TCP_MAERTS") == 0) {
+else if (strcasecmp(test_name,"TCP_MAERTS") == 0) {
 	send_tcp_maerts(host_name);
 }
 #ifdef HAVE_SENDFILE
-else if (strcmp(test_name,"TCP_SENDFILE") == 0) {
+else if (strcasecmp(test_name,"TCP_SENDFILE") == 0) {
 	sendfile_tcp_stream(host_name);
 }
 #endif /* HAVE_SENDFILE */
-else if (strcmp(test_name,"TCP_RR") == 0) {
+else if (strcasecmp(test_name,"TCP_RR") == 0) {
 	send_tcp_rr(host_name);
 }
-else if (strcmp(test_name,"TCP_CRR") == 0) {
+else if (strcasecmp(test_name,"TCP_CRR") == 0) {
 	send_tcp_conn_rr(host_name);
 }
-else if (strcmp(test_name,"TCP_CC") == 0) {
+else if (strcasecmp(test_name,"TCP_CC") == 0) {
 	send_tcp_cc(host_name);
 }
 #ifdef DO_1644
-else if (strcmp(test_name,"TCP_TRR") == 0) {
+else if (strcasecmp(test_name,"TCP_TRR") == 0) {
 	send_tcp_tran_rr(host_name);
 }
 #endif /* DO_1644 */
 #ifdef DO_NBRR
-else if (strcmp(test_name,"TCP_NBRR") == 0) {
+else if (strcasecmp(test_name,"TCP_NBRR") == 0) {
 	send_tcp_nbrr(host_name);
 }
 #endif /* DO_NBRR */
-else if (strcmp(test_name,"UDP_STREAM") == 0) {
+else if (strcasecmp(test_name,"UDP_STREAM") == 0) {
 	send_udp_stream(host_name);
 }
-else if (strcmp(test_name,"UDP_RR") == 0) {
+else if (strcasecmp(test_name,"UDP_RR") == 0) {
 	send_udp_rr(host_name);
 }
-else if (strcmp(test_name,"LOC_CPU") == 0) {
+else if (strcasecmp(test_name,"LOC_CPU") == 0) {
 	loc_cpu_rate();
 }
-else if (strcmp(test_name,"REM_CPU") == 0) {
+else if (strcasecmp(test_name,"REM_CPU") == 0) {
 	rem_cpu_rate();
 }
 #ifdef DO_DLPI
-else if (strcmp(test_name,"DLCO_RR") == 0) {
+else if (strcasecmp(test_name,"DLCO_RR") == 0) {
 	send_dlpi_co_rr();
 }
-else if (strcmp(test_name,"DLCL_RR") == 0) {
+else if (strcasecmp(test_name,"DLCL_RR") == 0) {
 	send_dlpi_cl_rr();
 }
-else if (strcmp(test_name,"DLCO_STREAM") == 0) {
+else if (strcasecmp(test_name,"DLCO_STREAM") == 0) {
 	send_dlpi_co_stream();
 }
-else if (strcmp(test_name,"DLCL_STREAM") == 0) {
+else if (strcasecmp(test_name,"DLCL_STREAM") == 0) {
 	send_dlpi_cl_stream();
 }
 #endif /* DO_DLPI */
 #ifdef DO_UNIX
-else if (strcmp(test_name,"STREAM_RR") == 0) {
+else if (strcasecmp(test_name,"STREAM_RR") == 0) {
 	send_stream_rr();
 }
-else if (strcmp(test_name,"DG_RR") == 0) {
+else if (strcasecmp(test_name,"DG_RR") == 0) {
 	send_dg_rr();
 }
-else if (strcmp(test_name,"STREAM_STREAM") == 0) {
+else if (strcasecmp(test_name,"STREAM_STREAM") == 0) {
 	send_stream_stream();
 }
-else if (strcmp(test_name,"DG_STREAM") == 0) {
+else if (strcasecmp(test_name,"DG_STREAM") == 0) {
 	send_dg_stream();
 }
 #endif /* DO_UNIX */
 #ifdef DO_FORE
-else if (strcmp(test_name,"FORE_STREAM") == 0) {
+else if (strcasecmp(test_name,"FORE_STREAM") == 0) {
 	send_fore_stream(host_name);
 }
-else if (strcmp(test_name,"FORE_RR") == 0) {
+else if (strcasecmp(test_name,"FORE_RR") == 0) {
 	send_fore_rr(host_name);
 }
 #endif /* DO_FORE */
 #ifdef DO_HIPPI
-else if (strcmp(test_name,"HIPPI_STREAM") == 0) {
+else if (strcasecmp(test_name,"HIPPI_STREAM") == 0) {
 	send_hippi_stream(host_name);
 }
-else if (strcmp(test_name,"HIPPI_RR") == 0) {
+else if (strcasecmp(test_name,"HIPPI_RR") == 0) {
 	send_hippi_rr(host_name);
 }
 #endif /* DO_HIPPI */
 #ifdef DO_XTI
-else if (strcmp(test_name,"XTI_TCP_STREAM") == 0) {
+else if (strcasecmp(test_name,"XTI_TCP_STREAM") == 0) {
 	send_xti_tcp_stream(host_name);
 }
-else if (strcmp(test_name,"XTI_TCP_RR") == 0) {
+else if (strcasecmp(test_name,"XTI_TCP_RR") == 0) {
 	send_xti_tcp_rr(host_name);
 }
-else if (strcmp(test_name,"XTI_UDP_STREAM") == 0) {
+else if (strcasecmp(test_name,"XTI_UDP_STREAM") == 0) {
 	send_xti_udp_stream(host_name);
 }
-else if (strcmp(test_name,"XTI_UDP_RR") == 0) {
+else if (strcasecmp(test_name,"XTI_UDP_RR") == 0) {
 	send_xti_udp_rr(host_name);
 }
 #endif /* DO_XTI */
 #ifdef DO_LWP
-else if (strcmp(test_name,"LWPSTR_STREAM") == 0) {
+else if (strcasecmp(test_name,"LWPSTR_STREAM") == 0) {
 	send_lwpstr_stream(host_name);
 }
-else if (strcmp(test_name,"LWPSTR_RR") == 0) {
+else if (strcasecmp(test_name,"LWPSTR_RR") == 0) {
 	send_lwpstr_rr(host_name);
 }
-else if (strcmp(test_name,"LWPDG_STREAM") == 0) {
+else if (strcasecmp(test_name,"LWPDG_STREAM") == 0) {
 	send_lwpdg_stream(host_name);
 }
-else if (strcmp(test_name,"LWPDG_RR") == 0) {
+else if (strcasecmp(test_name,"LWPDG_RR") == 0) {
 	send_lwpdg_rr(host_name);
 }
 #endif /* DO_LWP */
 #ifdef DO_IPV6
-else if (strcmp(test_name,"TCPIPV6_STREAM") == 0) {
+else if (strcasecmp(test_name,"TCPIPV6_STREAM") == 0) {
 	send_tcpipv6_stream(host_name);
 }
-else if (strcmp(test_name,"TCPIPV6_RR") == 0) {
+else if (strcasecmp(test_name,"TCPIPV6_RR") == 0) {
 	send_tcpipv6_rr(host_name);
 }
-else if (strcmp(test_name,"TCPIPV6_CRR") == 0) {
+else if (strcasecmp(test_name,"TCPIPV6_CRR") == 0) {
 	send_tcpipv6_rr(host_name);
 }
-else if (strcmp(test_name,"UDPIPV6_STREAM") == 0) {
+else if (strcasecmp(test_name,"UDPIPV6_STREAM") == 0) {
 	send_udpipv6_stream(host_name);
 }
-else if (strcmp(test_name,"UDPIPV6_RR") == 0) {
+else if (strcasecmp(test_name,"UDPIPV6_RR") == 0) {
 	send_udpipv6_rr(host_name);
 }
 #endif /* DO_IPV6 */
 #ifdef DO_DNS
-else if (strcmp(test_name,"DNS_RR") == 0) {
+else if (strcasecmp(test_name,"DNS_RR") == 0) {
 	send_dns_rr(host_name);
 }
 #endif /* DO_DNS */

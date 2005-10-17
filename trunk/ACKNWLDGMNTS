@@ -87,3 +87,12 @@ Initial prototype of the TCP_SENDFILE test support
 
 Philip Pishioneri of Cornel
 Conversion of the netperf.ps manul to PDF format.
+
+The Hewlett-Packard OpenVMS folks
+Assistance with the port to OpenVMS
+
+Munechika SUMIKAWA @ KAME Project / FreeBSD.org
+IPv6 fixes
+
+Jan Iven of CERN
+initial mods for sendfile() under Linux

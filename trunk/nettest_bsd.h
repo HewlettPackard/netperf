@@ -1,5 +1,5 @@
 /*
-        Copyright (C) 1993, Hewlett-Packard Company
+        Copyright (C) 1993-2003 Hewlett-Packard Company
 */
 
  /* This file contains the test-specific definitions for netperf's BSD */
@@ -347,14 +347,18 @@ struct tcp_cc_results_struct {
 extern void scan_sockets_args();
 
 extern void send_tcp_stream();
+extern void send_tcp_maerts();
 extern void send_tcp_rr();
 extern void send_tcp_conn_rr();
+extern void send_tcp_cc();
 extern void send_udp_stream();
 extern void send_udp_rr();
 
 extern void recv_tcp_stream();
+extern void recv_tcp_maerts();
 extern void recv_tcp_rr();
 extern void recv_tcp_conn_rr();
+extern void recv_tcp_cc();
 extern void recv_udp_stream();
 extern void recv_udp_rr();
 
