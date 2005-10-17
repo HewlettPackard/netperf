@@ -49,10 +49,40 @@ static const char rcsid[] =
 #endif
 
 #include <stdio.h>
-#include <errno.h>
 
+#ifndef WIN32
+#include <errno.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+
+#else   /* WIN32 */
+#include <time.h>
+#include <winsock2.h>
+#ifdef DO_IPV6
+#include <ws2tcpip.h>
+#endif  /* DO_IPV6 */
+#include <windows.h>
+
+/* The below are copied from netlib.h */
+#ifdef errno
+/* delete the one from stdlib.h  */
+/*#define errno       (*_errno()) */
+#undef errno
+#endif
+#define errno GetLastError()
+#define Set_errno(num) SetLastError((num))
+
+/* INVALID_SOCKET == INVALID_HANDLE_VALUE == (unsigned int)(~0) */
+/* SOCKET_ERROR == -1 */
+#define ENOTSOCK WSAENOTSOCK
+#define EINTR    WSAEINTR
+#define ENOBUFS  WSAENOBUFS
+#define EWOULDBLOCK           WSAEWOULDBLOCK
+#define EAFNOSUPPORT  WSAEAFNOSUPPORT
+/* from public\sdk\inc\crt\errno.h */
+#define ENOSPC          28
+#endif  /* WIN32 */
+
 /*
  *
  */
@@ -71,8 +101,8 @@ inet_ntop_v4 (const void *src, char *dst, size_t size)
     const char *orig_dst = dst;
 
     if (size < INET_ADDRSTRLEN) {
-	errno = ENOSPC;
-	return NULL;
+      Set_errno(ENOSPC);
+      return NULL;
     }
     for (i = 0; i < 4; ++i) {
 	int n = (a >> (24 - i * 8)) & 0xFF;
@@ -103,7 +133,7 @@ inet_ntop(int af, const void *src, char *dst, size_t size)
     case AF_INET :
 	return inet_ntop_v4 (src, dst, size);
     default :
-	errno = EAFNOSUPPORT;
-	return NULL;
+      Set_errno(EAFNOSUPPORT);
+      return NULL;
     }
 }

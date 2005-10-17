@@ -46,15 +46,19 @@ char	netperf_id[]="\
 
 #include <stdio.h>
 #include <stdlib.h>
+#if HAVE_STRINGS_H
 #include <strings.h>
+#endif
 
 /* FreeBSD doesn't like socket.h before types are set. */
 #if __FreeBSD__
 # include <sys/types.h>
 #endif
 
+#ifndef WIN32
 /* this should only be temporary */
 #include <sys/socket.h>
+#endif
 
 #ifdef WIN32
 #include <winsock2.h>

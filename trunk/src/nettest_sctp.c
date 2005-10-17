@@ -1,6 +1,6 @@
 #ifndef lint
 char	nettest_sctp[]="\
-@(#)nettest_sctp.c (c) Copyright 2005 Hewlett-Packard Co. Version 2.4.0";
+@(#)nettest_sctp.c (c) Copyright 2005 Hewlett-Packard Co. Version 2.4.1";
 #else
 #define DIRTY
 #define WANT_HISTOGRAM
@@ -188,19 +188,19 @@ sctp_enable_events(socket, ev_mask)
 	ev.sctp_adaption_layer_event = 1;
 
     if (setsockopt(socket,
-		  IPPROTO_SCTP,
+		   IPPROTO_SCTP,
 #ifdef SCTP_EVENTS
-		  SCTP_EVENTS,
+		   SCTP_EVENTS,
 #else
-		  SCTP_SET_EVENTS,
+		   SCTP_SET_EVENTS,
 #endif
-		  &ev,
-		  sizeof(ev)) != 0 ) {
-	fprintf(where,
-		"sctp_enable_event: could not set sctp events errno %d\n",
-		errno);
-	fflush(where);
-	exit(1);
+		   (const char*)&ev,
+		   sizeof(ev)) != 0 ) {
+      fprintf(where,
+	      "sctp_enable_event: could not set sctp events errno %d\n",
+	      errno);
+      fflush(where);
+      exit(1);
     }
 }
 
@@ -1325,7 +1325,7 @@ recv_sctp_stream()
 		    "recv_sctp_stream: sctp_recvmsg timed out, trying again\n");
 	     fflush(where);
 	   }
-	   errno = 0;
+	   Set_errno(0);
 	   continue;
 	}
 	if (debug) {
@@ -1706,12 +1706,12 @@ Size (bytes)\n\
 
       /* we have to make sure that the server port number is in */
       /* network order */
-      set_port_number(remote_res, sctp_stream_response->data_port_number);
+      set_port_number(remote_res, (unsigned short)sctp_stream_response->data_port_number);
       rem_rcvavoid	= sctp_stream_response->so_rcvavoid;
       rem_sndavoid	= sctp_stream_response->so_sndavoid;
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       fprintf(where,
 	      "netperf: remote error %d",
 	      netperf_response.content.serv_errno);
@@ -1860,7 +1860,7 @@ Size (bytes)\n\
 	      break;
 	    } else if (non_block && errno == EAGAIN) {
 		j--;	 /* send again on the same socket */
-		errno = 0;
+		Set_errno(0);
 		continue;
 	    }
 	    perror("netperf: data send error");
@@ -1977,7 +1977,7 @@ Size (bytes)\n\
 	fprintf(where,"remote results obtained\n");
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       fprintf(where,
 	      "netperf: remote error %d",
 	      netperf_response.content.serv_errno);
@@ -2460,7 +2460,7 @@ recv_sctp_stream_1toMany()
 			     NULL, &msg_flags)) != 0) {
     if (len < 0) {
       if (non_block && errno == EAGAIN) {
-	errno = 0;
+	Set_errno(0);
 	continue;
       }
       netperf_response.content.serv_errno = errno;
@@ -2596,7 +2596,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 Alignment      Offset\n\
 Local  Remote  Local  Remote\n\
 Send   Recv    Send   Recv\n\
-%5d  %5d   %5d  %5d";
+%5d  %5d   %5d  %5d\n";
   
   
   int			timed_out = 0;
@@ -3023,7 +3023,7 @@ Send   Recv    Send   Recv\n\
 	fprintf(where,"remote results obtained\n");
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       fprintf(where,"netperf: remote error %d",
 	      netperf_response.content.serv_errno);
       perror("");
@@ -3649,7 +3649,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 Alignment      Offset\n\
 Local  Remote  Local  Remote\n\
 Send   Recv    Send   Recv\n\
-%5d  %5d   %5d  %5d";
+%5d  %5d   %5d  %5d\n";
   
   
   int			timed_out = 0;
@@ -3843,7 +3843,7 @@ Send   Recv    Send   Recv\n\
 		      (unsigned short)sctp_rr_response->data_port_number);
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       fprintf(where,
 	      "netperf: remote error %d",
 	      netperf_response.content.serv_errno);
@@ -4075,7 +4075,7 @@ Send   Recv    Send   Recv\n\
 	fprintf(where,"remote results obtained\n");
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       fprintf(where,"netperf: remote error %d",
 	      netperf_response.content.serv_errno);
       perror("");

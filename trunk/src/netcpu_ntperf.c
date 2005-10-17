@@ -15,6 +15,29 @@ char   netcpu_ntperf_id[]="\
 # endif
 #endif
 
+#if 0
+#include <limits.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <string.h>
+#endif
+
+#include <assert.h>
+
+#include <process.h>
+#include <time.h>
+
+#include <windows.h>
+#include <assert.h>
+
+#include <winsock2.h>
+#ifdef DO_IPV6
+#include <ws2tcpip.h>
+#endif
+
 #include "netsh.h"
 #include "netlib.h"
 
@@ -53,6 +76,14 @@ NT_QUERY_SYSTEM_INFORMATION NtQuerySystemInformation = NULL;
 
 
 static LARGE_INTEGER TickHz;
+
+_inline LARGE_INTEGER ReadPerformanceCounter(VOID)
+{
+        LARGE_INTEGER Counter;
+        QueryPerformanceCounter(&Counter);
+
+        return(Counter);
+}       // ReadperformanceCounter
 
 
 /* The NT performance data is accessed through the NtQuerySystemInformation
@@ -99,6 +130,8 @@ get_cpu_method(void)
   return NT_METHOD;
 }
 
+typedef unsigned __int64    uint64_t;
+
 void
 get_cpu_idle(uint64_t *res)
 {
@@ -109,7 +142,7 @@ get_cpu_idle(uint64_t *res)
 float
 calibrate_idle_rate(int iterations, int interval)
 {
-  return;
+  return (float)0.0;
 }
 
 
@@ -128,7 +161,10 @@ PerfObj *InitPerfCntrs()
   PerfObj *NewPerfCntrs;
   DWORD NTVersion;
   DWORD status;
-  
+  SYSTEM_INFO SystemInfo;
+
+  GetSystemInfo(&SystemInfo);
+
   NewPerfCntrs = (PerfObj *)GlobalAlloc(GPTR, sizeof(PerfObj));
   assert(NewPerfCntrs != NULL);
   
@@ -186,6 +222,9 @@ void RestartPerfCntrs(PerfObj *PerfCntrs)
   DWORD i;
   
   DWORD status;
+  SYSTEM_INFO SystemInfo;
+
+  GetSystemInfo(&SystemInfo);
   
   // Move previous data from EndInfo to StartInfo.
   CopyMemory((PCHAR)&PerfCntrs->StartInfo[0],
@@ -264,6 +303,10 @@ double ReportPerfCntrs(PerfObj *PerfCntrs)
   
   LARGE_INTEGER   TotalCPUTime[MAXCPUS +1];         
   
+  SYSTEM_INFO SystemInfo;
+
+  GetSystemInfo(&SystemInfo);
+
   for (i=0; i <= MAXCPUS; i++)
     {
       DeltaInfo[i].IdleTime.QuadPart    = PerfCntrs->EndInfo[i].IdleTime.QuadPart -

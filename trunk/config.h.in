@@ -6,6 +6,9 @@
 /* Define to 1 if you have the <arpa/inet.h> header file. */
 #undef HAVE_ARPA_INET_H
 
+/* Define to 1 if you have the `bind_to_cpu_id' function. */
+#undef HAVE_BIND_TO_CPU_ID
+
 /* Define to 1 if you have the `bzero' function. */
 #undef HAVE_BZERO
 
@@ -53,6 +56,9 @@
 
 /* Define to 1 if you have the `m' library (-lm). */
 #undef HAVE_LIBM
+
+/* Define to 1 if you have the `mach' library (-lmach). */
+#undef HAVE_LIBMACH
 
 /* Define to 1 if you have the `nsl' library (-lnsl). */
 #undef HAVE_LIBNSL
@@ -104,9 +110,6 @@
 
 /* Define to 1 if you have the `processor_bind' function. */
 #undef HAVE_PROCESSOR_BIND
-
-/* Define to 1 if you have the `pstat_getdynamic' function. */
-#undef HAVE_PSTAT_GETDYNAMIC
 
 /* Define to 1 if you have the `sched_setaffinity' function. */
 #undef HAVE_SCHED_SETAFFINITY
@@ -288,11 +291,8 @@
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const
 
-/* Define to `unsigned char', `unsigned short', `unsigned int' or `unsigned
-   long' according with size of `sin_port' in `struct sockaddr_in', if
-   <sys/types.h>, <sys/socket.h> or <netinet/in.h> does not define
-   `in_port_t'. */
-#undef in_port_t
+/* type to use in place of socklen_t if not defined */
+#undef netperf_socklen_t
 
 /* Define to `long' if <sys/types.h> does not define. */
 #undef off_t
@@ -302,9 +302,6 @@
 
 /* Define to `unsigned' if <sys/types.h> does not define. */
 #undef size_t
-
-/* type to use in place of socklen_t if not defined */
-#undef socklen_t
 
 /* Define as `fork' if `vfork' does not work. */
 #undef vfork

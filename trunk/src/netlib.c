@@ -98,6 +98,8 @@ char    netlib_id[]="\
 #include <process.h>
 #include <time.h>
 #include <winsock2.h>
+#define netperf_socklen_t socklen_t
+#include <windows.h>
 
 /* there should be another way to decide to include the ws2 file */
 #ifdef DO_IPV6
@@ -487,7 +489,7 @@ inet_nton(int af, const void *src, char *dst, int cnt)
       return 4;
     }
     else {
-      errno=ENOSPC;
+      Set_errno(ENOSPC);
       return(-1);
     }
     break;
@@ -498,13 +500,13 @@ inet_nton(int af, const void *src, char *dst, int cnt)
       return(16);
     }
     else {
-      errno=ENOSPC;
+      Set_errno(ENOSPC);
       return(-1);
     }
     break;
 #endif
   default:
-    errno = EAFNOSUPPORT;
+    Set_errno(EAFNOSUPPORT);
     return(-1);
   }
 }
@@ -629,9 +631,10 @@ get_num_cpus()
 #else /* no _SC_NPROCESSORS_ONLN */
 
 #ifdef WIN32
-        GetSystemInfo(&SystemInfo);
-
-        temp_cpus = SystemInfo.dwNumberOfProcessors;
+  SYSTEM_INFO SystemInfo;
+  GetSystemInfo(&SystemInfo);
+  
+  temp_cpus = SystemInfo.dwNumberOfProcessors;
 #else
   /* we need to know some other ways to do this, or just fall-back on */
   /* a global command line option - raj 4/95 */
@@ -1724,7 +1727,7 @@ set));
   __CPU_SET(processor_affinity, &cpu_set);
   printf("set");
   if (sched_setaffinity(getpid(), &cpu_set)) {
-    fprintf(stderr, "failed to set PID %d's CPU affinityi errno %d\n",
+    fprintf(stderr, "failed to set PID %d's CPU affinity errno %d\n",
             getpid(),errno);
     fflush(stderr);
   }
@@ -1738,11 +1741,60 @@ set));
   this_mask = 1 << processor_affinity;
   printf("masked\n");
   if (sched_setaffinity(getpid(), len, &this_mask)) {
-    fprintf(stderr, "failed to set PID %d's CPU affinityi errno %d\n",
+    fprintf(stderr, "failed to set PID %d's CPU affinity errno %d\n",
             getpid(),errno);
     fflush(stderr);
   }
 #endif
+#elif HAVE_BIND_TO_CPU_ID
+  /* this is the one for Tru64 */
+#include <sys/types.h>
+#include <sys/resource.h>
+#include <sys/processor.h>
+
+  /* really should be checking a return code one of these days. raj
+     2005/08/31 */ 
+
+  bind_to_cpu_id(getpid(), processor_affinity,0);
+
+#elif WIN32
+
+  {
+    ULONG_PTR AffinityMask;
+    ULONG_PTR ProcessAffinityMask;
+    ULONG_PTR SystemAffinityMask;
+    
+    if ((processor_affinity < 0) || 
+	(processor_affinity > MAXIMUM_PROCESSORS)) {
+      fprintf(where,
+	      "Invalid processor_affinity specified: %d\n", processor_affinity);      fflush(where);
+      return;
+    }
+    
+    if (!GetProcessAffinityMask(
+				GetCurrentProcess(), 
+				&ProcessAffinityMask, 
+				&SystemAffinityMask))
+      {
+	perror("GetProcessAffinityMask failed");
+	fflush(stderr);
+	exit(1);
+      }
+    
+    AffinityMask = (ULONG_PTR)1 << processor_affinity;
+    
+    if (AffinityMask & ProcessAffinityMask) {
+      if (!SetThreadAffinityMask( GetCurrentThread(), AffinityMask)) {
+	perror("SetThreadAffinityMask failed");
+	fflush(stderr);
+      }
+    } else if (debug) {
+      fprintf(where,
+	      "Processor affinity set to CPU# %d\n", processor_affinity);
+      fflush(where);
+    }
+  }
+
 #else
   if (debug) {
     fprintf(where,
@@ -1971,24 +2023,37 @@ if (tot_bytes_recvd < buflen) {
 
 }
 
- /***********************************************************************/
- /*                                                                     */
- /*     recv_response()                                                 */
- /*                                                                     */
- /* receive the remote's response on the control socket. we will put    */
- /* the entire response into host order before giving it to the         */
- /* calling routine. hopefully, this will go most of the way to         */
- /* insuring intervendor interoperability. if there are any problems,   */
- /* we will just punt the entire situation.                             */
- /*                                                                     */
- /* The call to select at the beginning is to get us out of hang        */
- /* situations where the remote gives-up but we don't find-out about    */
- /* it. This seems to happen only rarely, but it would be nice to be    */
- /* somewhat robust ;-)                                                 */
- /***********************************************************************/
+ /*
+
+      recv_response_timed()                                           
+                                                                    
+ receive the remote's response on the control socket. we will put the
+ entire response into host order before giving it to the calling
+ routine. hopefully, this will go most of the way to insuring
+ intervendor interoperability. if there are any problems, we will just
+ punt the entire situation.
+                                                                    
+ The call to select at the beginning is to get us out of hang
+ situations where the remote gives-up but we don't find-out about
+ it. This seems to happen only rarely, but it would be nice to be
+ somewhat robust ;-)
+
+ The "_timed" part is to allow the caller to add (or I suppose
+ subtract) from the length of timeout on the select call. this was
+ added since not all the CPU utilization mechanisms require a 40
+ second calibration, and we used to have an aribtrary 40 second sleep
+ in "calibrate_remote_cpu" - since we don't _always_ need that, we
+ want to simply add 40 seconds to the select() timeout from that call,
+ but don't want to change all the "recv_response" calls in the code
+ right away.  sooo, we push the functionality of the old
+ recv_response() into a new recv_response_timed(addl_timout) call, and
+ have recv_response() call recv_response_timed(0).  raj 2005-05-16
+
+ */
+
 
 void
-recv_response()
+recv_response_timed(int addl_time)
 {
 int     tot_bytes_recvd,
         bytes_recvd = 0, 
@@ -2017,11 +2082,13 @@ for (counter = 0; counter < sizeof(netperf_response)/sizeof(int); counter++) {
 
 FD_ZERO(&readfds);
 FD_SET(netlib_control,&readfds);
-timeout.tv_sec  = 120; /* wait two minutes before punting - the
-                          USE_LOOPER CPU stuff may cause remote's to
-                          have a bit longer time of it than 60 seconds 
-                          would allow.  triggered by fix from Jeff
-                          Dwork. */
+timeout.tv_sec  = 120 + addl_time;  /* wait at least two minutes
+                                      before punting - the USE_LOOPER
+                                      CPU stuff may cause remote's to
+                                      have a bit longer time of it
+                                      than 60 seconds would allow.
+                                      triggered by fix from Jeff
+                                      Dwork. */
 timeout.tv_usec = 0;
 
  /* select had better return one, or there was either a problem or a */
@@ -2074,6 +2141,12 @@ if (tot_bytes_recvd < buflen) {
 if (debug > 1) {
   dump_response();
 }
+}
+
+void
+recv_response() 
+{
+  recv_response_timed(0);
 }
 
 
@@ -2132,11 +2205,11 @@ fprintf(where,"debug: %d\n",debug);
 
 
 void
-set_sock_buffer (int sd, enum sock_buffer which, int requested_size, int *effective_sizep)
+set_sock_buffer (SOCKET sd, enum sock_buffer which, int requested_size, int *effective_sizep)
 {
 #ifdef SO_SNDBUF
   int optname = (which == SEND_BUFFER) ? SO_SNDBUF : SO_RCVBUF;
-  socklen_t sock_opt_len;
+  netperf_socklen_t sock_opt_len;
 
   if (requested_size > 0) {
     if (setsockopt(sd, SOL_SOCKET, optname,
@@ -2159,7 +2232,7 @@ set_sock_buffer (int sd, enum sock_buffer which, int requested_size, int *effect
   /* that back to the user. If the call fails, we will just report a -1 */
   /* back to the initiator for the recv buffer size. */
 
-  sock_opt_len = sizeof(socklen_t);
+  sock_opt_len = sizeof(netperf_socklen_t);
   if (getsockopt(sd, SOL_SOCKET, optname, (char *)effective_sizep,
 		 &sock_opt_len) < 0) {
     fprintf(where, "netperf: set_sock_buffer: getsockopt %s: errno %d\n",
@@ -2250,7 +2323,7 @@ the "names" can also be IP addresses in ASCII string form.
 
 raj 2003-02-27 */
 
-int
+SOCKET
 establish_control_internal(char *hostname,
 			   char *port,
 			   int   remfam,
@@ -2259,7 +2332,7 @@ establish_control_internal(char *hostname,
 			   int   locfam)
 {
   int not_connected;
-  int control_sock;
+  SOCKET control_sock;
   int count;
   int error;
 
@@ -2313,7 +2386,7 @@ establish_control_internal(char *hostname,
     printf("\n\tgetaddrinfo returned %d %s\n",
            error,
            gai_strerror(error));
-    return(-1);
+    return(INVALID_SOCKET);
   }
 
   if (debug) {
@@ -2354,7 +2427,7 @@ establish_control_internal(char *hostname,
     printf("\n\tgetaddrinfo returned %d %s\n",
            error,
            gai_strerror(error));
-    return(-1);
+    return(INVALID_SOCKET);
   }
 
   if (debug) {
@@ -2378,7 +2451,7 @@ establish_control_internal(char *hostname,
     control_sock = socket(local_res_temp->ai_family,
                           SOCK_STREAM,
                           0);
-    if (control_sock < 0) {
+    if (control_sock == INVALID_SOCKET) {
       /* at some point we'll need a more generic "display error"
          message for when/if we use GUIs and the like. unlike a bind
          or connect failure, failure to allocate a socket is
@@ -2386,7 +2459,7 @@ establish_control_internal(char *hostname,
       if (debug) {
         perror("establish_control: unable to allocate control socket");
       }
-      return(-1);
+      return(INVALID_SOCKET);
     }
 
     /* if we are going to control the local enpoint addressing, we
@@ -2462,7 +2535,7 @@ establish_control_internal(char *hostname,
   if (not_connected) {
     fprintf(where, "establish control: are you sure there is a netserver listening on %s at port %s?\n",hostname,port);
     fflush(where);
-    return(-1);
+    return(INVALID_SOCKET);
   }
   /* at this point, we are connected.  we probably want some sort of
      version check with the remote at some point. raj 2003-02-24 */
@@ -2485,13 +2558,13 @@ establish_control(char *hostname,
 					      localhost,
 					      localport,
 					      locfam);
-  if (netlib_control < 0) {
+  if (netlib_control == INVALID_SOCKET) {
     fprintf(where,
 	    "establish_control could not establish the control connection from %s port %s address family %s to %s port %s address family %s\n",
 	    localhost,localport,inet_ftos(locfam),
 	    hostname,port,inet_ftos(remfam));
     fflush(where);
-    exit(-1);
+    exit(INVALID_SOCKET);
   }
 }
 
@@ -2521,35 +2594,36 @@ struct  utsname         system_name;
 #endif /* WIN32 */
 
 #ifdef WIN32
-GetSystemInfo( &SystemInfo ) ;
-if ( !GetComputerName(system_name , &(DWORD)name_len) )
-        strcpy(system_name , "no_name") ;
+ SYSTEM_INFO SystemInfo;
+ GetSystemInfo( &SystemInfo ) ;
+ if ( !GetComputerName(system_name , &(DWORD)name_len) )
+   strcpy(system_name , "no_name") ;
 #else
-if (uname(&system_name) <0) {
-        perror("identify_local: uname");
-        exit(1);
-}
+ if (uname(&system_name) <0) {
+   perror("identify_local: uname");
+   exit(1);
+ }
 #endif /* WIN32 */
 
-snprintf(id_string, sizeof(id_string),
+ snprintf(id_string, sizeof(id_string),
 #ifdef WIN32
-        "%-15s%-15s%d.%d%d",
-        "Windows NT",
-        system_name ,
-        GetVersion() & 0xFF ,
-        GetVersion() & 0xFF00 ,
-        SystemInfo.dwProcessorType
-        
+	  "%-15s%-15s%d.%d%d",
+	  "Windows NT",
+	  system_name ,
+	  GetVersion() & 0xFF ,
+	  GetVersion() & 0xFF00 ,
+	  SystemInfo.dwProcessorType
+	  
 #else
-        "%-15s%-15s%-15s%-15s%-15s",
-        system_name.sysname,
-        system_name.nodename,
-        system_name.release,
-        system_name.version,
-        system_name.machine
+	  "%-15s%-15s%-15s%-15s%-15s",
+	  system_name.sysname,
+	  system_name.nodename,
+	  system_name.release,
+	  system_name.version,
+	  system_name.machine
 #endif /* WIN32 */
-		);
-return (id_string);
+	  );
+ return (id_string);
 }
 
 
@@ -2833,8 +2907,12 @@ calibrate_remote_cpu()
   /* we know that calibration will last at least 40 seconds, so go to */
   /* sleep for that long so the 60 second select in recv_response will */
   /* not pop. raj 7/95 */
-  sleep(40);
-  recv_response();
+
+  /* we know that CPU calibration may last as long as 40 seconds, so
+     make sure we "select" for at least that long while looking for
+     the response. raj 2005-05-16 */
+  recv_response_timed(40);
+
   if (netperf_response.content.serv_errno) {
     /* initially, silently ignore remote errors and pass */
     /* back a zero to the caller this should allow us to */

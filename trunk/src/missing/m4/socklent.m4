@@ -36,7 +36,11 @@ dnl joy when you will really get warnings about mismatch types - type
 dnl mismatches that would be possibly Bad (tm) in a 64-bit compile.
 dnl raj 2005-05-11 this change may be redistributed at will 
 
-AC_DEFUN([TYPE_SOCKLEN_T],
+dnl also, added "extern" to the "int getpeername" in an attempt to resolve
+dnl an issue with this code under Solaris 2.9.  this too may be 
+dnl redistributed at will
+
+AC_DEFUN([OLD_TYPE_SOCKLEN_T],
 [
       AC_MSG_CHECKING([for socklen_t equivalent])
       AC_CACHE_VAL([curl_cv_socklen_t_equiv],
@@ -54,7 +58,7 @@ AC_DEFUN([TYPE_SOCKLEN_T],
                   #include <sys/socket.h>
                   #endif
 
-                  int getpeername (int, $arg2 *, $t *);
+                  extern int getpeername (int, $arg2 *, $t *);
                ],[
                   $t len;
                   getpeername(0,0,&len);
@@ -66,10 +70,12 @@ AC_DEFUN([TYPE_SOCKLEN_T],
          done
 
          if test "x$curl_cv_socklen_t_equiv" = x; then
-            AC_MSG_ERROR([Cannot find a type to use in place of socklen_t])
+	# take a wild guess
+            curl_cv_socklen_t_equiv="socklen_t"
+            AC_MSG_WARN([Cannot find a type to use in place of socklen_t, guessing socklen_t])
          fi
       ])
       AC_MSG_RESULT($curl_cv_socklen_t_equiv)
-      AC_DEFINE_UNQUOTED(socklen_t, $curl_cv_socklen_t_equiv,
+      AC_DEFINE_UNQUOTED(netperf_socklen_t, $curl_cv_socklen_t_equiv,
                         [type to use in place of socklen_t if not defined])
 ])
