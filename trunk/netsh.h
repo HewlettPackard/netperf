@@ -66,18 +66,19 @@ extern  int
 	interval_wate;
 extern	int
 	interval_burst;
-#endif
+#endif /* INTERVALS */
 
 #ifdef DIRTY
 extern int	rem_dirty_count;
 extern int	rem_clean_count;
 extern int	loc_dirty_count;
 extern int	loc_clean_count;
-#endif DIRTY
+#endif /* DIRTY */
 
 
 /* stuff to controll the bufferspace "width" */
 extern int	send_width;
+extern int      recv_width;
 
 /* different options for other things					*/
 extern int

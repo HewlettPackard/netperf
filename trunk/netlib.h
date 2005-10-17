@@ -50,9 +50,33 @@
 #define		DLPI_CL_RR_RESPONSE	32
 #define		DLPI_CL_RR_RESULTS	33
 
-#define		DO_TCP_ARR		34
-#define		TCP_ARR_RESPONSE	35
-#define		TCP_ARR_RESULTS		36
+#define		DO_TCP_CRR		34
+#define		TCP_CRR_RESPONSE	35
+#define		TCP_CRR_RESULTS		36
+
+#define		DO_STREAM_STREAM	37
+#define		STREAM_STREAM_RESPONSE	38
+#define		STREAM_STREAM_RESULTS	39
+
+#define		DO_STREAM_RR		40
+#define		STREAM_RR_RESPONSE	41
+#define		STREAM_RR_RESULTS	42
+
+#define		DO_DG_STREAM		43
+#define		DG_STREAM_RESPONSE	44
+#define		DG_STREAM_RESULTS	45
+
+#define		DO_DG_RR		46
+#define		DG_RR_RESPONSE		47
+#define		DG_RR_RESULTS		48
+
+#define		DO_FORE_STREAM		49
+#define		FORE_STREAM_RESPONSE	50
+#define		FORE_STREAM_RESULTS	51
+
+#define		DO_FORE_RR		52
+#define		FORE_RR_RESPONSE	53
+#define		FORE_RR_RESULTS		54
 
 struct netperf_request_struct {
 	int	request_type;
@@ -63,6 +87,12 @@ struct netperf_response_struct {
 	int response_type;
 	int serv_errno;
 	int test_specific_data[MAXSPECDATA];
+};
+
+struct ring_elt {
+  struct ring_elt *next;  /* next element in the ring */
+  char *buffer_base;      /* in case we have to free it at somepoint */
+  char *buffer_ptr;       /* the aligned and offset pointer */
 };
 
 #ifndef NETLIB
@@ -84,7 +114,23 @@ extern  float	calibrate_remote_cpu();
 extern  float	calc_cpu_util();
 extern	float	calc_service_demand();
 extern  void    catcher();
+extern  struct ring_elt *allocate_buffer_ring();
 extern  int     dl_connect();
 extern  int     dl_bind();
 extern  int     dl_open();
+#endif
+
+ /* if your system has bcopy and bzero, include it here, otherwise, we */
+ /* will try to use memcpy aand memset. fix from Bruce Barnett @ GE. */
+#ifdef hpux
+#define HAVE_BCOPY
+#define HAVE_BZERO
+#endif
+
+#ifndef HAVE_BCOPY
+#define bcopy(s,d,h) memcpy((d),(s),(h))
+#endif
+
+#ifndef HAVE_BZERO
+#define bzero(p,h) memset((p),0,(h))
 #endif

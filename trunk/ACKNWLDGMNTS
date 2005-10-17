@@ -19,5 +19,18 @@ realizing it ;-)
 Jeff Smits <jgs@usl.com>
 Fixes for TCP_RR and UDP_RR on sytems with an htonl that is not a no-op.
 
-Warren Burnett 
+Warren Burnett <somewhere in Kansas>
 Example code for DLPI tests.
+
+Several Folks
+Code to tell SunOS 4 to *not* restart system calls on receipt of a
+signal. 
+
+Fore Systems Inc.
+Manpages for the FORE API and question answering
+
+Jonathan Stone <jonathan@DSG.Stanford.EDU>
+Include file fixes for Ultrix
+
+Bruce Barnett <barnett@grymoire.crd.ge.com>
+Bunches of warnings fixes and lint picks for Solaris 2.3

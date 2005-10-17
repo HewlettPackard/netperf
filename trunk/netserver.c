@@ -36,14 +36,14 @@
       DOCUMENTATION. HP SPECIFICALLY DISCLAIMS ALL WARRANTIES OF
       MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
   
-  5.  HEWLETT-PACKARD COMPANY WILL NOT IN ANY EVENT BE LIABLE FOT ANY
+  5.  HEWLETT-PACKARD COMPANY WILL NOT IN ANY EVENT BE LIABLE FOR ANY
       DIRECT, INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES
       (INCLUDING LOST PROFITS) RELATED TO ANY USE, REPRODUCTION,
       MODIFICATION, OR DISTRIBUTION OF THE SOFTWARE OR DOCUMENTATION.
  
 */
 char	netserver_id[]="@(#)netserver.c (c) Copyright 1993, \
-Hewlett-Packard Company. Version 1.8alpha";
+Hewlett-Packard Company. Version 1.9alphaPL4";
 
  /***********************************************************************/
  /*									*/
@@ -142,6 +142,10 @@ process_requests()
       recv_tcp_rr();
       break;
       
+    case DO_TCP_CRR:
+      recv_tcp_conn_rr();
+      break;
+      
     case DO_UDP_STREAM:
       recv_udp_stream();
       break;
@@ -150,10 +154,12 @@ process_requests()
       recv_udp_rr();
       break;
       
+#ifdef DO_DLPI
+
     case DO_DLPI_CO_RR:
       recv_dlpi_co_rr();
       break;
-
+      
     case DO_DLPI_CL_RR:
       recv_dlpi_cl_rr();
       break;
@@ -166,8 +172,44 @@ process_requests()
       recv_dlpi_cl_stream();
       break;
 
+#endif /* DO_DLPI */
+
+#ifdef DO_UNIX
+
+    case DO_STREAM_STREAM:
+      recv_stream_stream();
+      break;
+      
+    case DO_STREAM_RR:
+      recv_stream_rr();
+      break;
+      
+    case DO_DG_STREAM:
+      recv_dg_stream();
+      break;
+      
+    case DO_DG_RR:
+      recv_dg_rr();
+      break;
+      
+#endif /* DO_UNIX */
+
+#ifdef DO_FORE
+
+    case DO_FORE_STREAM:
+      recv_fore_stream();
+      break;
+      
+    case DO_FORE_RR:
+      recv_fore_rr();
+      break;
+      
+#endif /* DO_FORE */
+
     default:
-      netperf_response->serv_errno=999;
+      fprintf(where,"unknown test\n");
+      fflush(where);
+      netperf_response->serv_errno=998;
       send_response();
       break;
       
@@ -205,7 +247,9 @@ void set_up_server()
       perror("server_set_up: creating the socket");
       exit(1);
     }
-  if (bind (server_control,&server, sizeof(struct sockaddr_in)) == -1)
+  if (bind (server_control,
+	    (struct sockaddr *)&server, 
+	    sizeof(struct sockaddr_in)) == -1)
     {
       perror("server_set_up: binding the socket");
       exit (1);
@@ -236,7 +280,7 @@ void set_up_server()
 	{
 	  peeraddr_len = sizeof(peeraddr);
 	  if ((server_sock=accept(server_control,
-				  &peeraddr,
+				  (struct sockaddr *)&peeraddr,
 				  &peeraddr_len)) == -1)
 	    {
 	      printf("server_control: accept failed\n");
@@ -275,14 +319,10 @@ char *argv[];
   struct protoent *pp;
   char	*debug_file;
   int	c;
+
+  int spin = 1;
   
   netlib_init();
-  
-  /*	if (argc == 1) 
-	debug_file = "/tmp/netperf.debug";
-	else
-	debug_file = argv[1];
-	*/
   
   /* Scan the command line to see if we are supposed to set-up our own */
   /* listen socket instead of relying on inetd. */
@@ -316,12 +356,11 @@ char *argv[];
   chmod("/tmp/netperf.debug",0777);
   
   /* if we were given a port number, then we should open a */
-  /* socket and nahg listens off of it. otherwise, we should go */
+  /* socket and hang listens off of it. otherwise, we should go */
   /* straight into processing requests. the do_listen() routine */
   /* will sit in an infinite loop accepting connections and */
   /* forking child processes. the child processes will call */
   /* process_requests */
-  
   
   if (listen_port_num) {
     set_up_server();
