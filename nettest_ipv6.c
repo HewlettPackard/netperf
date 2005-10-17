@@ -1,7 +1,7 @@
 #ifdef DO_IPV6
 #ifndef lint
 char	nettest_ipv6_id[]="\
-@(#)nettest_ipv6.c (c) Copyright 1995-2003 Hewlett-Packard Co. Version 2.2pl3";
+@(#)nettest_ipv6.c (c) Copyright 1995-2004 Hewlett-Packard Co. Version 2.2pl5";
 #else
 #define DIRTY
 #define HISTOGRAM
@@ -36,23 +36,30 @@ char	nettest_ipv6_id[]="\
 #define INET6
      
 #include <sys/types.h>
-#include <sys/ipc.h>
 #include <fcntl.h>
-#include <errno.h>
-#include <signal.h>
-#include <stdio.h>
+#ifndef WIN32
+#include <sys/ipc.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <netdb.h>
-#include <string.h>
+#include <errno.h>
+#include <signal.h>
 #include <sys/time.h>
+#include <unistd.h>
+#else /* WIN32 */
+#include <process.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <windows.h>
+#endif /* WIN32 */
+#include <stdio.h>
+#include <string.h>
 #ifdef NOSTDLIBH
 #include <malloc.h>
 #else /* NOSTDLIBH */
 #include <stdlib.h>
 #endif /* NOSTDLIBH */
-#include <netdb.h>
 
 #include "netlib.h"
 #include "netsh.h"
@@ -136,20 +143,21 @@ comma.\n";
 
 static
 int
-hostname2addr(hostname, sin6)
-	char *hostname;
-	struct sockaddr_in6 *sin6;
+hostname2addr(char *hostname, struct sockaddr_in6 *sin6)
 {
 	struct addrinfo hints, *res;
 	int error;
+	unsigned int i;
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET6;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 	error = getaddrinfo(hostname, NULL, &hints, &res);
-	if (error)
-		return -1;
+	if (error) {
+		printf("getaddrinfo failed\n");
+		return SOCKET_ERROR;
+	}
 
 	memcpy(sin6, res->ai_addr, res->ai_addrlen);
 	freeaddrinfo(res);
@@ -168,9 +176,7 @@ hostname2addr(hostname, sin6)
  /* called outside of the timing loop */
 static
 void
-get_tcp_info(socket, mss)
-     int socket;
-     int *mss;
+get_tcp_info(SOCKET socket, int *mss)
 {
 
   int sock_opt_len;
@@ -181,7 +187,7 @@ get_tcp_info(socket, mss)
 		 getprotobyname("tcp")->p_proto,	
 		 TCP_MAXSEG,
 		 (char *)mss,
-		 &sock_opt_len) < 0) {
+		 &sock_opt_len) == SOCKET_ERROR) {
     fprintf(where,
 	    "netperf: get_tcp_info: getsockopt TCP_MAXSEG: errno %d\n",
 	    errno);
@@ -202,13 +208,11 @@ get_tcp_info(socket, mss)
  /* should be directed towards "where." family is generally AF_INET6, */
  /* and type will be either SOCK_STREAM or SOCK_DGRAM */
 static
-int
-create_data_socket(family, type)
-     int family;
-     int type;
+SOCKET
+create_data_socket(int family, int type)
 {
 
-  int temp_socket;
+  SOCKET temp_socket;
   int one;
   int sock_opt_len;
 
@@ -217,7 +221,7 @@ create_data_socket(family, type)
 		       type,
 		       0);
   
-  if (temp_socket < 0){
+  if (temp_socket == INVALID_SOCKET){
     fprintf(where,
 	    "netperf: create_data_socket: socket: %d\n",
 	    errno);
@@ -246,7 +250,7 @@ create_data_socket(family, type)
 #ifdef SO_SNDBUF
   if (lss_size > 0) {
     if(setsockopt(temp_socket, SOL_SOCKET, SO_SNDBUF,
-		  (char *)&lss_size, sizeof(int)) < 0) {
+		  (char *)&lss_size, sizeof(int)) == SOCKET_ERROR) {
       fprintf(where,
 	      "netperf: create_data_socket: SO_SNDBUF option: errno %d\n",
 	      errno);
@@ -262,7 +266,7 @@ create_data_socket(family, type)
   }
   if (lsr_size > 0) {
     if(setsockopt(temp_socket, SOL_SOCKET, SO_RCVBUF,
-		  (char *)&lsr_size, sizeof(int)) < 0) {
+		  (char *)&lsr_size, sizeof(int)) == SOCKET_ERROR) {
       fprintf(where,
 	      "netperf: create_data_socket: SO_RCVBUF option: errno %d\n",
 	      errno);
@@ -287,7 +291,7 @@ create_data_socket(family, type)
 		 SOL_SOCKET,	
 		 SO_SNDBUF,
 		 (char *)&lss_size,
-		 &sock_opt_len) < 0) {
+		 &sock_opt_len) == SOCKET_ERROR) {
     fprintf(where,
 	    "netperf: create_data_socket: getsockopt SO_SNDBUF: errno %d\n",
 	    errno);
@@ -298,7 +302,7 @@ create_data_socket(family, type)
 		 SOL_SOCKET,	
 		 SO_RCVBUF,
 		 (char *)&lsr_size,
-		 &sock_opt_len) < 0) {
+		 &sock_opt_len) == SOCKET_ERROR) {
     fprintf(where,
 	    "netperf: create_data_socket: getsockopt SO_SNDBUF: errno %d\n",
 	    errno);
@@ -329,7 +333,7 @@ create_data_socket(family, type)
 		   SOL_SOCKET,
 		   SO_RCV_COPYAVOID,
 		   &loc_rcvavoid,
-		   sizeof(int)) < 0) {
+		   sizeof(int)) == SOCKET_ERROR) {
       fprintf(where,
 	      "netperf: create_data_socket: Could not enable receive copy avoidance");
       fflush(where);
@@ -347,7 +351,7 @@ create_data_socket(family, type)
 		   SOL_SOCKET,
 		   SO_SND_COPYAVOID,
 		   &loc_sndavoid,
-		   sizeof(int)) < 0) {
+		   sizeof(int)) == SOCKET_ERROR) {
       fprintf(where,
 	      "netperf: create_data_socket: Could not enable send copy avoidance");
       fflush(where);
@@ -372,7 +376,7 @@ create_data_socket(family, type)
 		  getprotobyname("tcp")->p_proto,
 		  TCP_NODELAY,
 		  (char *)&one,
-		  sizeof(one)) < 0) {
+		  sizeof(one)) == SOCKET_ERROR) {
       fprintf(where,"netperf: create_data_socket: nodelay: errno %d\n",
 	      errno);
       fflush(where);
@@ -402,8 +406,7 @@ create_data_socket(family, type)
 
 
 void 
-send_tcpipv6_stream(remote_host)
-char	remote_host[];
+send_tcpipv6_stream(char remote_host[])
 {
   
   char *tput_title = "\
@@ -465,9 +468,9 @@ Size (bytes)\n\
   
   int len;
   unsigned int nummessages = 0;
-  int send_socket;
+  SOCKET send_socket;
   int bytes_remaining;
-  int tcp_mss;
+  int tcp_mss = -1;  // possibly uninitialized on printf far below
 
   /* with links like fddi, one can send > 32 bits worth of bytes */
   /* during a test... ;-) at some point, this should probably become a */
@@ -510,7 +513,7 @@ Size (bytes)\n\
   bzero((char *)&server,
 	sizeof(server));
   
-  if ((hostname2addr(remote_host, &server)) == -1) {
+  if ((hostname2addr(remote_host, &server)) == SOCKET_ERROR) {
     fprintf(where,
 	    "send_tcpipv6_stream: could not resolve the name %s\n",
 	    remote_host);
@@ -576,7 +579,7 @@ Size (bytes)\n\
     send_socket = create_data_socket(AF_INET6, 
 				     SOCK_STREAM);
     
-    if (send_socket < 0){
+    if (send_socket == INVALID_SOCKET){
       perror("netperf: send_tcpipv6_stream: tcp stream data socket");
       exit(1);
     }
@@ -696,13 +699,13 @@ Size (bytes)\n\
 
       /* we have to make sure that the server port number is in */
       /* network order */
-      server.sin6_port   = tcpipv6_stream_response->data_port_number;
+      server.sin6_port   = (short)tcpipv6_stream_response->data_port_number;
       server.sin6_port   = htons(server.sin6_port); 
       rem_rcvavoid	= tcpipv6_stream_response->so_rcvavoid;
       rem_sndavoid	= tcpipv6_stream_response->so_sndavoid;
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       perror("netperf: remote error");
       
       exit(1);
@@ -711,7 +714,7 @@ Size (bytes)\n\
     /*Connect up to the remote port on the data socket  */
     if (connect(send_socket, 
 		(struct sockaddr *)&server,
-		sizeof(server)) <0){
+		sizeof(server)) == INVALID_SOCKET){
       perror("netperf: send_tcpipv6_stream: data socket connect failed");
       printf(" port: %d\n",ntohs(server.sin6_port));
       exit(1);
@@ -812,7 +815,7 @@ Size (bytes)\n\
 		   send_ring->buffer_ptr,
 		   send_size,
 		   0)) != send_size) {
-	if ((len >=0) || (errno == EINTR)) {
+	if ((len >=0) || SOCKET_EINTR(len)) {
 	  /* the test was interrupted, must be the end of test */
 	  break;
 	}
@@ -873,7 +876,7 @@ Size (bytes)\n\
       get_tcp_info(send_socket,&tcp_mss);
     }
     
-    if (shutdown(send_socket,1) == -1) {
+    if (shutdown(send_socket,1) == SOCKET_ERROR) {
       perror("netperf: cannot shutdown tcp stream socket");
       exit(1);
     }
@@ -908,7 +911,7 @@ Size (bytes)\n\
 	fprintf(where,"remote results obtained\n");
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       perror("netperf: remote error");
       
       exit(1);
@@ -1022,13 +1025,13 @@ Size (bytes)\n\
     switch (verbosity) {
     case 0:
       if (local_cpu_usage) {
-	fprintf(where,
+		fprintf(where,
 		cpu_fmt_0,
 		local_service_demand,
 		local_cpu_method);
       }
       else {
-	fprintf(where,
+		fprintf(where,
 		cpu_fmt_0,
 		remote_service_demand,
 		remote_cpu_method);
@@ -1037,7 +1040,7 @@ Size (bytes)\n\
     case 1:
     case 2:
       if (print_headers) {
-	fprintf(where,
+		fprintf(where,
 		cpu_title,
 		format_units(),
 		local_cpu_method,
@@ -1070,7 +1073,7 @@ Size (bytes)\n\
     case 1:
     case 2:
       if (print_headers) {
-	fprintf(where,tput_title,format_units());
+		fprintf(where,tput_title,format_units());
       }
       fprintf(where,
 	      tput_fmt_1,		/* the format string */
@@ -1135,7 +1138,7 @@ recv_tcpipv6_stream()
 {
   
   struct sockaddr_in6 myaddr_in, peeraddr_in;
-  int	s_listen,s_data;
+  SOCKET s_listen,s_data;
   int 	addrlen;
   int	len;
   unsigned int	receive_calls;
@@ -1235,7 +1238,7 @@ recv_tcpipv6_stream()
   s_listen = create_data_socket(AF_INET6,
 				SOCK_STREAM);
   
-  if (s_listen < 0) {
+  if (s_listen == INVALID_SOCKET) {
     if (debug) {
       fprintf(where,
 	      "recv_tcpipv6_stream: unable to grab a socket\n");
@@ -1254,10 +1257,10 @@ recv_tcpipv6_stream()
   
   if (bind(s_listen,
 	   (struct sockaddr *)&myaddr_in,
-	   sizeof(myaddr_in)) == -1) {
+	   sizeof(myaddr_in)) == SOCKET_ERROR) {
     if (debug) {
       fprintf(where,
-	      "recv_tcpipv6_stream: bind failled errno %d...\n",
+	      "recv_tcpipv6_stream: bind failed errno %d...\n",
 	      errno);
       fflush(where);
     }
@@ -1304,7 +1307,7 @@ recv_tcpipv6_stream()
   }
   
   /* Now, let's set-up the socket to listen for connections */
-  if (listen(s_listen, 5) == -1) {
+  if (listen(s_listen, 5) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -1317,7 +1320,7 @@ recv_tcpipv6_stream()
   addrlen = sizeof(myaddr_in);
   if (getsockname(s_listen, 
 		  (struct sockaddr *)&myaddr_in,
-		  &addrlen) == -1){
+		  &addrlen) == SOCKET_ERROR){
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -1363,7 +1366,7 @@ recv_tcpipv6_stream()
   
   if ((s_data=accept(s_listen,
 		     (struct sockaddr *)&peeraddr_in,
-		     &addrlen)) == -1) {
+		     &addrlen)) == INVALID_SOCKET) {
     /* Let's just punt. The remote will be given some information */
     close(s_listen);
     exit(1);
@@ -1400,7 +1403,7 @@ recv_tcpipv6_stream()
   receive_calls  = 0;
 
   while ((len = recv(s_data, recv_ring->buffer_ptr, recv_size, 0)) != 0) {
-    if (len < 0) {
+    if (len == SOCKET_ERROR) {
       netperf_response.content.serv_errno = errno;
       send_response();
       exit(1);
@@ -1427,7 +1430,7 @@ recv_tcpipv6_stream()
   /* perform a shutdown to signal the sender that */
   /* we have received all the data sent. raj 4/93 */
 
-  if (shutdown(s_data,1) == -1) {
+  if (shutdown(s_data,1) == SOCKET_ERROR) {
       netperf_response.content.serv_errno = errno;
       send_response();
       exit(1);
@@ -1450,7 +1453,8 @@ recv_tcpipv6_stream()
   tcpipv6_stream_results->bytes_received	= htond(bytes_received);
   tcpipv6_stream_results->elapsed_time	= elapsed_time;
   tcpipv6_stream_results->recv_calls	= receive_calls;
-  
+  tcpipv6_stream_results->cpu_method = cpu_method;
+  tcpipv6_stream_results->num_cpus       = lib_num_loc_cpus;
   if (tcpipv6_stream_request->measure_cpu) {
     tcpipv6_stream_results->cpu_util	= calc_cpu_util(0.0);
   };
@@ -1468,7 +1472,6 @@ recv_tcpipv6_stream()
     fflush(where);
   }
   
-  tcpipv6_stream_results->cpu_method = cpu_method;
   send_response();
 
   /* we are now done with the sockets */
@@ -1482,8 +1485,7 @@ recv_tcpipv6_stream()
  /* test. */
 
 void
-send_tcpipv6_rr(remote_host)
-     char	remote_host[];
+send_tcpipv6_rr(char remote_host[])
 {
   
   char *tput_title = "\
@@ -1528,7 +1530,7 @@ Send   Recv    Send   Recv\n\
   int	len;
   char	*temp_message_ptr;
   int	nummessages;
-  int	send_socket;
+  SOCKET send_socket;
   int	trans_remaining;
   double	bytes_xferd;
 
@@ -1586,7 +1588,7 @@ Send   Recv    Send   Recv\n\
 
   
   
-  if ((hostname2addr(remote_host, &server)) == -1) {
+  if ((hostname2addr(remote_host, &server)) == SOCKET_ERROR) {
     fprintf(where,
 	    "send_tcpipv6_rr: could not resolve the name %s\n",
 	    remote_host);
@@ -1675,7 +1677,7 @@ Send   Recv    Send   Recv\n\
     send_socket = create_data_socket(AF_INET6, 
 				     SOCK_STREAM);
   
-    if (send_socket < 0){
+    if (send_socket == INVALID_SOCKET){
       perror("netperf: send_tcpipv6_rr: tcp stream data socket");
       exit(1);
     }
@@ -1751,11 +1753,11 @@ Send   Recv    Send   Recv\n\
       remote_cpu_usage  = tcpipv6_rr_response->measure_cpu;
       remote_cpu_rate   = tcpipv6_rr_response->cpu_rate;
       /* make sure that port numbers are in network order */
-      server.sin6_port   = tcpipv6_rr_response->data_port_number;
+      server.sin6_port   = (short)tcpipv6_rr_response->data_port_number;
       server.sin6_port   = htons(server.sin6_port);
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       perror("netperf: remote error");
       
       exit(1);
@@ -1764,7 +1766,7 @@ Send   Recv    Send   Recv\n\
     /*Connect up to the remote port on the data socket  */
     if (connect(send_socket, 
 		(struct sockaddr *)&server,
-		sizeof(server)) <0){
+		sizeof(server)) == INVALID_SOCKET){
       perror("netperf: data socket connect failed");
       
       exit(1);
@@ -1837,7 +1839,7 @@ Send   Recv    Send   Recv\n\
 		   send_ring->buffer_ptr,
 		   req_size,
 		   0)) != req_size) {
-	if ((errno == EINTR) || (errno == 0)) {
+	if (SOCKET_EINTR(len) || (errno == 0)) {
 	  /* we hit the end of a */
 	  /* timed test. */
 	  timed_out = 1;
@@ -1855,8 +1857,8 @@ Send   Recv    Send   Recv\n\
 	if((rsp_bytes_recvd=recv(send_socket,
 				 temp_message_ptr,
 				 rsp_bytes_left,
-				 0)) < 0) {
-	  if (errno == EINTR) {
+				 0)) == SOCKET_ERROR) {
+	  if (SOCKET_EINTR(rsp_bytes_recvd)) {
 	    /* We hit the end of a timed test. */
 	    timed_out = 1;
 	    break;
@@ -1930,7 +1932,7 @@ Send   Recv    Send   Recv\n\
     cpu_stop(local_cpu_usage,&elapsed_time);	/* was cpu being */
 						/* measured? how long */
 						/* did we really run? */
-    
+
     /* Get the statistics from the remote end. The remote will have */
     /* calculated service demand and all those interesting things. If it */
     /* wasn't supposed to care, it will return obvious values. */
@@ -1941,7 +1943,7 @@ Send   Recv    Send   Recv\n\
 	fprintf(where,"remote results obtained\n");
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       perror("netperf: remote error");
       
       exit(1);
@@ -2152,8 +2154,7 @@ Send   Recv    Send   Recv\n\
 }
 
 void
-send_udpipv6_stream(remote_host)
-char	remote_host[];
+send_udpipv6_stream(char remote_host[])
 {
   /**********************************************************************/
   /*									*/
@@ -2201,7 +2202,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
   
   int	len;
   struct ring_elt *send_ring;
-  int 	data_socket;
+  SOCKET data_socket;
   
   unsigned int sum_messages_sent;
   unsigned int sum_messages_recvd;
@@ -2251,7 +2252,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
       fflush(where);
     }
   }
-  if ((hostname2addr(remote_host,&server)) == -1) {
+  if ((hostname2addr(remote_host,&server)) == SOCKET_ERROR) {
     fprintf(where,
 	    "send_udpipv6_stream: could not resolve the name %s\n",
 	    remote_host);
@@ -2314,7 +2315,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     data_socket = create_data_socket(AF_INET6,
 				     SOCK_DGRAM);
     
-    if (data_socket < 0){
+    if (data_socket == INVALID_SOCKET){
       perror("udp_send: data socket");
       exit(1);
     }
@@ -2379,7 +2380,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
 	fprintf(where,"send_udpipv6_stream: remote data connection done.\n");
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       perror("send_udpipv6_stream: error on remote");
       exit(1);
     }
@@ -2389,7 +2390,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     /* some of the returned socket buffer information for user display. */
     
     /* make sure that port numbers are in the proper order */
-    server.sin6_port = udpipv6_stream_response->data_port_number;
+    server.sin6_port = (short)udpipv6_stream_response->data_port_number;
     server.sin6_port = htons(server.sin6_port);
     rsr_size        = udpipv6_stream_response->recv_buf_size;
     rss_size        = udpipv6_stream_response->send_buf_size;
@@ -2404,7 +2405,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     
     if (connect(data_socket,
 		(struct sockaddr *)&server,
-		sizeof(server)) <0){
+		sizeof(server)) == INVALID_SOCKET){
       perror("send_udpipv6_stream: data socket connect failed");
       exit(1);
     }
@@ -2478,7 +2479,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
 		    send_ring->buffer_ptr,
 		    send_size,
 		    0))  != send_size) {
-	if ((len >= 0) || (errno == EINTR))
+	if ((len >= 0) || SOCKET_EINTR(len))
 	  break;
 	if (errno == ENOBUFS) {
 	  failed_sends++;
@@ -2541,7 +2542,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
 	fprintf(where,"send_udpipv6_stream: remote results obtained\n");
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       perror("send_udpipv6_stream: error on remote");
       exit(1);
     }
@@ -2760,7 +2761,7 @@ recv_udpipv6_stream()
   struct ring_elt *recv_ring;
 
   struct sockaddr_in6 myaddr_in;
-  int	s_data;
+  SOCKET s_data;
   int 	addrlen;
   int	len = 0;
   unsigned int	bytes_received = 0;
@@ -2863,7 +2864,7 @@ recv_udpipv6_stream()
   s_data = create_data_socket(AF_INET6,
 			      SOCK_DGRAM);
   
-  if (s_data < 0) {
+  if (s_data == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
@@ -2877,7 +2878,7 @@ recv_udpipv6_stream()
   
   if (bind(s_data,
 	   (struct sockaddr *)&myaddr_in,
-	   sizeof(myaddr_in)) == -1) {
+	   sizeof(myaddr_in)) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
@@ -2889,7 +2890,7 @@ recv_udpipv6_stream()
   addrlen = sizeof(myaddr_in);
   if (getsockname(s_data, 
 		  (struct sockaddr *)&myaddr_in,
-		  &addrlen) == -1){
+		  &addrlen) == SOCKET_ERROR){
     netperf_response.content.serv_errno = errno;
     close(s_data);
     send_response();
@@ -2938,6 +2939,16 @@ recv_udpipv6_stream()
   /* first grab the apropriate counters and then start grabbing. */
   
   cpu_start(udpipv6_stream_request->measure_cpu);
+
+#ifdef WIN32
+  /* this is used so the timer thread can close the socket out from */
+  /* under us, which to date is the easiest/cleanest/least */
+  /* Windows-specific way I can find to force the winsock calls to */
+  /* return WSAEINTR with the test is over. anything that will run on */
+  /* 95 and NT and is closer to what netperf expects from Unix signals */
+  /* and such would be appreciated raj 1/96 */
+  win_kludge_socket = s_data;
+#endif /* WIN32 */
   
   /* The loop will exit when the timer pops, or if we happen to recv a */
   /* message of less than send_size bytes... */
@@ -2951,11 +2962,22 @@ recv_udpipv6_stream()
   }
   
   while (!times_up) {
+#ifdef WIN32
+    /* for some reason, winsock does not like calling recv() on a UDP */
+    /* socket, unlike BSD sockets. NIH strikes again :( raj 1/96 */
+    if((len = recvfrom(s_data,
+		       recv_ring->buffer_ptr,
+		       message_size, 
+		       0,0,0)        
+	) != message_size)     
+#else
     if ((len = recv(s_data, 
 		    recv_ring->buffer_ptr,
 		    message_size, 
-		    0)) != message_size) {
-      if ((len == -1) && (errno != EINTR)) {
+		    0)) != message_size) 
+#endif
+	{
+      if ((len == SOCKET_ERROR) && SOCKET_EINTR(len)) {
 	netperf_response.content.serv_errno = errno;
 	send_response();
 	exit(1);
@@ -2981,7 +3003,7 @@ recv_udpipv6_stream()
     elapsed_time -= (float)PAD_TIME;
   }
   else {
-    alarm(0);
+    stop_timer();
   }
   
   if (debug) {
@@ -3003,10 +3025,11 @@ recv_udpipv6_stream()
   }
   
   netperf_response.content.response_type	= UDPIPV6_STREAM_RESULTS;
-  udpipv6_stream_results->bytes_received	= htond(bytes_received);
+  udpipv6_stream_results->bytes_received	= htonl((unsigned int)bytes_received);
   udpipv6_stream_results->messages_recvd	= messages_recvd;
   udpipv6_stream_results->elapsed_time	= elapsed_time;
   udpipv6_stream_results->cpu_method        = cpu_method;
+  udpipv6_stream_results->num_cpus       = lib_num_loc_cpus;
   if (udpipv6_stream_request->measure_cpu) {
     udpipv6_stream_results->cpu_util	= calc_cpu_util(elapsed_time);
   }
@@ -3027,8 +3050,7 @@ recv_udpipv6_stream()
 }
 
 void
-send_udpipv6_rr(remote_host)
-char	remote_host[];
+send_udpipv6_rr(char remote_host[])
 {
   
   char *tput_title = "\
@@ -3067,7 +3089,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 
   int	len;
   int	nummessages;
-  int	send_socket;
+  SOCKET send_socket;
   int	trans_remaining;
   int	bytes_xferd;
   
@@ -3119,7 +3141,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
       fflush(where);
     }
   }
-  if ((hostname2addr(remote_host,&server)) == -1) {
+  if ((hostname2addr(remote_host,&server)) == SOCKET_ERROR) {
     fprintf(where,
 	    "send_udpipv6_rr: could not resolve the name %s\n",
 	    remote_host);
@@ -3174,7 +3196,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 	 (confidence_iteration <= iteration_min)) {
     
     nummessages     = 0;
-    bytes_xferd     = 0.0;
+    bytes_xferd     = 0;
     times_up        = 0;
     trans_remaining = 0;
     
@@ -3201,7 +3223,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
     send_socket = create_data_socket(AF_INET6, 
 				     SOCK_DGRAM);
     
-    if (send_socket < 0){
+    if (send_socket == INVALID_SOCKET){
       perror("netperf: send_udpipv6_rr: udp rr data socket");
       exit(1);
     }
@@ -3277,11 +3299,11 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
       remote_cpu_usage =	udpipv6_rr_response->measure_cpu;
       remote_cpu_rate  = 	udpipv6_rr_response->cpu_rate;
       /* port numbers in proper order */
-      server.sin6_port  =	udpipv6_rr_response->data_port_number;
+      server.sin6_port  =	(short)udpipv6_rr_response->data_port_number;
       server.sin6_port  = 	htons(server.sin6_port);
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       perror("netperf: remote error");
       
       exit(1);
@@ -3295,7 +3317,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
     
     if ( connect(send_socket, 
 		 (struct sockaddr *)&server,
-		 sizeof(server)) < 0 ) {
+		 sizeof(server)) == INVALID_SOCKET ) {
       perror("netperf: data socket connect failed");
       exit(1);
     }
@@ -3304,7 +3326,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
     addrlen = sizeof(myaddr_in);
     if (getsockname(send_socket, 
 		    (struct sockaddr *)&myaddr_in,
-		    &addrlen) == -1){
+		    &addrlen) == SOCKET_ERROR){
       perror("send_udpipv6_rr: getsockname");
       exit(1);
     }
@@ -3372,7 +3394,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 		   send_ring->buffer_ptr,
 		   req_size,
 		   0)) != req_size) {
-	if (errno == EINTR) {
+	if (SOCKET_EINTR(len)) {
 	  /* We likely hit */
 	  /* test-end time. */
 	  break;
@@ -3388,7 +3410,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 			       recv_ring->buffer_ptr,
 			       rsp_size,
 			       0)) != rsp_size) {
-	if (errno == EINTR) {
+	if (SOCKET_EINTR(rsp_bytes_recvd)) {
 	  /* Again, we have likely hit test-end time */
 	  break;
 	}
@@ -3465,7 +3487,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 	fprintf(where,"remote results obtained\n");
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       perror("netperf: remote error");
       
       exit(1);
@@ -3672,7 +3694,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
     /* and all that sort of rot... */
     
 #ifdef HISTOGRAM
-    fprintf(where,"\nHistogram of reqeuest/reponse times.\n");
+    fprintf(where,"\nHistogram of request/reponse times.\n");
     fflush(where);
     HIST_report(time_hist);
 #endif /* HISTOGRAM */
@@ -3690,7 +3712,8 @@ recv_udpipv6_rr()
 
   struct	sockaddr_in6        myaddr_in,
   peeraddr_in;
-  int	s_data;
+  SOCKET s_data;
+  int   len;
   int 	addrlen;
   int	trans_received;
   int	trans_remaining;
@@ -3802,7 +3825,7 @@ recv_udpipv6_rr()
   s_data = create_data_socket(AF_INET6,
 			      SOCK_DGRAM);
   
-  if (s_data < 0) {
+  if (s_data == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
     send_response();
     
@@ -3817,7 +3840,7 @@ recv_udpipv6_rr()
   
   if (bind(s_data,
 	   (struct sockaddr *)&myaddr_in,
-	   sizeof(myaddr_in)) == -1) {
+	   sizeof(myaddr_in)) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_data);
     send_response();
@@ -3829,7 +3852,7 @@ recv_udpipv6_rr()
   addrlen = sizeof(myaddr_in);
   if (getsockname(s_data, 
 		  (struct sockaddr *)&myaddr_in,
-		  &addrlen) == -1){
+		  &addrlen) == SOCKET_ERROR){
     netperf_response.content.serv_errno = errno;
     close(s_data);
     send_response();
@@ -3874,6 +3897,16 @@ recv_udpipv6_rr()
   /* first grab the apropriate counters and then start grabbing. */
   
   cpu_start(udpipv6_rr_request->measure_cpu);
+
+#ifdef WIN32
+  /* this is used so the timer thread can close the socket out from */
+  /* under us, which to date is the easiest/cleanest/least */
+  /* Windows-specific way I can find to force the winsock calls to */
+  /* return WSAEINTR with the test is over. anything that will run on */
+  /* 95 and NT and is closer to what netperf expects from Unix signals */
+  /* and such would be appreciated raj 1/96 */
+  win_kludge_socket = s_data;
+#endif /* WIN32 */
   
   if (udpipv6_rr_request->test_length > 0) {
     times_up = 0;
@@ -3893,13 +3926,13 @@ recv_udpipv6_rr()
   while ((!times_up) || (trans_remaining > 0)) {
     
     /* receive the request from the other side */
-    if (recvfrom(s_data,
+    if ((len=recvfrom(s_data,
 		 recv_ring->buffer_ptr,
 		 udpipv6_rr_request->request_size,
 		 0,
 		 (struct sockaddr *)&peeraddr_in,
-		 &addrlen) != udpipv6_rr_request->request_size) {
-      if (errno == EINTR) {
+		 &addrlen)) != udpipv6_rr_request->request_size) {
+      if (SOCKET_EINTR(len)) {
 	/* we must have hit the end of test time. */
 	break;
       }
@@ -3910,13 +3943,13 @@ recv_udpipv6_rr()
     recv_ring = recv_ring->next;
 
     /* Now, send the response to the remote */
-    if (sendto(s_data,
+    if ((len=sendto(s_data,
 	       send_ring->buffer_ptr,
 	       udpipv6_rr_request->response_size,
 	       0,
 	       (struct sockaddr *)&peeraddr_in,
-	       addrlen) != udpipv6_rr_request->response_size) {
-      if (errno == EINTR) {
+	       addrlen)) != udpipv6_rr_request->response_size) {
+      if (SOCKET_EINTR(len)) {
 	/* we have hit end of test time. */
 	break;
       }
@@ -3967,6 +4000,7 @@ recv_udpipv6_rr()
   udpipv6_rr_results->trans_received = trans_received;
   udpipv6_rr_results->elapsed_time	 = elapsed_time;
   udpipv6_rr_results->cpu_method     = cpu_method;
+  udpipv6_rr_results->num_cpus       = lib_num_loc_cpus;
   if (udpipv6_rr_request->measure_cpu) {
     udpipv6_rr_results->cpu_util	= calc_cpu_util(elapsed_time);
   }
@@ -3995,7 +4029,7 @@ recv_tcpipv6_rr()
 
   struct	sockaddr_in6        myaddr_in,
   peeraddr_in;
-  int	s_listen,s_data;
+  SOCKET s_listen,s_data;
   int 	addrlen;
   char	*temp_message_ptr;
   int	trans_received;
@@ -4108,7 +4142,7 @@ recv_tcpipv6_rr()
   s_listen = create_data_socket(AF_INET6,
 				SOCK_STREAM);
   
-  if (s_listen < 0) {
+  if (s_listen == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
     send_response();
     
@@ -4123,7 +4157,7 @@ recv_tcpipv6_rr()
   
   if (bind(s_listen,
 	   (struct sockaddr *)&myaddr_in,
-	   sizeof(myaddr_in)) == -1) {
+	   sizeof(myaddr_in)) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -4132,7 +4166,7 @@ recv_tcpipv6_rr()
   }
   
   /* Now, let's set-up the socket to listen for connections */
-  if (listen(s_listen, 5) == -1) {
+  if (listen(s_listen, 5) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -4144,7 +4178,7 @@ recv_tcpipv6_rr()
   /* now get the port number assigned by the system  */
   addrlen = sizeof(myaddr_in);
   if (getsockname(s_listen,
-		  (struct sockaddr *)&myaddr_in, &addrlen) == -1){
+		  (struct sockaddr *)&myaddr_in, &addrlen) == SOCKET_ERROR){
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -4188,8 +4222,7 @@ recv_tcpipv6_rr()
   
   if ((s_data = accept(s_listen,
 		       (struct sockaddr *)&peeraddr_in,
-		       &addrlen)) ==
-      -1) {
+		       &addrlen)) == INVALID_SOCKET) {
     /* Let's just punt. The remote will be given some information */
     close(s_listen);
     
@@ -4205,6 +4238,16 @@ recv_tcpipv6_rr()
   /* first grab the apropriate counters and then start grabbing. */
   
   cpu_start(tcpipv6_rr_request->measure_cpu);
+
+#ifdef WIN32
+  /* this is used so the timer thread can close the socket out from */
+  /* under us, which to date is the easiest/cleanest/least */
+  /* Windows-specific way I can find to force the winsock calls to */
+  /* return WSAEINTR with the test is over. anything that will run on */
+  /* 95 and NT and is closer to what netperf expects from Unix signals */
+  /* and such would be appreciated raj 1/96 */
+  win_kludge_socket = s_data;
+#endif /* WIN32 */
   
   /* The loop will exit when the sender does a shutdown, which will */
   /* return a length of zero   */
@@ -4228,12 +4271,13 @@ recv_tcpipv6_rr()
       if((request_bytes_recvd=recv(s_data,
 				   temp_message_ptr,
 				   request_bytes_remaining,
-				   0)) < 0) {
-	if (errno == EINTR) {
+				   0)) == SOCKET_ERROR) {
+	if (SOCKET_EINTR(request_bytes_recvd)) {
 	  /* the timer popped */
 	  timed_out = 1;
 	  break;
 	}
+	fprintf(where, "recv_tcpipv6_rr: errno(%d) != EINTR\n", errno); fflush(where);
 	netperf_response.content.serv_errno = errno;
 	send_response();
 	exit(1);
@@ -4258,8 +4302,8 @@ recv_tcpipv6_rr()
     if((bytes_sent=send(s_data,
 			send_ring->buffer_ptr,
 			tcpipv6_rr_request->response_size,
-			0)) == -1) {
-      if (errno == EINTR) {
+			0)) == SOCKET_ERROR) {
+      if (SOCKET_EINTR(bytes_sent)) {
 	/* the test timer has popped */
 	timed_out = 1;
 	fprintf(where,"yo6\n");
@@ -4285,7 +4329,7 @@ recv_tcpipv6_rr()
   
   cpu_stop(tcpipv6_rr_request->measure_cpu,&elapsed_time);
   
-  alarm(0);
+  stop_timer();
 
   if (timed_out) {
     /* we ended the test by time, which was at least 2 seconds */
@@ -4309,6 +4353,7 @@ recv_tcpipv6_rr()
   tcpipv6_rr_results->trans_received = trans_received;
   tcpipv6_rr_results->elapsed_time   = elapsed_time;
   tcpipv6_rr_results->cpu_method     = cpu_method;
+  tcpipv6_rr_results->num_cpus       = lib_num_loc_cpus;
   if (tcpipv6_rr_request->measure_cpu) {
     tcpipv6_rr_results->cpu_util	= calc_cpu_util(elapsed_time);
   }
@@ -4330,15 +4375,14 @@ recv_tcpipv6_rr()
 
 
  /* this test is intended to test the performance of establishing a */
- /* connection, exchanging a reqeuest/response pair, and repeating. it */
+ /* connection, exchanging a request/response pair, and repeating. it */
  /* is expected that this would be a good starting-point for */
  /* comparision of T/TCP with classic TCP for transactional workloads. */
  /* it will also look (can look) much like the communication pattern */
  /* of http for www access. */
 
 void
-send_tcpipv6_conn_rr(remote_host)
-     char	remote_host[];
+send_tcpipv6_conn_rr(char remote_host[])
 {
   
   char *tput_title = "\
@@ -4382,11 +4426,12 @@ Send   Recv    Send   Recv\n\
   float			elapsed_time;
   
   int	len;
+  int   retval;
   struct ring_elt *send_ring;
   struct ring_elt *recv_ring;
   char	*temp_message_ptr;
   int	nummessages;
-  int	send_socket;
+  SOCKET send_socket;
   int	trans_remaining;
   double	bytes_xferd;
   int	sock_opt_len = sizeof(int);
@@ -4426,6 +4471,10 @@ Send   Recv    Send   Recv\n\
   /* must turn that into the test specific addressing information. */
   
   myaddr = (struct sockaddr_in6 *)malloc(sizeof(struct sockaddr_in6));
+  if (myaddr == NULL) {
+    printf("malloc(%d) failed!\n", sizeof(struct sockaddr_in6));
+    exit(1);
+  }
 
   bzero((char *)&server,
 	sizeof(server));
@@ -4444,7 +4493,7 @@ Send   Recv    Send   Recv\n\
       fflush(where);
     }
   }
-  if ((hostname2addr(remote_host,&server)) == -1) {
+  if ((hostname2addr(remote_host,&server)) == SOCKET_ERROR) {
     fprintf(where,
 	    "send_tcpipv6_conn_rr: could not resolve the name %s\n",
 	    remote_host);
@@ -4571,7 +4620,7 @@ Send   Recv    Send   Recv\n\
     remote_cpu_usage=	tcpipv6_conn_rr_response->measure_cpu;
     remote_cpu_rate = 	tcpipv6_conn_rr_response->cpu_rate;
     /* make sure that port numbers are in network order */
-    server.sin6_port	=	tcpipv6_conn_rr_response->data_port_number;
+    server.sin6_port	=	(short)tcpipv6_conn_rr_response->data_port_number;
     server.sin6_port =	htons(server.sin6_port);
     if (debug) {
       fprintf(where,"remote listen done.\n");
@@ -4580,7 +4629,7 @@ Send   Recv    Send   Recv\n\
     }
   }
   else {
-    errno = netperf_response.content.serv_errno;
+    Set_errno(netperf_response.content.serv_errno);
     perror("netperf: remote error");
     
     exit(1);
@@ -4598,7 +4647,7 @@ Send   Recv    Send   Recv\n\
   }
   /* there will be a ++ before the first call to bind, so subtract one */
   myport--;
-  myaddr->sin6_port = htons(myport);
+  myaddr->sin6_port = htons((unsigned short)myport);
   
   /* Set-up the test end conditions. For a request/response test, they */
   /* can be either time or transaction based. */
@@ -4642,7 +4691,7 @@ Send   Recv    Send   Recv\n\
     send_socket = create_data_socket(AF_INET6, 
 				     SOCK_STREAM);
   
-    if (send_socket < 0) {
+    if (send_socket == INVALID_SOCKET) {
       perror("netperf: send_tcpipv6_conn_rr: tcp stream data socket");
       exit(1);
     }
@@ -4656,7 +4705,7 @@ Send   Recv    Send   Recv\n\
     /* the length of the TIME_WAIT state raj 8/94 */
     one = 1;
     if(setsockopt(send_socket, SOL_SOCKET, SO_REUSEADDR,
-		  (char *)&one, sock_opt_len) < 0) {
+		  (char *)&one, sock_opt_len) == SOCKET_ERROR) {
       perror("netperf: send_tcpipv6_conn_rr: so_reuseaddr");
       exit(1);
     }
@@ -4684,7 +4733,7 @@ newport:
 
     if (myport == ntohs(server.sin6_port)) myport++;
 
-    myaddr->sin6_port = htons(myport);
+    myaddr->sin6_port = htons((unsigned short)myport);
 
     if (debug) {
       if ((nummessages % 100) == 0) {
@@ -4693,14 +4742,14 @@ newport:
     }
 
     /* we want to bind our socket to a particular port number. */
-    if (bind(send_socket,
+    if ((retval = bind(send_socket,
 	     (struct sockaddr *)myaddr,
-	     sizeof(struct sockaddr_in6)) < 0) {
+	     sizeof(struct sockaddr_in6))) == SOCKET_ERROR) {
       /* if the bind failed, someone else must have that port number */
       /* - perhaps in the listen state. since we can't use it, skip to */
       /* the next port number. we may have to do this again later, but */
       /* that's just too bad :) */
-      if (errno == EINTR) {
+      if (SOCKET_EINTR(retval)) {
 	/* we hit the end of a */
 	/* timed test. */
 	timed_out = 1;
@@ -4720,10 +4769,10 @@ newport:
     }
 
     /* Connect up to the remote port on the data socket  */
-    if (connect(send_socket, 
+    if ((retval = connect(send_socket, 
 		(struct sockaddr *)&server,
-		sizeof(server)) <0){
-      if (errno == EINTR) {
+		sizeof(server))) == INVALID_SOCKET){
+      if (SOCKET_EINTR(retval)) {
 	/* we hit the end of a */
 	/* timed test. */
 	timed_out = 1;
@@ -4742,7 +4791,7 @@ newport:
 		 send_ring->buffer_ptr,
 		 req_size,
 		 0)) != req_size) {
-      if (errno == EINTR) {
+      if (SOCKET_EINTR(len)) {
 	/* we hit the end of a */
 	/* timed test. */
 	timed_out = 1;
@@ -4760,8 +4809,8 @@ newport:
       if((rsp_bytes_recvd=recv(send_socket,
 			       temp_message_ptr,
 			       rsp_bytes_left,
-			       0)) < 0) {
-	if (errno == EINTR) {
+			       0)) == SOCKET_ERROR) {
+	if (SOCKET_EINTR(rsp_bytes_recvd)) {
 	  /* We hit the end of a timed test. */
 	  timed_out = 1;
 	  break;
@@ -4819,7 +4868,7 @@ newport:
       fprintf(where,"remote results obtained\n");
   }
   else {
-    errno = netperf_response.content.serv_errno;
+    Set_errno(netperf_response.content.serv_errno);
     perror("netperf: remote error");
     
     exit(1);
@@ -5002,10 +5051,10 @@ void
 recv_tcpipv6_conn_rr()
 {
   
-  char message[MAXMESSAGESIZE+MAXALIGNMENT+MAXOFFSET];
+  char  *message;
   struct	sockaddr_in6        myaddr_in,
   peeraddr_in;
-  int	s_listen,s_data;
+  SOCKET s_listen,s_data;
   int 	addrlen;
   char	*recv_message_ptr;
   char	*send_message_ptr;
@@ -5058,6 +5107,13 @@ recv_tcpipv6_conn_rr()
     fprintf(where,"recv_tcpipv6_conn_rr: the response type is set...\n");
     fflush(where);
   }
+
+  /* set-up the data buffer with the requested alignment and offset */
+  message = (char *)malloc(DATABUFFERLEN);
+  if (message == NULL) {
+    printf("malloc(%d) failed!\n", DATABUFFERLEN);
+    exit(1);
+  }
   
   /* We now alter the message_ptr variables to be at the desired */
   /* alignments with the desired offsets. */
@@ -5073,15 +5129,10 @@ recv_tcpipv6_conn_rr()
 	    tcpipv6_conn_rr_request->send_offset);
     fflush(where);
   }
-  recv_message_ptr = (char *)(( (long)message + 
-			(long) tcpipv6_conn_rr_request->recv_alignment -1) & 
-			~((long) tcpipv6_conn_rr_request->recv_alignment - 1));
-  recv_message_ptr = recv_message_ptr + tcpipv6_conn_rr_request->recv_offset;
+
+  recv_message_ptr = ALIGN_BUFFER(message, tcpipv6_conn_rr_request->recv_alignment, tcpipv6_conn_rr_request->recv_offset);
   
-  send_message_ptr = (char *)(( (long)message + 
-			(long) tcpipv6_conn_rr_request->send_alignment -1) & 
-			~((long) tcpipv6_conn_rr_request->send_alignment - 1));
-  send_message_ptr = send_message_ptr + tcpipv6_conn_rr_request->send_offset;
+  send_message_ptr = ALIGN_BUFFER(message, tcpipv6_conn_rr_request->send_alignment, tcpipv6_conn_rr_request->send_offset);
   
   if (debug) {
     fprintf(where,"recv_tcpipv6_conn_rr: receive alignment and offset set...\n");
@@ -5122,7 +5173,7 @@ recv_tcpipv6_conn_rr()
   s_listen = create_data_socket(AF_INET6,
 				SOCK_STREAM);
   
-  if (s_listen < 0) {
+  if (s_listen == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
     send_response();
     if (debug) {
@@ -5140,7 +5191,7 @@ recv_tcpipv6_conn_rr()
   
   if (bind(s_listen,
 	   (struct sockaddr *)&myaddr_in,
-	   sizeof(myaddr_in)) == -1) {
+	   sizeof(myaddr_in)) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -5152,7 +5203,7 @@ recv_tcpipv6_conn_rr()
   }
 
   /* Now, let's set-up the socket to listen for connections */
-  if (listen(s_listen, 5) == -1) {
+  if (listen(s_listen, 5) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -5167,7 +5218,7 @@ recv_tcpipv6_conn_rr()
   addrlen = sizeof(myaddr_in);
   if (getsockname(s_listen,
 		  (struct sockaddr *)&myaddr_in,
-		  &addrlen) == -1){
+		  &addrlen) == SOCKET_ERROR){
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -5221,7 +5272,7 @@ recv_tcpipv6_conn_rr()
   /* first grab the apropriate counters and then start grabbing. */
   
   cpu_start(tcpipv6_conn_rr_request->measure_cpu);
-  
+
   /* The loop will exit when the sender does a shutdown, which will */
   /* return a length of zero   */
   
@@ -5242,7 +5293,7 @@ recv_tcpipv6_conn_rr()
     /* accept a connection from the remote */
     if ((s_data=accept(s_listen,
 		       (struct sockaddr *)&peeraddr_in,
-		       &addrlen)) == -1) {
+		       &addrlen)) == INVALID_SOCKET) {
       if (errno == EINTR) {
 	/* the timer popped */
 	timed_out = 1;
@@ -5259,6 +5310,16 @@ recv_tcpipv6_conn_rr()
       fprintf(where,"recv_tcpipv6_conn_rr: accepted data connection.\n");
       fflush(where);
     }
+
+#ifdef WIN32
+  /* this is used so the timer thread can close the socket out from */
+  /* under us, which to date is the easiest/cleanest/least */
+  /* Windows-specific way I can find to force the winsock calls to */
+  /* return WSAEINTR with the test is over. anything that will run on */
+  /* 95 and NT and is closer to what netperf expects from Unix signals */
+  /* and such would be appreciated raj 1/96 */
+  win_kludge_socket = s_data;
+#endif /* WIN32 */
   
     temp_message_ptr	= recv_message_ptr;
     request_bytes_remaining	= tcpipv6_conn_rr_request->request_size;
@@ -5268,8 +5329,8 @@ recv_tcpipv6_conn_rr()
       if((request_bytes_recvd=recv(s_data,
 				   temp_message_ptr,
 				   request_bytes_remaining,
-				   0)) < 0) {
-	if (errno == EINTR) {
+				   0)) == SOCKET_ERROR) {
+	if (SOCKET_EINTR(request_bytes_recvd)) {
 	  /* the timer popped */
 	  timed_out = 1;
 	  break;
@@ -5296,8 +5357,8 @@ recv_tcpipv6_conn_rr()
     if((bytes_sent=send(s_data,
 			send_message_ptr,
 			tcpipv6_conn_rr_request->response_size,
-			0)) == -1) {
-      if (errno == EINTR) {
+			0)) == SOCKET_ERROR) {
+      if (SOCKET_EINTR(bytes_sent)) {
 	/* the test timer has popped */
 	timed_out = 1;
 	fprintf(where,"yo6\n");
@@ -5321,8 +5382,22 @@ recv_tcpipv6_conn_rr()
       fflush(where);
     }
 
-    /* close the connection */
+    /* close the connection. the server will likely do a graceful */
+    /* close of the connection, insuring that all data has arrived at */
+    /* the client. for this it will call shutdown(), and then recv() and */
+    /* then close(). I'm reasonably confident that this is the */
+    /* appropriate sequence of calls - I would like to hear of */
+    /* examples in web servers to the contrary. raj 10/95*/
+#ifdef TCP_CRR_SHUTDOWN
+    shutdown(s_data,SHUT_WR);
+    recv(s_data,
+	 recv_message_ptr,
+	 1,
+	 0);
     close(s_data);
+#else
+    close(s_data);
+#endif /* TCP_CRR_SHUTDOWN */
 
   }
   
@@ -5370,15 +5445,14 @@ recv_tcpipv6_conn_rr()
 #ifdef DO_1644
 
  /* this test is intended to test the performance of establishing a */
- /* connection, exchanging a reqeuest/response pair, and repeating. it */
+ /* connection, exchanging a request/response pair, and repeating. it */
  /* is expected that this would be a good starting-point for */
  /* comparision of T/TCP with classic TCP for transactional workloads. */
  /* it will also look (can look) much like the communication pattern */
  /* of http for www access. */
 
 int 
-send_tcpipv6_tran_rr(remote_host)
-     char	remote_host[];
+send_tcpipv6_tran_rr(char remote_host[])
 {
   
   char *tput_title = "\
@@ -5426,7 +5500,7 @@ Send   Recv    Send   Recv\n\
   struct ring_elt *recv_ring;
   char	*temp_message_ptr;
   int	nummessages;
-  int	send_socket;
+  SOCKET send_socket;
   int	trans_remaining;
   double	bytes_xferd;
   int	sock_opt_len = sizeof(int);
@@ -5466,6 +5540,10 @@ Send   Recv    Send   Recv\n\
   /* must turn that into the test specific addressing information. */
   
   myaddr = (struct sockaddr_in6 *)malloc(sizeof(struct sockaddr_in6));
+  if (myaddr == NULL) {
+    printf("malloc(%d) failed!\n", sizeof(struct sockaddr_in6));
+    exit(1);
+  }
 
   bzero((char *)&server,
 	sizeof(server));
@@ -5484,22 +5562,13 @@ Send   Recv    Send   Recv\n\
       fflush(where);
     }
   }
-  if ((hp = hostname2addr(remote_host,AF_INET6)) == NULL) {
+  if (hostname2addr(remote_host, &server) == SOCKET_ERROR) {
     fprintf(where,
 	    "send_tcpipv6_tran_rr: could not resolve the name %s\n",
 	    remote_host);
     fflush(where);
   }
-  
-  bcopy(hp->h_addr,
-	(char *)&server.sin6_addr,
-	hp->h_length);
-  
-  server.sin6_family = hp->h_addrtype;
-#ifdef SIN6_LEN
-  server.sin6_len = sizeof(struct sockaddr_in6);
-#endif /* SIN6_LEN */  
-  
+ 
   
   if ( print_headers ) {
     fprintf(where,"TCPIPV6 Transactional/Request/Response TEST");
@@ -5621,7 +5690,7 @@ Send   Recv    Send   Recv\n\
     remote_cpu_usage=	tcpipv6_tran_rr_response->measure_cpu;
     remote_cpu_rate = 	tcpipv6_tran_rr_response->cpu_rate;
     /* make sure that port numbers are in network order */
-    server.sin6_port	=	tcpipv6_tran_rr_response->data_port_number;
+    server.sin6_port	=	(short)tcpipv6_tran_rr_response->data_port_number;
     server.sin6_port =	htons(server.sin6_port);
     if (debug) {
       fprintf(where,"remote listen done.\n");
@@ -5630,7 +5699,7 @@ Send   Recv    Send   Recv\n\
     }
   }
   else {
-    errno = netperf_response.content.serv_errno;
+    Set_errno(netperf_response.content.serv_errno);
     perror("netperf: remote error");
     
     exit(1);
@@ -5698,7 +5767,7 @@ Send   Recv    Send   Recv\n\
     send_socket = create_data_socket(AF_INET6, 
 				     SOCK_STREAM);
   
-    if (send_socket < 0) {
+    if (send_socket == INVALID_SOCKET) {
       perror("netperf: send_tcpipv6_tran_rr: tcp stream data socket");
       exit(1);
     }
@@ -5712,7 +5781,7 @@ Send   Recv    Send   Recv\n\
     /* the length of the TIME_WAIT state raj 8/94 */
     one = 1;
     if(setsockopt(send_socket, SOL_SOCKET, SO_REUSEADDR,
-		  (char *)&one, sock_opt_len) < 0) {
+		  (char *)&one, sock_opt_len) == SOCKET_ERROR) {
       perror("netperf: send_tcpipv6_tran_rr: so_reuseaddr");
       exit(1);
     }
@@ -5749,7 +5818,7 @@ newport:
     /* we want to bind our socket to a particular port number. */
     if (bind(send_socket,
 	     (struct sockaddr *)myaddr,
-	     sizeof(struct sockaddr_in6)) < 0) {
+	     sizeof(struct sockaddr_in6)) == SOCKET_ERROR) {
       /* if the bind failed, someone else must have that port number */
       /* - perhaps in the listen state. since we can't use it, skip to */
       /* the next port number. we may have to do this again later, but */
@@ -5778,7 +5847,7 @@ newport:
 		   MSG_EOF, 
 		   (struct sockaddr *)&server,
 		   sizeof(server))) != req_size) {
-      if (errno == EINTR) {
+      if (SOCKET_EINTR(len)) {
 	/* we hit the end of a */
 	/* timed test. */
 	timed_out = 1;
@@ -5796,8 +5865,8 @@ newport:
       if((rsp_bytes_recvd=recv(send_socket,
 			       temp_message_ptr,
 			       rsp_bytes_left,
-			       0)) < 0) {
-	if (errno == EINTR) {
+			       0)) == SOCKET_ERROR) {
+	if (SOCKET_EINTR(rsp_bytes_recvd)) {
 	  /* We hit the end of a timed test. */
 	  timed_out = 1;
 	  break;
@@ -5855,7 +5924,7 @@ newport:
       fprintf(where,"remote results obtained\n");
   }
   else {
-    errno = netperf_response.content.serv_errno;
+    Set_errno(netperf_response.content.serv_errno);
     perror("netperf: remote error");
     
     exit(1);
@@ -6038,10 +6107,10 @@ int
 recv_tcpipv6_tran_rr()
 {
   
-  char message[MAXMESSAGESIZE+MAXALIGNMENT+MAXOFFSET];
+  char  *message;
   struct	sockaddr_in6        myaddr_in,
   peeraddr_in;
-  int	s_listen,s_data;
+  SOCKET s_listen,s_data;
   int 	addrlen;
   int   NoPush = 1;
 
@@ -6096,6 +6165,13 @@ recv_tcpipv6_tran_rr()
     fprintf(where,"recv_tcpipv6_tran_rr: the response type is set...\n");
     fflush(where);
   }
+
+  /* set-up the data buffer with the requested alignment and offset */
+  message = (char *)malloc(DATABUFFERLEN);
+  if (message == NULL) {
+    printf("malloc(%d) failed!\n", DATABUFFERLEN);
+    exit(1);
+  }
   
   /* We now alter the message_ptr variables to be at the desired */
   /* alignments with the desired offsets. */
@@ -6111,15 +6187,10 @@ recv_tcpipv6_tran_rr()
 	    tcpipv6_tran_rr_request->send_offset);
     fflush(where);
   }
-  recv_message_ptr = (char *)(( (long)message + 
-			(long) tcpipv6_tran_rr_request->recv_alignment -1) & 
-			~((long) tcpipv6_tran_rr_request->recv_alignment - 1));
-  recv_message_ptr = recv_message_ptr + tcpipv6_tran_rr_request->recv_offset;
+
+  recv_message_ptr = ALIGN_BUFFER(message, tcpipv6_tran_rr_request->recv_alignment, tcpipv6_tran_rr_request->recv_offset);
   
-  send_message_ptr = (char *)(( (long)message + 
-			(long) tcpipv6_tran_rr_request->send_alignment -1) & 
-			~((long) tcpipv6_tran_rr_request->send_alignment - 1));
-  send_message_ptr = send_message_ptr + tcpipv6_tran_rr_request->send_offset;
+  send_message_ptr = ALIGN_BUFFER(message, tcpipv6_tran_rr_request->send_alignment, tcpipv6_tran_rr_request->send_offset);
   
   if (debug) {
     fprintf(where,"recv_tcpipv6_tran_rr: receive alignment and offset set...\n");
@@ -6160,7 +6231,7 @@ recv_tcpipv6_tran_rr()
   s_listen = create_data_socket(AF_INET6,
 				SOCK_STREAM);
   
-  if (s_listen < 0) {
+  if (s_listen == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
     send_response();
     if (debug) {
@@ -6178,7 +6249,7 @@ recv_tcpipv6_tran_rr()
   
   if (bind(s_listen,
 	   (struct sockaddr *)&myaddr_in,
-	   sizeof(myaddr_in)) == -1) {
+	   sizeof(myaddr_in)) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -6195,7 +6266,7 @@ recv_tcpipv6_tran_rr()
 		 IPPROTO_TCP,
 		 TCP_NOPUSH, 
 		 &NoPush,
-		 sizeof(int))) {
+		 sizeof(int)) == SOCKET_ERROR) {
     fprintf(where,
 	    "recv_tcpipv6_tran_rr: could not set TCP_NOPUSH errno %d\n",
 	    errno);
@@ -6206,7 +6277,7 @@ recv_tcpipv6_tran_rr()
   }
 
   /* Now, let's set-up the socket to listen for connections */
-  if (listen(s_listen, 5) == -1) {
+  if (listen(s_listen, 5) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -6221,7 +6292,7 @@ recv_tcpipv6_tran_rr()
   addrlen = sizeof(myaddr_in);
   if (getsockname(s_listen,
 		  (struct sockaddr *)&myaddr_in,
-		  &addrlen) == -1){
+		  &addrlen) == SOCKET_ERROR){
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -6296,7 +6367,7 @@ recv_tcpipv6_tran_rr()
     /* accept a connection from the remote */
     if ((s_data=accept(s_listen,
 		       (struct sockaddr *)&peeraddr_in,
-		       &addrlen)) == -1) {
+		       &addrlen)) == INVALID_SOCKET) {
       if (errno == EINTR) {
 	/* the timer popped */
 	timed_out = 1;
@@ -6313,6 +6384,16 @@ recv_tcpipv6_tran_rr()
       fprintf(where,"recv_tcpipv6_tran_rr: accepted data connection.\n");
       fflush(where);
     }
+
+#ifdef WIN32
+  /* this is used so the timer thread can close the socket out from */
+  /* under us, which to date is the easiest/cleanest/least */
+  /* Windows-specific way I can find to force the winsock calls to */
+  /* return WSAEINTR with the test is over. anything that will run on */
+  /* 95 and NT and is closer to what netperf expects from Unix signals */
+  /* and such would be appreciated raj 1/96 */
+  win_kludge_socket = s_data;
+#endif /* WIN32 */
   
     temp_message_ptr	= recv_message_ptr;
     request_bytes_remaining	= tcpipv6_tran_rr_request->request_size;
@@ -6327,8 +6408,8 @@ recv_tcpipv6_tran_rr()
       if((request_bytes_recvd=recv(s_data,
 				   temp_message_ptr,
 				   request_bytes_remaining,
-				   0)) < 0) {
-	if (errno == EINTR) {
+				   0)) == SOCKET_ERROR) {
+	if (SOCKET_EINTR(request_bytes_recvd)) {
 	  /* the timer popped */
 	  timed_out = 1;
 	  break;
@@ -6358,8 +6439,8 @@ recv_tcpipv6_tran_rr()
 			  tcpipv6_tran_rr_request->response_size,
 			  MSG_EOF,
 			  &peeraddr_in,
-			  sizeof(struct sockaddr_in6))) == -1) {
-      if (errno == EINTR) {
+			  sizeof(struct sockaddr_in6))) == INVALID_SOCKET) {
+      if (SOCKET_EINTR(bytes_sent)) {
 	/* the test timer has popped */
 	timed_out = 1;
 	fprintf(where,"yo6\n");
@@ -6436,8 +6517,7 @@ recv_tcpipv6_tran_rr()
  /* test using POSIX-style non-blocking sockets. */
 
 int 
-send_tcp_nbrr(remote_host)
-     char	remote_host[];
+send_tcp_nbrr(char remote_host[])
 {
   
   char *tput_title = "\
@@ -6482,7 +6562,7 @@ Send   Recv    Send   Recv\n\
   int	len;
   char	*temp_message_ptr;
   int	nummessages;
-  int	send_socket;
+  SOCKET send_socket;
   int	trans_remaining;
   double	bytes_xferd;
 
@@ -6537,22 +6617,12 @@ Send   Recv    Send   Recv\n\
       fflush(where);
     }
   }
-  if ((hp = hostname2addr(remote_host,AF_INET6)) == NULL) {
+  if (hostname2addr(remote_host, &server) == SOCKET_ERROR) {
     fprintf(where,
 	    "send_tcp_nbrr: could not resolve the name %s\n",
 	    remote_host);
     fflush(where);
   }
-  
-  bcopy(hp->h_addr,
-	(char *)&server.sin6_addr,
-	hp->h_length);
-  
-  server.sin6_family = hp->h_addrtype;
-#ifdef SIN6_LEN
-  server.sin6_len = sizeof(struct sockaddr_in6);
-#endif /* SIN6_LEN */  
-  
   
   if ( print_headers ) {
     fprintf(where,"TCP Non-Blocking REQUEST/RESPONSE TEST");
@@ -6635,7 +6705,7 @@ Send   Recv    Send   Recv\n\
     send_socket = create_data_socket(AF_INET6, 
 				     SOCK_STREAM);
   
-    if (send_socket < 0){
+    if (send_socket == INVALID_SOCKET){
       perror("netperf: send_tcp_nbrr: tcp stream data socket");
       exit(1);
     }
@@ -6711,11 +6781,11 @@ Send   Recv    Send   Recv\n\
       remote_cpu_usage  = tcpipv6_rr_response->measure_cpu;
       remote_cpu_rate   = tcpipv6_rr_response->cpu_rate;
       /* make sure that port numbers are in network order */
-      server.sin6_port   = tcpipv6_rr_response->data_port_number;
+      server.sin6_port   = (short)tcpipv6_rr_response->data_port_number;
       server.sin6_port   = htons(server.sin6_port);
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       perror("netperf: remote error");
       
       exit(1);
@@ -6724,7 +6794,7 @@ Send   Recv    Send   Recv\n\
     /*Connect up to the remote port on the data socket  */
     if (connect(send_socket, 
 		(struct sockaddr *)&server,
-		sizeof(server)) <0){
+		sizeof(server)) == INVALID_SOCKET){
       perror("netperf: data socket connect failed");
       
       exit(1);
@@ -6806,7 +6876,7 @@ Send   Recv    Send   Recv\n\
 		   send_ring->buffer_ptr,
 		   req_size,
 		   0)) != req_size) {
-	if ((errno == EINTR) || (errno == 0)) {
+	if (SOCKET_EINTR(len) || (errno == 0)) {
 	  /* we hit the end of a */
 	  /* timed test. */
 	  timed_out = 1;
@@ -6825,14 +6895,14 @@ Send   Recv    Send   Recv\n\
 	if((rsp_bytes_recvd=recv(send_socket,
 				 temp_message_ptr,
 				 rsp_bytes_left,
-				 0)) < 0) {
-	  if (errno == EINTR) {
+				 0)) == SOCKET_ERROR) {
+	  if (SOCKET_EINTR(rsp_bytes_recvd)) {
 	    /* We hit the end of a timed test. */
 	    timed_out = 1;
 	    break;
 	  }
 	  else if (errno == EAGAIN) {
-	    errno = 0;
+	    Set_errno(0);
 	    continue;
 	  }
 	  else {
@@ -6917,7 +6987,7 @@ Send   Recv    Send   Recv\n\
 	fprintf(where,"remote results obtained\n");
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       perror("netperf: remote error");
       
       exit(1);
@@ -7138,7 +7208,7 @@ recv_tcp_nbrr()
 
   struct	sockaddr_in6        myaddr_in,
   peeraddr_in;
-  int	s_listen,s_data;
+  SOCKET s_listen,s_data;
   int 	addrlen;
   char	*temp_message_ptr;
   int	trans_received;
@@ -7251,7 +7321,7 @@ recv_tcp_nbrr()
   s_listen = create_data_socket(AF_INET6,
 				SOCK_STREAM);
   
-  if (s_listen < 0) {
+  if (s_listen == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
     send_response();
     
@@ -7266,7 +7336,7 @@ recv_tcp_nbrr()
   
   if (bind(s_listen,
 	   (struct sockaddr *)&myaddr_in,
-	   sizeof(myaddr_in)) == -1) {
+	   sizeof(myaddr_in)) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -7275,7 +7345,7 @@ recv_tcp_nbrr()
   }
   
   /* Now, let's set-up the socket to listen for connections */
-  if (listen(s_listen, 5) == -1) {
+  if (listen(s_listen, 5) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -7287,7 +7357,7 @@ recv_tcp_nbrr()
   /* now get the port number assigned by the system  */
   addrlen = sizeof(myaddr_in);
   if (getsockname(s_listen,
-		  (struct sockaddr *)&myaddr_in, &addrlen) == -1){
+		  (struct sockaddr *)&myaddr_in, &addrlen) == SOCKET_ERROR){
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -7331,7 +7401,7 @@ recv_tcp_nbrr()
   
   if ((s_data = accept(s_listen,
 		       (struct sockaddr *)&peeraddr_in,
-		       &addrlen)) ==  -1) {
+		       &addrlen)) == INVALID_SOCKET) {
     /* Let's just punt. The remote will be given some information */
     close(s_listen);
     exit(1);
@@ -7353,6 +7423,16 @@ recv_tcp_nbrr()
   /* first grab the apropriate counters and then start grabbing. */
   
   cpu_start(tcpipv6_rr_request->measure_cpu);
+
+#ifdef WIN32
+  /* this is used so the timer thread can close the socket out from */
+  /* under us, which to date is the easiest/cleanest/least */
+  /* Windows-specific way I can find to force the winsock calls to */
+  /* return WSAEINTR with the test is over. anything that will run on */
+  /* 95 and NT and is closer to what netperf expects from Unix signals */
+  /* and such would be appreciated raj 1/96 */
+  win_kludge_socket = s_data;
+#endif /* WIN32 */
   
   /* The loop will exit when the sender does a shutdown, which will */
   /* return a length of zero   */
@@ -7376,14 +7456,14 @@ recv_tcp_nbrr()
       if((request_bytes_recvd=recv(s_data,
 				   temp_message_ptr,
 				   request_bytes_remaining,
-				   0)) < 0) {
-	if (errno == EINTR) {
+				   0)) == SOCKET_ERROR) {
+	if (SOCKET_EINTR(request_bytes_recvd)) {
 	  /* the timer popped */
 	  timed_out = 1;
 	  break;
 	}
 	else if (errno == EAGAIN) {
-	  errno = 0;
+	  Set_errno(0);
 	  if (times_up) {
 	    timed_out = 1;
 	    break;
@@ -7416,8 +7496,8 @@ recv_tcp_nbrr()
     if((bytes_sent=send(s_data,
 			send_ring->buffer_ptr,
 			tcpipv6_rr_request->response_size,
-			0)) == -1) {
-      if (errno == EINTR) {
+			0)) == SOCKET_ERROR) {
+      if (SOCKET_EINTR(bytes_sent)) {
 	/* the test timer has popped */
 	timed_out = 1;
 	fprintf(where,"yo6\n");
@@ -7443,7 +7523,7 @@ recv_tcp_nbrr()
   
   cpu_stop(tcpipv6_rr_request->measure_cpu,&elapsed_time);
   
-  alarm(0);
+  stop_timer();
 
   if (timed_out) {
     /* we ended the test by time, which was at least 2 seconds */
@@ -7467,6 +7547,7 @@ recv_tcp_nbrr()
   tcpipv6_rr_results->trans_received = trans_received;
   tcpipv6_rr_results->elapsed_time   = elapsed_time;
   tcpipv6_rr_results->cpu_method     = cpu_method;
+  tcpipv6_stream_results->num_cpus   = lib_num_loc_cpus;
   if (tcpipv6_rr_request->measure_cpu) {
     tcpipv6_rr_results->cpu_util	= calc_cpu_util(elapsed_time);
   }
@@ -7491,15 +7572,13 @@ void
 print_ipv6_usage()
 {
 
-  printf("%s",ipv6_usage);
+  fwrite(ipv6_usage, sizeof(char), strlen(ipv6_usage), stdout);
   exit(1);
 
 }
-void
-scan_ipv6_args(argc, argv)
-     int	argc;
-     char	*argv[];
 
+void
+scan_ipv6_args(int argc, char *argv[])
 {
 #define IPV6_ARGS "DhH:m:M:p:r:s:S:Vw:W:z"
   extern char	*optarg;	  /* pointer to option string	*/

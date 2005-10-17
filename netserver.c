@@ -68,16 +68,21 @@ char	netserver_id[]="\
 /************************************************************************/
 #include <sys/types.h>
 #include <stdio.h>
+#ifndef WIN32
 #include <errno.h>
 #include <signal.h>
+#endif
 #if !defined(WIN32) && !defined(__VMS)
 #include <sys/ipc.h>
 #endif /* !defined(WIN32) && !defined(__VMS) */
 #include <fcntl.h>
 #ifdef WIN32
 #include <time.h>
+#include <winsock2.h>
+#ifdef DO_IPV6
+#include <ws2tcpip.h>
+#endif  /* DO_IPV6 */
 #include <windows.h>
-#include <winsock.h>
 #else
 #ifndef MPE
 #include <sys/time.h>
@@ -120,7 +125,11 @@ char	netserver_id[]="\
 #include "netsh.h"
 
 #ifndef DEBUG_LOG_FILE
+#ifndef WIN32
 #define DEBUG_LOG_FILE "/tmp/netperf.debug"
+#else
+#define DEBUG_LOG_FILE "c:\\temp\\netperf.debug"
+#endif  // WIN32
 #endif /* DEBUG_LOG_FILE */
 
  /* some global variables */
@@ -130,7 +139,11 @@ short	listen_port_num;
 extern	char	*optarg;
 extern	int	optind, opterr;
 
-#define SERVER_ARGS "dn:p:46"
+#ifndef WIN32
+#define SERVER_ARGS "dn:p:v:46"
+#else
+#define SERVER_ARGS "dn:p:v:46I:i:"
+#endif
 
  /* This routine implements the "main event loop" of the netperf	*/
  /* server code. Code above it will have set-up the control connection	*/
@@ -146,25 +159,30 @@ process_requests()
   
   while (1) {
     recv_request();
-    if (debug)
-      dump_request();
+//  dump_request already present in recv_request; redundant?
+//    if (debug)
+//      dump_request();
     
     switch (netperf_request.content.request_type) {
       
     case DEBUG_ON:
       netperf_response.content.response_type = DEBUG_OK;
-      if (!debug)
-	debug++;
-      dump_request();
+//  dump_request already present in recv_request; redundant?
+      if (!debug) {
+		debug++;
+		dump_request();
+	  }
       send_response();
       break;
       
     case DEBUG_OFF:
       if (debug)
-	debug--;
+		debug--;
       netperf_response.content.response_type = DEBUG_OK;
-      fclose(where);
       send_response();
+	  //+*+SAF why???
+	  if (!debug) 
+	      fclose(where);
       break;
       
     case CPU_CALIBRATE:
@@ -384,13 +402,13 @@ process_requests()
 void set_up_server(int af)
 { 
   struct sockaddr 	*server;
-  struct sockaddr_in 	server4;
+  struct sockaddr_in 	server4 = {0};
   struct sockaddr 	peeraddr;
 #ifdef DO_IPV6
-  struct sockaddr_in6 	server6;
+  struct sockaddr_in6 	server6 = {0};
 #endif
   
-  int server_control;
+  SOCKET server_control;
   int sockaddr_len;
   int on=1;
 
@@ -425,11 +443,7 @@ void set_up_server(int af)
 
   server_control = socket(server->sa_family,SOCK_STREAM,0);
 
-#ifdef WIN32
   if (server_control == INVALID_SOCKET)
-#else
-  if (server_control < 0)
-#endif /* WIN32 */
     {
       perror("server_set_up: creating the socket");
       exit(1);
@@ -437,19 +451,19 @@ void set_up_server(int af)
   if (setsockopt(server_control, 
 		 SOL_SOCKET, 
 		 SO_REUSEADDR, 
-		 &on , 
-		 sizeof(on)) == -1)
+		 (char *)&on , 
+		 sizeof(on)) == SOCKET_ERROR)
     {
       perror("server_set_up: SO_REUSEADDR");
       exit(1);
     }
 
-  if (bind (server_control, server, sockaddr_len) == -1)
+  if (bind (server_control, server, sockaddr_len) == SOCKET_ERROR)
     {
       perror("server_set_up: binding the socket");
       exit (1);
     }
-  if (listen (server_control,5) == -1)
+  if (listen (server_control,5) == SOCKET_ERROR)
     {
       perror("server_set_up: listening");
       exit(1);
@@ -484,25 +498,80 @@ void set_up_server(int af)
 
       signal(SIGCLD, SIG_IGN);
       
-#endif /* WIN32 */
+#endif /* !WIN32 !MPE !__VMS */
 
       for (;;)
 	{
 	  if ((server_sock=accept(server_control,
 				  &peeraddr,
-				  &sockaddr_len)) == -1)
+				  &sockaddr_len)) == INVALID_SOCKET)
 	    {
 	      printf("server_control: accept failed\n");
 	      exit(1);
 	    }
-#if defined(WIN32) || defined(MPE) || defined(__VMS)
+#if defined(MPE) || defined(__VMS)
 	  /*
 	   * Since we cannot fork this process , we cant fire any threads
 	   * as they all share the same global data . So we better allow
 	   * one request at at time 
 	   */
 	  process_requests() ;
-	}
+#elif WIN32
+		{
+			BOOL b;
+			char cmdline[80];
+			PROCESS_INFORMATION pi;
+			STARTUPINFO si;
+			int i;
+
+			memset(&si, 0 , sizeof(STARTUPINFO));
+			si.cb = sizeof(STARTUPINFO);
+
+			// Pass the server_sock as stdin for the new process.
+			// Hopefully this will continue to be created with the OBJ_INHERIT attribute.
+			si.hStdInput = (HANDLE)server_sock;
+			si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+			si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
+			si.dwFlags = STARTF_USESTDHANDLES;
+
+			// Build cmdline for child process
+			strcpy(cmdline, program);
+			if (verbosity > 1) {
+				snprintf(&cmdline[strlen(cmdline)], sizeof(cmdline) - strlen(cmdline), " -v %d", verbosity);
+			}
+			for (i=0; i < debug; i++) {
+				snprintf(&cmdline[strlen(cmdline)], sizeof(cmdline) - strlen(cmdline), " -d");
+			}
+			snprintf(&cmdline[strlen(cmdline)], sizeof(cmdline) - strlen(cmdline), " -I %x", (int)(UINT_PTR)server_sock);
+			snprintf(&cmdline[strlen(cmdline)], sizeof(cmdline) - strlen(cmdline), " -i %x", (int)(UINT_PTR)server_control);
+			snprintf(&cmdline[strlen(cmdline)], sizeof(cmdline) - strlen(cmdline), " -i %x", (int)(UINT_PTR)where);
+
+			b = CreateProcess(NULL,	 // Application Name
+					cmdline,
+					NULL,    // Process security attributes
+					NULL,    // Thread security attributes
+					TRUE,    // Inherit handles
+					0,	   // Creation flags  //PROCESS_QUERY_INFORMATION, 
+					NULL,    // Enviornment
+					NULL,    // Current directory
+					&si,	   // StartupInfo
+					&pi);
+			if (!b)
+			{
+				perror("CreateProcessfailure: ");
+				exit(1);
+			}
+
+			// We don't need the thread or process handles any more; let them
+			// go away on their own timeframe.
+
+			CloseHandle(pi.hThread);
+			CloseHandle(pi.hProcess);
+
+			// And close the server_sock since the child will own it.
+
+			close(server_sock);
+		}
 #else
       signal(SIGCLD, SIG_IGN);
 	  
@@ -531,25 +600,48 @@ void set_up_server(int af)
 #endif /* DONT_WAIT */
 	      break;
 	    }
+#endif /* !WIN32 !MPE !__VMS */  
 	} /*for*/
+#if !defined(WIN32) && !defined(MPE) && !defined(__VMS)
       break; /*case 0*/
       
     default: 
       exit (0);
       
     }
-#endif /* WIN32 */  
+#endif /* !WIN32 !MPE !__VMS */  
 }
 
+#ifdef WIN32
+  // With Win2003, WinNT's POSIX subsystem is gone and hence so is fork.
 
-int
-main(argc, argv)
-     int argc;
-     char *argv[];
+  // But hopefully the kernel support will continue to exist for some time.
+
+  // We are not counting on the child address space copy_on_write support, since it isn't exposed
+  // except through the NT native APIs (which is not public).
+
+  // We will try to use the InheritHandles flag in CreateProcess.  It is in the public API, though
+  // it is documented as "must be FALSE".
+
+  // So where we would have forked, we will now create a new process.
+  // I have added a set of command line switches to specify a list of handles that the
+  // child should close since they shouldn't have been inherited ("-i#"), and a single switch to specify
+  // the handle for the server_sock ("I#").
+
+  // A better alternative would be to re-write NetPerf to be multi-threaded; i.e., move all of 
+  // the various NetPerf global variables in to thread specific structures.
+  // But this is a bigger effort than I want to tackle at this time.
+  // (And I doubt that the HP-UX author sees value in this effort).
+#endif
+
+int _cdecl
+main(int argc, char *argv[])
 {
 
   int	c;
-  int	af = AF_INET;
+#ifdef WIN32
+  BOOL  child = FALSE;
+#endif
 
 struct sockaddr name;
   int namelen = sizeof(name);
@@ -558,18 +650,26 @@ struct sockaddr name;
 #ifdef WIN32
 	WSADATA	wsa_data ;
 
-	/* Initialise the wsock lib ( version 1.1 ) */
-	if ( WSAStartup(0x0101,&wsa_data) == SOCKET_ERROR ){
-		printf("WSAStartup() fauled : %d\n",GetLastError()) ;
+	/* Initialize the winsock lib ( version 2.2 ) */
+	if ( WSAStartup(MAKEWORD(2,2), &wsa_data) == SOCKET_ERROR ){
+		printf("WSAStartup() failed : %d\n", GetLastError()) ;
 		return 1 ;
 	}
 #endif /* WIN32 */
+
+	// Save away the program name
+	program = (char *)malloc(strlen(argv[0]) + 1);
+	if (program == NULL) {
+		printf("malloc(%ld) failed!\n", strlen(argv[0]) + 1);
+		return 1 ;
+	}
+	strcpy(program, argv[0]);
 
   netlib_init();
   
   /* Scan the command line to see if we are supposed to set-up our own */
   /* listen socket instead of relying on inetd. */
-  
+
   while ((c = getopt(argc, argv, SERVER_ARGS)) != EOF) {
     switch (c) {
     case '?':
@@ -583,7 +683,7 @@ struct sockaddr name;
     case 'p':
       /* we want to open a listen socket at a */
       /* specified port number */
-      listen_port_num = atoi(optarg);
+      listen_port_num = (short)atoi(optarg);
       break;
     case 'n':
       shell_num_cpus = atoi(optarg);
@@ -605,18 +705,72 @@ struct sockaddr name;
       af = AF_INET6;
       break;
 #endif
+    case 'v':
+      /* say how much to say */
+      verbosity = atoi(optarg);
+      break;
+#ifdef WIN32
+//+*+SAF
+	case 'I':
+		child = TRUE;
+		// This is the handle we expect to inherit.
+		//+*+SAF server_sock = (HANDLE)atoi(optarg);
+		break;
+	case 'i':
+		// This is a handle we should NOT inherit.
+		//+*+SAF CloseHandle((HANDLE)atoi(optarg));
+		break;
+#endif
+
     }
   }
 
+  //+*+SAF I need a better way to find inherited handles I should close!
+  //+*+SAF Use DuplicateHandle to force inheritable attribute (or reset it)?
+
 /*  unlink(DEBUG_LOG_FILE); */
-  
+#ifndef WIN32
   if ((where = fopen(DEBUG_LOG_FILE, "w")) == NULL) {
     perror("netserver: debug file");
     exit(1);
   }
+#else
+  {
+	  char FileName[MAX_PATH];
+
+	  strcpy(FileName, DEBUG_LOG_FILE);
+
+	  if (child) {
+		  snprintf(&FileName[strlen(FileName)], sizeof(FileName) - strlen(FileName), "_%x", getpid());
+	  }
   
+	  if ((where = fopen(FileName, "w")) == NULL) {
+		  perror("netserver: debug file");
+		  exit(1);
+	  }
+
+	  // Just in case there are some errant printfs...
+	  CloseHandle(GetStdHandle(STD_OUTPUT_HANDLE));
+	  if (!SetStdHandle(STD_OUTPUT_HANDLE, where)) {
+		  perror("SetStdHandle failed");
+	  }
+	  CloseHandle(GetStdHandle(STD_ERROR_HANDLE));
+	  if (!SetStdHandle(STD_ERROR_HANDLE, where)) {
+		  perror("SetStdHandle failed");
+	  }
+  }
+#endif
+ 
+#ifndef WIN32 
   chmod(DEBUG_LOG_FILE,0644);
+#endif
   
+#if WIN32
+  if (child) {
+	  server_sock = (SOCKET)GetStdHandle(STD_INPUT_HANDLE);
+  }
+#endif
+
   /* if we were given a port number, then we should open a */
   /* socket and hang listens off of it. otherwise, we should go */
   /* straight into processing requests. the do_listen() routine */
@@ -632,14 +786,26 @@ struct sockaddr name;
     /* the user specified a port number on the command line */
     set_up_server(af);
   }
-#if !defined(__VMS)
-  else if (getsockname(0, &name, &namelen) == -1) {
-    /* we may not be a child of inetd */
 #ifdef WIN32
-	  if (WSAGetLastError() == WSAENOTSOCK) {
-#else 
+  // OK, with Win2003 WinNT's POSIX subsystem is gone, and hence so is fork.
+  // But hopefully the kernel support will continue to exist for some time.
+  // We are not counting on the address space copy_on_write support, since it isn't 
+  // exposed except through the NT native APIs (which are not public).
+  // We will try to use the InheritHandles flag in CreateProcess though since this 
+  // is public and is used for more than just POSIX so hopefully it won't go away.
+  else if (TRUE) {
+	  if (child) {
+		process_requests();
+	  } else {
+		listen_port_num = TEST_PORT;
+		set_up_server(af);
+	  }
+  }
+#endif
+#if !defined(__VMS)
+  else if (getsockname(0, &name, &namelen) == SOCKET_ERROR) {
+    /* we may not be a child of inetd */
 	  if (errno == ENOTSOCK) {
-#endif /* WIN32 */
 	  listen_port_num = TEST_PORT;
       set_up_server(af);
     }
@@ -651,7 +817,7 @@ struct sockaddr name;
 #if !defined(__VMS)
     server_sock = 0;
 #else
-    if ( (server_sock = socket(TCPIP$C_AUXS, SOCK_STREAM, 0)) < 0 ) 
+    if ( (server_sock = socket(TCPIP$C_AUXS, SOCK_STREAM, 0)) == INVALID_SOCKET ) 
     { 
       perror("Failed to grab aux server socket" ); 
       exit(1); 
@@ -660,5 +826,10 @@ struct sockaddr name;
 #endif /* !defined(__VMS) */
     process_requests();
   }
+#ifdef WIN32
+	/* Cleanup the winsock lib */
+	WSACleanup();
+#endif
+
   return(0);
 }

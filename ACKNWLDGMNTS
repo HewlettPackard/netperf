@@ -102,3 +102,16 @@ for pointing-out that Solaris 9 has a copy of Linux sendfile()
 
 Andrew Gallatin 
 for assistance with the FreeBSD sysctl() stuff
+
+Mark Cooper
+pointing-out the need for -lresolv when compiling -DDO_DNS on RedHat
+7.1
+
+Carl Mascott 
+finding some cut-and-paste erors in create_data_socket error logging
+
+Fabrice Bacchella
+Fixes for -DHISTOGRAM and -DUNIX on Mac OS X, updates to usage strings
+
+Spencer Frink
+Fixes and Cleanup for WIN32

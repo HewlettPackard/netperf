@@ -49,10 +49,11 @@ char	netperf_id[]="\
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <strings.h>
 
 #ifdef WIN32
+#include <winsock2.h>
 #include <windows.h>
-#include <winsock.h>
 #endif /* WIN32 */
 
 #include "netsh.h"
@@ -84,19 +85,16 @@ char	netperf_id[]="\
  /* routines can be found in the file netsh.c */
 
 
-int
-main(argc,argv)
-int	argc;
-char	*argv[];
-
+int _cdecl
+main(int argc, char *argv[])
 {
 
 #ifdef WIN32
 	WSADATA	wsa_data ;
 
-	/* Initialise the wsock lib ( version 1.1 ) */
-	if ( WSAStartup(0x0101,&wsa_data) == SOCKET_ERROR ){
-		printf("WSAStartup() fauled : %d\n",GetLastError()) ;
+	/* Initialize the winsock lib ( version 2.2 ) */
+	if ( WSAStartup(MAKEWORD(2,2), &wsa_data) == SOCKET_ERROR ){
+		printf("WSAStartup() failed : %d\n", GetLastError()) ;
 		return 1 ;
 	}
 #endif /* WIN32 */
@@ -162,30 +160,30 @@ else if (strcasecmp(test_name,"REM_CPU") == 0) {
 }
 #ifdef DO_DLPI
 else if (strcasecmp(test_name,"DLCO_RR") == 0) {
-	send_dlpi_co_rr();
+	send_dlpi_co_rr(host_name);
 }
 else if (strcasecmp(test_name,"DLCL_RR") == 0) {
-	send_dlpi_cl_rr();
+	send_dlpi_cl_rr(host_name);
 }
 else if (strcasecmp(test_name,"DLCO_STREAM") == 0) {
-	send_dlpi_co_stream();
+	send_dlpi_co_stream(host_name);
 }
 else if (strcasecmp(test_name,"DLCL_STREAM") == 0) {
-	send_dlpi_cl_stream();
+	send_dlpi_cl_stream(host_name);
 }
 #endif /* DO_DLPI */
 #ifdef DO_UNIX
 else if (strcasecmp(test_name,"STREAM_RR") == 0) {
-	send_stream_rr();
+	send_stream_rr(host_name);
 }
 else if (strcasecmp(test_name,"DG_RR") == 0) {
-	send_dg_rr();
+	send_dg_rr(host_name);
 }
 else if (strcasecmp(test_name,"STREAM_STREAM") == 0) {
-	send_stream_stream();
+	send_stream_stream(host_name);
 }
 else if (strcasecmp(test_name,"DG_STREAM") == 0) {
-	send_dg_stream();
+	send_dg_stream(host_name);
 }
 #endif /* DO_UNIX */
 #ifdef DO_FORE
@@ -262,6 +260,11 @@ else {
 }
 
 shutdown_control();
+
+#ifdef WIN32
+	/* Cleanup the winsock lib */
+	WSACleanup();
+#endif
 
 return(0);
 }

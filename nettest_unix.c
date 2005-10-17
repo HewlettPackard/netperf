@@ -5,7 +5,7 @@
 #endif /* lint */
 #ifdef DO_UNIX
 char	nettest_unix_id[]="\
-@(#)nettest_unix.c (c) Copyright 1994, 1995 Hewlett-Packard Co. Version 2.2pl1";
+@(#)nettest_unix.c (c) Copyright 1994-2004 Hewlett-Packard Co. Version 2.2pl5";
      
 /****************************************************************/
 /*								*/
@@ -34,19 +34,27 @@ char	nettest_unix_id[]="\
  /* these includes, but for the moment, we'll let them all just sit */
  /* there. raj 8/94 */
 #include <sys/types.h>
-#include <sys/ipc.h>
 #include <fcntl.h>
-#include <errno.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#ifndef WIN32
+#include <sys/ipc.h>
 #include <sys/socket.h>
+#include <errno.h>
+#include <signal.h>
 #include <sys/un.h>
+#include <unistd.h>
+#else /* WIN32 */
+#include <process.h>
+#include <winsock2.h>
+#include <windows.h>
+#endif /* WIN32 */
 #include <string.h>
 #include <time.h>
-#include <unistd.h>
-#ifndef __bsdi__
+#if ! defined(__bsdi__) && ! defined(_APPLE_)
 #include <malloc.h>
+#else
+#include <sys/malloc.h>
 #endif
      
 #include "netlib.h"
@@ -120,13 +128,11 @@ init_test_vars()
  /* called by either the netperf or netserver programs, all output */
  /* should be directed towards "where." family is generally AF_UNIX, */
  /* and type will be either SOCK_STREAM or SOCK_DGRAM */
-int
-create_unix_socket(family, type)
-     int family;
-     int type;
+SOCKET
+create_unix_socket(int family, int type)
 {
 
-  int temp_socket;
+  SOCKET temp_socket;
   int sock_opt_len;
 
   /*set up the data socket                        */
@@ -134,7 +140,7 @@ create_unix_socket(family, type)
 		       type,
 		       0);
   
-  if (temp_socket < 0){
+  if (temp_socket == INVALID_SOCKET){
     fprintf(where,
 	    "netperf: create_unix_socket: socket: %d\n",
 	    errno);
@@ -163,7 +169,7 @@ create_unix_socket(family, type)
 #ifdef SO_SNDBUF
   if (lss_size > 0) {
     if(setsockopt(temp_socket, SOL_SOCKET, SO_SNDBUF,
-		  (char *)&lss_size, sizeof(int)) < 0) {
+		  (char *)&lss_size, sizeof(int)) == SOCKET_ERROR) {
       fprintf(where,
 	      "netperf: create_unix_socket: SO_SNDBUF option: errno %d\n",
 	      errno);
@@ -179,7 +185,7 @@ create_unix_socket(family, type)
   }
   if (lsr_size > 0) {
     if(setsockopt(temp_socket, SOL_SOCKET, SO_RCVBUF,
-		  (char *)&lsr_size, sizeof(int)) < 0) {
+		  (char *)&lsr_size, sizeof(int)) == SOCKET_ERROR) {
       fprintf(where,
 	      "netperf: create_unix_socket: SO_RCVBUF option: errno %d\n",
 	      errno);
@@ -204,7 +210,7 @@ create_unix_socket(family, type)
 		 SOL_SOCKET,	
 		 SO_SNDBUF,
 		 (char *)&lss_size,
-		 &sock_opt_len) < 0) {
+		 &sock_opt_len) == SOCKET_ERROR) {
     fprintf(where,
 	    "netperf: create_unix_socket: getsockopt SO_SNDBUF: errno %d\n",
 	    errno);
@@ -215,7 +221,7 @@ create_unix_socket(family, type)
 		 SOL_SOCKET,	
 		 SO_RCVBUF,
 		 (char *)&lsr_size,
-		 &sock_opt_len) < 0) {
+		 &sock_opt_len) == SOCKET_ERROR) {
     fprintf(where,
 	    "netperf: create_unix_socket: getsockopt SO_SNDBUF: errno %d\n",
 	    errno);
@@ -249,8 +255,7 @@ create_unix_socket(family, type)
 
 
 void 
-send_stream_stream(remote_host)
-char	remote_host[];
+send_stream_stream(char remote_host[])
 {
   
   char *tput_title = "\
@@ -305,7 +310,7 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
   
   int	len = 0;
   int	nummessages;
-  int	send_socket;
+  SOCKET send_socket;
   int	bytes_remaining;
   /* with links like fddi, one can send > 32 bits worth of bytes */
   /* during a test... ;-) */
@@ -362,7 +367,7 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
   send_socket = create_unix_socket(AF_UNIX, 
 				   SOCK_STREAM);
   
-  if (send_socket < 0){
+  if (send_socket == INVALID_SOCKET){
     perror("netperf: send_stream_stream: stream stream data socket");
     exit(1);
   }
@@ -472,7 +477,7 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
     strcpy(server.sun_path,stream_stream_response->unix_path);
   }
   else {
-    errno = netperf_response.content.serv_errno;
+    Set_errno(netperf_response.content.serv_errno);
     perror("netperf: send_stream_stream: remote error");
     exit(1);
   }
@@ -480,7 +485,7 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
   /*Connect up to the remote port on the data socket  */
   if (connect(send_socket, 
 	      (struct sockaddr *)&server,
-	      sizeof(server)) <0){
+	      sizeof(server)) == INVALID_SOCKET){
     perror("netperf: send_stream_stream: data socket connect failed");
     printf(" path: %s\n",server.sun_path);
     exit(1);
@@ -602,7 +607,7 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
       fprintf(where,"remote results obtained\n");
   }
   else {
-    errno = netperf_response.content.serv_errno;
+    Set_errno(netperf_response.content.serv_errno);
     perror("netperf: remote error");
     
     exit(1);
@@ -759,12 +764,12 @@ recv_stream_stream()
 {
   
   struct sockaddr_un myaddr_un, peeraddr_un;
-  int	s_listen,s_data;
+  SOCKET s_listen,s_data;
   int 	addrlen;
   int	len;
   int	receive_calls = 0;
   float	elapsed_time;
-  double   bytes_received;
+  int   bytes_received;
   
   struct ring_elt *recv_ring;
 
@@ -852,7 +857,7 @@ recv_stream_stream()
   s_listen = create_unix_socket(AF_UNIX,
 				SOCK_STREAM);
   
-  if (s_listen < 0) {
+  if (s_listen == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
@@ -871,7 +876,7 @@ recv_stream_stream()
   }
   if (bind(s_listen,
 	   (struct sockaddr *)&myaddr_un,
-	   sizeof(myaddr_un)) == -1) {
+	   sizeof(myaddr_un)) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     fprintf(where,"could not bind to path\n");
     close(s_listen);
@@ -917,7 +922,7 @@ recv_stream_stream()
   }
   
   /* Now, let's set-up the socket to listen for connections */
-  if (listen(s_listen, 5) == -1) {
+  if (listen(s_listen, 5) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -929,7 +934,7 @@ recv_stream_stream()
   addrlen = sizeof(myaddr_un);
   if (getsockname(s_listen, 
 		  (struct sockaddr *)&myaddr_un,
-		  &addrlen) == -1){
+		  &addrlen) == SOCKET_ERROR){
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -968,7 +973,7 @@ recv_stream_stream()
   
   if ((s_data=accept(s_listen,
 		     (struct sockaddr *)&peeraddr_un,
-		     &addrlen)) == -1) {
+		     &addrlen)) == INVALID_SOCKET) {
     /* Let's just punt. The remote will be given some information */
     close(s_listen);
     exit(1);
@@ -1000,10 +1005,10 @@ recv_stream_stream()
     message_int_ptr++;
   }
 #endif /* DIRTY */
-  bytes_received = 0.0;
+  bytes_received = 0;
 
   while ((len = recv(s_data, recv_ring->buffer_ptr, recv_size, 0)) != 0) {
-    if (len < 0) {
+    if (len == SOCKET_ERROR) {
       netperf_response.content.serv_errno = errno;
       send_response();
       exit(1);
@@ -1035,7 +1040,7 @@ recv_stream_stream()
   /* perform a shutdown to signal the sender that */
   /* we have received all the data sent. raj 4/93 */
 
-  if (shutdown(s_data,1) == -1) {
+  if (shutdown(s_data,1) == SOCKET_ERROR) {
       netperf_response.content.serv_errno = errno;
       send_response();
       exit(1);
@@ -1047,7 +1052,7 @@ recv_stream_stream()
   
   if (debug) {
     fprintf(where,
-	    "recv_stream_stream: got %g bytes\n",
+	    "recv_stream_stream: got %d bytes\n",
 	    bytes_received);
     fprintf(where,
 	    "recv_stream_stream: got %d recvs\n",
@@ -1078,8 +1083,7 @@ recv_stream_stream()
  /* test. */
 
 void
-send_stream_rr(remote_host)
-     char	remote_host[];
+send_stream_rr(char remote_host[])
 {
   
   char *tput_title = "\
@@ -1124,7 +1128,7 @@ Send   Recv    Send   Recv\n\
   int	len;
   char	*temp_message_ptr;
   int	nummessages;
-  int	send_socket;
+  SOCKET send_socket;
   int	trans_remaining;
   double	bytes_xferd;
 
@@ -1199,7 +1203,7 @@ Send   Recv    Send   Recv\n\
   send_socket = create_unix_socket(AF_UNIX, 
 				   SOCK_STREAM);
   
-  if (send_socket < 0){
+  if (send_socket == INVALID_SOCKET){
     perror("netperf: send_stream_rr: stream stream data socket");
     exit(1);
   }
@@ -1274,7 +1278,7 @@ Send   Recv    Send   Recv\n\
     strcpy(server.sun_path,stream_rr_response->unix_path);
   }
   else {
-    errno = netperf_response.content.serv_errno;
+    Set_errno(netperf_response.content.serv_errno);
     perror("netperf: remote error");
     
     exit(1);
@@ -1283,7 +1287,7 @@ Send   Recv    Send   Recv\n\
   /*Connect up to the remote port on the data socket  */
   if (connect(send_socket, 
 	      (struct sockaddr *)&server,
-	      sizeof(server)) <0){
+	      sizeof(server)) == INVALID_SOCKET){
     perror("netperf: data socket connect failed");
     
     exit(1);
@@ -1350,7 +1354,7 @@ Send   Recv    Send   Recv\n\
       if((rsp_bytes_recvd=recv(send_socket,
 			       temp_message_ptr,
 			       rsp_bytes_left,
-			       0)) < 0) {
+			       0)) == SOCKET_ERROR) {
 	if (errno == EINTR) {
 	  /* We hit the end of a timed test. */
 	  timed_out = 1;
@@ -1406,7 +1410,7 @@ Send   Recv    Send   Recv\n\
       fprintf(where,"remote results obtained\n");
   }
   else {
-    errno = netperf_response.content.serv_errno;
+    Set_errno(netperf_response.content.serv_errno);
     perror("netperf: remote error");
     
     exit(1);
@@ -1565,8 +1569,7 @@ Send   Recv    Send   Recv\n\
 }
 
 void
-send_dg_stream(remote_host)
-char	remote_host[];
+send_dg_stream(char remote_host[])
 {
   /************************************************************************/
   /*									*/
@@ -1614,7 +1617,7 @@ bytes   bytes    secs            #      #   %s/sec   %%       us/KB\n\n";
   int	failed_sends;
   int	failed_cows;
   int 	messages_sent;
-  int 	data_socket;
+  SOCKET data_socket;
   
   
 #ifdef INTERVALS
@@ -1662,7 +1665,7 @@ bytes   bytes    secs            #      #   %s/sec   %%       us/KB\n\n";
   data_socket = create_unix_socket(AF_UNIX,
 				   SOCK_DGRAM);
   
-  if (data_socket < 0){
+  if (data_socket == INVALID_SOCKET){
     perror("dg_send: data socket");
     exit(1);
   }
@@ -1726,7 +1729,7 @@ bytes   bytes    secs            #      #   %s/sec   %%       us/KB\n\n";
       fprintf(where,"send_dg_stream: remote data connection done.\n");
   }
   else {
-    errno = netperf_response.content.serv_errno;
+    Set_errno(netperf_response.content.serv_errno);
     perror("send_dg_stream: error on remote");
     exit(1);
   }
@@ -1748,7 +1751,7 @@ bytes   bytes    secs            #      #   %s/sec   %%       us/KB\n\n";
   
   if (connect(data_socket,
 	      (struct sockaddr *)&server,
-	      sizeof(server)) <0){
+	      sizeof(server)) == INVALID_SOCKET){
     perror("send_dg_stream: data socket connect failed");
     exit(1);
   }
@@ -1843,7 +1846,7 @@ bytes   bytes    secs            #      #   %s/sec   %%       us/KB\n\n";
       fprintf(where,"send_dg_stream: remote results obtained\n");
   }
   else {
-    errno = netperf_response.content.serv_errno;
+    Set_errno(netperf_response.content.serv_errno);
     perror("send_dg_stream: error on remote");
     exit(1);
   }
@@ -1983,7 +1986,7 @@ recv_dg_stream()
   struct ring_elt *recv_ring;
 
   struct sockaddr_un myaddr_un;
-  int	s_data;
+  SOCKET s_data;
   int	len = 0;
   int	bytes_received = 0;
   float	elapsed_time;
@@ -2078,7 +2081,7 @@ recv_dg_stream()
   s_data = create_unix_socket(AF_UNIX,
 			      SOCK_DGRAM);
   
-  if (s_data < 0) {
+  if (s_data == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
@@ -2093,7 +2096,7 @@ recv_dg_stream()
   strcpy(myaddr_un.sun_path,tempnam(path_prefix,"netperf."));
   if (bind(s_data,
 	   (struct sockaddr *)&myaddr_un,
-	   sizeof(myaddr_un)) == -1) {
+	   sizeof(myaddr_un)) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
@@ -2156,7 +2159,7 @@ recv_dg_stream()
 		    recv_ring->buffer_ptr,
 		    message_size, 
 		    0)) != message_size) {
-      if ((len == -1) && (errno != EINTR)) {
+      if ((len == SOCKET_ERROR) && (errno != EINTR)) {
 	netperf_response.content.serv_errno = errno;
 	send_response();
 	exit(1);
@@ -2182,7 +2185,7 @@ recv_dg_stream()
     elapsed_time -= (float)PAD_TIME;
   }
   else {
-    alarm(0);
+    stop_timer();
   }
   
   if (debug) {
@@ -2225,8 +2228,7 @@ recv_dg_stream()
 }
 
 void
-send_dg_rr(remote_host)
-     char	remote_host[];
+send_dg_rr(char remote_host[])
 {
   
   char *tput_title = "\
@@ -2270,7 +2272,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      us/Tr   us/Tr\n\n"
   char	*recv_message_ptr;
   char	*temp_message_ptr;
   int	nummessages;
-  int	send_socket;
+  SOCKET send_socket;
   int	trans_remaining;
   int	bytes_xferd;
   
@@ -2280,7 +2282,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      us/Tr   us/Tr\n\n"
   float	local_service_demand;
   float	remote_cpu_utilization;
   float	remote_service_demand;
-  float	thruput;
+  double	thruput;
   
 #ifdef INTERVALS
   /* timing stuff */
@@ -2349,12 +2351,20 @@ bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      us/Tr   us/Tr\n\n"
   times_up 	= 	0;
   
   /* set-up the data buffer with the requested alignment and offset */
-  temp_message_ptr = (char *)malloc(MAXMESSAGESIZE+MAXALIGNMENT+MAXOFFSET);
+  temp_message_ptr = (char *)malloc(DATABUFFERLEN);
+  if (temp_message_ptr == NULL) {
+    printf("malloc(%d) failed!\n", DATABUFFERLEN);
+    exit(1);
+  }
   send_message_ptr = (char *)(( (long)temp_message_ptr + 
 			(long) local_send_align - 1) &	
 			~((long) local_send_align - 1));
   send_message_ptr = send_message_ptr + local_send_offset;
-  temp_message_ptr = (char *)malloc(MAXMESSAGESIZE+MAXALIGNMENT+MAXOFFSET);
+  temp_message_ptr = (char *)malloc(DATABUFFERLEN);
+  if (temp_message_ptr == NULL) {
+    printf("malloc(%d) failed!\n", DATABUFFERLEN);
+    exit(1);
+  }
   recv_message_ptr = (char *)(( (long)temp_message_ptr + 
 			(long) local_recv_align - 1) &	
 			~((long) local_recv_align - 1));
@@ -2364,7 +2374,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      us/Tr   us/Tr\n\n"
   send_socket = create_unix_socket(AF_UNIX, 
 				   SOCK_DGRAM);
   
-  if (send_socket < 0){
+  if (send_socket == INVALID_SOCKET){
     perror("netperf: send_dg_rr: dg rr data socket");
     exit(1);
   }
@@ -2442,7 +2452,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      us/Tr   us/Tr\n\n"
     strcpy(server.sun_path,dg_rr_response->unix_path);
   }
   else {
-    errno = netperf_response.content.serv_errno;
+    Set_errno(netperf_response.content.serv_errno);
     perror("netperf: remote error");
     
     exit(1);
@@ -2453,7 +2463,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      us/Tr   us/Tr\n\n"
   /* out socket so that the remote gets something from a recvfrom  */
   if (bind(send_socket,
 	   (struct sockaddr *)&myaddr_un,
-	   sizeof(myaddr_un)) == -1) {
+	   sizeof(myaddr_un)) == SOCKET_ERROR) {
     perror("netperf: send_dg_rr");
     unlink(myaddr_un.sun_path);
     close(send_socket);
@@ -2462,7 +2472,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      us/Tr   us/Tr\n\n"
   
   if (connect(send_socket, 
 	      (struct sockaddr *)&server,
-	      sizeof(server)) < 0 ) {
+	      sizeof(server)) == INVALID_SOCKET ) {
     perror("netperf: data socket connect failed");
     exit(1);
   }
@@ -2586,7 +2596,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      us/Tr   us/Tr\n\n"
   /* remote. Of course, since this was a request/response test, there */
   /* should be no data outstanding on the socket ;-) */ 
   
-  if (shutdown(send_socket,1) == -1) {
+  if (shutdown(send_socket,1) == SOCKET_ERROR) {
     perror("netperf: cannot shutdown dg stream socket");
     
     exit(1);
@@ -2608,7 +2618,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      us/Tr   us/Tr\n\n"
       fprintf(where,"remote results obtained\n");
   }
   else {
-    errno = netperf_response.content.serv_errno;
+    Set_errno(netperf_response.content.serv_errno);
     perror("netperf: remote error");
     
     exit(1);
@@ -2785,7 +2795,7 @@ recv_dg_rr()
 
   struct	sockaddr_un        myaddr_un,
   peeraddr_un;
-  int	s_data;
+  SOCKET s_data;
   int 	addrlen;
   int	trans_received = 0;
   int	trans_remaining;
@@ -2890,7 +2900,7 @@ recv_dg_rr()
   s_data = create_unix_socket(AF_UNIX,
 			      SOCK_DGRAM);
   
-  if (s_data < 0) {
+  if (s_data == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
     send_response();
     
@@ -2906,7 +2916,7 @@ recv_dg_rr()
   strcpy(myaddr_un.sun_path,tempnam(path_prefix,"netperf."));
   if (bind(s_data,
 	   (struct sockaddr *)&myaddr_un,
-	   sizeof(myaddr_un)) == -1) {
+	   sizeof(myaddr_un)) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     unlink(myaddr_un.sun_path);
     close(s_data);
@@ -3073,7 +3083,7 @@ recv_stream_rr()
 
   struct	sockaddr_un        myaddr_un,
   peeraddr_un;
-  int	s_listen,s_data;
+  SOCKET s_listen,s_data;
   int 	addrlen;
   char	*temp_message_ptr;
   int	trans_received = 0;
@@ -3178,7 +3188,7 @@ recv_stream_rr()
   s_listen = create_unix_socket(AF_UNIX,
 				SOCK_STREAM);
   
-  if (s_listen < 0) {
+  if (s_listen == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
     send_response();
     
@@ -3194,7 +3204,7 @@ recv_stream_rr()
   strcpy(myaddr_un.sun_path,tempnam(path_prefix,"netperf."));
   if (bind(s_listen,
 	   (struct sockaddr *)&myaddr_un,
-	   sizeof(myaddr_un)) == -1) {
+	   sizeof(myaddr_un)) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     unlink(myaddr_un.sun_path);
     close(s_listen);
@@ -3204,7 +3214,7 @@ recv_stream_rr()
   }
   
   /* Now, let's set-up the socket to listen for connections */
-  if (listen(s_listen, 5) == -1) {
+  if (listen(s_listen, 5) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -3243,7 +3253,7 @@ recv_stream_rr()
   
   if ((s_data = accept(s_listen,
 		       (struct sockaddr *)&peeraddr_un,
-		       &addrlen)) == -1) {
+		       &addrlen)) == INVALID_SOCKET) {
     /* Let's just punt. The remote will be given some information */
     close(s_listen);
     
@@ -3287,7 +3297,7 @@ recv_stream_rr()
       if((request_bytes_recvd=recv(s_data,
 				   temp_message_ptr,
 				   request_bytes_remaining,
-				   0)) < 0) {
+				   0)) == SOCKET_ERROR) {
 	if (errno == EINTR) {
 	  /* the timer popped */
 	  timed_out = 1;
@@ -3325,7 +3335,7 @@ recv_stream_rr()
     if((bytes_sent=send(s_data,
 			send_ring->buffer_ptr,
 			stream_rr_request->response_size,
-			0)) == -1) {
+			0)) == SOCKET_ERROR) {
       if (errno == EINTR) {
 	/* the test timer has popped */
 	timed_out = 1;
@@ -3397,15 +3407,12 @@ void
 print_unix_usage()
 {
 
-  printf("%s",unix_usage);
+  fwrite(unix_usage, sizeof(char), strlen(unix_usage), stdout);
   exit(1);
 
 }
 void
-scan_unix_args(argc, argv)
-     int	argc;
-     char	*argv[];
-
+scan_unix_args(int argc, char *argv[])
 {
 #define UNIX_ARGS "hm:M:p:r:s:S:"
   extern char	*optarg;	  /* pointer to option string	*/

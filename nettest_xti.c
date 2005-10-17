@@ -4,7 +4,7 @@
 #ifdef DO_XTI
 #ifndef lint
 char	nettest_xti_id[]="\
-@(#)nettest_xti.c (c) Copyright 1995 Hewlett-Packard Co. Version 2.1pl4";
+@(#)nettest_xti.c (c) Copyright 1995,2004 Hewlett-Packard Co. Version 2.2pl5";
 #else
 #define DIRTY
 #define HISTOGRAM
@@ -34,13 +34,19 @@ char	nettest_xti_id[]="\
 /****************************************************************/
      
 #include <sys/types.h>
-#include <sys/ipc.h>
 #include <fcntl.h>
+#ifndef WIN32
+#include <sys/ipc.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <errno.h>
 #include <signal.h>
+#else /* WIN32 */
+#include <process.h>
+#include <winsock2.h>
+#include <windows.h>
+#endif /* WIN32 */
 #include <stdio.h>
 #include <time.h>
 #include <malloc.h>
@@ -147,12 +153,11 @@ get_xti_info(socket, info_struct)
  /* called by either the netperf or netserver programs, all output */
  /* should be directed towards "where." family is generally AF_INET, */
  /* and type will be either SOCK_STREAM or SOCK_DGRAM */
-int
-create_xti_endpoint(name)
-     char *name;
+SOCKET
+create_xti_endpoint(char *name)
 {
 
-  int temp_socket;
+  SOCKET temp_socket;
 
   struct t_optmgmt *opt_req;  /* we request an option */
   struct t_optmgmt *opt_ret;  /* it tells us what we got */
@@ -173,7 +178,7 @@ create_xti_endpoint(name)
   /*set up the data socket                        */
   temp_socket = t_open(name,O_RDWR,NULL);
   
-  if (temp_socket < 0){
+  if (temp_socket == INVALID_SOCKET){
     fprintf(where,
 	    "netperf: create_xti_endpoint: t_open %s: errno %d t_errno %d\n",
 	    name,
@@ -439,8 +444,7 @@ create_xti_endpoint(name)
 
 
 void 
-send_xti_tcp_stream(remote_host)
-char	remote_host[];
+send_xti_tcp_stream(char remote_host[])
 {
   
   char *tput_title = "\
@@ -500,9 +504,9 @@ Size (bytes)\n\
   
   int len;
   unsigned int nummessages;
-  int send_socket;
+  SOCKET send_socket;
   int bytes_remaining;
-  int tcp_mss;
+  int tcp_mss = -1;  // possibly uninitialized on printf far below
 
   /* with links like fddi, one can send > 32 bits worth of bytes */
   /* during a test... ;-) at some point, this should probably become a */
@@ -555,7 +559,7 @@ Size (bytes)\n\
   /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
   /* order changed to check for IP address first. raj 7/96 */
 
-  if ((addr = inet_addr(remote_host)) == -1) {
+  if ((addr = inet_addr(remote_host)) == SOCKET_ERROR) {
     /* it was not an IP address, try it as a name */
     if ((hp = gethostbyname(remote_host)) == NULL) {
       /* we have no idea what it is */
@@ -637,7 +641,7 @@ Size (bytes)\n\
     /*set up the data socket                        */
     send_socket = create_xti_endpoint(loc_xti_device);
     
-    if (send_socket < 0){
+    if (send_socket == INVALID_SOCKET) {
       perror("netperf: send_xti_tcp_stream: tcp stream data socket");
       exit(1);
     }
@@ -651,7 +655,7 @@ Size (bytes)\n\
     /* terribly convenient, but I suppose that "standard is better */
     /* than better" :) raj 2/95 */
 
-    if (t_bind(send_socket, NULL, NULL) == -1) {
+    if (t_bind(send_socket, NULL, NULL) == SOCKET_ERROR) {
       t_error("send_xti_tcp_stream: t_bind");
       exit(1);
     }
@@ -796,13 +800,13 @@ Size (bytes)\n\
 
       /* we have to make sure that the server port number is in */
       /* network order */
-      server.sin_port   = xti_tcp_stream_response->data_port_number;
+      server.sin_port   = (short)xti_tcp_stream_response->data_port_number;
       server.sin_port   = htons(server.sin_port); 
       rem_rcvavoid      = xti_tcp_stream_response->so_rcvavoid;
       rem_sndavoid      = xti_tcp_stream_response->so_sndavoid;
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       perror("netperf: remote error");
       
       exit(1);
@@ -816,7 +820,7 @@ Size (bytes)\n\
 
     if (t_connect(send_socket, 
 		  &server_call,
-		  NULL) == -1){
+		  NULL) == INVALID_SOCKET){
       t_error("netperf: send_xti_tcp_stream: data socket connect failed");
       printf(" port: %d\n",ntohs(server.sin_port));
       exit(1);
@@ -1017,7 +1021,7 @@ Size (bytes)\n\
         fprintf(where,"remote results obtained\n");
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       perror("netperf: remote error");
       
       exit(1);
@@ -1247,7 +1251,7 @@ recv_xti_tcp_stream()
   struct t_bind      bind_req, bind_resp;
   struct t_call      call_req;
 
-  int           s_listen,s_data;
+  SOCKET       s_listen,s_data;
   int           addrlen;
   int	        len;
   unsigned int	receive_calls;
@@ -1367,7 +1371,7 @@ recv_xti_tcp_stream()
 
   s_listen = create_xti_endpoint(xti_tcp_stream_request->xti_device);
   
-  if (s_listen < 0) {
+  if (s_listen == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
@@ -1391,7 +1395,7 @@ recv_xti_tcp_stream()
 
   if (t_bind(s_listen,
 	     &bind_req,
-	     &bind_resp) == -1) {
+	     &bind_resp) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = t_errno;
     close(s_listen);
     send_response();
@@ -1531,7 +1535,7 @@ recv_xti_tcp_stream()
 	    t_look(s_data));
     fprintf(where,
 	    "                     remote is %s port %d\n",
-	    inet_ntoa(peeraddr_in.sin_addr),
+	    inet_ntoa(*(struct in_addr *)&peeraddr_in.sin_addr),
 	    ntohs(peeraddr_in.sin_port));
     fflush(where);
   }
@@ -1688,8 +1692,7 @@ recv_xti_tcp_stream()
  /* test. */
 
 int 
-send_xti_tcp_rr(remote_host)
-     char	remote_host[];
+send_xti_tcp_rr(char remote_host[])
 {
   
   char *tput_title = "\
@@ -1734,7 +1737,7 @@ Send   Recv    Send   Recv\n\
   int	len;
   char	*temp_message_ptr;
   int	nummessages;
-  int	send_socket;
+  SOCKET send_socket;
   int	trans_remaining;
   double	bytes_xferd;
 
@@ -1789,7 +1792,7 @@ Send   Recv    Send   Recv\n\
   /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
   /* order changed to check for IP address first. raj 7/96 */
 
-  if ((addr = inet_addr(remote_host)) == -1) {
+  if ((addr = inet_addr(remote_host)) == SOCKET_ERROR) {
     /* it was not an IP address, try it as a name */
     if ((hp = gethostbyname(remote_host)) == NULL) {
       /* we have no idea what it is */
@@ -1893,7 +1896,7 @@ Send   Recv    Send   Recv\n\
     /*set up the data socket                        */
     send_socket = create_xti_endpoint(loc_xti_device);
   
-    if (send_socket < 0){
+    if (send_socket == INVALID_SOCKET){
       perror("netperf: send_xti_tcp_rr: tcp stream data socket");
       exit(1);
     }
@@ -1907,7 +1910,7 @@ Send   Recv    Send   Recv\n\
     /* terribly convenient, but I suppose that "standard is better */
     /* than better" :) raj 2/95 */
 
-    if (t_bind(send_socket, NULL, NULL) == -1) {
+    if (t_bind(send_socket, NULL, NULL) == SOCKET_ERROR) {
       t_error("send_xti_tcp_stream: t_bind");
       exit(1);
     }
@@ -2006,11 +2009,11 @@ Send   Recv    Send   Recv\n\
       remote_cpu_usage  = xti_tcp_rr_response->measure_cpu;
       remote_cpu_rate   = xti_tcp_rr_response->cpu_rate;
       /* make sure that port numbers are in network order */
-      server.sin_port   = xti_tcp_rr_response->data_port_number;
+      server.sin_port   = (short)xti_tcp_rr_response->data_port_number;
       server.sin_port   = htons(server.sin_port);
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       perror("netperf: remote error");
       
       exit(1);
@@ -2024,7 +2027,7 @@ Send   Recv    Send   Recv\n\
 
     if (t_connect(send_socket, 
 		  &server_call,
-		  NULL) == -1){
+		  NULL) == INVALID_SOCKET){
       t_error("netperf: send_xti_tcp_rr: data socket connect failed");
       printf(" port: %d\n",ntohs(server.sin_port));
       exit(1);
@@ -2120,7 +2123,7 @@ Send   Recv    Send   Recv\n\
 	if((rsp_bytes_recvd=t_rcv(send_socket,
 				  temp_message_ptr,
 				  rsp_bytes_left,
-				  &xti_flags)) < 0) {
+				  &xti_flags)) == SOCKET_ERROR) {
 	  if (errno == EINTR) {
 	    /* We hit the end of a timed test. */
 	    timed_out = 1;
@@ -2205,7 +2208,7 @@ Send   Recv    Send   Recv\n\
 	fprintf(where,"remote results obtained\n");
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       perror("netperf: remote error");
       
       exit(1);
@@ -2416,8 +2419,7 @@ Send   Recv    Send   Recv\n\
 }
 
 void
-send_xti_udp_stream(remote_host)
-char	remote_host[];
+send_xti_udp_stream(char remote_host[])
 {
   /**********************************************************************/
   /*									*/
@@ -2467,7 +2469,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
   int	len;
   int	*message_int_ptr;
   struct ring_elt *send_ring;
-  int 	data_socket;
+  SOCKET data_socket;
   
   unsigned int sum_messages_sent;
   unsigned int sum_messages_recvd;
@@ -2516,7 +2518,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
   /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
   /* order changed to check for IP address first. raj 7/96 */
 
-  if ((addr = inet_addr(remote_host)) == -1) {
+  if ((addr = inet_addr(remote_host)) == SOCKET_ERROR) {
     /* it was not an IP address, try it as a name */
     if ((hp = gethostbyname(remote_host)) == NULL) {
       /* we have no idea what it is */
@@ -2595,12 +2597,12 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     /*set up the data socket			*/
     data_socket = create_xti_endpoint(loc_xti_device);
     
-    if (data_socket < 0) {
+    if (data_socket == INVALID_SOCKET) {
       perror("send_xti_udp_stream: create_xti_endpoint");
       exit(1);
     }
 
-    if (t_bind(data_socket, NULL, NULL) == -1) {
+    if (t_bind(data_socket, NULL, NULL) == SOCKET_ERROR) {
       t_error("send_xti_udp_stream: t_bind");
       exit(1);
     }
@@ -2691,7 +2693,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
 	fprintf(where,"send_xti_udp_stream: remote data connection done.\n");
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       perror("send_xti_udp_stream: error on remote");
       exit(1);
     }
@@ -2701,7 +2703,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     /* some of the returned socket buffer information for user display. */
     
     /* make sure that port numbers are in the proper order */
-    server.sin_port = xti_udp_stream_response->data_port_number;
+    server.sin_port = (short)xti_udp_stream_response->data_port_number;
     server.sin_port = htons(server.sin_port);
     rsr_size        = xti_udp_stream_response->recv_buf_size;
     rss_size        = xti_udp_stream_response->send_buf_size;
@@ -2865,7 +2867,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
 	fprintf(where,"send_xti_udp_stream: remote results obtained\n");
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       perror("send_xti_udp_stream: error on remote");
       exit(1);
     }
@@ -3090,7 +3092,7 @@ recv_xti_udp_stream()
   struct sockaddr_in myaddr_in;
   struct sockaddr_in fromaddr_in;
 
-  int	s_data;
+  SOCKET s_data;
   int 	addrlen;
   unsigned int	bytes_received = 0;
   float	elapsed_time;
@@ -3214,7 +3216,7 @@ recv_xti_udp_stream()
     
   s_data = create_xti_endpoint(xti_udp_stream_request->xti_device);
   
-  if (s_data < 0) {
+  if (s_data == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
@@ -3238,7 +3240,7 @@ recv_xti_udp_stream()
 
   if (t_bind(s_data,
 	     &bind_req,
-	     &bind_resp) == -1) {
+	     &bind_resp) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = t_errno;
     send_response();
     
@@ -3372,7 +3374,7 @@ recv_xti_udp_stream()
     elapsed_time -= (float)PAD_TIME;
   }
   else {
-    alarm(0);
+    stop_timer();
   }
   
   if (debug) {
@@ -3413,8 +3415,7 @@ recv_xti_udp_stream()
   
 }
 
-int send_xti_udp_rr(remote_host)
-     char	remote_host[];
+int send_xti_udp_rr(char remote_host[])
 {
   
   char *tput_title = "\
@@ -3466,7 +3467,7 @@ Send   Recv    Send   Recv\n\
 
   int	len;
   int	nummessages;
-  int	send_socket;
+  SOCKET send_socket;
   int	trans_remaining;
   int	bytes_xferd;
   
@@ -3476,7 +3477,7 @@ Send   Recv    Send   Recv\n\
   float	local_service_demand;
   float	remote_cpu_utilization;
   float	remote_service_demand;
-  float	thruput;
+  double thruput;
   
   struct	hostent	        *hp;
   struct	sockaddr_in	server, myaddr_in;
@@ -3516,7 +3517,7 @@ Send   Recv    Send   Recv\n\
   /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
   /* order changed to check for IP address first. raj 7/96 */
 
-  if ((addr = inet_addr(remote_host)) == -1) {
+  if ((addr = inet_addr(remote_host)) == SOCKET_ERROR) {
     /* it was not an IP address, try it as a name */
     if ((hp = gethostbyname(remote_host)) == NULL) {
       /* we have no idea what it is */
@@ -3647,7 +3648,7 @@ Send   Recv    Send   Recv\n\
     /*set up the data socket                        */
     send_socket = create_xti_endpoint(loc_xti_device);
     
-    if (send_socket < 0){
+    if (send_socket == INVALID_SOCKET){
       perror("netperf: send_xti_udp_rr: udp rr data socket");
       exit(1);
     }
@@ -3661,7 +3662,7 @@ Send   Recv    Send   Recv\n\
     /* terribly convenient, but I suppose that "standard is better */
     /* than better" :) raj 2/95 */
 
-    if (t_bind(send_socket, NULL, NULL) == -1) {
+    if (t_bind(send_socket, NULL, NULL) == SOCKET_ERROR) {
       t_error("send_xti_tcp_stream: t_bind");
       exit(1);
     }
@@ -3760,11 +3761,11 @@ Send   Recv    Send   Recv\n\
       remote_cpu_usage =	xti_udp_rr_response->measure_cpu;
       remote_cpu_rate  = 	xti_udp_rr_response->cpu_rate;
       /* port numbers in proper order */
-      server.sin_port  =	xti_udp_rr_response->data_port_number;
+      server.sin_port  =	(short)xti_udp_rr_response->data_port_number;
       server.sin_port  = 	htons(server.sin_port);
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       perror("netperf: remote error");
       
       exit(1);
@@ -3944,7 +3945,7 @@ Send   Recv    Send   Recv\n\
 	fprintf(where,"remote results obtained\n");
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       perror("netperf: remote error");
       
       exit(1);
@@ -4151,7 +4152,7 @@ Send   Recv    Send   Recv\n\
     /* and all that sort of rot... */
     
 #ifdef HISTOGRAM
-    fprintf(where,"\nHistogram of reqeuest/reponse times.\n");
+    fprintf(where,"\nHistogram of request/reponse times.\n");
     fflush(where);
     HIST_report(time_hist);
 #endif /* HISTOGRAM */
@@ -4173,7 +4174,7 @@ int
   int	            flags = 0;
 
   struct sockaddr_in myaddr_in, peeraddr_in;
-  int	s_data;
+  SOCKET s_data;
   int 	addrlen;
   int	trans_received;
   int	trans_remaining;
@@ -4297,7 +4298,7 @@ int
     
   s_data = create_xti_endpoint(xti_udp_rr_request->xti_device);
   
-  if (s_data < 0) {
+  if (s_data == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
@@ -4326,7 +4327,7 @@ int
 
   if (t_bind(s_data,
 	     &bind_req,
-	     &bind_resp) == -1) {
+	     &bind_resp) == SOCKET_ERROR) {
     if (debug) {
       fprintf(where,
 	      "recv_xti_udp_rr: t_bind failed, t_errno %d errno %d\n",
@@ -4557,7 +4558,7 @@ recv_xti_tcp_rr()
   struct t_bind bind_req, bind_resp;
   struct t_call call_req;
 
-  int	s_listen,s_data;
+  SOCKET s_listen,s_data;
   int 	addrlen;
   char	*temp_message_ptr;
   int	trans_received;
@@ -4692,7 +4693,7 @@ recv_xti_tcp_rr()
 
   s_listen = create_xti_endpoint(xti_tcp_rr_request->xti_device);
   
-  if (s_listen < 0) {
+  if (s_listen == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
     send_response();
     
@@ -4717,7 +4718,7 @@ recv_xti_tcp_rr()
 
   if (t_bind(s_listen,
 	     &bind_req,
-	     &bind_resp) == -1) {
+	     &bind_resp) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = t_errno;
     close(s_listen);
     send_response();
@@ -4819,7 +4820,7 @@ recv_xti_tcp_rr()
 	    t_look(s_data));
     fprintf(where,
 	    " remote is %s port %d\n",
-	    inet_ntoa(peeraddr_in.sin_addr),
+	    inet_ntoa(*(struct in_addr *)&peeraddr_in.sin_addr),
 	    ntohs(peeraddr_in.sin_port));
     fflush(where);
   }
@@ -4848,7 +4849,7 @@ recv_xti_tcp_rr()
       if((request_bytes_recvd=t_rcv(s_data,
 				    temp_message_ptr,
 				    request_bytes_remaining,
-				    &xti_flags)) < 0) {
+				    &xti_flags)) == SOCKET_ERROR) {
 	if (errno == EINTR) {
 	  /* the timer popped */
 	  timed_out = 1;
@@ -4927,7 +4928,7 @@ recv_xti_tcp_rr()
   
   cpu_stop(xti_tcp_rr_request->measure_cpu,&elapsed_time);
   
-  alarm(0); /* this is probably unnecessary, but it shouldn't hurt */
+  stop_timer(); /* this is probably unnecessary, but it shouldn't hurt */
 
   if (timed_out) {
     /* we ended the test by time, which was at least 2 seconds */
@@ -4971,15 +4972,14 @@ recv_xti_tcp_rr()
 
 
  /* this test is intended to test the performance of establishing a */
- /* connection, exchanging a reqeuest/response pair, and repeating. it */
+ /* connection, exchanging a request/response pair, and repeating. it */
  /* is expected that this would be a good starting-point for */
  /* comparision of T/TCP with classic TCP for transactional workloads. */
  /* it will also look (can look) much like the communication pattern */
  /* of http for www access. */
 
 int 
-send_xti_tcp_conn_rr(remote_host)
-     char	remote_host[];
+send_xti_tcp_conn_rr(char remote_host[])
 {
   
   char *tput_title = "\
@@ -5027,7 +5027,7 @@ Send   Recv    Send   Recv\n\
   struct ring_elt *recv_ring;
   char	*temp_message_ptr;
   int	nummessages;
-  int	send_socket;
+  SOCKET send_socket;
   int	trans_remaining;
   double	bytes_xferd;
   int	sock_opt_len = sizeof(int);
@@ -5063,6 +5063,10 @@ Send   Recv    Send   Recv\n\
   /* must turn that into the test specific addressing information. */
   
   myaddr = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
+  if (myaddr == NULL) {
+    printf("malloc(%d) failed!\n", sizeof(struct sockaddr_in));
+    exit(1);
+  }
 
   bzero((char *)&server,
 	sizeof(server));
@@ -5075,7 +5079,7 @@ Send   Recv    Send   Recv\n\
   /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
   /* order changed to check for IP address first. raj 7/96 */
 
-  if ((addr = inet_addr(remote_host)) == -1) {
+  if ((addr = inet_addr(remote_host)) == SOCKET_ERROR) {
     /* it was not an IP address, try it as a name */
     if ((hp = gethostbyname(remote_host)) == NULL) {
       /* we have no idea what it is */
@@ -5197,7 +5201,7 @@ Send   Recv    Send   Recv\n\
     remote_cpu_usage=	xti_tcp_conn_rr_response->measure_cpu;
     remote_cpu_rate = 	xti_tcp_conn_rr_response->cpu_rate;
     /* make sure that port numbers are in network order */
-    server.sin_port	=	xti_tcp_conn_rr_response->data_port_number;
+    server.sin_port	=	(short)xti_tcp_conn_rr_response->data_port_number;
     server.sin_port =	htons(server.sin_port);
     if (debug) {
       fprintf(where,"remote listen done.\n");
@@ -5206,7 +5210,7 @@ Send   Recv    Send   Recv\n\
     }
   }
   else {
-    errno = netperf_response.content.serv_errno;
+    Set_errno(netperf_response.content.serv_errno);
     perror("netperf: remote error");
     
     exit(1);
@@ -5251,10 +5255,9 @@ Send   Recv    Send   Recv\n\
   while ((!times_up) || (trans_remaining > 0)) {
 
     /* set up the data socket */
-    send_socket = create_xti_endpoint(AF_INET, 
-				     SOCK_STREAM);
+    send_socket = create_xti_endpoint(loc_xti_device);
   
-    if (send_socket < 0) {
+    if (send_socket == INVALID_SOCKET) {
       perror("netperf: send_xti_tcp_conn_rr: tcp stream data socket");
       exit(1);
     }
@@ -5272,7 +5275,7 @@ Send   Recv    Send   Recv\n\
     /* the length of the TIME_WAIT state raj 8/94 */
     one = 1;
     if(setsockopt(send_socket, SOL_SOCKET, SO_REUSEADDR,
-		  (char *)&one, sock_opt_len) < 0) {
+		  (char *)&one, sock_opt_len) == SOCKET_ERROR) {
       perror("netperf: send_xti_tcp_conn_rr: so_reuseaddr");
       exit(1);
     }
@@ -5280,7 +5283,7 @@ Send   Recv    Send   Recv\n\
     /* we want to bind our socket to a particular port number. */
     if (bind(send_socket,
 	     (struct sockaddr *)myaddr,
-	     sizeof(struct sockaddr_in)) < 0) {
+	     sizeof(struct sockaddr_in)) == SOCKET_ERROR) {
       printf("netperf: send_xti_tcp_conn_rr: tried to bind to port %d\n",
 	     ntohs(myaddr->sin_port));
       perror("netperf: send_xti_tcp_conn_rr: bind");
@@ -5290,7 +5293,7 @@ Send   Recv    Send   Recv\n\
     /* Connect up to the remote port on the data socket  */
     if (connect(send_socket, 
 		(struct sockaddr *)&server,
-		sizeof(server)) <0){
+		sizeof(server)) == INVALID_SOCKET){
       if (errno == EINTR) {
 	/* we hit the end of a */
 	/* timed test. */
@@ -5328,7 +5331,7 @@ Send   Recv    Send   Recv\n\
       if((rsp_bytes_recvd=recv(send_socket,
 			       temp_message_ptr,
 			       rsp_bytes_left,
-			       0)) < 0) {
+			       0)) == SOCKET_ERROR) {
 	if (errno == EINTR) {
 	  /* We hit the end of a timed test. */
 	  timed_out = 1;
@@ -5405,7 +5408,7 @@ newport:
       fprintf(where,"remote results obtained\n");
   }
   else {
-    errno = netperf_response.content.serv_errno;
+    Set_errno(netperf_response.content.serv_errno);
     perror("netperf: remote error");
     
     exit(1);
@@ -5563,10 +5566,10 @@ int
 recv_xti_tcp_conn_rr()
 {
   
-  char message[MAXMESSAGESIZE+MAXALIGNMENT+MAXOFFSET];
+  char  *message;
   struct	sockaddr_in        myaddr_in,
   peeraddr_in;
-  int	s_listen,s_data;
+  SOCKET s_listen,s_data;
   int 	addrlen;
   char	*recv_message_ptr;
   char	*send_message_ptr;
@@ -5619,6 +5622,13 @@ recv_xti_tcp_conn_rr()
     fprintf(where,"recv_xti_tcp_conn_rr: the response type is set...\n");
     fflush(where);
   }
+
+  /* set-up the data buffer with the requested alignment and offset */
+  message = (char *)malloc(DATABUFFERLEN);
+  if (message == NULL) {
+    printf("malloc(%d) failed!\n", DATABUFFERLEN);
+    exit(1);
+  }
   
   /* We now alter the message_ptr variables to be at the desired */
   /* alignments with the desired offsets. */
@@ -5634,15 +5644,10 @@ recv_xti_tcp_conn_rr()
 	    xti_tcp_conn_rr_request->send_offset);
     fflush(where);
   }
-  recv_message_ptr = (char *)(( (long)message + 
-			(long) xti_tcp_conn_rr_request->recv_alignment -1) & 
-			~((long) xti_tcp_conn_rr_request->recv_alignment - 1));
-  recv_message_ptr = recv_message_ptr + xti_tcp_conn_rr_request->recv_offset;
+
+  recv_message_ptr = ALIGN_BUFFER(message, xti_tcp_conn_rr_request->recv_alignment, xti_tcp_conn_rr_request->recv_offset);
   
-  send_message_ptr = (char *)(( (long)message + 
-			(long) xti_tcp_conn_rr_request->send_alignment -1) & 
-			~((long) xti_tcp_conn_rr_request->send_alignment - 1));
-  send_message_ptr = send_message_ptr + xti_tcp_conn_rr_request->send_offset;
+  send_message_ptr = ALIGN_BUFFER(message, xti_tcp_conn_rr_request->send_alignment, xti_tcp_conn_rr_request->send_offset);
   
   if (debug) {
     fprintf(where,"recv_xti_tcp_conn_rr: receive alignment and offset set...\n");
@@ -5677,10 +5682,9 @@ recv_xti_tcp_conn_rr()
   loc_rcvavoid = xti_tcp_conn_rr_request->so_rcvavoid;
   loc_sndavoid = xti_tcp_conn_rr_request->so_sndavoid;
   
-  s_listen = create_xti_endpoint(AF_INET,
-				SOCK_STREAM);
+  s_listen = create_xti_endpoint(loc_xti_device);
   
-  if (s_listen < 0) {
+  if (s_listen == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
     send_response();
     if (debug) {
@@ -5698,7 +5702,7 @@ recv_xti_tcp_conn_rr()
   
   if (bind(s_listen,
 	   (struct sockaddr *)&myaddr_in,
-	   sizeof(myaddr_in)) == -1) {
+	   sizeof(myaddr_in)) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -5710,7 +5714,7 @@ recv_xti_tcp_conn_rr()
   }
 
   /* Now, let's set-up the socket to listen for connections */
-  if (listen(s_listen, 5) == -1) {
+  if (listen(s_listen, 5) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -5725,7 +5729,7 @@ recv_xti_tcp_conn_rr()
   addrlen = sizeof(myaddr_in);
   if (getsockname(s_listen,
 		  (struct sockaddr *)&myaddr_in,
-		  &addrlen) == -1){
+		  &addrlen) == SOCKET_ERROR){
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -5800,7 +5804,7 @@ recv_xti_tcp_conn_rr()
     /* accept a connection from the remote */
     if ((s_data=accept(s_listen,
 		       (struct sockaddr *)&peeraddr_in,
-		       &addrlen)) == -1) {
+		       &addrlen)) == INVALID_SOCKET) {
       if (errno == EINTR) {
 	/* the timer popped */
 	timed_out = 1;
@@ -5826,7 +5830,7 @@ recv_xti_tcp_conn_rr()
       if((request_bytes_recvd=recv(s_data,
 				   temp_message_ptr,
 				   request_bytes_remaining,
-				   0)) < 0) {
+				   0)) == SOCKET_ERROR) {
 	if (errno == EINTR) {
 	  /* the timer popped */
 	  timed_out = 1;
@@ -5854,7 +5858,7 @@ recv_xti_tcp_conn_rr()
     if((bytes_sent=send(s_data,
 			send_message_ptr,
 			xti_tcp_conn_rr_request->response_size,
-			0)) == -1) {
+			0)) == SOCKET_ERROR) {
       if (errno == EINTR) {
 	/* the test timer has popped */
 	timed_out = 1;
@@ -5928,15 +5932,13 @@ void
 print_xti_usage()
 {
 
-  printf("%s",xti_usage);
+  fwrite(xti_usage, sizeof(char), strlen(xti_usage), stdout);
   exit(1);
 
 }
-void
-scan_xti_args(argc, argv)
-     int	argc;
-     char	*argv[];
 
+void
+scan_xti_args(int argc, char *argv[])
 {
 #define XTI_ARGS "Dhm:M:r:s:S:Vw:W:X:"
   extern int	optind, opterrs;  /* index of first unused arg 	*/

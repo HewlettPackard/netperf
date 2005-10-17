@@ -1,5 +1,5 @@
 /*
-        Copyright (C) 1997, Hewlett-Packard Company
+        Copyright (C) 1997,2004 Hewlett-Packard Company
 */
 
  /* This file contains the test-specific definitions for netperf's DNS */
@@ -38,9 +38,9 @@ struct dns_rr_results_struct {
   int           num_cpus;      /* how many CPUs had the remote? */
 };
 
-extern void scan_dns_args();
+extern void scan_dns_args(int argc, char *argv[]);
 
-extern void send_dns_rr();
+extern void send_dns_rr(char remote_host[]);
 
 extern void recv_dns_rr();
 

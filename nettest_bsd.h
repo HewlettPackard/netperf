@@ -1,5 +1,5 @@
 /*
-        Copyright (C) 1993-2003 Hewlett-Packard Company
+        Copyright (C) 1993-2004 Hewlett-Packard Company
 */
 
  /* This file contains the test-specific definitions for netperf's BSD */
@@ -344,15 +344,15 @@ struct tcp_cc_results_struct {
   int           num_cpus;      /* how many CPUs had the remote? */
 };
 
-extern void scan_sockets_args();
+extern void scan_sockets_args(int argc, char *argv[]);
 
-extern void send_tcp_stream();
-extern void send_tcp_maerts();
-extern void send_tcp_rr();
-extern void send_tcp_conn_rr();
-extern void send_tcp_cc();
-extern void send_udp_stream();
-extern void send_udp_rr();
+extern void send_tcp_stream(char remote_host[]);
+extern void send_tcp_maerts(char remote_host[]);
+extern void send_tcp_rr(char remote_host[]);
+extern void send_tcp_conn_rr(char remote_host[]);
+extern void send_tcp_cc(char remote_host[]);
+extern void send_udp_stream(char remote_host[]);
+extern void send_udp_rr(char remote_host[]);
 
 extern void recv_tcp_stream();
 extern void recv_tcp_maerts();
@@ -364,3 +364,7 @@ extern void recv_udp_rr();
 
 extern void loc_cpu_rate();
 extern void rem_cpu_rate();
+
+#ifdef HAVE_SENDFILE
+extern void sendfile_tcp_stream(char remotehost[]);
+#endif /* HAVE_SENDFILE */

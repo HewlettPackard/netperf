@@ -2,7 +2,7 @@
 #error you must first edit and customize the makefile to your platform
 #endif /* NEED_MAKEFILE_EDIT */
 char	netsh_id[]="\
-@(#)netsh.c (c) Copyright 1993-2003 Hewlett-Packard Company. Version 2.2pl3";
+@(#)netsh.c (c) Copyright 1993-2004 Hewlett-Packard Company. Version 2.2pl5";
 
 
 /****************************************************************/
@@ -19,16 +19,23 @@ char	netsh_id[]="\
 #endif /* __VMS */
 #endif /* WIN32 */
 #include <fcntl.h>
+#ifndef WIN32
 #include <errno.h>
 #include <signal.h>
+#endif  // !WIN32
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
  /* the following four includes should not be needed ?*/
+#ifndef WIN32
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#else
+#include <time.h>
+#include <winsock2.h>
+#endif
 
 #ifndef STRINGS
 #include <string.h>
@@ -54,11 +61,23 @@ double atof();
 #include "nettest_bsd.h"
 #ifdef DO_UNIX
 #include "nettest_unix.h"
+#ifndef WIN32
 #include "sys/socket.h"
+#endif  // !WIN32
 #endif /* DO_UNIX */
+#ifdef DO_XTI
+#include "nettest_xti.h"
+#endif /* DO_XTI */
+#ifdef DO_DLPI
+#include "nettest_dlpi.h"
+#endif /* DO_DLPI */
 #ifdef DO_IPV6
 #include "nettest_ipv6.h"
 #endif /* DO_IPV6 */
+#ifdef DO_DNS
+#include "nettest_dns.h"
+#endif /* DO_DNS */
+
 /************************************************************************/
 /*									*/
 /*	Global constants  and macros					*/
@@ -95,7 +114,7 @@ char	cmd_file[BUFSIZ];	/* name of the commands file		*/
 
 /* stuff to say where this test is going                                */
 char	host_name[HOSTNAMESIZE];	/* remote host name or ip addr  */
-char    test_name[BUFSIZ];			/* which test to run 		*/
+char    test_name[BUFSIZ];		/* which test to run 		*/
 short	test_port;			/* where is the test waiting    */
 
 /* the source of data for filling the buffers */
@@ -177,7 +196,11 @@ Usage: netserver [options] \n\
 \n\
 Options:\n\
     -h                Display this text\n\
+    -d                Increase debugging output\n\
     -p portnum        Listen for connect requests on portnum.\n\
+    -4                Do IPv4\n\
+    -6                Do IPv6\n\
+    -v verbosity      Specify the verbosity level\n\
 \n";
 
 char netperf_usage[] = "\n\
@@ -220,8 +243,7 @@ comma.\n";
 /* value of the first. If there is a comma, then the value of the */
 /* second argument will be the value of the second argument ;-) */
 void
-break_args(s, arg1, arg2)
-char	*s, *arg1, *arg2;
+break_args(char *s, char *arg1, char *arg2)
 
 {
   char *ns;
@@ -301,21 +323,18 @@ set_defaults()
 void
 print_netserver_usage()
 {
-  fprintf(stderr,netserver_usage);
+  fwrite(netserver_usage, sizeof(char), strlen(netserver_usage), stderr);
 }
 
 
 void
 print_netperf_usage()
 {
-  fprintf(stderr,netperf_usage);
+  fwrite(netperf_usage, sizeof(char), strlen(netperf_usage),  stderr);
 }
 
 void
-scan_cmd_line(argc, argv)
-     int	argc;
-     char	*argv[];
-
+scan_cmd_line(int argc, char *argv[])
 {
   extern int	optind;           /* index of first unused arg 	*/
   extern char	*optarg;	  /* pointer to option string	*/
@@ -326,6 +345,10 @@ scan_cmd_line(argc, argv)
   arg2[BUFSIZ];
   
   program = (char *)malloc(strlen(argv[0]) + 1);
+  if (program == NULL) {
+    printf("malloc(%ld) failed!\n", strlen(argv[0]) + 1);
+    exit(1);
+  }
   strcpy(program, argv[0]);
   
   /* Go through all the command line arguments and break them */
@@ -493,7 +516,7 @@ scan_cmd_line(argc, argv)
       /* measure local cpu usage please. the user */
       /* may have specified the cpu rate as an */
       /* optional parm */
-      if (argv[optind] && isdigit(argv[optind][0])){
+      if (argv[optind] && isdigit((unsigned char)argv[optind][0])){
 	/* there was an optional parm */
 	local_cpu_rate = (float)atof(argv[optind]);
 	optind++;
@@ -502,7 +525,7 @@ scan_cmd_line(argc, argv)
       break;
     case 'C':
       /* measure remote cpu usage please */
-      if (argv[optind] && isdigit(argv[optind][0])){
+      if (argv[optind] && isdigit((unsigned char)argv[optind][0])){
 	/* there was an optional parm */
 	remote_cpu_rate = (float)atof(argv[optind]);
 	optind++;
