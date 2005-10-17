@@ -7,33 +7,59 @@
 # uncomment the next line if you think the script is broken
 #set -x
 
-# This points me at the program
-NETHOME=/usr/local/netperf
 
-# The name of the remote machine
-REM_HOST="localhost"
+if [ $# -gt 2 ]; then
+  echo "try again, correctly -> udp_rr_script hostname [CPU]"
+  exit 1
+fi
+
+if [ $# -eq 0 ]; then
+  echo "try again, correctly -> udp_rr_script hostname [CPU]"
+  exit 1
+fi
+
+# where the programs are
+
+#NETHOME=/usr/local/netperf
+#NETHOME="/opt/netperf"
+NETHOME="."
 
 # The test length in seconds
+
 TEST_TIME=60
 
+# How accurate we want the estimate of performance: 
+#      maximum and minimum test iterations (-i)
+#      confidence level (99 or 95) and interval (percent)
+
+STATS_STUFF="-i 10,2 -I 99,10"
+
 # The socket sizes that we will be testing - 0 means use default
-# not much point in changing the socket buffr for a UDP request/response
-# test - unless you want to have requests/responses whicha re larger than
-# the default
+# not much point in changing the socket buffer for a UDP request/
+# response test - unless you want to have requests/responses which 
+# are larger than the default
+
 SOCKET_SIZES="0"
 
 # The send sizes that we will be using
+
 RR_SIZES="1,1 64,64 100,200 1024,1024"
 
-# Do you want local cpu usage? Use the line that defines LOC_CPU as "-c"
-# Otherwise, define it as ""
-#LOC_CPU="-c"
-LOC_CPU=""
+# if there are two parms, parm one it the hostname and parm two will
+# be a CPU indicator. actually, anything as a second parm will cause
+# the CPU to be measured, but we will "advertise" it should be "CPU"
 
-# Do you want remote cpu usage? Use the line that defines REM_CPU as "-C"
-# Otherwise, define it as ""
-#REM_CPU="-C"
-REM_CPU=""
+if [ $# -eq 2 ]; then
+  REM_HOST=$1
+  LOC_CPU="-c"
+  REM_CPU="-C"
+fi
+
+if [ $# -eq 1 ]; then
+  LOC_CPU=""
+  REM_CPU=""
+  REM_HOST=$1
+fi
 
 # If we are measuring CPU utilization, then we can save beaucoup
 # time by saving the results of the CPU calibration and passing
@@ -53,22 +79,22 @@ esac
 NO_HDR="-P 0"
 
 for SOCKET_SIZE in $SOCKET_SIZES
-	do
-	for RR_SIZE in $RR_SIZES
-		do
-		echo
-		echo
-		echo Testing with $SOCKET_SIZE sockets and $RR_SIZE req/rep
-		echo ------------------------------------------------------
-		echo
-		$NETHOME/netperf -l $TEST_TIME -H $REM_HOST \
+do
+  for RR_SIZE in $RR_SIZES
+  do
+  echo
+  echo ------------------------------------------------------
+  echo Testing with the following command line:
+  echo $NETHOME/netperf -l $TEST_TIME -H $REM_HOST $STATS_STUFF \
                   $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE -t UDP_RR --\
                   -r $RR_SIZE -s $SOCKET_SIZE -S $SOCKET_SIZE
-		$NETHOME/netperf -l $TEST_TIME -H $REM_HOST \
-		  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE -t UDP_RR $NO_HDR --\
+  $NETHOME/netperf -l $TEST_TIME -H $REM_HOST $STATS_STUFF \
+    $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE -t UDP_RR $NO_HDR --\
                   -r $RR_SIZE -s $SOCKET_SIZE -S $SOCKET_SIZE
-		$NETHOME/netperf -l $TEST_TIME -H $REM_HOST \
-                  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE -t UDP_RR $NO_HDR --\
-                  -r $RR_SIZE -s $SOCKET_SIZE -S $SOCKET_SIZE
-		done
-	done
+  done
+done
+echo
+echo If you wish to submit these results to the netperf database at
+echo http://www.cup.hp.com/netperf/NetperfPage.html, please submit each
+echo datapoint individually. Individual datapoints are separated by
+echo lines of dashes. 

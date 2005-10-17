@@ -1,7 +1,7 @@
 
 /*
  
-              Copyright (C) 1993 Hewlett-Packard Company
+            Copyright (C) 1993,1994 Hewlett-Packard Company
                          ALL RIGHTS RESERVED.
  
   The enclosed software and documention includes copyrighted works of
@@ -42,8 +42,8 @@
       MODIFICATION, OR DISTRIBUTION OF THE SOFTWARE OR DOCUMENTATION.
  
 */
-char	netserver_id[]="@(#)netserver.c (c) Copyright 1993, \
-Hewlett-Packard Company. Version 1.9alphaPL4";
+char	netserver_id[]="\
+@(#)netserver.c (c) Copyright 1993, 1994 Hewlett-Packard Co. Version 2.0";
 
  /***********************************************************************/
  /*									*/
@@ -75,6 +75,10 @@ Hewlett-Packard Company. Version 1.9alphaPL4";
 #include <netinet/in.h>
 #include <netdb.h>
 #include <string.h>
+
+#ifndef DONT_WAIT
+#include <sys/wait.h>
+#endif /* DONT_WAIT */
 
 #include "netlib.h"
 #include "nettest_bsd.h"
@@ -206,6 +210,18 @@ process_requests()
       
 #endif /* DO_FORE */
 
+#ifdef DO_HIPPI
+
+    case DO_HIPPI_STREAM:
+      recv_hippi_stream();
+      break;
+      
+    case DO_HIPPI_RR:
+      recv_hippi_rr();
+      break;
+      
+#endif /* DO_HIPPI */
+
     default:
       fprintf(where,"unknown test\n");
       fflush(where);
@@ -271,8 +287,9 @@ void set_up_server()
       exit(1);
       
     case 0:	
-      close(stdin);
-      close(stderr);
+      /* stdin/stderr should use fclose */
+      fclose(stdin);
+      fclose(stderr);
       setpgrp();
       signal(SIGCLD, SIG_IGN);
       
@@ -291,14 +308,26 @@ void set_up_server()
 	  switch (fork())
 	    {
 	    case -1:
+	      /* something went wrong */
 	      exit(1);
 	    case 0:
+	      /* we are the child process */
 	      close(server_control);
 	      process_requests();
 	      exit(0);
 	      break;
 	    default:
+	      /* we are the parent process */
 	      close(server_sock);
+	      /* we should try to "reap" some of our children. on some */
+	      /* systems they are being left as defunct processes. we */
+	      /* will call waitpid, looking for any child process, */
+	      /* with the WNOHANG feature. when waitpid return a zero, */
+	      /* we have reaped all the children there are to reap at */
+	      /* the moment, so it is time to move on. raj 12/94 */
+#ifndef DONT_WAIT
+	      while(waitpid(-1, NULL, WNOHANG) > 0) { }
+#endif /* DONT_WAIT */
 	      break;
 	    }
 	} /*for*/

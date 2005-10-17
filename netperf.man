@@ -14,8 +14,8 @@ is a benchmark that can be used to measure various aspects of
 networking performance.
 Currently, its focus is on bulk data transfer and request/response
 performance using either TCP or UDP, and the Berkeley Sockets
-interface. In addition, tests with DLPI - either connection oriented,
-or connectionless, are included.
+interface. In addition, tests for DLPI, the Fore ATM API, Unix Domain
+Sockets, and HP HiPPI LLA may be conditionally compiled-in.
 
 .SS GLOBAL OPTIONS
 
@@ -44,11 +44,26 @@ a test (possibly at the expense of performance).
 Change the units of measure for stream tests. Capital letters are
 powers of two, lowercase are powers of ten.
 .TP
+.B \-F fill_file
+Pre-fill the send buffers with data from the named file. This is
+intended to provide a means for avoiding buffers that are filled with
+data which is trivially easy to compress. A good choice for a file
+that should be present on any system is this manpage - netperf.man.
+Other files may be provided as part of the distribution.
+.TP
 .B \-h
 Display a usage string, and exit.
 .TP
-.B \-H
+.B \-H remote_host
 Set the hostname (or IP address) of the remote system.
+.TP
+.B \-i max,min
+Set the maximum and minimum number of iterations when trying to reach
+certain confidence levels.
+.TP
+.B \-I lvl,[,intvl]
+Specify the confidence level (either 95 or 99 - 99 is the default) and
+the width of the confidence interval as a percentage (default 10)
 .TP
 .B \-l testlen
 Specify the length of the test (default 10 seconds).
@@ -90,6 +105,8 @@ Valid testnames are (but not always compiled-in):
 .I DG_RR
 .I FORE_STREAM
 .I FORE_RR
+.I HIPPI_STREAM
+.I HIPPI_RR
 .I LOC_CPU
 .I REM_CPU
 .fi
@@ -123,6 +140,8 @@ Jones <raj@cup.hp.com>.
 .br
 .I
 Netperf: A Network Performance Benchmark
+.br
+http://www.cup.hp.com/netperf/NetperfPage.html
 
 .SH AUTHORS
 HP Information Networks Division - Networking Performance Team.

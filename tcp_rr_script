@@ -3,16 +3,37 @@
 # This is an example script for using netperf. Feel free to modify it 
 # as necessary, but I would suggest that you copy this one first.
 #
+# 
+# This version has been modified to take advantage of the confidence
+# interval support in revision 2.0 of netperf. it has also been altered
+# to make submitting its resutls to the netperf database easier
+# raj 11/94
+#
+# usage: tcp_rr_script hostname [CPU]
 #
 
-# this points me to different revs of netperf
-NETHOME=/usr/local/netperf
+if [ $# -gt 2 ]; then
+  echo "try again, correctly -> tcp_rr_script hostname [CPU]"
+  exit 1
+fi
 
-# The name of the remote machine
-REM_HOST="localhost"
+if [ $# -eq 0 ]; then
+  echo "try again, correctly -> tcp_rr_script hostname [CPU]"
+  exit 1
+fi
 
-# The test length (in seconds)
+# where the programs are
+#NETHOME=/usr/local/netperf
+#NETHOME="/opt/netperf"
+NETHOME=.
+
+# The test length in seconds
 TEST_TIME=60
+
+# How accurate we want the estimate of performance: 
+#      maximum and minimum test iterations (-i)
+#      confidence level (99 or 95) and interval (percent)
+STATS_STUFF="-i 10,3 -I 99,10"
 
 # The socket sizes that we will be testing - using zero will let it 
 # be the system default.
@@ -23,15 +44,19 @@ SOCKET_SIZES="0"
 # remember that it is "request,response"
 RR_SIZES="1,1 64,64 100,200 128,8192"
 
-# Do you want local cpu usage? Use the line that defines LOC_CPU as "-c"
-# Otherwise, define it as ""
-#LOC_CPU="-c"
-LOC_CPU=""
+# if there are two parms, parm one it the hostname and parm two will
+# be a CPU indicator. actually, anything as a second parm will cause
+# the CPU to be measured, but we will "advertise" it should be "CPU"
 
-# Do you want remote cpu usage? Use the line that defines REM_CPU as "-C"
-# Otherwise, define it as ""
-#REM_CPU="-C"
-REM_CPU=""
+if [ $# -eq 2 ]; then
+  REM_HOST=$1
+  LOC_CPU="-c"
+  REM_CPU="-C"
+fi
+
+if [ $# -eq 1 ]; then
+  REM_HOST=$1
+fi
 
 # If we are measuring CPU utilization, then we can save beaucoup
 # time by saving the results of the CPU calibration and passing
@@ -50,32 +75,27 @@ esac
 # This disables header display
 NO_HDR="-P 0"
 
-# we will repeat the test points five times to give a better feel for 
-# variability. previously, we repeated three times
-
 for SOCKET_SIZE in $SOCKET_SIZES
-	do
-	for RR_SIZE in $RR_SIZES
-		do
-		echo
-		echo
-		echo Testing with $SOCKET_SIZE byte sockets and $RR_SIZE byte req/rep
-		echo ------------------------------------------------------
-		echo
-		$NETHOME/netperf -l $TEST_TIME -H $REM_HOST \
-		  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE -t TCP_RR -- \
-                  -r $RR_SIZE -s $SOCKET_SIZE -S $SOCKET_SIZE
-		$NETHOME/netperf -l $TEST_TIME -H $REM_HOST \
-                  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE -t TCP_RR $NO_HDR --\
-                   -r $RR_SIZE -s $SOCKET_SIZE -S $SOCKET_SIZE
-		$NETHOME/netperf -l $TEST_TIME -H $REM_HOST \
-                  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE -t TCP_RR $NO_HDR --\
-                   -r $RR_SIZE -s $SOCKET_SIZE -S $SOCKET_SIZE
-		$NETHOME/netperf -l $TEST_TIME -H $REM_HOST \
-                  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE -t TCP_RR $NO_HDR --\
-                   -r $RR_SIZE -s $SOCKET_SIZE -S $SOCKET_SIZE
-		$NETHOME/netperf -l $TEST_TIME -H $REM_HOST \
-                  $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE -t TCP_RR $NO_HDR --\
-                   -r $RR_SIZE -s $SOCKET_SIZE -S $SOCKET_SIZE
-		done
-	done
+ do
+  for RR_SIZE in $RR_SIZES
+   do
+   echo
+   echo ------------------------------------------------------
+   echo Testing with the following command line:
+   # we echo the command line for cut and paste to th database
+   echo $NETHOME/netperf -l $TEST_TIME -H $REM_HOST -t TCP_RR \
+        $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF --\
+        -r $RR_SIZE -s $SOCKET_SIZE -S $SOCKET_SIZE
+   echo
+   # since we have the confidence interval stuff, we do not
+   # need to repeat a test multiple times from the shell
+   $NETHOME/netperf -l $TEST_TIME -H $REM_HOST -t TCP_RR \
+   $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF --\
+   -m $RR_SIZE -s $SOCKET_SIZE -S $SOCKET_SIZE
+ done
+done
+echo
+echo If you wish to submit these results to the netperf database at
+echo http://www.cup.hp.com/netperf/NetperfPage.html, please submit each
+echo datapoint individually. Individual datapoints are separated by
+echo lines of dashes. 
