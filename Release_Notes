@@ -1,3 +1,19 @@
+These are the Release Notes for Revision 2.2pl4 of netperf:
+
+Things changed in this release
+
+*) USE_SYSCTL available on suitable FreeBSD releases to measure CPU
+   utilization without having to resort to -DUSE_LOOPER.
+
+*) Include Solaris 9 with the Linux sendfile path under -DHAVE_SENDFILE
+
+This still outstanding in this release
+
+*) Knowing why signals are not interrupting socket calls under
+   OpenVMS.  A quick try to use threads for timing a la Win32 worked,
+   but also cut performance in half.  Any and all assistance in this
+   area would be most welcome.
+
 These are the Release Notes for revisoin 2.2pl3 of netperf:
 
 Things changed in this release

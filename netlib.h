@@ -234,6 +234,7 @@ struct sendfile_ring_elt {
 #define NT_METHOD       6
 #define KSTAT           7
 #define PROC_STAT       8
+#define SYSCTL          9
 
 #define BADCH ('?')
 

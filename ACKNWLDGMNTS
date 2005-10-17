@@ -96,3 +96,9 @@ IPv6 fixes
 
 Jan Iven of CERN
 initial mods for sendfile() under Linux
+
+Fabrice Bacchella
+for pointing-out that Solaris 9 has a copy of Linux sendfile()
+
+Andrew Gallatin 
+for assistance with the FreeBSD sysctl() stuff

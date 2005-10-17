@@ -2,7 +2,7 @@
 #error you must first edit and customize the makefile to your platform
 #endif /* NEED_MAKEFILE_EDIT */
 char	netlib_id[]="\
-@(#)netlib.c (c) Copyright 1993-2003 Hewlett-Packard Company. Version 2.2pl3";
+@(#)netlib.c (c) Copyright 1993-2003 Hewlett-Packard Company. Version 2.2pl4";
 
 /****************************************************************/
 /*								*/
@@ -136,6 +136,10 @@ char	netlib_id[]="\
 #include <sys/sysinfo.h>
 #endif /* USE_KSTAT */
 
+#ifdef USE_SYSCTL
+#include <sys/sysctl.h>
+#endif /* USE_SYSCTL */
+
  /* not all systems seem to have the sysconf for page size. for those */
  /* which do not, we will assume that the page size is 8192 bytes. */
  /* this should be more than enough to be sure that there is no page */
@@ -230,6 +234,23 @@ long
   lib_end_count[MAXCPUS];     /* idle counter final value per-cpu      */
 
 #else
+#ifdef USE_SYSCTL
+long
+  lib_start_count[MAXCPUS],   /* idle counter initial value per-cpu     */
+  lib_end_count[MAXCPUS];     /* idle counter final value per-cpu      */
+
+/* this has been liberally cut and pasted from <sys/resource.h> on
+   FreeBSD. in general, this would be a bad idea, but I don't want to
+   have to do a _KERNEL define to get these and that is what
+   sys/resource.h seems to want. raj 2002-03-03 */
+#define CP_USER         0
+#define CP_NICE         1
+#define CP_SYS          2
+#define CP_INTR         3
+#define CP_IDLE         4
+#define CPUSTATES       5
+
+#else
 #ifdef USE_LOOPER
 
 long
@@ -253,6 +274,7 @@ int
   lib_idle_fd;
   
 #endif /* USE_LOOPER */
+#endif /* USE_SYSCTL */
 #endif /* USE_PROC_STAT */
 #endif /* USE_KSTAT */
 #endif /* USE_PSTAT */  
@@ -1269,6 +1291,9 @@ format_cpu_method(method)
   case PROC_STAT:
     method_char = 'S';
     break;
+  case SYSCTL:
+    method_char = 'C';
+    break;
   default:
     method_char = '?';
   }
@@ -1682,7 +1707,7 @@ if (debug > 1) {
 
 
 
-#ifdef USE_PSTAT
+#if defined(USE_PSTAT) || defined (USE_SYSCTL)
 int
 hi_32(big_int)
      long long *big_int;
@@ -1725,7 +1750,7 @@ lo_32(big_int)
   }
 }
 
-#endif /* USE_PSTAT */
+#endif /* USE_PSTAT || USE_SYSCTL */
 
 
 #ifdef USE_KSTAT
@@ -2159,7 +2184,117 @@ calibrate_looper(times,wait_time)
   return local_maxrate;
 }
 #endif /* USE_LOOPER */
+
+#ifdef USE_SYSCTL
+/* calibrate_sysctl  - perform the idle rate calculation using the
+   sysctl call - typically on BSD */
 
+float
+calibrate_sysctl(int times, int wait_time) {
+  long 
+    firstcnt[MAXCPUS],
+    secondcnt[MAXCPUS];
+
+  long cp_time[CPUSTATES];
+  size_t cp_time_len = sizeof(cp_time);
+
+  float	
+    elapsed, 
+    temp_rate,
+    rate[MAXTIMES],
+    local_maxrate;
+
+  long	
+    sec,
+    usec;
+
+  int	
+    i,
+    j;
+  
+  long	count;
+
+  struct  timeval time1, time2;
+  struct  timezone tz;
+
+  if (times > MAXTIMES) {
+    times = MAXTIMES;
+  }
+  
+  local_maxrate = -1.0;
+
+
+  for(i = 0; i < times; i++) {
+    rate[i] = 0.0;
+    /* get the idle counter for each processor */
+    if (sysctlbyname("kern.cp_time",cp_time,&cp_time_len,NULL,0) != -1) {
+      for (j = 0; j < lib_num_loc_cpus; j++) {
+	firstcnt[j] = cp_time[CP_IDLE];
+      }
+    }
+    else {
+      fprintf(where,"sysctl failure errno %d\n",errno);
+      fflush(where);
+      exit(1);
+    }
+
+    gettimeofday (&time1, &tz);
+    sleep(wait_time);
+    gettimeofday (&time2, &tz);
+    
+    if (time2.tv_usec < time1.tv_usec)
+      {
+	time2.tv_usec += 1000000;
+	time2.tv_sec -=1;
+      }
+    sec = time2.tv_sec - time1.tv_sec;
+    usec = time2.tv_usec - time1.tv_usec;
+    elapsed = (float)sec + ((float)usec/(float)1000000.0);
+
+    if(debug) {
+      fprintf(where, "Calibration for counter run: %d\n",i);
+      fprintf(where,"\tsec = %ld usec = %ld\n",sec,usec);
+      fprintf(where,"\telapsed time = %g\n",elapsed);
+    }
+
+    if (sysctlbyname("kern.cp_time",cp_time,&cp_time_len,NULL,0) != -1) {
+      for (j = 0; j < lib_num_loc_cpus; j++) {
+	secondcnt[j] = cp_time[CP_IDLE];
+	if(debug) {
+	  /* I know that there are situations where compilers know about */
+	  /* long long, but the library fucntions do not... raj 4/95 */
+	  fprintf(where,
+		  "\tfirstcnt[%d] = 0x%8.8lx secondcnt[%d] = 0x%8.8lx\n",
+		  j,
+		  firstcnt[j],
+		  j,
+		  secondcnt[j]);
+	}
+	temp_rate = (secondcnt[j] >= firstcnt[j]) ? 
+	  (float)(secondcnt[j] - firstcnt[j] )/elapsed : 
+	    (float)(secondcnt[j] - firstcnt[j] + LONG_LONG_MAX)/elapsed;
+	if (temp_rate > rate[i]) rate[i] = temp_rate;
+	if (debug) {
+	  fprintf(where,"\trate[%d] = %g\n",i,rate[i]);
+	  fflush(where);
+	}
+	if (local_maxrate < rate[i]) local_maxrate = rate[i];
+      }
+    }
+    else {
+      fprintf(where,"sysctl failure; errno %d\n",errno);
+      fflush(where);
+      exit(1);
+    }
+  }
+  if(debug) {
+    fprintf(where,"\tlocal maxrate = %g per sec. \n",local_maxrate);
+    fflush(where);
+  }
+  return local_maxrate;
+
+}
+#endif /* USE_SYSCTL */
 
 #ifdef USE_PSTAT
 #ifdef PSTAT_IPCINFO
@@ -2627,6 +2762,16 @@ cpu_start(measure_cpu)
       lib_start_count[i] = get_kstat_idle(i);
     }
 #else
+#ifdef USE_SYSCTL
+    cpu_method = SYSCTL;
+    long cp_time[CPUSTATES];
+    size_t cp_time_len = sizeof(cp_time);
+    if (sysctlbyname("kern.cp_time",cp_time,&cp_time_len,NULL,0) != -1) {
+      for (i = 0; i < lib_num_loc_cpus; i++){
+	lib_start_count[i] = cp_time[CP_IDLE];
+      }
+    }
+#else
 #ifdef	USE_PSTAT
     cpu_method = PSTAT;
 #ifdef PSTAT_IPCINFO
@@ -2707,6 +2852,7 @@ cpu_start(measure_cpu)
     cpu_method = TIMES;
     times(&times_data1);
 #endif /* WIN32 */
+#endif /* USE_SYSCTL */
 #endif /* USE_PSTAT */
 #endif /* USE_KSTAT */
 #endif /* USE_PROC_STAT */
@@ -2762,6 +2908,15 @@ if (measure_cpu) {
   for (i = 0; i < lib_num_loc_cpus; i++){
     lib_end_count[i] = get_kstat_idle(i);
   }
+#else
+#ifdef USE_SYSCTL
+    long cp_time[CPUSTATES];
+    size_t cp_time_len = sizeof(cp_time);
+    if (sysctlbyname("kern.cp_time",cp_time,&cp_time_len,NULL,0) != -1) {
+      for (i = 0; i < lib_num_loc_cpus; i++){
+	lib_end_count[i] = cp_time[CP_IDLE];
+      }
+    }
 #else
 #ifdef	USE_PSTAT
 #ifdef PSTAT_IPCINFO
@@ -2833,6 +2988,7 @@ if (measure_cpu) {
 #else
   times(&times_data2);
 #endif /* WIN32 */
+#endif /* USE_SYSCTL */
 #endif /* USE_PSTAT */
 #endif /* USE_KSTAT */
 #endif /* USE_PROC_STAT */
@@ -2930,7 +3086,7 @@ calc_cpu_util(elapsed_time)
     correction_factor = (float) 1.0;
   }
   
-#if defined (USE_LOOPER)  || defined (USE_KSTAT) || defined (USE_PROC_STAT)
+#if defined (USE_LOOPER)  || defined (USE_KSTAT) || defined (USE_PROC_STAT) || defined (USE_SYSCTL)
   for (i = 0; i < lib_num_loc_cpus; i++) {
 
     /* it would appear that on some systems, in loopback, nice is
@@ -2950,9 +3106,11 @@ calc_cpu_util(elapsed_time)
 		MAXLONG)/ lib_elapsed;
     if (debug) {
       fprintf(where,
-	      "calc_cpu_util: actual_rate on processor %d is %f\n",
+	      "calc_cpu_util: actual_rate on processor %d is %f start %lx end %lx\n",
 	      i,
-	      actual_rate);
+	      actual_rate,
+	      lib_start_count[i],
+	      lib_end_count[i]);
     }
     lib_local_per_cpu_util[i] = (lib_local_maxrate - actual_rate) /
       lib_local_maxrate * 100;
@@ -3585,6 +3743,9 @@ calibrate_local_cpu(local_cpu_rate)
 #ifdef USE_KSTAT
     lib_local_maxrate = calibrate_kstat(4,10);
 #endif /* USE_KSTAT */
+#ifdef USE_SYSCTL
+    lib_local_maxrate = calibrate_sysctl(4,10);
+#endif /* USE_SYSCTL */
 #ifdef USE_PSTAT
 #ifdef PSTAT_IPCINFO
     /* one version of pstat needs calibration */

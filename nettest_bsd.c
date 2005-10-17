@@ -3,7 +3,7 @@
 #endif /* NEED_MAKEFILE_EDIT */
 #ifndef lint
 char	nettest_id[]="\
-@(#)nettest_bsd.c (c) Copyright 1993-2003 Hewlett-Packard Co. Version 2.2pl3";
+@(#)nettest_bsd.c (c) Copyright 1993-2003 Hewlett-Packard Co. Version 2.2pl4";
 #else
 #define DIRTY
 #define HISTOGRAM
@@ -86,9 +86,9 @@ char	nettest_id[]="\
 int first_burst_size=0;
 #endif /* DO_FIRST_BURST */
 
-#if defined(HAVE_SENDFILE) && defined(__linux)
+#if defined(HAVE_SENDFILE) && (defined(__linux) || defined(__SunOS_5_9))
 #include <sys/sendfile.h>
-#endif /* HAVE_SENDFILE && __linux */
+#endif /* HAVE_SENDFILE && (__linux || __SunOS_5_9 */
 
 
 
@@ -145,8 +145,7 @@ TCP/UDP BSD Sockets Test Options:\n\
     -m bytes          Set the send size (TCP_STREAM, UDP_STREAM)\n\
     -M bytes          Set the recv size (TCP_STREAM, UDP_STREAM)\n\
     -p min[,max]      Set the min/max port numbers for TCP_CRR, TCP_TRR\n\
-    -r bytes          Set request size (TCP_RR, UDP_RR)\n\
-    -R bytes          Set response size (TCP_RR, UDP_RR)\n\
+    -r req,[rsp]      Set request/response sizes (TCP_RR, UDP_RR)\n\
     -s send[,recv]    Set local socket send/recv buffer sizes\n\
     -S send[,recv]    Set remote socket send/recv buffer sizes\n\
 \n\
@@ -2181,13 +2180,13 @@ Size (bytes)\n\
   unsigned      int             addr;
   int		file_size;
 
-#if defined(__linux)
+#if defined(__linux) || defined(__SunOS_5_9)
   off_t     scratch_offset;   /* the linux sendfile() call will update
 				 the offset variable, which is
 				 something we do _not_ want to happen
 				 to the value in the send_ring! so, we
 				 have to use a scratch variable. */
-#endif /* __linux */
+#endif /* __linux  || defined(__SunOS_5_9) */
   
   struct	tcp_stream_request_struct	*tcp_stream_request;
   struct	tcp_stream_response_struct	*tcp_stream_response;
@@ -2573,13 +2572,23 @@ if (send_width == 0) {
 			send_ring->length,
 			send_ring->hdtrl,
 			send_ring->flags)) != send_size) {
-#elif defined(__linux)
+#elif defined(__linux)  || defined(__SunOS_5_9)
 	scratch_offset = send_ring->offset;
 	if ((len=sendfile(send_socket, 
 			  send_ring->fildes, 
 			  &scratch_offset,   /* modified after the call! */
 			  send_ring->length)) != send_size) {
-#else /* original sendile HP-UX and then BSD */
+#elif defined(__FreeBSD__)
+      /* so close to HP-UX and yet so far away... :) */
+      if ((sendfile(send_ring->fildes, 
+		    send_socket, 
+		    send_ring->offset,
+		    send_ring->length,
+		    NULL,
+		    (off_t *)&len,
+		    send_ring->flags) != 0) ||
+	  (len != send_size)) {
+#else /* original sendile HP-UX */
       if ((len=sendfile(send_socket, 
 			send_ring->fildes, 
 			send_ring->offset,
