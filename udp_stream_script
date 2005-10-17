@@ -21,8 +21,13 @@ fi
 #NETHOME="/opt/netperf"
 NETHOME="."
 
-# The test length in seconds
+# at what port will netserver be waiting? If you decide to run
+# netserver at a differnet port than the default of 12865, then set
+# the value of PORT apropriately
+#PORT="-p some_other_portnum"
+PORT=""
 
+# The test length in seconds
 TEST_TIME=60
 
 # How accurate we want the estimate of performance: 
@@ -63,12 +68,12 @@ fi
 # them in during the real tests. So, we execute the new CPU "tests"
 # of netperf and put the values into shell vars.
 case $LOC_CPU in
-\-c) LOC_RATE=`$NETHOME/netperf -t LOC_CPU`;;
+\-c) LOC_RATE=`$NETHOME/netperf $PORT -t LOC_CPU`;;
 *) LOC_RATE=""
 esac
 
 case $REM_CPU in
-\-C) REM_RATE=`$NETHOME/netperf -t REM_CPU -H $REM_HOST`;;
+\-C) REM_RATE=`$NETHOME/netperf $PORT -t REM_CPU -H $REM_HOST`;;
 *) REM_RATE=""
 esac
 
@@ -82,11 +87,11 @@ do
     echo
     echo ------------------------------------------------------
     echo Testing with the following command line:
-    echo $NETHOME/netperf -l $TEST_TIME -H $REM_HOST $STATS_STUFF \
+    echo $NETHOME/netperf $PORT -l $TEST_TIME -H $REM_HOST $STATS_STUFF \
            $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE -t UDP_STREAM -- \
            -m $SEND_SIZE -s $SOCKET_SIZE -S $SOCKET_SIZE
 
-    $NETHOME/netperf -l $TEST_TIME -H $REM_HOST $STATS_STUFF \
+    $NETHOME/netperf $PORT -l $TEST_TIME -H $REM_HOST $STATS_STUFF \
       $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE -t UDP_STREAM -- \
       -m $SEND_SIZE -s $SOCKET_SIZE -S $SOCKET_SIZE
 

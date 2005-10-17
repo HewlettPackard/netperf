@@ -1,5 +1,5 @@
 #
-# @(#)Makefile	2.0	02/08/95
+# @(#)Makefile	2.0PL1	02/08/95
 #
 # Makefile to build netperf benchmark tool
 #
@@ -20,8 +20,10 @@ NETPERF_HOME = /opt/netperf
 #                        platforms (IRIX, OSF/1)
 # /usr/ucb/cc          - the bundled C compiler under Solaris (?)
 # /opt/SUNWspro/bin/cc - the unbundled C compiler under Solaris (?)
+# cc                   - if your paths are set, this may be all you 
+#                        need
 
-CC = /bin/cc -Ae -O
+CC = cc
 
 # Adding flags to CFLAGS enables some non-mainline features. For
 # more information, please consult the source code.
@@ -35,7 +37,7 @@ CC = /bin/cc -Ae -O
 # -DINTERVALS - include code to allow pacing of sends in a UDP or TCP 
 #               test. this may have unexpected results on non-HP-UX
 #               systems as I have not learned how to emulated the
-#               functionality found within the _HPUX_SOURCE defines in
+#               functionality found within the __hpux defines in
 #               the catcher() routine of netlib.c
 # -DDO_DLPI   - include code to test the DLPI interface (may also 
 #               require changes to LIBS. see below)
@@ -45,10 +47,11 @@ CC = /bin/cc -Ae -O
 # -DDO_HIPPI  - include code to test the HP HiPPI LLA interface. if 
 #               you just want vanilla HP LLA, then also add
 #               -DBUTNOTHIPPI
-# -DSUNOS4    - if you are running SunOS 4.something, use this to 
-#               keep some tests from hanging
+# -D$(LOG_FILE) Specifies where netserver should put its debug output 
+#               when debug is enabled
 
-CFLAGS = 
+LOG_FILE=DEBUG_LOG_FILE="\"/tmp/netperf.debug\""
+CFLAGS = -D$(LOG_FILE)
 
 # Some platforms, and some options, require additional libraries.
 # you can add to the "LIBS =" line to accomplish this. if you find
@@ -76,6 +79,7 @@ SHAR_SOURCE_FILES = netlib.c netlib.h netperf.c netserver.c \
 		    nettest_unix.c nettest_unix.h \
 		    nettest_fore.c nettest_fore.h \
 		    nettest_hippi.c nettest_hippi.h \
+                    nettest_xti.c nettest_xti.h \
                     hist.h \
 		    makefile
 
@@ -89,11 +93,11 @@ SHAR_SCRIPT_FILES = tcp_stream_script udp_stream_script \
 
 NETSERVER_OBJS	  = netserver.o nettest_bsd.o nettest_dlpi.o \
                     nettest_unix.o netlib.o netsh.o nettest_fore.o \
-		    nettest_hippi.o
+		    nettest_hippi.o nettest_xti.o
 
 NETPERF_OBJS	  = netperf.o netsh.o netlib.o nettest_bsd.o \
                     nettest_dlpi.o nettest_unix.o nettest_fore.o \
-		    nettest_hippi.o
+		    nettest_hippi.o nettest_xti.o
 
 NETPERF_SCRIPTS   = tcp_range_script tcp_stream_script tcp_rr_script \
                     udp_stream_script udp_rr_script \
@@ -125,6 +129,8 @@ nettest_unix.o:	nettest_unix.c nettest_unix.h netlib.h netsh.h makefile
 nettest_fore.o: nettest_fore.c nettest_fore.h netlib.h netsh.h makefile
 
 nettest_hippi.o: nettest_hippi.c nettest_hippi.h netlib.h netsh.h makefile
+
+nettest_xti.o:   nettest_xti.c nettest_xti.h netlib.h netsh.h makefile
 
 netserver.o:	netserver.c nettest_bsd.h netlib.h makefile
 

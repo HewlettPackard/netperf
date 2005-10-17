@@ -1,7 +1,7 @@
 
 /*
  
-            Copyright (C) 1993,1994 Hewlett-Packard Company
+            Copyright (C) 1993,1994,1995 Hewlett-Packard Company
                          ALL RIGHTS RESERVED.
  
   The enclosed software and documention includes copyrighted works of
@@ -36,14 +36,14 @@
       DOCUMENTATION. HP SPECIFICALLY DISCLAIMS ALL WARRANTIES OF
       MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
   
-  5.  HEWLETT-PACKARD COMPANY WILL NOT IN ANY EVENT BE LIABLE FOT ANY
+  5.  HEWLETT-PACKARD COMPANY WILL NOT IN ANY EVENT BE LIABLE FOR ANY
       DIRECT, INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES
       (INCLUDING LOST PROFITS) RELATED TO ANY USE, REPRODUCTION,
       MODIFICATION, OR DISTRIBUTION OF THE SOFTWARE OR DOCUMENTATION.
  
 */
 char	netperf_id[]="\
-@(#)netperf.c (c) Copyright 1993, 1994 Hewlett-Packard Company. Version 2.0";
+@(#)netperf.c (c) Copyright 1993, 1994 Hewlett-Packard Company. Version 2.0PL1";
 
 #include <stdio.h>
 #include "netsh.h"
@@ -85,6 +85,11 @@ else if (strcmp(test_name,"TCP_RR") == 0) {
 else if (strcmp(test_name,"TCP_CRR") == 0) {
 	send_tcp_conn_rr(host_name);
 }
+#ifdef DO_1644
+else if (strcmp(test_name,"TCP_TRR") == 0) {
+	send_tcp_tran_rr(host_name);
+}
+#endif /* DO_1644 */
 else if (strcmp(test_name,"UDP_STREAM") == 0) {
 	send_udp_stream(host_name);
 }
@@ -141,6 +146,34 @@ else if (strcmp(test_name,"HIPPI_RR") == 0) {
 	send_hippi_rr(host_name);
 }
 #endif /* DO_HIPPI */
+#ifdef DO_XTI
+else if (strcmp(test_name,"XTI_TCP_STREAM") == 0) {
+	send_xti_tcp_stream(host_name);
+}
+else if (strcmp(test_name,"XTI_TCP_RR") == 0) {
+	send_xti_tcp_rr(host_name);
+}
+else if (strcmp(test_name,"XTI_UDP_STREAM") == 0) {
+	send_xti_udp_stream(host_name);
+}
+else if (strcmp(test_name,"XTI_UDP_RR") == 0) {
+	send_xti_udp_rr(host_name);
+}
+#endif /* DO_XTI */
+#ifdef DO_LWP
+else if (strcmp(test_name,"LWPSTR_STREAM") == 0) {
+	send_lwpstr_stream(host_name);
+}
+else if (strcmp(test_name,"LWPSTR_RR") == 0) {
+	send_lwpstr_rr(host_name);
+}
+else if (strcmp(test_name,"LWPDG_STREAM") == 0) {
+	send_lwpdg_stream(host_name);
+}
+else if (strcmp(test_name,"LWPDG_RR") == 0) {
+	send_lwpdg_rr(host_name);
+}
+#endif /* DO_LWP */
 else {
 	printf("The test you requested is unknown to this netperf.\n");
 	printf("Please verify that you have the correct test name, \n");

@@ -49,3 +49,8 @@ the netperf database (http://www.cup.hp.com/netperf/NetperfPage.html).
 His prompting finally got me off my whatever to put the confidence
 interval stuff from the guys at IBM into netperf
 
+Peter Skopp pds@cs.columbia.edu
+Fixes to make netperf more secure.	
+
+Tom Wilson (tcwilson@newbridge.com)
+A fix to send_udp_rr to correct bogus throughput values.

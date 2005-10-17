@@ -1,6 +1,6 @@
 
 char	netsh_id[]="\
-@(#)netsh.c (c) Copyright 1993, 1994 Hewlett-Packard Company. Version 2.0";
+@(#)netsh.c (c) Copyright 1993, 1994 Hewlett-Packard Company. Version 2.0PL1";
 
 
 /****************************************************************/
@@ -61,10 +61,11 @@ double atof();
 /*									*/
 /************************************************************************/
 
+/*
 extern int errno;
 extern char *sys_errlist[ ];
 extern int sys_nerr;
-
+*/
 
 /************************************************************************/
 /*									*/
@@ -339,9 +340,9 @@ scan_cmd_line(argc, argv)
       debug++;
       break;
     case 'D':
-#if (defined INTERVALS) && (defined _HPUX_SOURCE)
+#if (defined INTERVALS) && (defined __hpux)
       demo_mode++;
-#else /* INTERVALS _HPUX_SOURCE */
+#else /* INTERVALS __hpux */
       printf("Sorry, Demo Mode requires -DINTERVALS compilation \n");
       printf("as well as a mechanism to dynamically select syscall \n");
       printf("restart or interruption. I only know how to do this \n");
@@ -349,7 +350,7 @@ scan_cmd_line(argc, argv)
       printf("and let me know of more standard alternatives. \n");
       printf("                             Rick Jones <raj@cup.hp.com>\n");
       exit(1);
-#endif /* INTERVALS _HPUX_SOURCE */
+#endif /* INTERVALS __hpux */
       break;
     case 'f':
       /* set the thruput formatting */
@@ -494,10 +495,10 @@ scan_cmd_line(argc, argv)
       /* We want to send requests at a certain wate. */
       /* Remember that there are 1000000 usecs in a */
       /* second, and that the packet rate is */
-      /* expressed in packets per second. */
+      /* expressed in packets per millisecond. */
 #ifdef INTERVALS
-      interval_usecs = 1000000 / convert(optarg);
       interval_wate  = convert(optarg);
+      interval_usecs = interval_wate * 1000;
 #else
       fprintf(where,
 	      "Packet rate control is not compiled in.\n");
@@ -523,7 +524,9 @@ scan_cmd_line(argc, argv)
     if ((strcmp(test_name,"TCP_STREAM") == 0) || 
 	(strcmp(test_name,"TCP_RR") == 0) ||
 	(strcmp(test_name,"TCP_CRR") == 0) ||
-	(strcmp(test_name,"TCP_ARR") == 0) ||
+#ifdef DO_1644
+	(strcmp(test_name,"TCP_TRR") == 0) ||
+#endif /* DO_1644 */
 	(strcmp(test_name,"UDP_STREAM") == 0) ||
 	(strcmp(test_name,"UDP_RR") == 0))
       {
@@ -560,7 +563,25 @@ scan_cmd_line(argc, argv)
       {
 	scan_hippi_args(argc, argv);
       }
-#endif /* DO_FORE */
+#endif /* DO_HIPPI */
+#ifdef DO_XTI
+    else if ((strcmp(test_name,"XTI_TCP_RR") == 0) ||
+	     (strcmp(test_name,"XTI_TCP_STREAM") == 0) ||
+	     (strcmp(test_name,"XTI_UDP_RR") == 0) ||
+	     (strcmp(test_name,"XTI_UDP_STREAM") == 0))
+      {
+	scan_xti_args(argc, argv);
+      }
+#endif /* DO_XTI */
+#ifdef DO_LWP
+    else if ((strcmp(test_name,"XTI_LWPSTR_RR") == 0) ||
+	     (strcmp(test_name,"XTI_LWPSTR_STREAM") == 0) ||
+	     (strcmp(test_name,"XTI_LWPDG_RR") == 0) ||
+	     (strcmp(test_name,"XTI_LWPDG_STREAM") == 0))
+      {
+	scan_lwp_args(argc, argv);
+      }
+#endif /* DO_LWP */
   }
 }
 

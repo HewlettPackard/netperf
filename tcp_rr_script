@@ -27,6 +27,12 @@ fi
 #NETHOME="/opt/netperf"
 NETHOME=.
 
+# at what port will netserver be waiting? If you decide to run
+# netserver at a differnet port than the default of 12865, then set
+# the value of PORT apropriately
+#PORT="-p some_other_portnum"
+PORT=""
+
 # The test length in seconds
 TEST_TIME=60
 
@@ -63,12 +69,12 @@ fi
 # them in during the real tests. So, we execute the new CPU "tests"
 # of netperf and put the values into shell vars.
 case $LOC_CPU in
-\-c) LOC_RATE=`$NETHOME/netperf -t LOC_CPU`;;
+\-c) LOC_RATE=`$NETHOME/netperf $PORT -t LOC_CPU`;;
 *) LOC_RATE=""
 esac
 
 case $REM_CPU in
-\-C) REM_RATE=`$NETHOME/netperf -t REM_CPU -H $REM_HOST`;;
+\-C) REM_RATE=`$NETHOME/netperf $PORT -t REM_CPU -H $REM_HOST`;;
 *) REM_RATE=""
 esac
 
@@ -83,13 +89,13 @@ for SOCKET_SIZE in $SOCKET_SIZES
    echo ------------------------------------------------------
    echo Testing with the following command line:
    # we echo the command line for cut and paste to th database
-   echo $NETHOME/netperf -l $TEST_TIME -H $REM_HOST -t TCP_RR \
+   echo $NETHOME/netperf $PORT -l $TEST_TIME -H $REM_HOST -t TCP_RR \
         $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF --\
         -r $RR_SIZE -s $SOCKET_SIZE -S $SOCKET_SIZE
    echo
    # since we have the confidence interval stuff, we do not
    # need to repeat a test multiple times from the shell
-   $NETHOME/netperf -l $TEST_TIME -H $REM_HOST -t TCP_RR \
+   $NETHOME/netperf $PORT -l $TEST_TIME -H $REM_HOST -t TCP_RR \
    $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF --\
    -m $RR_SIZE -s $SOCKET_SIZE -S $SOCKET_SIZE
  done

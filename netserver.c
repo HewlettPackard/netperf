@@ -1,7 +1,7 @@
 
 /*
  
-            Copyright (C) 1993,1994 Hewlett-Packard Company
+            Copyright (C) 1993,1994,1995 Hewlett-Packard Company
                          ALL RIGHTS RESERVED.
  
   The enclosed software and documention includes copyrighted works of
@@ -43,7 +43,7 @@
  
 */
 char	netserver_id[]="\
-@(#)netserver.c (c) Copyright 1993, 1994 Hewlett-Packard Co. Version 2.0";
+@(#)netserver.c (c) Copyright 1993, 1994 Hewlett-Packard Co. Version 2.0PL1";
 
  /***********************************************************************/
  /*									*/
@@ -84,6 +84,10 @@ char	netserver_id[]="\
 #include "nettest_bsd.h"
 #include "nettest_dlpi.h"
 #include "netsh.h"
+
+#ifndef DEBUG_LOG_FILE
+#define DEBUG_LOG_FILE "/tmp/netperf.debug"
+#endif /* DEBUG_LOG_FILE */
 
  /* some global variables */
 
@@ -149,6 +153,12 @@ process_requests()
     case DO_TCP_CRR:
       recv_tcp_conn_rr();
       break;
+      
+#ifdef DO_1644
+    case DO_TCP_TRR:
+      recv_tcp_tran_rr();
+      break;
+#endif /* DO_1644 */
       
     case DO_UDP_STREAM:
       recv_udp_stream();
@@ -222,8 +232,46 @@ process_requests()
       
 #endif /* DO_HIPPI */
 
+#ifdef DO_XTI
+    case DO_XTI_TCP_STREAM:
+      recv_xti_tcp_stream();
+      break;
+      
+    case DO_XTI_TCP_RR:
+      recv_xti_tcp_rr();
+      break;
+      
+    case DO_XTI_UDP_STREAM:
+      recv_xti_udp_stream();
+      break;
+      
+    case DO_XTI_UDP_RR:
+      recv_xti_udp_rr();
+      break;
+
+#endif /* DO_XTI */
+#ifdef DO_LWP
+    case DO_LWPSTR_STREAM:
+      recv_lwpstr_stream();
+      break;
+      
+    case DO_LWPSTR_RR:
+      recv_lwpstr_rr();
+      break;
+      
+    case DO_LWPDG_STREAM:
+      recv_lwpdg_stream();
+      break;
+      
+    case DO_LWPDG_RR:
+      recv_lwpdg_rr();
+      break;
+
+#endif /* DO_LWP */
+
     default:
-      fprintf(where,"unknown test\n");
+      fprintf(where,"unknown test number %d\n",
+	      netperf_request->request_type);
       fflush(where);
       netperf_response->serv_errno=998;
       send_response();
@@ -291,6 +339,12 @@ void set_up_server()
       fclose(stdin);
       fclose(stderr);
       setpgrp();
+
+ /* some OS's have SIGCLD defined as SIGCHLD */
+#ifndef SIGCLD
+#define SIGCLD SIGCHLD
+#endif /* SIGCLD */
+
       signal(SIGCLD, SIG_IGN);
       
       for (;;)
@@ -375,14 +429,14 @@ char *argv[];
     }
   }
   
-  if ((where = fopen("/tmp/netperf.debug", "w")) == NULL) {
+  if ((where = fopen(DEBUG_LOG_FILE, "w")) == NULL) {
     if (listen_port_num) {
       perror("netserver: debug file");
     }
     exit(1);
   }
   
-  chmod("/tmp/netperf.debug",0777);
+  chmod(DEBUG_LOG_FILE,0644);
   
   /* if we were given a port number, then we should open a */
   /* socket and hang listens off of it. otherwise, we should go */
