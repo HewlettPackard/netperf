@@ -1,9 +1,12 @@
 #ifdef lint
-#define DO_UNIX
+#define WANT_UNIX
 #define DIRTY
-#define INTERVALS
+#define WANT_INTERVALS
 #endif /* lint */
-#ifdef DO_UNIX
+
+#include <config.h>
+
+#ifdef WANT_UNIX
 char	nettest_unix_id[]="\
 @(#)nettest_unix.c (c) Copyright 1994-2004 Hewlett-Packard Co. Version 2.3";
      
@@ -222,7 +225,7 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
   
   float			elapsed_time;
   
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
   int interval_count;
 #endif
   
@@ -493,7 +496,7 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
       printf("len was %d\n",len);
       exit(1);
     }
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
     for (interval_count = 0;
 	 interval_count < interval_wate;
 	 interval_count++);
@@ -1551,9 +1554,9 @@ bytes   bytes    secs            #      #   %s/sec   %%       us/KB\n\n";
   SOCKET data_socket;
   
   
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
   int	interval_count;
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
 #ifdef DIRTY
   int	*message_int_ptr;
   int	i;
@@ -1694,7 +1697,7 @@ bytes   bytes    secs            #      #   %s/sec   %%       us/KB\n\n";
   
   cpu_start(local_cpu_usage);
   
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
   interval_count = interval_burst;
 #endif
   
@@ -1744,7 +1747,7 @@ bytes   bytes    secs            #      #   %s/sec   %%       us/KB\n\n";
     send_ring = send_ring->next;
     
     
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
     /* in this case, the interval count is the count-down couter */
     /* to decide to sleep for a little bit */
     if ((interval_burst) && (--interval_count == 0)) {
@@ -2215,7 +2218,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      us/Tr   us/Tr\n\n"
   float	remote_service_demand;
   double	thruput;
   
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
   /* timing stuff */
 #define	MAX_KEPT_TIMES	1024
   int	time_index = 0;
@@ -2243,7 +2246,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      us/Tr   us/Tr\n\n"
     (struct dg_rr_results_struct *)netperf_response.content.test_specific_data;
   
   /* we want to zero out the times, so we can detect unused entries. */
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
   time_index = 0;
   while (time_index < MAX_KEPT_TIMES) {
     kept_times[time_index] = 0;
@@ -2445,7 +2448,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      us/Tr   us/Tr\n\n"
   /* the send buffer and the receive buffer should be the same buffer. */
   while ((!times_up) || (trans_remaining > 0)) {
     /* send the request */
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
     gettimeofday(&send_time,&dummy_zone);
 #endif
     if((len=send(send_socket,
@@ -2474,7 +2477,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      us/Tr   us/Tr\n\n"
       perror("send_dg_rr: data recv error");
       exit(1);
     }
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
     gettimeofday(&recv_time,&dummy_zone);
     
     /* now we do some arithmatic on the two timevals */
@@ -2695,7 +2698,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      us/Tr   us/Tr\n\n"
     /* DG statistics, the alignments of the sends and receives */
     /* and all that sort of rot... */
     
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
     kept_times[MAX_KEPT_TIMES] = 0;
     time_index = 0;
     while (time_index < MAX_KEPT_TIMES) {
@@ -3408,4 +3411,4 @@ scan_unix_args(int argc, char *argv[])
     };
   }
 }
-#endif /* DO_UNIX */ 
+#endif /* WANT_UNIX */ 

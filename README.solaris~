@@ -1,0 +1,13 @@
+Until such time as Rick Jones can figure-out or be told how to make it
+automagic in the configure script, prior to configure on solaris, you
+may need:
+
+CFLAGS="-lsocket -lnsl -lkstat"
+
+and if you are trying to compile the SCTP tests:
+
+CFLAGS="-lxnet -lsocket -lnsl -lkstat -D_XOPEN_SOURCE=500 -D__EXTENSIONS__"
+
+beware CPU util figures on anything before Solaris 10 that does not
+say 100%, and still be a triffle cautious with Solaris 10 CPU util
+reports.

@@ -7,9 +7,10 @@
 
 /* defines and defaults */
 #define		HOSTNAMESIZE 	255
+#define         PORTBUFSIZE     10
 #define		DEFAULT_SIZE	32768
 #define		HOST_NAME	"127.0.0.1"
-#define		TEST_PORT	12865
+#define		TEST_PORT	"12865"
 
 /* output controlling variables                                         */
 #define 	DEBUG 0		/* debugging level			*/
@@ -37,12 +38,17 @@ extern char		*program;		/* program invocation name		*/
 
 /* stuff to say where this test is going                                */
 extern char	host_name[HOSTNAMESIZE];/* remote host name or ip addr  */
-extern short	test_port;		/* where is the test waiting    */
-
+extern char     local_host_name[HOSTNAMESIZE];
+extern char	test_port[PORTBUFSIZE]; /* where is the test waiting    */
+extern char     local_test_port[PORTBUFSIZE];
+extern int      address_family;
+extern int      local_address_family;
+extern int      parse_address_family(char family_string[]);
 extern void     set_defaults();
 extern void     scan_cmd_line(int argc, char *argv[]);
 extern void     dump_globals();
 extern void     break_args(char *s, char *arg1, char *arg2);
+extern void     break_args_explicit(char *s, char *arg1, char *arg2);
 extern void     print_netserver_usage();
 
 /* output controlling variables                                         */
@@ -70,13 +76,18 @@ extern int
   remote_send_offset,
   remote_recv_offset;
 
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
 extern	int          interval_usecs;
 extern  int          interval_wate;
 extern	int	     interval_burst;
-extern  int          demo_mode;
-extern  unsigned int units_this_tick;
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
+
+#ifdef WANT_DEMO
+extern int    demo_mode;
+extern double demo_interval;
+extern double demo_units;
+extern double units_this_tick;
+#endif 
 
 #ifdef DIRTY
 extern int	rem_dirty_count;
@@ -117,7 +128,7 @@ extern	char
 extern char
   fill_file[BUFSIZ];
 
-#ifdef DO_DLPI
+#ifdef WANT_DLPI
 
 extern int
   loc_ppa,
@@ -126,6 +137,6 @@ extern int
 extern int
   dlpi_sap;
 
-#endif /* DO_DLPI */
+#endif /* WANT_DLPI */
 
 #endif

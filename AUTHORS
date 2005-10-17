@@ -122,11 +122,39 @@ Fixes for DLPI on SVR4 Streams under Linux
 Dave Craig
 Fixes for getaddrinfo error returns
 
-David Mosberger
+David Mosberger of HP
 Workaround for the Linux getsockopt() bug that returns more than that
 for which one asked.
 
-Stephen Burger
+Stephen Burger of HP
 Code to implement the netserver CPU binding.
 
+Vladislav "Vlad" Yasevich of HP
+Initial SCTP tests.  Enhancements to the configure.ac sources to show
+the way to make many of the LIBS="foo" before ./configure unnecessary.
 
+Padmanabhan "Paddu" S N of HP
+Patches for /proc/stat CPU util and recv_tcp_rr.
+
+Cary Coutant and other hp-mac-users of HP
+Access to Mac OS X systems for porting netperf 2.4.0
+
+Chris Bertin of HP
+Access to AIX for initial porting of netperf 2.4.0
+
+James Carlson
+Assistance finding the right magic to compile SCTP on Solaris 10.
+
+Gavin 
+Pointers on Solaris 10 Microstate accounting.
+
+Brent Draney
+Getting netcpu_perfstat.c in running order on AIX and other misc
+fixups in places such as BSD.
+
+Samuel Ying
+Change struct sockaddr to struct sockaddr storage in netserver.c
+
+Rodolpho Boer
+Fix for default message size in UDP_STREAM when defualt SO_SNDBUF size
+is > max UDP datagram size.

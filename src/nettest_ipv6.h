@@ -273,7 +273,6 @@ struct udpipv6_rr_results_struct {
 
 extern void scan_ipv6_args(int argc, char *argv[]);
 
-//+*+extern void scan_sockets_args(int argc, char *argv[]);  // included by nettest_bsd.h
 
 extern void send_tcpipv6_stream(char remote_host[]);
 extern void send_tcpipv6_rr(char remote_host[]);

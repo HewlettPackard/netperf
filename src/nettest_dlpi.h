@@ -5,7 +5,6 @@
  /* This file contains the test-specific definitions for netperf's */
  /* DLPI tests */
 
-//#define PAD_TIME 2   // defined in netlib.h as 4
 
 struct	dlpi_co_stream_request_struct {
   int	recv_win_size;

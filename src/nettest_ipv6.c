@@ -1,11 +1,11 @@
 #ifdef DO_IPV6
 #ifndef lint
 char	nettest_ipv6_id[]="\
-@(#)nettest_ipv6.c (c) Copyright 1995-2004 Hewlett-Packard Co. Version 2.3";
+@(#)nettest_ipv6.c (c) Copyright 1995-2004 Hewlett-Packard Co. Version 2.3pl2";
 #else
 #define DIRTY
-#define HISTOGRAM
-#define INTERVALS
+#define WANT_HISTOGRAM
+#define WANT_INTERVALS
 #endif /* lint */
 
 /****************************************************************/
@@ -30,6 +30,11 @@ char	nettest_ipv6_id[]="\
 /*	recv_udpipv6_rr()					*/
 /*								*/
 /****************************************************************/
+
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
  /* for the initial development systems, it is/was necessary to define */
  /* INET6 before including the files */
@@ -66,12 +71,12 @@ char	nettest_ipv6_id[]="\
 #include "nettest_bsd.h"
 #include "nettest_ipv6.h"
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
 #ifdef __sgi
 #include <sys/time.h>
 #endif /* __sgi */
 #include "hist.h"
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
 
 
@@ -109,7 +114,7 @@ int
   rem_sndavoid,		/* avoid send copies remotely		*/
   rem_rcvavoid;		/* avoid recv_copies remotely		*/
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
 #ifdef HAVE_GETHRTIME
 hrtime_t time_one;
 hrtime_t time_two;
@@ -118,7 +123,7 @@ static struct timeval time_one;
 static struct timeval time_two;
 #endif /* HAVE_GETHRTIME */
 static HIST time_hist;
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
  /* this is here since the V6 namespace may not be the same os the V4 */
  /* (still used for the control connection) space. raj 10/95 */
@@ -381,7 +386,7 @@ Size (bytes)\n\
   
   float			elapsed_time;
   
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
   int interval_count;
   sigset_t signal_set;
 #endif
@@ -403,7 +408,7 @@ Size (bytes)\n\
   unsigned int nummessages = 0;
   SOCKET send_socket;
   int bytes_remaining;
-  int tcp_mss = -1;  // possibly uninitialized on printf far below
+  int tcp_mss = -1;  /* possibly uninitialized on printf far below */
 
   /* with links like fddi, one can send > 32 bits worth of bytes */
   /* during a test... ;-) at some point, this should probably become a */
@@ -435,9 +440,9 @@ Size (bytes)\n\
   tcpipv6_stream_result   = 
     (struct tcpipv6_stream_results_struct *)netperf_response.content.test_specific_data;
   
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
   time_hist = HIST_new();
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
   /* since we are now disconnected from the code that established the */
   /* control socket, and since we want to be able to use different */
   /* protocols and such, we are passed the name of the remote host and */
@@ -475,12 +480,12 @@ Size (bytes)\n\
 	rem_rcvavoid) {
       fprintf(where," : copy avoidance");
     }
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     fprintf(where," : histogram");
-#endif /* HISTOGRAM */
-#ifdef INTERVALS
+#endif /* WANT_HISTOGRAM */
+#ifdef WANT_INTERVALS
     fprintf(where," : interval");
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
 #ifdef DIRTY 
     fprintf(where," : dirty data");
 #endif /* DIRTY */
@@ -687,7 +692,7 @@ Size (bytes)\n\
     
     cpu_start(local_cpu_usage);
     
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
     if ((interval_burst) || (demo_mode)) {
       /* zero means that we never pause, so we never should need the */
       /* interval timer, unless we are in demo_mode */
@@ -702,7 +707,7 @@ Size (bytes)\n\
       fflush(where);
       exit(1);
     }
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
 
 #ifdef DIRTY
     /* initialize the random number generator for putting dirty stuff */
@@ -738,11 +743,11 @@ Size (bytes)\n\
       }
 #endif /* DIRTY */
       
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
       /* timestamp just before we go into send and then again just after */
       /* we come out raj 8/94 */
       HIST_timestamp(&time_one);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
       
       if((len=send(send_socket,
 		   send_ring->buffer_ptr,
@@ -757,13 +762,13 @@ Size (bytes)\n\
 	exit(1);
       }
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
       /* timestamp the exit from the send call and update the histogram */
       HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
-#endif /* HISTOGRAM */      
+#endif /* WANT_HISTOGRAM */      
 
-#ifdef INTERVALS      
+#ifdef WANT_INTERVALS      
       if (demo_mode) {
 	units_this_tick += send_size;
       }
@@ -784,7 +789,7 @@ Size (bytes)\n\
 	}
 	interval_count = interval_burst;
       }
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
       
       /* now we want to move our pointer to the next position in the */
       /* data buffer...we may also want to wrap back to the "beginning" */
@@ -1052,11 +1057,11 @@ Size (bytes)\n\
 	    ksink_fmt2,
 	    tcp_mss);
     fflush(where);
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     fprintf(where,"\n\nHistogram of time spent in send() call.\n");
     fflush(where);
     HIST_report(time_hist);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
   }
   
 }
@@ -1486,10 +1491,10 @@ Send   Recv    Send   Recv\n\
   struct	tcpipv6_rr_response_struct	*tcpipv6_rr_response;
   struct	tcpipv6_rr_results_struct	*tcpipv6_rr_result;
   
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
   int	interval_count;
   sigset_t signal_set;
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
 
   tcpipv6_rr_request = 
     (struct tcpipv6_rr_request_struct *)netperf_request.content.test_specific_data;
@@ -1498,9 +1503,9 @@ Send   Recv    Send   Recv\n\
   tcpipv6_rr_result	=
     (struct tcpipv6_rr_results_struct *)netperf_response.content.test_specific_data;
   
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
   time_hist = HIST_new();
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
   /* since we are now disconnected from the code that established the */
   /* control socket, and since we want to be able to use different */
@@ -1547,12 +1552,12 @@ Send   Recv    Send   Recv\n\
 	rem_rcvavoid) {
       fprintf(where," : copy avoidance");
     }
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     fprintf(where," : histogram");
-#endif /* HISTOGRAM */
-#ifdef INTERVALS
+#endif /* WANT_HISTOGRAM */
+#ifdef WANT_INTERVALS
     fprintf(where," : interval");
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
 #ifdef DIRTY 
     fprintf(where," : dirty data");
 #endif /* DIRTY */
@@ -1732,7 +1737,7 @@ Send   Recv    Send   Recv\n\
     
     cpu_start(local_cpu_usage);
 
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
     if ((interval_burst) || (demo_mode)) {
       /* zero means that we never pause, so we never should need the */
       /* interval timer, unless we are in demo_mode */
@@ -1747,7 +1752,7 @@ Send   Recv    Send   Recv\n\
       fflush(where);
       exit(1);
     }
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
     
     /* We use an "OR" to control test execution. When the test is */
     /* controlled by time, the byte count check will always return false. */
@@ -1762,11 +1767,11 @@ Send   Recv    Send   Recv\n\
       /* send the request. we assume that if we use a blocking socket, */
       /* the request will be sent at one shot. */
       
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
       /* timestamp just before our call to send, and then again just */
       /* after the receive raj 8/94 */
       HIST_timestamp(&time_one);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
       
       if((len=send(send_socket,
 		   send_ring->buffer_ptr,
@@ -1810,11 +1815,11 @@ Send   Recv    Send   Recv\n\
 	break;
       }
       
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
       HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
-#endif /* HISTOGRAM */
-#ifdef INTERVALS      
+#endif /* WANT_HISTOGRAM */
+#ifdef WANT_INTERVALS      
       if (demo_mode) {
 	units_this_tick += 1;
       }
@@ -1835,7 +1840,7 @@ Send   Recv    Send   Recv\n\
 	}
 	interval_count = interval_burst;
       }
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
       
       nummessages++;          
       if (trans_remaining) {
@@ -2076,11 +2081,11 @@ Send   Recv    Send   Recv\n\
 	    local_send_offset,
 	    remote_recv_offset);
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     fprintf(where,"\nHistogram of request/response times\n");
     fflush(where);
     HIST_report(time_hist);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
   }
   
@@ -2142,10 +2147,10 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
   unsigned int sum_failed_sends;
   double sum_local_thruput;
 
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
   int	interval_count;
   sigset_t signal_set;
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
 #ifdef DIRTY
   int	*message_int_ptr;
   int	i;
@@ -2165,9 +2170,9 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
   udpipv6_stream_results	= 
     (struct udpipv6_stream_results_struct *)netperf_response.content.test_specific_data;
   
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
   time_hist = HIST_new();
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
   /* since we are now disconnected from the code that established the */
   /* control socket, and since we want to be able to use different */
@@ -2207,12 +2212,12 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
 	rem_rcvavoid) {
       fprintf(where," : copy avoidance");
     }
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     fprintf(where," : histogram");
-#endif /* HISTOGRAM */
-#ifdef INTERVALS
+#endif /* WANT_HISTOGRAM */
+#ifdef WANT_INTERVALS
     fprintf(where," : interval");
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
 #ifdef DIRTY 
     fprintf(where," : dirty data");
 #endif /* DIRTY */
@@ -2362,7 +2367,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     
     cpu_start(local_cpu_usage);
     
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
     if ((interval_burst) || (demo_mode)) {
       /* zero means that we never pause, so we never should need the */
       /* interval timer, unless we are in demo_mode */
@@ -2377,7 +2382,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
       fflush(where);
       exit(1);
     }
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
     
     /* Send datagrams like there was no tomorrow. at somepoint it might */
     /* be nice to set this up so that a quantity of bytes could be sent, */
@@ -2404,9 +2409,9 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
       }
 #endif /* DIRTY */
       
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
       HIST_timestamp(&time_one);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
       
       if ((len=send(data_socket,
 		    send_ring->buffer_ptr,
@@ -2429,12 +2434,12 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
       send_ring = send_ring->next;
       
       
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
       /* get the second timestamp */
       HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
-#endif /* HISTOGRAM */
-#ifdef INTERVALS      
+#endif /* WANT_HISTOGRAM */
+#ifdef WANT_INTERVALS      
       if (demo_mode) {
 	units_this_tick += send_size;
       }
@@ -2455,7 +2460,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
 	}
 	interval_count = interval_burst;
       }
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
       
     }
     
@@ -2674,13 +2679,13 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
   }
 
   fflush(where);
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
   if (verbosity > 1) {
     fprintf(where,"\nHistogram of time spent in send() call\n");
     fflush(where);
     HIST_report(time_hist);
   }
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
 }
 
@@ -3042,10 +3047,10 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
   struct	udpipv6_rr_response_struct	*udpipv6_rr_response;
   struct	udpipv6_rr_results_struct	*udpipv6_rr_result;
 
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
   int	interval_count;
   sigset_t signal_set;
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
   
   udpipv6_rr_request  =
     (struct udpipv6_rr_request_struct *)netperf_request.content.test_specific_data;
@@ -3054,7 +3059,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
   udpipv6_rr_result	 =
     (struct udpipv6_rr_results_struct *)netperf_response.content.test_specific_data;
   
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
   time_hist = HIST_new();
 #endif
   
@@ -3096,12 +3101,12 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 	rem_rcvavoid) {
       fprintf(where," : copy avoidance");
     }
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     fprintf(where," : histogram");
-#endif /* HISTOGRAM */
-#ifdef INTERVALS
+#endif /* WANT_HISTOGRAM */
+#ifdef WANT_INTERVALS
     fprintf(where," : interval");
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
 #ifdef DIRTY 
     fprintf(where," : dirty data");
 #endif /* DIRTY */
@@ -3291,7 +3296,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
     
     cpu_start(local_cpu_usage);
 
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
     if ((interval_burst) || (demo_mode)) {
       /* zero means that we never pause, so we never should need the */
       /* interval timer, unless we are in demo_mode */
@@ -3306,7 +3311,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
       fflush(where);
       exit(1);
     }
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
     
     /* We use an "OR" to control test execution. When the test is */
     /* controlled by time, the byte count check will always return */
@@ -3320,7 +3325,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 
     while ((!times_up) || (trans_remaining > 0)) {
       /* send the request */
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
       HIST_timestamp(&time_one);
 #endif
       if((len=send(send_socket,
@@ -3352,7 +3357,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
       }
       recv_ring = recv_ring->next;
       
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
       HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
       
@@ -3362,7 +3367,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
       /* will not sleep if the time would be less than a */
       /* millisecond.  */
 #endif
-#ifdef INTERVALS      
+#ifdef WANT_INTERVALS      
       if (demo_mode) {
 	units_this_tick += 1;
       }
@@ -3383,7 +3388,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 	}
 	interval_count = interval_burst;
       }
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
       
       nummessages++;          
       if (trans_remaining) {
@@ -3626,11 +3631,11 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
     /* UDP statistics, the alignments of the sends and receives */
     /* and all that sort of rot... */
     
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     fprintf(where,"\nHistogram of request/reponse times.\n");
     fflush(where);
     HIST_report(time_hist);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
   }
 }
 
@@ -4394,9 +4399,9 @@ Send   Recv    Send   Recv\n\
     (struct tcpipv6_conn_rr_results_struct *)netperf_response.content.test_specific_data;
   
   
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
   time_hist = HIST_new();
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
   /* since we are now disconnected from the code that established the */
   /* control socket, and since we want to be able to use different */
@@ -4451,12 +4456,12 @@ Send   Recv    Send   Recv\n\
 	rem_rcvavoid) {
       fprintf(where," : copy avoidance");
     }
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     fprintf(where," : histogram");
-#endif /* HISTOGRAM */
-#ifdef INTERVALS
+#endif /* WANT_HISTOGRAM */
+#ifdef WANT_INTERVALS
     fprintf(where," : interval");
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
 #ifdef DIRTY 
     fprintf(where," : dirty data");
 #endif /* DIRTY */
@@ -4614,11 +4619,11 @@ Send   Recv    Send   Recv\n\
 
   while ((!times_up) || (trans_remaining > 0)) {
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     /* timestamp just before our call to create the socket, and then */
     /* again just after the receive raj 3/95 */
     HIST_timestamp(&time_one);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
     /* set up the data socket */
     send_socket = create_data_socket(AF_INET6, 
@@ -4764,10 +4769,10 @@ newport:
 
     close(send_socket);
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     HIST_timestamp(&time_two);
     HIST_add(time_hist,delta_micro(&time_one,&time_two));
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
     nummessages++;          
     if (trans_remaining) {
@@ -4969,11 +4974,11 @@ newport:
 	    local_send_offset,
 	    remote_recv_offset);
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     fprintf(where,"\nHistogram of request/response times\n");
     fflush(where);
     HIST_report(time_hist);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
   }
   
@@ -5463,9 +5468,9 @@ Send   Recv    Send   Recv\n\
     (struct tcpipv6_tran_rr_results_struct *)netperf_response.content.test_specific_data;
   
   
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
   time_hist = HIST_new();
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
   /* since we are now disconnected from the code that established the */
   /* control socket, and since we want to be able to use different */
@@ -5521,12 +5526,12 @@ Send   Recv    Send   Recv\n\
 	rem_rcvavoid) {
       fprintf(where," : copy avoidance");
     }
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     fprintf(where," : histogram");
-#endif /* HISTOGRAM */
-#ifdef INTERVALS
+#endif /* WANT_HISTOGRAM */
+#ifdef WANT_INTERVALS
     fprintf(where," : interval");
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
 #ifdef DIRTY 
     fprintf(where," : dirty data");
 #endif /* DIRTY */
@@ -5686,11 +5691,11 @@ Send   Recv    Send   Recv\n\
 
   while ((!times_up) || (trans_remaining > 0)) {
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     /* timestamp just before our call to create the socket, and then */
     /* again just after the receive raj 3/95 */
     HIST_timestamp(&time_one);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
     /* set up the data socket - is this really necessary or can I just */
     /* re-use the same socket and move this cal out of the while loop. */
@@ -5820,10 +5825,10 @@ newport:
 
     close(send_socket);
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     HIST_timestamp(&time_two);
     HIST_add(time_hist,delta_micro(&time_one,&time_two));
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
     nummessages++;          
     if (trans_remaining) {
@@ -6025,11 +6030,11 @@ newport:
 	    local_send_offset,
 	    remote_recv_offset);
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     fprintf(where,"\nHistogram of request/response times\n");
     fflush(where);
     HIST_report(time_hist);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
   }
   
@@ -6371,7 +6376,7 @@ recv_tcpipv6_tran_rr()
 			  send_message_ptr,
 			  tcpipv6_tran_rr_request->response_size,
 			  MSG_EOF,
-			  &peeraddr_in,
+			  (struct sockaddr *)&peeraddr_in,
 			  sizeof(struct sockaddr_in6))) == INVALID_SOCKET) {
       if (SOCKET_EINTR(bytes_sent)) {
 	/* the test timer has popped */
@@ -6518,10 +6523,10 @@ Send   Recv    Send   Recv\n\
   struct	tcpipv6_rr_response_struct	*tcpipv6_rr_response;
   struct	tcpipv6_rr_results_struct	*tcpipv6_rr_result;
   
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
   int	interval_count;
   sigset_t signal_set;
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
 
   tcpipv6_rr_request = 
     (struct tcpipv6_rr_request_struct *)netperf_request.content.test_specific_data;
@@ -6530,9 +6535,9 @@ Send   Recv    Send   Recv\n\
   tcpipv6_rr_result	=
     (struct tcpipv6_rr_results_struct *)netperf_response.content.test_specific_data;
   
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
   time_hist = HIST_new();
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
   /* since we are now disconnected from the code that established the */
   /* control socket, and since we want to be able to use different */
@@ -6575,12 +6580,12 @@ Send   Recv    Send   Recv\n\
 	rem_rcvavoid) {
       fprintf(where," : copy avoidance");
     }
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     fprintf(where," : histogram");
-#endif /* HISTOGRAM */
-#ifdef INTERVALS
+#endif /* WANT_HISTOGRAM */
+#ifdef WANT_INTERVALS
     fprintf(where," : interval");
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
 #ifdef DIRTY 
     fprintf(where," : dirty data");
 #endif /* DIRTY */
@@ -6766,7 +6771,7 @@ Send   Recv    Send   Recv\n\
     
     cpu_start(local_cpu_usage);
 
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
     if ((interval_burst) || (demo_mode)) {
       /* zero means that we never pause, so we never should need the */
       /* interval timer, unless we are in demo_mode */
@@ -6781,7 +6786,7 @@ Send   Recv    Send   Recv\n\
       fflush(where);
       exit(1);
     }
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
     
     /* We use an "OR" to control test execution. When the test is */
     /* controlled by time, the byte count check will always return false. */
@@ -6796,11 +6801,11 @@ Send   Recv    Send   Recv\n\
       /* send the request. we assume that if we use a blocking socket, */
       /* the request will be sent at one shot. */
       
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
       /* timestamp just before our call to send, and then again just */
       /* after the receive raj 8/94 */
       HIST_timestamp(&time_one);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
       /* even though this is a non-blocking socket, we will assume for */
       /* the time being that we will be able to send an entire request */
@@ -6854,11 +6859,11 @@ Send   Recv    Send   Recv\n\
 	break;
       }
       
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
       HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
-#endif /* HISTOGRAM */
-#ifdef INTERVALS      
+#endif /* WANT_HISTOGRAM */
+#ifdef WANT_INTERVALS      
       if (demo_mode) {
 	units_this_tick += 1;
       }
@@ -6879,7 +6884,7 @@ Send   Recv    Send   Recv\n\
 	}
 	interval_count = interval_burst;
       }
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
       
       nummessages++;          
       if (trans_remaining) {
@@ -7120,11 +7125,11 @@ Send   Recv    Send   Recv\n\
 	    local_send_offset,
 	    remote_recv_offset);
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     fprintf(where,"\nHistogram of request/response times\n");
     fflush(where);
     HIST_report(time_hist);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
   }
   

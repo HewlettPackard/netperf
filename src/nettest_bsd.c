@@ -1,13 +1,10 @@
-#ifdef NEED_MAKEFILE_EDIT
-#error you must first edit and customize the makefile to your platform
-#endif /* NEED_MAKEFILE_EDIT */
 #ifndef lint
 char	nettest_id[]="\
-@(#)nettest_bsd.c (c) Copyright 1993-2004 Hewlett-Packard Co. Version 2.3pl1";
+@(#)nettest_bsd.c (c) Copyright 1993-2004 Hewlett-Packard Co. Version 2.3pl2";
 #else
 #define DIRTY
-#define HISTOGRAM
-#define INTERVALS
+#define WANT_HISTOGRAM
+#define WANT_INTERVALS
 #endif /* lint */
 
 /****************************************************************/
@@ -40,28 +37,71 @@ char	nettest_id[]="\
 /*	rem_cpu_rate()		find the remote cpu maxrate	*/
 /*								*/
 /****************************************************************/
-     
-#include <sys/types.h>
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#include <stdio.h>
+#if HAVE_SYS_TYPES_H
+# include <sys/types.h>
+#endif
+#if HAVE_SYS_STAT_H
+# include <sys/stat.h>
+#endif
+#if STDC_HEADERS
+# include <stdlib.h>
+# include <stddef.h>
+#else
+# if HAVE_STDLIB_H
+#  include <stdlib.h>
+# endif
+#endif
+#if HAVE_STRING_H
+# if !STDC_HEADERS && HAVE_MEMORY_H
+#  include <memory.h>
+# endif
+# include <string.h>
+#endif
+#if HAVE_STRINGS_H
+# include <strings.h>
+#endif
+#if HAVE_INTTYPES_H
+# include <inttypes.h>
+#else
+# if HAVE_STDINT_H
+#  include <stdint.h>
+# endif
+#endif
+#if HAVE_UNISTD_H
+# include <unistd.h>
+#endif
+
 #include <fcntl.h>
 #ifndef WIN32
 #include <errno.h>
 #include <signal.h>
 #endif
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
+
+#if TIME_WITH_SYS_TIME
+# include <sys/time.h>
+# include <time.h>
+#else
+# if HAVE_SYS_TIME_H
+#  include <sys/time.h>
+# else
+#  include <time.h>
+# endif
+#endif
+
 #ifdef NOSTDLIBH
 #include <malloc.h>
-#else /* NOSTDLIBH */
-#include <stdlib.h>
 #endif /* NOSTDLIBH */
 
 #ifndef WIN32
-#include <sys/time.h>
 #if !defined(__VMS)
 #include <sys/ipc.h>
 #endif /* !defined(__VMS) */
-#include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
@@ -73,20 +113,21 @@ char	nettest_id[]="\
 #include <windows.h>
 #endif /* WIN32 */
 
+#if !defined(HAVE_GETADDRINFO) || !defined(HAVE_GETNAMEINFO)
+# include "missing/getaddrinfo.h"
+#endif
+
 #include "netlib.h"
 #include "netsh.h"
 #include "nettest_bsd.h"
 
-#ifdef HISTOGRAM
-#ifdef __sgi
-#include <sys/time.h>
-#endif /* __sgi */
+#ifdef WANT_HISTOGRAM
 #include "hist.h"
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
-#ifdef DO_FIRST_BURST
+#ifdef WANT_FIRST_BURST
 int first_burst_size=0;
-#endif /* DO_FIRST_BURST */
+#endif /* WANT_FIRST_BURST */
 
 #if defined(HAVE_SENDFILE) && (defined(__linux) || defined(__SunOS_5_9))
 #include <sys/sendfile.h>
@@ -94,10 +135,13 @@ int first_burst_size=0;
 
 
 
- /* these variables are specific to the BSD sockets tests. declare */
- /* them static to make them global only to this file. */
+/* these variables are specific to the BSD sockets tests, but can
+ * be used elsewhere if needed.  They are externed through nettest_bsd.h
+ */
 
-static int	
+int	
+  rss_size_req,		/* requested remote socket send buffer size */
+  rsr_size_req,		/* requested remote socket recv buffer size */
   rss_size,		/* remote socket send buffer size	*/
   rsr_size,		/* remote socket recv buffer size	*/
   lss_size_req,		/* requested local socket send buffer size */
@@ -113,17 +157,10 @@ static  int confidence_iteration;
 static  char  local_cpu_method;
 static  char  remote_cpu_method;
 
- /* these will control the width of port numbers we try to use in the */
- /* TCP_CRR and/or TCP_TRR tests. raj 3/95 */
+/* these will control the width of port numbers we try to use in the */
+/* TCP_CRR and/or TCP_TRR tests. raj 3/95 */
 static int client_port_min = 5000;
 static int client_port_max = 65535;
-
-/* these are to allow netperf to be run easily through those evil,
-   end-to-end breaking things known as firewalls */
-static int local_data_port = 0;
-static int remote_data_port = 0;
-static in_addr_t local_data_ip = INADDR_ANY;
-static in_addr_t remote_data_ip = INADDR_ANY;
 
  /* different options for the sockets				*/
 
@@ -139,26 +176,129 @@ int
   rem_sndavoid,		/* avoid send copies remotely		*/
   rem_rcvavoid;		/* avoid recv_copies remotely		*/
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
 #ifdef HAVE_GETHRTIME
-hrtime_t time_one;
-hrtime_t time_two;
+static hrtime_t time_one;
+static hrtime_t time_two;
 #else
 static struct timeval time_one;
 static struct timeval time_two;
 #endif /* HAVE_GETHRTIME */
 static HIST time_hist;
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
+#ifdef WANT_DEMO
+#ifdef HAVE_GETHRTIME
+static hrtime_t demo_one;
+static hrtime_t demo_two;
+static hrtime_t *demo_one_ptr = &demo_one;
+static hrtime_t *demo_two_ptr = &demo_two;
+static hrtime_t *temp_demo_ptr = &demo_one;
+#else
+static struct timeval demo_one;
+static struct timeval demo_two;
+static struct timeval *demo_one_ptr = &demo_one;
+static struct timeval *demo_two_ptr = &demo_two;
+static struct timeval *temp_demo_ptr = &demo_one;
+#endif 
+
+/* for a _STREAM test, "a" should be lss_size and "b" should be
+   rsr_size. for a _MAERTS test, "a" should be lsr_size and "b" should
+   be rss_size. raj 2005-04-06 */
+#define DEMO_STREAM_SETUP(a,b) \
+    if ((demo_mode) && (demo_units == 0)) { \
+      /* take our default value of demo_units to be the larger of \
+	 twice the remote's SO_RCVBUF or twice our SO_SNDBUF */ \
+      if (a > b) { \
+	demo_units = 2*a; \
+      } \
+      else { \
+	demo_units = 2*b; \
+      } \
+    }
+
+#define DEMO_STREAM_INTERVAL(units) \
+      if (demo_mode) { \
+	double actual_interval; \
+	units_this_tick += units; \
+	if (units_this_tick >= demo_units) { \
+	  /* time to possibly update demo_units and maybe output an \
+	     interim result */ \
+	  HIST_timestamp(demo_two_ptr); \
+	  actual_interval = delta_micro(demo_one_ptr,demo_two_ptr); \
+	  /* we always want to fine-tune demo_units here whether we \
+	     emit an interim result or not.  if we are short, this \
+	     will lengthen demo_units.  if we are long, this will \
+	     shorten it */ \
+	  demo_units = demo_units * (demo_interval / actual_interval); \
+	  if (actual_interval >= demo_interval) { \
+	    /* time to emit an interim result */ \
+	    fprintf(where, \
+		    "Interim result: %7.2f %s/s over %.2f seconds\n", \
+		    calc_thruput_interval(units_this_tick, \
+					  actual_interval/1000000.0), \
+		    format_units(), \
+		    actual_interval/1000000.0); \
+	    units_this_tick = 0.0; \
+	    /* now get a new starting timestamp.  we could be clever \
+	       and swap pointers - the math we do probably does not \
+	       take all that long, but for now this will suffice */ \
+	    temp_demo_ptr = demo_one_ptr; \
+	    demo_one_ptr = demo_two_ptr; \
+	    demo_two_ptr = temp_demo_ptr; \
+	  } \
+	} \
+      }
+
+#define DEMO_RR_SETUP(a) \
+    if ((demo_mode) && (demo_units == 0)) { \
+      /* take whatever we are given */ \
+	demo_units = a; \
+    }
+
+#define DEMO_RR_INTERVAL(units) \
+      if (demo_mode) { \
+	double actual_interval; \
+	units_this_tick += units; \
+	if (units_this_tick >= demo_units) { \
+	  /* time to possibly update demo_units and maybe output an \
+	     interim result */ \
+	  HIST_timestamp(demo_two_ptr); \
+	  actual_interval = delta_micro(demo_one_ptr,demo_two_ptr); \
+	  /* we always want to fine-tune demo_units here whether we \
+	     emit an interim result or not.  if we are short, this \
+	     will lengthen demo_units.  if we are long, this will \
+	     shorten it */ \
+	  demo_units = demo_units * (demo_interval / actual_interval); \
+	  if (actual_interval >= demo_interval) { \
+	    /* time to emit an interim result */ \
+	    fprintf(where, \
+		    "Interim result: %.2f %s/s over %.2f seconds\n", \
+                    units_this_tick / (actual_interval/1000000.0), \
+		    "Trans", \
+		    actual_interval/1000000.0); \
+	    units_this_tick = 0.0; \
+	    /* now get a new starting timestamp.  we could be clever \
+	       and swap pointers - the math we do probably does not \
+	       take all that long, but for now this will suffice */ \
+	    temp_demo_ptr = demo_one_ptr; \
+	    demo_one_ptr = demo_two_ptr; \
+	    demo_two_ptr = temp_demo_ptr; \
+	  } \
+	} \
+      }
+#endif 
 
 char sockets_usage[] = "\n\
 Usage: netperf [global options] -- [test options] \n\
 \n\
 TCP/UDP BSD Sockets Test Options:\n\
+    -b number         Send number requests at start of _RR tests\n\
     -C                Set TCP_CORK when available\n\
     -D [L][,R]        Set TCP_NODELAY locally and/or remotely (TCP_*)\n\
     -h                Display this text\n\
-    -I local[,remote] Set the local/remote IP addresses for the data socket\n\
+    -H name,fam       Use name (or IP) and family as target of data connection\n\
+    -L name,fam       Use name (or IP) and family as source of data connection\n\
     -m bytes          Set the send size (TCP_STREAM, UDP_STREAM)\n\
     -M bytes          Set the recv size (TCP_STREAM, UDP_STREAM)\n\
     -p min[,max]      Set the min/max port numbers for TCP_CRR, TCP_TRR\n\
@@ -166,6 +306,8 @@ TCP/UDP BSD Sockets Test Options:\n\
     -r req,[rsp]      Set request/response sizes (TCP_RR, UDP_RR)\n\
     -s send[,recv]    Set local socket send/recv buffer sizes\n\
     -S send[,recv]    Set remote socket send/recv buffer sizes\n\
+    -4                Use AF_INET (eg IPv4) on both ends of the data conn\n\
+    -6                Use AF_INET6 (eg IPv6) on both ends of the data conn\n\
 \n\
 For those options taking two parms, at least one must be specified;\n\
 specifying one value without a comma will set both parms to that\n\
@@ -173,7 +315,56 @@ value, specifying a value with a leading comma will set just the second\n\
 parm, a value with a trailing comma will set just the first. To set\n\
 each parm to unique values, specify both and separate them with a\n\
 comma.\n"; 
-     
+
+
+
+/* these routines convert between the AF address space and the NF
+   address space since the numeric values of AF_mumble are not the
+   same across the platforms. raj 2005-02-08 */
+
+int
+nf_to_af(int nf) {
+  switch(nf) {
+  case NF_INET:
+    return AF_INET;
+    break;
+  case NF_UNSPEC:
+    return AF_UNSPEC;
+    break;
+  case NF_INET6:
+#if defined(AF_INET6)
+    return AF_INET6;
+#else
+    return AF_UNSPEC;
+#endif
+    break;
+  default:
+    return AF_UNSPEC;
+    break;
+  }
+}
+
+int
+af_to_nf(int af) {
+
+  switch(af) {
+  case AF_INET:
+    return NF_INET;
+    break;
+  case AF_UNSPEC:
+    return NF_UNSPEC;
+    break;
+#if defined(AF_INET6)
+  case AF_INET6:
+    return NF_INET6;
+    break;
+#endif
+  default:
+    return NF_UNSPEC;
+    break;
+  }
+}     
+
 
  /* This routine is intended to retrieve interesting aspects of tcp */
  /* for the data connection. at first, it attempts to retrieve the */
@@ -188,9 +379,9 @@ get_tcp_info(SOCKET socket, int *mss)
 {
 
 #ifdef TCP_MAXSEG
-  int sock_opt_len;
+  socklen_t sock_opt_len;
 
-  sock_opt_len = sizeof(int);
+  sock_opt_len = sizeof(socklen_t);
   if (getsockopt(socket,
 		 getprotobyname("tcp")->p_proto,	
 		 TCP_MAXSEG,
@@ -207,78 +398,268 @@ get_tcp_info(SOCKET socket, int *mss)
 #endif /* TCP_MAXSEG */
 }
 
-static
-complete_sockaddr(struct sockaddr_in *server, char *remote_host, int ip_address) 
+
+/* return a pointer to a completed addrinfo chain - prefer
+   data_address to controlhost and utilize the specified address
+   family */
+
+struct addrinfo *
+complete_addrinfo(char *controlhost, char *data_address, char *port, int family, int type, int protocol, int flags) 
 {
-  unsigned int addr;
-  struct hostent *hp;
+  struct addrinfo hints;
+  struct addrinfo *res;
+  int count = 0;
+  int error = 0;
+#define CHANGE_SOCK_TYPE  0x1
+#define CHANGE_PROTOCOL   0x2
+  int change_info = 0;
 
-  /* it would seem that while HP-UX will allow an IP address (as a */
-  /* string) in a call to gethostbyname, other, less enlightened */
-  /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
-  /* order changed to check for IP address first. raj 7/96 */
-  /* however, if the user provided a remote IP address with the -I
-     option we will honour that above all else. raj 2004-06-15 */
+  char *hostname;
 
-  if (ip_address) {
-    server->sin_addr.s_addr = ip_address;
-    server->sin_family = AF_INET;
+  /* take data-address over controlhost */
+  if (data_address)
+    hostname = data_address;
+  else
+    hostname = controlhost;
+
+  if (debug) {
+    fprintf(where,
+	    "complete_addrinfo using hostname %s port %s family %s type %s prot %s flags 0x%x\n",
+	    hostname,
+	    port,
+	    inet_ftos(family),
+	    inet_ttos(type),
+	    inet_ptos(protocol),
+	    flags);
+    fflush(where);
   }
-  else {
-    if ((addr = inet_addr(remote_host)) == SOCKET_ERROR) {
-      /* it was not an IP address, try it as a name */
-      if ((hp = gethostbyname(remote_host)) == NULL) {
-	/* we have no idea what it is */
-	fprintf(where,
-		"complete_sockaddr: could not resolve the destination %s\n",
-		remote_host);
-	fflush(where);
-	exit(1);
+
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_family = family;
+  switch (type) {
+      case 0:
+      case SOCK_STREAM:
+      case SOCK_DGRAM:
+	  /* Right now most implementations only support these socket
+	   * types.
+	   */
+	  hints.ai_socktype = type;
+	  break;
+      default:
+	  /* we'll default to STREAM and will change the type if successfull */
+	  hints.ai_socktype = SOCK_STREAM;
+	  change_info |= CHANGE_SOCK_TYPE;
+	  break;
+  }
+  switch (protocol) {
+    case 0:
+    case IPPROTO_TCP:
+    case IPPROTO_UDP:
+	/* This is supported on all implementations */
+	hints.ai_protocol = protocol;
+	break;
+    default:
+	hints.ai_protocol = 0;
+	change_info |= CHANGE_PROTOCOL;
+	break;
+  }
+
+  hints.ai_flags = flags|AI_CANONNAME;
+  count = 0;
+  do {
+    error = getaddrinfo((char *)hostname,
+                        (char *)port,
+                        &hints,
+                        &res);
+    count += 1;
+    if (error == EAI_AGAIN) {
+      if (debug) {
+        fprintf(where,"Sleeping on getaddrinfo EAI_AGAIN\n");
+        fflush(where);
       }
-      else {
-	/* it was a valid remote_host */
-	bcopy(hp->h_addr,
-	      (char *)&server->sin_addr,
-	      hp->h_length);
-	server->sin_family = hp->h_addrtype;
-      }
+      sleep(1);
     }
-    else {
-      /* it was a valid IP address */
-      server->sin_addr.s_addr = addr;
-      server->sin_family = AF_INET;
-    }    
+  } while ((error == EAI_AGAIN) && (count <= 5));
+
+  if (error) {
+    fprintf(where,
+	    "complete_addrinfo: could not resolve '%s' port '%s' af %d",
+	    hostname,
+	    port,
+	    family);
+    fprintf(where,
+	    "\n\tgetaddrinfo returned %d %s\n",
+	    error,
+	    gai_strerror(error));
+    fflush(where);
+    exit(-1);
+  }
+
+  if (change_info) {
+    struct addrinfo *temp = res;
+
+    fprintf(where,
+		"Warning! getaddrinfo returned a result which did not match\n");
+    fprintf(where,
+		"requested protocol. Kludging. Please contact your vendor for a fix.\n");
+    fflush(where);
+    while (temp) {
+      if (change_info & CHANGE_SOCK_TYPE)
+	  temp->ai_socktype = type;
+
+      if (change_info & CHANGE_PROTOCOL)
+	  temp->ai_protocol = protocol;
+
+      temp = temp->ai_next;
+    }
+  }
+
+  if (debug) {
+    dump_addrinfo(where, res, hostname, port, family);
+  }
+
+
+  return(res);
+}
+
+void
+complete_addrinfos(struct addrinfo **remote,struct addrinfo **local, char remote_host[], int type, int protocol, int flags) {
+
+  *remote = complete_addrinfo(remote_host,
+			      remote_data_address,
+			      remote_data_port,
+			      remote_data_family,
+			      type,
+			      protocol,
+			      flags);
+  /* OK, if the user has not specified a local endpoint address pick
+     something based on the local address family.  if the local
+     address family is AF_UNSPEC, then base it on the
+     remote_address_family.  if the remote_address_family is !AF_INET6
+     then use "0.0.0.0" for INADDR_ANY */
+
+  if (NULL == local_data_address) {
+    local_data_address = malloc(HOSTNAMESIZE);
+    strcpy(local_data_address,"0.0.0.0");  /* INADDR_ANY */
+#if defined(AF_INET6)
+    if ((AF_INET6 == local_data_family) ||
+	((AF_UNSPEC == local_data_family) && 
+	 (AF_INET6 == (*remote)->ai_family))) {
+      strcpy(local_data_address,"::0");
+    }
+#endif
+  }
+
+
+  *local = complete_addrinfo("what to put here?",
+			     local_data_address,
+			     local_data_port,
+			     local_data_family,
+			     type,
+			     protocol,
+			     flags|AI_PASSIVE);
+
+}
+
+void
+set_hostname_and_port(char *hostname, char *portstr, int family, int port)
+{
+  strcpy(hostname,"0.0.0.0");
+#if defined AF_INET6
+  if (AF_INET6 == family) {
+    strcpy(hostname,"::0");
+  }
+#endif
+    
+  sprintf(portstr, "%u", port);
+
+}
+
+static unsigned short
+get_port_number(struct addrinfo *res) 
+{
+ switch(res->ai_family) {
+  case AF_INET: {
+    struct sockaddr_in *foo = (struct sockaddr_in *)res->ai_addr;
+    return(ntohs(foo->sin_port));
+    break;
+  }
+#if defined(AF_INET6)
+  case AF_INET6: {
+    struct sockaddr_in6 *foo = (struct sockaddr_in6 *)res->ai_addr;
+    return(ntohs(foo->sin6_port));
+    break;
+  }
+#endif
+  default:
+    fprintf(where,
+	    "Unexpected Address Family of %u\n",res->ai_family);
+    fflush(where);
+    exit(-1);
   }
 }
+
+/* this routine will set the port number of the sockaddr in the
+   addrinfo to the specified value, based on the address family */
+void
+set_port_number(struct addrinfo *res, unsigned short port)
+{
+  switch(res->ai_family) {
+  case AF_INET: {
+    struct sockaddr_in *foo = (struct sockaddr_in *)res->ai_addr;
+    foo->sin_port = htons(port);
+    break;
+  }
+#if defined(AF_INET6)
+  case AF_INET6: {
+    struct sockaddr_in6 *foo = (struct sockaddr_in6 *)res->ai_addr;
+    foo->sin6_port = htons(port);
+    break;
+  }
+#endif
+  default:
+    fprintf(where,
+	    "Unexpected Address Family of %u\n",res->ai_family);
+    fflush(where);
+    exit(-1);
+  }
+}
+
 
- /* This routine will create a data (listen) socket with the apropriate */
- /* options set and return it to the caller. this replaces all the */
- /* duplicate code in each of the test routines and should help make */
- /* things a little easier to understand. since this routine can be */
- /* called by either the netperf or netserver programs, all output */
- /* should be directed towards "where." family is generally AF_INET, */
- /* and type will be either SOCK_STREAM or SOCK_DGRAM */
-static
+
+ /* This routine will create a data (listen) socket with the
+  apropriate options set and return it to the caller. this replaces
+  all the duplicate code in each of the test routines and should help
+  make things a little easier to understand. since this routine can be
+  called by either the netperf or netserver programs, all output
+  should be directed towards "where." family is generally AF_INET and
+  type will be either SOCK_STREAM or SOCK_DGRAM.  This routine will
+  also be used by the "SCTP" tests, hence the slightly strange-looking
+  SCTP stuff in the classic bsd sockets test file... vlad/raj
+  2005-03-15 */
+
 SOCKET
-create_data_socket(int family, int type, int address, unsigned short port)
+create_data_socket(struct addrinfo *res)
 {
 
   SOCKET temp_socket;
   int one;
-  int sock_opt_len;
-  struct sockaddr_in temp;
   int    on  = 1;
   
 
   /*set up the data socket                        */
-  temp_socket = socket(family, 
-		       type,
-		       0);
+  temp_socket = socket(res->ai_family,
+		       res->ai_socktype,
+		       res->ai_protocol);
   
   if (temp_socket == INVALID_SOCKET){
     fprintf(where,
-	    "netperf: create_data_socket: socket: errno %d\n",
-	    errno);
+	    "netperf: create_data_socket: socket: errno %d fam %s type %s prot %s errmsg %s\n",
+	    errno,
+	    inet_ftos(res->ai_family),
+	    inet_ttos(res->ai_socktype),
+	    inet_ptos(res->ai_protocol),
+	    strerror(errno));
     fflush(where);
     exit(1);
   }
@@ -347,18 +728,53 @@ create_data_socket(int family, int type, int address, unsigned short port)
   loc_sndavoid = 0;
 #endif
   
-  /* Now, we will see about setting the TCP_NO_DELAY flag on the local */
+  /* Now, we will see about setting the TCP_NODELAY flag on the local */
   /* socket. We will only do this for those systems that actually */
   /* support the option. If it fails, note the fact, but keep going. */
   /* If the user tries to enable TCP_NODELAY on a UDP socket, this */
   /* will cause an error to be displayed */
+
+  /* well..... long ago and far away that would have happened, in
+     particular because we would always use IPPROTO_TCP here.
+     however, now we are using res->ai_protocol, which will be
+     IPPROT_UDP, and while HP-UX, and I suspect no-one else on the
+     planet has a UDP_mumble option that overlaps with TCP_NODELAY,
+     sure as knuth made little green programs, linux has a UDP_CORK
+     option that is defined as a value of 1, which is the same a
+     TCP_NODELAY under Linux.  So, when asking for -D and
+     "TCP_NODELAY" under Linux, we are actually setting UDP_CORK
+     instead of getting an error like every other OS on the
+     planet. joy and rupture. this stops a UDP_RR test cold sooo we
+     have to make sure that res->ai_protocol actually makes sense for
+     a _NODELAY setsockopt() or a UDP_RR test on Linux where someone
+     mistakenly sets -D will hang.  raj 2005-04-21 */
   
-#ifdef TCP_NODELAY
-  if (loc_nodelay) {
+#if defined(TCP_NODELAY) || defined(SCTP_NODELAY)
+  if ((loc_nodelay) && (res->ai_protocol != IPPROTO_UDP)) {
+
+    /* strictly speaking, since the if defined above is an OR, we
+       should probably check against TCP_NODELAY being defined here.
+       however, the likelihood of SCTP_NODELAY being defined and
+       TCP_NODELAY _NOT_ being defined is, probably :), epsilon.  raj
+       2005-03-15 */
+
+    int option = TCP_NODELAY;
+
+    /* I suspect that WANT_SCTP would suffice here since that is the
+       only time we would have called getaddrinfo with a hints asking
+       for SCTP, but just in case there is an SCTP implementation out
+       there _without_ SCTP_NODELAY... raj 2005-03-15 */ 
+
+#if defined(WANT_SCTP) && defined(SCTP_NODELAY)
+    if (IPPROTO_SCTP == res->ai_protocol) {
+      option = SCTP_NODELAY;
+    }
+#endif
+
     one = 1;
     if(setsockopt(temp_socket,
-		  getprotobyname("tcp")->p_proto,
-		  TCP_NODELAY,
+		  res->ai_protocol,
+		  option,
 		  (char *)&one,
 		  sizeof(one)) == SOCKET_ERROR) {
       fprintf(where,
@@ -369,7 +785,7 @@ create_data_socket(int family, int type, int address, unsigned short port)
     
     if (debug > 1) {
       fprintf(where,
-	      "netperf: create_data_socket: TCP_NODELAY requested...\n");
+	      "netperf: create_data_socket: [TCP|SCTP]_NODELAY requested...\n");
       fflush(where);
     }
   }
@@ -378,6 +794,26 @@ create_data_socket(int family, int type, int address, unsigned short port)
   loc_nodelay = 0;
   
 #endif /* TCP_NODELAY */
+
+#if defined(TCP_CORK)
+    
+    if (loc_tcpcork != 0) {
+      /* the user wishes for us to set TCP_CORK on the socket */
+      int one = 1;
+      if (setsockopt(temp_socket,
+		     getprotobyname("tcp")->p_proto,
+		     TCP_CORK,
+		     (char *)&one,
+		     sizeof(one)) == SOCKET_ERROR) {
+	perror("netperf: sendfile_tcp_stream: tcp_cork");
+	exit(1);
+      }
+      if (debug) {
+	fprintf(where,"sendfile_tcp_stream: tcp_cork...\n");
+      }
+    }
+    
+#endif /* TCP_CORK */    
 
   /* since some of the UDP tests do not do anything to cause an
      implicit bind() call, we need to be rather explicit about our
@@ -395,18 +831,16 @@ create_data_socket(int family, int type, int address, unsigned short port)
     fflush(where);
   }
   
-  bzero(&temp,sizeof(struct sockaddr));
-  temp.sin_port = htons(port);
-  temp.sin_family = AF_INET;
-  temp.sin_addr.s_addr = address;
   if (bind(temp_socket,
-	   (struct sockaddr *)&temp,
-	   sizeof(struct sockaddr_in)) < 0) {
-    fprintf(where,
-	    "netperf: create_data_socket: data socket bind failed errno %d\n",
-	    errno);
-    fprintf(where," port: %d\n",ntohs(temp.sin_port));
-    fflush(where);
+	   res->ai_addr,
+	   res->ai_addrlen) < 0) {
+    if (debug) {
+      fprintf(where,
+	      "netperf: create_data_socket: data socket bind failed errno %d\n",
+	      errno);
+      fprintf(where," port: %d\n",get_port_number(res));
+      fflush(where);
+    }
   }
   
 
@@ -471,6 +905,96 @@ kludge_socket_options(int temp_socket)
 #endif /* KLUDGE_SOCKET_OPTIONS */
 
 
+static void *
+get_address_address(struct addrinfo *info) 
+{
+  struct sockaddr_in *sin;
+#if defined(AF_INET6)
+  struct sockaddr_in6 *sin6;
+#endif
+
+  switch(info->ai_family) {
+  case AF_INET:
+    sin = (struct sockaddr_in *)info->ai_addr;
+    return(&(sin->sin_addr));
+    break;
+#if defined(AF_INET6)
+  case AF_INET6:
+    sin6 = (struct sockaddr_in6 *)info->ai_addr;
+    return(&(sin6->sin6_addr));
+    break;
+#endif
+  default:
+    fprintf(stderr,"we never expected to get here in get_address_address\n");
+    fflush(stderr);
+    exit(-1);
+  }
+}
+
+/* This routine is a generic test header printer for the topmost header */
+void
+print_top_test_header(char test_name[], struct addrinfo *source, struct addrinfo *destination)
+{
+
+#if defined(AF_INET6)
+  char address_buf[INET6_ADDRSTRLEN];
+#else
+  char address_buf[16]; /* magic constant */
+#endif
+
+  /* we want to have some additional, interesting information in */
+  /* the headers. we know some of it here, but not all, so we will */
+  /* only print the test title here and will print the results */
+  /* titles after the test is finished */
+  fprintf(where,test_name);
+  address_buf[0] = '\0';
+  inet_ntop(source->ai_family,get_address_address(source),address_buf,sizeof(address_buf));
+  fprintf(where,
+	  " from %s (%s) port %u %s",
+	  source->ai_canonname,
+	  address_buf,
+	  get_port_number(source),
+	  inet_ftos(source->ai_family));
+  address_buf[0] = '\0';
+  inet_ntop(destination->ai_family,get_address_address(destination),address_buf,sizeof(address_buf));
+  fprintf(where,
+	  " to %s (%s) port %u %s",
+	  destination->ai_canonname,
+	  address_buf,
+	  get_port_number(destination),
+	  inet_ftos(destination->ai_family));
+
+  if (iteration_max > 1) {
+    fprintf(where,
+	    " : +/-%3.1f%% @ %2d%% conf.",
+	    interval/0.02,
+	    confidence_level);
+  }
+  if (loc_nodelay || rem_nodelay) {
+    fprintf(where," : nodelay");
+  }
+  if (loc_sndavoid || 
+      loc_rcvavoid ||
+      rem_sndavoid ||
+      rem_rcvavoid) {
+    fprintf(where," : copy avoidance");
+  }
+#ifdef WANT_HISTOGRAM
+  fprintf(where," : histogram");
+#endif /* WANT_HISTOGRAM */
+#ifdef WANT_INTERVALS
+  fprintf(where," : interval");
+#endif /* WANT_INTERVALS */
+#ifdef DIRTY 
+  fprintf(where," : dirty data");
+#endif /* DIRTY */
+#ifdef WANT_DEMO
+  fprintf(where," : demo");
+#endif
+  fprintf(where,"\n");
+  
+}
+
 
 /* This routine implements the TCP unidirectional data transfer test */
 /* (a.k.a. stream) for the sockets interface. It receives its */
@@ -521,7 +1045,7 @@ Size (bytes)\n\
   
   float			elapsed_time;
   
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
   int interval_count;
   sigset_t signal_set;
 #endif
@@ -535,6 +1059,7 @@ Size (bytes)\n\
   
 #ifdef DIRTY
   int	*message_int_ptr;
+  int	i;
 #endif
 
   struct ring_elt *send_ring;
@@ -543,16 +1068,13 @@ Size (bytes)\n\
   unsigned int nummessages = 0;
   SOCKET send_socket;
   int bytes_remaining;
-  int tcp_mss = -1;  // possibly uninitialized on printf far below
+  int tcp_mss = -1;  /* possibly uninitialized on printf far below */
 
   /* with links like fddi, one can send > 32 bits worth of bytes */
   /* during a test... ;-) at some point, this should probably become a */
   /* 64bit integral type, but those are not entirely common yet */
+
   double	bytes_sent = 0.0;
-  
-#ifdef DIRTY
-  int	i;
-#endif /* DIRTY */
   
   float	local_cpu_utilization;
   float	local_service_demand;
@@ -561,9 +1083,8 @@ Size (bytes)\n\
 
   double	thruput;
   
-  struct	hostent	        *hp;
-  struct	sockaddr_in	server;
-  unsigned      int             addr;
+  struct addrinfo *remote_res;
+  struct addrinfo *local_res;
   
   struct	tcp_stream_request_struct	*tcp_stream_request;
   struct	tcp_stream_response_struct	*tcp_stream_response;
@@ -576,51 +1097,24 @@ Size (bytes)\n\
   tcp_stream_result   = 
     (struct tcp_stream_results_struct *)netperf_response.content.test_specific_data;
   
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
   time_hist = HIST_new();
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
   /* since we are now disconnected from the code that established the */
   /* control socket, and since we want to be able to use different */
   /* protocols and such, we are passed the name of the remote host and */
   /* must turn that into the test specific addressing information. */
   
-  bzero((char *)&server,
-	sizeof(server));
-  
-  complete_sockaddr(&server, remote_host, remote_data_ip);
+  /* complete_addrinfos will either succede or exit the process */
+  complete_addrinfos(&remote_res,
+		     &local_res,
+		     remote_host,
+		     SOCK_STREAM,
+		     IPPROTO_TCP,
+		     0);
   
   if ( print_headers ) {
-    /* we want to have some additional, interesting information in */
-    /* the headers. we know some of it here, but not all, so we will */
-    /* only print the test title here and will print the results */
-    /* titles after the test is finished */
-    fprintf(where,"TCP STREAM TEST");
-    fprintf(where," to %s", remote_host);
-    if (iteration_max > 1) {
-      fprintf(where,
-	      " : +/-%3.1f%% @ %2d%% conf.",
-	      interval/0.02,
-	      confidence_level);
-      }
-    if (loc_nodelay || rem_nodelay) {
-      fprintf(where," : nodelay");
-    }
-    if (loc_sndavoid || 
-	loc_rcvavoid ||
-	rem_sndavoid ||
-	rem_rcvavoid) {
-      fprintf(where," : copy avoidance");
-    }
-#ifdef HISTOGRAM
-    fprintf(where," : histogram");
-#endif /* HISTOGRAM */
-#ifdef INTERVALS
-    fprintf(where," : interval");
-#endif /* INTERVALS */
-#ifdef DIRTY 
-    fprintf(where," : dirty data");
-#endif /* DIRTY */
-    fprintf(where,"\n");
+    print_top_test_header("TCP STREAM TEST",local_res,remote_res);
   }
 
   send_ring = NULL;
@@ -645,10 +1139,7 @@ Size (bytes)\n\
     times_up       = 	0;
     
     /*set up the data socket                        */
-    send_socket = create_data_socket(AF_INET, 
-				     SOCK_STREAM,
-				     local_data_ip,
-				     local_data_port);
+    send_socket = create_data_socket(local_res);
     
     if (send_socket == INVALID_SOCKET){
       perror("netperf: send_tcp_stream: tcp stream data socket");
@@ -717,9 +1208,9 @@ Size (bytes)\n\
     /* default should be used. Alignment is the exception, it will */
     /* default to 1, which will be no alignment alterations. */
     
-    netperf_request.content.request_type	=	DO_TCP_STREAM;
-    tcp_stream_request->send_buf_size	=	rss_size;
-    tcp_stream_request->recv_buf_size	=	rsr_size;
+    netperf_request.content.request_type =	DO_TCP_STREAM;
+    tcp_stream_request->send_buf_size	=	rss_size_req;
+    tcp_stream_request->recv_buf_size	=	rsr_size_req;
     tcp_stream_request->receive_size	=	recv_size;
     tcp_stream_request->no_delay	=	rem_nodelay;
     tcp_stream_request->recv_alignment	=	remote_recv_align;
@@ -738,8 +1229,8 @@ Size (bytes)\n\
     tcp_stream_request->dirty_count     =       rem_dirty_count;
     tcp_stream_request->clean_count     =       rem_clean_count;
 #endif /* DIRTY */
-    tcp_stream_request->port            =    (int)remote_data_port;
-    tcp_stream_request->ipaddress       =    remote_data_ip;
+    tcp_stream_request->port            =    atoi(remote_data_port);
+    tcp_stream_request->ipfamily = af_to_nf(remote_res->ai_family);
     if (debug > 1) {
       fprintf(where,
 	      "netperf: send_tcp_stream: requesting TCP stream test\n");
@@ -770,8 +1261,8 @@ Size (bytes)\n\
 
       /* we have to make sure that the server port number is in */
       /* network order */
-      server.sin_port   = (short)tcp_stream_response->data_port_number;
-      server.sin_port   = htons(server.sin_port); 
+      set_port_number(remote_res,(short)tcp_stream_response->data_port_number);
+
       rem_rcvavoid	= tcp_stream_response->so_rcvavoid;
       rem_sndavoid	= tcp_stream_response->so_sndavoid;
     }
@@ -786,13 +1277,15 @@ Size (bytes)\n\
       exit(1);
     }
 
+#ifdef WANT_DEMO
+    DEMO_STREAM_SETUP(lss_size,rsr_size)
+#endif
+
     /*Connect up to the remote port on the data socket  */
     if (connect(send_socket, 
-		(struct sockaddr *)&server,
-		sizeof(server)) == INVALID_SOCKET){
+		remote_res->ai_addr,
+		remote_res->ai_addrlen) == INVALID_SOCKET){
       perror("netperf: send_tcp_stream: data socket connect failed");
-      fprintf(stderr," port: %d\n",ntohs(server.sin_port));
-      fflush(stderr);
       exit(1);
     }
 
@@ -830,8 +1323,8 @@ Size (bytes)\n\
     
     cpu_start(local_cpu_usage);
     
-#ifdef INTERVALS
-    if ((interval_burst) || (demo_mode)) {
+#ifdef WANT_INTERVALS
+    if (interval_burst) {
       /* zero means that we never pause, so we never should need the */
       /* interval timer, unless we are in demo_mode */
       start_itimer(interval_wate);
@@ -845,7 +1338,7 @@ Size (bytes)\n\
       fflush(where);
       exit(1);
     }
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
 
 #ifdef DIRTY
     /* initialize the random number generator for putting dirty stuff */
@@ -854,6 +1347,13 @@ Size (bytes)\n\
 #endif
     
     /* before we start, initialize a few variables */
+
+#ifdef WANT_DEMO
+      if (demo_mode) {
+	HIST_timestamp(demo_one_ptr);
+      }
+#endif
+      
 
     /* We use an "OR" to control test execution. When the test is */
     /* controlled by time, the byte count check will always return false. */
@@ -881,12 +1381,12 @@ Size (bytes)\n\
       }
 #endif /* DIRTY */
       
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
       /* timestamp just before we go into send and then again just after */
       /* we come out raj 8/94 */
       HIST_timestamp(&time_one);
-#endif /* HISTOGRAM */
-      
+#endif /* WANT_HISTOGRAM */
+
       if((len=send(send_socket,
 		   send_ring->buffer_ptr,
 		   send_size,
@@ -900,16 +1400,17 @@ Size (bytes)\n\
 	exit(1);
       }
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
       /* timestamp the exit from the send call and update the histogram */
       HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
-#endif /* HISTOGRAM */      
+#endif /* WANT_HISTOGRAM */      
 
-#ifdef INTERVALS      
-      if (demo_mode) {
-	units_this_tick += send_size;
-      }
+#ifdef WANT_DEMO
+      DEMO_STREAM_INTERVAL(send_size)
+#endif 
+
+#ifdef WANT_INTERVALS      
       /* in this case, the interval count is the count-down couter */
       /* to decide to sleep for a little bit */
       if ((interval_burst) && (--interval_count == 0)) {
@@ -927,7 +1428,7 @@ Size (bytes)\n\
 	}
 	interval_count = interval_burst;
       }
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
       
       /* now we want to move our pointer to the next position in the */
       /* data buffer...we may also want to wrap back to the "beginning" */
@@ -1199,17 +1700,16 @@ Size (bytes)\n\
 	    ksink_fmt2,
 	    tcp_mss);
     fflush(where);
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     fprintf(where,"\n\nHistogram of time spent in send() call.\n");
     fflush(where);
     HIST_report(time_hist);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
   }
   
 }
 
 
-
 
 /* This routine implements the netperf-side TCP unidirectional data
    transfer test (a.k.a. stream) for the sockets interface where the
@@ -1261,7 +1761,7 @@ Size (bytes)\n\
   
   float			elapsed_time;
   
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
   int interval_count;
   sigset_t signal_set;
 #endif
@@ -1283,7 +1783,7 @@ Size (bytes)\n\
   unsigned int nummessages = 0;
   SOCKET recv_socket;
   int bytes_remaining;
-  int tcp_mss = -1;  // possibly uninitialized on printf far below
+  int tcp_mss = -1;  /* possibly uninitialized on printf far below */
 
   /* with links like fddi, one can recv > 32 bits worth of bytes */
   /* during a test... ;-) at some point, this should probably become a */
@@ -1301,9 +1801,8 @@ Size (bytes)\n\
 
   double	thruput;
   
-  struct	hostent	        *hp;
-  struct	sockaddr_in	server;
-  unsigned      int             addr;
+  struct addrinfo *remote_res;
+  struct addrinfo *local_res;
   
   struct	tcp_maerts_request_struct	*tcp_maerts_request;
   struct	tcp_maerts_response_struct	*tcp_maerts_response;
@@ -1316,51 +1815,23 @@ Size (bytes)\n\
   tcp_maerts_result   = 
     (struct tcp_maerts_results_struct *)netperf_response.content.test_specific_data;
   
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
   time_hist = HIST_new();
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
   /* since we are now disconnected from the code that established the */
   /* control socket, and since we want to be able to use different */
   /* protocols and such, we are passed the name of the remote host and */
   /* must turn that into the test specific addressing information. */
   
-  bzero((char *)&server,
-	sizeof(server));
-
-  complete_sockaddr(&server, remote_host, remote_data_ip);
+  complete_addrinfos(&remote_res,
+		     &local_res,
+		     remote_host,
+		     SOCK_STREAM,
+		     IPPROTO_TCP,
+		     0);
   
   if ( print_headers ) {
-    /* we want to have some additional, interesting information in */
-    /* the headers. we know some of it here, but not all, so we will */
-    /* only print the test title here and will print the results */
-    /* titles after the test is finished */
-    fprintf(where,"TCP MAERTS TEST");
-    fprintf(where," to %s", remote_host);
-    if (iteration_max > 1) {
-      fprintf(where,
-	      " : +/-%3.1f%% @ %2d%% conf.",
-	      interval/0.02,
-	      confidence_level);
-      }
-    if (loc_nodelay || rem_nodelay) {
-      fprintf(where," : nodelay");
-    }
-    if (loc_sndavoid || 
-	loc_rcvavoid ||
-	rem_sndavoid ||
-	rem_rcvavoid) {
-      fprintf(where," : copy avoidance");
-    }
-#ifdef HISTOGRAM
-    fprintf(where," : histogram");
-#endif /* HISTOGRAM */
-#ifdef INTERVALS
-    fprintf(where," : interval");
-#endif /* INTERVALS */
-#ifdef DIRTY 
-    fprintf(where," : dirty data");
-#endif /* DIRTY */
-    fprintf(where,"\n");
+    print_top_test_header("TCP MAERTS TEST",local_res,remote_res);
   }
 
   recv_ring = NULL;
@@ -1385,10 +1856,7 @@ Size (bytes)\n\
     times_up       = 	0;
     
     /*set up the data socket                        */
-    recv_socket = create_data_socket(AF_INET, 
-				     SOCK_STREAM,
-				     local_data_ip,
-				     local_data_port);
+    recv_socket = create_data_socket(local_res);
     
     if (recv_socket == INVALID_SOCKET){
       perror("netperf: send_tcp_maerts: tcp stream data socket");
@@ -1458,8 +1926,8 @@ Size (bytes)\n\
     /* default to 1, which will be no alignment alterations. */
     
     netperf_request.content.request_type	=	DO_TCP_MAERTS;
-    tcp_maerts_request->send_buf_size	=	rss_size;
-    tcp_maerts_request->recv_buf_size	=	rsr_size;
+    tcp_maerts_request->send_buf_size	=	rss_size_req;
+    tcp_maerts_request->recv_buf_size	=	rsr_size_req;
     tcp_maerts_request->send_size	=	send_size;
     tcp_maerts_request->no_delay	=	rem_nodelay;
     tcp_maerts_request->send_alignment	=	remote_send_align;
@@ -1478,9 +1946,8 @@ Size (bytes)\n\
     tcp_maerts_request->dirty_count       =       rem_dirty_count;
     tcp_maerts_request->clean_count       =       rem_clean_count;
 #endif /* DIRTY */
-    tcp_maerts_request->port            = (int) remote_data_port;
-    tcp_maerts_request->ipaddress       = remote_data_ip;
-    
+    tcp_maerts_request->port            = atoi(remote_data_port);
+    tcp_maerts_request->ipfamily        = af_to_nf(remote_res->ai_family);
     if (debug > 1) {
       fprintf(where,
 	      "netperf: send_tcp_maerts: requesting TCP maerts test\n");
@@ -1512,8 +1979,7 @@ Size (bytes)\n\
 
       /* we have to make sure that the server port number is in */
       /* network order */
-      server.sin_port   = (short)tcp_maerts_response->data_port_number;
-      server.sin_port   = htons(server.sin_port); 
+      set_port_number(remote_res, (short)tcp_maerts_response->data_port_number);
       rem_rcvavoid	= tcp_maerts_response->so_rcvavoid;
       rem_sndavoid	= tcp_maerts_response->so_sndavoid;
     }
@@ -1528,12 +1994,15 @@ Size (bytes)\n\
       exit(1);
     }
 
+#ifdef WANT_DEMO
+    DEMO_STREAM_SETUP(lsr_size,rss_size)
+#endif
+
     /*Connect up to the remote port on the data socket  */
     if (connect(recv_socket, 
-		(struct sockaddr *)&server,
-		sizeof(server)) == INVALID_SOCKET){
+		remote_res->ai_addr,
+		remote_res->ai_addrlen) == INVALID_SOCKET){
       perror("netperf: send_tcp_maerts: data socket connect failed");
-      printf(" port: %d\n",ntohs(server.sin_port));
       exit(1);
     }
 
@@ -1572,7 +2041,7 @@ Size (bytes)\n\
     
     cpu_start(local_cpu_usage);
     
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
     if ((interval_burst) || (demo_mode)) {
       /* zero means that we never pause, so we never should need the */
       /* interval timer, unless we are in demo_mode */
@@ -1587,7 +2056,7 @@ Size (bytes)\n\
       fflush(where);
       exit(1);
     }
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
 
 #ifdef DIRTY
     /* initialize the random number generator for putting dirty stuff */
@@ -1596,6 +2065,12 @@ Size (bytes)\n\
 #endif
     
     /* before we start, initialize a few variables */
+
+#ifdef WANT_DEMO
+    if (demo_mode) {
+      HIST_timestamp(demo_one_ptr);
+    }
+#endif
 
     /* the test will continue until we either get a zero-byte recv()
        on the socket or our failsafe timer expires. most of the time
@@ -1620,23 +2095,27 @@ Size (bytes)\n\
       }
 #endif /* DIRTY */
       
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
       /* timestamp just before we go into recv and then again just after */
       /* we come out raj 8/94 */
       HIST_timestamp(&time_one);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
     
     while ((len=recv(recv_socket,
 		   recv_ring->buffer_ptr,
 		   recv_size,
 		   0)) > 0 ) {
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
       /* timestamp the exit from the recv call and update the histogram */
       HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
-#endif /* HISTOGRAM */      
+#endif /* WANT_HISTOGRAM */      
 
-#ifdef INTERVALS      
+#ifdef WANT_DEMO
+      DEMO_STREAM_INTERVAL(len)
+#endif
+
+#ifdef WANT_INTERVALS      
       if (demo_mode) {
 	units_this_tick += recv_size;
       }
@@ -1657,7 +2136,7 @@ Size (bytes)\n\
 	}
 	interval_count = interval_burst;
       }
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
       
       /* now we want to move our pointer to the next position in the */
       /* data buffer...we may also want to wrap back to the "beginning" */
@@ -1670,16 +2149,16 @@ Size (bytes)\n\
 	bytes_remaining -= recv_size;
       }
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
       /* make sure we timestamp just before we go into recv  */
       /* raj 2004-06-15 */
       HIST_timestamp(&time_one);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
     
     }
 
     if ((len < 0) || SOCKET_EINTR(len)) {
-      perror("netperf: data recv error");
+      perror("send_tcp_maerts: data recv error");
       printf("len was %d\n",len);
       exit(1);
     }
@@ -1940,25 +2419,828 @@ Size (bytes)\n\
 	    ksink_fmt2,
 	    tcp_mss);
     fflush(where);
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     fprintf(where,"\n\nHistogram of time spent in recv() call.\n");
     fflush(where);
     HIST_report(time_hist);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
   }
   
 }
+
+
+
+#ifdef HAVE_ICSC_EXS
+
+#include <sys/exs.h>
+
+
+/* This routine implements the TCP unidirectional data transfer test */
+/* (a.k.a. stream) for the sockets interface. It receives its */
+/* parameters via global variables from the shell and writes its */
+/* output to the standard output. */
+
+void
+send_exs_tcp_stream(char remote_host[])
+{
+
+    char *tput_title = "\
+Recv   Send    Send                          \n\
+Socket Socket  Message  Elapsed              \n\
+Size   Size    Size     Time     Throughput  \n\
+bytes  bytes   bytes    secs.    %s/sec  \n\n";
+
+    char *tput_fmt_0 =
+        "%7.2f\n";
+
+    char *tput_fmt_1 =
+        "%6d %6d %6d    %-6.2f   %7.2f   \n";
+
+    char *cpu_title = "\
+Recv   Send    Send                          Utilization       Service Demand\n\
+Socket Socket  Message  Elapsed              Send     Recv     Send    Recv\n\
+Size   Size    Size     Time     Throughput  local    remote   local   remote\n\
+bytes  bytes   bytes    secs.    %-8.8s/s  %% %c      %% %c      us/KB   us/KB\n\n";
+
+    char *cpu_fmt_0 =
+        "%6.3f %c\n";
+
+    char *cpu_fmt_1 =
+        "%6d %6d %6d    %-6.2f     %7.2f   %-6.2f   %-6.2f   %-6.3f  %-6.3f\n";
+
+    char *ksink_fmt = "\n\
+Alignment      Offset         %-8.8s %-8.8s    Sends   %-8.8s Recvs\n\
+Local  Remote  Local  Remote  Xfered   Per                 Per\n\
+Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
+%5d   %5d  %5d   %5d %6.4g  %6.2f    %6d   %6.2f %6d\n";
+
+    char *ksink_fmt2 = "\n\
+Maximum\n\
+Segment\n\
+Size (bytes)\n\
+%6d\n";
+
+
+    float         elapsed_time;
+
+#if 0 /* def WANT_INTERVALS */
+    int interval_count;
+    sigset_t signal_set;
+#endif
+
+    /* what we want is to have a buffer space that is at least one */
+    /* send-size greater than our send window. this will insure that we */
+    /* are never trying to re-use a buffer that may still be in the hands */
+    /* of the transport. This buffer will be malloc'd after we have found */
+    /* the size of the local senc socket buffer. We will want to deal */
+    /* with alignment and offset concerns as well. */
+
+#ifdef DIRTY
+    int   *message_int_ptr;
+    int   i;
+#endif
+
+    struct ring_elt *send_ring;
+
+    int len;
+    unsigned int nummessages = 0;
+    SOCKET send_socket;
+    int bytes_remaining;
+    int tcp_mss = -1;  /* possibly uninitialized on printf far below */
+
+    exs_mhandle_t exs_mhandle;
+    exs_qhandle_t exs_qhandle;
+#define NETPERF_EXS_PENDING  16
+    int exs_aio_pending;
+    int exs_aio_eagain;
+    int exs_aio_dequeued;
+    int exs_aio_dequeuecnt;
+    int exs_evtcnt;
+#define NETPERF_EXS_QSIZE    128
+    exs_event_t exs_evtvec[NETPERF_EXS_QSIZE];
+
+    /* with links like fddi, one can send > 32 bits worth of bytes */
+    /* during a test... ;-) at some point, this should probably become a */
+    /* 64bit integral type, but those are not entirely common yet */
+
+    double   bytes_sent = 0.0;
+
+    float   local_cpu_utilization;
+    float   local_service_demand;
+    float   remote_cpu_utilization;
+    float   remote_service_demand;
+
+    double   thruput;
+
+    struct addrinfo *remote_res;
+    struct addrinfo *local_res;
+
+    struct   tcp_stream_request_struct   *tcp_stream_request;
+    struct   tcp_stream_response_struct   *tcp_stream_response;
+    struct   tcp_stream_results_struct   *tcp_stream_result;
+
+    tcp_stream_request  =
+        (struct tcp_stream_request_struct *)netperf_request.content.test_specific_data;
+    tcp_stream_response =
+        (struct tcp_stream_response_struct *)netperf_response.content.test_specific_data;
+    tcp_stream_result   =
+        (struct tcp_stream_results_struct *)netperf_response.content.test_specific_data;
+
+#if 0 /* def WANT_HISTOGRAM */
+    time_hist = HIST_new();
+#endif /* WANT_HISTOGRAM */
+    /* since we are now disconnected from the code that established the */
+    /* control socket, and since we want to be able to use different */
+    /* protocols and such, we are passed the name of the remote host and */
+    /* must turn that into the test specific addressing information. */
+
+    /* complete_addrinfos will either succede or exit the process */
+    complete_addrinfos(&remote_res,
+                       &local_res,
+                       remote_host,
+                       SOCK_STREAM,
+                       IPPROTO_TCP,
+                       0);
+
+    if ( print_headers ) {
+        print_top_test_header("EXS TCP STREAM TEST",local_res,remote_res);
+    }
+
+    send_ring = NULL;
+    confidence_iteration = 1;
+    init_stat();
+
+    /* initialize EXS API and create event queue */
+    if (exs_init (EXS_VERSION) == -1) {
+        perror ("netperf: send_exs_tcp_stream: exs_init failed");
+        exit (1);
+    }
+
+    if ((exs_qhandle = exs_qcreate (NETPERF_EXS_QSIZE)) == EXS_QHANDLE_INVALID) {
+        perror ("netperf: send_exs_tcp_stream: exs_qcreate failed");
+        exit (1);
+    }
+    if (debug) {
+        fprintf (where, "send_tcp_stream: qhandle=%d\n", exs_qhandle);
+    }
+
+    /* we have a great-big while loop which controls the number of times */
+    /* we run a particular test. this is for the calculation of a */
+    /* confidence interval (I really should have stayed awake during */
+    /* probstats :). If the user did not request confidence measurement */
+    /* (no confidence is the default) then we will only go though the */
+    /* loop once. the confidence stuff originates from the folks at IBM */
+
+    while (((confidence < 0) && (confidence_iteration < iteration_max)) ||
+           (confidence_iteration <= iteration_min)) {
+
+        /* initialize a few counters. we have to remember that we might be */
+        /* going through the loop more than once. */
+
+        nummessages    =   0;
+        bytes_sent     =   0.0;
+        times_up       =    0;
+
+        /*set up the data socket                        */
+        send_socket = create_data_socket(local_res);
+
+        if (send_socket == INVALID_SOCKET){
+            perror("netperf: send_tcp_stream: tcp stream data socket");
+            exit(1);
+        }
+
+        if (debug) {
+            fprintf(where,"send_tcp_stream: send_socket obtained...\n");
+        }
+
+        /* at this point, we have either retrieved the socket buffer sizes, */
+        /* or have tried to set them, so now, we may want to set the send */
+        /* size based on that (because the user either did not use a -m */
+        /* option, or used one with an argument of 0). If the socket buffer */
+        /* size is not available, we will set the send size to 4KB - no */
+        /* particular reason, just arbitrary... */
+        if (send_size == 0) {
+            if (lss_size > 0) {
+                send_size = lss_size;
+            }
+            else {
+                send_size = 4096;
+            }
+        }
+
+        /* set-up the data buffer ring with the requested alignment and offset. */
+        /* note also that we have allocated a quantity */
+        /* of memory that is at least one send-size greater than our socket */
+        /* buffer size. We want to be sure that there are at least two */
+        /* buffers allocated - this can be a bit of a problem when the */
+        /* send_size is bigger than the socket size, so we must check... the */
+        /* user may have wanted to explicitly set the "width" of our send */
+        /* buffers, we should respect that wish... */
+        if (send_width == 0) {
+            send_width = (lss_size/send_size) + 1;
+            if (send_width == 1) send_width++;
+        }
+
+        if (send_ring == NULL) {
+            /* only allocate the send ring once. this is a networking test, */
+            /* not a memory allocation test. this way, we do not need a */
+            /* deallocate_buffer_ring() routine, and I don't feel like */
+            /* writing one anyway :) raj 11/94 */
+            send_ring = allocate_exs_buffer_ring(send_width,
+                                                 send_size,
+                                                 local_send_align,
+                                                 local_send_offset,
+                                                 &exs_mhandle);
+        }
+
+        /* If the user has requested cpu utilization measurements, we must */
+        /* calibrate the cpu(s). We will perform this task within the tests */
+        /* themselves. If the user has specified the cpu rate, then */
+        /* calibrate_local_cpu will return rather quickly as it will have */
+        /* nothing to do. If local_cpu_rate is zero, then we will go through */
+        /* all the "normal" calibration stuff and return the rate back. */
+
+        if (local_cpu_usage) {
+            local_cpu_rate = calibrate_local_cpu(local_cpu_rate);
+        }
+
+        /* Tell the remote end to do a listen. The server alters the socket */
+        /* paramters on the other side at this point, hence the reason for */
+        /* all the values being passed in the setup message. If the user did */
+        /* not specify any of the parameters, they will be passed as 0, which */
+        /* will indicate to the remote that no changes beyond the system's */
+        /* default should be used. Alignment is the exception, it will */
+        /* default to 1, which will be no alignment alterations. */
+
+        netperf_request.content.request_type =   DO_TCP_STREAM;
+        tcp_stream_request->send_buf_size   =   rss_size_req;
+        tcp_stream_request->recv_buf_size   =   rsr_size_req;
+        tcp_stream_request->receive_size   =   recv_size;
+        tcp_stream_request->no_delay   =   rem_nodelay;
+        tcp_stream_request->recv_alignment   =   remote_recv_align;
+        tcp_stream_request->recv_offset   =   remote_recv_offset;
+        tcp_stream_request->measure_cpu   =   remote_cpu_usage;
+        tcp_stream_request->cpu_rate   =   remote_cpu_rate;
+        if (test_time) {
+            tcp_stream_request->test_length   =   test_time;
+        }
+        else {
+            tcp_stream_request->test_length   =   test_bytes;
+        }
+        tcp_stream_request->so_rcvavoid   =   rem_rcvavoid;
+        tcp_stream_request->so_sndavoid   =   rem_sndavoid;
+#ifdef DIRTY
+        tcp_stream_request->dirty_count     =       rem_dirty_count;
+        tcp_stream_request->clean_count     =       rem_clean_count;
+#endif /* DIRTY */
+        tcp_stream_request->port            =    atoi(remote_data_port);
+        tcp_stream_request->ipfamily = af_to_nf(remote_res->ai_family);
+        if (debug > 1) {
+            fprintf(where,
+                    "netperf: send_tcp_stream: requesting TCP stream test\n");
+        }
+
+        send_request();
+
+        /* The response from the remote will contain all of the relevant    */
+        /* socket parameters for this test type. We will put them back into */
+        /* the variables here so they can be displayed if desired.  The   */
+        /* remote will have calibrated CPU if necessary, and will have done   */
+        /* all the needed set-up we will have calibrated the cpu locally   */
+        /* before sending the request, and will grab the counter value right*/
+        /* after the connect returns. The remote will grab the counter right*/
+        /* after the accept call. This saves the hassle of extra messages   */
+        /* being sent for the TCP tests.               */
+
+        recv_response();
+
+        if (!netperf_response.content.serv_errno) {
+            if (debug)
+                fprintf(where,"remote listen done.\n");
+            rsr_size         =   tcp_stream_response->recv_buf_size;
+            rss_size         =   tcp_stream_response->send_buf_size;
+            rem_nodelay     =   tcp_stream_response->no_delay;
+            remote_cpu_usage=   tcp_stream_response->measure_cpu;
+            remote_cpu_rate = tcp_stream_response->cpu_rate;
+
+            /* we have to make sure that the server port number is in */
+            /* network order */
+            set_port_number(remote_res,(short)tcp_stream_response->data_port_number);
+
+            rem_rcvavoid   = tcp_stream_response->so_rcvavoid;
+            rem_sndavoid   = tcp_stream_response->so_sndavoid;
+        }
+        else {
+            Set_errno(netperf_response.content.serv_errno);
+            fprintf(where,
+                    "netperf: remote error %d",
+                    netperf_response.content.serv_errno);
+            perror("");
+            fflush(where);
+
+            exit(1);
+        }
+
+#if 0 /* def WANT_DEMO */
+        DEMO_STREAM_SETUP(lss_size,rsr_size)
+#endif
+
+            /*Connect up to the remote port on the data socket  */
+            if (connect(send_socket,
+                        remote_res->ai_addr,
+                        remote_res->ai_addrlen) == INVALID_SOCKET){
+                perror("netperf: send_tcp_stream: data socket connect failed");
+                exit(1);
+            }
+
+        /* Data Socket set-up is finished. If there were problems, either */
+        /* the connect would have failed, or the previous response would */
+        /* have indicated a problem. I failed to see the value of the */
+        /* extra  message after the accept on the remote. If it failed, */
+        /* we'll see it here. If it didn't, we might as well start pumping */
+        /* data. */
+
+        /* Set-up the test end conditions. For a stream test, they can be */
+        /* either time or byte-count based. */
+
+        if (test_time) {
+            /* The user wanted to end the test after a period of time. */
+            times_up = 0;
+            bytes_remaining = 0;
+            /* in previous revisions, we had the same code repeated throught */
+            /* all the test suites. this was unnecessary, and meant more */
+            /* work for me when I wanted to switch to POSIX signals, so I */
+            /* have abstracted this out into a routine in netlib.c. if you */
+            /* are experiencing signal problems, you might want to look */
+            /* there. raj 11/94 */
+            start_timer(test_time);
+        }
+        else {
+            /* The tester wanted to send a number of bytes. */
+            bytes_remaining = test_bytes;
+            times_up = 1;
+        }
+
+        /* The cpu_start routine will grab the current time and possibly */
+        /* value of the idle counter for later use in measuring cpu */
+        /* utilization and/or service demand and thruput. */
+
+        cpu_start(local_cpu_usage);
+
+#if 0 /* def WANT_INTERVALS */
+        if (interval_burst) {
+            /* zero means that we never pause, so we never should need the */
+            /* interval timer, unless we are in demo_mode */
+            start_itimer(interval_wate);
+        }
+        interval_count = interval_burst;
+        /* get the signal set for the call to sigsuspend */
+        if (sigprocmask(SIG_BLOCK, (sigset_t *)NULL, &signal_set) != 0) {
+            fprintf(where,
+                    "send_tcp_stream: unable to get sigmask errno %d\n",
+                    errno);
+            fflush(where);
+            exit(1);
+        }
+#endif /* WANT_INTERVALS */
+
+#ifdef DIRTY
+        /* initialize the random number generator for putting dirty stuff */
+        /* into the send buffer. raj */
+        srand((int) getpid());
+#endif
+
+        /* before we start, initialize a few variables */
+
+#if 0 /* def WANT_DEMO */
+        if (demo_mode) {
+            HIST_timestamp(demo_one_ptr);
+        }
+#endif
+
+
+        /* We use an "OR" to control test execution. When the test is */
+        /* controlled by time, the byte count check will always return false. */
+        /* When the test is controlled by byte count, the time test will */
+        /* always return false. When the test is finished, the whole */
+        /* expression will go false and we will stop sending data. */
+
+        exs_aio_pending = 0;
+        exs_aio_eagain = 0;
+        exs_aio_dequeuecnt = 0;
+
+        while ((!times_up) || (bytes_remaining > 0)) {
+
+#ifdef DIRTY
+            /* we want to dirty some number of consecutive integers in the buffer */
+            /* we are about to send. we may also want to bring some number of */
+            /* them cleanly into the cache. The clean ones will follow any dirty */
+            /* ones into the cache. at some point, we might want to replace */
+            /* the rand() call with something from a table to reduce our call */
+            /* overhead during the test, but it is not a high priority item. */
+            message_int_ptr = (int *)(send_ring->buffer_ptr);
+            for (i = 0; i < loc_dirty_count; i++) {
+                *message_int_ptr = rand();
+                message_int_ptr++;
+            }
+            for (i = 0; i < loc_clean_count; i++) {
+                loc_dirty_count = *message_int_ptr;
+                message_int_ptr++;
+            }
+#endif /* DIRTY */
+
+#if 0 /* def WANT_HISTOGRAM */
+            /* timestamp just before we go into send and then again just after */
+            /* we come out raj 8/94 */
+            HIST_timestamp(&time_one);
+#endif /* WANT_HISTOGRAM */
+
+
+            /* post up to NETPERF_EXS_PENDING I/Os  */
+            while ((exs_aio_pending < NETPERF_EXS_PENDING) &&
+                   (exs_send (send_socket, send_ring->buffer_ptr, send_size,
+                              0, exs_qhandle, (exs_ahandle_t)-1, exs_mhandle) == 0)) {
+                exs_aio_pending++;
+                /* now we want to move our pointer to the next position in the */
+                /* data buffer...we may also want to wrap back to the "beginning" */
+                /* of the bufferspace, so we will mod the number of messages sent */
+                /* by the send width, and use that to calculate the offset to add */
+                /* to the base pointer. */
+                nummessages++;
+                send_ring = send_ring->next;
+                if (bytes_remaining) {
+                    bytes_remaining -= send_size;
+                }
+            }
+
+            /* check exs_send result */
+            if (exs_aio_pending < NETPERF_EXS_PENDING) {
+               /* standard flow control case */
+                if (errno == EAGAIN)
+                    exs_aio_eagain++;
+                /* case of times_up */
+                else if (errno == EINTR)
+                    break;
+                /* strange, let's stop */
+                else {
+                    perror ("netperf: exs_send error");
+                    exit (1);
+                }
+            }
+
+            /* dequeue events with "threshold" on 1/2 posted */
+            exs_aio_dequeued =
+                exs_qdequeue (exs_qhandle, exs_evtvec,
+                              -(exs_aio_pending>>1), NULL);
+            exs_aio_dequeuecnt++;
+
+            /* check exs_dequeue result */
+            if (exs_aio_dequeued < 0) {
+                /* case of times_up */
+                if (errno == EINTR)
+                    break;
+                /* strange, let's stop */
+                else {
+                    perror ("netperf: exs_send error");
+                    exit (1);
+                }
+            }
+            /* update number of pending I/Os */
+            else {
+                exs_aio_pending -= exs_aio_dequeued;
+            }
+
+
+#if 0 /* def WANT_HISTOGRAM */
+            /* timestamp the exit from the send call and update the histogram */
+            HIST_timestamp(&time_two);
+            HIST_add(time_hist,delta_micro(&time_one,&time_two));
+#endif /* WANT_HISTOGRAM */
+
+#if 0 /* def WANT_DEMO */
+            DEMO_STREAM_INTERVAL(send_size)
+#endif
+
+#if 0 /* def WANT_INTERVALS */
+                /* in this case, the interval count is the count-down couter */
+                /* to decide to sleep for a little bit */
+                if ((interval_burst) && (--interval_count == 0)) {
+                    /* call sigsuspend and wait for the interval timer to get us */
+                    /* out */
+                    if (debug) {
+                        fprintf(where,"about to suspend\n");
+                        fflush(where);
+                    }
+                    if (sigsuspend(&signal_set) == EFAULT) {
+                        fprintf(where,
+                                "send_tcp_stream: fault with sigsuspend.\n");
+                        fflush(where);
+                        exit(1);
+                    }
+                    interval_count = interval_burst;
+                }
+#endif /* WANT_INTERVALS */
+
+        }
+
+        /* Collect the last completion events */
+        exs_aio_dequeued =
+            exs_qdequeue (exs_qhandle, exs_evtvec, -exs_aio_pending, NULL);
+        exs_aio_dequeuecnt++;
+        /* check exs_dequeue result and update number of pending I/Os */
+        if (exs_aio_dequeued < 0) {
+            perror ("netperf: exs_send error");
+            exit (1);
+        }
+        exs_aio_pending -= exs_aio_dequeued;
+
+        /* Display some async I/O debug info */
+        if (debug) {
+            fprintf (where, "send_exs_tcp_stream: "
+                     "aio sent=%d eagain=%d dequeue=%d pending=%d\n",
+                     nummessages, exs_aio_eagain, exs_aio_dequeuecnt, exs_aio_pending);
+        }
+
+        /* The test is over. Flush the buffers to the remote end. We do a */
+        /* graceful release to insure that all data has been taken by the */
+        /* remote. */
+
+        /* but first, if the verbosity is greater than 1, find-out what */
+        /* the TCP maximum segment_size was (if possible) */
+        if (verbosity > 1) {
+            tcp_mss = -1;
+            get_tcp_info(send_socket,&tcp_mss);
+        }
+
+        if (shutdown(send_socket,1) == SOCKET_ERROR) {
+            perror("netperf: cannot shutdown tcp stream socket");
+            exit(1);
+        }
+
+        /* hang a recv() off the socket to block until the remote has */
+        /* brought all the data up into the application. it will do a */
+        /* shutdown to cause a FIN to be sent our way. We will assume that */
+        /* any exit from the recv() call is good... raj 4/93 */
+
+        recv(send_socket, send_ring->buffer_ptr, send_size, 0);
+
+        /* this call will always give us the elapsed time for the test, and */
+        /* will also store-away the necessaries for cpu utilization */
+
+        cpu_stop(local_cpu_usage,&elapsed_time);   /* was cpu being */
+        /* measured and how */
+        /* long did we really */
+        /* run? */
+
+        /* we are finished with the socket, so close it to prevent hitting */
+        /* the limit on maximum open files. */
+
+        close(send_socket);
+
+        /* Get the statistics from the remote end. The remote will have */
+        /* calculated service demand and all those interesting things. If it */
+        /* wasn't supposed to care, it will return obvious values. */
+
+        recv_response();
+        if (!netperf_response.content.serv_errno) {
+            if (debug)
+                fprintf(where,"remote results obtained\n");
+        }
+        else {
+            Set_errno(netperf_response.content.serv_errno);
+            fprintf(where,
+                    "netperf: remote error %d",
+                    netperf_response.content.serv_errno);
+            perror("");
+            fflush(where);
+
+            exit(1);
+        }
+
+        /* We now calculate what our thruput was for the test. In the future, */
+        /* we may want to include a calculation of the thruput measured by */
+        /* the remote, but it should be the case that for a TCP stream test, */
+        /* that the two numbers should be *very* close... We calculate */
+        /* bytes_sent regardless of the way the test length was controlled. */
+        /* If it was time, we needed to, and if it was by bytes, the user may */
+        /* have specified a number of bytes that wasn't a multiple of the */
+        /* send_size, so we really didn't send what he asked for ;-) */
+
+        bytes_sent   = ntohd(tcp_stream_result->bytes_received);
+
+        thruput   = calc_thruput(bytes_sent);
+
+        if (local_cpu_usage || remote_cpu_usage) {
+            /* We must now do a little math for service demand and cpu */
+            /* utilization for the system(s) */
+            /* Of course, some of the information might be bogus because */
+            /* there was no idle counter in the kernel(s). We need to make */
+            /* a note of this for the user's benefit...*/
+            if (local_cpu_usage) {
+
+                local_cpu_utilization   = calc_cpu_util(0.0);
+                local_service_demand   = calc_service_demand(bytes_sent,
+                                                             0.0,
+                                                             0.0,
+                                                             0);
+            }
+            else {
+                local_cpu_utilization   = (float) -1.0;
+                local_service_demand   = (float) -1.0;
+            }
+
+            if (remote_cpu_usage) {
+
+                remote_cpu_utilization   = tcp_stream_result->cpu_util;
+                remote_service_demand   = calc_service_demand(bytes_sent,
+                                                              0.0,
+                                                              remote_cpu_utilization,
+                                                              tcp_stream_result->num_cpus);
+            }
+            else {
+                remote_cpu_utilization = (float) -1.0;
+                remote_service_demand  = (float) -1.0;
+            }
+        }
+        else {
+            /* we were not measuring cpu, for the confidence stuff, we */
+            /* should make it -1.0 */
+            local_cpu_utilization   = (float) -1.0;
+            local_service_demand   = (float) -1.0;
+            remote_cpu_utilization = (float) -1.0;
+            remote_service_demand  = (float) -1.0;
+        }
+
+        /* at this point, we want to calculate the confidence information. */
+        /* if debugging is on, calculate_confidence will print-out the */
+        /* parameters we pass it */
+
+        calculate_confidence(confidence_iteration,
+                             elapsed_time,
+                             thruput,
+                             local_cpu_utilization,
+                             remote_cpu_utilization,
+                             local_service_demand,
+                             remote_service_demand);
+
+
+        confidence_iteration++;
+    }
+
+    /* at this point, we have finished making all the runs that we */
+    /* will be making. so, we should extract what the calcuated values */
+    /* are for all the confidence stuff. we could make the values */
+    /* global, but that seemed a little messy, and it did not seem worth */
+    /* all the mucking with header files. so, we create a routine much */
+    /* like calcualte_confidence, which just returns the mean values. */
+    /* raj 11/94 */
+
+    retrieve_confident_values(&elapsed_time,
+                              &thruput,
+                              &local_cpu_utilization,
+                              &remote_cpu_utilization,
+                              &local_service_demand,
+                              &remote_service_demand);
+
+    /* We are now ready to print all the information. If the user */
+    /* has specified zero-level verbosity, we will just print the */
+    /* local service demand, or the remote service demand. If the */
+    /* user has requested verbosity level 1, he will get the basic */
+    /* "streamperf" numbers. If the user has specified a verbosity */
+    /* of greater than 1, we will display a veritable plethora of */
+    /* background information from outside of this block as it it */
+    /* not cpu_measurement specific...  */
+
+    if (confidence < 0) {
+        /* we did not hit confidence, but were we asked to look for it? */
+        if (iteration_max > 1) {
+            display_confidence();
+        }
+    }
+
+    if (local_cpu_usage || remote_cpu_usage) {
+        local_cpu_method = format_cpu_method(cpu_method);
+        remote_cpu_method = format_cpu_method(tcp_stream_result->cpu_method);
+
+        switch (verbosity) {
+            case 0:
+                if (local_cpu_usage) {
+                    fprintf(where,
+                            cpu_fmt_0,
+                            local_service_demand,
+                            local_cpu_method);
+                }
+                else {
+                    fprintf(where,
+                            cpu_fmt_0,
+                            remote_service_demand,
+                            remote_cpu_method);
+                }
+                break;
+            case 1:
+            case 2:
+                if (print_headers) {
+                    fprintf(where,
+                            cpu_title,
+                            format_units(),
+                            local_cpu_method,
+                            remote_cpu_method);
+                }
+
+                fprintf(where,
+                        cpu_fmt_1,      /* the format string */
+                        rsr_size,              /* remote recvbuf size */
+                        lss_size,              /* local sendbuf size */
+                        send_size,      /* how large were the sends */
+                        elapsed_time,      /* how long was the test */
+                        thruput,               /* what was the xfer rate */
+                        local_cpu_utilization,   /* local cpu */
+                        remote_cpu_utilization,   /* remote cpu */
+                        local_service_demand,   /* local service demand */
+                        remote_service_demand);   /* remote service demand */
+                break;
+        }
+    }
+    else {
+        /* The tester did not wish to measure service demand. */
+
+        switch (verbosity) {
+            case 0:
+                fprintf(where,
+                        tput_fmt_0,
+                        thruput);
+                break;
+            case 1:
+            case 2:
+                if (print_headers) {
+                    fprintf(where,tput_title,format_units());
+                }
+                fprintf(where,
+                        tput_fmt_1,      /* the format string */
+                        rsr_size,       /* remote recvbuf size */
+                        lss_size,       /* local sendbuf size */
+                        send_size,      /* how large were the sends */
+                        elapsed_time,       /* how long did it take */
+                        thruput);/* how fast did it go */
+                break;
+        }
+    }
+
+    /* it would be a good thing to include information about some of the */
+    /* other parameters that may have been set for this test, but at the */
+    /* moment, I do not wish to figure-out all the  formatting, so I will */
+    /* just put this comment here to help remind me that it is something */
+    /* that should be done at a later time. */
+
+    if (verbosity > 1) {
+        /* The user wanted to know it all, so we will give it to him. */
+        /* This information will include as much as we can find about */
+        /* TCP statistics, the alignments of the sends and receives */
+        /* and all that sort of rot... */
+
+        /* this stuff needs to be worked-out in the presence of confidence */
+        /* intervals and multiple iterations of the test... raj 11/94 */
+
+        fprintf(where,
+                ksink_fmt,
+                "Bytes",
+                "Bytes",
+                "Bytes",
+                local_send_align,
+                remote_recv_align,
+                local_send_offset,
+                remote_recv_offset,
+                bytes_sent,
+                bytes_sent / (double)nummessages,
+                nummessages,
+                bytes_sent / (double)tcp_stream_result->recv_calls,
+                tcp_stream_result->recv_calls);
+        fprintf(where,
+                ksink_fmt2,
+                tcp_mss);
+        fflush(where);
+#if 0 /* def WANT_HISTOGRAM */
+        fprintf(where,"\n\nHistogram of time spent in send() call.\n");
+        fflush(where);
+        HIST_report(time_hist);
+#endif /* WANT_HISTOGRAM */
+    }
+
+}
+
+#endif /* HAVE_ICSC_EXS */
+
 
 
 #if defined(HAVE_SENDFILE) 
 
 #if defined(QUICK_SENDPATH)
 
-   /*
-    * a temporary stub for the sendpath() system call
-    * which is defined & implemented in the kernel
-    * but which has no libc stub.
-    */
+/*
+ * a temporary stub for the sendpath() system call
+ * which is defined & implemented in the kernel
+ * but which has no libc stub.
+ */
 #include <sys/types.h>
 #include <sys/scall_define.h>
 #include <sys/uio.h>
@@ -1981,7 +3263,7 @@ sendpath(int s, char *path, off_t offset, size_t nbytes,
 
 void 
 sendfile_tcp_stream(remote_host)
-char	remote_host[];
+     char	remote_host[];
 {
   
   char *tput_title = "\
@@ -2021,7 +3303,7 @@ Size (bytes)\n\
 
   float			elapsed_time;
   
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
   int interval_count;
   sigset_t signal_set;
 #endif
@@ -2043,7 +3325,7 @@ Size (bytes)\n\
   unsigned int nummessages = 0;
   SOCKET send_socket;
   int bytes_remaining;
-  int tcp_mss = -1;  // possibly uninitialized on printf far below
+  int tcp_mss = -1;  /* possibly uninitialized on printf far below */
 
   /* with links like fddi, one can send > 32 bits worth of bytes */
   /* during a test... ;-) at some point, this should probably become a */
@@ -2061,9 +3343,9 @@ Size (bytes)\n\
 
   double	thruput;
   
-  struct	hostent	        *hp;
+  struct  addrinfo *remote_res;
+  struct  addrinfo *local_res;
   struct	sockaddr_in	server;
-  unsigned      int             addr;
 
 #if defined(__linux) || defined(__SunOS_5_9)
   off_t     scratch_offset;   /* the linux sendfile() call will update
@@ -2084,9 +3366,9 @@ Size (bytes)\n\
   tcp_stream_result   = 
     (struct tcp_stream_results_struct *)netperf_response.content.test_specific_data;
   
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
   time_hist = HIST_new();
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
   /* since we are now disconnected from the code that established the */
   /* control socket, and since we want to be able to use different */
@@ -2096,7 +3378,12 @@ Size (bytes)\n\
   bzero((char *)&server,
 	sizeof(server));
   
-  complete_sockaddr(&server, remote_host, remote_data_ip);
+  complete_addrinfos(&remote_res,
+		     &local_res,
+		     remote_host,
+		     SOCK_STREAM,
+		     IPPROTO_TCP,
+		     0);
 
   if ( print_headers ) {
     /* we want to have some additional, interesting information in */
@@ -2104,42 +3391,15 @@ Size (bytes)\n\
     /* only print the test title here and will print the results */
     /* titles after the test is finished */
 #ifdef QUICK_SENDPATH
-    fprintf(where,"TCP SENDPATH TEST");
+    print_top_test_header("TCP SENDPATH TEST",local_res,remote_res);
 #else
-    fprintf(where,"TCP SENDFILE TEST");
+    print_top_test_header("TCP SENDFILE TEST",local_res,remote_res);
 #endif /* QUICK_SENDPATH */
-    fprintf(where," to %s", remote_host);
-    if (iteration_max > 1) {
-      fprintf(where,
-	      " : +/-%3.1f%% @ %2d%% conf.",
-	      interval/0.02,
-	      confidence_level);
-      }
-    if (loc_nodelay || rem_nodelay) {
-      fprintf(where," : nodelay");
-    }
-    if (loc_sndavoid || 
-	loc_rcvavoid ||
-	rem_sndavoid ||
-	rem_rcvavoid) {
-      fprintf(where," : copy avoidance");
-    }
-#ifdef HISTOGRAM
-    fprintf(where," : histogram");
-#endif /* HISTOGRAM */
-#ifdef INTERVALS
-    fprintf(where," : interval");
-#endif /* INTERVALS */
-#ifdef DIRTY 
-    fprintf(where," : dirty data");
-#endif /* DIRTY */
-    fprintf(where,"\n");
   }
-
   send_ring = NULL;
   confidence_iteration = 1;
   init_stat();
-
+  
   /* we have a great-big while loop which controls the number of times */
   /* we run a particular test. this is for the calculation of a */
   /* confidence interval (I really should have stayed awake during */
@@ -2149,7 +3409,7 @@ Size (bytes)\n\
 
   while (((confidence < 0) && (confidence_iteration < iteration_max)) ||
 	 (confidence_iteration <= iteration_min)) {
-
+    
     /* initialize a few counters. we have to remember that we might be */
     /* going through the loop more than once. */
     
@@ -2158,21 +3418,19 @@ Size (bytes)\n\
     times_up       = 	0;
     
     /* set up the data socket */
-    send_socket = create_data_socket(AF_INET, 
-				     SOCK_STREAM,
-				     local_data_ip,
-				     local_data_port);
+    send_socket = create_data_socket(local_res);
+
     if (send_socket == INVALID_SOCKET){
       perror("netperf: sendfile_tcp_stream: tcp stream data socket");
       exit(1);
     }
-
+    
     if (debug) {
       fprintf(where,"sendfile_tcp_stream: send_socket obtained...\n");
     }
-
+    
 #if defined(TCP_CORK)
-
+    /* should this even be here?!? */
     if (loc_tcpcork != 0) {
       /* the user wishes for us to set TCP_CORK on the socket */
       int one = 1;
@@ -2188,7 +3446,7 @@ Size (bytes)\n\
 	fprintf(where,"sendfile_tcp_stream: tcp_cork...\n");
       }
     }
-
+    
 #endif /* TCP_CORK */    
 
     /* at this point, we have either retrieved the socket buffer sizes, */
@@ -2199,7 +3457,7 @@ Size (bytes)\n\
     /* particular reason, just arbitrary... */
 
     /*check for file size/ min file size here?  create file here/ back out???*/
-
+    
     if (send_size == 0) {
       if (lss_size > 0) {
 	send_size = lss_size;
@@ -2218,10 +3476,10 @@ Size (bytes)\n\
        may have wanted to explicitly set the "width" of our send
        buffers, we should respect that wish... */ 
 
-/*sendring -> an offset index that will shift the starting point of the*/
-/*section of the file sent throughout the file*/
-
-if (send_width == 0) {
+    /*sendring -> an offset index that will shift the starting point of the*/
+    /*section of the file sent throughout the file*/
+    
+    if (send_width == 0) {
       send_width = (lss_size/send_size) + 1;
       if (send_width == 1) send_width++;
     }
@@ -2232,7 +3490,7 @@ if (send_width == 0) {
 	 not a memory allocation test. this way, we do not need a
 	 deallocate_buffer_ring() routine, and I don't feel like
 	 writing one anyway :) raj 11/94 */ 
-
+      
       send_ring = alloc_sendfile_buf_ring(send_width,
 					  send_size,
 					  local_send_align,
@@ -2261,8 +3519,8 @@ if (send_width == 0) {
        will be no alignment alterations. */ 
 
     netperf_request.content.request_type =	DO_TCP_STREAM;
-    tcp_stream_request->send_buf_size	=	rss_size;
-    tcp_stream_request->recv_buf_size	=	rsr_size;
+    tcp_stream_request->send_buf_size	=	rss_size_req;
+    tcp_stream_request->recv_buf_size	=	rsr_size_req;
     tcp_stream_request->receive_size	=	recv_size;
     tcp_stream_request->no_delay	=	rem_nodelay;
     tcp_stream_request->recv_alignment	=	remote_recv_align;
@@ -2284,7 +3542,9 @@ if (send_width == 0) {
     tcp_stream_request->dirty_count       =       rem_dirty_count;
     tcp_stream_request->clean_count       =       rem_clean_count;
 #endif /* DIRTY */
-    
+    tcp_stream_request->port     = atoi(remote_data_port);
+    tcp_stream_request->ipfamily = af_to_nf(remote_res->ai_family);
+
     if (debug > 1) {
       fprintf(where,
 	      "netperf: send_tcp_stream: requesting TCP stream test\n");
@@ -2315,8 +3575,7 @@ if (send_width == 0) {
 
       /* we have to make sure that the server port number is in */
       /* network order */
-      server.sin_port   = (short)tcp_stream_response->data_port_number;
-      server.sin_port   = htons(server.sin_port); 
+      set_port_number(remote_res,(short)tcp_stream_response->data_port_number);
       rem_rcvavoid	= tcp_stream_response->so_rcvavoid;
       rem_sndavoid	= tcp_stream_response->so_sndavoid;
     }
@@ -2331,10 +3590,14 @@ if (send_width == 0) {
       exit(1);
     }
 
+#ifdef WANT_DEMO
+    DEMO_STREAM_SETUP(lss_size,rsr_size)
+#endif
+
     /*Connect up to the remote port on the data socket  */
     if (connect(send_socket, 
-		(struct sockaddr *)&server,
-		sizeof(server)) == INVALID_SOCKET){
+		remote_res->ai_addr,
+		remote_res->ai_addrlen) == INVALID_SOCKET){
       perror("netperf: send_tcp_stream: data socket connect failed");
       printf(" port: %d\n",ntohs(server.sin_port));
       exit(1);
@@ -2346,7 +3609,7 @@ if (send_width == 0) {
        extra message after the accept on the remote. If it failed,
        we'll see it here. If it didn't, we might as well start pumping
        data. */
-
+    
     /* Set-up the test end conditions. For a stream test, they can be */
     /* either time or byte-count based. */
     
@@ -2369,15 +3632,15 @@ if (send_width == 0) {
       bytes_remaining = test_bytes;
       times_up = 1;
     }
-
+    
     /* The cpu_start routine will grab the current time and possibly */
     /* value of the idle counter for later use in measuring cpu */
     /* utilization and/or service demand and thruput. */
     
     cpu_start(local_cpu_usage);
     
-#ifdef INTERVALS
-    if ((interval_burst) || (demo_mode)) {
+#ifdef WANT_INTERVALS
+    if (interval_burst) {
       /* zero means that we never pause, so we never should need the */
       /* interval timer, unless we are in demo_mode */
       start_itimer(interval_wate);
@@ -2394,7 +3657,7 @@ if (send_width == 0) {
       fflush(where);
       exit(1);
     }
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
 
 #ifdef DIRTY
     /* initialize the random number generator for putting dirty stuff */
@@ -2403,6 +3666,12 @@ if (send_width == 0) {
 #endif
    
     /* before we start, initialize a few variables */
+
+#ifdef WANT_DEMO
+    if (demo_mode) {
+      HIST_timestamp(demo_one_ptr);
+    }
+#endif
 
     /* We use an "OR" to control test execution. When the test is
        controlled by time, the byte count check will always return
@@ -2415,13 +3684,13 @@ if (send_width == 0) {
       /* the sendfile_tcp_stream test does not support making the buffers
 	 dirty. 08/2000 */
       
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
       
       /* timestamp just before we go into sendfile() and then again just
          after we come out raj 08/2000 */
       
       HIST_timestamp(&time_one);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
       
       /* you can look at netlib.h for a description of the fields we
 	 are passing to sendfile(). 08/2000 */
@@ -2434,58 +3703,59 @@ if (send_width == 0) {
 			send_ring->flags)) != send_size)
 #elif defined(__linux)  || defined(__SunOS_5_9)
 	scratch_offset = send_ring->offset;
-	if ((len=sendfile(send_socket, 
-			  send_ring->fildes, 
-			  &scratch_offset,   /* modified after the call! */
-			  send_ring->length)) != send_size)
-#elif defined(__FreeBSD__)
-      /* so close to HP-UX and yet so far away... :) */
-      if ((sendfile(send_ring->fildes, 
-		    send_socket, 
-		    send_ring->offset,
-		    send_ring->length,
-		    NULL,
-		    (off_t *)&len,
-		    send_ring->flags) != 0) ||
-	  (len != send_size))
-#else /* original sendile HP-UX */
       if ((len=sendfile(send_socket, 
 			send_ring->fildes, 
-			send_ring->offset,
-			send_ring->length,
-			send_ring->hdtrl,
-			send_ring->flags)) != send_size)
+			&scratch_offset,   /* modified after the call! */
+			send_ring->length)) != send_size)
+#elif defined(__FreeBSD__)
+	/* so close to HP-UX and yet so far away... :) */
+	if ((sendfile(send_ring->fildes, 
+		      send_socket, 
+		      send_ring->offset,
+		      send_ring->length,
+		      NULL,
+		      (off_t *)&len,
+		      send_ring->flags) != 0) ||
+	    (len != send_size))
+#else /* original sendile HP-UX */
+	  if ((len=sendfile(send_socket, 
+			    send_ring->fildes, 
+			    send_ring->offset,
+			    send_ring->length,
+			    send_ring->hdtrl,
+			    send_ring->flags)) != send_size)
 #endif /* QUICK_SENDPATH */
-	  {
-	    /* the test was interrupted, must be the end of test. the
-	    send_tcp_stream code has some WIN32 ifdefs that we do not
-	    need here. */
- 		if ((len >=0) || SOCKET_EINTR(len)) {
-	      break;
-		}
-        perror("netperf: data send error: sendfile");
-        fprintf(stderr,
-	        "len was %d send_size was %d\n",
-	        len,
-	        send_size);
-        fflush(stderr);
-        exit(1);
-      }
-    
-/*	offset += len;*/
-
-#ifdef HISTOGRAM
+	    {
+	      /* the test was interrupted, must be the end of test. the
+		 send_tcp_stream code has some WIN32 ifdefs that we do not
+		 need here. */
+	      if ((len >=0) || SOCKET_EINTR(len)) {
+		break;
+	      }
+	      perror("netperf: data send error: sendfile");
+	      fprintf(stderr,
+		      "len was %d send_size was %d\n",
+		      len,
+		      send_size);
+	      fflush(stderr);
+	      exit(1);
+	    }
+      
+      /*	offset += len;*/
+      
+#ifdef WANT_HISTOGRAM
       /* timestamp the exit from the send call and update the histogram */
       
       HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
 
-#endif /* HISTOGRAM */      
-
-#ifdef INTERVALS      
-      if (demo_mode) {
-	units_this_tick += send_size;
-      }
+#endif /* WANT_HISTOGRAM */      
+    
+#ifdef WANT_DEMO
+      DEMO_STREAM_INTERVAL(send_size)
+#endif 
+  
+#ifdef WANT_INTERVALS      
       
       /* in this case, the interval count is the count-down couter */
       /* to decide to sleep for a little bit */
@@ -2502,15 +3772,15 @@ if (send_width == 0) {
 	
 	if (sigsuspend(&signal_set) == EFAULT) {
 	  fprintf(where,
-		  "send_udp_stream: fault with sigsuspend.\n");
+		  "sendfile_tcp_stream: fault with sigsuspend.\n");
 	  fflush(where);
 	  exit(1);
 	}
 	
 	interval_count = interval_burst;
       }
-
-#endif /* INTERVALS */
+      
+#endif /* WANT_INTERVALS */
       
       /* now we want to move our pointer to the next position in the */
       /* data buffer...we may also want to wrap back to the "beginning" */
@@ -2603,7 +3873,7 @@ if (send_width == 0) {
     /* send_size, so we really didn't send what he asked for ;-) */
     
     bytes_sent	= ntohd(tcp_stream_result->bytes_received);
-
+    
     thruput	= calc_thruput(bytes_sent);
     
     if (local_cpu_usage || remote_cpu_usage) {
@@ -2810,12 +4080,12 @@ if (send_width == 0) {
 
     fflush(where);
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
 
     fprintf(where,"\n\nHistogram of time spent in send() call.\n");
     fflush(where);
     HIST_report(time_hist);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
   }
 }
 
@@ -2831,13 +4101,17 @@ recv_tcp_stream()
   
   struct sockaddr_in myaddr_in, peeraddr_in;
   SOCKET s_listen,s_data;
-  int 	addrlen;
+  socklen_t addrlen;
   int	len;
   unsigned int	receive_calls;
   float	elapsed_time;
   double   bytes_received;
   
   struct ring_elt *recv_ring;
+
+  struct addrinfo *local_res;
+  char local_name[BUFSIZ];
+  char port_buffer[PORTBUFSIZE];
 
 #ifdef DIRTY
   int   *message_int_ptr;
@@ -2913,14 +4187,24 @@ recv_tcp_stream()
   /* based on the updated value of those globals. raj 7/94 */
   lss_size_req = tcp_stream_request->send_buf_size;
   lsr_size_req = tcp_stream_request->recv_buf_size;
-  loc_nodelay = tcp_stream_request->no_delay;
+  loc_nodelay  = tcp_stream_request->no_delay;
   loc_rcvavoid = tcp_stream_request->so_rcvavoid;
   loc_sndavoid = tcp_stream_request->so_sndavoid;
 
-  s_listen = create_data_socket(AF_INET,
+  set_hostname_and_port(local_name,
+			port_buffer,
+			nf_to_af(tcp_stream_request->ipfamily),
+			tcp_stream_request->port);
+
+  local_res = complete_addrinfo(local_name,
+				local_name,
+				port_buffer,
+				nf_to_af(tcp_stream_request->ipfamily),
 				SOCK_STREAM,
-				tcp_stream_request->ipaddress,
-				tcp_stream_request->port);
+				IPPROTO_TCP,
+				0);
+
+  s_listen = create_data_socket(local_res);
   
   if (s_listen == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
@@ -3159,7 +4443,6 @@ recv_tcp_stream()
 
   }
 
-
 /* This is the server-side routine for the tcp maerts test. It is
    implemented as one routine. I could break things-out somewhat, but
    didn't feel it was necessary. */ 
@@ -3169,8 +4452,12 @@ recv_tcp_maerts()
 {
   
   struct sockaddr_in myaddr_in, peeraddr_in;
+  struct addrinfo *local_res;
+  char  local_name[BUFSIZ];
+  char  port_buffer[PORTBUFSIZE];
+
   SOCKET	s_listen,s_data;
-  int 	addrlen;
+  socklen_t 	addrlen;
   int	len;
   unsigned int	send_calls;
   float	elapsed_time;
@@ -3252,10 +4539,20 @@ recv_tcp_maerts()
   loc_rcvavoid = tcp_maerts_request->so_rcvavoid;
   loc_sndavoid = tcp_maerts_request->so_sndavoid;
 
-  s_listen = create_data_socket(AF_INET,
+  set_hostname_and_port(local_name,
+			port_buffer,
+			nf_to_af(tcp_maerts_request->ipfamily),
+			tcp_maerts_request->port);
+
+  local_res = complete_addrinfo(local_name,
+				local_name,
+				port_buffer,
+				nf_to_af(tcp_maerts_request->ipfamily),
 				SOCK_STREAM,
-				tcp_maerts_request->ipaddress,
-				tcp_maerts_request->port);
+				IPPROTO_TCP,
+				0);
+
+  s_listen = create_data_socket(local_res);
   
   if (s_listen == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
@@ -3411,7 +4708,9 @@ recv_tcp_maerts()
   bytes_sent = 0.0;
   send_calls  = 0;
 
-  len = 0;   // nt-lint; len is not initialized (printf far below) if times_up initially true.
+  len = 0;   /* nt-lint; len is not initialized (printf far below) if
+		times_up initially true.*/
+  times_up = 0; /* must remember to initialize this little beauty */
   while (!times_up) {
 
 #ifdef DIRTY
@@ -3575,18 +4874,17 @@ Send   Recv    Send   Recv\n\
   float	remote_service_demand;
   double	thruput;
   
-  struct	hostent	        *hp;
-  struct	sockaddr_in	server;
-  unsigned      int             addr;
+  struct addrinfo *local_res;
+  struct addrinfo *remote_res;
 
   struct	tcp_rr_request_struct	*tcp_rr_request;
   struct	tcp_rr_response_struct	*tcp_rr_response;
   struct	tcp_rr_results_struct	*tcp_rr_result;
   
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
   int	interval_count;
   sigset_t signal_set;
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
 
   tcp_rr_request = 
     (struct tcp_rr_request_struct *)netperf_request.content.test_specific_data;
@@ -3595,48 +4893,24 @@ Send   Recv    Send   Recv\n\
   tcp_rr_result	=
     (struct tcp_rr_results_struct *)netperf_response.content.test_specific_data;
   
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
   time_hist = HIST_new();
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
   /* since we are now disconnected from the code that established the */
   /* control socket, and since we want to be able to use different */
   /* protocols and such, we are passed the name of the remote host and */
   /* must turn that into the test specific addressing information. */
 
-  bzero((char *)&server,
-	sizeof(server));
-  
-  complete_sockaddr(&server, remote_host, remote_data_ip);
+  complete_addrinfos(&remote_res,
+		     &local_res,
+		     remote_host,
+		     SOCK_STREAM,
+		     IPPROTO_TCP,
+		     0);
 
   if ( print_headers ) {
-    fprintf(where,"TCP REQUEST/RESPONSE TEST");
-    fprintf(where," to %s", remote_host);
-    if (iteration_max > 1) {
-      fprintf(where,
-	      " : +/-%3.1f%% @ %2d%% conf.",
-	      interval/0.02,
-	      confidence_level);
-      }
-    if (loc_nodelay || rem_nodelay) {
-      fprintf(where," : nodelay");
-    }
-    if (loc_sndavoid || 
-	loc_rcvavoid ||
-	rem_sndavoid ||
-	rem_rcvavoid) {
-      fprintf(where," : copy avoidance");
-    }
-#ifdef HISTOGRAM
-    fprintf(where," : histogram");
-#endif /* HISTOGRAM */
-#ifdef INTERVALS
-    fprintf(where," : interval");
-#endif /* INTERVALS */
-#ifdef DIRTY 
-    fprintf(where," : dirty data");
-#endif /* DIRTY */
-    fprintf(where,"\n");
+    print_top_test_header("TCP REQUEST/RESPONSE TEST",local_res,remote_res);
   }
   
   /* initialize a few counters */
@@ -3687,10 +4961,7 @@ Send   Recv    Send   Recv\n\
     }
     
     /*set up the data socket                        */
-    send_socket = create_data_socket(AF_INET, 
-				     SOCK_STREAM,
-				     local_data_ip,
-				     local_data_port);
+    send_socket = create_data_socket(local_res);
   
     if (send_socket == INVALID_SOCKET){
       perror("netperf: send_tcp_rr: tcp stream data socket");
@@ -3721,8 +4992,8 @@ Send   Recv    Send   Recv\n\
     /* default to 8, which will be no alignment alterations. */
     
     netperf_request.content.request_type	=	DO_TCP_RR;
-    tcp_rr_request->recv_buf_size	=	rsr_size;
-    tcp_rr_request->send_buf_size	=	rss_size;
+    tcp_rr_request->recv_buf_size	=	rsr_size_req;
+    tcp_rr_request->send_buf_size	=	rss_size_req;
     tcp_rr_request->recv_alignment      =	remote_recv_align;
     tcp_rr_request->recv_offset	        =	remote_recv_offset;
     tcp_rr_request->send_alignment      =	remote_send_align;
@@ -3740,8 +5011,8 @@ Send   Recv    Send   Recv\n\
     else {
       tcp_rr_request->test_length	=	test_trans * -1;
     }
-    tcp_rr_request->port                =      (int)remote_data_port;
-    tcp_rr_request->ipaddress           =      remote_data_ip;
+    tcp_rr_request->port                =      atoi(remote_data_port);
+    tcp_rr_request->ipfamily = af_to_nf(remote_res->ai_family);
 
     if (debug > 1) {
       fprintf(where,"netperf: send_tcp_rr: requesting TCP rr test\n");
@@ -3770,8 +5041,7 @@ Send   Recv    Send   Recv\n\
       remote_cpu_usage  = tcp_rr_response->measure_cpu;
       remote_cpu_rate   = tcp_rr_response->cpu_rate;
       /* make sure that port numbers are in network order */
-      server.sin_port   = (short)tcp_rr_response->data_port_number;
-      server.sin_port   = htons(server.sin_port);
+      set_port_number(remote_res,(short)tcp_rr_response->data_port_number);
     }
     else {
       Set_errno(netperf_response.content.serv_errno);
@@ -3784,10 +5054,14 @@ Send   Recv    Send   Recv\n\
       exit(1);
     }
 
+#ifdef WANT_DEMO
+    DEMO_RR_SETUP(1000)
+#endif
+
     /*Connect up to the remote port on the data socket  */
     if (connect(send_socket, 
-		(struct sockaddr *)&server,
-		sizeof(server)) == INVALID_SOCKET){
+		remote_res->ai_addr,
+		remote_res->ai_addrlen) == INVALID_SOCKET){
       perror("netperf: data socket connect failed");
       
       exit(1);
@@ -3820,8 +5094,8 @@ Send   Recv    Send   Recv\n\
     
     cpu_start(local_cpu_usage);
 
-#ifdef INTERVALS
-    if ((interval_burst) || (demo_mode)) {
+#ifdef WANT_INTERVALS
+    if (interval_burst) {
       /* zero means that we never pause, so we never should need the */
       /* interval timer, unless we are in demo_mode */
       start_itimer(interval_wate);
@@ -3835,7 +5109,7 @@ Send   Recv    Send   Recv\n\
       fflush(where);
       exit(1);
     }
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
     
     /* We use an "OR" to control test execution. When the test is */
     /* controlled by time, the byte count check will always return false. */
@@ -3846,7 +5120,7 @@ Send   Recv    Send   Recv\n\
     /* will not do that just yet... One other question is whether or not */
     /* the send buffer and the receive buffer should be the same buffer. */
 
-#ifdef DO_FIRST_BURST
+#ifdef WANT_FIRST_BURST
     {
       int i;
       for (i = 0; i < first_burst_size; i++) {
@@ -3860,17 +5134,23 @@ Send   Recv    Send   Recv\n\
 	}
       }
     }
-#endif /* DO_FIRST_BURST */
+#endif /* WANT_FIRST_BURST */
+
+#ifdef WANT_DEMO
+      if (demo_mode) {
+	HIST_timestamp(demo_one_ptr);
+      }
+#endif
 
     while ((!times_up) || (trans_remaining > 0)) {
       /* send the request. we assume that if we use a blocking socket, */
       /* the request will be sent at one shot. */
       
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
       /* timestamp just before our call to send, and then again just */
       /* after the receive raj 8/94 */
       HIST_timestamp(&time_one);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
       
       if((len=send(send_socket,
 		   send_ring->buffer_ptr,
@@ -3914,14 +5194,16 @@ Send   Recv    Send   Recv\n\
 	break;
       }
       
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
       HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
-#endif /* HISTOGRAM */
-#ifdef INTERVALS      
-      if (demo_mode) {
-	units_this_tick += 1;
-      }
+#endif /* WANT_HISTOGRAM */
+
+#ifdef WANT_DEMO
+      DEMO_RR_INTERVAL(1)
+#endif
+
+#ifdef WANT_INTERVALS      
       /* in this case, the interval count is the count-down couter */
       /* to decide to sleep for a little bit */
       if ((interval_burst) && (--interval_count == 0)) {
@@ -3939,7 +5221,7 @@ Send   Recv    Send   Recv\n\
 	}
 	interval_count = interval_burst;
       }
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
       
       nummessages++;          
       if (trans_remaining) {
@@ -4182,11 +5464,11 @@ Send   Recv    Send   Recv\n\
 	    local_send_offset,
 	    remote_recv_offset);
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     fprintf(where,"\nHistogram of request/response times\n");
     fflush(where);
     HIST_report(time_hist);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
   }
   
@@ -4200,6 +5482,9 @@ send_udp_stream(char remote_host[])
   /*               	UDP Unidirectional Send Test                    */
   /*									*/
   /**********************************************************************/
+
+#define UDP_LENGTH_MAX 0XFFFF - 28
+
   char *tput_title = "\
 Socket  Message  Elapsed      Messages                \n\
 Size    Size     Time         Okay Errors   Throughput\n\
@@ -4248,18 +5533,17 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
   unsigned int sum_failed_sends;
   double sum_local_thruput;
 
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
   int	interval_count;
   sigset_t signal_set;
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
 #ifdef DIRTY
   int	*message_int_ptr;
   int	i;
 #endif /* DIRTY */
   
-  struct	hostent	        *hp;
-  struct	sockaddr_in	server;
-  unsigned      int             addr;
+  struct addrinfo *local_res;
+  struct addrinfo *remote_res;
   
   struct	udp_stream_request_struct	*udp_stream_request;
   struct	udp_stream_response_struct	*udp_stream_response;
@@ -4272,47 +5556,26 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
   udp_stream_results	= 
     (struct udp_stream_results_struct *)netperf_response.content.test_specific_data;
   
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
   time_hist = HIST_new();
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
   /* since we are now disconnected from the code that established the */
   /* control socket, and since we want to be able to use different */
   /* protocols and such, we are passed the name of the remote host and */
   /* must turn that into the test specific addressing information. */
   
-  bzero((char *)&server,
-	sizeof(server));
-  
-  complete_sockaddr(&server, remote_host, remote_data_ip);
+  complete_addrinfos(&remote_res,
+		     &local_res,
+		     remote_host,
+		     SOCK_DGRAM,
+		     IPPROTO_UDP,
+		     0);
 
   if ( print_headers ) {
-    fprintf(where,"UDP UNIDIRECTIONAL SEND TEST");
-    fprintf(where," to %s", remote_host);
-    if (iteration_max > 1) {
-      fprintf(where,
-	      " : +/-%3.1f%% @ %2d%% conf.",
-	      interval/0.02,
-	      confidence_level);
-      }
-    if (loc_sndavoid || 
-	loc_rcvavoid ||
-	rem_sndavoid ||
-	rem_rcvavoid) {
-      fprintf(where," : copy avoidance");
-    }
-#ifdef HISTOGRAM
-    fprintf(where," : histogram");
-#endif /* HISTOGRAM */
-#ifdef INTERVALS
-    fprintf(where," : interval");
-#endif /* INTERVALS */
-#ifdef DIRTY 
-    fprintf(where," : dirty data");
-#endif /* DIRTY */
-    fprintf(where,"\n");
-  }	
-  
+    print_top_test_header("UDP UNIDIRECTIONAL SEND TEST",local_res,remote_res);
+  }
+
   send_ring            = NULL;
   confidence_iteration = 1;
   init_stat();
@@ -4339,10 +5602,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     times_up       = 0;
     
     /*set up the data socket			*/
-    data_socket = create_data_socket(AF_INET,
-				     SOCK_DGRAM,
-				     local_data_ip,
-				     local_data_port);
+    data_socket = create_data_socket(local_res);
     
     if (data_socket == INVALID_SOCKET){
       perror("udp_send: data socket");
@@ -4352,7 +5612,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     /* now, we want to see if we need to set the send_size */
     if (send_size == 0) {
       if (lss_size > 0) {
-	send_size = lss_size;
+	send_size = (lss_size < UDP_LENGTH_MAX ? lss_size : UDP_LENGTH_MAX);
       }
       else {
 	send_size = 4096;
@@ -4390,7 +5650,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     /* set up, the server just sets up the socket and binds it. */
     
     netperf_request.content.request_type      = DO_UDP_STREAM;
-    udp_stream_request->recv_buf_size  = rsr_size;
+    udp_stream_request->recv_buf_size  = rsr_size_req;
     udp_stream_request->message_size   = send_size;
     udp_stream_request->recv_alignment = remote_recv_align;
     udp_stream_request->recv_offset    = remote_recv_offset;
@@ -4399,8 +5659,8 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     udp_stream_request->test_length    = test_time;
     udp_stream_request->so_rcvavoid    = rem_rcvavoid;
     udp_stream_request->so_sndavoid    = rem_sndavoid;
-    udp_stream_request->port           = (int)remote_data_port;
-    udp_stream_request->ipaddress      = remote_data_ip;
+    udp_stream_request->port           = atoi(remote_data_port);
+    udp_stream_request->ipfamily = af_to_nf(remote_res->ai_family);
 
     send_request();
     
@@ -4421,8 +5681,8 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     /* some of the returned socket buffer information for user display. */
     
     /* make sure that port numbers are in the proper order */
-    server.sin_port = (short)udp_stream_response->data_port_number;
-    server.sin_port = htons(server.sin_port);
+    set_port_number(remote_res,(short)udp_stream_response->data_port_number);
+
     rsr_size        = udp_stream_response->recv_buf_size;
     rss_size        = udp_stream_response->send_buf_size;
     remote_cpu_rate = udp_stream_response->cpu_rate;
@@ -4435,8 +5695,8 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     /* when talking to a server */
     
     if (connect(data_socket,
-		(struct sockaddr *)&server,
-		sizeof(server)) == INVALID_SOCKET){
+		remote_res->ai_addr,
+		remote_res->ai_addrlen) == INVALID_SOCKET){
       perror("send_udp_stream: data socket connect failed");
       exit(1);
     }
@@ -4460,7 +5720,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     
     cpu_start(local_cpu_usage);
     
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
     if ((interval_burst) || (demo_mode)) {
       /* zero means that we never pause, so we never should need the */
       /* interval timer, unless we are in demo_mode */
@@ -4475,7 +5735,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
       fflush(where);
       exit(1);
     }
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
     
     /* Send datagrams like there was no tomorrow. at somepoint it might */
     /* be nice to set this up so that a quantity of bytes could be sent, */
@@ -4502,9 +5762,9 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
       }
 #endif /* DIRTY */
       
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
       HIST_timestamp(&time_one);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
       
       if ((len=send(data_socket,
 		    send_ring->buffer_ptr,
@@ -4528,12 +5788,12 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
       send_ring = send_ring->next;
       
       
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
       /* get the second timestamp */
       HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
-#endif /* HISTOGRAM */
-#ifdef INTERVALS      
+#endif /* WANT_HISTOGRAM */
+#ifdef WANT_INTERVALS      
       if (demo_mode) {
 	units_this_tick += send_size;
       }
@@ -4554,7 +5814,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
 	}
 	interval_count = interval_burst;
       }
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
       
     }
     
@@ -4773,13 +6033,13 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
   }
 
   fflush(where);
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
   if (verbosity > 1) {
     fprintf(where,"\nHistogram of time spent in send() call\n");
     fflush(where);
     HIST_report(time_hist);
   }
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
 }
 
@@ -4792,9 +6052,13 @@ recv_udp_stream()
 {
   struct ring_elt *recv_ring;
 
+  struct addrinfo *local_res;
+  char local_name[BUFSIZ];
+  char port_buffer[PORTBUFSIZE];
+
   struct sockaddr_in myaddr_in;
   SOCKET	s_data;
-  int 	addrlen;
+  socklen_t 	addrlen;
   int	len = 0;
   unsigned int	bytes_received = 0;
   float	elapsed_time;
@@ -4875,14 +6139,24 @@ recv_udp_stream()
   /* variables, so set the globals based on the values in the request. */
   /* once the socket has been created, we will set the response values */
   /* based on the updated value of those globals. raj 7/94 */
-  lsr_size = udp_stream_request->recv_buf_size;
+  lsr_size_req = udp_stream_request->recv_buf_size;
   loc_rcvavoid = udp_stream_request->so_rcvavoid;
   loc_sndavoid = udp_stream_request->so_sndavoid;
-    
-  s_data = create_data_socket(AF_INET,
-			      SOCK_DGRAM,
-			      udp_stream_request->ipaddress,
-			      udp_stream_request->port);
+
+  set_hostname_and_port(local_name,
+			port_buffer,
+			nf_to_af(udp_stream_request->ipfamily),
+			udp_stream_request->port);
+
+  local_res = complete_addrinfo(local_name,
+				local_name,
+				port_buffer,
+				nf_to_af(udp_stream_request->ipfamily),
+				SOCK_DGRAM,
+				IPPROTO_UDP,
+				0);
+
+  s_data = create_data_socket(local_res);
   
   if (s_data == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
@@ -5110,19 +6384,17 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
   float	remote_service_demand;
   double	thruput;
   
-  struct	hostent	        *hp;
-  struct	sockaddr_in	server, myaddr_in;
-  unsigned      int             addr;
-  int	                        addrlen;
+  struct addrinfo *local_res;
+  struct addrinfo *remote_res;
   
   struct	udp_rr_request_struct	*udp_rr_request;
   struct	udp_rr_response_struct	*udp_rr_response;
   struct	udp_rr_results_struct	*udp_rr_result;
 
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
   int	interval_count;
   sigset_t signal_set;
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
   
   udp_rr_request  =
     (struct udp_rr_request_struct *)netperf_request.content.test_specific_data;
@@ -5131,7 +6403,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
   udp_rr_result	 =
     (struct udp_rr_results_struct *)netperf_response.content.test_specific_data;
   
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
   time_hist = HIST_new();
 #endif
   
@@ -5140,38 +6412,17 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
   /* protocols and such, we are passed the name of the remote host and */
   /* must turn that into the test specific addressing information. */
   
-  bzero((char *)&server,
-	sizeof(server));
-  
-  complete_sockaddr(&server, remote_host, remote_data_ip);
+  complete_addrinfos(&remote_res,
+		     &local_res,
+		     remote_host,
+		     SOCK_DGRAM,
+		     IPPROTO_UDP,
+		     0);
 
   if ( print_headers ) {
-    fprintf(where,"UDP REQUEST/RESPONSE TEST");
-        fprintf(where," to %s", remote_host);
-    if (iteration_max > 1) {
-      fprintf(where,
-	      " : +/-%3.1f%% @ %2d%% conf.",
-	      interval/0.02,
-	      confidence_level);
-      }
-    if (loc_sndavoid || 
-	loc_rcvavoid ||
-	rem_sndavoid ||
-	rem_rcvavoid) {
-      fprintf(where," : copy avoidance");
-    }
-#ifdef HISTOGRAM
-    fprintf(where," : histogram");
-#endif /* HISTOGRAM */
-#ifdef INTERVALS
-    fprintf(where," : interval");
-#endif /* INTERVALS */
-#ifdef DIRTY 
-    fprintf(where," : dirty data");
-#endif /* DIRTY */
-    fprintf(where,"\n");
+    print_top_test_header("UDP REQUEST/RESPONSE TEST",local_res,remote_res);
   }
-  
+
   /* initialize a few counters */
   
   send_ring     = NULL;
@@ -5217,10 +6468,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
     }
     
     /*set up the data socket                        */
-    send_socket = create_data_socket(AF_INET, 
-				     SOCK_DGRAM,
-				     local_data_ip,
-				     local_data_port);
+    send_socket = create_data_socket(local_res);
     
     if (send_socket == INVALID_SOCKET){
       perror("netperf: send_udp_rr: udp rr data socket");
@@ -5253,8 +6501,8 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
     /* default to 8, which will be no alignment alterations. */
     
     netperf_request.content.request_type	= DO_UDP_RR;
-    udp_rr_request->recv_buf_size	= rsr_size;
-    udp_rr_request->send_buf_size	= rss_size;
+    udp_rr_request->recv_buf_size	= rsr_size_req;
+    udp_rr_request->send_buf_size	= rss_size_req;
     udp_rr_request->recv_alignment      = remote_recv_align;
     udp_rr_request->recv_offset	        = remote_recv_offset;
     udp_rr_request->send_alignment      = remote_send_align;
@@ -5271,7 +6519,8 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
     else {
       udp_rr_request->test_length	= test_trans * -1;
     }
-    udp_rr_request->port                = (int) remote_data_port;
+    udp_rr_request->port                = atoi(remote_data_port);
+    udp_rr_request->ipfamily = af_to_nf(remote_res->ai_family);
 
     if (debug > 1) {
       fprintf(where,"netperf: send_udp_rr: requesting UDP r/r test\n");
@@ -5299,8 +6548,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
       remote_cpu_usage =	udp_rr_response->measure_cpu;
       remote_cpu_rate  = 	udp_rr_response->cpu_rate;
       /* port numbers in proper order */
-      server.sin_port  =	(short)udp_rr_response->data_port_number;
-      server.sin_port  = 	htons(server.sin_port);
+      set_port_number(remote_res,(short)udp_rr_response->data_port_number);
     }
     else {
       Set_errno(netperf_response.content.serv_errno);
@@ -5312,6 +6560,10 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
       exit(1);
     }
 
+#ifdef WANT_DEMO
+    DEMO_RR_SETUP(100)
+#endif
+
     /* Connect up to the remote port on the data socket. This will set */
     /* the default destination address on this socket. With UDP, this */
     /* does make a performance difference as we may not have to do as */
@@ -5319,18 +6571,9 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
     /* behave this way. raj 1/94 */
     
     if ( connect(send_socket, 
-		 (struct sockaddr *)&server,
-		 sizeof(server)) == INVALID_SOCKET ) {
+		 remote_res->ai_addr,
+		 remote_res->ai_addrlen) == INVALID_SOCKET ) {
       perror("netperf: data socket connect failed");
-      exit(1);
-    }
-    
-    /* now get the port number assigned by the system  */
-    addrlen = sizeof(myaddr_in);
-    if (getsockname(send_socket, 
-		    (struct sockaddr *)&myaddr_in,
-		    &addrlen) == SOCKET_ERROR){
-      perror("send_udp_rr: getsockname");
       exit(1);
     }
     
@@ -5361,8 +6604,14 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
     
     cpu_start(local_cpu_usage);
 
-#ifdef INTERVALS
-    if ((interval_burst) || (demo_mode)) {
+#ifdef WANT_DEMO
+    if (demo_mode) {
+      HIST_timestamp(demo_one_ptr);
+    }
+#endif 
+
+#ifdef WANT_INTERVALS
+    if (interval_burst) {
       /* zero means that we never pause, so we never should need the */
       /* interval timer, unless we are in demo_mode */
       start_itimer(interval_wate);
@@ -5376,7 +6625,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
       fflush(where);
       exit(1);
     }
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
     
     /* We use an "OR" to control test execution. When the test is */
     /* controlled by time, the byte count check will always return */
@@ -5390,7 +6639,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 
     while ((!times_up) || (trans_remaining > 0)) {
       /* send the request */
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
       HIST_timestamp(&time_one);
 #endif
       if((len=send(send_socket,
@@ -5423,7 +6672,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
       }
       recv_ring = recv_ring->next;
       
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
       HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
       
@@ -5433,10 +6682,13 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
       /* will not sleep if the time would be less than a */
       /* millisecond.  */
 #endif
-#ifdef INTERVALS      
-      if (demo_mode) {
-	units_this_tick += 1;
-      }
+
+#ifdef WANT_DEMO
+      DEMO_RR_INTERVAL(1)
+#endif
+
+#ifdef WANT_INTERVALS      
+
       /* in this case, the interval count is the count-down couter */
       /* to decide to sleep for a little bit */
       if ((interval_burst) && (--interval_count == 0)) {
@@ -5454,7 +6706,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 	}
 	interval_count = interval_burst;
       }
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
       
       nummessages++;          
       if (trans_remaining) {
@@ -5700,11 +6952,11 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
     /* UDP statistics, the alignments of the sends and receives */
     /* and all that sort of rot... */
     
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     fprintf(where,"\nHistogram of request/reponse times.\n");
     fflush(where);
     HIST_report(time_hist);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
   }
 }
 
@@ -5717,10 +6969,14 @@ recv_udp_rr()
   struct ring_elt *recv_ring;
   struct ring_elt *send_ring;
 
-  struct	sockaddr_in        myaddr_in,
-  peeraddr_in;
+  struct addrinfo *local_res;
+  char local_name[BUFSIZ];
+  char port_buffer[PORTBUFSIZE];
+
+  struct sockaddr_in        myaddr_in;
+  struct sockaddr_storage    peeraddr; 
   SOCKET	s_data;
-  int 	addrlen;
+  socklen_t 	addrlen;
   int	trans_received;
   int	trans_remaining;
   int   request_bytes_recvd;
@@ -5816,10 +7072,20 @@ recv_udp_rr()
   loc_rcvavoid = udp_rr_request->so_rcvavoid;
   loc_sndavoid = udp_rr_request->so_sndavoid;
 
-  s_data = create_data_socket(AF_INET,
-			      SOCK_DGRAM,
-			      INADDR_ANY,
-			      udp_rr_request->port);
+  set_hostname_and_port(local_name,
+			port_buffer,
+			nf_to_af(udp_rr_request->ipfamily),
+			udp_rr_request->port);
+
+  local_res = complete_addrinfo(local_name,
+				local_name,
+				port_buffer,
+				nf_to_af(udp_rr_request->ipfamily),
+				SOCK_DGRAM,
+				IPPROTO_UDP,
+				0);
+				
+  s_data = create_data_socket(local_res);
   
   if (s_data == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
@@ -5900,8 +7166,8 @@ recv_udp_rr()
     trans_remaining = udp_rr_request->test_length * -1;
   }
 
-  addrlen = sizeof(peeraddr_in);
-  bzero((char *)&peeraddr_in, addrlen);
+  addrlen = sizeof(peeraddr); 
+  bzero((char *)&peeraddr, addrlen);
   
   trans_received = 0;
 
@@ -5912,7 +7178,7 @@ recv_udp_rr()
 		 recv_ring->buffer_ptr,
 		 udp_rr_request->request_size,
 		 0,
-		 (struct sockaddr *)&peeraddr_in,
+		 (struct sockaddr *)&peeraddr,
 		 &addrlen)) != udp_rr_request->request_size) {
 	  if ( SOCKET_EINTR(request_bytes_recvd) )
 	  {
@@ -5930,7 +7196,7 @@ recv_udp_rr()
 				      send_ring->buffer_ptr,
 				      udp_rr_request->response_size,
 				      0,
-				      (struct sockaddr *)&peeraddr_in,
+				      (struct sockaddr *)&peeraddr,
 				      addrlen)) != 
 	udp_rr_request->response_size) {
       if ( SOCKET_EINTR(response_bytes_sent) )
@@ -6013,10 +7279,14 @@ recv_tcp_rr()
   struct ring_elt *send_ring;
   struct ring_elt *recv_ring;
 
+  struct addrinfo *local_res;
+  char local_name[BUFSIZ];
+  char port_buffer[PORTBUFSIZE];
+
   struct	sockaddr_in        myaddr_in,
   peeraddr_in;
   SOCKET	s_listen,s_data;
-  int 	addrlen;
+  socklen_t 	addrlen;
   char	*temp_message_ptr;
   int	trans_received;
   int	trans_remaining;
@@ -6024,6 +7294,7 @@ recv_tcp_rr()
   int	request_bytes_recvd;
   int	request_bytes_remaining;
   int	timed_out = 0;
+  int   sock_closed = 0;
   float	elapsed_time;
   
   struct	tcp_rr_request_struct	*tcp_rr_request;
@@ -6110,11 +7381,21 @@ recv_tcp_rr()
   loc_nodelay = tcp_rr_request->no_delay;
   loc_rcvavoid = tcp_rr_request->so_rcvavoid;
   loc_sndavoid = tcp_rr_request->so_sndavoid;
-  
-  s_listen = create_data_socket(AF_INET,
+
+  set_hostname_and_port(local_name,
+			port_buffer,
+			nf_to_af(tcp_rr_request->ipfamily),
+			tcp_rr_request->port);
+
+  local_res = complete_addrinfo(local_name,
+				local_name,
+				port_buffer,
+				nf_to_af(tcp_rr_request->ipfamily),
 				SOCK_STREAM,
-				tcp_rr_request->ipaddress,
-				tcp_rr_request->port);
+				IPPROTO_TCP,
+				0);
+
+  s_listen = create_data_socket(local_res);
   
   if (s_listen == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
@@ -6245,9 +7526,18 @@ recv_tcp_rr()
 	  timed_out = 1;
 	  break;
 	}
+
 	netperf_response.content.serv_errno = errno;
 	send_response();
 	exit(1);
+      }
+      else if( request_bytes_recvd == 0 ) {
+	if (debug) {
+	  fprintf(where,"zero is my hero\n");
+	  fflush(where);
+	}
+	sock_closed = 1;
+	break;
       }
       else {
 	request_bytes_remaining -= request_bytes_recvd;
@@ -6257,9 +7547,9 @@ recv_tcp_rr()
 
     recv_ring = recv_ring->next;
 
-    if (timed_out) {
-      /* we hit the end of the test based on time - lets */
-      /* bail out of here now... */
+    if ((timed_out) || (sock_closed)) {
+      /* we hit the end of the test based on time - or the socket
+	 closed on us along the way.  bail out of here now... */
       if (debug) {
 	fprintf(where,"yo5\n");
 	fflush(where);
@@ -6345,7 +7635,7 @@ recv_tcp_rr()
 void
 loc_cpu_rate()
 {
-#if !defined(WIN32) && !defined(USE_PROC_STAT)
+#if defined(USE_LOOPER)
   float dummy;
 #endif
 
@@ -6431,7 +7721,6 @@ Send   Recv    Send   Recv\n\
 %5d  %5d   %5d  %5d\n";
   
   
-  int 			one = 1;
   int			timed_out = 0;
   float			elapsed_time;
   
@@ -6443,7 +7732,6 @@ Send   Recv    Send   Recv\n\
   SOCKET	send_socket;
   int	trans_remaining;
   double	bytes_xferd;
-  int	sock_opt_len = sizeof(int);
   int	rsp_bytes_left;
   int	rsp_bytes_recvd;
   
@@ -6453,10 +7741,9 @@ Send   Recv    Send   Recv\n\
   float	remote_service_demand;
   double	thruput;
   
-  struct	hostent	        *hp;
-  struct	sockaddr_in	server;
-  struct        sockaddr_in     *myaddr;
-  unsigned      int             addr;
+  struct addrinfo *local_res;
+  struct addrinfo *remote_res;
+
   int                           myport;
   int                           ret;
 
@@ -6472,57 +7759,24 @@ Send   Recv    Send   Recv\n\
     (struct tcp_conn_rr_results_struct *)netperf_response.content.test_specific_data;
   
   
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
   time_hist = HIST_new();
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
   /* since we are now disconnected from the code that established the */
   /* control socket, and since we want to be able to use different */
   /* protocols and such, we are passed the name of the remote host and */
   /* must turn that into the test specific addressing information. */
   
-  myaddr = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
-  if (myaddr == NULL) {
-    printf("malloc(%ld) failed!\n", sizeof(struct sockaddr_in));
-    exit(1);
-  }
-
-  bzero((char *)&server,
-	sizeof(server));
-  bzero((char *)myaddr,
-	sizeof(struct sockaddr_in));
-  myaddr->sin_family = AF_INET;
-
-  complete_sockaddr(&server, remote_host, remote_data_ip);
+  complete_addrinfos(&remote_res,
+		     &local_res,
+		     remote_host,
+		     SOCK_STREAM,
+		     IPPROTO_TCP,
+		     0);
 
   if ( print_headers ) {
-    fprintf(where,"TCP Connect/Request/Response TEST");
-    fprintf(where," to %s", remote_host);
-    if (iteration_max > 1) {
-      fprintf(where,
-	      " : +/-%3.1f%% @ %2d%% conf.",
-	      interval/0.02,
-	      confidence_level);
-      }
-    if (loc_nodelay || rem_nodelay) {
-      fprintf(where," : nodelay");
-    }
-    if (loc_sndavoid || 
-	loc_rcvavoid ||
-	rem_sndavoid ||
-	rem_rcvavoid) {
-      fprintf(where," : copy avoidance");
-    }
-#ifdef HISTOGRAM
-    fprintf(where," : histogram");
-#endif /* HISTOGRAM */
-#ifdef INTERVALS
-    fprintf(where," : interval");
-#endif /* INTERVALS */
-#ifdef DIRTY 
-    fprintf(where," : dirty data");
-#endif /* DIRTY */
-    fprintf(where,"\n");
+    print_top_test_header("TCP Connect/Request/Response TEST",local_res,remote_res);
   }
   
   /* initialize a few counters */
@@ -6570,8 +7824,8 @@ Send   Recv    Send   Recv\n\
   /* default to 8, which will be no alignment alterations. */
   
   netperf_request.content.request_type	        =	DO_TCP_CRR;
-  tcp_conn_rr_request->recv_buf_size	=	rsr_size;
-  tcp_conn_rr_request->send_buf_size	=	rss_size;
+  tcp_conn_rr_request->recv_buf_size	=	rsr_size_req;
+  tcp_conn_rr_request->send_buf_size	=	rss_size_req;
   tcp_conn_rr_request->recv_alignment	=	remote_recv_align;
   tcp_conn_rr_request->recv_offset	=	remote_recv_offset;
   tcp_conn_rr_request->send_alignment	=	remote_send_align;
@@ -6589,7 +7843,8 @@ Send   Recv    Send   Recv\n\
   else {
     tcp_conn_rr_request->test_length	=	test_trans * -1;
   }
-  tcp_conn_rr_request->port             = (int)remote_data_port;
+  tcp_conn_rr_request->port             = atoi(remote_data_port);
+  tcp_conn_rr_request->ipfamily = af_to_nf(remote_res->ai_family);
 
   if (debug > 1) {
     fprintf(where,"netperf: send_tcp_conn_rr: requesting TCP crr test\n");
@@ -6616,11 +7871,11 @@ Send   Recv    Send   Recv\n\
     remote_cpu_usage=	tcp_conn_rr_response->measure_cpu;
     remote_cpu_rate = 	tcp_conn_rr_response->cpu_rate;
     /* make sure that port numbers are in network order */
-    server.sin_port	=	(short)tcp_conn_rr_response->data_port_number;
-    server.sin_port =	htons(server.sin_port);
+    set_port_number(remote_res,(unsigned short)tcp_conn_rr_response->data_port_number);
+
     if (debug) {
       fprintf(where,"remote listen done.\n");
-      fprintf(where,"remote port is %d\n",ntohs(server.sin_port));
+      fprintf(where,"remote port is %u\n",get_port_number(remote_res));
       fflush(where);
     }
   }
@@ -6634,6 +7889,10 @@ Send   Recv    Send   Recv\n\
     exit(1);
   }
   
+#ifdef WANT_DEMO
+  DEMO_RR_SETUP(100)
+#endif
+
   /* pick a nice random spot between client_port_min and */
   /* client_port_max for our initial port number */
   srand(getpid());
@@ -6646,8 +7905,6 @@ Send   Recv    Send   Recv\n\
   }
   /* there will be a ++ before the first call to bind, so subtract one */
   myport--;
-  myaddr->sin_port = htons((unsigned short)myport);
-  
   /* Set-up the test end conditions. For a request/response test, they */
   /* can be either time or transaction based. */
   
@@ -6666,8 +7923,15 @@ Send   Recv    Send   Recv\n\
   /* The cpu_start routine will grab the current time and possibly */
   /* value of the idle counter for later use in measuring cpu */
   /* utilization and/or service demand and thruput. */
+
   
   cpu_start(local_cpu_usage);
+
+#ifdef WANT_DEMO
+      if (demo_mode) {
+	HIST_timestamp(demo_one_ptr);
+      }
+#endif
   
   /* We use an "OR" to control test execution. When the test is */
   /* controlled by time, the byte count check will always return false. */
@@ -6680,40 +7944,14 @@ Send   Recv    Send   Recv\n\
 
   while ((!times_up) || (trans_remaining > 0)) {
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     /* timestamp just before our call to create the socket, and then */
     /* again just after the receive raj 3/95 */
     HIST_timestamp(&time_one);
-#endif /* HISTOGRAM */
-
-    /* set up the data socket */
-    send_socket = create_data_socket(AF_INET, 
-				     SOCK_STREAM,
-				     local_data_ip,
-				     local_data_port);
-  
-    if (send_socket == INVALID_SOCKET) {
-      perror("netperf: send_tcp_conn_rr: tcp stream data socket");
-      exit(1);
-    }
-
-    /* we set SO_REUSEADDR on the premis that no unreserved port */
-    /* number on the local system is going to be already connected to */
-    /* the remote netserver's port number. One thing that I might */
-    /* try later is to have the remote actually allocate a couple of */
-    /* port numbers and cycle through those as well. depends on if we */
-    /* can get through all the unreserved port numbers in less than */
-    /* the length of the TIME_WAIT state raj 8/94 */
-    one = 1;
-    if(setsockopt(send_socket, SOL_SOCKET, SO_REUSEADDR,
-		  (char *)&one, sock_opt_len) == SOCKET_ERROR) {
-      perror("netperf: send_tcp_conn_rr: so_reuseaddr");
-      exit(1);
-    }
+#endif /* WANT_HISTOGRAM */
 
 newport:
     /* pick a new port number */
-    myport = ntohs(myaddr->sin_port);
     myport++;
 
     /* wrap the port number when we get to client_port_max. NOTE, some */
@@ -6732,9 +7970,7 @@ newport:
     /* faster, given that we *know* that port number is already in use */
     /* (or rather would be in a loopback test) */
 
-    if (myport == ntohs(server.sin_port)) myport++;
-
-    myaddr->sin_port = htons((unsigned short)myport);
+    if (myport == get_port_number(remote_res)) myport++;
 
     if (debug) {
       if ((nummessages % 100) == 0) {
@@ -6742,52 +7978,46 @@ newport:
       }
     }
 
-    /* we want to bind our socket to a particular port number. */
-    if ((ret = bind(send_socket,
-		   (struct sockaddr *)myaddr,
-		   sizeof(struct sockaddr_in))) == SOCKET_ERROR) {
-      /* if the bind failed, someone else must have that port number */
-      /* - perhaps in the listen state. since we can't use it, skip to */
-      /* the next port number. we may have to do this again later, but */
-      /* that's just too bad :) */
-      if (SOCKET_EINTR(ret))
-	  {
-	    /* we hit the end of a */
-	    /* timed test. */
-	    timed_out = 1;
-	    break;
-      }
-      if (debug > 1) {
-	fprintf(where,
-		"send_tcp_conn_rr: tried to bind to port %d errno %d\n",
-		ntohs(myaddr->sin_port),
-		errno);
-	fflush(where);
-      }
-	/* yes, goto's are supposed to be evil, but they do have their */
-	/* uses from time to time. the real world doesn't always have */
-	/* to code to ge tthe A in CS 101 :) raj 3/95 */
-	goto newport;
+    /* set up the data socket */
+    set_port_number(local_res,myport);
+    send_socket = create_data_socket(local_res);
+  
+    if (send_socket == INVALID_SOCKET) {
+      perror("netperf: send_tcp_conn_rr: tcp stream data socket");
+      exit(1);
     }
+
+
+    /* we used to call bind here, but that is now taken-care-of by the
+       create_data_socket routine. */
 
     /* Connect up to the remote port on the data socket  */
     if ((ret = connect(send_socket, 
-		(struct sockaddr *)&server,
-		sizeof(server))) == INVALID_SOCKET){
+		       remote_res->ai_addr,
+		       remote_res->ai_addrlen)) == INVALID_SOCKET){
       if (SOCKET_EINTR(ret))
 	  {
 	    /* we hit the end of a */
 	    /* timed test. */
 	    timed_out = 1;
 	    break;
+      }
+      if ((SOCKET_EADDRINUSE(ret)) || SOCKET_EADDRNOTAVAIL(ret)) {
+	/* likely something our explicit bind() would have caught in
+           the past, so go get another port, via create_data_socket.
+           yes, this is a bit more overhead than before, but the
+           condition should be rather rare.  raj 2005-02-08 */
+	close(send_socket);
+	goto newport;
       }
       perror("netperf: data socket connect failed");
       printf("\tattempted to connect on socket %d to port %d",
 	     send_socket,
-	     ntohs(server.sin_port));
-      printf(" from port %d \n",ntohs(myaddr->sin_port));
+	     get_port_number(remote_res));
+      printf(" from port %d \n",get_port_number(local_res));
       exit(1);
     }
+
 
     /* send the request */
     if((len=send(send_socket,
@@ -6809,6 +8039,7 @@ newport:
     /* receive the response */
     rsp_bytes_left = rsp_size;
     temp_message_ptr  = recv_ring->buffer_ptr;
+
 
     while((rsp_bytes_recvd=recv(send_socket,
 			       temp_message_ptr,
@@ -6834,10 +8065,14 @@ newport:
       /* number of bytes have been received */
       recv_ring = recv_ring->next;
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
       HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
+
+#ifdef WANT_DEMO
+      DEMO_RR_INTERVAL(1)
+#endif
 
       nummessages++;          
       if (trans_remaining) {
@@ -6848,7 +8083,7 @@ newport:
 	fprintf(where,
 		"Transaction %d completed on local port %d\n",
 		nummessages,
-		ntohs(myaddr->sin_port));
+		get_port_number(local_res));
 	fflush(where);
       }
 
@@ -7058,11 +8293,11 @@ newport:
 	    local_send_offset,
 	    remote_recv_offset);
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     fprintf(where,"\nHistogram of request/response times\n");
     fflush(where);
     HIST_report(time_hist);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
   }
   
@@ -7074,10 +8309,13 @@ recv_tcp_conn_rr()
 {
   
   char  *message;
-  struct	sockaddr_in        myaddr_in,
-  peeraddr_in;
+  struct addrinfo *local_res;
+  char local_name[BUFSIZ];
+  char port_buffer[PORTBUFSIZE];
+
+  struct	sockaddr_in        myaddr_in, peeraddr_in;
   SOCKET	s_listen,s_data;
-  int 	addrlen;
+  socklen_t 	addrlen;
   char	*recv_message_ptr;
   char	*send_message_ptr;
   char	*temp_message_ptr;
@@ -7178,10 +8416,20 @@ recv_tcp_conn_rr()
   loc_rcvavoid = tcp_conn_rr_request->so_rcvavoid;
   loc_sndavoid = tcp_conn_rr_request->so_sndavoid;
   
-  s_listen = create_data_socket(AF_INET,
+  set_hostname_and_port(local_name,
+			port_buffer,
+			nf_to_af(tcp_conn_rr_request->ipfamily),
+			tcp_conn_rr_request->port);
+
+  local_res = complete_addrinfo(local_name,
+				local_name,
+				port_buffer,
+				nf_to_af(tcp_conn_rr_request->ipfamily),
 				SOCK_STREAM,
-				tcp_conn_rr_request->ipaddress,
-				tcp_conn_rr_request->port);
+				IPPROTO_TCP,
+				0);
+
+  s_listen = create_data_socket(local_res);
   
   if (s_listen == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
@@ -7214,7 +8462,7 @@ recv_tcp_conn_rr()
     close(s_listen);
     send_response();
     if (debug) {
-      fprintf(where,"could not geetsockname\n");
+      fprintf(where,"could not getsockname\n");
       fflush(where);
     }
     exit(1);
@@ -7532,9 +8780,9 @@ Send   Recv    Send   Recv\n\
     (struct tcp_tran_rr_results_struct *)netperf_response.content.test_specific_data;
   
   
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
   time_hist = HIST_new();
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
   /* since we are now disconnected from the code that established the */
   /* control socket, and since we want to be able to use different */
@@ -7553,36 +8801,15 @@ Send   Recv    Send   Recv\n\
 	sizeof(struct sockaddr_in));
   myaddr->sin_family = AF_INET;
 
-  complete_sockaddr(&server, remote_host, remote_data_ip);
+  complete_addrinfos(&remote_res,
+		     &local_res,
+		     remote_host,
+		     SOCK_STREAM,
+		     IPPROTO_TCP,
+		     0);
 
   if ( print_headers ) {
-    fprintf(where,"TCP Transactional/Request/Response TEST");
-    fprintf(where," to %s", remote_host);
-    if (iteration_max > 1) {
-      fprintf(where,
-	      " : +/-%3.1f%% @ %2d%% conf.",
-	      interval/0.02,
-	      confidence_level);
-      }
-    if (loc_nodelay || rem_nodelay) {
-      fprintf(where," : nodelay");
-    }
-    if (loc_sndavoid || 
-	loc_rcvavoid ||
-	rem_sndavoid ||
-	rem_rcvavoid) {
-      fprintf(where," : copy avoidance");
-    }
-#ifdef HISTOGRAM
-    fprintf(where," : histogram");
-#endif /* HISTOGRAM */
-#ifdef INTERVALS
-    fprintf(where," : interval");
-#endif /* INTERVALS */
-#ifdef DIRTY 
-    fprintf(where," : dirty data");
-#endif /* DIRTY */
-    fprintf(where,"\n");
+    print_top_test_header("TCP Transactional/Request/Response TEST",local_res,remote_res);
   }
   
   /* initialize a few counters */
@@ -7630,8 +8857,8 @@ Send   Recv    Send   Recv\n\
   /* default to 8, which will be no alignment alterations. */
   
   netperf_request.content.request_type	        =	DO_TCP_TRR;
-  tcp_tran_rr_request->recv_buf_size	=	rsr_size;
-  tcp_tran_rr_request->send_buf_size	=	rss_size;
+  tcp_tran_rr_request->recv_buf_size	=	rsr_size_req;
+  tcp_tran_rr_request->send_buf_size	=	rss_size_req;
   tcp_tran_rr_request->recv_alignment	=	remote_recv_align;
   tcp_tran_rr_request->recv_offset	=	remote_recv_offset;
   tcp_tran_rr_request->send_alignment	=	remote_send_align;
@@ -7649,7 +8876,9 @@ Send   Recv    Send   Recv\n\
   else {
     tcp_tran_rr_request->test_length	=	test_trans * -1;
   }
-  
+  tcp_tran_rr_request->port             =       atoi(remote_data_port);
+  tcp_tran_rr_request->ipfamily        =       af_to_nf(remote_res->ai_family);
+
   if (debug > 1) {
     fprintf(where,"netperf: send_tcp_tran_rr: requesting TCP_TRR test\n");
   }
@@ -7741,21 +8970,20 @@ Send   Recv    Send   Recv\n\
 
   while ((!times_up) || (trans_remaining > 0)) {
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     /* timestamp just before our call to create the socket, and then */
     /* again just after the receive raj 3/95 */
     HIST_timestamp(&time_one);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
     /* set up the data socket - is this really necessary or can I just */
     /* re-use the same socket and move this cal out of the while loop. */
     /* it does introcudea *boatload* of system calls. I guess that it */
     /* all depends on "reality of programming." keeping it this way is */
     /* a bit more conservative I imagine - raj 3/95 */
-    send_socket = create_data_socket(AF_INET, 
-				     SOCK_STREAM);
+    send_socket = create_data_socket(local_res);
   
-    if (send_socket == INAVLID_SOCKET) {
+    if (send_socket == INVALID_SOCKET) {
       perror("netperf: send_tcp_tran_rr: tcp stream data socket");
       exit(1);
     }
@@ -7877,10 +9105,10 @@ newport:
 
     close(send_socket);
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     HIST_timestamp(&time_two);
     HIST_add(time_hist,delta_micro(&time_one,&time_two));
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
     nummessages++;          
     if (trans_remaining) {
@@ -8085,11 +9313,11 @@ newport:
 	    local_send_offset,
 	    remote_recv_offset);
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     fprintf(where,"\nHistogram of request/response times\n");
     fflush(where);
     HIST_report(time_hist);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
   }
   
@@ -8104,7 +9332,7 @@ recv_tcp_tran_rr()
   struct	sockaddr_in        myaddr_in,
   peeraddr_in;
   SOCKET	s_listen,s_data;
-  int 	addrlen;
+  socklen_t 	addrlen;
   int   NoPush = 1;
 
   char	*recv_message_ptr;
@@ -8218,8 +9446,20 @@ recv_tcp_tran_rr()
   loc_rcvavoid = tcp_tran_rr_request->so_rcvavoid;
   loc_sndavoid = tcp_tran_rr_request->so_sndavoid;
   
-  s_listen = create_data_socket(AF_INET,
-				SOCK_STREAM);
+  set_hostname_and_port(local_name,
+			port_buffer,
+			nf_to_af(tcp_tran_rr_request->ipfamily),
+			tcp_tran_rr_request->port);
+
+  local_res = complete_addrinfo(local_name,
+				local_name,
+				port_buffer,
+				nf_to_af(tcp_tran_rr_request->ipfamily),
+				SOCK_STREAM,
+				IPPROTO_TCP,
+				0);
+
+  s_listen = create_data_socket(local_res);
   
   if (s_listen == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
@@ -8438,7 +9678,7 @@ recv_tcp_tran_rr()
 			  send_message_ptr,
 			  tcp_tran_rr_request->response_size,
 			  MSG_EOF,
-			  &peeraddr_in,
+			  (struct sockaddr *)&peeraddr_in,
 			  sizeof(struct sockaddr_in))) == SOCKET_ERROR) {
       if (SOCKET_EINTR(bytes_sent)) {
 	/* the test timer has popped */
@@ -8586,10 +9826,10 @@ Send   Recv    Send   Recv\n\
   struct	tcp_rr_response_struct	*tcp_rr_response;
   struct	tcp_rr_results_struct	*tcp_rr_result;
   
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
   int	interval_count;
   sigset_t signal_set;
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
 
   tcp_rr_request = 
     (struct tcp_rr_request_struct *)netperf_request.content.test_specific_data;
@@ -8598,9 +9838,9 @@ Send   Recv    Send   Recv\n\
   tcp_rr_result	=
     (struct tcp_rr_results_struct *)netperf_response.content.test_specific_data;
   
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
   time_hist = HIST_new();
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
   /* since we are now disconnected from the code that established the */
   /* control socket, and since we want to be able to use different */
@@ -8610,36 +9850,15 @@ Send   Recv    Send   Recv\n\
   bzero((char *)&server,
 	sizeof(server));
   
-  complete_sockaddr(&server, remote_host, remote_data_ip);
+  complete_addrinfos(&remote_res,
+		     &local_res,
+		     remote_host,
+		     SOCK_STREAM,
+		     IPPROTO_TCP,
+		     0);
 
   if ( print_headers ) {
-    fprintf(where,"TCP Non-Blocking REQUEST/RESPONSE TEST");
-    fprintf(where," to %s", remote_host);
-    if (iteration_max > 1) {
-      fprintf(where,
-	      " : +/-%3.1f%% @ %2d%% conf.",
-	      interval/0.02,
-	      confidence_level);
-      }
-    if (loc_nodelay || rem_nodelay) {
-      fprintf(where," : nodelay");
-    }
-    if (loc_sndavoid || 
-	loc_rcvavoid ||
-	rem_sndavoid ||
-	rem_rcvavoid) {
-      fprintf(where," : copy avoidance");
-    }
-#ifdef HISTOGRAM
-    fprintf(where," : histogram");
-#endif /* HISTOGRAM */
-#ifdef INTERVALS
-    fprintf(where," : interval");
-#endif /* INTERVALS */
-#ifdef DIRTY 
-    fprintf(where," : dirty data");
-#endif /* DIRTY */
-    fprintf(where,"\n");
+    print_top_test_header("TCP Non-Blocking REQUEST/RESPONSE TEST",local_res,remote_res);
   }
   
   /* initialize a few counters */
@@ -8690,8 +9909,7 @@ Send   Recv    Send   Recv\n\
     }
     
     /*set up the data socket                        */
-    send_socket = create_data_socket(AF_INET, 
-				     SOCK_STREAM);
+    send_socket = create_data_socket(local_res);
   
     if (send_socket == INVALID_SOCKET){
       perror("netperf: send_tcp_nbrr: tcp stream data socket");
@@ -8722,8 +9940,8 @@ Send   Recv    Send   Recv\n\
     /* default to 8, which will be no alignment alterations. */
     
     netperf_request.content.request_type	=	DO_TCP_NBRR;
-    tcp_rr_request->recv_buf_size	=	rsr_size;
-    tcp_rr_request->send_buf_size	=	rss_size;
+    tcp_rr_request->recv_buf_size	=	rsr_size_req;
+    tcp_rr_request->send_buf_size	=	rss_size_req;
     tcp_rr_request->recv_alignment      =	remote_recv_align;
     tcp_rr_request->recv_offset	        =	remote_recv_offset;
     tcp_rr_request->send_alignment      =	remote_send_align;
@@ -8784,8 +10002,8 @@ Send   Recv    Send   Recv\n\
     
     /*Connect up to the remote port on the data socket  */
     if (connect(send_socket, 
-		(struct sockaddr *)&server,
-		sizeof(server)) == INVALID_SOCKET){
+		remote_res->ai_addr,
+		remote_res->ai_addrlen) == INVALID_SOCKET){
       perror("netperf: data socket connect failed");
       
       exit(1);
@@ -8824,7 +10042,7 @@ Send   Recv    Send   Recv\n\
     
     cpu_start(local_cpu_usage);
 
-#ifdef INTERVALS
+#ifdef WANT_INTERVALS
     if ((interval_burst) || (demo_mode)) {
       /* zero means that we never pause, so we never should need the */
       /* interval timer, unless we are in demo_mode */
@@ -8839,7 +10057,7 @@ Send   Recv    Send   Recv\n\
       fflush(where);
       exit(1);
     }
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
     
     /* We use an "OR" to control test execution. When the test is */
     /* controlled by time, the byte count check will always return false. */
@@ -8854,11 +10072,11 @@ Send   Recv    Send   Recv\n\
       /* send the request. we assume that if we use a blocking socket, */
       /* the request will be sent at one shot. */
       
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
       /* timestamp just before our call to send, and then again just */
       /* after the receive raj 8/94 */
       HIST_timestamp(&time_one);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
       /* even though this is a non-blocking socket, we will assume for */
       /* the time being that we will be able to send an entire request */
@@ -8913,11 +10131,11 @@ Send   Recv    Send   Recv\n\
 	break;
       }
       
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
       HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
-#endif /* HISTOGRAM */
-#ifdef INTERVALS      
+#endif /* WANT_HISTOGRAM */
+#ifdef WANT_INTERVALS      
       if (demo_mode) {
 	units_this_tick += 1;
       }
@@ -8938,7 +10156,7 @@ Send   Recv    Send   Recv\n\
 	}
 	interval_count = interval_burst;
       }
-#endif /* INTERVALS */
+#endif /* WANT_INTERVALS */
       
       nummessages++;          
       if (trans_remaining) {
@@ -9183,11 +10401,11 @@ Send   Recv    Send   Recv\n\
 	    local_send_offset,
 	    remote_recv_offset);
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     fprintf(where,"\nHistogram of request/response times\n");
     fflush(where);
     HIST_report(time_hist);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
   }
   
@@ -9205,7 +10423,7 @@ recv_tcp_nbrr()
   struct	sockaddr_in        myaddr_in,
   peeraddr_in;
   SOCKET	s_listen,s_data;
-  int 	addrlen;
+  socklen_t 	addrlen;
   char	*temp_message_ptr;
   int	trans_received;
   int	trans_remaining;
@@ -9311,8 +10529,19 @@ recv_tcp_nbrr()
   loc_rcvavoid = tcp_rr_request->so_rcvavoid;
   loc_sndavoid = tcp_rr_request->so_sndavoid;
   
-  s_listen = create_data_socket(AF_INET,
-				SOCK_STREAM);
+  set_hostname_and_port(local_name,
+			port_buffer,
+			nf_to_af(tcp_rr_request->ipfamily),
+			tcp_rr_request->port);
+
+  local_res = complete_addrinfo(local_name,
+				local_name,
+				nf_to_af(tcp_rr_request->ipfamily),
+				SOCK_STREAM,
+				IPPROTO_TCP,
+				0);
+
+  s_listen = create_data_socket(local_res);
   
   if (s_listen == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
@@ -9619,7 +10848,6 @@ Send   Recv    Send   Recv\n\
 %5d  %5d   %5d  %5d\n";
   
   
-  int 			one = 1;
   int			timed_out = 0;
   float			elapsed_time;
   
@@ -9628,7 +10856,6 @@ Send   Recv    Send   Recv\n\
   SOCKET	send_socket;
   int	trans_remaining;
   double	bytes_xferd;
-  int	sock_opt_len = sizeof(int);
   int	rsp_bytes_left = 1;
   int	rsp_bytes_recvd;
   
@@ -9638,10 +10865,9 @@ Send   Recv    Send   Recv\n\
   float	remote_service_demand;
   double	thruput;
   
-  struct	hostent	        *hp;
-  struct	sockaddr_in	server;
-  struct        sockaddr_in     *myaddr;
-  unsigned      int             addr;
+  struct addrinfo *local_res;
+  struct addrinfo *remote_res;
+
   int                           myport;
   int                           ret;
 
@@ -9657,57 +10883,24 @@ Send   Recv    Send   Recv\n\
     (struct tcp_cc_results_struct *)netperf_response.content.test_specific_data;
   
   
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
   time_hist = HIST_new();
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
   /* since we are now disconnected from the code that established the */
   /* control socket, and since we want to be able to use different */
   /* protocols and such, we are passed the name of the remote host and */
   /* must turn that into the test specific addressing information. */
   
-  myaddr = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
-  if (myaddr == NULL) {
-    printf("malloc(%ld) failed!\n", sizeof(struct sockaddr_in));
-    exit(1);
-  }
-
-  bzero((char *)&server,
-	sizeof(server));
-  bzero((char *)myaddr,
-	sizeof(struct sockaddr_in));
-  myaddr->sin_family = AF_INET;
-
-  complete_sockaddr(&server, remote_host, remote_data_ip);
+  complete_addrinfos(&remote_res,
+		     &local_res,
+		     remote_host,
+		     SOCK_STREAM,
+		     IPPROTO_TCP,
+		     0);
 
   if ( print_headers ) {
-    fprintf(where,"TCP Connect/Close TEST");
-    fprintf(where," to %s", remote_host);
-    if (iteration_max > 1) {
-      fprintf(where,
-	      " : +/-%3.1f%% @ %2d%% conf.",
-	      interval/0.02,
-	      confidence_level);
-      }
-    if (loc_nodelay || rem_nodelay) {
-      fprintf(where," : nodelay");
-    }
-    if (loc_sndavoid || 
-	loc_rcvavoid ||
-	rem_sndavoid ||
-	rem_rcvavoid) {
-      fprintf(where," : copy avoidance");
-    }
-#ifdef HISTOGRAM
-    fprintf(where," : histogram");
-#endif /* HISTOGRAM */
-#ifdef INTERVALS
-    fprintf(where," : interval");
-#endif /* INTERVALS */
-#ifdef DIRTY 
-    fprintf(where," : dirty data");
-#endif /* DIRTY */
-    fprintf(where,"\n");
+    print_top_test_header("TCP Connect/Close TEST",local_res,remote_res);
   }
   
   /* initialize a few counters */
@@ -9742,17 +10935,17 @@ Send   Recv    Send   Recv\n\
   /* default should be used. Alignment is the exception, it will */
   /* default to 8, which will be no alignment alterations. */
   
-  netperf_request.content.request_type	        =	DO_TCP_CC;
-  tcp_cc_request->recv_buf_size	=	rsr_size;
-  tcp_cc_request->send_buf_size	=	rss_size;
+  netperf_request.content.request_type	=	DO_TCP_CC;
+  tcp_cc_request->recv_buf_size	        =	rsr_size_req;
+  tcp_cc_request->send_buf_size	        =	rss_size_req;
   tcp_cc_request->recv_alignment	=	remote_recv_align;
-  tcp_cc_request->recv_offset	=	remote_recv_offset;
+  tcp_cc_request->recv_offset	        =	remote_recv_offset;
   tcp_cc_request->send_alignment	=	remote_send_align;
-  tcp_cc_request->send_offset	=	remote_send_offset;
-  tcp_cc_request->request_size	=	req_size;
-  tcp_cc_request->response_size	=	rsp_size;
+  tcp_cc_request->send_offset	        =	remote_send_offset;
+  tcp_cc_request->request_size	        =	req_size;
+  tcp_cc_request->response_size	        =	rsp_size;
   tcp_cc_request->no_delay	        =	rem_nodelay;
-  tcp_cc_request->measure_cpu	=	remote_cpu_usage;
+  tcp_cc_request->measure_cpu	        =	remote_cpu_usage;
   tcp_cc_request->cpu_rate	        =	remote_cpu_rate;
   tcp_cc_request->so_rcvavoid	=	rem_rcvavoid;
   tcp_cc_request->so_sndavoid	=	rem_sndavoid;
@@ -9762,7 +10955,8 @@ Send   Recv    Send   Recv\n\
   else {
     tcp_cc_request->test_length	=	test_trans * -1;
   }
-  tcp_cc_request->port          = (int)remote_data_port;
+  tcp_cc_request->port          = atoi(remote_data_port);
+  tcp_cc_request->ipfamily  = af_to_nf(remote_res->ai_family);
 
   if (debug > 1) {
     fprintf(where,"netperf: send_tcp_cc: requesting TCP crr test\n");
@@ -9789,11 +10983,11 @@ Send   Recv    Send   Recv\n\
     remote_cpu_usage=	tcp_cc_response->measure_cpu;
     remote_cpu_rate = 	tcp_cc_response->cpu_rate;
     /* make sure that port numbers are in network order */
-    server.sin_port	=	(unsigned short)tcp_cc_response->data_port_number;
-    server.sin_port =	htons(server.sin_port);
+    set_port_number(remote_res,(unsigned short)tcp_cc_response->data_port_number);
+
     if (debug) {
       fprintf(where,"remote listen done.\n");
-      fprintf(where,"remote port is %d\n",ntohs(server.sin_port));
+      fprintf(where,"remote port is %d\n",get_port_number(remote_res));
       fflush(where);
     }
   }
@@ -9806,6 +11000,10 @@ Send   Recv    Send   Recv\n\
     fflush(where);
     exit(1);
   }
+
+#ifdef WANT_DEMO
+  DEMO_RR_SETUP(100)
+#endif
   
   /* pick a nice random spot between client_port_min and */
   /* client_port_max for our initial port number */
@@ -9819,7 +11017,6 @@ Send   Recv    Send   Recv\n\
   }
   /* there will be a ++ before the first call to bind, so subtract one */
   myport--;
-  myaddr->sin_port = htons((unsigned short)myport);
   
   /* Set-up the test end conditions. For a request/response test, they */
   /* can be either time or transaction based. */
@@ -9841,7 +11038,13 @@ Send   Recv    Send   Recv\n\
   /* utilization and/or service demand and thruput. */
   
   cpu_start(local_cpu_usage);
-  
+
+#ifdef WANT_DEMO
+  if (demo_mode) {
+    HIST_timestamp(demo_one_ptr);
+  }
+#endif
+
   /* We use an "OR" to control test execution. When the test is */
   /* controlled by time, the byte count check will always return false. */
   /* When the test is controlled by byte count, the time test will */
@@ -9853,40 +11056,15 @@ Send   Recv    Send   Recv\n\
 
   while ((!times_up) || (trans_remaining > 0)) {
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     /* timestamp just before our call to create the socket, and then */
     /* again just after the receive raj 3/95 */
     HIST_timestamp(&time_one);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
     /* set up the data socket */
-    send_socket = create_data_socket(AF_INET, 
-				     SOCK_STREAM,
-				     local_data_ip,
-				     local_data_port);
-
-    if (send_socket == INVALID_SOCKET) {
-      perror("netperf: send_tcp_cc: tcp stream data socket");
-      exit(1);
-    }
-
-    /* we set SO_REUSEADDR on the premis that no unreserved port */
-    /* number on the local system is going to be already connected to */
-    /* the remote netserver's port number. One thing that I might */
-    /* try later is to have the remote actually allocate a couple of */
-    /* port numbers and cycle through those as well. depends on if we */
-    /* can get through all the unreserved port numbers in less than */
-    /* the length of the TIME_WAIT state raj 8/94 */
-    one = 1;
-    if(setsockopt(send_socket, SOL_SOCKET, SO_REUSEADDR,
-		  (char *)&one, sock_opt_len) == SOCKET_ERROR) {
-      perror("netperf: send_tcp_cc: so_reuseaddr");
-      exit(1);
-    }
-
 newport:
     /* pick a new port number */
-    myport = ntohs(myaddr->sin_port);
     myport++;
 
     /* wrap the port number when we get to client_port_max. NOTE, some */
@@ -9905,48 +11083,28 @@ newport:
     /* faster, given that we *know* that port number is already in use */
     /* (or rather would be in a loopback test) */
 
-    if (myport == ntohs(server.sin_port)) myport++;
-
-    myaddr->sin_port = htons((unsigned short)myport);
+    if (myport == get_port_number(remote_res)) myport++;
 
     if (debug) {
       if ((nummessages % 100) == 0) {
 	printf("port %d\n",myport);
       }
     }
+    set_port_number(local_res,myport);
+    send_socket = create_data_socket(local_res);
 
-    /* we want to bind our socket to a particular port number. */
-    if ((ret = bind(send_socket,
-		   (struct sockaddr *)myaddr,
-		   sizeof(struct sockaddr_in))) == SOCKET_ERROR) {
-      /* if the bind failed, someone else must have that port number */
-      /* - perhaps in the listen state. since we can't use it, skip to */
-      /* the next port number. we may have to do this again later, but */
-      /* that's just too bad :) */
-      if (SOCKET_EINTR(ret))
-	  {
-	    /* we hit the end of a */
-	    /* timed test. */
-	    timed_out = 1;
-	    break;
-      }
-      if (debug > 1) {
-	fprintf(where,
-		"send_tcp_cc: tried to bind to port %d errno %d\n",
-		ntohs(myaddr->sin_port),
-		errno);
-	fflush(where);
-      }
-	/* yes, goto's are supposed to be evil, but they do have their */
-	/* uses from time to time. the real world doesn't always have */
-	/* to code to ge tthe A in CS 101 :) raj 3/95 */
-	goto newport;
+    if (send_socket == INVALID_SOCKET) {
+      perror("netperf: send_tcp_cc: tcp stream data socket");
+      exit(1);
     }
+
+    /* we used to have a call to bind() here, but that is being
+       taken care of by create_data_socket(). raj 2005-02-08 */
 
     /* Connect up to the remote port on the data socket  */
     if ((ret = connect(send_socket, 
-		(struct sockaddr *)&server,
-		sizeof(server))) == INVALID_SOCKET){
+		       remote_res->ai_addr,
+		       remote_res->ai_addrlen)) == INVALID_SOCKET){
       if (SOCKET_EINTR(ret))
 	  {
 	    /* we hit the end of a */
@@ -9957,11 +11115,12 @@ newport:
       perror("netperf: data socket connect failed");
       printf("\tattempted to connect on socket %d to port %d",
 	     send_socket,
-	     ntohs(server.sin_port));
-      printf(" from port %d \n",ntohs(myaddr->sin_port));
+	     get_port_number(remote_res));
+      printf(" from port %u \n",get_port_number(local_res));
       exit(1);
     }
 
+    /* we hang in a recv() to get the remote's close indication */
 
     rsp_bytes_recvd=recv(send_socket,
 			 temp_message_ptr,
@@ -9973,10 +11132,14 @@ newport:
       /* connection close, call close. we assume that the requisite */
       /* number of bytes have been received */
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
       HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
+
+#ifdef WANT_DEMO
+      DEMO_RR_INTERVAL(1)
+#endif
 
       nummessages++;          
       if (trans_remaining) {
@@ -9985,9 +11148,9 @@ newport:
     
       if (debug > 3) {
 	fprintf(where,
-		"Transaction %d completed on local port %d\n",
+		"Transaction %d completed on local port %u\n",
 		nummessages,
-		ntohs(myaddr->sin_port));
+		get_port_number(local_res));
 	fflush(where);
       }
 
@@ -10197,11 +11360,11 @@ newport:
 	    local_send_offset,
 	    remote_recv_offset);
 
-#ifdef HISTOGRAM
+#ifdef WANT_HISTOGRAM
     fprintf(where,"\nHistogram of request/response times\n");
     fflush(where);
     HIST_report(time_hist);
-#endif /* HISTOGRAM */
+#endif /* WANT_HISTOGRAM */
 
   }
   
@@ -10213,10 +11376,14 @@ recv_tcp_cc()
 {
   
   char  *message;
-  struct	sockaddr_in        myaddr_in,
-  peeraddr_in;
+
+  struct addrinfo *local_res;
+  char local_name[BUFSIZ];
+  char port_buffer[PORTBUFSIZE];
+
+  struct	sockaddr_in        myaddr_in,  peeraddr_in;
   SOCKET	s_listen,s_data;
-  int 	addrlen;
+  socklen_t 	addrlen;
   char	*recv_message_ptr;
   char	*send_message_ptr;
   int	trans_received;
@@ -10323,36 +11490,27 @@ recv_tcp_cc()
   loc_nodelay = tcp_cc_request->no_delay;
   loc_rcvavoid = tcp_cc_request->so_rcvavoid;
   loc_sndavoid = tcp_cc_request->so_sndavoid;
-  
-  s_listen = create_data_socket(AF_INET,
+
+  set_hostname_and_port(local_name,
+			port_buffer,
+			nf_to_af(tcp_cc_request->ipfamily),
+			tcp_cc_request->port);
+
+  local_res = complete_addrinfo(local_name,
+				local_name,
+				port_buffer,
+				nf_to_af(tcp_cc_request->ipfamily),
 				SOCK_STREAM,
-				INADDR_ANY,
-				tcp_cc_request->port);
+				IPPROTO_TCP,
+				0);
+
+  s_listen = create_data_socket(local_res);
   
   if (s_listen == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
     send_response();
     if (debug) {
       fprintf(where,"could not create data socket\n");
-      fflush(where);
-    }
-    exit(1);
-  }
-
-  /* Let's get an address assigned to this socket so we can tell the */
-  /* initiator how to reach the data socket. There may be a desire to */
-  /* nail this socket to a specific IP address in a multi-homed, */
-  /* multi-connection situation, but for now, we'll ignore the issue */
-  /* and concentrate on single connection testing. */
-  
-  if (bind(s_listen,
-	   (struct sockaddr *)&myaddr_in,
-	   sizeof(myaddr_in)) == SOCKET_ERROR) {
-    netperf_response.content.serv_errno = errno;
-    close(s_listen);
-    send_response();
-    if (debug) {
-      fprintf(where,"could not bind\n");
       fflush(where);
     }
     exit(1);
@@ -10563,7 +11721,7 @@ scan_sockets_args(int argc, char *argv[])
 
 {
 
-#define SOCKETS_ARGS "b:CDhI:m:M:p:P:r:s:S:Vw:W:z"
+#define SOCKETS_ARGS "b:CDhH:L:m:M:p:P:r:s:S:Vw:W:z46"
 
   extern char	*optarg;	  /* pointer to option string	*/
   
@@ -10572,7 +11730,11 @@ scan_sockets_args(int argc, char *argv[])
   char	
     arg1[BUFSIZ],  /* argument holders		*/
     arg2[BUFSIZ];
-  
+
+
+  strncpy(local_data_port,"0",sizeof(local_data_port));
+  strncpy(remote_data_port,"0",sizeof(remote_data_port));
+
   /* Go through all the command line arguments and break them */
   /* out. For those options that take two parms, specifying only */
   /* the first will set both to that value. Specifying only the */
@@ -10582,15 +11744,30 @@ scan_sockets_args(int argc, char *argv[])
   while ((c= getopt(argc, argv, SOCKETS_ARGS)) != EOF) {
     switch (c) {
     case '?':	
+    case '4':
+      remote_data_family = AF_INET;
+      local_data_family = AF_INET;
+      break;
+    case '6':
+#if defined(AF_INET6)
+      remote_data_family = AF_INET6;
+      local_data_family = AF_INET6;
+#else
+      fprintf(stderr,
+	      "This netperf was not compiled on an IPv6 capable host!\n");
+      fflush(stderr);
+      exit(-1);
+#endif
+      break;
     case 'h':
       print_sockets_usage();
       exit(1);
     case 'b':
-#ifdef DO_FIRST_BURST
+#ifdef WANT_FIRST_BURST
       first_burst_size = atoi(optarg);
-#else /* DO_FIRST_BURST */
+#else /* WANT_FIRST_BURST */
       printf("Initial request burst functionality not compiled-in!\n");
-#endif /* DO_FIRST_BURST */
+#endif /* WANT_FIRST_BURST */
       break;
     case 'C':
 #ifdef TCP_CORK
@@ -10606,12 +11783,27 @@ scan_sockets_args(int argc, char *argv[])
       loc_nodelay = 1;
       rem_nodelay = 1;
       break;
-    case 'I':
-      break_args(optarg,arg1,arg2);
-      if (arg1[0])
-	local_data_ip = inet_addr(arg1);
+    case 'H':
+      break_args_explicit(optarg,arg1,arg2);
+      if (arg1[0]) {
+	/* make sure we leave room for the NULL termination boys and
+	   girls. raj 2005-02-82 */ 
+	remote_data_address = malloc(strlen(arg1)+1);
+	strncpy(remote_data_address,arg1,strlen(arg1));
+      }
       if (arg2[0])
-	remote_data_ip = inet_addr(arg2);
+	remote_data_family = parse_address_family(arg2);
+      break;
+    case 'L':
+      break_args_explicit(optarg,arg1,arg2);
+      if (arg1[0]) {
+	/* make sure we leave room for the NULL termination boys and
+	   girls. raj 2005-02-82 */ 
+	local_data_address = malloc(strlen(arg1)+1);
+	strncpy(local_data_address,arg1,strlen(arg1));
+      }
+      if (arg2[0])
+	local_data_family = parse_address_family(arg2);
       break;
     case 's':
       /* set local socket sizes */
@@ -10625,9 +11817,9 @@ scan_sockets_args(int argc, char *argv[])
       /* set remote socket sizes */
       break_args(optarg,arg1,arg2);
       if (arg1[0])
-	rss_size = convert(arg1);
+	rss_size_req = convert(arg1);
       if (arg2[0])
-	rsr_size = convert(arg2);
+	rsr_size_req = convert(arg2);
       break;
     case 'r':
       /* set the request/response sizes */
@@ -10660,9 +11852,9 @@ scan_sockets_args(int argc, char *argv[])
 	 breaking firewalls. raj 2004-06-15 */
       break_args(optarg,arg1,arg2);
       if (arg1[0])
-	local_data_port = atoi(arg1);
+	strncpy(local_data_port,arg1,sizeof(local_data_port));
       if (arg2[0])	
-	remote_data_port = atoi(arg2);
+	strncpy(remote_data_port,arg2,sizeof(remote_data_port));
       break;
     case 't':
       /* set the test name */
@@ -10699,4 +11891,10 @@ scan_sockets_args(int argc, char *argv[])
       break;
     };
   }
+
+  /* we do not want to make remote_data_address non-NULL because if
+     the user has not specified a remote adata address, we want to
+     take it from the hostname in the -H global option. raj
+     2005-02-08 */
+
 }

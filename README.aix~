@@ -1,0 +1,8 @@
+Pseudo-random things about netperf on AIX:
+
+configure may need:
+
+CFLAGS="-qcpluscmt -lperfstat"
+
+until such time as Rick Jones can figure-out or be told how to
+automagically add those using the configure script (hint hint :)
