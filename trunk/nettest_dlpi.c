@@ -22,7 +22,7 @@
 
 #ifdef DO_DLPI
 char	nettest_dlpi_id[]="\
-@(#)nettest_dlpi.c (c) Copyright 1993,1995 Hewlett-Packard Co. Version 2.2pl1";
+@(#)nettest_dlpi.c (c) Copyright 1993,1995,2004 Hewlett-Packard Co. Version 2.2pl5";
 
 #include <sys/types.h>
 #include <fcntl.h>
@@ -148,7 +148,7 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
   /* with alignment and offset concerns as well. */
   
   struct ring_elt *send_ring;
-  char	*message_base;
+  char	*message;
   char	*message_ptr;
   struct strbuf send_message;
   char  dlsap[BUFSIZ];
@@ -267,7 +267,7 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
   
   /* set-up the data buffer with the requested alignment and offset. */
   /* After we have calculated the proper starting address, we want to */
-  /* put that back into the message_base variable so we go back to the */
+  /* put that back into the message variable so we go back to the */
   /* proper place. note that this means that only the first send is */
   /* guaranteed to be at the alignment specified by the -a parameter. I */
   /* think that this is a little more "real-world" than what was found */
@@ -389,7 +389,7 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
     remote_cpu_rate = 	dlpi_co_stream_response->cpu_rate;
   }
   else {
-    errno = netperf_response.content.serv_errno;
+    Set_errno(netperf_response.content.serv_errno);
     perror("netperf: remote error");
     exit(1);
   }
@@ -528,7 +528,7 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
       fprintf(where,"remote results obtained\n");
   }
   else {
-    errno = netperf_response.content.serv_errno;
+    Set_errno(netperf_response.content.serv_errno);
     perror("netperf: remote error");
     
     exit(1);
@@ -563,7 +563,8 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
       local_cpu_utilization	= calc_cpu_util(0.0);
       local_service_demand	= calc_service_demand(bytes_sent,
 						      0.0,
-						      0.0);
+						      0.0,
+						      0);
     }
     else {
       local_cpu_utilization	= -1.0;
@@ -581,7 +582,8 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
       remote_cpu_utilization	= dlpi_co_stream_result->cpu_util;
       remote_service_demand	= calc_service_demand(bytes_sent,
 						      0.0,
-						      remote_cpu_utilization);
+						      remote_cpu_utilization,
+						      dlpi_co_stream_result->num_cpus);
     }
     else {
       remote_cpu_utilization = -1.0;
@@ -695,7 +697,7 @@ int
   
   struct ring_elt *recv_ring;
   char	*message_ptr;
-  char	*message_base;
+  char	*message;
   int   *message_int_ptr;
   struct strbuf recv_message;
   int   dirty_count;
@@ -835,11 +837,13 @@ int
   
   /* just a little prep work for when we may have to behave like the */
   /* sending side... */
-  message_base = (char *)malloc(recv_size * 2);
-  message_ptr = (char *)(((long)message_base + 
-			  (long)dlpi_co_stream_request->recv_alignment -1) &
-			 ~((long)dlpi_co_stream_request->recv_alignment - 1));
-  message_ptr = message_ptr + dlpi_co_stream_request->recv_offset;
+  message = (char *)malloc(recv_size * 2);
+  if (message == NULL) {
+    printf("malloc(%d) failed!\n", recv_size * 2);
+    exit(1);
+  }
+
+  message_ptr = ALIGN_BUFFER(message, dlpi_co_stream_request->recv_alignment, dlpi_co_stream_request->recv_offset);
   recv_message.maxlen = recv_size;
   recv_message.len = 0;
   recv_message.buf = message_ptr;
@@ -988,8 +992,7 @@ int
 
 /*********************************/
 
-int send_dlpi_co_rr(remote_host)
-     char	remote_host[];
+int send_dlpi_co_rr(char remote_host[])
 {
   
   char *tput_title = "\
@@ -1088,6 +1091,10 @@ int send_dlpi_co_rr(remote_host)
   
   /* set-up the data buffers with the requested alignment and offset */
   temp_message_ptr = (char *)malloc(req_size+MAXALIGNMENT+MAXOFFSET);
+  if (temp_message_ptr == NULL) {
+    printf("malloc(%d) failed!\n", req_size+MAXALIGNMENT+MAXOFFSET);
+    exit(1);
+  }
   send_message_ptr = (char *)(( (long) temp_message_ptr + 
 			       (long) local_send_align - 1) &	
 			      ~((long) local_send_align - 1));
@@ -1097,6 +1104,10 @@ int send_dlpi_co_rr(remote_host)
   send_message.buf    = send_message_ptr;
   
   temp_message_ptr = (char *)malloc(rsp_size+MAXALIGNMENT+MAXOFFSET);
+  if (temp_message_ptr == NULL) {
+    printf("malloc(%d) failed!\n", rsp_size+MAXALIGNMENT+MAXOFFSET);
+    exit(1);
+  }
   recv_message_ptr = (char *)(( (long) temp_message_ptr + 
 			       (long) local_recv_align - 1) &	
 			      ~((long) local_recv_align - 1));
@@ -1267,7 +1278,7 @@ int send_dlpi_co_rr(remote_host)
     
   }
   else {
-    errno = netperf_response.content.serv_errno;
+    Set_errno(netperf_response.content.serv_errno);
     perror("netperf: remote error");
     
     exit(1);
@@ -1405,7 +1416,7 @@ int send_dlpi_co_rr(remote_host)
       fprintf(where,"remote results obtained\n");
   }
   else {
-    errno = netperf_response.content.serv_errno;
+    Set_errno(netperf_response.content.serv_errno);
     perror("netperf: remote error");
     
     exit(1);
@@ -1444,7 +1455,8 @@ int send_dlpi_co_rr(remote_host)
       /* "good" numbers */
       local_service_demand  = calc_service_demand((double) nummessages*1024,
 						  0.0,
-						  0.0);
+						  0.0,
+						  0);
     }
     else {
       local_cpu_utilization	= -1.0;
@@ -1463,7 +1475,8 @@ int send_dlpi_co_rr(remote_host)
       /* "good" numbers */
       remote_service_demand = calc_service_demand((double) nummessages*1024,
 						  0.0,
-						  remote_cpu_utilization);
+						  remote_cpu_utilization,
+						  dlpi_co_rr_result->num_cpus);
     }
     else {
       remote_cpu_utilization = -1.0;
@@ -1562,8 +1575,7 @@ int send_dlpi_co_rr(remote_host)
 }
 
 void
-  send_dlpi_cl_stream(remote_host)
-char	remote_host[];
+  send_dlpi_cl_stream(char remote_host[])
 {
   /************************************************************************/
   /*									*/
@@ -1608,7 +1620,7 @@ frames  bytes    secs            #      #   %s/sec   %%       us/KB\n\n";
   
   int	*message_int_ptr;
   char	*message_ptr;
-  char	*message_base;
+  char	*message;
   char  sctl_data[BUFSIZ];
   struct strbuf send_message;
   struct strbuf sctl_message;
@@ -1708,15 +1720,19 @@ frames  bytes    secs            #      #   %s/sec   %%       us/KB\n\n";
   /* before it leaves the node...unless the user set the width */
   /* explicitly. */
   if (send_width == 0) send_width = 32;
-  message_base = (char *)malloc(send_size * (send_width + 1) + local_send_align + local_send_offset);
-  message_ptr = (char *)(( (long) message_base + 
+  message = (char *)malloc(send_size * (send_width + 1) + local_send_align + local_send_offset);
+  if (message == NULL) {
+    printf("malloc(%d) failed!\n", send_size * (send_width + 1) + local_send_align + local_send_offset);
+    exit(1);
+  }
+  message_ptr = (char *)(( (long) message + 
 			  (long) local_send_align - 1) &	
 			 ~((long) local_send_align - 1));
   message_ptr = message_ptr + local_send_offset;
-  message_base = message_ptr;
+  message = message_ptr;
   send_message.maxlen = send_size;
   send_message.len = send_size;
-  send_message.buf = message_base;
+  send_message.buf = message;
   
   sctl_message.maxlen = BUFSIZ;
   sctl_message.len    = 0;
@@ -1791,7 +1807,7 @@ frames  bytes    secs            #      #   %s/sec   %%       us/KB\n\n";
       fprintf(where,"send_dlpi_cl_stream: remote data connection done.\n");
   }
   else {
-    errno = netperf_response.content.serv_errno;
+    Set_errno(netperf_response.content.serv_errno);
     perror("send_dlpi_cl_stream: error on remote");
     exit(1);
   }
@@ -1906,7 +1922,7 @@ frames  bytes    secs            #      #   %s/sec   %%       us/KB\n\n";
       fprintf(where,"send_dlpi_cl_stream: remote results obtained\n");
   }
   else {
-    errno = netperf_response.content.serv_errno;
+    Set_errno(netperf_response.content.serv_errno);
     perror("send_dlpi_cl_stream: error on remote");
     exit(1);
   }
@@ -1938,7 +1954,8 @@ frames  bytes    secs            #      #   %s/sec   %%       us/KB\n\n";
       local_cpu_utilization	= calc_cpu_util(0.0);
       local_service_demand	= calc_service_demand(bytes_sent,
 						      0.0,
-						      0.0);
+						      0.0,
+						      0);
     }
     else {
       local_cpu_utilization	= -1.0;
@@ -1958,7 +1975,8 @@ frames  bytes    secs            #      #   %s/sec   %%       us/KB\n\n";
       remote_cpu_utilization	= dlpi_cl_stream_results->cpu_util;
       remote_service_demand	= calc_service_demand(bytes_recvd,
 						      0.0,
-						      remote_cpu_utilization);
+						      remote_cpu_utilization,
+						      dlpi_cl_stream_results->num_cpus);
     }
     else {
       remote_cpu_utilization	= -1.0;
@@ -2038,7 +2056,7 @@ int
   recv_dlpi_cl_stream()
 {
   
-  char message[MAXMESSAGESIZE+MAXALIGNMENT+MAXOFFSET];
+  char  *message;
   int	data_descriptor;
   int	len;
   char	*message_ptr;
@@ -2094,6 +2112,13 @@ int
     fprintf(where,"recv_dlpi_cl_stream: the response type is set...\n");
     fflush(where);
   }
+
+  /* set-up the data buffer with the requested alignment and offset */
+  message = (char *)malloc(DATABUFFERLEN);
+  if (message == NULL) {
+    printf("malloc(%d) failed!\n", DATABUFFERLEN);
+    exit(1);
+  }
   
   /* We now alter the message_ptr variable to be at the desired */
   /* alignment with the desired offset. */
@@ -2103,11 +2128,9 @@ int
 	    dlpi_cl_stream_request->recv_alignment);
     fflush(where);
   }
-  message_ptr = (char *)(((long)message + 
-			  (long ) dlpi_cl_stream_request->recv_alignment -1) & 
-			 ~((long) dlpi_cl_stream_request->recv_alignment - 1));
-  message_ptr = message_ptr + dlpi_cl_stream_request->recv_offset;
 
+  message_ptr = ALIGN_BUFFER(message, dlpi_cl_stream_request->recv_alignment, dlpi_cl_stream_request->recv_offset);
+  
   if (dlpi_cl_stream_request->message_size > 0) {
     recv_message.maxlen = dlpi_cl_stream_request->message_size;
   }
@@ -2274,7 +2297,7 @@ int
     elapsed_time -= (float)PAD_TIME;
   }
   else {
-    alarm(0);
+    stop_timer();
   }
   
   if (debug) {
@@ -2316,8 +2339,7 @@ int
   
 }
 
-int send_dlpi_cl_rr(remote_host)
-     char	remote_host[];
+int send_dlpi_cl_rr(char remote_host[])
 {
   
   char *tput_title = "\
@@ -2385,7 +2407,7 @@ Send   Recv    Send   Recv\n\
   float	local_service_demand;
   float	remote_cpu_utilization;
   float	remote_service_demand;
-  float	thruput;
+  double thruput;
   
 #ifdef INTERVALS
   /* timing stuff */
@@ -2438,6 +2460,10 @@ Send   Recv    Send   Recv\n\
   
   /* set-up the data buffer with the requested alignment and offset */
   temp_message_ptr = (char *)malloc(req_size+MAXALIGNMENT+MAXOFFSET);
+  if (temp_message_ptr == NULL) {
+    printf("malloc(%d) failed!\n", req_size+MAXALIGNMENT+MAXOFFSET);
+    exit(1);
+  }
   send_message_ptr = (char *)(( (long)temp_message_ptr + 
 			       (long) local_send_align - 1) &	
 			      ~((long) local_send_align - 1));
@@ -2447,6 +2473,10 @@ Send   Recv    Send   Recv\n\
   send_message.buf    = send_message_ptr;
   
   temp_message_ptr = (char *)malloc(rsp_size+MAXALIGNMENT+MAXOFFSET);
+  if (temp_message_ptr == NULL) {
+    printf("malloc(%d) failed!\n", rsp_size+MAXALIGNMENT+MAXOFFSET);
+    exit(1);
+  }
   recv_message_ptr = (char *)(( (long)temp_message_ptr + 
 			       (long) local_recv_align - 1) &	
 			      ~((long) local_recv_align - 1));
@@ -2637,7 +2667,7 @@ Send   Recv    Send   Recv\n\
       data_req->dl_dest_addr_length;
   }
   else {
-    errno = netperf_response.content.serv_errno;
+    Set_errno(netperf_response.content.serv_errno);
     perror("netperf: remote error");
     exit(1);
   }
@@ -2782,7 +2812,7 @@ Send   Recv    Send   Recv\n\
       fprintf(where,"remote results obtained\n");
   }
   else {
-    errno = netperf_response.content.serv_errno;
+    Set_errno(netperf_response.content.serv_errno);
     perror("netperf: remote error");
     
     exit(1);
@@ -2818,7 +2848,8 @@ Send   Recv    Send   Recv\n\
       /* "good" numbers */
       local_service_demand  = calc_service_demand((double) nummessages*1024,
 						  0.0,
-						  0.0);
+						  0.0,
+						  0);
     }
     else {
       local_cpu_utilization	= -1.0;
@@ -2837,7 +2868,8 @@ Send   Recv    Send   Recv\n\
       /* "good" numbers */
       remote_service_demand  = calc_service_demand((double) nummessages*1024,
 						   0.0,
-						   remote_cpu_utilization);
+						   remote_cpu_utilization,
+						   dlpi_cl_rr_result->num_cpus);
     }
     else {
       remote_cpu_utilization = -1.0;
@@ -2949,7 +2981,7 @@ int
   recv_dlpi_cl_rr()
 {
   
-  char message[MAXMESSAGESIZE+MAXALIGNMENT+MAXOFFSET];
+  char  *message;
   int	data_descriptor;
   int   flags = 0;
   int	measure_cpu;
@@ -3013,6 +3045,13 @@ int
     fprintf(where,"recv_dlpi_cl_rr: the response type is set...\n");
     fflush(where);
   }
+
+  /* set-up the data buffer with the requested alignment and offset */
+  message = (char *)malloc(DATABUFFERLEN);
+  if (message == NULL) {
+    printf("malloc(%d) failed!\n", DATABUFFERLEN);
+    exit(1);
+  }
   
   /* We now alter the message_ptr variables to be at the desired */
   /* alignments with the desired offsets. */
@@ -3028,18 +3067,13 @@ int
 	    dlpi_cl_rr_request->send_offset);
     fflush(where);
   }
-  recv_message_ptr = (char *)(( (long)message + 
-			       (long) dlpi_cl_rr_request->recv_alignment -1) & 
-			      ~((long) dlpi_cl_rr_request->recv_alignment - 1));
-  recv_message_ptr = recv_message_ptr + dlpi_cl_rr_request->recv_offset;
+
+  recv_message_ptr = ALIGN_BUFFER(message, dlpi_cl_rr_request->recv_alignment, dlpi_cl_rr_request->recv_offset);
   recv_message.maxlen = dlpi_cl_rr_request->request_size;
   recv_message.len    = 0;
   recv_message.buf    = recv_message_ptr;
   
-  send_message_ptr = (char *)(( (long)message + 
-			       (long) dlpi_cl_rr_request->send_alignment -1) & 
-			      ~((long) dlpi_cl_rr_request->send_alignment - 1));
-  send_message_ptr = send_message_ptr + dlpi_cl_rr_request->send_offset;
+  send_message_ptr = ALIGN_BUFFER(message, dlpi_cl_rr_request->send_alignment, dlpi_cl_rr_request->send_offset);
   send_message.maxlen = dlpi_cl_rr_request->response_size;
   send_message.len    = dlpi_cl_rr_request->response_size;
   send_message.buf    = send_message_ptr;
@@ -3278,8 +3312,8 @@ int
   recv_dlpi_co_rr()
 {
   
-  char message[MAXMESSAGESIZE+MAXALIGNMENT+MAXOFFSET];
-  int	s_listen,data_descriptor;
+  char  *message;
+  SOCKET	s_listen,data_descriptor;
   
   int	measure_cpu;
   
@@ -3332,6 +3366,13 @@ int
     fprintf(where,"recv_dlpi_co_rr: the response type is set...\n");
     fflush(where);
   }
+
+  /* set-up the data buffer with the requested alignment and offset */
+  message = (char *)malloc(DATABUFFERLEN);
+  if (message == NULL) {
+    printf("malloc(%d) failed!\n", DATABUFFERLEN);
+    exit(1);
+  }
   
   /* We now alter the message_ptr variables to be at the desired */
   /* alignments with the desired offsets. */
@@ -3347,18 +3388,13 @@ int
 	    dlpi_co_rr_request->send_offset);
     fflush(where);
   }
-  recv_message_ptr = (char *)(( (long)message + 
-			       (long) dlpi_co_rr_request->recv_alignment -1) & 
-			      ~((long) dlpi_co_rr_request->recv_alignment - 1));
-  recv_message_ptr = recv_message_ptr + dlpi_co_rr_request->recv_offset;
+
+  recv_message_ptr = ALIGN_BUFFER(message, dlpi_co_rr_request->recv_alignment, dlpi_co_rr_request->recv_offset);
   recv_message.maxlen = dlpi_co_rr_request->request_size;
   recv_message.len    = 0;
   recv_message.buf    = recv_message_ptr;
   
-  send_message_ptr = (char *)(( (long)message + 
-			       (long) dlpi_co_rr_request->send_alignment -1) & 
-			      ~((long) dlpi_co_rr_request->send_alignment - 1));
-  send_message_ptr = send_message_ptr + dlpi_co_rr_request->send_offset;
+  send_message_ptr = ALIGN_BUFFER(message, dlpi_co_rr_request->send_alignment, dlpi_co_rr_request->send_offset);
   send_message.maxlen = dlpi_co_rr_request->response_size;
   send_message.len    = dlpi_co_rr_request->response_size;
   send_message.buf    = send_message_ptr;
@@ -3651,16 +3687,13 @@ void
   print_dlpi_usage()
 
 {
-  printf("%s",dlpi_usage);
+  fwrite(dlpi_usage, sizeof(char), strlen(dlpi_usage), stdout);
 }
 
 
 /* this routine will scan the command line for DLPI test arguments */
 void
-  scan_dlpi_args(argc, argv)
-int	argc;
-char	*argv[];
-
+  scan_dlpi_args(int argc, char *argv[])
 {
   extern int	optind, opterrs;  /* index of first unused arg 	*/
   extern char	*optarg;	  /* pointer to option string	*/

@@ -1,5 +1,5 @@
 /*
- *       Copyright (C) 1995 Hewlett-Packard Company
+ *       Copyright (C) 1995,2004 Hewlett-Packard Company
  */
 
  /* This file contains the test-specific definitions for netperf's BSD */
@@ -230,4 +230,35 @@ struct xti_udp_rr_results_struct {
   int           cpu_method;    /* how was cpu util measured? */
   int           num_cpus;      /* how many CPUs were there */
 };
+
+extern void send_xti_tcp_stream(char remote_host[]);
+
+extern int recv_xti_tcp_stream();
+
+extern int send_xti_tcp_rr(char remote_host[]);
+
+extern void send_xti_udp_stream(char remote_host[]);
+
+extern int recv_xti_udp_stream();
+
+extern int send_xti_udp_rr(char remote_host[]);
+
+extern int recv_xti_udp_rr();
+
+extern int recv_xti_tcp_rr();
+
+extern int send_xti_tcp_conn_rr(char remote_host[]);
+
+extern int recv_xti_tcp_conn_rr();
+
+extern void scan_xti_args(int argc, char *argv[]);
+
+
+
+
+
+
+
+
+
 

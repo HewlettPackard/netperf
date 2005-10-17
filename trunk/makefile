@@ -1,5 +1,5 @@
 #
-# @(#)Makefile	2.1pl4	2003/03/04
+# @(#)Makefile	2.1pl5	2004/03/12
 #
 # Makefile to build netperf benchmark tool
 #
@@ -7,7 +7,7 @@
 #SHELL="/bin/sh"
 
 #what version of netperf is this for?
-VERSION = 2.2pl4
+VERSION = 2.2pl5
 
 #
 # This tells the script where the executables and scripts are supposed
@@ -27,7 +27,10 @@ NETPERF_HOME = /opt/netperf
 # /opt/SUNWspro/bin/cc - the unbundled C compiler under Solaris
 # cc                   - if your paths are set, this may be all you 
 #                        need
-# gcc                  - There is a gcc for MPE/iX
+# gcc                  - There is a gcc for MPE/iX, and this is likely
+#                        the compiler on other platforms when you
+#                        haven't gone and purchased the proper
+#                        vendor supplied compiler :)
 # 
 # one most systems, netperf spends very little time in user code, and
 # most of its time in the kernel, so I *suspect* that different
@@ -97,6 +100,8 @@ CC = cc
 #               the makefile for your platform
 # -DUSE_SYSCTL - Use sysctl() on FreeBSD (perhaps other BSDs) to calculate
 #                CPU utilization
+# -DUSE_PERFSTAT - Use the perfstat call on AIX to calculate CPU util
+#
 
 LOG_FILE=DEBUG_LOG_FILE="\"/tmp/netperf.debug\""
 CFLAGS = -O -D$(LOG_FILE) -DNEED_MAKEFILE_EDIT
@@ -114,11 +119,13 @@ CFLAGS = -O -D$(LOG_FILE) -DNEED_MAKEFILE_EDIT
 #                         netperf no longer uses nlist()
 # -lsys5                - on Digital Unix (OSF) this helps insure that
 #                         netserver processes are reaped?
-# -lm                   - required for ALL platforms
+# -lm                   - required for ALL platforms except Zeta OS
 # -lxti                 - required for -DDO_XTI on HP_UX 10.X
 # -L/POSIXC60/lib -lunix -lm -lsocket - for MPE/iX
 # -lkstat               - required for -DUSE_KSTAT on Solaris
 # -lsendfile            - required for -DHAVE_SENDFILE on Solaris 9
+# -lresolv              - required for -DDO_DNS on RedHat 7.1
+# -lsocket -lbind       - required for Zeta OS
 
 LIBS= -lm
 

@@ -1,7 +1,7 @@
 #ifdef DO_DNS
 #ifndef lint
 char	nettest_dns_id[]="\
-@(#)nettest_dns.c (c) Copyright 1997 Hewlett-Packard Co. Version 2.1pl4";
+@(#)nettest_dns.c (c) Copyright 1997,2004 Hewlett-Packard Co. Version 2.2pl5";
 #else
 #define DIRTY
 #define HISTOGRAM
@@ -38,8 +38,6 @@ char	nettest_dns_id[]="\
 
 #include <sys/types.h>
 #include <fcntl.h>
-#include <errno.h>
-#include <signal.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -57,12 +55,18 @@ char	nettest_dns_id[]="\
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <netdb.h>
+#include <errno.h>
+#include <signal.h>
 #include <arpa/nameser.h>
 #include <resolv.h>
 #else /* WIN32 */
 #include <process.h>
 #include <windows.h>
 #include <winsock.h>
+#include "pinc\nameser.h"
+#include "pinc\res.h"
+#include "pinc\resolv.h"
+//#include "pinc\resolvp.h"
 #define close(x)	closesocket(x)
 #endif /* WIN32 */
 
@@ -117,8 +121,7 @@ comma.\n";
  /* test. */
 
 void
-send_dns_rr(remote_host)
-     char	remote_host[];
+send_dns_rr(char remote_host[])
 {
   
   char *tput_title = "\
@@ -211,7 +214,7 @@ secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\n";
   if (dns_server_addr == INADDR_ANY) {
     /* we use the control connection hostname as the way to find the */
     /* IP address of the DNS SUT */
-    if ((dns_server_addr = inet_addr(remote_host)) == -1) {
+    if ((dns_server_addr = inet_addr(remote_host)) == SOCKET_ERROR) {
       /* it was not an IP address, try it as a name, if it was */
       /* all-ones broadcast, we don't want to send to that anyway */
       if ((hp = gethostbyname(remote_host)) == NULL) {
@@ -240,7 +243,7 @@ secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\n";
 
   if ( print_headers ) {
     fprintf(where,"DNS REQUEST/RESPONSE TEST");
-    fprintf(where," to %s", inet_ntoa(dns_server_addr));
+    fprintf(where," to %s", inet_ntoa(*(struct in_addr *)&dns_server_addr));
     if (iteration_max > 1) {
       fprintf(where,
 	      " : +/-%3.1f%% @ %2d%% conf.",
@@ -362,7 +365,7 @@ secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\n";
       }
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       fprintf(where,
 	      "netperf: remote error %d",
 	      netperf_response.content.serv_errno);
@@ -494,7 +497,7 @@ secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\n";
 		
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       fprintf(where,"netperf: remote error %d",
 	      netperf_response.content.serv_errno);
       perror("");
@@ -753,7 +756,9 @@ recv_dns_rr()
   /* return WSAEINTR with the test is over. anything that will run on */
   /* 95 and NT and is closer to what netperf expects from Unix signals */
   /* and such would be appreciated raj 1/96 */
-  win_kludge_socket = s_data;
+
+  //+*+SAF Unfortunately, there is no s_data socket to close out in the DNS API case...
+  //+*+ SAF win_kludge_socket = s_data;
 #endif /* WIN32 */
 
   if (debug) {
@@ -768,6 +773,8 @@ recv_dns_rr()
   /* The loop will exit when we hit the end of the test time */
   
   times_up = 0;
+
+#ifndef WIN32
   start_timer(dns_rr_request->test_length + PAD_TIME);
 
   /* since we know that a signal will be coming, we use pause() here. */
@@ -782,6 +789,39 @@ recv_dns_rr()
   cpu_stop(dns_rr_request->measure_cpu,&elapsed_time);
   
   stop_timer();
+#else
+
+  {
+    HANDLE hSleep = INVALID_HANDLE_VALUE;
+	DWORD ErrorCode;
+
+	// Create the dummy "Sleep" event object
+	hSleep = CreateEvent( 
+		(LPSECURITY_ATTRIBUTES) NULL,	  // no security
+		TRUE,	 // manual reset event
+		FALSE,   // init. state = reset
+		(void *)NULL);  // unnamed event object
+	if (hSleep == (HANDLE) INVALID_HANDLE_VALUE)
+	{
+		perror("CreateEvent failure");
+		exit(1);
+	}
+
+	// Wait on this event (which will never be signaled) for test_length + PAD_TIME seconds.
+
+	ErrorCode = WaitForSingleObject(hSleep, (dns_rr_request->test_length + PAD_TIME)*1000);  //Lint
+	if (ErrorCode == WAIT_FAILED)
+	{
+		perror("WaitForSingleObject failed");
+		exit(1);
+	}
+
+  }  
+  /* The loop now exits due to timeout or transaction count being */
+  /* reached */
+  
+  cpu_stop(dns_rr_request->measure_cpu,&elapsed_time);
+#endif  // WIN32
 
   /* we ended the test by time, which was at least 2 seconds */
   /* longer than we wanted to run. so, we want to subtract */
@@ -812,15 +852,12 @@ void
 print_dns_usage()
 {
 
-  printf("%s",dns_usage);
+  fwrite(dns_usage, sizeof(char), strlen(dns_usage), stdout);
   exit(1);
 
 }
 void
-scan_dns_args(argc, argv)
-     int	argc;
-     char	*argv[];
-
+scan_dns_args(int argc, char *argv[])
 {
 #define DNS_ARGS "f:hH:"
   extern char	*optarg;	  /* pointer to option string	*/
@@ -860,7 +897,7 @@ scan_dns_args(argc, argv)
       /* someone wishes to specify the DNS server as being different */
       /* from the endpoint of the control connection */
 
-      if ((dns_server_addr = inet_addr(optarg)) == -1) {
+      if ((dns_server_addr = inet_addr(optarg)) == SOCKET_ERROR) {
 	/* it was not an IP address, try it as a name, if it was */
 	/* all-ones broadcast, we don't want to send to that anyway */
 	if ((hp = gethostbyname(optarg)) == NULL) {

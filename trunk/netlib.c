@@ -1,37 +1,37 @@
 #ifdef NEED_MAKEFILE_EDIT
 #error you must first edit and customize the makefile to your platform
 #endif /* NEED_MAKEFILE_EDIT */
-char	netlib_id[]="\
-@(#)netlib.c (c) Copyright 1993-2003 Hewlett-Packard Company. Version 2.2pl4";
+char    netlib_id[]="\
+@(#)netlib.c (c) Copyright 1993-2003 Hewlett-Packard Company. Version 2.2pl5";
 
 /****************************************************************/
-/*								*/
-/*	netlib.c						*/
-/*								*/
-/*	the common utility routines available to all...		*/
-/*								*/
-/*	establish_control()	establish the control socket	*/
-/*	calibrate_local_cpu()	do local cpu calibration	*/
-/*	calibrate_remote_cpu()	do remote cpu calibration	*/
-/*	send_request()		send a request to the remote	*/
-/*	recv_response()		receive a response from remote	*/
-/*	send_response()		send a response to the remote	*/
-/*	recv_request()		recv a request from the remote	*/
-/*	dump_request()		dump request contents		*/
-/*	dump_response()		dump response contents		*/
-/*	cpu_start()		start measuring cpu		*/
-/*	cpu_stop()		stop measuring cpu		*/
-/*	calc_cpu_util()		calculate the cpu utilization	*/
-/*	calc_service_demand()	calculate the service demand	*/
-/*	calc_thruput()		calulate the tput in units	*/
-/*	calibrate()		really calibrate local cpu	*/
-/*	identify_local()	print local host information	*/
-/*	identify_remote()	print remote host information	*/
-/*	format_number()		format the number (KB, MB,etc)	*/
-/*	format_units()		return the format in english    */
-/*	msec_sleep()		sleep for some msecs		*/
+/*                                                              */
+/*      netlib.c                                                */
+/*                                                              */
+/*      the common utility routines available to all...         */
+/*                                                              */
+/*      establish_control()     establish the control socket    */
+/*      calibrate_local_cpu()   do local cpu calibration        */
+/*      calibrate_remote_cpu()  do remote cpu calibration       */
+/*      send_request()          send a request to the remote    */
+/*      recv_response()         receive a response from remote  */
+/*      send_response()         send a response to the remote   */
+/*      recv_request()          recv a request from the remote  */
+/*      dump_request()          dump request contents           */
+/*      dump_response()         dump response contents          */
+/*      cpu_start()             start measuring cpu             */
+/*      cpu_stop()              stop measuring cpu              */
+/*      calc_cpu_util()         calculate the cpu utilization   */
+/*      calc_service_demand()   calculate the service demand    */
+/*      calc_thruput()          calulate the tput in units      */
+/*      calibrate()             really calibrate local cpu      */
+/*      identify_local()        print local host information    */
+/*      identify_remote()       print remote host information   */
+/*      format_number()         format the number (KB, MB,etc)  */
+/*      format_units()          return the format in english    */
+/*      msec_sleep()            sleep for some msecs            */
 /*      start_timer()           start a timer                   */
-/*								*/
+/*                                                              */
 /*      the routines you get when DO_DLPI is defined...         */
 /*                                                              */
 /*      dl_open()               open a file descriptor and      */
@@ -47,9 +47,9 @@ char	netlib_id[]="\
 /****************************************************************/
 
 /****************************************************************/
-/*								*/
-/*	Global include files				      	*/
-/*							       	*/
+/*                                                              */
+/*      Global include files                                    */
+/*                                                              */
 /****************************************************************/
 
  /* It would seem that most of the includes being done here from */
@@ -67,6 +67,7 @@ char	netlib_id[]="\
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include <assert.h>
 
 
 #ifndef WIN32
@@ -96,18 +97,14 @@ char	netlib_id[]="\
 
 #else /* WIN32 */
 
-#ifdef NT_SDK
- /* this is an alternative for CPU util that is being worked-on, but I */
- /* don't have an SDK for it. raj 1/96 */
-#include <nt.h>                                            /* robin */
-#include <ntrtl.h>                                         /* robin */
-#include <nturtl.h>                                        /* robin */
-#endif /* NT_SDK */
-
 #include <process.h>
 #include <time.h>
+#include <winsock2.h>
+#ifdef DO_IPV6
+#include <ws2tcpip.h>
+#endif
 #include <windows.h>
-#include <winsock.h>
+
 #define SIGALRM (14)
 #define sleep(x) Sleep((x)*1000)
 
@@ -136,6 +133,10 @@ char	netlib_id[]="\
 #include <sys/sysinfo.h>
 #endif /* USE_KSTAT */
 
+#ifdef USE_PERFSTAT
+#include <libperfstat.h>
+#endif /*USE_PERFSTAT */
+
 #ifdef USE_SYSCTL
 #include <sys/sysctl.h>
 #endif /* USE_SYSCTL */
@@ -147,7 +148,22 @@ char	netlib_id[]="\
  /* that's really just too bad - such systems should define */
  /* _SC_PAGE_SIZE - raj 4/95 */
 #ifndef _SC_PAGE_SIZE
+#ifdef WIN32
+
+SYSTEM_INFO SystemInfo;
+
+DWORD SysPageSize()
+{
+        GetSystemInfo(&SystemInfo);
+
+        return SystemInfo.dwPageSize;
+}
+
+#define NETPERF_PAGE_SIZE SysPageSize()
+
+#else
 #define NETPERF_PAGE_SIZE 8192
+#endif  // WIN32
 #else
 #define NETPERF_PAGE_SIZE sysconf(_SC_PAGE_SIZE)
 #endif /* _SC_PAGE_SIZE */
@@ -171,26 +187,71 @@ char	netlib_id[]="\
 #endif /* HISTOGRAM */
 /****************************************************************/
 /*                                                              */
-/*	Local Include Files					*/
+/*      Local Include Files                                     */
 /*                                                              */
 /****************************************************************/
 #define NETLIB
 #include "netlib.h"
 #include "netsh.h"
 
+#ifdef WIN32
+#ifdef NT_PERF
+//
+// System CPU time information class.
+// Used to get CPU time information.
+//
+//     SDK\inc\ntexapi.h 
+// Function x8:   SystemProcessorPerformanceInformation
+// DataStructure: SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION 
+//
 
+#define SystemProcessorPerformanceInformation 0x08
+
+typedef struct 
+{
+        LARGE_INTEGER   IdleTime;
+        LARGE_INTEGER   KernelTime;
+        LARGE_INTEGER   UserTime;
+        LARGE_INTEGER   DpcTime;
+        LARGE_INTEGER   InterruptTime;
+        LONG                    InterruptCount;
+} SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION, *PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION;
+
+//
+// Calls to get the information
+//
+typedef ULONG (__stdcall *NT_QUERY_SYSTEM_INFORMATION)( 
+                                                                                        ULONG SystemInformationClass, 
+                                                                                        PVOID SystemInformation, 
+                                                                                        ULONG SystemInformationLength,
+                                                                                        PULONG ReturnLength 
+                                                                                        );
+
+NT_QUERY_SYSTEM_INFORMATION NtQuerySystemInformation = NULL;
+#endif /* NT_PERF */
+
+_inline LARGE_INTEGER ReadPerformanceCounter(VOID)
+{
+        LARGE_INTEGER Counter;
+        QueryPerformanceCounter(&Counter);
+
+        return(Counter);
+}       // ReadperformanceCounter
+
+static LARGE_INTEGER TickHz;
+#endif  // WIN32
 /****************************************************************/
-/*		       						*/
-/*	Global constants, macros and variables			*/
-/*							       	*/
+/*                                                              */
+/*      Global constants, macros and variables                  */
+/*                                                              */
 /****************************************************************/
 
 #if defined(WIN32) || defined(__VMS)
-struct	timezone {
-	int 	dummy ;
-	} ;
+struct  timezone {
+        int     dummy ;
+        } ;
 #ifndef __VMS
-int     win_kludge_socket = 0;
+SOCKET     win_kludge_socket = INVALID_SOCKET;
 #endif /* __VMS */
 #endif /* WIN32 || __VMS */
 
@@ -210,9 +271,9 @@ int
 
 #ifdef USE_PSTAT
 long long
-  *lib_idle_address[MAXCPUS], /* addresses of the per-cpu idle counters	*/
+  *lib_idle_address[MAXCPUS], /* addresses of the per-cpu idle counters */
   lib_start_count[MAXCPUS],  /* idle counter initial value per-cpu      */
-  lib_end_count[MAXCPUS];    /* idle counter final value per-cpu	*/
+  lib_end_count[MAXCPUS];    /* idle counter final value per-cpu        */
 
 long long
   *lib_base_pointer;
@@ -221,12 +282,19 @@ long long
 #ifdef USE_KSTAT
 long
   lib_start_count[MAXCPUS],  /* idle counter initial value per-cpu      */
-  lib_end_count[MAXCPUS];    /* idle counter final value per-cpu	*/
+  lib_end_count[MAXCPUS];    /* idle counter final value per-cpu        */
 
   kstat_t *cpu_ks[MAXCPUS]; /* the addresses that kstat will need to
-			       pull the cpu info from the kstat
-			       interface. at least I think that is
-			       what this is :) raj 8/2000 */
+                               pull the cpu info from the kstat
+                               interface. at least I think that is
+                               what this is :) raj 8/2000 */
+#else
+#ifdef USE_PERFSTAT
+
+long long
+  lib_start_count[MAXCPUS],  /* idle counter initial value per-cpu      */
+  lib_end_count[MAXCPUS];    /* idle counter final value per-cpu        */
+
 #else
 #ifdef USE_PROC_STAT
 long
@@ -254,9 +322,9 @@ long
 #ifdef USE_LOOPER
 
 long
-  *lib_idle_address[MAXCPUS], /* addresses of the per-cpu idle counters	*/
+  *lib_idle_address[MAXCPUS], /* addresses of the per-cpu idle counters */
   lib_start_count[MAXCPUS],  /* idle counter initial value per-cpu      */
-  lib_end_count[MAXCPUS];    /* idle counter final value per-cpu	*/
+  lib_end_count[MAXCPUS];    /* idle counter final value per-cpu        */
 
 long
   *lib_base_pointer;
@@ -264,7 +332,7 @@ long
 #ifdef WIN32
 HANDLE
   lib_idle_pids[MAXCPUS];    /* the pids (ok, handles) of the per-cpu */
-			     /* idle loopers */ 
+                             /* idle loopers */ 
 #else
 int
   lib_idle_pids[MAXCPUS];    /* the pids of the per-cpu idle loopers */
@@ -276,51 +344,69 @@ int
 #endif /* USE_LOOPER */
 #endif /* USE_SYSCTL */
 #endif /* USE_PROC_STAT */
+#endif /* USE_PERFSTAT */
 #endif /* USE_KSTAT */
 #endif /* USE_PSTAT */  
 
-int	lib_use_idle;
+int     lib_use_idle;
+int     lib_loopers_running;
 int     cpu_method;
 
  /* if there is no IDLE counter in the kernel */
 #ifdef USE_PSTAT
-struct	pst_dynamic	pst_dynamic_info;
-long			cp_time1[PST_MAX_CPUSTATES];
-long	                cp_time2[PST_MAX_CPUSTATES];
+struct  pst_dynamic     pst_dynamic_info;
+long                    cp_time1[PST_MAX_CPUSTATES];
+long                    cp_time2[PST_MAX_CPUSTATES];
 #else
 #ifdef WIN32
-#ifdef NT_SDK
-LARGE_INTEGER       systime_start;                         /* robin */
-LARGE_INTEGER       systime_end;                           /* robin */ 
-KERNEL_USER_TIMES   perf_start;                            /* robin */
-KERNEL_USER_TIMES   perf_end;                              /* robin */
-SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION sysperf_start;    /* robin */
-SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION sysperf_end;      /* robin */
-#endif /* NT_SDK */
+#ifdef NT_PERF
+
+/* The NT performance data is accessed through the NtQuerySystemInformation
+   call.  References to the PDH.DLL have been deleted.  This structure
+   is the root for these data structures. */
+
+typedef struct sPerfObj 
+{
+        LARGE_INTEGER   StartTime;
+        LARGE_INTEGER   EndTime;
+        SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION StartInfo[MAXCPUS +1];
+        SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION EndInfo[MAXCPUS +1];
+} PerfObj, *PPerfObj;
+
+static PerfObj *PerfCntrs;
+
+// Forward declarations
+
+PerfObj *InitPerfCntrs();
+void RestartPerfCntrs(PerfObj *PerfCntrs);
+double ReportPerfCntrs(PerfObj *PerfCntrs);  /* returns CPU utilization */
+void ClosePerfCntrs(PerfObj *PerfCntrs);
+
+#endif /* NT_PERF */
 #else
-struct	tms		times_data1, 
+struct  tms             times_data1, 
                         times_data2;
 #endif /* WIN32 */
 #endif
 
-struct	timeval		time1, time2;
-struct	timezone	tz;
-float	lib_elapsed,
-	lib_local_maxrate,
-	lib_remote_maxrate,
-	lib_local_cpu_util,
-	lib_remote_cpu_util;
+struct  timeval         time1, time2;
+struct  timezone        tz;
+float   lib_elapsed,
+        lib_local_maxrate,
+        lib_remote_maxrate,
+        lib_local_cpu_util,
+        lib_remote_cpu_util;
 
 float   lib_local_per_cpu_util[MAXCPUS];
 
-int	*request_array;
-int	*response_array;
+int     *request_array;
+int     *response_array;
 
-int	netlib_control = -1;
+// INVALID_SOCKET == INVALID_HANDLE_VALUE == (unsigned int)(~0) == -1
+SOCKET  netlib_control = INVALID_SOCKET;  
+SOCKET  server_sock = INVALID_SOCKET;
 
-int	server_sock = -1;
-
-int	tcp_proto_num;
+int     tcp_proto_num;
 
  /* in the past, I was overlaying a structure on an array of ints. now */
  /* I am going to have a "real" structure, and point an array of ints */
@@ -328,13 +414,13 @@ int	tcp_proto_num;
  /* the type "double." this change will mean that pre-2.1 netperfs */
  /* cannot be mixed with 2.1 and later. raj 11/95 */
 
-union	netperf_request_struct	netperf_request;
-union	netperf_response_struct	netperf_response;
+union   netperf_request_struct  netperf_request;
+union   netperf_response_struct netperf_response;
 
-FILE	*where;
+FILE    *where;
 
-char	libfmt = 'm';
-	
+char    libfmt = 'm';
+        
 #ifdef DO_DLPI
 /* some stuff for DLPI control messages */
 #define DLPI_DATA_SIZE 2048
@@ -344,7 +430,11 @@ struct strbuf control_message = {DLPI_DATA_SIZE, 0, (char *)control_data};
 
 #endif /* DO_DLPI */
 
-int	times_up;
+#ifdef WIN32
+HANDLE hAlarm = INVALID_HANDLE_VALUE;
+#endif
+
+int     times_up;
 
 #ifdef WIN32
  /* we use a getopt implementation from net.sources */
@@ -352,15 +442,13 @@ int	times_up;
  * get option letter from argument vector
  */
 int
-	opterr = 1,		/* should error messages be printed? */
-	optind = 1,		/* index into parent argv vector */
-	optopt;			/* character checked for validity */
+        opterr = 1,             /* should error messages be printed? */
+        optind = 1,             /* index into parent argv vector */
+        optopt;                 /* character checked for validity */
 char
-	*optarg;		/* argument associated with option */
+        *optarg;                /* argument associated with option */
 
-#define EMSG	""
-
-char *progname;			/* may also be defined elsewhere */
+#define EMSG    ""
 
 #endif /* WIN32 */
 
@@ -397,28 +485,28 @@ static void
 error(char *pch)
 {
   if (!opterr) {
-    return;		/* without printing */
+    return;             /* without printing */
     }
   fprintf(stderr, "%s: %s: %c\n",
-	  (NULL != progname) ? progname : "getopt", pch, optopt);
+          (NULL != program) ? program : "getopt", pch, optopt);
 }
 
 int
 getopt(int argc, char **argv, char *ostr)
 {
-  static char *place = EMSG;	/* option letter processing */
-  register char *oli;			/* option letter list index */
+  static char *place = EMSG;    /* option letter processing */
+  register char *oli;                   /* option letter list index */
   
   if (!*place) {
     /* update scanning pointer */
       if (optind >= argc || *(place = argv[optind]) != '-' || !*++place) {
-	return EOF; 
+        return EOF; 
       }
     if (*place == '-') {
       /* found "--" */
-	++optind;
-      place = EMSG ;	/* Added by shiva for Netperf */
-	return EOF;
+        ++optind;
+      place = EMSG ;    /* Added by shiva for Netperf */
+        return EOF;
     }
   }
   
@@ -431,7 +519,7 @@ getopt(int argc, char **argv, char *ostr)
     error("illegal option");
     return BADCH;
   }
-  if (*++oli != ':') {	
+  if (*++oli != ':') {  
     /* don't need argument */
     optarg = NULL;
     if (!*place)
@@ -439,19 +527,54 @@ getopt(int argc, char **argv, char *ostr)
   } else {
     /* need an argument */
     if (*place) {
-      optarg = place;		/* no white space */
+      optarg = place;           /* no white space */
     } else  if (argc <= ++optind) {
       /* no arg */
       place = EMSG;
       error("option requires an argument");
       return BADCH;
     } else {
-      optarg = argv[optind];		/* white space */
+      optarg = argv[optind];            /* white space */
     }
     place = EMSG;
     ++optind;
   }
-  return optopt;			/* return option letter */
+  return optopt;                        /* return option letter */
+}
+#endif /* WIN32 */
+
+/*----------------------------------------------------------------------------
+ * WIN32 implementation of perror, does not deal very well with WSA errors
+ * The stdlib.h version of perror only deals with the ancient XENIX error codes.
+ *
+ * +*+SAF Why can't all WSA errors go through GetLastError?  Most seem to...
+ *--------------------------------------------------------------------------*/
+
+#ifdef WIN32
+void PrintWin32Error(FILE *stream, LPSTR text)
+{
+    LPSTR    szTemp;
+    DWORD    dwResult;
+    DWORD    dwError;
+
+    dwError = GetLastError();
+    dwResult = FormatMessage(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM |FORMAT_MESSAGE_ARGUMENT_ARRAY,
+        NULL, 
+        dwError, 
+        LANG_NEUTRAL, 
+        (LPTSTR)&szTemp, 
+        0, 
+        NULL );
+
+    if (dwResult)
+        fprintf(stream, "%s: %s\n", text, szTemp);
+    else
+        fprintf(stream, "%s: error 0x%x\n", text, dwError);
+	fflush(stream);
+
+    if (szTemp)
+        LocalFree((HLOCAL)szTemp);
 }
 #endif /* WIN32 */
 
@@ -459,8 +582,7 @@ getopt(int argc, char **argv, char *ostr)
 
 
 double
-ntohd(net_double)
-     double net_double;
+ntohd(double net_double)
 
 {
   /* we rely on things being nicely packed */
@@ -498,9 +620,9 @@ ntohd(net_double)
   return(conv_rec.whole_thing);
   
 }
+
 double
-htond(host_double)
-     double host_double;
+htond(double host_double)
 
 {
   /* we rely on things being nicely packed */
@@ -557,7 +679,7 @@ get_num_cpus()
   struct pst_dynamic psd;
 
   if (pstat_getdynamic((struct pst_dynamic *)&psd, 
-		       (size_t)sizeof(psd), (size_t)1, 0) != -1) {
+                       (size_t)sizeof(psd), (size_t)1, 0) != -1) {
     temp_cpus = psd.psd_proc_cnt;
   }
   else {
@@ -570,21 +692,31 @@ get_num_cpus()
 #ifdef _SC_NPROCESSORS_ONLN
   temp_cpus = sysconf(_SC_NPROCESSORS_ONLN);
 
+#ifdef USE_PERFSTAT
+  temp_cpus = perfstat_cpu(NULL,NULL, sizeof(perfstat_cpu_t), 0);
+#endif /* USE_PERFSTAT */
+
 #else /* no _SC_NPROCESSORS_ONLN */
+
+#ifdef WIN32
+        GetSystemInfo(&SystemInfo);
+
+        temp_cpus = SystemInfo.dwNumberOfProcessors;
+#else
   /* we need to know some other ways to do this, or just fall-back on */
   /* a global command line option - raj 4/95 */
   temp_cpus = shell_num_cpus;
-
+#endif  // WIN32
 #endif /* _SC_NPROCESSORS_ONLN */
 #endif /*  __hpux */
 
   if (temp_cpus > MAXCPUS) {
     fprintf(where,
-	    "Sorry, this system has more CPUs (%d) than I can handle (%d).\n",
-	    temp_cpus,
-	    MAXCPUS);
+            "Sorry, this system has more CPUs (%d) than I can handle (%d).\n",
+            temp_cpus,
+            MAXCPUS);
     fprintf(where,
-	    "Please alter MAXCPUS in netlib.h and recompile.\n");
+            "Please alter MAXCPUS in netlib.h and recompile.\n");
     fflush(where);
     exit(1);
   }
@@ -594,23 +726,39 @@ get_num_cpus()
 }  
 
 #ifdef WIN32
+/*
+ * Number of 100 nanosecond units from 1/1/1601 to 1/1/1970
+ */
+#define EPOCH_BIAS  116444736000000000i64
+
+/*
+ * Union to facilitate converting from FILETIME to unsigned __int64
+ */
+typedef union {
+        unsigned __int64 ft_scalar;
+        FILETIME ft_struct;
+} FT;
+
 void
 gettimeofday( struct timeval *tv , struct timezone *not_used )
 {
-	SYSTEMTIME	sys_time ;
-	GetSystemTime( &sys_time ) ;
+        FT nt_time;
+        __int64 UnixTime;  // microseconds since 1/1/1970
 
-	tv->tv_sec = (long)time(NULL) ;
-	tv->tv_usec = sys_time.wMilliseconds ;
+        GetSystemTimeAsFileTime( &(nt_time.ft_struct) );
+
+        UnixTime = ((nt_time.ft_scalar - EPOCH_BIAS) / 10i64);
+        tv->tv_sec = (long)(time_t)(UnixTime / 1000000i64);
+        tv->tv_usec = (unsigned long)(UnixTime % 1000000i64);
 }
 #endif /* WIN32 */
 
      
 
 /************************************************************************/
-/*									*/
-/*	signal catcher		                                	*/
-/*									*/
+/*                                                                      */
+/*      signal catcher                                                  */
+/*                                                                      */
 /************************************************************************/
 
 void
@@ -620,8 +768,7 @@ catcher(sig, code, scp)
      int code;
      struct sigcontext *scp;
 #else 
-catcher(sig)
-     int sig;
+catcher(int sig)
 #endif /* __hpux || __VMS */
 {
 
@@ -630,7 +777,7 @@ catcher(sig)
     fprintf(where,"caught signal %d ",sig);
     if (scp) {
       fprintf(where,"while in syscall %d\n",
-	      scp->sc_syscall);
+              scp->sc_syscall);
     }
     else {
       fprintf(where,"null scp\n");
@@ -650,8 +797,8 @@ catcher(sig)
    if (--test_len_ticks == 0) {
       /* the test is over */
       if (times_up != 0) {
-	fprintf(where,"catcher: timer popped with times_up != 0\n");
-	fflush(where);
+        fprintf(where,"catcher: timer popped with times_up != 0\n");
+        fflush(where);
       }
       times_up = 1;
 #ifdef INTERVALS
@@ -669,27 +816,27 @@ catcher(sig)
       /* OPERATING SYSTEMS. If you know how, please let me know. rick */
       /* jones <raj@cup.hp.com> */
       if (scp->sc_syscall != SYS_SIGSUSPEND) {
-	if (debug > 2) {
-	  fprintf(where,
-		  "catcher: Time to send burst > interval!\n");
-	  fflush(where);
-	}
-	scp->sc_syscall_action = SIG_RESTART;
+        if (debug > 2) {
+          fprintf(where,
+                  "catcher: Time to send burst > interval!\n");
+          fflush(where);
+        }
+        scp->sc_syscall_action = SIG_RESTART;
       }
 #endif /* __hpux */
       if (demo_mode) {
-	/* spit-out what the performance was in units/s. based on our */
-	/* knowledge of the interval length we do not need to call */
-	/* gettimeofday() raj 2/95 */
-	fprintf(where,"%g\n",(units_this_tick * 
-			      (double) 1000000 / 
-			      (double) usec_per_itvl));
-	fflush(where);
-	units_this_tick = (double) 0.0;
+        /* spit-out what the performance was in units/s. based on our */
+        /* knowledge of the interval length we do not need to call */
+        /* gettimeofday() raj 2/95 */
+        fprintf(where,"%g\n",(units_this_tick * 
+                              (double) 1000000 / 
+                              (double) usec_per_itvl));
+        fflush(where);
+        units_this_tick = (double) 0.0;
       }
 #else /* INTERVALS */
       fprintf(where,
-	      "catcher: interval timer running unexpectedly!\n");
+              "catcher: interval timer running unexpectedly!\n");
       fflush(where);
       times_up = 1;
 #endif /* INTERVALS */      
@@ -726,11 +873,11 @@ install_signal_catchers()
   for (i = 1; i <= NSIG; i++) {
     if (i != SIGALRM) {
       if (sigaction(i,&action,NULL) != 0) {
-	fprintf(where,
-		"Could not install signal catcher for sig %d, errno %d\n",
-		i,
-		errno);
-	fflush(where);
+        fprintf(where,
+                "Could not install signal catcher for sig %d, errno %d\n",
+                i,
+                errno);
+        fflush(where);
 
       }
     }
@@ -742,48 +889,80 @@ install_signal_catchers()
 
 
 #ifdef WIN32
-#define SIGALRM	(14)
+#define SIGALRM (14)
 void
 emulate_alarm( int seconds )
 {
+	DWORD ErrorCode;
 
-	Sleep( seconds * 1000 ) ;
+	// Wait on this event for parm seconds.
 
-	times_up = 1;
+	ErrorCode = WaitForSingleObject(hAlarm, seconds*1000);
+	if (ErrorCode == WAIT_FAILED)
+	{
+		perror("WaitForSingleObject failed");
+		exit(1);
+	}
 
-	/* We have yet to find a good way to fully emulate the effects */
-	/* of signals and getting EINTR from system calls under */
-	/* winsock, so what we do here is close the socket out from */
-	/* under the other thread. it is rather kludgy, but should be */
-	/* sufficient to get this puppy shipped. the concept can be */
-	/* attributed/blamed :) on Robin raj 1/96 */
+	if (ErrorCode == WAIT_TIMEOUT)
+	{
+		// WaitForSingleObject timed out; this means the timer wasn't canceled.
 
-	if (win_kludge_socket != 0) {
-	  closesocket(win_kludge_socket);
+        times_up = 1;
+
+        /* We have yet to find a good way to fully emulate the effects */
+        /* of signals and getting EINTR from system calls under */
+        /* winsock, so what we do here is close the socket out from */
+        /* under the other thread.  It is rather kludgy, but should be */
+        /* sufficient to get this puppy shipped.  The concept can be */
+        /* attributed/blamed :) on Robin raj 1/96 */
+
+        if (win_kludge_socket != INVALID_SOCKET) {
+          closesocket(win_kludge_socket);
+        }
 	}
 }
 
 #endif /* WIN32 */
 
 void
-start_timer(time)
-     int time;
+start_timer(int time)
 {
 
 #ifdef WIN32
-struct	sigaction {
-	int dummy ;
-	} ;
-void	emulate_alarm(int) ;
+	//+*+SAF What if StartTimer is called twice without the first timer
+	//+*+SAF expiring?
 
-long	thread_id ;
+	DWORD  thread_id ;
+	HANDLE tHandle;
 
-CreateThread(0,
-	     0,
-	     (LPTHREAD_START_ROUTINE)emulate_alarm,
-	     (LPVOID)time,
-	     0,
-	     &thread_id ) ;
+	if (hAlarm == (HANDLE) INVALID_HANDLE_VALUE)
+	{
+		// Create the Alarm event object
+		hAlarm = CreateEvent( 
+			(LPSECURITY_ATTRIBUTES) NULL,	  // no security
+			FALSE,	 // auto reset event
+			FALSE,   // init. state = reset
+			(void *)NULL);  // unnamed event object
+		if (hAlarm == (HANDLE) INVALID_HANDLE_VALUE)
+		{
+			perror("CreateEvent failure");
+			exit(1);
+		}
+	}
+	else
+	{
+		ResetEvent(hAlarm);
+	}
+
+
+	tHandle = CreateThread(0,
+					       0,
+						   (LPTHREAD_START_ROUTINE)emulate_alarm,
+						   (LPVOID)(ULONG_PTR)time,
+						   0,		
+						   &thread_id ) ;
+	CloseHandle(tHandle);
 
 #else /* not WIN32 */
 
@@ -816,8 +995,8 @@ if (debug) {
   /* this is the easy case - just set the timer for so many seconds */ 
   if (alarm(time) != 0) {
     fprintf(where,
-	    "error starting alarm timer, errno %d\n",
-	    errno);
+            "error starting alarm timer, errno %d\n",
+            errno);
     fflush(where);
   }
 #endif /* WIN32 */
@@ -835,6 +1014,10 @@ stop_timer()
   alarm(0);
 #else
   /* at some point we may need some win32 equivalent */
+  	if (hAlarm != (HANDLE) INVALID_HANDLE_VALUE)
+	{
+		SetEvent(hAlarm);
+	}
 #endif /* WIN32 */
 
 }
@@ -863,7 +1046,7 @@ start_itimer( interval_len_msec )
   /* the number of itimer events */
 
   ticks_per_itvl = ((interval_wate * sysconf(_SC_CLK_TCK) * 1000) / 
-		    1000000);
+                    1000000);
 
   if (ticks_per_itvl == 0) ticks_per_itvl = 1;
 
@@ -882,10 +1065,10 @@ start_itimer( interval_len_msec )
 
   if (debug) {
     fprintf(where,"setting the interval timer to %d sec %d usec ",
-	    usec_per_itvl / 1000000,
-	    usec_per_itvl % 1000000);
+            usec_per_itvl / 1000000,
+            usec_per_itvl % 1000000);
     fprintf(where,"test len %d ticks\n",
-	    test_len_ticks);
+            test_len_ticks);
     fflush(where);
   }
 
@@ -905,11 +1088,11 @@ start_itimer( interval_len_msec )
 #endif /* INTERVALS */
 
 /****************************************************************/
-/*								*/
-/*	netlib_init()						*/
-/*								*/
-/*	initialize the performance library...			*/
-/*								*/
+/*                                                              */
+/*      netlib_init()                                           */
+/*                                                              */
+/*      initialize the performance library...                   */
+/*                                                              */
 /****************************************************************/
 
 void
@@ -917,7 +1100,8 @@ netlib_init()
 {
   int i;
 
-  where		   = stdout;
+  where            = stdout;
+  lib_loopers_running = 0;
 
   request_array = (int *)(&netperf_request);
   response_array = (int *)(&netperf_response);
@@ -928,11 +1112,11 @@ netlib_init()
 
   if (debug) {
     fprintf(where,
-	    "netlib_init: request_array at %p\n",
-	    request_array);
+            "netlib_init: request_array at %p\n",
+            request_array);
     fprintf(where,
-	    "netlib_init: response_array at %p\n",
-	    response_array);
+            "netlib_init: response_array at %p\n",
+            response_array);
 
     fflush(where);
   }
@@ -946,8 +1130,7 @@ netlib_init()
  /* If they inter 32m, the number will be converted to 32 * 1000 * */
  /* 1000 */
 unsigned int
-convert(string)
-     char *string;
+convert(char *string)
 
 {
   unsigned int base;
@@ -983,11 +1166,7 @@ convert(string)
  /* any particular data */
 
 struct ring_elt *
-allocate_buffer_ring(width, buffer_size, alignment, offset)
-     int width;
-     int buffer_size;
-     int alignment;
-     int offset;
+allocate_buffer_ring(int width, int buffer_size, int alignment, int offset)
 {
 
   struct ring_elt *first_link = NULL;
@@ -1019,37 +1198,56 @@ allocate_buffer_ring(width, buffer_size, alignment, offset)
     }
   }
 
+  assert(width >= 1);
+
   prev_link = NULL;
   for (i = 1; i <= width; i++) {
     /* get the ring element */
     temp_link = (struct ring_elt *)malloc(sizeof(struct ring_elt));
+    if (temp_link == NULL) {
+      printf("malloc(%ld) failed!\n", sizeof(struct ring_elt));
+      exit(1);
+	}
     /* remember the first one so we can close the ring at the end */
     if (i == 1) {
       first_link = temp_link;
     }
     temp_link->buffer_base = (char *)malloc(malloc_size);
+    if (temp_link == NULL) {
+      printf("malloc(%d) failed!\n", malloc_size);
+      exit(1);
+	}
+
+#ifndef WIN32
     temp_link->buffer_ptr = (char *)(( (long)(temp_link->buffer_base) + 
-			  (long)alignment - 1) &	
-			 ~((long)alignment - 1));
+                          (long)alignment - 1) &        
+                         ~((long)alignment - 1));
+#else
+    temp_link->buffer_ptr = (char *)(( (ULONG_PTR)(temp_link->buffer_base) + 
+                          (ULONG_PTR)alignment - 1) &   
+                         ~((ULONG_PTR)alignment - 1));
+#endif
     temp_link->buffer_ptr += offset;
     /* is where the buffer fill code goes. */
     if (do_fill) {
       bytes_left = buffer_size;
       while (bytes_left) {
-	if (((bytes_read = fread(temp_link->buffer_ptr,
-				 1,
-				 bytes_left,
-				 fill_source)) == 0) &&
-	    (feof(fill_source))){
-	  rewind(fill_source);
-	}
-	bytes_left -= bytes_read;
+        if (((bytes_read = (int)fread(temp_link->buffer_ptr,
+                                 1,
+                                 bytes_left,
+                                 fill_source)) == 0) &&
+            (feof(fill_source))){
+          rewind(fill_source);
+        }
+        bytes_left -= bytes_read;
       }
     }
     temp_link->next = prev_link;
     prev_link = temp_link;
   }
-  first_link->next = temp_link;
+  if (first_link) {  //SAF Prefast made me do it...
+    first_link->next = temp_link;
+  }
 
   return(first_link); /* it's a circle, doesn't matter which we return */
 }
@@ -1063,9 +1261,9 @@ allocate_buffer_ring(width, buffer_size, alignment, offset)
 
 struct sendfile_ring_elt *
 alloc_sendfile_buf_ring(int width,
-			int buffer_size,
-			int alignment,
-			int offset)
+                        int buffer_size,
+                        int alignment,
+                        int offset)
 
 {
 
@@ -1116,6 +1314,10 @@ alloc_sendfile_buf_ring(int width,
 
     temp_link = (struct sendfile_ring_elt *)
       malloc(sizeof(struct sendfile_ring_elt));
+    if (temp_link == NULL) {
+      printf("malloc(%ld) failed!\n", sizeof(struct sendfile_ring_elt));
+      exit(1);
+	}
 
     /* remember the first one so we can close the ring at the end */
 
@@ -1150,13 +1352,13 @@ alloc_sendfile_buf_ring(int width,
 
 
  /***********************************************************************/
- /*									*/
- /*	dump_request()							*/
- /*									*/
- /* display the contents of the request array to the user. it will	*/
- /* display the contents in decimal, hex, and ascii, with four bytes	*/
- /* per line.								*/
- /*									*/
+ /*                                                                     */
+ /*     dump_request()                                                  */
+ /*                                                                     */
+ /* display the contents of the request array to the user. it will      */
+ /* display the contents in decimal, hex, and ascii, with four bytes    */
+ /* per line.                                                           */
+ /*                                                                     */
  /***********************************************************************/
 
 void
@@ -1166,28 +1368,28 @@ int counter = 0;
 fprintf(where,"request contents:\n");
 for (counter = 0; counter < ((sizeof(netperf_request)/4)-3); counter += 4) {
   fprintf(where,"%d:\t%8x %8x %8x %8x \t|%4.4s| |%4.4s| |%4.4s| |%4.4s|\n",
-	  counter,
-	  request_array[counter],
-	  request_array[counter+1],
-	  request_array[counter+2],
-	  request_array[counter+3],
-	  (char *)&request_array[counter],
-	  (char *)&request_array[counter+1],
-	  (char *)&request_array[counter+2],
-	  (char *)&request_array[counter+3]);
+          counter,
+          request_array[counter],
+          request_array[counter+1],
+          request_array[counter+2],
+          request_array[counter+3],
+          (char *)&request_array[counter],
+          (char *)&request_array[counter+1],
+          (char *)&request_array[counter+2],
+          (char *)&request_array[counter+3]);
 }
 fflush(where);
 }
 
 
  /***********************************************************************/
- /*									*/
- /*	dump_response()							*/
- /*									*/
- /* display the content of the response array to the user. it will	*/
- /* display the contents in decimal, hex, and ascii, with four bytes	*/
- /* per line.								*/
- /*									*/
+ /*                                                                     */
+ /*     dump_response()                                                 */
+ /*                                                                     */
+ /* display the content of the response array to the user. it will      */
+ /* display the contents in decimal, hex, and ascii, with four bytes    */
+ /* per line.                                                           */
+ /*                                                                     */
  /***********************************************************************/
 
 void
@@ -1198,67 +1400,64 @@ int counter = 0;
 fprintf(where,"response contents\n");
 for (counter = 0; counter < ((sizeof(netperf_response)/4)-3); counter += 4) {
   fprintf(where,"%d:\t%8x %8x %8x %8x \t>%4.4s< >%4.4s< >%4.4s< >%4.4s<\n",
-	  counter,
-	  response_array[counter],
-	  response_array[counter+1],
-	  response_array[counter+2],
-	  response_array[counter+3],
-	  (char *)&response_array[counter],
-	  (char *)&response_array[counter+1],
-	  (char *)&response_array[counter+2],
-	  (char *)&response_array[counter+3]);
+          counter,
+          response_array[counter],
+          response_array[counter+1],
+          response_array[counter+2],
+          response_array[counter+3],
+          (char *)&response_array[counter],
+          (char *)&response_array[counter+1],
+          (char *)&response_array[counter+2],
+          (char *)&response_array[counter+3]);
 }
 fflush(where);
 }
 
  /***********************************************************************/
- /*									*/
- /*	format_number()							*/
- /*									*/
+ /*                                                                     */
+ /*     format_number()                                                 */
+ /*                                                                     */
  /* return a pointer to a formatted string containing the value passed  */
  /* translated into the units specified. It assumes that the base units */
  /* are bytes. If the format calls for bits, it will use SI units (10^) */
- /* if the format calls for bytes, it will use CS units (2^)...		*/
- /* This routine should look familiar to uses of the latest ttcp...	*/
- /*									*/
+ /* if the format calls for bytes, it will use CS units (2^)...         */
+ /* This routine should look familiar to uses of the latest ttcp...     */
+ /*                                                                     */
  /***********************************************************************/
 
 char *
-format_number(number)
-double	number;
+format_number(double number)
 {
-	static	char	fmtbuf[64];
-	
-	switch (libfmt) {
-	case 'K':
-		sprintf(fmtbuf, "%-7.2f" , number / 1024.0);
-		break;
-	case 'M':
-		sprintf(fmtbuf, "%-7.2f", number / 1024.0 / 1024.0);
-		break;
-	case 'G':
-		sprintf(fmtbuf, "%-7.2f", number / 1024.0 / 1024.0 / 1024.0);
-		break;
-	case 'k':
-		sprintf(fmtbuf, "%-7.2f", number * 8 / 1000.0);
-		break;
-	case 'm':
-		sprintf(fmtbuf, "%-7.2f", number * 8 / 1000.0 / 1000.0);
-		break;
-	case 'g':
-		sprintf(fmtbuf, "%-7.2f", number * 8 / 1000.0 / 1000.0 / 1000.0);
-		break;
+        static  char    fmtbuf[64];
+        
+        switch (libfmt) {
+        case 'K':
+                snprintf(fmtbuf, sizeof(fmtbuf),  "%-7.2f" , number / 1024.0);
+                break;
+        case 'M':
+                snprintf(fmtbuf, sizeof(fmtbuf),  "%-7.2f", number / 1024.0 / 1024.0);
+                break;
+        case 'G':
+                snprintf(fmtbuf, sizeof(fmtbuf),  "%-7.2f", number / 1024.0 / 1024.0 / 1024.0);
+                break;
+        case 'k':
+                snprintf(fmtbuf, sizeof(fmtbuf),  "%-7.2f", number * 8 / 1000.0);
+                break;
+        case 'm':
+                snprintf(fmtbuf, sizeof(fmtbuf),  "%-7.2f", number * 8 / 1000.0 / 1000.0);
+                break;
+        case 'g':
+                snprintf(fmtbuf, sizeof(fmtbuf),  "%-7.2f", number * 8 / 1000.0 / 1000.0 / 1000.0);
+                break;
+                default:
+                snprintf(fmtbuf, sizeof(fmtbuf),  "%-7.2f", number / 1024.0);
+        }
 
-		default:
-		sprintf(fmtbuf, "%-7.2f", number / 1024.0);
-	}
-
-	return fmtbuf;
+        return fmtbuf;
 }
 
 char
-format_cpu_method(method)
-     int method;
+format_cpu_method(int method)
 {
 
   char method_char;
@@ -1275,6 +1474,9 @@ format_cpu_method(method)
     break;
   case KSTAT:
     method_char = 'K';
+    break;
+  case PERFSTAT:
+    method_char = 'E';
     break;
   case TIMES:
     method_char = 'T';
@@ -1305,30 +1507,30 @@ format_cpu_method(method)
 char *
 format_units()
 {
-  static	char	unitbuf[64];
+  static        char    unitbuf[64];
   
   switch (libfmt) {
   case 'K':
-    sprintf(unitbuf, "%s", "KBytes");
+    strcpy(unitbuf, "KBytes");
     break;
   case 'M':
-    sprintf(unitbuf, "%s", "MBytes");
+    strcpy(unitbuf, "MBytes");
     break;
   case 'G':
-    sprintf(unitbuf, "%s", "GBytes");
+    strcpy(unitbuf, "GBytes");
     break;
   case 'k':
-    sprintf(unitbuf, "%s", "10^3bits");
+    strcpy(unitbuf, "10^3bits");
     break;
   case 'm':
-    sprintf(unitbuf, "%s", "10^6bits");
+    strcpy(unitbuf, "10^6bits");
     break;
   case 'g':
-    sprintf(unitbuf, "%s", "10^9bits");
+    strcpy(unitbuf, "10^9bits");
     break;
     
   default:
-    sprintf(unitbuf, "%s", "KBytes");
+    strcpy(unitbuf, "KBytes");
   }
   
   return unitbuf;
@@ -1336,9 +1538,9 @@ format_units()
 
 
 /****************************************************************/
-/*								*/
-/*	shutdown_control()					*/
-/*								*/
+/*                                                              */
+/*      shutdown_control()                                      */
+/*                                                              */
 /* tear-down the control connection between me and the server.  */
 /****************************************************************/
 
@@ -1346,25 +1548,24 @@ void
 shutdown_control()
 {
 
-  char 	*buf = (char *)&netperf_response;
-  int 	buflen = sizeof(netperf_response);
+  char  *buf = (char *)&netperf_response;
+  int   buflen = sizeof(netperf_response);
 
   /* stuff for select, use fd_set for better compliance */
-  fd_set	readfds;
-  struct	timeval	timeout;
+  fd_set        readfds;
+  struct        timeval timeout;
 
   if (debug) {
     fprintf(where,
-	    "shutdown_control: shutdown of control connection requested.\n");
+            "shutdown_control: shutdown of control connection requested.\n");
     fflush(where);
   }
 
   /* first, we say that we will be sending no more data on the */
   /* connection */
-  if (shutdown(netlib_control,1) == -1) {
-    fprintf(where,
-	    "shutdown_control: error in shutdown. errno %d\n",
-	    errno);
+  if (shutdown(netlib_control,1) == SOCKET_ERROR) {
+    Print_errno(where,
+            "shutdown_control: error in shutdown");
     fflush(where);
     exit(1);
   }
@@ -1379,19 +1580,18 @@ shutdown_control()
 
   FD_ZERO(&readfds);
   FD_SET(netlib_control,&readfds);
-  timeout.tv_sec  = 60; /* wait two minutes then punt */
+  timeout.tv_sec  = 60; /* wait one minute then punt */
   timeout.tv_usec = 0;
 
   /* select had better return one, or there was either a problem or a */
   /* timeout... */
   if (select(FD_SETSIZE,
-	     &readfds,
-	     0,
-	     0,
-	     &timeout) != 1) {
-    fprintf(where,
-	    "shutdown_control: no response received. errno %d\n",
-	    errno);
+             &readfds,
+             0,
+             0,
+             &timeout) != 1) {
+    Print_errno(where,
+            "shutdown_control: no response received");
     fflush(where);
     exit(1);
   }
@@ -1403,21 +1603,21 @@ shutdown_control()
 
 
  /***********************************************************************/
- /*									*/
- /*	send_request()							*/
- /*									*/
- /* send a netperf request on the control socket to the remote half of 	*/
- /* the connection. to get us closer to intervendor interoperability, 	*/
- /* we will call htonl on each of the int that compose the message to 	*/
- /* be sent. the server-half of the connection will call the ntohl 	*/
- /* routine to undo any changes that may have been made... 		*/
- /* 									*/
+ /*                                                                     */
+ /*     send_request()                                                  */
+ /*                                                                     */
+ /* send a netperf request on the control socket to the remote half of  */
+ /* the connection. to get us closer to intervendor interoperability,   */
+ /* we will call htonl on each of the int that compose the message to   */
+ /* be sent. the server-half of the connection will call the ntohl      */
+ /* routine to undo any changes that may have been made...              */
+ /*                                                                     */
  /***********************************************************************/
 
 void
 send_request()
 {
-  int	counter=0;
+  int   counter=0;
   
   /* display the contents of the request if the debug level is high */
   /* enough. otherwise, just send the darned thing ;-) */
@@ -1443,16 +1643,16 @@ send_request()
     dump_request();
 
     fprintf(where,
-	    "\nsend_request: about to send %ld bytes from %p\n",
-	    sizeof(netperf_request),
-	    &netperf_request);
+            "\nsend_request: about to send %ld bytes from %p\n",
+            sizeof(netperf_request),
+            &netperf_request);
     fflush(where);
   }
 
   if (send(netlib_control,
-	   (char *)&netperf_request,
-	   sizeof(netperf_request),
-	   0) != sizeof(netperf_request)) {
+           (char *)&netperf_request,
+           sizeof(netperf_request),
+           0) != sizeof(netperf_request)) {
     perror("send_request: send call failure");
     
     exit(1);
@@ -1460,29 +1660,30 @@ send_request()
 }
 
 /***********************************************************************/
- /*									*/
- /*	send_response()							*/
- /*									*/
+ /*                                                                     */
+ /*     send_response()                                                 */
+ /*                                                                     */
  /* send a netperf response on the control socket to the remote half of */
- /* the connection. to get us closer to intervendor interoperability, 	*/
- /* we will call htonl on each of the int that compose the message to 	*/
- /* be sent. the other half of the connection will call the ntohl 	*/
- /* routine to undo any changes that may have been made... 		*/
- /* 									*/
+ /* the connection. to get us closer to intervendor interoperability,   */
+ /* we will call htonl on each of the int that compose the message to   */
+ /* be sent. the other half of the connection will call the ntohl       */
+ /* routine to undo any changes that may have been made...              */
+ /*                                                                     */
  /***********************************************************************/
 
 void
 send_response()
 {
-  int	counter=0;
+  int   counter=0;
+  int	bytes_sent;
 
   /* display the contents of the request if the debug level is high */
   /* enough. otherwise, just send the darned thing ;-) */
 
   if (debug > 1) {
     fprintf(where,
-	    "send_response: contents of %u ints before htonl\n",
-	    sizeof(netperf_response)/4);
+            "send_response: contents of %lu ints before htonl\n",
+            sizeof(netperf_response)/4);
     dump_response();
   }
 
@@ -1498,49 +1699,51 @@ send_response()
   
   if (debug > 1) {
     fprintf(where,
-	    "send_response: contents after htonl\n");
+            "send_response: contents after htonl\n");
     dump_response();
     fprintf(where,
-	    "about to send %u bytes from %p\n",
-	    sizeof(netperf_response),
-	    &netperf_response);
+            "about to send %lu bytes from %p\n",
+            sizeof(netperf_response),
+            &netperf_response);
     fflush(where);
   }
 
   /*KC*/
-  if (send(server_sock,
-	   (char *)&netperf_response,
-	   sizeof(netperf_response),
-	   0) != sizeof(netperf_response)) {
+  if ((bytes_sent = send(server_sock,
+           (char *)&netperf_response,
+           sizeof(netperf_response),
+           0)) != sizeof(netperf_response)) {
     perror("send_response: send call failure");
+	fprintf(where, "BytesSent: %d\n", bytes_sent);
     exit(1);
   }
   
 }
 
  /***********************************************************************/
- /* 									*/
- /*	recv_request()							*/
- /*									*/
- /* receive the remote's request on the control socket. we will put	*/
- /* the entire response into host order before giving it to the		*/
- /* calling routine. hopefully, this will go most of the way to		*/
- /* insuring intervendor interoperability. if there are any problems,	*/
- /* we will just punt the entire situation.				*/
- /*									*/
+ /*                                                                     */
+ /*     recv_request()                                                  */
+ /*                                                                     */
+ /* receive the remote's request on the control socket. we will put     */
+ /* the entire response into host order before giving it to the         */
+ /* calling routine. hopefully, this will go most of the way to         */
+ /* insuring intervendor interoperability. if there are any problems,   */
+ /* we will just punt the entire situation.                             */
+ /*                                                                     */
  /***********************************************************************/
 
 void
 recv_request()
 {
-int 	tot_bytes_recvd,
+int     tot_bytes_recvd,
         bytes_recvd, 
         bytes_left;
-char 	*buf = (char *)&netperf_request;
-int	buflen = sizeof(netperf_request);
-int	counter;
+char    *buf = (char *)&netperf_request;
+int     buflen = sizeof(netperf_request);
+int     counter;
 
-tot_bytes_recvd = 0;	
+tot_bytes_recvd = 0;    
+bytes_recvd = 0;        // nt_lint; bytes_recvd uninitialized if buflen == 0
 bytes_left      = buflen;
 while ((tot_bytes_recvd != buflen) &&
        ((bytes_recvd = recv(server_sock, buf, bytes_left,0)) > 0 )) {
@@ -1557,19 +1760,14 @@ for (counter = 0; counter < sizeof(netperf_request)/sizeof(int); counter++) {
 
 if (debug) {
   fprintf(where,
-	  "recv_request: received %d bytes of request.\n",
-	  tot_bytes_recvd);
+          "recv_request: received %d bytes of request.\n",
+          tot_bytes_recvd);
   fflush(where);
 }
 
-#ifdef WIN32
-if (bytes_recvd == SOCKET_ERROR ) {
-#else
-if (bytes_recvd == -1) {
-#endif /* WIN32 */
-  fprintf(where,
-	  "recv_request: error on recv, errno %d\n",
-	  errno);
+if (bytes_recvd == SOCKET_ERROR) {
+  Print_errno(where,
+          "recv_request: error on recv");
   fflush(where);
   exit(1);
 }
@@ -1580,11 +1778,13 @@ if (bytes_recvd == 0) {
 
   if (debug) {
     fprintf(where,
-	    "recv_request: remote reqeusted shutdown of control\n");
+            "recv_request: remote requested shutdown of control\n");
     fflush(where);
   }
 
-  shutdown_control();
+  if (netlib_control != INVALID_SOCKET) {
+        shutdown_control();
+  }
   exit(0);
 }
 
@@ -1593,8 +1793,8 @@ if (tot_bytes_recvd < buflen) {
     dump_request();
 
   fprintf(where,
-	  "recv_request: partial request received of %d bytes\n",
-	  tot_bytes_recvd);
+          "recv_request: partial request received of %d bytes\n",
+          tot_bytes_recvd);
   fflush(where);
   exit(1);
 }
@@ -1605,36 +1805,36 @@ if (debug > 1) {
 }
 
  /***********************************************************************/
- /* 									*/
- /*	recv_response()							*/
- /*									*/
- /* receive the remote's response on the control socket. we will put	*/
- /* the entire response into host order before giving it to the		*/
- /* calling routine. hopefully, this will go most of the way to		*/
- /* insuring intervendor interoperability. if there are any problems,	*/
- /* we will just punt the entire situation.				*/
- /*									*/
- /* The call to select at the beginning is to get us out of hang	*/
- /* situations where the remote gives-up but we don't find-out about	*/
- /* it. This seems to happen only rarely, but it would be nice to be	*/
- /* somewhat robust ;-)							*/
+ /*                                                                     */
+ /*     recv_response()                                                 */
+ /*                                                                     */
+ /* receive the remote's response on the control socket. we will put    */
+ /* the entire response into host order before giving it to the         */
+ /* calling routine. hopefully, this will go most of the way to         */
+ /* insuring intervendor interoperability. if there are any problems,   */
+ /* we will just punt the entire situation.                             */
+ /*                                                                     */
+ /* The call to select at the beginning is to get us out of hang        */
+ /* situations where the remote gives-up but we don't find-out about    */
+ /* it. This seems to happen only rarely, but it would be nice to be    */
+ /* somewhat robust ;-)                                                 */
  /***********************************************************************/
 
 void
 recv_response()
 {
-int 	tot_bytes_recvd,
+int     tot_bytes_recvd,
         bytes_recvd = 0, 
         bytes_left;
-char 	*buf = (char *)&netperf_response;
-int 	buflen = sizeof(netperf_response);
-int	counter;
+char    *buf = (char *)&netperf_response;
+int     buflen = sizeof(netperf_response);
+int     counter;
 
  /* stuff for select, use fd_set for better compliance */
-fd_set	readfds;
-struct	timeval	timeout;
+fd_set  readfds;
+struct  timeval timeout;
 
-tot_bytes_recvd = 0;	
+tot_bytes_recvd = 0;    
 bytes_left      = buflen;
 
 /* zero out the response structure */
@@ -1650,21 +1850,25 @@ for (counter = 0; counter < sizeof(netperf_response)/sizeof(int); counter++) {
 
 FD_ZERO(&readfds);
 FD_SET(netlib_control,&readfds);
-timeout.tv_sec  = 60; /* wait one minute then punt */
+timeout.tv_sec  = 120; /* wait two minutes before punting - the
+                          USE_LOOPER CPU stuff may cause remote's to
+                          have a bit longer time of it than 60 seconds 
+                          would allow.  triggered by fix from Jeff
+                          Dwork. */
 timeout.tv_usec = 0;
 
  /* select had better return one, or there was either a problem or a */
  /* timeout... */
 
 if ((counter = select(FD_SETSIZE,
-		      &readfds,
-		      0,
-		      0,
-		      &timeout)) != 1) {
+                      &readfds,
+                      0,
+                      0,
+                      &timeout)) != 1) {
   fprintf(where,
-	  "netperf: receive_response: no response received. errno %d counter %d\n",
-	  errno,
-	  counter);
+          "netperf: receive_response: no response received. errno %d counter %d\n",
+          errno,
+          counter);
   exit(1);
 }
 
@@ -1677,7 +1881,7 @@ while ((tot_bytes_recvd != buflen) &&
 
 if (debug) {
   fprintf(where,"recv_response: received a %d byte response\n",
-	  tot_bytes_recvd);
+          tot_bytes_recvd);
   fflush(where);
 }
 
@@ -1687,14 +1891,14 @@ for (counter = 0; counter < sizeof(netperf_response)/sizeof(int); counter++) {
   response_array[counter] = ntohl(response_array[counter]);
 }
 
-if (bytes_recvd == -1) {
-	perror("recv_response");
-	exit(1);
+if (bytes_recvd == SOCKET_ERROR) {
+        perror("recv_response");
+        exit(1);
 }
 if (tot_bytes_recvd < buflen) {
   fprintf(stderr,
-	  "recv_response: partial response received: %d bytes\n",
-	  tot_bytes_recvd);
+          "recv_response: partial response received: %d bytes\n",
+          tot_bytes_recvd);
   fflush(stderr);
   if (debug > 1)
     dump_response();
@@ -1795,8 +1999,8 @@ open_kstat()
       kc = kstat_open();
       if (!kc)
         {
-	  perror("kstat_open ");
-	  exit(1);
+          perror("kstat_open ");
+          exit(1);
         }
       changed = 1;
       kcid = kc->kc_chain_id;
@@ -1856,34 +2060,34 @@ open_kstat()
     }
     
     for (ks = kc->kc_chain; ks;
-	 ks = ks->ks_next)
+         ks = ks->ks_next)
       {
-	if (strncmp(ks->ks_name, "cpu_stat", 8) == 0)
-	  {
-	    nkcid = kstat_read(kc, ks, NULL);
-	    /* if kcid changed, pointer might be invalid. we'll deal
-	       wtih changes at this stage, but will not accept them
-	       when we are actually in the middle of reading
-	       values. hopefully this is not going to be a big
-	       issue. raj 8/2000 */
-	    UPDKCID(nkcid, kcid);
-	    
-	    if (debug) {
-	      fprintf(where,"cpu_ks[%d] getting %p\n",ncpu,ks);
-	      fflush(where);
-	    }
+        if (strncmp(ks->ks_name, "cpu_stat", 8) == 0)
+          {
+            nkcid = kstat_read(kc, ks, NULL);
+            /* if kcid changed, pointer might be invalid. we'll deal
+               wtih changes at this stage, but will not accept them
+               when we are actually in the middle of reading
+               values. hopefully this is not going to be a big
+               issue. raj 8/2000 */
+            UPDKCID(nkcid, kcid);
+            
+            if (debug) {
+              fprintf(where,"cpu_ks[%d] getting %p\n",ncpu,ks);
+              fflush(where);
+            }
 
-	    cpu_ks[ncpu] = ks;
-	    ncpu++;
-	    if (ncpu > lib_num_loc_cpus)
-	      {
-		/* with the check above, would we ever hit this? */
-		fprintf(stderr, 
-			"kstat finds too many cpus %d: should be %d\n",
-			ncpu,lib_num_loc_cpus);
-		exit(1);
-	      }
-	  }
+            cpu_ks[ncpu] = ks;
+            ncpu++;
+            if (ncpu > lib_num_loc_cpus)
+              {
+                /* with the check above, would we ever hit this? */
+                fprintf(stderr, 
+                        "kstat finds too many cpus %d: should be %d\n",
+                        ncpu,lib_num_loc_cpus);
+                exit(1);
+              }
+          }
       }
     /* note that ncpu could be less than ncpus, but that's okay */
     changed = 0;
@@ -1900,9 +2104,9 @@ get_kstat_idle(cpu)
 
   if (debug) {
     fprintf(where,
-	    "get_kstat_idle reading with kc %x and ks %p\n",
-	    kc,
-	    cpu_ks[cpu]);
+            "get_kstat_idle reading with kc %x and ks %p\n",
+            kc,
+            cpu_ks[cpu]);
   }
 
   nkcid = kstat_read(kc, cpu_ks[cpu], &cpu_stat);
@@ -1928,21 +2132,21 @@ calibrate_kstat(times,wait_time)
      int wait_time;
 {
 
-  long	
+  long  
     firstcnt[MAXCPUS],
     secondcnt[MAXCPUS];
 
-  float	
+  float 
     elapsed,
     temp_rate,
     rate[MAXTIMES],
     local_maxrate;
 
-  long	
+  long  
     sec,
     usec;
 
-  int	
+  int   
     i,
     j;
   
@@ -1973,8 +2177,8 @@ calibrate_kstat(times,wait_time)
 
     if (time2.tv_usec < time1.tv_usec)
       {
-	time2.tv_usec += 1000000;
-	time2.tv_sec -=1;
+        time2.tv_usec += 1000000;
+        time2.tv_sec -=1;
       }
     sec = time2.tv_sec - time1.tv_sec;
     usec = time2.tv_usec - time1.tv_usec;
@@ -1989,26 +2193,26 @@ calibrate_kstat(times,wait_time)
     for (j = 0; j < lib_num_loc_cpus; j++) {
       secondcnt[j] = get_kstat_idle(j);
       if(debug) {
-	/* I know that there are situations where compilers know about */
-	/* long long, but the library functions do not... raj 4/95 */
-	fprintf(where,
-		"\tfirstcnt[%d] = 0x%8.8lx%8.8lx secondcnt[%d] = 0x%8.8lx%8.8lx\n",
-		j,
-		firstcnt[j],
-		firstcnt[j],
-		j,
-		secondcnt[j],
-		secondcnt[j]);
+        /* I know that there are situations where compilers know about */
+        /* long long, but the library functions do not... raj 4/95 */
+        fprintf(where,
+                "\tfirstcnt[%d] = 0x%8.8lx%8.8lx secondcnt[%d] = 0x%8.8lx%8.8lx\n",
+                j,
+                firstcnt[j],
+                firstcnt[j],
+                j,
+                secondcnt[j],
+                secondcnt[j]);
       }
       /* we assume that it would wrap no more than once. we also */
       /* assume that the result of subtracting will "fit" raj 4/95 */
       temp_rate = (secondcnt[j] >= firstcnt[j]) ?
-	(float)(secondcnt[j] - firstcnt[j])/elapsed : 
-	  (float)(secondcnt[j]-firstcnt[j]+MAXLONG)/elapsed;
+        (float)(secondcnt[j] - firstcnt[j])/elapsed : 
+          (float)(secondcnt[j]-firstcnt[j]+MAXLONG)/elapsed;
       if (temp_rate > rate[i]) rate[i] = temp_rate;
       if(debug) {
-	fprintf(where,"\trate[%d] = %g\n",i,rate[i]);
-	fflush(where);
+        fprintf(where,"\trate[%d] = %g\n",i,rate[i]);
+        fflush(where);
       }
       if (local_maxrate < rate[i]) local_maxrate = rate[i];
     }
@@ -2020,6 +2224,159 @@ calibrate_kstat(times,wait_time)
   return local_maxrate;
 }
 #endif /* USE_KSTAT */
+
+#ifdef USE_PERFSTAT
+float
+calibrate_perfstat(int times, int wait_time) {
+
+  unsigned long long
+    firstcnt[MAXCPUS],
+    secondcnt[MAXCPUS];
+
+  float 
+    elapsed,
+    temp_rate,
+    rate[MAXTIMES],
+    local_maxrate;
+
+  long  
+    sec,
+    usec;
+
+  int   
+    i,
+    j;
+  
+  struct  timeval time1, time2 ;
+  struct  timezone tz;
+
+  perfstat_cpu_t  *perfstat_buffer;
+  perfstat_cpu_t  *per_cpu_pointer;
+  perfstat_id_t   name;
+  int ret;
+  
+  if (debug) {
+    fprintf(where,"enter calibrate_perfstat\n");
+    fflush(where);
+  }
+
+  if (times > MAXTIMES) {
+    times = MAXTIMES;
+  }
+
+  local_maxrate = (float)-1.0;
+  
+  perfstat_buffer = (perfstat_cpu_t *)malloc(lib_num_loc_cpus *
+                                             sizeof(perfstat_cpu_t));
+  if (perfstat_buffer == NULL) {
+    fprintf(where,
+            "calibrate_perfstat: malloc failed errno %d\n",
+            errno);
+    fflush(where);
+    exit(-1);
+  }
+
+  for(i = 0; i < times; i++) {
+    rate[i] = (float)0.0;
+    /* a name of "" will cause us to start from the beginning */
+    strcpy(name.name,"");
+     
+    /* happiness and joy, keep going */
+    ret = perfstat_cpu(&name,
+                       perfstat_buffer,
+                       sizeof(perfstat_cpu_t),
+                       lib_num_loc_cpus);
+    
+    if ((ret == -1) || 
+        (ret != lib_num_loc_cpus)) {
+      fprintf(where,
+              "calibrate_perfstat: perfstat_cpu failed/count off; errno %d cpus %d count %d\n",
+              errno,
+              lib_num_loc_cpus,
+              ret);
+      fflush(where);
+      exit(-1);
+    }
+
+    per_cpu_pointer = perfstat_buffer;
+    for (j = 0; j < lib_num_loc_cpus; j++) {
+      firstcnt[j] = per_cpu_pointer->idle;
+      per_cpu_pointer++;
+    }
+    gettimeofday (&time1, &tz);
+    sleep(wait_time);
+    gettimeofday (&time2, &tz);
+
+    if (time2.tv_usec < time1.tv_usec)
+      {
+        time2.tv_usec += 1000000;
+        time2.tv_sec -=1;
+      }
+    sec = time2.tv_sec - time1.tv_sec;
+    usec = time2.tv_usec - time1.tv_usec;
+    elapsed = (float)sec + ((float)usec/(float)1000000.0);
+
+    /* happiness and joy, keep going */
+    ret = perfstat_cpu(&name,
+                       perfstat_buffer,
+                       sizeof(perfstat_cpu_t),
+                       lib_num_loc_cpus);
+    
+    if ((ret == -1) || 
+        (ret != lib_num_loc_cpus)) {
+      fprintf(where,
+              "calibrate_perfstat: perfstat_cpu failed/count off; errno %d cpus %d count %d\n",
+              errno,
+              lib_num_loc_cpus,
+              ret);
+      fflush(where);
+      exit(-1);
+    }
+
+    per_cpu_pointer = perfstat_buffer;
+    
+    if(debug) {
+      fprintf(where, "Calibration for perfstat counter run: %d\n",i);
+      fprintf(where,"\tsec = %ld usec = %ld\n",sec,usec);
+      fprintf(where,"\telapsed time = %g\n",elapsed);
+    }
+
+    for (j = 0; j < lib_num_loc_cpus; j++) {
+      secondcnt[j] = per_cpu_pointer->idle;
+      per_cpu_pointer++;
+      if(debug) {
+        /* I know that there are situations where compilers know about */
+        /* long long, but the library functions do not... raj 4/95 */
+        fprintf(where,
+                "\tfirstcnt[%d] = 0x%8.8lx%8.8lx secondcnt[%d] = 0x%8.8lx%8.8lx\n",
+                j,
+                firstcnt[j],
+                firstcnt[j],
+                j,
+                secondcnt[j],
+                secondcnt[j]);
+      }
+      /* we assume that it would wrap no more than once. we also */
+      /* assume that the result of subtracting will "fit" raj 4/95 */
+      temp_rate = (secondcnt[j] >= firstcnt[j]) ?
+        (float)(secondcnt[j] - firstcnt[j])/elapsed : 
+          (float)(secondcnt[j]-firstcnt[j]+MAXLONG)/elapsed;
+      if (temp_rate > rate[i]) rate[i] = temp_rate;
+      if(debug) {
+        fprintf(where,"\trate[%d] = %g\n",i,rate[i]);
+        fflush(where);
+      }
+      if (local_maxrate < rate[i]) local_maxrate = rate[i];
+    }
+  }
+  if(debug) {
+    fprintf(where,"\tlocal maxrate = %g per sec. \n",local_maxrate);
+    fflush(where);
+  }
+  free(perfstat_buffer);
+  return local_maxrate;
+}
+#endif /* USE_PERFSTAT */
 
 #ifdef USE_PROC_STAT
 
@@ -2093,27 +2450,25 @@ proc_stat_cpu_idle (long *res)
  /* measured cpu rate to the calling routine. raj 4/95 */
 
 float
-calibrate_looper(times,wait_time)
-     int times;
-     int wait_time;
+calibrate_looper(int times, int wait_time)
 
 {
 
-  long	
+  long  
     firstcnt[MAXCPUS],
     secondcnt[MAXCPUS];
 
-  float	
+  float 
     elapsed,
     temp_rate,
     rate[MAXTIMES],
     local_maxrate;
 
-  long	
+  long  
     sec,
     usec;
 
-  int	
+  int   
     i,
     j;
   
@@ -2137,8 +2492,8 @@ calibrate_looper(times,wait_time)
 
     if (time2.tv_usec < time1.tv_usec)
       {
-	time2.tv_usec += 1000000;
-	time2.tv_sec -=1;
+        time2.tv_usec += 1000000;
+        time2.tv_sec -=1;
       }
     sec = time2.tv_sec - time1.tv_sec;
     usec = time2.tv_usec - time1.tv_usec;
@@ -2153,26 +2508,26 @@ calibrate_looper(times,wait_time)
     for (j = 0; j < lib_num_loc_cpus; j++) {
       secondcnt[j] = *(lib_idle_address[j]);
       if(debug) {
-	/* I know that there are situations where compilers know about */
-	/* long long, but the library fucntions do not... raj 4/95 */
-	fprintf(where,
-		"\tfirstcnt[%d] = 0x%8.8lx%8.8lx secondcnt[%d] = 0x%8.8lx%8.8lx\n",
-		j,
-		firstcnt[j],
-		firstcnt[j],
-		j,
-		secondcnt[j],
-		secondcnt[j]);
+        /* I know that there are situations where compilers know about */
+        /* long long, but the library fucntions do not... raj 4/95 */
+        fprintf(where,
+                "\tfirstcnt[%d] = 0x%8.8lx%8.8lx secondcnt[%d] = 0x%8.8lx%8.8lx\n",
+                j,
+                firstcnt[j],
+                firstcnt[j],
+                j,
+                secondcnt[j],
+                secondcnt[j]);
       }
       /* we assume that it would wrap no more than once. we also */
       /* assume that the result of subtracting will "fit" raj 4/95 */
       temp_rate = (secondcnt[j] >= firstcnt[j]) ?
-	(float)(secondcnt[j] - firstcnt[j])/elapsed : 
-	  (float)(secondcnt[j]-firstcnt[j]+MAXLONG)/elapsed;
+        (float)(secondcnt[j] - firstcnt[j])/elapsed : 
+          (float)(secondcnt[j]-firstcnt[j]+MAXLONG)/elapsed;
       if (temp_rate > rate[i]) rate[i] = temp_rate;
       if(debug) {
-	fprintf(where,"\trate[%d] = %g\n",i,rate[i]);
-	fflush(where);
+        fprintf(where,"\trate[%d] = %g\n",i,rate[i]);
+        fflush(where);
       }
       if (local_maxrate < rate[i]) local_maxrate = rate[i];
     }
@@ -2198,21 +2553,21 @@ calibrate_sysctl(int times, int wait_time) {
   long cp_time[CPUSTATES];
   size_t cp_time_len = sizeof(cp_time);
 
-  float	
+  float 
     elapsed, 
     temp_rate,
     rate[MAXTIMES],
     local_maxrate;
 
-  long	
+  long  
     sec,
     usec;
 
-  int	
+  int   
     i,
     j;
   
-  long	count;
+  long  count;
 
   struct  timeval time1, time2;
   struct  timezone tz;
@@ -2229,7 +2584,7 @@ calibrate_sysctl(int times, int wait_time) {
     /* get the idle counter for each processor */
     if (sysctlbyname("kern.cp_time",cp_time,&cp_time_len,NULL,0) != -1) {
       for (j = 0; j < lib_num_loc_cpus; j++) {
-	firstcnt[j] = cp_time[CP_IDLE];
+        firstcnt[j] = cp_time[CP_IDLE];
       }
     }
     else {
@@ -2244,8 +2599,8 @@ calibrate_sysctl(int times, int wait_time) {
     
     if (time2.tv_usec < time1.tv_usec)
       {
-	time2.tv_usec += 1000000;
-	time2.tv_sec -=1;
+        time2.tv_usec += 1000000;
+        time2.tv_sec -=1;
       }
     sec = time2.tv_sec - time1.tv_sec;
     usec = time2.tv_usec - time1.tv_usec;
@@ -2259,26 +2614,26 @@ calibrate_sysctl(int times, int wait_time) {
 
     if (sysctlbyname("kern.cp_time",cp_time,&cp_time_len,NULL,0) != -1) {
       for (j = 0; j < lib_num_loc_cpus; j++) {
-	secondcnt[j] = cp_time[CP_IDLE];
-	if(debug) {
-	  /* I know that there are situations where compilers know about */
-	  /* long long, but the library fucntions do not... raj 4/95 */
-	  fprintf(where,
-		  "\tfirstcnt[%d] = 0x%8.8lx secondcnt[%d] = 0x%8.8lx\n",
-		  j,
-		  firstcnt[j],
-		  j,
-		  secondcnt[j]);
-	}
-	temp_rate = (secondcnt[j] >= firstcnt[j]) ? 
-	  (float)(secondcnt[j] - firstcnt[j] )/elapsed : 
-	    (float)(secondcnt[j] - firstcnt[j] + LONG_LONG_MAX)/elapsed;
-	if (temp_rate > rate[i]) rate[i] = temp_rate;
-	if (debug) {
-	  fprintf(where,"\trate[%d] = %g\n",i,rate[i]);
-	  fflush(where);
-	}
-	if (local_maxrate < rate[i]) local_maxrate = rate[i];
+        secondcnt[j] = cp_time[CP_IDLE];
+        if(debug) {
+          /* I know that there are situations where compilers know about */
+          /* long long, but the library fucntions do not... raj 4/95 */
+          fprintf(where,
+                  "\tfirstcnt[%d] = 0x%8.8lx secondcnt[%d] = 0x%8.8lx\n",
+                  j,
+                  firstcnt[j],
+                  j,
+                  secondcnt[j]);
+        }
+        temp_rate = (secondcnt[j] >= firstcnt[j]) ? 
+          (float)(secondcnt[j] - firstcnt[j] )/elapsed : 
+            (float)(secondcnt[j] - firstcnt[j] + LONG_LONG_MAX)/elapsed;
+        if (temp_rate > rate[i]) rate[i] = temp_rate;
+        if (debug) {
+          fprintf(where,"\trate[%d] = %g\n",i,rate[i]);
+          fflush(where);
+        }
+        if (local_maxrate < rate[i]) local_maxrate = rate[i];
       }
     }
     else {
@@ -2299,13 +2654,13 @@ calibrate_sysctl(int times, int wait_time) {
 #ifdef USE_PSTAT
 #ifdef PSTAT_IPCINFO
 /****************************************************************/
-/*								*/
-/*	calibrate_pstat                                         */
-/*								*/
-/*	Loop a number of times, sleeping wait_time seconds each */
-/* and count how high the idle counter gets each time. Return	*/
-/* the measured cpu rate to the calling routine.		*/
-/*								*/
+/*                                                              */
+/*      calibrate_pstat                                         */
+/*                                                              */
+/*      Loop a number of times, sleeping wait_time seconds each */
+/* and count how high the idle counter gets each time. Return   */
+/* the measured cpu rate to the calling routine.                */
+/*                                                              */
 /****************************************************************/
 
 float
@@ -2318,21 +2673,21 @@ calibrate_pstat(times,wait_time)
     firstcnt[MAXCPUS],
     secondcnt[MAXCPUS];
 
-  float	
+  float 
     elapsed, 
     temp_rate,
     rate[MAXTIMES],
     local_maxrate;
 
-  long	
+  long  
     sec,
     usec;
 
-  int	
+  int   
     i,
     j;
   
-  long	count;
+  long  count;
 
   struct  timeval time1, time2;
   struct  timezone tz;
@@ -2346,19 +2701,23 @@ calibrate_pstat(times,wait_time)
   local_maxrate = -1.0;
 
   psp = (struct pst_processor *)malloc(lib_num_loc_cpus * sizeof(*psp));
+  if (psp == NULL) {
+    printf("malloc(%d) failed!\n", lib_num_loc_cpus * sizeof(*psp));
+    exit(1);
+  }
 
   for(i = 0; i < times; i++) {
     rate[i] = 0.0;
     /* get the idle sycle counter for each processor */
     if (pstat_getprocessor(psp, sizeof(*psp), lib_num_loc_cpus, 0) != -1) {
       for (j = 0; j < lib_num_loc_cpus; j++) {
-	union overlay_u {
-	  long long full;
-	  long      word[2];
-	} *overlay;
-	overlay = (union overlay_u *)&(firstcnt[j]);
-	overlay->word[0] = psp[j].psp_idlecycles.psc_hi;
-	overlay->word[1] = psp[j].psp_idlecycles.psc_lo;
+        union overlay_u {
+          long long full;
+          long      word[2];
+        } *overlay;
+        overlay = (union overlay_u *)&(firstcnt[j]);
+        overlay->word[0] = psp[j].psp_idlecycles.psc_hi;
+        overlay->word[1] = psp[j].psp_idlecycles.psc_lo;
       }
     }
     else {
@@ -2373,8 +2732,8 @@ calibrate_pstat(times,wait_time)
     
     if (time2.tv_usec < time1.tv_usec)
       {
-	time2.tv_usec += 1000000;
-	time2.tv_sec -=1;
+        time2.tv_usec += 1000000;
+        time2.tv_sec -=1;
       }
     sec = time2.tv_sec - time1.tv_sec;
     usec = time2.tv_usec - time1.tv_usec;
@@ -2388,34 +2747,34 @@ calibrate_pstat(times,wait_time)
 
     if (pstat_getprocessor(psp, sizeof(*psp), lib_num_loc_cpus, 0) != -1) {
       for (j = 0; j < lib_num_loc_cpus; j++) {
-	union overlay_u {
-	  long long full;
-	  long      word[2];
-	} *overlay;
-	overlay = (union overlay_u *)&(secondcnt[j]);
-	overlay->word[0] = psp[j].psp_idlecycles.psc_hi;
-	overlay->word[1] = psp[j].psp_idlecycles.psc_lo;
-	if(debug) {
-	  /* I know that there are situations where compilers know about */
-	  /* long long, but the library fucntions do not... raj 4/95 */
-	  fprintf(where,
-		  "\tfirstcnt[%d] = 0x%8.8x%8.8x secondcnt[%d] = 0x%8.8x%8.8x\n",
-		  j,
-		  hi_32(&firstcnt[j]),
-		  lo_32(&firstcnt[j]),
-		  j,
-		  hi_32(&secondcnt[j]),
-		  lo_32(&secondcnt[j]));
-	}
-	temp_rate = (secondcnt[j] >= firstcnt[j]) ? 
-	  (float)(secondcnt[j] - firstcnt[j] )/elapsed : 
-	    (float)(secondcnt[j] - firstcnt[j] + LONG_LONG_MAX)/elapsed;
-	if (temp_rate > rate[i]) rate[i] = temp_rate;
-	if(debug) {
-	  fprintf(where,"\trate[%d] = %g\n",i,rate[i]);
-	  fflush(where);
-	}
-	if (local_maxrate < rate[i]) local_maxrate = rate[i];
+        union overlay_u {
+          long long full;
+          long      word[2];
+        } *overlay;
+        overlay = (union overlay_u *)&(secondcnt[j]);
+        overlay->word[0] = psp[j].psp_idlecycles.psc_hi;
+        overlay->word[1] = psp[j].psp_idlecycles.psc_lo;
+        if(debug) {
+          /* I know that there are situations where compilers know about */
+          /* long long, but the library fucntions do not... raj 4/95 */
+          fprintf(where,
+                  "\tfirstcnt[%d] = 0x%8.8x%8.8x secondcnt[%d] = 0x%8.8x%8.8x\n",
+                  j,
+                  hi_32(&firstcnt[j]),
+                  lo_32(&firstcnt[j]),
+                  j,
+                  hi_32(&secondcnt[j]),
+                  lo_32(&secondcnt[j]));
+        }
+        temp_rate = (secondcnt[j] >= firstcnt[j]) ? 
+          (float)(secondcnt[j] - firstcnt[j] )/elapsed : 
+            (float)(secondcnt[j] - firstcnt[j] + LONG_LONG_MAX)/elapsed;
+        if (temp_rate > rate[i]) rate[i] = temp_rate;
+        if(debug) {
+          fprintf(where,"\trate[%d] = %g\n",i,rate[i]);
+          fflush(where);
+        }
+        if (local_maxrate < rate[i]) local_maxrate = rate[i];
       }
     }
     else {
@@ -2441,52 +2800,51 @@ fprintf(where,"debug: %d\n",debug);
 }
 
 /****************************************************************/
-/*								*/
-/*	establish_control()					*/
-/*								*/
-/* set-up the control connection between me and the server so	*/
+/*                                                              */
+/*      establish_control()                                     */
+/*                                                              */
+/* set-up the control connection between me and the server so   */
 /* we can actually run some tests. if we cannot establish the   */
-/* control connection, we might as well punt...			*/
-/* the variables for the control socket are kept in this lib	*/
-/* so as to 'hide' them from the upper routines as much as	*/
-/* possible so we can change them without affecting anyone...	*/
+/* control connection, we might as well punt...                 */
+/* the variables for the control socket are kept in this lib    */
+/* so as to 'hide' them from the upper routines as much as      */
+/* possible so we can change them without affecting anyone...   */
 /****************************************************************/
 
 #ifdef DO_IPV6
-struct	sockaddr_storage	server; /* remote host address          */
+struct  sockaddr_storage        server; /* remote host address          */
 #else
-struct	sockaddr_in	server;         /* remote host address          */
+struct  sockaddr_in     server;         /* remote host address          */
 #endif
-struct	servent		*sp;            /* server entity                */
-struct	hostent		*hp;            /* host entity                  */
+struct  servent         *sp;            /* server entity                */
+struct  hostent         *hp;            /* host entity                  */
 
 void 
-establish_control(hostname,port)
-char 		hostname[];
-short int	port;
+establish_control(char hostname[], short int port)
 {
 
-  unsigned int addr;
   int salen;
 #ifdef DO_IPV6
   struct addrinfo hints, *res;
   char pbuf[10];
+#else
+  unsigned int addr;
 #endif
 
   if (debug > 1) {
     fprintf(where,"establish_control: entered with %s and %d\n",
-	    hostname,
-	    port);
+            hostname,
+            port);
   }
 
   /********************************************************/
-  /* Set up the control socket netlib_control first	*/
-  /* for the time being we will assume that all set-ups	*/
-  /* are for tcp/ip and sockets...			*/
+  /* Set up the control socket netlib_control first     */
+  /* for the time being we will assume that all set-ups */
+  /* are for tcp/ip and sockets...                      */
   /********************************************************/
   
   bzero((char *)&server,
-	sizeof(server));
+        sizeof(server));
 
 #ifdef DO_IPV6
   snprintf(pbuf, sizeof(pbuf), "%d", port);
@@ -2496,8 +2854,8 @@ short int	port;
   hints.ai_flags = AI_PASSIVE;
   if (getaddrinfo(hostname, pbuf, &hints, &res) > 0) {
       fprintf(where,
-	      "establish_control: could not resolve the destination %s\n",
-	      hostname);
+              "establish_control: could not resolve the destination %s\n",
+              hostname);
       fflush(where);
       exit(1);
   }
@@ -2511,21 +2869,21 @@ short int	port;
   /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
   /* order changed to check for IP address first. raj 7/96 */
 
-  if ((addr = inet_addr(hostname)) == -1) {
+  if ((addr = inet_addr(hostname)) == SOCKET_ERROR) {
     /* it was not an IP address, try it as a name */
     if ((hp = gethostbyname(hostname)) == NULL) {
       /* we have no idea what it is */
       fprintf(where,
-	      "establish_control: could not resolve the destination %s\n",
-	      hostname);
+              "establish_control: could not resolve the destination %s\n",
+              hostname);
       fflush(where);
       exit(1);
     }
     else {
       /* it was a valid hostname */
       bcopy(hp->h_addr,
-	    (char *)&server.sin_addr,
-	    hp->h_length);
+            (char *)&server.sin_addr,
+            hp->h_length);
       server.sin_family = hp->h_addrtype;
     }
   }
@@ -2549,10 +2907,10 @@ short int	port;
   }
   
   netlib_control = socket(af,
-			  SOCK_STREAM,
-			  tcp_proto_num);
+                          SOCK_STREAM,
+                          tcp_proto_num);
   
-  if (netlib_control < 0){
+  if (netlib_control == INVALID_SOCKET){
     perror("establish_control: control socket");
     exit(1);
   }
@@ -2563,13 +2921,13 @@ short int	port;
   }
   
   if (connect(netlib_control, 
-	      (struct sockaddr *)&server, 
-	      salen) <0){
+              (struct sockaddr *)&server, 
+              salen) == INVALID_SOCKET){
     perror("establish_control: control socket connect failed");
     fprintf(stderr,
-	    "Are you sure there is a netserver running on %s at port %d?\n",
-	    hostname,
-	    port);
+            "Are you sure there is a netserver running on %s at port %d?\n",
+            hostname,
+            port);
     fflush(stderr);
     exit(1);
   }
@@ -2578,8 +2936,8 @@ short int	port;
   }
   
   /********************************************************/
-  /* The Control Socket set-up is done, so now we want	*/
-  /* to test for connectivity on the connection		*/
+  /* The Control Socket set-up is done, so now we want  */
+  /* to test for connectivity on the connection         */
   /********************************************************/
 
   if (debug) 
@@ -2602,78 +2960,79 @@ short int	port;
 
 
  /***********************************************************************/
- /*									*/
- /*	get_id()							*/
- /*									*/
- /* Return a string to the calling routine that contains the		*/
- /* identifying information for the host we are running on. This	*/
- /* information will then either be displayed locally, or returned to	*/
- /* a remote caller for display there.					*/
- /*									*/
+ /*                                                                     */
+ /*     get_id()                                                        */
+ /*                                                                     */
+ /* Return a string to the calling routine that contains the            */
+ /* identifying information for the host we are running on. This        */
+ /* information will then either be displayed locally, or returned to   */
+ /* a remote caller for display there.                                  */
+ /*                                                                     */
  /***********************************************************************/
 
-void
-get_id(id_string)
-char *id_string;
+char *
+get_id()
 {
+	static char id_string[80];
 #ifdef WIN32
-SYSTEM_INFO		system_info ;
-char			system_name[MAX_COMPUTERNAME_LENGTH+1] ;
-int			name_len = MAX_COMPUTERNAME_LENGTH + 1 ;
+char                    system_name[MAX_COMPUTERNAME_LENGTH+1] ;
+int                     name_len = MAX_COMPUTERNAME_LENGTH + 1 ;
 #else
-struct	utsname		system_name;
+struct  utsname         system_name;
 #endif /* WIN32 */
 
 #ifdef WIN32
-GetSystemInfo( &system_info ) ;
-if ( !GetComputerName(system_name , &name_len) )
-	strcpy(system_name , "no_name") ;
+GetSystemInfo( &SystemInfo ) ;
+if ( !GetComputerName(system_name , &(DWORD)name_len) )
+        strcpy(system_name , "no_name") ;
 #else
 if (uname(&system_name) <0) {
-	perror("identify_local: uname");
-	exit(1);
+        perror("identify_local: uname");
+        exit(1);
 }
 #endif /* WIN32 */
 
-sprintf(id_string,
+snprintf(id_string, sizeof(id_string),
 #ifdef WIN32
-	"%-15s%-15s%d.%d%-15s",
-	"Windows NT",
-	system_name ,
-	GetVersion() & 0xFF ,
-	GetVersion() & 0xFF00 ,
-	system_info.dwProcessorType ) ;
-	
+        "%-15s%-15s%d.%d%d",
+        "Windows NT",
+        system_name ,
+        GetVersion() & 0xFF ,
+        GetVersion() & 0xFF00 ,
+        SystemInfo.dwProcessorType
+        
 #else
-	"%-15s%-15s%-15s%-15s%-15s",
-	system_name.sysname,
-	system_name.nodename,
-	system_name.release,
-	system_name.version,
-	system_name.machine);
+        "%-15s%-15s%-15s%-15s%-15s",
+        system_name.sysname,
+        system_name.nodename,
+        system_name.release,
+        system_name.version,
+        system_name.machine
 #endif /* WIN32 */
+		);
+return (id_string);
 }
 
 
  /***********************************************************************/
- /*									*/
- /*	identify_local()						*/
- /*									*/
- /* Display identifying information about the local host to the user.	*/
- /* At first release, this information will be the same as that which	*/
- /* is returned by the uname -a command, with the exception of the	*/
- /* idnumber field, which seems to be a non-POSIX item, and hence	*/
- /* non-portable.							*/
- /*									*/
+ /*                                                                     */
+ /*     identify_local()                                                */
+ /*                                                                     */
+ /* Display identifying information about the local host to the user.   */
+ /* At first release, this information will be the same as that which   */
+ /* is returned by the uname -a command, with the exception of the      */
+ /* idnumber field, which seems to be a non-POSIX item, and hence       */
+ /* non-portable.                                                       */
+ /*                                                                     */
  /***********************************************************************/
 
 void
 identify_local()
 {
 
-char	local_id[80];
+char *local_id;
 
-get_id(local_id);
+local_id = get_id();
 
 fprintf(where,"Local Information \n\
 Sysname       Nodename       Release        Version        Machine\n");
@@ -2685,24 +3044,24 @@ fprintf(where,"%s\n",
 
 
  /***********************************************************************/
- /*									*/
- /*	identify_remote()						*/
- /*									*/
- /* Display identifying information about the remote host to the user.	*/
- /* At first release, this information will be the same as that which	*/
- /* is returned by the uname -a command, with the exception of the	*/
- /* idnumber field, which seems to be a non-POSIX item, and hence	*/
- /* non-portable. A request is sent to the remote side, which will	*/
- /* return a string containing the utsname information in a		*/
- /* pre-formatted form, which is then displayed after the header.	*/
- /*									*/
+ /*                                                                     */
+ /*     identify_remote()                                               */
+ /*                                                                     */
+ /* Display identifying information about the remote host to the user.  */
+ /* At first release, this information will be the same as that which   */
+ /* is returned by the uname -a command, with the exception of the      */
+ /* idnumber field, which seems to be a non-POSIX item, and hence       */
+ /* non-portable. A request is sent to the remote side, which will      */
+ /* return a string containing the utsname information in a             */
+ /* pre-formatted form, which is then displayed after the header.       */
+ /*                                                                     */
  /***********************************************************************/
 
 void
 identify_remote()
 {
 
-char	*remote_id="";
+char    *remote_id="";
 
 /* send a request for node info to the remote */
 netperf_request.content.request_type = NODE_IDENTIFY;
@@ -2714,9 +3073,9 @@ send_request();
 recv_response();
 
 if (netperf_response.content.serv_errno) {
-	errno = netperf_response.content.serv_errno;
-	perror("identify_remote: on remote");
-	exit(1);
+        Set_errno(netperf_response.content.serv_errno);
+        perror("identify_remote: on remote");
+        exit(1);
 }
 
 fprintf(where,"Remote Information \n\
@@ -2727,14 +3086,14 @@ fprintf(where,"%s",
 }
 
 void
-cpu_start(measure_cpu)
-     int measure_cpu;
+cpu_start(int measure_cpu)
 {
-
-  int	i;
+#if !defined(WIN32) && !defined(USE_PROC_STAT)
+  int   i;
+#endif
 
   gettimeofday(&time1,
-	       &tz);
+               &tz);
   
   if (measure_cpu) {
     measuring_cpu = 1;
@@ -2762,17 +3121,62 @@ cpu_start(measure_cpu)
       lib_start_count[i] = get_kstat_idle(i);
     }
 #else
+#ifdef USE_PERFSTAT
+    {
+      perfstat_cpu_t *perfstat_buffer;
+      perfstat_cpu_t *per_cpu_pointer;
+      perfstat_id_t  name;
+      int ret;
+
+      cpu_method = PERFSTAT;
+      /* a name of "" will cause us to start from the beginning */
+      strcpy(name.name,"");
+      perfstat_buffer = (perfstat_cpu_t *)malloc(lib_num_loc_cpus *
+                                                 sizeof(perfstat_cpu_t));
+      if (perfstat_buffer == NULL) {
+        fprintf(where,
+                "cpu_start: malloc failed errno %d\n",
+                errno);
+        fflush(where);
+        exit(-1);
+      }
+      
+      /* happiness and joy, keep going */
+      ret = perfstat_cpu(&name,
+                         perfstat_buffer,
+                         sizeof(perfstat_cpu_t),
+                         lib_num_loc_cpus);
+      
+      if ((ret == -1) || 
+          (ret != lib_num_loc_cpus)) {
+        fprintf(where,
+                "cpu_start: perfstat_cpu failed/count off; errno %d cpus %d count %d\n",
+                errno,
+                lib_num_loc_cpus,
+                ret);
+        fflush(where);
+        exit(-1);
+      }
+      
+      per_cpu_pointer = perfstat_buffer;
+      for (i = 0; i < lib_num_loc_cpus; i++){
+        lib_start_count[i] = per_cpu_pointer->idle;
+        per_cpu_pointer++;
+      }
+      free(perfstat_buffer);
+    }
+#else
 #ifdef USE_SYSCTL
     cpu_method = SYSCTL;
     long cp_time[CPUSTATES];
     size_t cp_time_len = sizeof(cp_time);
     if (sysctlbyname("kern.cp_time",cp_time,&cp_time_len,NULL,0) != -1) {
       for (i = 0; i < lib_num_loc_cpus; i++){
-	lib_start_count[i] = cp_time[CP_IDLE];
+        lib_start_count[i] = cp_time[CP_IDLE];
       }
     }
 #else
-#ifdef	USE_PSTAT
+#ifdef  USE_PSTAT
     cpu_method = PSTAT;
 #ifdef PSTAT_IPCINFO
     /* we need to know if we have the 10.0 pstat interface */
@@ -2784,76 +3188,61 @@ cpu_start(measure_cpu)
       /* get the idle sycle counter for each processor */
       struct pst_processor *psp;
       union overlay_u {
-	long long full;
-	long      word[2];
+        long long full;
+        long      word[2];
       } *overlay;
       
       psp = (struct pst_processor *)malloc(lib_num_loc_cpus * sizeof(*psp));
-      if (pstat_getprocessor(psp, sizeof(*psp), lib_num_loc_cpus, 0) != -1) {
-	int i;
-	for (i = 0; i < lib_num_loc_cpus; i++) {
-	  overlay = (union overlay_u *)&(lib_start_count[i]);
-	  overlay->word[0] = psp[i].psp_idlecycles.psc_hi;
-	  overlay->word[1] = psp[i].psp_idlecycles.psc_lo;
-	  if(debug) {
-	    fprintf(where,
-		    "\tlib_start_count[%d] = 0x%8.8x%8.8x\n",
-		    i,
-		    hi_32(&lib_start_count[i]),
-		    lo_32(&lib_start_count[i]));
-	    fflush(where);
+      if (psp == NULL) {
+        printf("malloc(%d) failed!\n", lib_num_loc_cpus * sizeof(*psp));
+        exit(1);
 	  }
-	}
-	free(psp);
+      if (pstat_getprocessor(psp, sizeof(*psp), lib_num_loc_cpus, 0) != -1) {
+        int i;
+        for (i = 0; i < lib_num_loc_cpus; i++) {
+          overlay = (union overlay_u *)&(lib_start_count[i]);
+          overlay->word[0] = psp[i].psp_idlecycles.psc_hi;
+          overlay->word[1] = psp[i].psp_idlecycles.psc_lo;
+          if(debug) {
+            fprintf(where,
+                    "\tlib_start_count[%d] = 0x%8.8x%8.8x\n",
+                    i,
+                    hi_32(&lib_start_count[i]),
+                    lo_32(&lib_start_count[i]));
+            fflush(where);
+          }
+        }
+        free(psp);
       }
     }
 #else
     /* this is what we should get when compiling on an HP-UX 9.X */
     /* system. raj 4/95 */
     pstat_getdynamic((struct pst_dynamic *)&pst_dynamic_info,
-		     sizeof(pst_dynamic_info),1,0);
+                     sizeof(pst_dynamic_info),1,0);
     for (i = 0; i < PST_MAX_CPUSTATES; i++) {
       cp_time1[i] = pst_dynamic_info.psd_cpu_time[i];
     }
 #endif /* PSTAT_IPCINFO */
 #else
 #ifdef WIN32
-#ifdef NT_SDK
-    /*--------------------------------------------------*/      /* robin */
-    /* Use Win/NT internal counters to measure CPU%     */      /* robin */
-    /*--------------------------------------------------*/      /* robin */
-    NTSTATUS status;                                            /* robin */
-                                                                /* robin */
-    status = NtQuerySystemTime( &systime_start );               /* robin */
-    if (debug) {                                                /* robin */
-       if (!NT_SUCCESS(status)) {                               /* robin */
-          fprintf(where,"NtQuerySystemTime "                    /* robin */
-                        "failed: 0x%08X\n",                     /* robin */
-                        status);                                /* robin */
-       }                                                        /* robin */
-    }                                                           /* robin */
-                                                                /* robin */
-    status = NtQuerySystemInformation (                         /* robin */
-                SystemProcessorPerformanceInformation,          /* robin */
-                &sysperf_start,                                 /* robin */
-                sizeof(sysperf_start),                          /* robin */
-                NULL );                                         /* robin */
-                                                                /* robin */
-    if (debug) {                                                /* robin */
-       if (!NT_SUCCESS(status)) {                               /* robin */
-          fprintf(where,"NtQuerySystemInformation "             /* robin */
-                        "failed: 0x%08X\n",                     /* robin */
-                        status);                                /* robin */
-       }                                                        /* robin */
-    }                                                           /* robin */
-                                                                /* robin */
-#endif /* NT_SDK */
+#ifdef NT_PERF
+        cpu_method = NT_METHOD;
+        if (NtQuerySystemInformation == NULL) {
+                // Open the performance counter interface
+                PerfCntrs = InitPerfCntrs();
+
+        } else {
+                RestartPerfCntrs(PerfCntrs);
+        }
+#endif /* NT_PERF */
 #else
     cpu_method = TIMES;
     times(&times_data1);
 #endif /* WIN32 */
 #endif /* USE_SYSCTL */
 #endif /* USE_PSTAT */
+#endif /* USE_PERFSTAT */
 #endif /* USE_KSTAT */
 #endif /* USE_PROC_STAT */
 #endif /* USE_LOOPER */
@@ -2862,18 +3251,19 @@ cpu_start(measure_cpu)
 
 
 void
-cpu_stop(measure_cpu,elapsed)
-int	measure_cpu;
-float	*elapsed;
+cpu_stop(int measure_cpu, float *elapsed)
+
 {
 #ifndef WIN32
 #include <sys/wait.h>
 #endif /* WIN32 */
 
-int	sec,
+int     sec,
         usec;
 
-int	i;
+#if !defined(WIN32) && !defined(USE_PROC_STAT)
+  int   i;
+#endif
 
 if (measure_cpu) {
 #ifdef USE_LOOPER
@@ -2891,13 +3281,14 @@ if (measure_cpu) {
     /* for pointing that out. */
     kill(lib_idle_pids[i],SIGTERM);
   }
+  lib_loopers_running = 0;
   /* reap the children */
   while(waitpid(-1, NULL, WNOHANG) > 0) { }
   
   /* finally, unlink the mmaped file */
   munmap((caddr_t)lib_base_pointer,
-	 ((NETPERF_PAGE_SIZE * PAGES_PER_CHILD) * 
-	  lib_num_loc_cpus));
+         ((NETPERF_PAGE_SIZE * PAGES_PER_CHILD) * 
+          lib_num_loc_cpus));
   unlink("/tmp/netperf_cpu");
 #endif /* WIN32 */
 #else
@@ -2909,16 +3300,61 @@ if (measure_cpu) {
     lib_end_count[i] = get_kstat_idle(i);
   }
 #else
+#ifdef USE_PERFSTAT
+    {
+      perfstat_cpu_t *perfstat_buffer;
+      perfstat_cpu_t *per_cpu_pointer;
+      perfstat_id_t  name;
+      int ret;
+
+      cpu_method = PERFSTAT;
+      /* a name of "" will cause us to start from the beginning */
+      strcpy(name.name,"");
+      perfstat_buffer = (perfstat_cpu_t *)malloc(lib_num_loc_cpus *
+                                                 sizeof(perfstat_cpu_t));
+      if (perfstat_buffer == NULL) {
+        fprintf(where,
+                "cpu_start: malloc failed errno %d\n",
+                errno);
+        fflush(where);
+        exit(-1);
+      }
+      
+      /* happiness and joy, keep going */
+      ret = perfstat_cpu(&name,
+                         perfstat_buffer,
+                         sizeof(perfstat_cpu_t),
+                         lib_num_loc_cpus);
+      
+      if ((ret == -1) || 
+          (ret != lib_num_loc_cpus)) {
+        fprintf(where,
+                "cpu_start: perfstat_cpu failed/count off; errno %d cpus %d count %d\n",
+                errno,
+                lib_num_loc_cpus,
+                ret);
+        fflush(where);
+        exit(-1);
+      }
+      
+      per_cpu_pointer = perfstat_buffer;
+      for (i = 0; i < lib_num_loc_cpus; i++){
+        lib_end_count[i] = per_cpu_pointer->idle;
+        per_cpu_pointer++;
+      }
+      free(perfstat_buffer);
+    }
+#else
 #ifdef USE_SYSCTL
     long cp_time[CPUSTATES];
     size_t cp_time_len = sizeof(cp_time);
     if (sysctlbyname("kern.cp_time",cp_time,&cp_time_len,NULL,0) != -1) {
       for (i = 0; i < lib_num_loc_cpus; i++){
-	lib_end_count[i] = cp_time[CP_IDLE];
+        lib_end_count[i] = cp_time[CP_IDLE];
       }
     }
 #else
-#ifdef	USE_PSTAT
+#ifdef  USE_PSTAT
 #ifdef PSTAT_IPCINFO
   {
     struct pst_processor *psp;
@@ -2927,19 +3363,23 @@ if (measure_cpu) {
       long      word[2];
     } *overlay;
     psp = (struct pst_processor *)malloc(lib_num_loc_cpus * sizeof(*psp));
+    if (psp == NULL) {
+      printf("malloc(%d) failed!\n", lib_num_loc_cpus * sizeof(*psp));
+      exit(1);
+	}
     if (pstat_getprocessor(psp, sizeof(*psp), lib_num_loc_cpus, 0) != -1) {
       for (i = 0; i < lib_num_loc_cpus; i++) {
-	overlay = (union overlay_u *)&(lib_end_count[i]);
-	overlay->word[0] = psp[i].psp_idlecycles.psc_hi;
-	overlay->word[1] = psp[i].psp_idlecycles.psc_lo;
-	if(debug) {
-	  fprintf(where,
-		  "\tlib_end_count[%d]   = 0x%8.8x%8.8x\n",
-		  i,
-		  hi_32(&lib_end_count[i]),
-		  lo_32(&lib_end_count[i]));
-	  fflush(where);
-	}
+        overlay = (union overlay_u *)&(lib_end_count[i]);
+        overlay->word[0] = psp[i].psp_idlecycles.psc_hi;
+        overlay->word[1] = psp[i].psp_idlecycles.psc_lo;
+        if(debug) {
+          fprintf(where,
+                  "\tlib_end_count[%d]   = 0x%8.8x%8.8x\n",
+                  i,
+                  hi_32(&lib_end_count[i]),
+                  lo_32(&lib_end_count[i]));
+          fflush(where);
+        }
       }
       free(psp);
     }
@@ -2959,64 +3399,41 @@ if (measure_cpu) {
 #endif /* PSTAT_IPC_INFO */
 #else
 #ifdef WIN32
-#ifdef NT_SDK
-       NTSTATUS status;                                         /* robin */
-                                                                /* robin */
-       status = NtQuerySystemTime( &systime_end );              /* robin */
-       if (debug) {                                             /* robin */
-          if (!NT_SUCCESS(status)) {                            /* robin */
-             fprintf(where,"NtQuerySystemTime "                 /* robin */
-                           "failed: 0x%08X\n",                  /* robin */
-                           status);                             /* robin */
-          }                                                     /* robin */
-       }                                                        /* robin */
-       status = NtQuerySystemInformation (                      /* robin */
-                   SystemProcessorPerformanceInformation,       /* robin */
-                   &sysperf_end,                                /* robin */
-                   sizeof(sysperf_end),                         /* robin */
-                   NULL );                                      /* robin */
-                                                                /* robin */
-       if (debug) {                                             /* robin */
-          if (!NT_SUCCESS(status)) {                            /* robin */
-             fprintf(where,"NtQuerySystemInformation "          /* robin */
-                           "failed: 0x%08X\n",                  /* robin */
-                           status);                             /* robin */
-          }                                                     /* robin */
-       }                                                        /* robin */
-                                                                /* robin */
-#endif /* NT_SDK */
+#ifdef NT_PERF
+           RestartPerfCntrs(PerfCntrs);
+#endif /* NT_PERF */
 #else
   times(&times_data2);
 #endif /* WIN32 */
 #endif /* USE_SYSCTL */
 #endif /* USE_PSTAT */
+#endif /* USE_PERFSTAT */
 #endif /* USE_KSTAT */
 #endif /* USE_PROC_STAT */
 #endif /* USE_LOOPER */
 }
 
 gettimeofday(&time2,
-	     &tz);
+             &tz);
 
 if (time2.tv_usec < time1.tv_usec) {
-  time2.tv_usec	+= 1000000;
-  time2.tv_sec	-= 1;
+  time2.tv_usec += 1000000;
+  time2.tv_sec  -= 1;
 }
 
-sec	= time2.tv_sec - time1.tv_sec;
-usec	= time2.tv_usec - time1.tv_usec;
-lib_elapsed	= (float)sec + ((float)usec/(float)1000000.0);
+sec     = time2.tv_sec - time1.tv_sec;
+usec    = time2.tv_usec - time1.tv_usec;
+lib_elapsed     = (float)sec + ((float)usec/(float)1000000.0);
 
 *elapsed = lib_elapsed;
-	
+        
 }
 
 double
-calc_thruput(units_received)
-double units_received;
+calc_thruput(double units_received)
 
 {
-  double	divisor;
+  double        divisor;
 
   /* We will calculate the thruput in libfmt units/second */
   switch (libfmt) {
@@ -3051,11 +3468,12 @@ double units_received;
 
 
 float 
-calc_cpu_util(elapsed_time)
-     float elapsed_time;
+calc_cpu_util(float elapsed_time)
 {
   
-  float	actual_rate;
+#ifndef WIN32
+  float actual_rate;
+#endif
   float correction_factor;
 #ifdef USE_PSTAT
 #ifdef PSTAT_IPCINFO
@@ -3064,11 +3482,13 @@ calc_cpu_util(elapsed_time)
   long diff;
 #endif
 #endif
-#ifndef USE_LOOPER
-  int	cpu_time_ticks;
-  long	ticks_sec;
+#ifndef WIN32
+#if !defined(USE_LOOPER) && !defined(USE_PROC_STAT)
+  int   cpu_time_ticks;
+  long  ticks_sec;
 #endif
-  int	i;
+  int   i;
+#endif
   
 
   lib_local_cpu_util = (float)0.0;
@@ -3086,7 +3506,7 @@ calc_cpu_util(elapsed_time)
     correction_factor = (float) 1.0;
   }
   
-#if defined (USE_LOOPER)  || defined (USE_KSTAT) || defined (USE_PROC_STAT) || defined (USE_SYSCTL)
+#if defined (USE_LOOPER)  || defined (USE_KSTAT) || defined (USE_PROC_STAT) || defined (USE_SYSCTL) || defined (USE_PERFSTAT)
   for (i = 0; i < lib_num_loc_cpus; i++) {
 
     /* it would appear that on some systems, in loopback, nice is
@@ -3102,15 +3522,15 @@ calc_cpu_util(elapsed_time)
     
     actual_rate = (lib_end_count[i] > lib_start_count[i]) ?
       (float)(lib_end_count[i] - lib_start_count[i])/lib_elapsed :
-	(float)(lib_end_count[i] - lib_start_count[i] +
-		MAXLONG)/ lib_elapsed;
+        (float)(lib_end_count[i] - lib_start_count[i] +
+                MAXLONG)/ lib_elapsed;
     if (debug) {
       fprintf(where,
-	      "calc_cpu_util: actual_rate on processor %d is %f start %lx end %lx\n",
-	      i,
-	      actual_rate,
-	      lib_start_count[i],
-	      lib_end_count[i]);
+              "calc_cpu_util: actual_rate on processor %d is %f start %lx end %lx\n",
+              i,
+              actual_rate,
+              lib_start_count[i],
+              lib_end_count[i]);
     }
     lib_local_per_cpu_util[i] = (lib_local_maxrate - actual_rate) /
       lib_local_maxrate * 100;
@@ -3132,25 +3552,25 @@ calc_cpu_util(elapsed_time)
       /* raj 4/95 */
 
       long long 
-	diff;
+        diff;
       
       if (lib_end_count[i] >= lib_start_count[i]) {
-	diff = lib_end_count[i] - lib_start_count[i];
+        diff = lib_end_count[i] - lib_start_count[i];
       }
       else {
-	diff = lib_end_count[i] - lib_start_count[i] + LONG_LONG_MAX;
+        diff = lib_end_count[i] - lib_start_count[i] + LONG_LONG_MAX;
       }
       actual_rate = (float) diff / lib_elapsed;
       lib_local_per_cpu_util[i] = (lib_local_maxrate - actual_rate) /
-	lib_local_maxrate * 100;
+        lib_local_maxrate * 100;
       lib_local_cpu_util += lib_local_per_cpu_util[i];
       if (debug) {
-	fprintf(where,
-		"calc_cpu_util: actual_rate on cpu %d is %g max_rate %g cpu %6.2f\n",
-		i,
-		actual_rate,
-		lib_local_maxrate,
-		lib_local_per_cpu_util[i]);
+        fprintf(where,
+                "calc_cpu_util: actual_rate on cpu %d is %g max_rate %g cpu %6.2f\n",
+                i,
+                actual_rate,
+                lib_local_maxrate,
+                lib_local_per_cpu_util[i]);
       }
     }
     /* we want the average across all n processors */
@@ -3167,123 +3587,48 @@ calc_cpu_util(elapsed_time)
       diff = cp_time2[i] - cp_time1[i];
       cpu_time_ticks += diff;
       if (debug) {
-	fprintf(where,
-		"%d cp_time1 %d cp_time2 %d diff %d cpu_time_ticks is %d \n",
-		i,
-		cp_time1[i],
-		cp_time2[i],
-		diff,
-		cpu_time_ticks);
-	fflush(where);
+        fprintf(where,
+                "%d cp_time1 %d cp_time2 %d diff %d cpu_time_ticks is %d \n",
+                i,
+                cp_time1[i],
+                cp_time2[i],
+                diff,
+                cpu_time_ticks);
+        fflush(where);
       }
     }
     if (!cpu_time_ticks)
       cpu_time_ticks = 1;
     /* cpu used is 100% minus the idle time - right ?-) */
     lib_local_cpu_util = 1.0 - ( ((float)(cp_time2[CP_IDLE] - 
-					  cp_time1[CP_IDLE]))
-				/ (float)cpu_time_ticks);
+                                          cp_time1[CP_IDLE]))
+                                / (float)cpu_time_ticks);
     lib_local_cpu_util *= 100.0;
     if (debug) {
       fprintf(where,
-	      "calc_cpu_util has cpu_time_ticks at %d\n",cpu_time_ticks);
+              "calc_cpu_util has cpu_time_ticks at %d\n",cpu_time_ticks);
       fprintf(where,"sysconf ticks is %g\n",
-	      sysconf(_SC_CLK_TCK) * lib_elapsed);
+              sysconf(_SC_CLK_TCK) * lib_elapsed);
       fprintf(where,"calc_cpu_util has idle_ticks at %d\n",
-	      (cp_time2[CP_IDLE] - cp_time1[CP_IDLE]));
+              (cp_time2[CP_IDLE] - cp_time1[CP_IDLE]));
       fflush(where);
     }
   }
 #endif /* PSTAT_IPCINFO */
 #else
 #ifdef WIN32
-#ifdef NT_SDK
-  LARGE_INTEGER delta_t,    /* scratch */                       /* robin */
-                elapsed,    /* elapsed total system time */     /* robin */
-                kernel,     /* elapsed kernel mode time  */     /* robin */
-                idle,       /* elapsed kernel idle time  */     /* robin */
-                user;       /* elapsed user mode time    */     /* robin */
-  ULONG         remainder;  /* never used, discarded value */   /* robin */
-  ULONG         cpu;        /* cpu utilization (as ULONG)  */   /* robin */
-                                                                /* robin */
-  /* The magic number 10*1000 will convert the  */              /* robin */
-  /* 100ns time units (returned by NT kernel)   */              /* robin */
-  /* into millisecond units.                    */              /* robin */
-  delta_t = RtlLargeIntegerSubtract(                            /* robin */
-                       systime_end,                             /* robin */
-                       systime_start);                          /* robin */
-  elapsed = RtlExtendedLargeIntegerDivide(                      /* robin */
-                       delta_t,                                 /* robin */
-                       10*1000,                                 /* robin */
-                       &remainder);                             /* robin */
-  if (debug) {
-    fprintf(where,
-	    "NT's elapsed time %d\n",
-	    remainder);
-    fflush(where);
-  }
-
-  delta_t = RtlLargeIntegerSubtract(                            /* robin */
-                       sysperf_end.KernelTime,                  /* robin */
-                       sysperf_start.KernelTime);               /* robin */
-  kernel  = RtlExtendedLargeIntegerDivide(                      /* robin */
-                       delta_t,                                 /* robin */
-                       10*1000,                                 /* robin */
-                       &remainder);                             /* robin */
-  if (debug) {
-    fprintf(where,
-	    " kernel time %d ",
-	    kernel);
-    fflush(where);
-  }
-
-  delta_t = RtlLargeIntegerSubtract(                            /* robin */
-                       sysperf_end.IdleTime,                    /* robin */
-                       sysperf_start.IdleTime);                 /* robin */
-  idle    = RtlExtendedLargeIntegerDivide(                      /* robin */
-                       delta_t,                                 /* robin */
-                       10*1000,                                 /* robin */
-                       &remainder);                             /* robin */
-  if (debug) {
-    fprintf(where,
-	    " idle time %d ",
-	    idle);
-    fflush(where);
-  }
-
-  delta_t = RtlLargeIntegerSubtract(                            /* robin */
-                       sysperf_end.UserTime,                    /* robin */
-                       sysperf_start.UserTime);                 /* robin */
-  user    = RtlExtendedLargeIntegerDivide(                      /* robin */
-                       delta_t,                                 /* robin */
-                       10*1000,                                 /* robin */
-                       &remainder);                             /* robin */
-
-  if (debug) {
-    fprintf(where,
-	    " user time %d\n",
-	    user);
-    fflush(where);
-  }
-
-                                                                /* robin */
-  cpu = ((kernel.LowPart+user.LowPart-idle.LowPart)*100 + 50)   /* robin */
-                      /elapsed.LowPart;                         /* robin */
-  lib_local_cpu_util = (float)cpu;                              /* robin */
-                                                                /* robin */
-                                                                /* robin */
-  if (debug) {                                                  /* robin */
-     fprintf(where,"calc_cpu_util: local_cpu_util = %ld%%\n",   /* robin */
-                   cpu);                                        /* robin */
-  }                                                             /* robin */
-                                                                /* robin */
-#endif /* NT_SDK */
+#ifdef NT_PERF
+        if (debug) {
+                fprintf(where, "correction factor: %f\n", correction_factor);
+        }
+        lib_local_cpu_util = (float)ReportPerfCntrs(PerfCntrs);
+#endif /* NT_PERF */
 #else
   /* we had no kernel idle counter, so use what we can */
   ticks_sec = sysconf(_SC_CLK_TCK);
   cpu_time_ticks = ((times_data2.tms_utime - times_data1.tms_utime) +
-		    (times_data2.tms_stime -
-		     times_data1.tms_stime));
+                    (times_data2.tms_stime -
+                     times_data1.tms_stime));
   
   if (debug) {
     fprintf(where,"calc_cpu_util has cpu_time_ticks at %d\n",cpu_time_ticks);
@@ -3293,9 +3638,9 @@ calc_cpu_util(elapsed_time)
   }
   
   lib_local_cpu_util = (float) (((double) (cpu_time_ticks) /
-				 (double) ticks_sec /
-				 (double) lib_elapsed) *
-				(double) 100.0);
+                                 (double) ticks_sec /
+                                 (double) lib_elapsed) *
+                                (double) 100.0);
 #endif /* WIN32 */
 #endif /* USE_PSTAT */
 #endif /* USE_LOOPER */
@@ -3303,14 +3648,10 @@ calc_cpu_util(elapsed_time)
   return lib_local_cpu_util;
 }
 
-float calc_service_demand(units_sent,
-			  elapsed_time,
-			  cpu_utilization,
-			  num_cpus)
-double	units_sent;
-float	elapsed_time;
-float	cpu_utilization;
-int     num_cpus;
+float calc_service_demand(double units_sent,
+                          float elapsed_time,
+                          float cpu_utilization,
+                          int num_cpus)
 
 {
 
@@ -3320,13 +3661,13 @@ int     num_cpus;
 
   if (debug) {
     fprintf(where,"calc_service_demand called:  units_sent = %f\n",
-	    units_sent);
+            units_sent);
     fprintf(where,"                             elapsed_time = %f\n",
-	    elapsed_time);
+            elapsed_time);
     fprintf(where,"                             cpu_util = %f\n",
-	    cpu_utilization);
+            cpu_utilization);
     fprintf(where,"                             num cpu = %d\n",
-	    num_cpus);
+            num_cpus);
     fflush(where);
   }
 
@@ -3340,8 +3681,8 @@ int     num_cpus;
   }
   
   thruput = (units_sent / 
-	     (double) unit_divisor / 
-	     (double) elapsed_time);
+             (double) unit_divisor / 
+             (double) elapsed_time);
 
   /* on MP systems, it is necessary to multiply the service demand by */
   /* the number of CPU's. at least, I believe that to be the case:) */
@@ -3358,27 +3699,26 @@ int     num_cpus;
   
   if (debug) {
     fprintf(where,"calc_service_demand using:   units_sent = %f\n",
-	    units_sent);
+            units_sent);
     fprintf(where,"                             elapsed_time = %f\n",
-	    elapsed_time);
+            elapsed_time);
     fprintf(where,"                             cpu_util = %f\n",
-	    cpu_utilization);
+            cpu_utilization);
     fprintf(where,"                             num cpu = %d\n",
-	    num_cpus);
+            num_cpus);
     fprintf(where,"calc_service_demand got:     thruput = %f\n",
-	    thruput);
+            thruput);
     fprintf(where,"                             servdem = %f\n",
-	    service_demand);
+            service_demand);
     fflush(where);
   }
-  return service_demand;
+  return (float)service_demand;
 }
 
 
 #ifdef USE_LOOPER
 void
-bind_to_processor(child_num)
-     int child_num;
+bind_to_processor(int child_num)
 {
   /* This routine will bind the calling process to a particular */
   /* processor. We are not choosy as to which processor, so it will be */
@@ -3400,11 +3740,11 @@ bind_to_processor(child_num)
 
   if (debug) {
     fprintf(where,
-	    "child %d asking for CPU %d as pid %d with %d CPUs\n",
-	    child_num,
-	    (child_num % lib_num_loc_cpus),
-	    getpid(),
-	    lib_num_loc_cpus);
+            "child %d asking for CPU %d as pid %d with %d CPUs\n",
+            child_num,
+            (child_num % lib_num_loc_cpus),
+            getpid(),
+            lib_num_loc_cpus);
     fflush(where);
   }
 
@@ -3421,24 +3761,27 @@ bind_to_processor(child_num)
 
   if (debug) {
     fprintf(where,
-	    "bind_to_processor: child %d asking for CPU %d as pid %d with %d CPUs\n",
-	    child_num,
-	    (child_num % lib_num_loc_cpus),
-	    getpid(),
-	    lib_num_loc_cpus);
+            "bind_to_processor: child %d asking for CPU %d as pid %d with %d CPUs\n",
+            child_num,
+            (child_num % lib_num_loc_cpus),
+            getpid(),
+            lib_num_loc_cpus);
     fflush(where);
   }
 
   if (processor_bind(P_PID,
-		     getpid(),
-		     (child_num % lib_num_loc_cpus), 
-		      &old_binding) != 0) {
+                     getpid(),
+                     (child_num % lib_num_loc_cpus), 
+                      &old_binding) != 0) {
     fprintf(where,"bind_to_processor: unable to perform processor binding\n");
     fprintf(where,"                   errno %d\n",errno);
     fflush(where);
   }
   return;
 #else
+#ifdef WIN32
+        SetThreadAffinityMask(GetCurrentThread(), (ULONG_PTR)1 << (child_num % lib_num_loc_cpus));
+#endif
   return;
 #endif /* __sun && _SVR4 */
 #endif /* __hpux */
@@ -3454,8 +3797,7 @@ bind_to_processor(child_num)
  /* systems. This routine never returns. raj 1/96 */ 
 
 void
-sit_and_spin(child_index)
-     int child_index;
+sit_and_spin(int child_index)
 
 {
   long *my_counter_ptr;
@@ -3467,9 +3809,9 @@ sit_and_spin(child_index)
   /* program, but that doesn't really seem worthwhile - raj 4/95 */
   if (debug > 1) {
     fprintf(where,
-	    "Looper child %d is born, pid %d\n",
-	    child_index,
-	    getpid());
+            "Looper child %d is born, pid %d\n",
+            child_index,
+            getpid());
     fflush(where);
   }
   
@@ -3477,8 +3819,8 @@ sit_and_spin(child_index)
 
   /* reset our base pointer to be at the appropriate offset */
   my_counter_ptr = (long *) ((char *)lib_base_pointer + 
-			     (NETPERF_PAGE_SIZE * 
-			      PAGES_PER_CHILD * child_index));
+                             (NETPERF_PAGE_SIZE * 
+                              PAGES_PER_CHILD * child_index));
   
   /* in the event we are running on an MP system, it would */
   /* probably be good to bind the soaker processes to specific */
@@ -3567,7 +3909,7 @@ start_looper_processes()
   /* well, you'll have to modify this or live with it :( raj 4/95 */
 
   file_size = ((NETPERF_PAGE_SIZE * PAGES_PER_CHILD) * 
-	       lib_num_loc_cpus);
+               lib_num_loc_cpus);
   
 #ifndef WIN32
 
@@ -3613,11 +3955,11 @@ start_looper_processes()
 #define MAP_FILE 0x0000
 #endif /* MAP_FILE */
   if ((lib_base_pointer = (long *)mmap(NULL,
-				       file_size,
-				       PROT_READ | PROT_WRITE,
-				       MAP_FILE | MAP_SHARED | MAP_VARIABLE,
-				       lib_idle_fd,
-				       0)) == (long *)-1) {
+                                       file_size,
+                                       PROT_READ | PROT_WRITE,
+                                       MAP_FILE | MAP_SHARED | MAP_VARIABLE,
+                                       lib_idle_fd,
+                                       0)) == (long *)-1) {
     fprintf(where,"create_looper: mmap: errno %d\n",errno);
     fflush(where);
     exit(1);
@@ -3626,15 +3968,15 @@ start_looper_processes()
 
   if (debug > 1) {
     fprintf(where,"num CPUs %d, file_size %d, lib_base_pointer %p\n",
-	    lib_num_loc_cpus,
-	    file_size,
-	    lib_base_pointer);
+            lib_num_loc_cpus,
+            file_size,
+            lib_base_pointer);
     fflush(where);
   }
 
   /* we should have a valid base pointer. lets fork */
   
-  for (i = 0; i < lib_num_loc_cpus; i++) {
+  for (i = 0; i < (unsigned int)lib_num_loc_cpus; i++) {
     switch (lib_idle_pids[i] = fork()) {
     case -1:
       perror("netperf: fork");
@@ -3651,13 +3993,13 @@ start_looper_processes()
     default:
       /* we must be the parent */
       lib_idle_address[i] = (long *) ((char *)lib_base_pointer + 
-				      (NETPERF_PAGE_SIZE * 
-				       PAGES_PER_CHILD * i));
+                                      (NETPERF_PAGE_SIZE * 
+                                       PAGES_PER_CHILD * i));
       if (debug) {
-	fprintf(where,"lib_idle_address[%d] is %p\n",
-		i,
-		lib_idle_address[i]);
-	fflush(where);
+        fprintf(where,"lib_idle_address[%d] is %p\n",
+                i,
+                lib_idle_address[i]);
+        fflush(where);
       }
     }
   }
@@ -3665,34 +4007,34 @@ start_looper_processes()
   /* we are compiled -DWIN32 */
   if ((lib_base_pointer = malloc(file_size)) == NULL) {
     fprintf(where,
-	    "create_looper_process could not malloc %d bytes\n",
-	    file_size);
+            "create_looper_process could not malloc %d bytes\n",
+            file_size);
     fflush(where);
     exit(1);
   }
 
   /* now, create all the threads */
-  for(i = 0; i < lib_num_loc_cpus; i++) {
+  for(i = 0; i < (unsigned int)lib_num_loc_cpus; i++) {
     long place_holder;
     if ((lib_idle_pids[i] = CreateThread(0,
-					 0,
-					 (LPTHREAD_START_ROUTINE)sit_and_spin,
-					 (LPVOID)i,
-					 0,
-					 &place_holder)) == NULL ) {
+                                         0,
+                                         (LPTHREAD_START_ROUTINE)sit_and_spin,
+                                         (LPVOID)(ULONG_PTR)i,
+                                         0,
+                                         &place_holder)) == NULL ) {
       fprintf(where,
-	      "create_looper_process: CreateThread failled\n");
+              "create_looper_process: CreateThread failed\n");
       fflush(where);
       /* I wonder if I need to look for other threads to kill? */
       exit(1);
     }
     lib_idle_address[i] = (long *) ((char *)lib_base_pointer + 
-				    (NETPERF_PAGE_SIZE * 
-				     PAGES_PER_CHILD * i));
+                                    (NETPERF_PAGE_SIZE * 
+                                     PAGES_PER_CHILD * i));
     if (debug) {
       fprintf(where,"lib_idle_address[%d] is %p\n",
-	      i,
-	      lib_idle_address[i]);
+              i,
+              lib_idle_address[i]);
       fflush(where);
     }
   }
@@ -3708,8 +4050,7 @@ start_looper_processes()
 
 
 float
-calibrate_local_cpu(local_cpu_rate)
-     float	local_cpu_rate;
+calibrate_local_cpu(float local_cpu_rate)
 {
   
   lib_num_loc_cpus = get_num_cpus();
@@ -3717,7 +4058,10 @@ calibrate_local_cpu(local_cpu_rate)
   lib_use_idle = 0;
 #ifdef USE_LOOPER
   /* we want to get the looper processes going */
-  start_looper_processes();
+  if (!lib_loopers_running) {
+    start_looper_processes();
+    lib_loopers_running = 1;
+  }
   lib_use_idle = 1;
 #endif /* USE_LOOPER */
 
@@ -3743,6 +4087,9 @@ calibrate_local_cpu(local_cpu_rate)
 #ifdef USE_KSTAT
     lib_local_maxrate = calibrate_kstat(4,10);
 #endif /* USE_KSTAT */
+#ifdef USE_PERFSTAT
+    lib_local_maxrate = calibrate_perfstat(4,10);
+#endif /* USE_KSTAT */
 #ifdef USE_SYSCTL
     lib_local_maxrate = calibrate_sysctl(4,10);
 #endif /* USE_SYSCTL */
@@ -3760,7 +4107,7 @@ calibrate_local_cpu(local_cpu_rate)
 float
 calibrate_remote_cpu()
 {
-  float	remrate;
+  float remrate;
 
   netperf_request.content.request_type = CPU_CALIBRATE;
   send_request();
@@ -3778,40 +4125,33 @@ calibrate_remote_cpu()
   else {
     /* the rate is the first word of the test_specific data */
     bcopy((char *)netperf_response.content.test_specific_data,
-	  (char *)&remrate,
-	  sizeof(remrate));
+          (char *)&remrate,
+          sizeof(remrate));
 /*    remrate = (float) netperf_response.content.test_specific_data[0]; */
     return(remrate);
-  }	
+  }     
 }
 
+#ifndef WIN32
+// WIN32 requires that at least one of the file sets to select be non-null.
+// Since msec_sleep routine is only called by nettest_dlpi & nettest_unix, 
+// let's duck this issue.
+
 int
-msec_sleep( msecs )
-     int msecs;
+msec_sleep( int msecs )
 {
+  int           rval ;
 
-#ifdef WIN32
-  int		rval ;
-#endif /* WIN32 */
+  struct timeval timeout;
 
-  struct timeval interval;
-
-  interval.tv_sec = msecs / 1000;
-  interval.tv_usec = (msecs - (msecs/1000) *1000) * 1000;
-#ifdef WIN32
-  if (rval = select(0,
-#else
-  if (select(0,
-#endif /* WIN32 */
-	     0,
-	     0,
-	     0,
-	     &interval)) {
-#ifdef WIN32
-    if ( rval == SOCKET_ERROR && WSAGetLastError() == WSAEINTR ) {
-#else
-    if (errno == EINTR) {
-#endif /* WIN32 */
+  timeout.tv_sec = msecs / 1000;
+  timeout.tv_usec = (msecs - (msecs/1000) *1000) * 1000;
+  if ((rval = select(0,
+             0,
+             0,
+             0,
+             &timeout))) {
+    if ( SOCKET_EINTR(rval) ) {
       return(1);
     }
     perror("msec_sleep: select");
@@ -3819,6 +4159,7 @@ msec_sleep( msecs )
   }
   return(0);
 }
+#endif // WIN32
 
 #ifdef HISTOGRAM
 /* hist.c
@@ -3968,14 +4309,14 @@ put_control(fd, len, pri, ack)
   }
   if (err_ack->dl_primitive != ack) {
     fprintf(where,"put_control: acknowledgement error wanted %u got %u \n",
-	    ack,err_ack->dl_primitive);
+            ack,err_ack->dl_primitive);
     if (err_ack->dl_primitive == DL_ERROR_ACK) {
       fprintf(where,"             dl_error_primitive: %u\n",
-	      err_ack->dl_error_primitive);
+              err_ack->dl_error_primitive);
       fprintf(where,"             dl_errno:           %u\n",
-	      err_ack->dl_errno);
+              err_ack->dl_errno);
       fprintf(where,"             dl_unix_errno       %u\n",
-	      err_ack->dl_unix_errno);
+              err_ack->dl_unix_errno);
     }
     fflush(where);
     return(-1);
@@ -3985,18 +4326,15 @@ put_control(fd, len, pri, ack)
 }
     
 int
-dl_open(devfile,ppa)
-     char devfile[];
-     int ppa;
-     
+dl_open(char devfile[], int ppa)
 {
   int fd;
   dl_attach_req_t *attach_req = (dl_attach_req_t *)control_data;
 
   if ((fd = open(devfile, O_RDWR)) == -1) {
     fprintf(where,"netperf: dl_open: open of %s failed, errno = %d\n",
-	    devfile,
-	    errno);
+            devfile,
+            errno);
     return(-1);
   }
 
@@ -4005,18 +4343,15 @@ dl_open(devfile,ppa)
 
   if (put_control(fd, sizeof(dl_attach_req_t), 0, DL_OK_ACK) < 0) {
     fprintf(where,
-	    "netperf: dl_open: could not send control message, errno = %d\n",
-	    errno);
+            "netperf: dl_open: could not send control message, errno = %d\n",
+            errno);
     return(-1);
   }
   return(fd);
 }
 
 int
-dl_bind(fd, sap, mode, dlsap_ptr, dlsap_len)
-     int fd, sap, mode;
-     char *dlsap_ptr;
-     int *dlsap_len;
+dl_bind(int fd, int sap, int mode, char *dlsap_ptr, int *dlsap_len)
 {
   dl_bind_req_t *bind_req = (dl_bind_req_t *)control_data;
   dl_bind_ack_t *bind_ack = (dl_bind_ack_t *)control_data;
@@ -4030,8 +4365,8 @@ dl_bind(fd, sap, mode, dlsap_ptr, dlsap_len)
 
   if (put_control(fd, sizeof(dl_bind_req_t), 0, DL_BIND_ACK) < 0) {
     fprintf(where,
-	    "netperf: dl_bind: could not send control message, errno = %d\n",
-	    errno);
+            "netperf: dl_bind: could not send control message, errno = %d\n",
+            errno);
     return(-1);
   }
 
@@ -4052,10 +4387,7 @@ dl_bind(fd, sap, mode, dlsap_ptr, dlsap_len)
 }
 
 int
-dl_connect(fd, rem_addr, rem_addr_len)
-     int fd;
-     unsigned char *rem_addr;
-     int rem_addr_len;
+dl_connect(int fd, unsigned char *rem_addr, int rem_addr_len)
 {
   dl_connect_req_t *connection_req = (dl_connect_req_t *)control_data;
   dl_connect_con_t *connection_con = (dl_connect_con_t *)control_data;
@@ -4079,8 +4411,8 @@ dl_connect(fd, rem_addr, rem_addr_len)
   connection_req->dl_qos_length = 0;
   connection_req->dl_qos_offset = 0;
   bcopy (rem_addr, 
-	 (unsigned char *)control_data + sizeof(dl_connect_req_t),
-	 rem_addr_len);
+         (unsigned char *)control_data + sizeof(dl_connect_req_t),
+         rem_addr_len);
 
   /* well, I would call the put_control routine here, but the sequence */
   /* of connection stuff with DLPI is a bit screwey with all this */
@@ -4189,7 +4521,7 @@ dl_recv_disc(fd)
  /* tests. raj 11/94 I would suspect that this code carries an IBM */
  /* copyright that is much the same as that for the original HP */
  /* netperf code */
-int	confidence_iterations; /* for iterations */
+int     confidence_iterations; /* for iterations */
 
 double  
   result_confid=-10.0,
@@ -4234,57 +4566,55 @@ double
 /*  interval=0.1; */
 
 /************************************************************************/
-/*     									*/
-/*     	Constants for Confidence Intervals 		             	*/
-/*     									*/
+/*                                                                      */
+/*      Constants for Confidence Intervals                              */
+/*                                                                      */
 /************************************************************************/
 void 
 init_stat()
 {
-	measured_sum_result=0.0;
-	measured_square_sum_result=0.0;
-	measured_mean_result=0.0;
-	measured_var_result=0.0;
+        measured_sum_result=0.0;
+        measured_square_sum_result=0.0;
+        measured_mean_result=0.0;
+        measured_var_result=0.0;
 
-	measured_sum_local_cpu=0.0;
-	measured_square_sum_local_cpu=0.0;
-	measured_mean_local_cpu=0.0;
-	measured_var_local_cpu=0.0;
+        measured_sum_local_cpu=0.0;
+        measured_square_sum_local_cpu=0.0;
+        measured_mean_local_cpu=0.0;
+        measured_var_local_cpu=0.0;
 
-	measured_sum_remote_cpu=0.0;
-	measured_square_sum_remote_cpu=0.0;
-	measured_mean_remote_cpu=0.0;
-	measured_var_remote_cpu=0.0;
+        measured_sum_remote_cpu=0.0;
+        measured_square_sum_remote_cpu=0.0;
+        measured_mean_remote_cpu=0.0;
+        measured_var_remote_cpu=0.0;
 
-	measured_sum_local_service_demand=0.0;
-	measured_square_sum_local_service_demand=0.0;
-	measured_mean_local_service_demand=0.0;
-	measured_var_local_service_demand=0.0;
+        measured_sum_local_service_demand=0.0;
+        measured_square_sum_local_service_demand=0.0;
+        measured_mean_local_service_demand=0.0;
+        measured_var_local_service_demand=0.0;
 
-	measured_sum_remote_service_demand=0.0;
-	measured_square_sum_remote_service_demand=0.0;
-	measured_mean_remote_service_demand=0.0;
-	measured_var_remote_service_demand=0.0;
+        measured_sum_remote_service_demand=0.0;
+        measured_square_sum_remote_service_demand=0.0;
+        measured_mean_remote_service_demand=0.0;
+        measured_var_remote_service_demand=0.0;
 
-	measured_sum_local_time=0.0;
-	measured_square_sum_local_time=0.0;
-	measured_mean_local_time=0.0;
-	measured_var_local_time=0.0;
+        measured_sum_local_time=0.0;
+        measured_square_sum_local_time=0.0;
+        measured_mean_local_time=0.0;
+        measured_var_local_time=0.0;
 
-	measured_mean_remote_time=0.0;
+        measured_mean_remote_time=0.0;
 
-	measured_fails = 0.0;
-	measured_local_results=0.0,
-	confidence=-10.0;
+        measured_fails = 0.0;
+        measured_local_results=0.0,
+        confidence=-10.0;
 }
 
  /* this routine does a simple table lookup for some statistical */
  /* function that I would remember if I stayed awake in my probstats */
  /* class... raj 11/94 */
 double 
-confid(level,freedom)
-int	level;
-int	freedom;
+confid(int level, int freedom)
 {
 double  t99[35],t95[35];
 
@@ -4351,7 +4681,7 @@ double  t99[35],t95[35];
    t99[30]= 2.750;
    
    if(level==95){
-   	return(t95[freedom]);
+        return(t95[freedom]);
    } else if(level==99){
         return(t99[freedom]);
    } else{
@@ -4360,127 +4690,120 @@ double  t99[35],t95[35];
 }
 
 void
-calculate_confidence(confidence_iterations,
-		     time,
-		     result,
-		     loc_cpu,
-		     rem_cpu,
-		     loc_sd,
-		     rem_sd)
-int	confidence_iterations;
-float   time;
-double	result;
-float	loc_cpu;
-float	rem_cpu;
-float   loc_sd;
-float   rem_sd;
+calculate_confidence(int confidence_iterations,
+                     float time,
+                     double result,
+                     float loc_cpu,
+                     float rem_cpu,
+                     float loc_sd,
+                     float rem_sd)
 {
 
   if (debug) {
     fprintf(where,
-	    "calculate_confidence: itr  %d; time %f; res  %f\n",
-	    confidence_iterations,
-	    time,
-	    result);
+            "calculate_confidence: itr  %d; time %f; res  %f\n",
+            confidence_iterations,
+            time,
+            result);
     fprintf(where,
-	    "                               lcpu %f; rcpu %f\n",
-	    loc_cpu,
-	    rem_cpu);
+            "                               lcpu %f; rcpu %f\n",
+            loc_cpu,
+            rem_cpu);
     fprintf(where,
-	    "                               lsdm %f; rsdm %f\n",
-	    loc_sd,
-	    rem_sd);
+            "                               lsdm %f; rsdm %f\n",
+            loc_sd,
+            rem_sd);
     fflush(where);
   }
 
   /* the test time */
-  measured_sum_local_time		+= 
+  measured_sum_local_time               += 
     (double) time;
-  measured_square_sum_local_time	+= 
+  measured_square_sum_local_time        += 
     (double) time*time;
-  measured_mean_local_time		=  
+  measured_mean_local_time              =  
     (double) measured_sum_local_time/confidence_iterations;
-  measured_var_local_time		=  
+  measured_var_local_time               =  
     (double) measured_square_sum_local_time/confidence_iterations
       -measured_mean_local_time*measured_mean_local_time;
   
   /* the test result */
-  measured_sum_result		+= 
+  measured_sum_result           += 
     (double) result;
-  measured_square_sum_result	+= 
+  measured_square_sum_result    += 
     (double) result*result;
-  measured_mean_result		=  
+  measured_mean_result          =  
     (double) measured_sum_result/confidence_iterations;
-  measured_var_result		=  
+  measured_var_result           =  
     (double) measured_square_sum_result/confidence_iterations
       -measured_mean_result*measured_mean_result;
 
   /* local cpu utilization */
-  measured_sum_local_cpu	+= 
+  measured_sum_local_cpu        += 
     (double) loc_cpu;
-  measured_square_sum_local_cpu	+= 
+  measured_square_sum_local_cpu += 
     (double) loc_cpu*loc_cpu;
-  measured_mean_local_cpu	= 
+  measured_mean_local_cpu       = 
     (double) measured_sum_local_cpu/confidence_iterations;
-  measured_var_local_cpu	= 
+  measured_var_local_cpu        = 
     (double) measured_square_sum_local_cpu/confidence_iterations
       -measured_mean_local_cpu*measured_mean_local_cpu;
 
   /* remote cpu util */
-  measured_sum_remote_cpu	+=
+  measured_sum_remote_cpu       +=
     (double) rem_cpu;
   measured_square_sum_remote_cpu+=
     (double) rem_cpu*rem_cpu;
-  measured_mean_remote_cpu	= 
+  measured_mean_remote_cpu      = 
     (double) measured_sum_remote_cpu/confidence_iterations;
-  measured_var_remote_cpu	= 
+  measured_var_remote_cpu       = 
     (double) measured_square_sum_remote_cpu/confidence_iterations
       -measured_mean_remote_cpu*measured_mean_remote_cpu;
 
   /* local service demand */
-  measured_sum_local_service_demand	+=
+  measured_sum_local_service_demand     +=
     (double) loc_sd;
   measured_square_sum_local_service_demand+=
     (double) loc_sd*loc_sd;
-  measured_mean_local_service_demand	= 
+  measured_mean_local_service_demand    = 
     (double) measured_sum_local_service_demand/confidence_iterations;
-  measured_var_local_service_demand	= 
+  measured_var_local_service_demand     = 
     (double) measured_square_sum_local_service_demand/confidence_iterations
       -measured_mean_local_service_demand*measured_mean_local_service_demand;
 
   /* remote service demand */
-  measured_sum_remote_service_demand	+=
+  measured_sum_remote_service_demand    +=
     (double) rem_sd;
   measured_square_sum_remote_service_demand+=
     (double) rem_sd*rem_sd;
-  measured_mean_remote_service_demand	= 
+  measured_mean_remote_service_demand   = 
     (double) measured_sum_remote_service_demand/confidence_iterations;
-  measured_var_remote_service_demand	= 
+  measured_var_remote_service_demand    = 
     (double) measured_square_sum_remote_service_demand/confidence_iterations
       -measured_mean_remote_service_demand*measured_mean_remote_service_demand;
 
   if(confidence_iterations>1){ 
      result_confid= (double) interval - 
        2.0 * confid(confidence_level,confidence_iterations-1)* 
-	 sqrt(measured_var_result/(confidence_iterations-1.0)) / 
-	   measured_mean_result;
+         sqrt(measured_var_result/(confidence_iterations-1.0)) / 
+           measured_mean_result;
 
      loc_cpu_confid= (double) interval - 
        2.0 * confid(confidence_level,confidence_iterations-1)* 
-	 sqrt(measured_var_local_cpu/(confidence_iterations-1.0)) / 
-	   measured_mean_local_cpu;
+         sqrt(measured_var_local_cpu/(confidence_iterations-1.0)) / 
+           measured_mean_local_cpu;
 
      rem_cpu_confid= (double) interval - 
        2.0 * confid(confidence_level,confidence_iterations-1)*
-	 sqrt(measured_var_remote_cpu/(confidence_iterations-1.0)) / 
-	   measured_mean_remote_cpu;
+         sqrt(measured_var_remote_cpu/(confidence_iterations-1.0)) / 
+           measured_mean_remote_cpu;
 
      if(debug){
        printf("Conf_itvl %2d: results:%4.1f%% loc_cpu:%4.1f%% rem_cpu:%4.1f%%\n",
-	      confidence_iterations,
-	      (interval-result_confid)*100.0,
-	      (interval-loc_cpu_confid)*100.0,
-	      (interval-rem_cpu_confid)*100.0);
+              confidence_iterations,
+              (interval-result_confid)*100.0,
+              (interval-loc_cpu_confid)*100.0,
+              (interval-rem_cpu_confid)*100.0);
      }
 
      confidence = min(min(result_confid,loc_cpu_confid),rem_cpu_confid);
@@ -4491,26 +4814,20 @@ float   rem_sd;
  /* here ends the IBM code */
 
 void
-retrieve_confident_values(elapsed_time,
-			  thruput,
-			  local_cpu_utilization,
-			  remote_cpu_utilization,
-			  local_service_demand,
-			  remote_service_demand)
-     float  *elapsed_time;
-     double *thruput;
-     float  *local_cpu_utilization;
-     float  *remote_cpu_utilization;
-     float  *local_service_demand;
-     float  *remote_service_demand;
+retrieve_confident_values(float *elapsed_time,
+                          double *thruput,
+                          float *local_cpu_utilization,
+                          float *remote_cpu_utilization,
+                          float *local_service_demand,
+                          float *remote_service_demand)
 
 {
-  *elapsed_time            = measured_mean_local_time;
+  *elapsed_time            = (float)measured_mean_local_time;
   *thruput                 = measured_mean_result;
-  *local_cpu_utilization   = measured_mean_local_cpu;
-  *remote_cpu_utilization  = measured_mean_remote_cpu;
-  *local_service_demand    = measured_mean_local_service_demand;
-  *remote_service_demand   = measured_mean_remote_service_demand;
+  *local_cpu_utilization   = (float)measured_mean_local_cpu;
+  *remote_cpu_utilization  = (float)measured_mean_remote_cpu;
+  *local_service_demand    = (float)measured_mean_local_service_demand;
+  *remote_service_demand   = (float)measured_mean_remote_service_demand;
 }
 
  /* display_confidence() is called when we could not achieve the */
@@ -4521,24 +4838,332 @@ display_confidence()
 
 {
   fprintf(where,
-	  "!!! WARNING\n");
+          "!!! WARNING\n");
   fprintf(where,
-	  "!!! Desired confidence was not achieved within ");
+          "!!! Desired confidence was not achieved within ");
   fprintf(where,
-	  "the specified iterations.\n");
+          "the specified iterations.\n");
   fprintf(where,
-	  "!!! This implies that there was variability in ");
+          "!!! This implies that there was variability in ");
   fprintf(where,
-	  "the test environment that\n");
+          "the test environment that\n");
   fprintf(where,
-	  "!!! must be investigated before going further.\n");
+          "!!! must be investigated before going further.\n");
   fprintf(where,
-	  "!!! Confidence intervals: Throughput      : %4.1f%%\n",
-	  100.0 * (interval - result_confid));
+          "!!! Confidence intervals: Throughput      : %4.1f%%\n",
+          100.0 * (interval - result_confid));
   fprintf(where,
-	  "!!!                       Local CPU util  : %4.1f%%\n",
-	  100.0 * (interval - loc_cpu_confid));
+          "!!!                       Local CPU util  : %4.1f%%\n",
+          100.0 * (interval - loc_cpu_confid));
   fprintf(where,
-	  "!!!                       Remote CPU util : %4.1f%%\n\n",
-	  100.0 * (interval - rem_cpu_confid));
+          "!!!                       Remote CPU util : %4.1f%%\n\n",
+          100.0 * (interval - rem_cpu_confid));
 }
+
+#ifdef WIN32
+#ifdef NT_PERF
+
+/*****************************************************************************
+*                                                                                                                                                        *
+*  InitPerfCntrs() -                                                                                                             *
+*                                                                                                                                                        *
+*         Changed to no longer access the NT performance registry interfaces.    *
+*         A direct call to NtQuerySystemInformation (an undocumented NT API)     *
+*         is made instead.      Parameters determined by decompilation of ntkrnlmp       *
+*         and ntdll.                                                                                                                     *
+*                                                                                                                                                        *
+*****************************************************************************/
+
+PerfObj *InitPerfCntrs()
+{
+        PerfObj *NewPerfCntrs;
+        DWORD NTVersion;
+        DWORD status;
+
+        NewPerfCntrs = (PerfObj *)GlobalAlloc(GPTR, sizeof(PerfObj));
+        assert(NewPerfCntrs != NULL);
+
+        ZeroMemory((PCHAR)NewPerfCntrs, sizeof(PerfObj));
+
+        // get NT version
+        NTVersion = GetVersion();
+        if (NTVersion >= 0x80000000) 
+        {
+                fprintf(stderr, "Not running on Windows NT\n");
+                exit(1);
+        }
+
+        // locate the calls we need in NTDLL
+        //Lint 
+    NtQuerySystemInformation = (NT_QUERY_SYSTEM_INFORMATION)GetProcAddress( GetModuleHandle("ntdll.dll"),
+                "NtQuerySystemInformation" );
+
+        if ( !(NtQuerySystemInformation) )
+        {
+                //Lint
+                status = GetLastError();
+                fprintf(stderr, "GetProcAddressFailed, status: %X\n", status);
+                exit(1);
+        }
+        
+        // setup to measure timestamps with the high resolution timers.
+        if (QueryPerformanceFrequency(&TickHz) == FALSE)
+        {
+                fprintf(stderr,"MAIN - QueryPerformanceFrequency Failed!\n");
+                exit(2);   
+        }
+
+        RestartPerfCntrs(NewPerfCntrs);
+
+        return(NewPerfCntrs);
+}  /* InitPerfCntrs */
+
+/*****************************************************************************
+*                                                                                                                                                        *
+*  RestartPerfCntrs() -                                                                                                          *
+*                                                                                                                                                        *
+*         The Performance counters must be read twice to produce rate and                *
+*         percentage results.  This routine is called before the start of a      *
+*         benchmark to establish the initial counters.                                                   *
+*         It must be called a second time after the benchmark completes to               *
+*         collect the final state of the performance counters.                                   *
+*         ReportPerfCntrs is called to print the results after the benchmark     *
+*         completes.                                                                                                                     *
+*                                                                                                                                                        *
+*****************************************************************************/
+
+void RestartPerfCntrs(PerfObj *PerfCntrs)
+{
+        DWORD returnLength = 0;  //Lint
+        DWORD returnNumCPUs;  //Lint
+        DWORD i;
+
+        DWORD status;
+
+        // Move previous data from EndInfo to StartInfo.
+        CopyMemory((PCHAR)&PerfCntrs->StartInfo[0],
+                (PCHAR)&PerfCntrs->EndInfo[0],
+                sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION)*(MAXCPUS +1));
+
+        PerfCntrs->StartTime = PerfCntrs->EndTime;
+
+        // get the current CPUTIME information
+        if ( (status = NtQuerySystemInformation( SystemProcessorPerformanceInformation,
+                (PCHAR)&PerfCntrs->EndInfo[0], sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION)*MAXCPUS,
+                &returnLength )) != 0) 
+        {
+                fprintf(stderr, "NtQuery failed, status: %X\n", status);
+                exit(1);
+        }
+
+        PerfCntrs->EndTime = ReadPerformanceCounter();
+
+        // Validate that NtQuery returned a reasonable amount of data
+        if ((returnLength % sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION)) != 0)
+        {
+                fprintf(stderr, "NtQuery didn't return expected amount of data\n");
+                fprintf(stderr, "Expected a multiple of %i, returned %i\n",
+                        sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION), returnLength);
+                exit(1);
+        }
+        returnNumCPUs = returnLength / sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION); 
+
+        if (returnNumCPUs != (int)SystemInfo.dwNumberOfProcessors)
+        {
+                fprintf(stderr, "NtQuery didn't return expected amount of data\n");
+                fprintf(stderr, "Expected data for %i CPUs, returned %i\n",
+                        (int)SystemInfo.dwNumberOfProcessors, returnNumCPUs);
+                exit(1);
+        }
+
+        // Zero entries not returned by NtQuery
+        ZeroMemory((PCHAR)&PerfCntrs->EndInfo[returnNumCPUs],
+                sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION)*
+                (MAXCPUS +1 - returnNumCPUs));
+
+        // Total all of the CPUs
+        //      KernelTime needs to be fixed-up; it includes both idle & true kernel time
+        //  Note that kernel time also includes DpcTime & InterruptTime, but I like this.
+        for (i=0; i < returnNumCPUs; i++)
+        {
+                PerfCntrs->EndInfo[i].KernelTime.QuadPart                 -= PerfCntrs->EndInfo[i].IdleTime.QuadPart;
+                PerfCntrs->EndInfo[MAXCPUS].IdleTime.QuadPart     += PerfCntrs->EndInfo[i].IdleTime.QuadPart;
+                PerfCntrs->EndInfo[MAXCPUS].KernelTime.QuadPart   += PerfCntrs->EndInfo[i].KernelTime.QuadPart;
+                PerfCntrs->EndInfo[MAXCPUS].UserTime.QuadPart     += PerfCntrs->EndInfo[i].UserTime.QuadPart;
+                PerfCntrs->EndInfo[MAXCPUS].DpcTime.QuadPart      += PerfCntrs->EndInfo[i].DpcTime.QuadPart;
+                PerfCntrs->EndInfo[MAXCPUS].InterruptTime.QuadPart += PerfCntrs->EndInfo[i].InterruptTime.QuadPart;
+                PerfCntrs->EndInfo[MAXCPUS].InterruptCount                += PerfCntrs->EndInfo[i].InterruptCount;
+        }
+
+}   /* RestartPerfCntrs */
+
+/*****************************************************************************
+*                                                                                                                                                        *
+*  ReportPerfCntrs() -                                                                                                           *
+*                                                                                                                                                        *
+*         This routine reports the results of the various performance counters.  *
+*                                                                                                                                                        *
+*****************************************************************************/
+
+double ReportPerfCntrs(PerfObj *PerfCntrs)
+{
+        double tot_CPU_Util;
+        int i;
+        int duration;  // in 100 usecs
+
+        LARGE_INTEGER ActualDuration;
+
+        SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION        DeltaInfo[MAXCPUS +1];  
+
+        LARGE_INTEGER   TotalCPUTime[MAXCPUS +1];         
+
+        for (i=0; i <= MAXCPUS; i++)
+        {
+                DeltaInfo[i].IdleTime.QuadPart    = PerfCntrs->EndInfo[i].IdleTime.QuadPart -
+                        PerfCntrs->StartInfo[i].IdleTime.QuadPart;
+                DeltaInfo[i].KernelTime.QuadPart          = PerfCntrs->EndInfo[i].KernelTime.QuadPart -
+                        PerfCntrs->StartInfo[i].KernelTime.QuadPart;
+                DeltaInfo[i].UserTime.QuadPart    = PerfCntrs->EndInfo[i].UserTime.QuadPart -
+                        PerfCntrs->StartInfo[i].UserTime.QuadPart;
+                DeltaInfo[i].DpcTime.QuadPart     = PerfCntrs->EndInfo[i].DpcTime.QuadPart -
+                        PerfCntrs->StartInfo[i].DpcTime.QuadPart;
+                DeltaInfo[i].InterruptTime.QuadPart = PerfCntrs->EndInfo[i].InterruptTime.QuadPart -
+                        PerfCntrs->StartInfo[i].InterruptTime.QuadPart;
+                DeltaInfo[i].InterruptCount               = PerfCntrs->EndInfo[i].InterruptCount -
+                        PerfCntrs->StartInfo[i].InterruptCount;
+
+                TotalCPUTime[i].QuadPart =      
+                        DeltaInfo[i].IdleTime.QuadPart +
+                        DeltaInfo[i].KernelTime.QuadPart +
+                        DeltaInfo[i].UserTime.QuadPart;
+                // KernelTime already includes DpcTime & InterruptTime!
+                // + DeltaInfo[i].DpcTime.QuadPart  +
+                //  DeltaInfo[i].InterruptTime.QuadPart;
+        }
+
+        tot_CPU_Util = 100.0*(1.0 - (double)DeltaInfo[MAXCPUS].IdleTime.QuadPart/(double)TotalCPUTime[MAXCPUS].QuadPart);  //Lint
+
+        // Re-calculate duration, since we may have stoped early due to cntr-C.
+        ActualDuration.QuadPart = PerfCntrs->EndTime.QuadPart - 
+                PerfCntrs->StartTime.QuadPart;
+
+        // convert to 1/10 milliseconds (100 usec) 
+        ActualDuration.QuadPart = (ActualDuration.QuadPart*10000)/TickHz.QuadPart;
+        duration = ActualDuration.LowPart;
+
+        if (verbosity > 1)
+        {
+                fprintf(where,"ActualDuation (ms): %d\n", duration/10);
+        }
+
+        if (verbosity > 1)
+        {
+                fprintf(where, "%% CPU    _Total");
+                if ((int)SystemInfo.dwNumberOfProcessors > 1)
+                {
+                        for (i=0; i < (int)SystemInfo.dwNumberOfProcessors; i++)
+                        {
+                                fprintf(where, "\t CPU %i", i);
+                        }
+                }
+                fprintf(where, "\n");
+
+                fprintf(where, "Busy      %5.2f", tot_CPU_Util);
+                if ((int)SystemInfo.dwNumberOfProcessors > 1)
+                {
+                        for (i=0; i < (int)SystemInfo.dwNumberOfProcessors; i++)
+                        {
+                                fprintf(where, "\t %5.2f", 
+                                        100.0*(1.0 - (double)DeltaInfo[i].IdleTime.QuadPart/(double)TotalCPUTime[i].QuadPart));  //Lint
+                        }
+                }
+                fprintf(where, "\n");
+
+                fprintf(where, "Kernel    %5.2f", 
+                        100.0*(double)DeltaInfo[MAXCPUS].KernelTime.QuadPart/(double)TotalCPUTime[MAXCPUS].QuadPart);  //Lint
+
+                if ((int)SystemInfo.dwNumberOfProcessors > 1)
+                {
+                        for (i=0; i < (int)SystemInfo.dwNumberOfProcessors; i++)
+                        {
+                                fprintf(where, "\t %5.2f", 
+                                        100.0*(double)DeltaInfo[i].KernelTime.QuadPart/(double)TotalCPUTime[i].QuadPart);  //Lint
+                        }
+                }
+                fprintf(where, "\n");
+
+                fprintf(where, "User      %5.2f", 
+                        100.0*(double)DeltaInfo[MAXCPUS].UserTime.QuadPart/(double)TotalCPUTime[MAXCPUS].QuadPart);
+
+                if ((int)SystemInfo.dwNumberOfProcessors > 1)
+                {
+                        for (i=0; i < (int)SystemInfo.dwNumberOfProcessors; i++)
+                        {
+                                fprintf(where, "\t %5.2f", 
+                                        100.0*(double)DeltaInfo[i].UserTime.QuadPart/TotalCPUTime[i].QuadPart);  //Lint
+                        }
+                }
+                fprintf(where, "\n");
+
+                fprintf(where, "Dpc       %5.2f", 
+                        100.0*(double)DeltaInfo[MAXCPUS].DpcTime.QuadPart/(double)TotalCPUTime[MAXCPUS].QuadPart);  //Lint
+
+                if ((int)SystemInfo.dwNumberOfProcessors > 1)
+                {
+                        for (i=0; i < (int)SystemInfo.dwNumberOfProcessors; i++)
+                        {
+                                fprintf(where, "\t %5.2f", 
+                                        100.0*(double)DeltaInfo[i].DpcTime.QuadPart/(double)TotalCPUTime[i].QuadPart);  //Lint
+                        }
+                }
+                fprintf(where, "\n");
+
+                fprintf(where, "Interrupt %5.2f", 
+                        100.0*(double)DeltaInfo[MAXCPUS].InterruptTime.QuadPart/(double)TotalCPUTime[MAXCPUS].QuadPart);  //Lint
+
+                if ((int)SystemInfo.dwNumberOfProcessors > 1)
+                {
+                        for (i=0; i < (int)SystemInfo.dwNumberOfProcessors; i++)
+                        {
+                                fprintf(where, "\t %5.2f", 
+                                        100.0*(double)DeltaInfo[i].InterruptTime.QuadPart/TotalCPUTime[i].QuadPart);  //Lint
+                        }
+                }
+                fprintf(where, "\n\n");
+
+                fprintf(where, "Interrupt/Sec. %5.1f", 
+                        (double)DeltaInfo[MAXCPUS].InterruptCount*10000.0/(double)duration);
+
+                if ((int)SystemInfo.dwNumberOfProcessors > 1)
+                {
+                        for (i=0; i < (int)SystemInfo.dwNumberOfProcessors; i++)
+                        {
+                                fprintf(where, "\t %5.1f", 
+                                        (double)DeltaInfo[i].InterruptCount*10000.0/(double)duration);
+                        }
+                }
+                fprintf(where, "\n\n");
+                fflush(where);
+        }
+
+        return (tot_CPU_Util);
+
+}  /* ReportPerfCntrs */
+
+/*****************************************************************************
+*                                                                                                                                                        *
+*  ClosePerfCntrs() -                                                                                                            *
+*                                                                                                                                                        *
+*         This routine cleans up the performance counter APIs.                                   *
+*                                                                                                                                                        *
+*****************************************************************************/
+
+void ClosePerfCntrs(PerfObj *PerfCntrs)
+{
+        GlobalFree(PerfCntrs);
+
+        NtQuerySystemInformation = NULL;
+}   /* ClosePerfCntrs */
+
+#endif  // NT_PERF
+#endif  // WIN32

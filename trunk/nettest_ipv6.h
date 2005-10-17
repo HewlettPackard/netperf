@@ -1,5 +1,5 @@
 /*
-        Copyright (C) 1993, Hewlett-Packard Company
+        Copyright (C) 1993-2004 Hewlett-Packard Company
 */
 
  /* This file contains the test-specific definitions for netperf's BSD */
@@ -253,13 +253,15 @@ struct udpipv6_rr_results_struct {
   int           num_cpus;      /* how many CPUs had the remote? */
 };
 
-extern void scan_sockets_args();
+extern void scan_ipv6_args(int argc, char *argv[]);
 
-extern void send_tcpipv6_stream();
-extern void send_tcpipv6_rr();
-extern void send_tcpipv6_conn_rr();
-extern void send_udpipv6_stream();
-extern void send_udpipv6_rr();
+//+*+extern void scan_sockets_args(int argc, char *argv[]);  // included by nettest_bsd.h
+
+extern void send_tcpipv6_stream(char remote_host[]);
+extern void send_tcpipv6_rr(char remote_host[]);
+extern void send_tcpipv6_conn_rr(char remote_host[]);
+extern void send_udpipv6_stream(char remote_host[]);
+extern void send_udpipv6_rr(char remote_host[]);
 
 extern void recv_tcpipv6_stream();
 extern void recv_tcpipv6_rr();

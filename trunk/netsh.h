@@ -33,14 +33,16 @@
 #endif /* MAXLONG */
 
 #ifndef NETSH
+extern char		*program;		/* program invocation name		*/
+
 /* stuff to say where this test is going                                */
 extern char	host_name[HOSTNAMESIZE];/* remote host name or ip addr  */
 extern short	test_port;		/* where is the test waiting    */
 
 extern void     set_defaults();
-extern void     scan_cmd_line();
+extern void     scan_cmd_line(int argc, char *argv[]);
 extern void     dump_globals();
-extern void     break_args();
+extern void     break_args(char *s, char *arg1, char *arg2);
 extern void     print_netserver_usage();
 
 /* output controlling variables                                         */

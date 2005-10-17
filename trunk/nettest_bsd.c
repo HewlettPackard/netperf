@@ -3,7 +3,7 @@
 #endif /* NEED_MAKEFILE_EDIT */
 #ifndef lint
 char	nettest_id[]="\
-@(#)nettest_bsd.c (c) Copyright 1993-2003 Hewlett-Packard Co. Version 2.2pl4";
+@(#)nettest_bsd.c (c) Copyright 1993-2004 Hewlett-Packard Co. Version 2.2pl5";
 #else
 #define DIRTY
 #define HISTOGRAM
@@ -43,8 +43,10 @@ char	nettest_id[]="\
      
 #include <sys/types.h>
 #include <fcntl.h>
+#ifndef WIN32
 #include <errno.h>
 #include <signal.h>
+#endif
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -55,6 +57,7 @@ char	nettest_id[]="\
 #endif /* NOSTDLIBH */
 
 #ifndef WIN32
+#include <sys/time.h>
 #if !defined(__VMS)
 #include <sys/ipc.h>
 #endif /* !defined(__VMS) */
@@ -66,9 +69,8 @@ char	nettest_id[]="\
 #include <netdb.h>
 #else /* WIN32 */
 #include <process.h>
+#include <winsock2.h>
 #include <windows.h>
-#include <winsock.h>
-#define close(x)	closesocket(x)
 #endif /* WIN32 */
 
 #include "netlib.h"
@@ -166,9 +168,7 @@ comma.\n";
  /* called outside of the timing loop */
 static
 void
-get_tcp_info(socket, mss)
-     int socket;
-     int *mss;
+get_tcp_info(SOCKET socket, int *mss)
 {
 
 #ifdef TCP_MAXSEG
@@ -179,7 +179,7 @@ get_tcp_info(socket, mss)
 		 getprotobyname("tcp")->p_proto,	
 		 TCP_MAXSEG,
 		 (char *)mss,
-		 &sock_opt_len) < 0) {
+		 &sock_opt_len) == SOCKET_ERROR) {
     fprintf(where,
 	    "netperf: get_tcp_info: getsockopt TCP_MAXSEG: errno %d\n",
 	    errno);
@@ -200,13 +200,11 @@ get_tcp_info(socket, mss)
  /* should be directed towards "where." family is generally AF_INET, */
  /* and type will be either SOCK_STREAM or SOCK_DGRAM */
 static
-int
-create_data_socket(family, type)
-     int family;
-     int type;
+SOCKET
+create_data_socket(int family, int type)
 {
 
-  int temp_socket;
+  SOCKET temp_socket;
   int one;
   int sock_opt_len;
 
@@ -215,11 +213,7 @@ create_data_socket(family, type)
 		       type,
 		       0);
   
-#ifdef WIN32
   if (temp_socket == INVALID_SOCKET){
-#else
-  if (temp_socket < 0){
-#endif /* WIN32 */
     fprintf(where,
 	    "netperf: create_data_socket: socket: errno %d\n",
 	    errno);
@@ -248,7 +242,7 @@ create_data_socket(family, type)
 #ifdef SO_SNDBUF
   if (lss_size > 0) {
     if(setsockopt(temp_socket, SOL_SOCKET, SO_SNDBUF,
-		  (char *)&lss_size, sizeof(int)) < 0) {
+		  (char *)&lss_size, sizeof(int)) == SOCKET_ERROR) {
       fprintf(where,
 	      "netperf: create_data_socket: SO_SNDBUF option: errno %d\n",
 	      errno);
@@ -264,7 +258,7 @@ create_data_socket(family, type)
   }
   if (lsr_size > 0) {
     if(setsockopt(temp_socket, SOL_SOCKET, SO_RCVBUF,
-		  (char *)&lsr_size, sizeof(int)) < 0) {
+		  (char *)&lsr_size, sizeof(int)) == SOCKET_ERROR) {
       fprintf(where,
 	      "netperf: create_data_socket: SO_RCVBUF option: errno %d\n",
 	      errno);
@@ -273,8 +267,8 @@ create_data_socket(family, type)
     }
     if (debug > 1) {
       fprintf(where,
-	      "netperf: create_data_socket: SO_SNDBUF of %d requested.\n",
-	      lss_size);
+	      "netperf: create_data_socket: SO_RCVBUF of %d requested.\n",
+	      lsr_size);
       fflush(where);
     }
   }
@@ -289,7 +283,7 @@ create_data_socket(family, type)
 		 SOL_SOCKET,	
 		 SO_SNDBUF,
 		 (char *)&lss_size,
-		 &sock_opt_len) < 0) {
+		 &sock_opt_len) == SOCKET_ERROR) {
     fprintf(where,
 	    "netperf: create_data_socket: getsockopt SO_SNDBUF: errno %d\n",
 	    errno);
@@ -300,9 +294,9 @@ create_data_socket(family, type)
 		 SOL_SOCKET,	
 		 SO_RCVBUF,
 		 (char *)&lsr_size,
-		 &sock_opt_len) < 0) {
+		 &sock_opt_len) == SOCKET_ERROR) {
     fprintf(where,
-	    "netperf: create_data_socket: getsockopt SO_SNDBUF: errno %d\n",
+	    "netperf: create_data_socket: getsockopt SO_RCVBUF: errno %d\n",
 	    errno);
     fflush(where);
     lsr_size = -1;
@@ -333,7 +327,7 @@ create_data_socket(family, type)
 		   SOL_SOCKET,
 		   SO_RCV_COPYAVOID,
 		   &loc_rcvavoid,
-		   sizeof(int)) < 0) {
+		   sizeof(int)) == SOCKET_ERROR) {
       fprintf(where,
 	      "netperf: create_data_socket: Could not enable receive copy avoidance");
       fflush(where);
@@ -351,7 +345,7 @@ create_data_socket(family, type)
 		   SOL_SOCKET,
 		   SO_SND_COPYAVOID,
 		   &loc_sndavoid,
-		   sizeof(int)) < 0) {
+		   sizeof(int)) == SOCKET_ERROR) {
       fprintf(where,
 	      "netperf: create_data_socket: Could not enable send copy avoidance");
       fflush(where);
@@ -376,7 +370,7 @@ create_data_socket(family, type)
 		  getprotobyname("tcp")->p_proto,
 		  TCP_NODELAY,
 		  (char *)&one,
-		  sizeof(one)) < 0) {
+		  sizeof(one)) == SOCKET_ERROR) {
       fprintf(where,
 	      "netperf: create_data_socket: nodelay: errno %d\n",
 	      errno);
@@ -407,13 +401,12 @@ create_data_socket(family, type)
  /* only be called for those broken systems. I *really* don't want to */
  /* have this, but even broken systems must be measured. raj 11/95 */
 void
-kludge_socket_options(temp_socket)
-int temp_socket;
+kludge_socket_options(int temp_socket)
 {
 #ifdef SO_SNDBUF
   if (lss_size > 0) {
     if(setsockopt(temp_socket, SOL_SOCKET, SO_SNDBUF,
-		  (char *)&lss_size, sizeof(int)) < 0) {
+		  (char *)&lss_size, sizeof(int)) == SOCKET_ERROR) {
       fprintf(where,
 	      "netperf: kludge_socket_options: SO_SNDBUF option: errno %d\n",
 	      errno);
@@ -429,7 +422,7 @@ int temp_socket;
   }
   if (lsr_size > 0) {
     if(setsockopt(temp_socket, SOL_SOCKET, SO_RCVBUF,
-		  (char *)&lsr_size, sizeof(int)) < 0) {
+		  (char *)&lsr_size, sizeof(int)) == SOCKET_ERROR) {
       fprintf(where,
 	      "netperf: kludge_socket_options: SO_RCVBUF option: errno %d\n",
 	      errno);
@@ -454,7 +447,7 @@ int temp_socket;
 		 SOL_SOCKET,	
 		 SO_SNDBUF,
 		 (char *)&lss_size,
-		 &sock_opt_len) < 0) {
+		 &sock_opt_len) == SOCKET_ERROR) {
     fprintf(where,
 	    "netperf: kludge_socket_options: getsockopt SO_SNDBUF: errno %d\n",
 	    errno);
@@ -465,7 +458,7 @@ int temp_socket;
 		 SOL_SOCKET,	
 		 SO_RCVBUF,
 		 (char *)&lsr_size,
-		 &sock_opt_len) < 0) {
+		 &sock_opt_len) == SOCKET_ERROR) {
     fprintf(where,
 	    "netperf: kludge_socket_options: getsockopt SO_SNDBUF: errno %d\n",
 	    errno);
@@ -509,7 +502,7 @@ int temp_socket;
 		  getprotobyname("tcp")->p_proto,
 		  TCP_NODELAY,
 		  (char *)&one,
-		  sizeof(one)) < 0) {
+		  sizeof(one)) == SOCKET_ERROR) {
       fprintf(where,"netperf: kludge_socket_options: nodelay: errno %d\n",
 	      errno);
       fflush(where);
@@ -540,8 +533,7 @@ int temp_socket;
 
 
 void 
-send_tcp_stream(remote_host)
-char	remote_host[];
+send_tcp_stream(char remote_host[])
 {
   
   char *tput_title = "\
@@ -603,9 +595,9 @@ Size (bytes)\n\
   
   int len;
   unsigned int nummessages = 0;
-  int send_socket;
+  SOCKET send_socket;
   int bytes_remaining;
-  int tcp_mss;
+  int tcp_mss = -1;  // possibly uninitialized on printf far below
 
   /* with links like fddi, one can send > 32 bits worth of bytes */
   /* during a test... ;-) at some point, this should probably become a */
@@ -654,7 +646,7 @@ Size (bytes)\n\
   /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
   /* order changed to check for IP address first. raj 7/96 */
 
-  if ((addr = inet_addr(remote_host)) == -1) {
+  if ((addr = inet_addr(remote_host)) == SOCKET_ERROR) {
     /* it was not an IP address, try it as a name */
     if ((hp = gethostbyname(remote_host)) == NULL) {
       /* we have no idea what it is */
@@ -738,7 +730,7 @@ Size (bytes)\n\
     send_socket = create_data_socket(AF_INET, 
 				     SOCK_STREAM);
     
-    if (send_socket < 0){
+    if (send_socket == INVALID_SOCKET){
       perror("netperf: send_tcp_stream: tcp stream data socket");
       exit(1);
     }
@@ -858,13 +850,13 @@ Size (bytes)\n\
 
       /* we have to make sure that the server port number is in */
       /* network order */
-      server.sin_port   = tcp_stream_response->data_port_number;
+      server.sin_port   = (short)tcp_stream_response->data_port_number;
       server.sin_port   = htons(server.sin_port); 
       rem_rcvavoid	= tcp_stream_response->so_rcvavoid;
       rem_sndavoid	= tcp_stream_response->so_sndavoid;
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       fprintf(where,
 	      "netperf: remote error %d",
 	      netperf_response.content.serv_errno);
@@ -877,7 +869,7 @@ Size (bytes)\n\
     /*Connect up to the remote port on the data socket  */
     if (connect(send_socket, 
 		(struct sockaddr *)&server,
-		sizeof(server)) <0){
+		sizeof(server)) == INVALID_SOCKET){
       perror("netperf: send_tcp_stream: data socket connect failed");
       printf(" port: %d\n",ntohs(server.sin_port));
       exit(1);
@@ -978,15 +970,10 @@ Size (bytes)\n\
 		   send_ring->buffer_ptr,
 		   send_size,
 		   0)) != send_size) {
-#ifdef WIN32
-      if ((len >=0) || 
-	  (len == SOCKET_ERROR && WSAGetLastError() == WSAEINTR)) {
-#else
-      if ((len >=0) || (errno == EINTR)) {
-#endif /* WIN32 */
-	  /* the test was interrupted, must be the end of test */
-	  break;
-	}
+      if ((len >=0) || SOCKET_EINTR(len)) {
+	    /* the test was interrupted, must be the end of test */
+	    break;
+	  }
 	perror("netperf: data send error");
 	printf("len was %d\n",len);
 	exit(1);
@@ -1044,7 +1031,7 @@ Size (bytes)\n\
       get_tcp_info(send_socket,&tcp_mss);
     }
     
-    if (shutdown(send_socket,1) == -1) {
+    if (shutdown(send_socket,1) == SOCKET_ERROR) {
       perror("netperf: cannot shutdown tcp stream socket");
       exit(1);
     }
@@ -1079,7 +1066,7 @@ Size (bytes)\n\
 	fprintf(where,"remote results obtained\n");
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       fprintf(where,
 	      "netperf: remote error %d",
 	      netperf_response.content.serv_errno);
@@ -1100,7 +1087,7 @@ Size (bytes)\n\
     
     bytes_sent	= ntohd(tcp_stream_result->bytes_received);
 
-    thruput	= (double) calc_thruput(bytes_sent);
+    thruput	= calc_thruput(bytes_sent);
     
     if (local_cpu_usage || remote_cpu_usage) {
       /* We must now do a little math for service demand and cpu */
@@ -1197,13 +1184,13 @@ Size (bytes)\n\
     switch (verbosity) {
     case 0:
       if (local_cpu_usage) {
-	fprintf(where,
+		fprintf(where,
 		cpu_fmt_0,
 		local_service_demand,
 		local_cpu_method);
       }
       else {
-	fprintf(where,
+		fprintf(where,
 		cpu_fmt_0,
 		remote_service_demand,
 		remote_cpu_method);
@@ -1212,7 +1199,7 @@ Size (bytes)\n\
     case 1:
     case 2:
       if (print_headers) {
-	fprintf(where,
+		fprintf(where,
 		cpu_title,
 		format_units(),
 		local_cpu_method,
@@ -1245,7 +1232,7 @@ Size (bytes)\n\
     case 1:
     case 2:
       if (print_headers) {
-	fprintf(where,tput_title,format_units());
+		fprintf(where,tput_title,format_units());
       }
       fprintf(where,
 	      tput_fmt_1,		/* the format string */
@@ -1311,8 +1298,7 @@ Size (bytes)\n\
 
 
 void 
-send_tcp_maerts(remote_host)
-char	remote_host[];
+send_tcp_maerts(char remote_host[])
 {
   
   char *tput_title = "\
@@ -1374,9 +1360,9 @@ Size (bytes)\n\
   
   int len;
   unsigned int nummessages = 0;
-  int recv_socket;
+  SOCKET recv_socket;
   int bytes_remaining;
-  int tcp_mss;
+  int tcp_mss = -1;  // possibly uninitialized on printf far below
 
   /* with links like fddi, one can recv > 32 bits worth of bytes */
   /* during a test... ;-) at some point, this should probably become a */
@@ -1425,7 +1411,7 @@ Size (bytes)\n\
   /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
   /* order changed to check for IP address first. raj 7/96 */
 
-  if ((addr = inet_addr(remote_host)) == -1) {
+  if ((addr = inet_addr(remote_host)) == SOCKET_ERROR) {
     /* it was not an IP address, try it as a name */
     if ((hp = gethostbyname(remote_host)) == NULL) {
       /* we have no idea what it is */
@@ -1509,7 +1495,7 @@ Size (bytes)\n\
     recv_socket = create_data_socket(AF_INET, 
 				     SOCK_STREAM);
     
-    if (recv_socket < 0){
+    if (recv_socket == INVALID_SOCKET){
       perror("netperf: send_tcp_maerts: tcp stream data socket");
       exit(1);
     }
@@ -1630,13 +1616,13 @@ Size (bytes)\n\
 
       /* we have to make sure that the server port number is in */
       /* network order */
-      server.sin_port   = tcp_maerts_response->data_port_number;
+      server.sin_port   = (short)tcp_maerts_response->data_port_number;
       server.sin_port   = htons(server.sin_port); 
       rem_rcvavoid	= tcp_maerts_response->so_rcvavoid;
       rem_sndavoid	= tcp_maerts_response->so_sndavoid;
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       fprintf(where,
 	      "netperf: remote error %d",
 	      netperf_response.content.serv_errno);
@@ -1649,7 +1635,7 @@ Size (bytes)\n\
     /*Connect up to the remote port on the data socket  */
     if (connect(recv_socket, 
 		(struct sockaddr *)&server,
-		sizeof(server)) <0){
+		sizeof(server)) == INVALID_SOCKET){
       perror("netperf: send_tcp_maerts: data socket connect failed");
       printf(" port: %d\n",ntohs(server.sin_port));
       exit(1);
@@ -1789,12 +1775,7 @@ Size (bytes)\n\
       }
     }
 
-#ifdef WIN32
-    if ((len < 0) || 
-	(len == SOCKET_ERROR && WSAGetLastError() == WSAEINTR)) {
-#else
-    if ((len < 0) || (errno == EINTR)) {
-#endif /* WIN32 */
+    if ((len < 0) || SOCKET_EINTR(len)) {
       perror("netperf: data recv error");
       printf("len was %d\n",len);
       exit(1);
@@ -1813,10 +1794,12 @@ Size (bytes)\n\
       get_tcp_info(recv_socket,&tcp_mss);
     }
     
-    if (shutdown(recv_socket,1) == -1) {
+    if (shutdown(recv_socket,1) == SOCKET_ERROR) {
       perror("netperf: cannot shutdown tcp maerts socket");
       exit(1);
     }
+
+    stop_timer();
     
     /* this call will always give us the local elapsed time for the
        test, and will also store-away the necessaries for cpu
@@ -1842,7 +1825,7 @@ Size (bytes)\n\
 	fprintf(where,"remote results obtained\n");
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       fprintf(where,
 	      "netperf: remote error %d",
 	      netperf_response.content.serv_errno);
@@ -1863,7 +1846,7 @@ Size (bytes)\n\
     
     bytes_sent	= ntohd(tcp_maerts_result->bytes_sent);
 
-    thruput	= (double) calc_thruput(bytes_sent);
+    thruput	= calc_thruput(bytes_sent);
     
     if (local_cpu_usage || remote_cpu_usage) {
       /* We must now do a little math for service demand and cpu */
@@ -2154,10 +2137,10 @@ Size (bytes)\n\
   struct sendfile_ring_elt *send_ring;
   
   int len;
-  unsigned int nummessages = 0, offset = 0;
-  int send_socket;
+  unsigned int nummessages = 0;
+  SOCKET send_socket;
   int bytes_remaining;
-  int tcp_mss;
+  int tcp_mss = -1;  // possibly uninitialized on printf far below
 
   /* with links like fddi, one can send > 32 bits worth of bytes */
   /* during a test... ;-) at some point, this should probably become a */
@@ -2178,7 +2161,6 @@ Size (bytes)\n\
   struct	hostent	        *hp;
   struct	sockaddr_in	server;
   unsigned      int             addr;
-  int		file_size;
 
 #if defined(__linux) || defined(__SunOS_5_9)
   off_t     scratch_offset;   /* the linux sendfile() call will update
@@ -2216,7 +2198,7 @@ Size (bytes)\n\
   /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
   /* order changed to check for IP address first. raj 7/96 */
 
-  if ((addr = inet_addr(remote_host)) == -1) {
+  if ((addr = inet_addr(remote_host)) == SOCKET_ERROR) {
     /* it was not an IP address, try it as a name */
     if ((hp = gethostbyname(remote_host)) == NULL) {
       /* we have no idea what it is */
@@ -2302,7 +2284,7 @@ Size (bytes)\n\
     /* set up the data socket */
     send_socket = create_data_socket(AF_INET, 
 				     SOCK_STREAM);
-    if (send_socket < 0){
+    if (send_socket == INVALID_SOCKET){
       perror("netperf: sendfile_tcp_stream: tcp stream data socket");
       exit(1);
     }
@@ -2320,7 +2302,7 @@ Size (bytes)\n\
 		     getprotobyname("tcp")->p_proto,
 		     TCP_CORK,
 		     (char *)&one,
-		     sizeof(one)) < 0) {
+		     sizeof(one)) == SOCKET_ERROR) {
 	perror("netperf: sendfile_tcp_stream: tcp_cork");
 	exit(1);
       }
@@ -2455,13 +2437,13 @@ if (send_width == 0) {
 
       /* we have to make sure that the server port number is in */
       /* network order */
-      server.sin_port   = tcp_stream_response->data_port_number;
+      server.sin_port   = (short)tcp_stream_response->data_port_number;
       server.sin_port   = htons(server.sin_port); 
       rem_rcvavoid	= tcp_stream_response->so_rcvavoid;
       rem_sndavoid	= tcp_stream_response->so_sndavoid;
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       fprintf(where,
 	      "netperf: remote error %d",
 	      netperf_response.content.serv_errno);
@@ -2474,7 +2456,7 @@ if (send_width == 0) {
     /*Connect up to the remote port on the data socket  */
     if (connect(send_socket, 
 		(struct sockaddr *)&server,
-		sizeof(server)) <0){
+		sizeof(server)) == INVALID_SOCKET){
       perror("netperf: send_tcp_stream: data socket connect failed");
       printf(" port: %d\n",ntohs(server.sin_port));
       exit(1);
@@ -2571,13 +2553,13 @@ if (send_width == 0) {
 			send_ring->offset,
 			send_ring->length,
 			send_ring->hdtrl,
-			send_ring->flags)) != send_size) {
+			send_ring->flags)) != send_size)
 #elif defined(__linux)  || defined(__SunOS_5_9)
 	scratch_offset = send_ring->offset;
 	if ((len=sendfile(send_socket, 
 			  send_ring->fildes, 
 			  &scratch_offset,   /* modified after the call! */
-			  send_ring->length)) != send_size) {
+			  send_ring->length)) != send_size)
 #elif defined(__FreeBSD__)
       /* so close to HP-UX and yet so far away... :) */
       if ((sendfile(send_ring->fildes, 
@@ -2587,28 +2569,29 @@ if (send_width == 0) {
 		    NULL,
 		    (off_t *)&len,
 		    send_ring->flags) != 0) ||
-	  (len != send_size)) {
+	  (len != send_size))
 #else /* original sendile HP-UX */
       if ((len=sendfile(send_socket, 
 			send_ring->fildes, 
 			send_ring->offset,
 			send_ring->length,
 			send_ring->hdtrl,
-			send_ring->flags)) != send_size) {
+			send_ring->flags)) != send_size)
 #endif /* QUICK_SENDPATH */
-	/* the test was interrupted, must be the end of test. the
-	   send_tcp_stream code has some WIN32 ifdefs that we do not
-	   need here. */
-	if ((len >=0) || (errno == EINTR)) {
-	  break;
-	}
-      perror("netperf: data send error: sendfile");
-      fprintf(stderr,
-	      "len was %d send_size was %d\n",
-	      len,
-	      send_size);
-      fflush(stderr);
-      exit(1);
+	  {
+	    /* the test was interrupted, must be the end of test. the
+	    send_tcp_stream code has some WIN32 ifdefs that we do not
+	    need here. */
+ 		if ((len >=0) || SOCKET_EINTR(len)) {
+	      break;
+		}
+        perror("netperf: data send error: sendfile");
+        fprintf(stderr,
+	        "len was %d send_size was %d\n",
+	        len,
+	        send_size);
+        fflush(stderr);
+        exit(1);
       }
     
 /*	offset += len;*/
@@ -2675,7 +2658,7 @@ if (send_width == 0) {
       get_tcp_info(send_socket,&tcp_mss);
     }
     
-    if (shutdown(send_socket,1) == -1) {
+    if (shutdown(send_socket,1) == SOCKET_ERROR) {
       perror("netperf: cannot shutdown tcp stream socket");
       exit(1);
     }
@@ -2722,7 +2705,7 @@ if (send_width == 0) {
     }
 
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       fprintf(where,
 	      "netperf: remote error %d",
 	      netperf_response.content.serv_errno);
@@ -2743,7 +2726,7 @@ if (send_width == 0) {
     
     bytes_sent	= ntohd(tcp_stream_result->bytes_received);
 
-    thruput	= (double) calc_thruput(bytes_sent);
+    thruput	= calc_thruput(bytes_sent);
     
     if (local_cpu_usage || remote_cpu_usage) {
 
@@ -2969,7 +2952,7 @@ recv_tcp_stream()
 {
   
   struct sockaddr_in myaddr_in, peeraddr_in;
-  int	s_listen,s_data;
+  SOCKET s_listen,s_data;
   int 	addrlen;
   int	len;
   unsigned int	receive_calls;
@@ -3077,7 +3060,7 @@ recv_tcp_stream()
   s_listen = create_data_socket(AF_INET,
 				SOCK_STREAM);
   
-  if (s_listen < 0) {
+  if (s_listen == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
@@ -3091,7 +3074,7 @@ recv_tcp_stream()
   
   if (bind(s_listen,
 	   (struct sockaddr *)&myaddr_in,
-	   sizeof(myaddr_in)) == -1) {
+	   sizeof(myaddr_in)) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -3135,7 +3118,7 @@ recv_tcp_stream()
   }
   
   /* Now, let's set-up the socket to listen for connections */
-  if (listen(s_listen, 5) == -1) {
+  if (listen(s_listen, 5) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -3148,7 +3131,7 @@ recv_tcp_stream()
   addrlen = sizeof(myaddr_in);
   if (getsockname(s_listen, 
 		  (struct sockaddr *)&myaddr_in,
-		  &addrlen) == -1){
+		  &addrlen) == SOCKET_ERROR){
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -3194,7 +3177,7 @@ recv_tcp_stream()
   
   if ((s_data=accept(s_listen,
 		     (struct sockaddr *)&peeraddr_in,
-		     &addrlen)) == -1) {
+		     &addrlen)) == INVALID_SOCKET) {
     /* Let's just punt. The remote will be given some information */
     close(s_listen);
     exit(1);
@@ -3240,14 +3223,8 @@ recv_tcp_stream()
   receive_calls  = 0;
 
   while ((len = recv(s_data, recv_ring->buffer_ptr, recv_size, 0)) != 0) {
-#ifdef WIN32
-    if (len == SOCKET_ERROR ){
-      netperf_response.content.serv_errno = WSAGetLastError();
-#else
-    if (len < 0) {
-      netperf_response.content.serv_errno = errno;
-#endif /* WIN32 */
-
+    if (len == SOCKET_ERROR )
+	{
       netperf_response.content.serv_errno = errno;
       send_response();
       exit(1);
@@ -3284,7 +3261,7 @@ recv_tcp_stream()
   /* perform a shutdown to signal the sender that */
   /* we have received all the data sent. raj 4/93 */
 
-  if (shutdown(s_data,1) == -1) {
+  if (shutdown(s_data,1) == SOCKET_ERROR) {
       netperf_response.content.serv_errno = errno;
       send_response();
       exit(1);
@@ -3308,6 +3285,9 @@ recv_tcp_stream()
   tcp_stream_results->elapsed_time	= elapsed_time;
   tcp_stream_results->recv_calls	= receive_calls;
   
+  tcp_stream_results->cpu_method = cpu_method;
+  tcp_stream_results->num_cpus   = lib_num_loc_cpus;
+  
   if (tcp_stream_request->measure_cpu) {
     tcp_stream_results->cpu_util	= calc_cpu_util(0.0);
   };
@@ -3324,9 +3304,7 @@ recv_tcp_stream()
 	    len);
     fflush(where);
   }
-  
-  tcp_stream_results->cpu_method = cpu_method;
-  tcp_stream_results->num_cpus   = lib_num_loc_cpus;
+
   send_response();
 
   /* we are now done with the sockets */
@@ -3345,7 +3323,7 @@ recv_tcp_maerts()
 {
   
   struct sockaddr_in myaddr_in, peeraddr_in;
-  int	s_listen,s_data;
+  SOCKET	s_listen,s_data;
   int 	addrlen;
   int	len;
   unsigned int	send_calls;
@@ -3442,7 +3420,7 @@ recv_tcp_maerts()
   s_listen = create_data_socket(AF_INET,
 				SOCK_STREAM);
   
-  if (s_listen < 0) {
+  if (s_listen == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
@@ -3456,7 +3434,7 @@ recv_tcp_maerts()
   
   if (bind(s_listen,
 	   (struct sockaddr *)&myaddr_in,
-	   sizeof(myaddr_in)) == -1) {
+	   sizeof(myaddr_in)) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -3500,7 +3478,7 @@ recv_tcp_maerts()
   }
   
   /* Now, let's set-up the socket to listen for connections */
-  if (listen(s_listen, 5) == -1) {
+  if (listen(s_listen, 5) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -3513,7 +3491,7 @@ recv_tcp_maerts()
   addrlen = sizeof(myaddr_in);
   if (getsockname(s_listen, 
 		  (struct sockaddr *)&myaddr_in,
-		  &addrlen) == -1){
+		  &addrlen) == SOCKET_ERROR){
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -3571,7 +3549,7 @@ recv_tcp_maerts()
 
   if ((s_data=accept(s_listen,
 		     (struct sockaddr *)&peeraddr_in,
-		     &addrlen)) == -1) {
+		     &addrlen)) == INVALID_SOCKET) {
     /* Let's just punt. The remote will be given some information */
     close(s_listen);
     exit(1);
@@ -3612,6 +3590,7 @@ recv_tcp_maerts()
   bytes_sent = 0.0;
   send_calls  = 0;
 
+  len = 0;   // nt-lint; len is not initialized (printf far below) if times_up initially true.
   while (!times_up) {
 
 #ifdef DIRTY
@@ -3630,20 +3609,11 @@ recv_tcp_maerts()
 		 send_ring->buffer_ptr,
 		 send_size,
 		 0)) != send_size) {
-#ifdef WIN32
-      if ((len >=0) || 
-	  (len == SOCKET_ERROR && WSAGetLastError() == WSAEINTR)) {
-#else
-      if ((len >=0) || (errno == EINTR)) {
-#endif /* WIN32 */
-	/* the test was interrupted, must be the end of test */
-	break;
-      }
-#ifdef WIN32
-      netperf_response.content.serv_errno = WSAGetLastError();
-#else
+		if ((len >=0) || SOCKET_EINTR(len)) {
+	      /* the test was interrupted, must be the end of test */
+	      break;
+		}
       netperf_response.content.serv_errno = errno;
-#endif /* WIN32 */
       send_response();
       exit(1);
     }
@@ -3659,7 +3629,7 @@ recv_tcp_maerts()
   /* perform a shutdown to signal the sender that */
   /* we have received all the data sent. raj 4/93 */
 
-  if (shutdown(s_data,1) == -1) {
+  if (shutdown(s_data,1) == SOCKET_ERROR) {
       netperf_response.content.serv_errno = errno;
       send_response();
       exit(1);
@@ -3723,8 +3693,7 @@ recv_tcp_maerts()
  /* test. */
 
 void
-send_tcp_rr(remote_host)
-     char	remote_host[];
+send_tcp_rr(char remote_host[])
 {
   
   char *tput_title = "\
@@ -3769,7 +3738,7 @@ Send   Recv    Send   Recv\n\
   int	len;
   char	*temp_message_ptr;
   int	nummessages;
-  int	send_socket;
+  SOCKET	send_socket;
   int	trans_remaining;
   double	bytes_xferd;
 
@@ -3822,7 +3791,7 @@ Send   Recv    Send   Recv\n\
   /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
   /* order changed to check for IP address first. raj 7/96 */
 
-  if ((addr = inet_addr(remote_host)) == -1) {
+  if ((addr = inet_addr(remote_host)) == SOCKET_ERROR) {
     /* it was not an IP address, try it as a name */
     if ((hp = gethostbyname(remote_host)) == NULL) {
       /* we have no idea what it is */
@@ -3927,7 +3896,7 @@ Send   Recv    Send   Recv\n\
     send_socket = create_data_socket(AF_INET, 
 				     SOCK_STREAM);
   
-    if (send_socket < 0){
+    if (send_socket == INVALID_SOCKET){
       perror("netperf: send_tcp_rr: tcp stream data socket");
       exit(1);
     }
@@ -4003,11 +3972,11 @@ Send   Recv    Send   Recv\n\
       remote_cpu_usage  = tcp_rr_response->measure_cpu;
       remote_cpu_rate   = tcp_rr_response->cpu_rate;
       /* make sure that port numbers are in network order */
-      server.sin_port   = tcp_rr_response->data_port_number;
+      server.sin_port   = (short)tcp_rr_response->data_port_number;
       server.sin_port   = htons(server.sin_port);
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       fprintf(where,
 	      "netperf: remote error %d",
 	      netperf_response.content.serv_errno);
@@ -4020,7 +3989,7 @@ Send   Recv    Send   Recv\n\
     /*Connect up to the remote port on the data socket  */
     if (connect(send_socket, 
 		(struct sockaddr *)&server,
-		sizeof(server)) <0){
+		sizeof(server)) == INVALID_SOCKET){
       perror("netperf: data socket connect failed");
       
       exit(1);
@@ -4109,21 +4078,12 @@ Send   Recv    Send   Recv\n\
 		   send_ring->buffer_ptr,
 		   req_size,
 		   0)) != req_size) {
-#ifdef WIN32
-	if (len == SOCKET_ERROR && WSAGetLastError() == WSAEINTR ){
+	if (SOCKET_EINTR(len) || (errno == 0)) {
 	  /* we hit the end of a */
 	  /* timed test. */
 	  timed_out = 1;
 	  break;
 	}
-#else
-	if ((errno == EINTR) || (errno == 0)) {
-	  /* we hit the end of a */
-	  /* timed test. */
-	  timed_out = 1;
-	  break;
-	}
-#endif /* WIN32 */
 	perror("send_tcp_rr: data send error");
 	exit(1);
       }
@@ -4136,21 +4096,12 @@ Send   Recv    Send   Recv\n\
 	if((rsp_bytes_recvd=recv(send_socket,
 				 temp_message_ptr,
 				 rsp_bytes_left,
-				 0)) < 0) {
-#ifdef WIN32
-	  if ( rsp_bytes_recvd == SOCKET_ERROR && 
-	      WSAGetLastError() == WSAEINTR ) {
-	    /* We hit the end of a timed test. */
-	    timed_out = 1;
-	    break;
-	  }
-#else
-	  if (errno == EINTR) {
-	    /* We hit the end of a timed test. */
-	    timed_out = 1;
-	    break;
-	  }
-#endif /* WIN32 */
+				 0)) == SOCKET_ERROR) {
+		if ( SOCKET_EINTR(rsp_bytes_recvd) ) {
+		    /* We hit the end of a timed test. */
+			timed_out = 1;
+			break;
+		}
 	  perror("send_tcp_rr: data recv error");
 	  exit(1);
 	}
@@ -4184,7 +4135,7 @@ Send   Recv    Send   Recv\n\
 	}
 	if (sigsuspend(&signal_set) == EFAULT) {
 	  fprintf(where,
-		  "send_udp_rr: fault with signal set!\n");
+		  "send_tcp_rr: fault with signal set!\n");
 	  fflush(where);
 	  exit(1);
 	}
@@ -4231,7 +4182,7 @@ Send   Recv    Send   Recv\n\
 	fprintf(where,"remote results obtained\n");
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       fprintf(where,"netperf: remote error %d",
 	      netperf_response.content.serv_errno);
       perror("");
@@ -4444,8 +4395,7 @@ Send   Recv    Send   Recv\n\
 }
 
 void
-send_udp_stream(remote_host)
-char	remote_host[];
+send_udp_stream(char remote_host[])
 {
   /**********************************************************************/
   /*									*/
@@ -4493,7 +4443,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
   
   int	len;
   struct ring_elt *send_ring;
-  int 	data_socket;
+  SOCKET 	data_socket;
   
   unsigned int sum_messages_sent;
   unsigned int sum_messages_recvd;
@@ -4541,7 +4491,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
   /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
   /* order changed to check for IP address first. raj 7/96 */
 
-  if ((addr = inet_addr(remote_host)) == -1) {
+  if ((addr = inet_addr(remote_host)) == SOCKET_ERROR) {
     /* it was not an IP address, try it as a name */
     if ((hp = gethostbyname(remote_host)) == NULL) {
       /* we have no idea what it is */
@@ -4622,7 +4572,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     data_socket = create_data_socket(AF_INET,
 				     SOCK_DGRAM);
     
-    if (data_socket < 0){
+    if (data_socket == INVALID_SOCKET){
       perror("udp_send: data socket");
       exit(1);
     }
@@ -4687,7 +4637,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
 	fprintf(where,"send_udp_stream: remote data connection done.\n");
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       perror("send_udp_stream: error on remote");
       exit(1);
     }
@@ -4697,7 +4647,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     /* some of the returned socket buffer information for user display. */
     
     /* make sure that port numbers are in the proper order */
-    server.sin_port = udp_stream_response->data_port_number;
+    server.sin_port = (short)udp_stream_response->data_port_number;
     server.sin_port = htons(server.sin_port);
     rsr_size        = udp_stream_response->recv_buf_size;
     rss_size        = udp_stream_response->send_buf_size;
@@ -4712,7 +4662,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     
     if (connect(data_socket,
 		(struct sockaddr *)&server,
-		sizeof(server)) <0){
+		sizeof(server)) == INVALID_SOCKET){
       perror("send_udp_stream: data socket connect failed");
       exit(1);
     }
@@ -4787,17 +4737,9 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
 		    send_size,
 		    0))  != send_size) {
       if ((len >= 0) || 
-#ifdef WIN32
-          (len == SOCKET_ERROR && WSAGetLastError() == WSAEINTR ))
-#else
-	  (errno == EINTR))
-#endif /* WIN32 */
+          SOCKET_EINTR(len))
 		      break;
-#ifdef WIN32
-      if (WSAGetLastError() == WSAENOBUFS) {
-#else
 	if (errno == ENOBUFS) {
-#endif /* WIN32 */
 	  failed_sends++;
 	  continue;
 	}
@@ -4858,20 +4800,20 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
 	fprintf(where,"send_udp_stream: remote results obtained\n");
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       perror("send_udp_stream: error on remote");
       exit(1);
     }
     
     bytes_sent    = (double) send_size * (double) messages_sent;
-    local_thruput = (double) calc_thruput(bytes_sent);
+    local_thruput = calc_thruput(bytes_sent);
     
     messages_recvd = udp_stream_results->messages_recvd;
     bytes_recvd    = (double) send_size * (double) messages_recvd;
     
     /* we asume that the remote ran for as long as we did */
     
-    remote_thruput = (double) calc_thruput(bytes_recvd);
+    remote_thruput = calc_thruput(bytes_recvd);
     
     /* print the results for this socket and message size */
     
@@ -5077,13 +5019,13 @@ recv_udp_stream()
   struct ring_elt *recv_ring;
 
   struct sockaddr_in myaddr_in;
-  int	s_data;
+  SOCKET	s_data;
   int 	addrlen;
   int	len = 0;
   unsigned int	bytes_received = 0;
   float	elapsed_time;
   
-  unsigned int	message_size;
+  int	message_size;
   unsigned int	messages_recvd = 0;
   
   struct	udp_stream_request_struct	*udp_stream_request;
@@ -5177,7 +5119,7 @@ recv_udp_stream()
   s_data = create_data_socket(AF_INET,
 			      SOCK_DGRAM);
   
-  if (s_data < 0) {
+  if (s_data == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
@@ -5191,7 +5133,7 @@ recv_udp_stream()
   
   if (bind(s_data,
 	   (struct sockaddr *)&myaddr_in,
-	   sizeof(myaddr_in)) == -1) {
+	   sizeof(myaddr_in)) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
@@ -5203,7 +5145,7 @@ recv_udp_stream()
   addrlen = sizeof(myaddr_in);
   if (getsockname(s_data, 
 		  (struct sockaddr *)&myaddr_in,
-		  &addrlen) == -1){
+		  &addrlen) == SOCKET_ERROR){
     netperf_response.content.serv_errno = errno;
     close(s_data);
     send_response();
@@ -5253,12 +5195,6 @@ recv_udp_stream()
   
   cpu_start(udp_stream_request->measure_cpu);
   
-  /* The loop will exit when the timer pops, or if we happen to recv a */
-  /* message of less than send_size bytes... */
-  
-  times_up = 0;
-  start_timer(test_time + PAD_TIME);
-  
 #ifdef WIN32
   /* this is used so the timer thread can close the socket out from */
   /* under us, which to date is the easiest/cleanest/least */
@@ -5268,6 +5204,13 @@ recv_udp_stream()
   /* and such would be appreciated raj 1/96 */
   win_kludge_socket = s_data;
 #endif /* WIN32 */
+  
+  /* The loop will exit when the timer pops, or if we happen to recv a */
+  /* message of less than send_size bytes... */
+  
+  times_up = 0;
+
+  start_timer(test_time + PAD_TIME);
 
   if (debug) {
     fprintf(where,"recv_udp_stream: about to enter inner sanctum.\n");
@@ -5282,31 +5225,21 @@ recv_udp_stream()
 		       recv_ring->buffer_ptr,
 		       message_size, 
 		       0,0,0)        
-	) != message_size) {    
-      if ((len == SOCKET_ERROR) &&           
-	  (WSAGetLastError() != WSAEINTR))   
-	{                                      
-          netperf_response.content.serv_errno = WSAGetLastError();
-	send_response();
-	exit(1);
-      }
-      break;
-    }
-
+	) != message_size)     
 #else
-	  
     if ((len = recv(s_data, 
 		    recv_ring->buffer_ptr,
 		    message_size, 
-		    0)) != message_size) {
-      if ((len == -1) && (errno != EINTR)) {
-	netperf_response.content.serv_errno = errno;
-	send_response();
-	exit(1);
+		    0)) != message_size) 
+#endif
+	{
+      if ((len == SOCKET_ERROR) && SOCKET_EINTR(len)) {
+        netperf_response.content.serv_errno = errno;
+	    send_response();
+	    exit(1);
       }
       break;
     }
-#endif /* WIN32 */
     messages_recvd++;
     recv_ring = recv_ring->next;
   }
@@ -5350,7 +5283,7 @@ recv_udp_stream()
   }
   
   netperf_response.content.response_type	= UDP_STREAM_RESULTS;
-  udp_stream_results->bytes_received	= htond(bytes_received);
+  udp_stream_results->bytes_received	= htonl(bytes_received);
   udp_stream_results->messages_recvd	= messages_recvd;
   udp_stream_results->elapsed_time	= elapsed_time;
   udp_stream_results->cpu_method        = cpu_method;
@@ -5375,8 +5308,7 @@ recv_udp_stream()
 }
 
 void
-send_udp_rr(remote_host)
-char	remote_host[];
+send_udp_rr(char remote_host[])
 {
   
   char *tput_title = "\
@@ -5415,7 +5347,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 
   int	len;
   int	nummessages;
-  int	send_socket;
+  SOCKET	send_socket;
   int	trans_remaining;
   int	bytes_xferd;
   
@@ -5465,12 +5397,12 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
   /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
   /* order changed to check for IP address first. raj 7/96 */
 
-  if ((addr = inet_addr(remote_host)) == -1) {
+  if ((addr = inet_addr(remote_host)) == SOCKET_ERROR) {
     /* it was not an IP address, try it as a name */
     if ((hp = gethostbyname(remote_host)) == NULL) {
       /* we have no idea what it is */
       fprintf(where,
-	      "establish_control: could not resolve the destination %s\n",
+	      "send_udp_rr: could not resolve the destination %s\n",
 	      remote_host);
       fflush(where);
       exit(1);
@@ -5537,7 +5469,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 	 (confidence_iteration <= iteration_min)) {
     
     nummessages     = 0;
-    bytes_xferd     = 0.0;
+    bytes_xferd     = 0;
     times_up        = 0;
     trans_remaining = 0;
     
@@ -5564,7 +5496,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
     send_socket = create_data_socket(AF_INET, 
 				     SOCK_DGRAM);
     
-    if (send_socket < 0){
+    if (send_socket == INVALID_SOCKET){
       perror("netperf: send_udp_rr: udp rr data socket");
       exit(1);
     }
@@ -5640,11 +5572,11 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
       remote_cpu_usage =	udp_rr_response->measure_cpu;
       remote_cpu_rate  = 	udp_rr_response->cpu_rate;
       /* port numbers in proper order */
-      server.sin_port  =	udp_rr_response->data_port_number;
+      server.sin_port  =	(short)udp_rr_response->data_port_number;
       server.sin_port  = 	htons(server.sin_port);
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       fprintf(where,
 	      "netperf: remote error %d",
 	      netperf_response.content.serv_errno);
@@ -5661,7 +5593,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
     
     if ( connect(send_socket, 
 		 (struct sockaddr *)&server,
-		 sizeof(server)) < 0 ) {
+		 sizeof(server)) == INVALID_SOCKET ) {
       perror("netperf: data socket connect failed");
       exit(1);
     }
@@ -5670,7 +5602,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
     addrlen = sizeof(myaddr_in);
     if (getsockname(send_socket, 
 		    (struct sockaddr *)&myaddr_in,
-		    &addrlen) == -1){
+		    &addrlen) == SOCKET_ERROR){
       perror("send_udp_rr: getsockname");
       exit(1);
     }
@@ -5738,18 +5670,14 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 		   send_ring->buffer_ptr,
 		   req_size,
 		   0)) != req_size) {
-#ifdef WIN32
-      if (len == SOCKET_ERROR && WSAGetLastError() == WSAEINTR ){
-#else
-      if (errno == EINTR) {
-#endif /* WIN32 */
-	  /* We likely hit */
-	  /* test-end time. */
-	  break;
-	}
-	perror("send_udp_rr: data send error");
-	exit(1);
-      }
+        if (SOCKET_EINTR(len)) {
+	      /* We likely hit */
+	      /* test-end time. */
+	      break;
+		}
+	    perror("send_udp_rr: data send error");
+	    exit(1);
+	  }
       send_ring = send_ring->next;
       
       /* receive the response. with UDP we will get it all, or nothing */
@@ -5758,17 +5686,13 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 			       recv_ring->buffer_ptr,
 			       rsp_size,
 			       0)) != rsp_size) {
-#ifdef WIN32
-	if (rsp_bytes_recvd == SOCKET_ERROR && 
-	    WSAGetLastError() == WSAEINTR) {
-#else
-	if (errno == EINTR) {
-#endif /* WIN32 */
-	  /* Again, we have likely hit test-end time */
-	  break;
-	}
-	perror("send_udp_rr: data recv error");
-	exit(1);
+	    if (SOCKET_EINTR(rsp_bytes_recvd))
+		{
+    	  /* Again, we have likely hit test-end time */
+	      break;
+		}
+	    perror("send_udp_rr: data recv error");
+	    exit(1);
       }
       recv_ring = recv_ring->next;
       
@@ -5840,7 +5764,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 	fprintf(where,"remote results obtained\n");
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       fprintf(where,
 	      "netperf: remote error %d",
 	      netperf_response.content.serv_errno);
@@ -6050,7 +5974,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
     /* and all that sort of rot... */
     
 #ifdef HISTOGRAM
-    fprintf(where,"\nHistogram of reqeuest/reponse times.\n");
+    fprintf(where,"\nHistogram of request/reponse times.\n");
     fflush(where);
     HIST_report(time_hist);
 #endif /* HISTOGRAM */
@@ -6068,7 +5992,7 @@ recv_udp_rr()
 
   struct	sockaddr_in        myaddr_in,
   peeraddr_in;
-  int	s_data;
+  SOCKET	s_data;
   int 	addrlen;
   int	trans_received;
   int	trans_remaining;
@@ -6179,7 +6103,7 @@ recv_udp_rr()
   s_data = create_data_socket(AF_INET,
 			      SOCK_DGRAM);
   
-  if (s_data < 0) {
+  if (s_data == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
     send_response();
     
@@ -6194,7 +6118,7 @@ recv_udp_rr()
   
   if (bind(s_data,
 	   (struct sockaddr *)&myaddr_in,
-	   sizeof(myaddr_in)) == -1) {
+	   sizeof(myaddr_in)) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_data);
     send_response();
@@ -6206,7 +6130,7 @@ recv_udp_rr()
   addrlen = sizeof(myaddr_in);
   if (getsockname(s_data, 
 		  (struct sockaddr *)&myaddr_in,
-		  &addrlen) == -1){
+		  &addrlen) == SOCKET_ERROR){
     netperf_response.content.serv_errno = errno;
     close(s_data);
     send_response();
@@ -6254,16 +6178,6 @@ recv_udp_rr()
   
   cpu_start(udp_rr_request->measure_cpu);
   
-  if (udp_rr_request->test_length > 0) {
-    times_up = 0;
-    trans_remaining = 0;
-    start_timer(udp_rr_request->test_length + PAD_TIME);
-  }
-  else {
-    times_up = 1;
-    trans_remaining = udp_rr_request->test_length * -1;
-  }
-  
 #ifdef WIN32
   /* this is used so the timer thread can close the socket out from */
   /* under us, which to date is the easiest/cleanest/least */
@@ -6273,6 +6187,16 @@ recv_udp_rr()
   /* and such would be appreciated raj 1/96 */
   win_kludge_socket = s_data;
 #endif /* WIN32 */
+  
+  if (udp_rr_request->test_length > 0) {
+    times_up = 0;
+    trans_remaining = 0;
+    start_timer(udp_rr_request->test_length + PAD_TIME);
+  }
+  else {
+    times_up = 1;
+    trans_remaining = udp_rr_request->test_length * -1;
+  }
 
   addrlen = sizeof(peeraddr_in);
   bzero((char *)&peeraddr_in, addrlen);
@@ -6288,14 +6212,10 @@ recv_udp_rr()
 		 0,
 		 (struct sockaddr *)&peeraddr_in,
 		 &addrlen)) != udp_rr_request->request_size) {
-#ifdef WIN32
-	if ( request_bytes_recvd == SOCKET_ERROR &&
-	     WSAGetLastError() == WSAEINTR ) {
-#else
-	if (errno == EINTR) {
-#endif /* WIN32 */
-	/* we must have hit the end of test time. */
-	break;
+	  if ( SOCKET_EINTR(request_bytes_recvd) )
+	  {
+	    /* we must have hit the end of test time. */
+	    break;
       }
       netperf_response.content.serv_errno = errno;
       send_response();
@@ -6311,14 +6231,10 @@ recv_udp_rr()
 				      (struct sockaddr *)&peeraddr_in,
 				      addrlen)) != 
 	udp_rr_request->response_size) {
-#ifdef WIN32
-      if ( response_bytes_sent == SOCKET_ERROR &&
-	  WSAGetLastError() == WSAEINTR ) {
-#else
-      if (errno == EINTR) {
-#endif 
-	/* we have hit end of test time. */
-	break;
+      if ( SOCKET_EINTR(response_bytes_sent) )
+	  {
+	    /* we have hit end of test time. */
+	    break;
       }
       netperf_response.content.serv_errno = errno;
       send_response();
@@ -6397,7 +6313,7 @@ recv_tcp_rr()
 
   struct	sockaddr_in        myaddr_in,
   peeraddr_in;
-  int	s_listen,s_data;
+  SOCKET	s_listen,s_data;
   int 	addrlen;
   char	*temp_message_ptr;
   int	trans_received;
@@ -6507,7 +6423,7 @@ recv_tcp_rr()
   s_listen = create_data_socket(AF_INET,
 				SOCK_STREAM);
   
-  if (s_listen < 0) {
+  if (s_listen == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
     send_response();
     
@@ -6522,7 +6438,7 @@ recv_tcp_rr()
   
   if (bind(s_listen,
 	   (struct sockaddr *)&myaddr_in,
-	   sizeof(myaddr_in)) == -1) {
+	   sizeof(myaddr_in)) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -6531,7 +6447,7 @@ recv_tcp_rr()
   }
   
   /* Now, let's set-up the socket to listen for connections */
-  if (listen(s_listen, 5) == -1) {
+  if (listen(s_listen, 5) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -6543,7 +6459,7 @@ recv_tcp_rr()
   /* now get the port number assigned by the system  */
   addrlen = sizeof(myaddr_in);
   if (getsockname(s_listen,
-		  (struct sockaddr *)&myaddr_in, &addrlen) == -1){
+		  (struct sockaddr *)&myaddr_in, &addrlen) == SOCKET_ERROR){
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -6587,8 +6503,7 @@ recv_tcp_rr()
   
   if ((s_data = accept(s_listen,
 		       (struct sockaddr *)&peeraddr_in,
-		       &addrlen)) ==
-      -1) {
+		       &addrlen)) == INVALID_SOCKET) {
     /* Let's just punt. The remote will be given some information */
     close(s_listen);
     
@@ -6646,26 +6561,13 @@ recv_tcp_rr()
       if((request_bytes_recvd=recv(s_data,
 				   temp_message_ptr,
 				   request_bytes_remaining,
-				   0)) < 0) {
-#ifdef WIN32
-	if (request_bytes_recvd == SOCKET_ERROR &&
-	    ((WSAGetLastError() == WSAEINTR ) ||
-	     (WSAGetLastError() == WSAECONNABORTED))) {
-	  /* the timer popped. seems that when the other thread */
-	  /* closesocket's the socket, we get a WSAECONNABORTED */
-	  /* (instead of WSAEINTR?) raj 1/96 */
-	  timed_out = 1;
-	  break;
-	}
-	netperf_response.content.serv_errno = WSAGetLastError();
-#else
-	if (errno == EINTR) {
-	  /* the timer popped */
+				   0)) == SOCKET_ERROR) {
+	if (SOCKET_EINTR(request_bytes_recvd))
+	{
 	  timed_out = 1;
 	  break;
 	}
 	netperf_response.content.serv_errno = errno;
-#endif /* WIN32 */
 	send_response();
 	exit(1);
       }
@@ -6691,24 +6593,14 @@ recv_tcp_rr()
     if((bytes_sent=send(s_data,
 			send_ring->buffer_ptr,
 			tcp_rr_request->response_size,
-			0)) == -1) {
-#ifdef WIN32
-      if (bytes_sent == SOCKET_ERROR && WSAGetLastError() == WSAEINTR ){
+			0)) == SOCKET_ERROR) {
+      if (SOCKET_EINTR(bytes_sent)) {
 	/* the test timer has popped */
 	timed_out = 1;
 	fprintf(where,"yo6\n");
 	fflush(where);						
 	break;
       }
-#else
-      if (errno == EINTR) {
-	/* the test timer has popped */
-	timed_out = 1;
-	fprintf(where,"yo6\n");
-	fflush(where);						
-	break;
-      }
-#endif /* WIN32 */
       netperf_response.content.serv_errno = 992;
       send_response();
       exit(1);
@@ -6775,7 +6667,9 @@ recv_tcp_rr()
 void
 loc_cpu_rate()
 {
+#if !defined(WIN32) && !defined(USE_PROC_STAT)
   float dummy;
+#endif
 
   /* a rather simple little test - it merely calibrates the local cpu */
   /* and prints the results. There are no headers to allow someone to */
@@ -6807,21 +6701,20 @@ rem_cpu_rate()
   
   fprintf(where,
 	  "%g",
-	  calibrate_remote_cpu(0.0));
+	  calibrate_remote_cpu());
   
 }
 
 
  /* this test is intended to test the performance of establishing a */
- /* connection, exchanging a reqeuest/response pair, and repeating. it */
+ /* connection, exchanging a request/response pair, and repeating. it */
  /* is expected that this would be a good starting-point for */
  /* comparision of T/TCP with classic TCP for transactional workloads. */
  /* it will also look (can look) much like the communication pattern */
  /* of http for www access. */
 
 void
-send_tcp_conn_rr(remote_host)
-     char	remote_host[];
+send_tcp_conn_rr(char remote_host[])
 {
   
   char *tput_title = "\
@@ -6869,7 +6762,7 @@ Send   Recv    Send   Recv\n\
   struct ring_elt *recv_ring;
   char	*temp_message_ptr;
   int	nummessages;
-  int	send_socket;
+  SOCKET	send_socket;
   int	trans_remaining;
   double	bytes_xferd;
   int	sock_opt_len = sizeof(int);
@@ -6911,6 +6804,10 @@ Send   Recv    Send   Recv\n\
   /* must turn that into the test specific addressing information. */
   
   myaddr = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
+  if (myaddr == NULL) {
+    printf("malloc(%ld) failed!\n", sizeof(struct sockaddr_in));
+    exit(1);
+  }
 
   bzero((char *)&server,
 	sizeof(server));
@@ -6923,7 +6820,7 @@ Send   Recv    Send   Recv\n\
   /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
   /* order changed to check for IP address first. raj 7/96 */
 
-  if ((addr = inet_addr(remote_host)) == -1) {
+  if ((addr = inet_addr(remote_host)) == SOCKET_ERROR) {
     /* it was not an IP address, try it as a name */
     if ((hp = gethostbyname(remote_host)) == NULL) {
       /* we have no idea what it is */
@@ -7068,7 +6965,7 @@ Send   Recv    Send   Recv\n\
     remote_cpu_usage=	tcp_conn_rr_response->measure_cpu;
     remote_cpu_rate = 	tcp_conn_rr_response->cpu_rate;
     /* make sure that port numbers are in network order */
-    server.sin_port	=	tcp_conn_rr_response->data_port_number;
+    server.sin_port	=	(short)tcp_conn_rr_response->data_port_number;
     server.sin_port =	htons(server.sin_port);
     if (debug) {
       fprintf(where,"remote listen done.\n");
@@ -7077,7 +6974,7 @@ Send   Recv    Send   Recv\n\
     }
   }
   else {
-    errno = netperf_response.content.serv_errno;
+    Set_errno(netperf_response.content.serv_errno);
     fprintf(where,
 	    "netperf: remote error %d",
 	    netperf_response.content.serv_errno);
@@ -7142,7 +7039,7 @@ Send   Recv    Send   Recv\n\
     send_socket = create_data_socket(AF_INET, 
 				     SOCK_STREAM);
   
-    if (send_socket < 0) {
+    if (send_socket == INVALID_SOCKET) {
       perror("netperf: send_tcp_conn_rr: tcp stream data socket");
       exit(1);
     }
@@ -7156,7 +7053,7 @@ Send   Recv    Send   Recv\n\
     /* the length of the TIME_WAIT state raj 8/94 */
     one = 1;
     if(setsockopt(send_socket, SOL_SOCKET, SO_REUSEADDR,
-		  (char *)&one, sock_opt_len) < 0) {
+		  (char *)&one, sock_opt_len) == SOCKET_ERROR) {
       perror("netperf: send_tcp_conn_rr: so_reuseaddr");
       exit(1);
     }
@@ -7184,7 +7081,7 @@ newport:
 
     if (myport == ntohs(server.sin_port)) myport++;
 
-    myaddr->sin_port = htons(myport);
+    myaddr->sin_port = htons((unsigned short)myport);
 
     if (debug) {
       if ((nummessages % 100) == 0) {
@@ -7195,20 +7092,17 @@ newport:
     /* we want to bind our socket to a particular port number. */
     if ((ret = bind(send_socket,
 		   (struct sockaddr *)myaddr,
-		   sizeof(struct sockaddr_in))) < 0) {
+		   sizeof(struct sockaddr_in))) == SOCKET_ERROR) {
       /* if the bind failed, someone else must have that port number */
       /* - perhaps in the listen state. since we can't use it, skip to */
       /* the next port number. we may have to do this again later, but */
       /* that's just too bad :) */
-#ifdef WIN32
-      if (ret == SOCKET_ERROR && WSAGetLastError() == WSAEINTR ){
-#else
-      if (errno == EINTR) {
-#endif /* WIN32 */
-	/* we hit the end of a */
-	/* timed test. */
-	timed_out = 1;
-	break;
+      if (SOCKET_EINTR(ret))
+	  {
+	    /* we hit the end of a */
+	    /* timed test. */
+	    timed_out = 1;
+	    break;
       }
       if (debug > 1) {
 	fprintf(where,
@@ -7226,16 +7120,13 @@ newport:
     /* Connect up to the remote port on the data socket  */
     if ((ret = connect(send_socket, 
 		(struct sockaddr *)&server,
-		sizeof(server))) <0){
-#ifdef WIN32
-      if (ret == SOCKET_ERROR && WSAGetLastError() == WSAEINTR ){
-#else
-      if (errno == EINTR) {
-#endif /* WIN32 */
-	/* we hit the end of a */
-	/* timed test. */
-	timed_out = 1;
-	break;
+		sizeof(server))) == INVALID_SOCKET){
+      if (SOCKET_EINTR(ret))
+	  {
+	    /* we hit the end of a */
+	    /* timed test. */
+	    timed_out = 1;
+	    break;
       }
       perror("netperf: data socket connect failed");
       printf("\tattempted to connect on socket %d to port %d",
@@ -7250,15 +7141,12 @@ newport:
 		 send_ring->buffer_ptr,
 		 req_size,
 		 0)) != req_size) {
-#ifdef WIN32
-      if (len == SOCKET_ERROR && WSAGetLastError() == WSAEINTR ) {
-#else
-      if (errno == EINTR) {
-#endif /* WIN32 */
-	/* we hit the end of a */
-	/* timed test. */
-	timed_out = 1;
-	break;
+      if (SOCKET_EINTR(len))
+	  {
+	    /* we hit the end of a */
+	    /* timed test. */
+	    timed_out = 1;
+	    break;
       }
       perror("send_tcp_conn_rr: data send error");
       exit(1);
@@ -7316,17 +7204,14 @@ newport:
     }
     else {
       /* it was less than zero - an error occured */
-#ifdef WIN32
-      if (rsp_bytes_recvd == SOCKET_ERROR && WSAGetLastError() == WSAEINTR) {
-#else
-      if (errno == EINTR) {
-#endif /* WIN32 */
-	  /* We hit the end of a timed test. */
-	  timed_out = 1;
-	  break;
-	}
-	perror("send_tcp_conn_rr: data recv error");
-	exit(1);
+      if (SOCKET_EINTR(rsp_bytes_recvd))
+	  {
+	    /* We hit the end of a timed test. */
+	    timed_out = 1;
+	    break;
+	  }
+	  perror("send_tcp_conn_rr: data recv error");
+	  exit(1);
     }
       
   }
@@ -7348,7 +7233,7 @@ newport:
       fprintf(where,"remote results obtained\n");
   }
   else {
-    errno = netperf_response.content.serv_errno;
+    Set_errno(netperf_response.content.serv_errno);
     fprintf(where,
 	    "netperf: remote error %d",
 	     netperf_response.content.serv_errno);
@@ -7371,7 +7256,7 @@ newport:
   /* unit selections. */ 
   
   bytes_xferd	= (req_size * nummessages) + (rsp_size * nummessages);
-  thruput	= (double) calc_thruput(bytes_xferd);
+  thruput	= calc_thruput(bytes_xferd);
   
   if (local_cpu_usage || remote_cpu_usage) {
     /* We must now do a little math for service demand and cpu */
@@ -7535,10 +7420,10 @@ void
 recv_tcp_conn_rr()
 {
   
-  char message[MAXMESSAGESIZE+MAXALIGNMENT+MAXOFFSET];
+  char  *message;
   struct	sockaddr_in        myaddr_in,
   peeraddr_in;
-  int	s_listen,s_data;
+  SOCKET	s_listen,s_data;
   int 	addrlen;
   char	*recv_message_ptr;
   char	*send_message_ptr;
@@ -7591,6 +7476,13 @@ recv_tcp_conn_rr()
     fprintf(where,"recv_tcp_conn_rr: the response type is set...\n");
     fflush(where);
   }
+
+  /* set-up the data buffer with the requested alignment and offset */
+  message = (char *)malloc(DATABUFFERLEN);
+  if (message == NULL) {
+    printf("malloc(%d) failed!\n", DATABUFFERLEN);
+    exit(1);
+  }
   
   /* We now alter the message_ptr variables to be at the desired */
   /* alignments with the desired offsets. */
@@ -7606,15 +7498,10 @@ recv_tcp_conn_rr()
 	    tcp_conn_rr_request->send_offset);
     fflush(where);
   }
-  recv_message_ptr = (char *)(( (long)message + 
-			(long) tcp_conn_rr_request->recv_alignment -1) & 
-			~((long) tcp_conn_rr_request->recv_alignment - 1));
-  recv_message_ptr = recv_message_ptr + tcp_conn_rr_request->recv_offset;
+
+  recv_message_ptr = ALIGN_BUFFER(message, tcp_conn_rr_request->recv_alignment, tcp_conn_rr_request->recv_offset);
   
-  send_message_ptr = (char *)(( (long)message + 
-			(long) tcp_conn_rr_request->send_alignment -1) & 
-			~((long) tcp_conn_rr_request->send_alignment - 1));
-  send_message_ptr = send_message_ptr + tcp_conn_rr_request->send_offset;
+  send_message_ptr = ALIGN_BUFFER(message, tcp_conn_rr_request->send_alignment, tcp_conn_rr_request->send_offset);
   
   if (debug) {
     fprintf(where,"recv_tcp_conn_rr: receive alignment and offset set...\n");
@@ -7652,7 +7539,7 @@ recv_tcp_conn_rr()
   s_listen = create_data_socket(AF_INET,
 				SOCK_STREAM);
   
-  if (s_listen < 0) {
+  if (s_listen == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
     send_response();
     if (debug) {
@@ -7670,7 +7557,7 @@ recv_tcp_conn_rr()
   
   if (bind(s_listen,
 	   (struct sockaddr *)&myaddr_in,
-	   sizeof(myaddr_in)) == -1) {
+	   sizeof(myaddr_in)) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -7682,7 +7569,7 @@ recv_tcp_conn_rr()
   }
 
   /* Now, let's set-up the socket to listen for connections */
-  if (listen(s_listen, 5) == -1) {
+  if (listen(s_listen, 5) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -7697,7 +7584,7 @@ recv_tcp_conn_rr()
   addrlen = sizeof(myaddr_in);
   if (getsockname(s_listen,
 		  (struct sockaddr *)&myaddr_in,
-		  &addrlen) == -1){
+		  &addrlen) == SOCKET_ERROR){
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -7772,7 +7659,7 @@ recv_tcp_conn_rr()
     /* accept a connection from the remote */
     if ((s_data=accept(s_listen,
 		       (struct sockaddr *)&peeraddr_in,
-		       &addrlen)) == -1) {
+		       &addrlen)) == INVALID_SOCKET) {
       if (errno == EINTR) {
 	/* the timer popped */
 	timed_out = 1;
@@ -7785,14 +7672,10 @@ recv_tcp_conn_rr()
       exit(1);
     }
 
-#ifdef KLUDGE_SOCKET_OPTIONS
-    /* this is for those systems which *INCORRECTLY* fail to pass */
-    /* attributes across an accept() call. Including this goes against */
-    /* my better judgement :( raj 11/95 */
-    
-    kludge_socket_options(s_data);
-
-#endif /* KLUDGE_SOCKET_OPTIONS */
+    if (debug) {
+      fprintf(where,"recv_tcp_conn_rr: accepted data connection.\n");
+      fflush(where);
+    }
   
 #ifdef WIN32
   /* this is used so the timer thread can close the socket out from */
@@ -7804,26 +7687,26 @@ recv_tcp_conn_rr()
   win_kludge_socket = s_data;
 #endif /* WIN32 */
 
-    if (debug) {
-      fprintf(where,"recv_tcp_conn_rr: accepted data connection.\n");
-      fflush(where);
-    }
+#ifdef KLUDGE_SOCKET_OPTIONS
+    /* this is for those systems which *INCORRECTLY* fail to pass */
+    /* attributes across an accept() call. Including this goes against */
+    /* my better judgement :( raj 11/95 */
+    
+    kludge_socket_options(s_data);
+
+#endif /* KLUDGE_SOCKET_OPTIONS */
   
     temp_message_ptr	= recv_message_ptr;
     request_bytes_remaining	= tcp_conn_rr_request->request_size;
     
     /* receive the request from the other side */
-    while(request_bytes_remaining > 0) {
+    while (!times_up || (request_bytes_remaining > 0)) {
       if((request_bytes_recvd=recv(s_data,
 				   temp_message_ptr,
 				   request_bytes_remaining,
-				   0)) < 0) {
-#ifdef WIN32
-	if ( request_bytes_recvd == SOCKET_ERROR &&
-	     WSAGetLastError() == WSAEINTR ) {
-#else
-	if (errno == EINTR) {
-#endif /* WIN32 */
+				   0)) == SOCKET_ERROR) {
+	if (SOCKET_EINTR(request_bytes_recvd))
+	{
 	  /* the timer popped */
 	  timed_out = 1;
 	  break;
@@ -7850,12 +7733,8 @@ recv_tcp_conn_rr()
     if((bytes_sent=send(s_data,
 			send_message_ptr,
 			tcp_conn_rr_request->response_size,
-			0)) == -1) {
-#ifdef WIN32
-      if (bytes_sent == SOCKET_ERROR && WSAGetLastError() == WSAEINTR ){
-#else
+			0)) == SOCKET_ERROR) {
       if (errno == EINTR) {
-#endif /* WIN32 */
 	/* the test timer has popped */
 	timed_out = 1;
 	fprintf(where,"yo6\n");
@@ -7942,15 +7821,14 @@ recv_tcp_conn_rr()
 #ifdef DO_1644
 
  /* this test is intended to test the performance of establishing a */
- /* connection, exchanging a reqeuest/response pair, and repeating. it */
+ /* connection, exchanging a request/response pair, and repeating. it */
  /* is expected that this would be a good starting-point for */
  /* comparision of T/TCP with classic TCP for transactional workloads. */
  /* it will also look (can look) much like the communication pattern */
  /* of http for www access. */
 
 int 
-send_tcp_tran_rr(remote_host)
-     char	remote_host[];
+send_tcp_tran_rr(char remote_host[])
 {
   
   char *tput_title = "\
@@ -7998,7 +7876,7 @@ Send   Recv    Send   Recv\n\
   struct ring_elt *recv_ring;
   char	*temp_message_ptr;
   int	nummessages;
-  int	send_socket;
+  SOCKET	send_socket;
   int	trans_remaining;
   double	bytes_xferd;
   int	sock_opt_len = sizeof(int);
@@ -8039,6 +7917,10 @@ Send   Recv    Send   Recv\n\
   /* must turn that into the test specific addressing information. */
   
   myaddr = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
+  if (myaddr == NULL) {
+    printf("malloc(%d) failed!\n", sizeof(struct sockaddr_in));
+    exit(1);
+  }
 
   bzero((char *)&server,
 	sizeof(server));
@@ -8051,7 +7933,7 @@ Send   Recv    Send   Recv\n\
   /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
   /* order changed to check for IP address first. raj 7/96 */
 
-  if ((addr = inet_addr(remote_host)) == -1) {
+  if ((addr = inet_addr(remote_host)) == SOCKET_ERROR) {
     /* it was not an IP address, try it as a name */
     if ((hp = gethostbyname(remote_host)) == NULL) {
       /* we have no idea what it is */
@@ -8204,7 +8086,7 @@ Send   Recv    Send   Recv\n\
     }
   }
   else {
-    errno = netperf_response.content.serv_errno;
+    Set_errno(netperf_response.content.serv_errno);
     fprintf(where,
 	    "netperf: remote error %d",
 	    netperf_response.content.serv_errno);
@@ -8275,7 +8157,7 @@ Send   Recv    Send   Recv\n\
     send_socket = create_data_socket(AF_INET, 
 				     SOCK_STREAM);
   
-    if (send_socket < 0) {
+    if (send_socket == INAVLID_SOCKET) {
       perror("netperf: send_tcp_tran_rr: tcp stream data socket");
       exit(1);
     }
@@ -8289,7 +8171,7 @@ Send   Recv    Send   Recv\n\
     /* the length of the TIME_WAIT state raj 8/94 */
     one = 1;
     if(setsockopt(send_socket, SOL_SOCKET, SO_REUSEADDR,
-		  (char *)&one, sock_opt_len) < 0) {
+		  (char *)&one, sock_opt_len) == SOCKET_ERROR) {
       perror("netperf: send_tcp_tran_rr: so_reuseaddr");
       exit(1);
     }
@@ -8315,7 +8197,7 @@ newport:
     if (myport >= client_port_max) {
       myport = client_port_min;
     }
-    myaddr->sin_port = htons(myport);
+    myaddr->sin_port = htons((unsigned short)myport);
 
     if (debug) {
       if ((nummessages % 100) == 0) {
@@ -8326,7 +8208,7 @@ newport:
     /* we want to bind our socket to a particular port number. */
     if (bind(send_socket,
 	     (struct sockaddr *)myaddr,
-	     sizeof(struct sockaddr_in)) < 0) {
+	     sizeof(struct sockaddr_in)) == SOCKET_ERROR) {
       /* if the bind failed, someone else must have that port number */
       /* - perhaps in the listen state. since we can't use it, skip to */
       /* the next port number. we may have to do this again later, but */
@@ -8355,15 +8237,12 @@ newport:
 		   MSG_EOF, 
 		   (struct sockaddr *)&server,
 		   sizeof(server))) != req_size) {
-#ifdef WIN32
-      if (len == SOCKET_ERROR && WSAGetLastError() == WSAEINTR ){
-#else
-      if (errno == EINTR) {
-#endif /* WIN32 */
-	/* we hit the end of a */
-	/* timed test. */
-	timed_out = 1;
-	break;
+      if (SOCKET_EINTR(len))
+	  {
+	    /* we hit the end of a */
+	    /* timed test. */
+	    timed_out = 1;
+	    break;
       }
       perror("send_tcp_tran_rr: data send error");
       exit(1);
@@ -8377,19 +8256,15 @@ newport:
       if((rsp_bytes_recvd=recv(send_socket,
 			       temp_message_ptr,
 			       rsp_bytes_left,
-			       0)) < 0) {
-#ifdef WIN32
-	if (rsp_bytes_recvd == SOCKET_ERROR &&
-	    WSAGetLastError() == WSAEINTR ) {
-#else
-	if (errno == EINTR) {
-#endif /* WIN32 */
-	  /* We hit the end of a timed test. */
-	  timed_out = 1;
-	  break;
-	}
-	perror("send_tcp_tran_rr: data recv error");
-	exit(1);
+			       0)) == SOCKET_ERROR) {
+	    if (SOCKET_EINTR(rsp_bytes_recvd))
+		{
+	      /* We hit the end of a timed test. */
+	      timed_out = 1;
+	      break;
+		}
+	    perror("send_tcp_tran_rr: data recv error");
+	    exit(1);
       }
       rsp_bytes_left -= rsp_bytes_recvd;
       temp_message_ptr  += rsp_bytes_recvd;
@@ -8441,7 +8316,7 @@ newport:
       fprintf(where,"remote results obtained\n");
   }
   else {
-    errno = netperf_response.content.serv_errno;
+    Set_errno(netperf_response.content.serv_errno);
     fprintf(where,
 	    "netperf: remote error %d",
 	    netperf_response.content.serv_errno);
@@ -8463,7 +8338,7 @@ newport:
   /* unit selections. */ 
   
   bytes_xferd	= (req_size * nummessages) + (rsp_size * nummessages);
-  thruput	= (double) calc_thruput(bytes_xferd);
+  thruput	= calc_thruput(bytes_xferd);
   
   if (local_cpu_usage || remote_cpu_usage) {
     /* We must now do a little math for service demand and cpu */
@@ -8627,10 +8502,10 @@ int
 recv_tcp_tran_rr()
 {
   
-  char message[MAXMESSAGESIZE+MAXALIGNMENT+MAXOFFSET];
+  char  *message;
   struct	sockaddr_in        myaddr_in,
   peeraddr_in;
-  int	s_listen,s_data;
+  SOCKET	s_listen,s_data;
   int 	addrlen;
   int   NoPush = 1;
 
@@ -8685,6 +8560,13 @@ recv_tcp_tran_rr()
     fprintf(where,"recv_tcp_tran_rr: the response type is set...\n");
     fflush(where);
   }
+
+  /* set-up the data buffer with the requested alignment and offset */
+  message = (char *)malloc(DATABUFFERLEN);
+  if (message == NULL) {
+    printf("malloc(%d) failed!\n", DATABUFFERLEN);
+    exit(1);
+  }
   
   /* We now alter the message_ptr variables to be at the desired */
   /* alignments with the desired offsets. */
@@ -8700,15 +8582,10 @@ recv_tcp_tran_rr()
 	    tcp_tran_rr_request->send_offset);
     fflush(where);
   }
-  recv_message_ptr = (char *)(( (long)message + 
-			(long) tcp_tran_rr_request->recv_alignment -1) & 
-			~((long) tcp_tran_rr_request->recv_alignment - 1));
-  recv_message_ptr = recv_message_ptr + tcp_tran_rr_request->recv_offset;
+
+  recv_message_ptr = ALIGN_BUFFER(message, tcp_tran_rr_request->recv_alignment, tcp_tran_rr_request->recv_offset);
   
-  send_message_ptr = (char *)(( (long)message + 
-			(long) tcp_tran_rr_request->send_alignment -1) & 
-			~((long) tcp_tran_rr_request->send_alignment - 1));
-  send_message_ptr = send_message_ptr + tcp_tran_rr_request->send_offset;
+  send_message_ptr = ALIGN_BUFFER(message, tcp_tran_rr_request->send_alignment, tcp_tran_rr_request->send_offset);
   
   if (debug) {
     fprintf(where,"recv_tcp_tran_rr: receive alignment and offset set...\n");
@@ -8746,7 +8623,7 @@ recv_tcp_tran_rr()
   s_listen = create_data_socket(AF_INET,
 				SOCK_STREAM);
   
-  if (s_listen < 0) {
+  if (s_listen == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
     send_response();
     if (debug) {
@@ -8764,7 +8641,7 @@ recv_tcp_tran_rr()
   
   if (bind(s_listen,
 	   (struct sockaddr *)&myaddr_in,
-	   sizeof(myaddr_in)) == -1) {
+	   sizeof(myaddr_in)) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -8781,7 +8658,7 @@ recv_tcp_tran_rr()
 		 IPPROTO_TCP,
 		 TCP_NOPUSH, 
 		 &NoPush,
-		 sizeof(int))) {
+		 sizeof(int)) == SOCKET_ERROR) {
     fprintf(where,
 	    "recv_tcp_tran_rr: could not set TCP_NOPUSH errno %d\n",
 	    errno);
@@ -8792,7 +8669,7 @@ recv_tcp_tran_rr()
   }
 
   /* Now, let's set-up the socket to listen for connections */
-  if (listen(s_listen, 5) == -1) {
+  if (listen(s_listen, 5) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -8807,7 +8684,7 @@ recv_tcp_tran_rr()
   addrlen = sizeof(myaddr_in);
   if (getsockname(s_listen,
 		  (struct sockaddr *)&myaddr_in,
-		  &addrlen) == -1){
+		  &addrlen) == SOCKET_ERROR){
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -8882,7 +8759,7 @@ recv_tcp_tran_rr()
     /* accept a connection from the remote */
     if ((s_data=accept(s_listen,
 		       (struct sockaddr *)&peeraddr_in,
-		       &addrlen)) == -1) {
+		       &addrlen)) == INVALID_SOCKET) {
       if (errno == EINTR) {
 	/* the timer popped */
 	timed_out = 1;
@@ -8899,6 +8776,16 @@ recv_tcp_tran_rr()
       fprintf(where,"recv_tcp_tran_rr: accepted data connection.\n");
       fflush(where);
     }
+  
+#ifdef WIN32
+  /* this is used so the timer thread can close the socket out from */
+  /* under us, which to date is the easiest/cleanest/least */
+  /* Windows-specific way I can find to force the winsock calls to */
+  /* return WSAEINTR with the test is over. anything that will run on */
+  /* 95 and NT and is closer to what netperf expects from Unix signals */
+  /* and such would be appreciated raj 1/96 */
+  win_kludge_socket = s_data;
+#endif /* WIN32 */
 
 #ifdef KLUDGE_SOCKET_OPTIONS
   /* this is for those systems which *INCORRECTLY* fail to pass */
@@ -8922,20 +8809,16 @@ recv_tcp_tran_rr()
       if((request_bytes_recvd=recv(s_data,
 				   temp_message_ptr,
 				   request_bytes_remaining,
-				   0)) < 0) {
-#ifdef WIN32
-	if ( request_bytes_recvd == SOCKET_ERROR &&
-	     WSAGetLastError() == WSAEINTR ) {
-#else
-	if (errno == EINTR) {
-#endif /* WIN32 */
-	  /* the timer popped */
-	  timed_out = 1;
-	  break;
-	}
-	netperf_response.content.serv_errno = errno;
-	send_response();
-	exit(1);
+				   0)) == SOCKET_ERROR) {
+	    if ( SOCKET_EINTR(request_bytes_recvd) )
+		{
+	      /* the timer popped */
+	      timed_out = 1;
+	      break;
+		}
+	    netperf_response.content.serv_errno = errno;
+	    send_response();
+	    exit(1);
       }
       else {
 	request_bytes_remaining -= request_bytes_recvd;
@@ -8958,13 +8841,8 @@ recv_tcp_tran_rr()
 			  tcp_tran_rr_request->response_size,
 			  MSG_EOF,
 			  &peeraddr_in,
-			  sizeof(struct sockaddr_in))) == -1) {
-#ifdef WIN32
-      if ( bytes_sent == SOCKET_ERROR &&
-	  WSAGetLastError() == WSAEINTR ) {
-#else
-      if (errno == EINTR) {
-#endif /* WIN32 */
+			  sizeof(struct sockaddr_in))) == SOCKET_ERROR) {
+      if (SOCKET_EINTR(bytes_sent)) {
 	/* the test timer has popped */
 	timed_out = 1;
 	fprintf(where,"yo6\n");
@@ -9041,8 +8919,7 @@ recv_tcp_tran_rr()
  /* test using POSIX-style non-blocking sockets. */
 
 int 
-send_tcp_nbrr(remote_host)
-     char	remote_host[];
+send_tcp_nbrr(char remote_host[])
 {
   
   char *tput_title = "\
@@ -9087,7 +8964,7 @@ Send   Recv    Send   Recv\n\
   int	len;
   char	*temp_message_ptr;
   int	nummessages;
-  int	send_socket;
+  SOCKET	send_socket;
   int	trans_remaining;
   double	bytes_xferd;
 
@@ -9140,7 +9017,7 @@ Send   Recv    Send   Recv\n\
   /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
   /* order changed to check for IP address first. raj 7/96 */
 
-  if ((addr = inet_addr(remote_host)) == -1) {
+  if ((addr = inet_addr(remote_host)) == SOCKET_ERROR) {
     /* it was not an IP address, try it as a name */
     if ((hp = gethostbyname(remote_host)) == NULL) {
       /* we have no idea what it is */
@@ -9245,7 +9122,7 @@ Send   Recv    Send   Recv\n\
     send_socket = create_data_socket(AF_INET, 
 				     SOCK_STREAM);
   
-    if (send_socket < 0){
+    if (send_socket == INVALID_SOCKET){
       perror("netperf: send_tcp_nbrr: tcp stream data socket");
       exit(1);
     }
@@ -9325,7 +9202,7 @@ Send   Recv    Send   Recv\n\
       server.sin_port   = htons(server.sin_port);
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       fprintf(where,
 	      "netperf: remote error %d",
 	      netperf_response.content.serv_errno);
@@ -9337,7 +9214,7 @@ Send   Recv    Send   Recv\n\
     /*Connect up to the remote port on the data socket  */
     if (connect(send_socket, 
 		(struct sockaddr *)&server,
-		sizeof(server)) <0){
+		sizeof(server)) == INVALID_SOCKET){
       perror("netperf: data socket connect failed");
       
       exit(1);
@@ -9419,7 +9296,7 @@ Send   Recv    Send   Recv\n\
 		   send_ring->buffer_ptr,
 		   req_size,
 		   0)) != req_size) {
-	if ((errno == EINTR) || (errno == 0)) {
+	if (SOCKET_EINTR(len)) {
 	  /* we hit the end of a */
 	  /* timed test. */
 	  timed_out = 1;
@@ -9438,19 +9315,15 @@ Send   Recv    Send   Recv\n\
 	if((rsp_bytes_recvd=recv(send_socket,
 				 temp_message_ptr,
 				 rsp_bytes_left,
-				 0)) < 0) {
-#ifdef WIN32
-	if (rsp_bytes_recvd == SOCKET_ERROR &&
-	     WSAGetLastError() == WSAEINTR ) {
-#else
-	if (errno == EINTR) {
-#endif /* WIN32 */
+				 0)) == SOCKET_ERROR) {
+	  if (SOCKET_EINTR(rsp_bytes_recvd))
+	  {
 	    /* We hit the end of a timed test. */
 	    timed_out = 1;
 	    break;
 	  }
 	  else if (errno == EAGAIN) {
-	    errno = 0;
+	    Set_errno(0);
 	    continue;
 	  }
 	  else {
@@ -9535,7 +9408,7 @@ Send   Recv    Send   Recv\n\
 	fprintf(where,"remote results obtained\n");
     }
     else {
-      errno = netperf_response.content.serv_errno;
+      Set_errno(netperf_response.content.serv_errno);
       fprintf(where,
 	      "netperf: remote error %d",
 	      netperf_response.content.serv_errno);
@@ -9760,7 +9633,7 @@ recv_tcp_nbrr()
 
   struct	sockaddr_in        myaddr_in,
   peeraddr_in;
-  int	s_listen,s_data;
+  SOCKET	s_listen,s_data;
   int 	addrlen;
   char	*temp_message_ptr;
   int	trans_received;
@@ -9870,7 +9743,7 @@ recv_tcp_nbrr()
   s_listen = create_data_socket(AF_INET,
 				SOCK_STREAM);
   
-  if (s_listen < 0) {
+  if (s_listen == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
     send_response();
     
@@ -9885,7 +9758,7 @@ recv_tcp_nbrr()
   
   if (bind(s_listen,
 	   (struct sockaddr *)&myaddr_in,
-	   sizeof(myaddr_in)) == -1) {
+	   sizeof(myaddr_in)) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -9894,7 +9767,7 @@ recv_tcp_nbrr()
   }
   
   /* Now, let's set-up the socket to listen for connections */
-  if (listen(s_listen, 5) == -1) {
+  if (listen(s_listen, 5) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -9906,7 +9779,7 @@ recv_tcp_nbrr()
   /* now get the port number assigned by the system  */
   addrlen = sizeof(myaddr_in);
   if (getsockname(s_listen,
-		  (struct sockaddr *)&myaddr_in, &addrlen) == -1){
+		  (struct sockaddr *)&myaddr_in, &addrlen) == SOCKET_ERROR){
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -9950,7 +9823,7 @@ recv_tcp_nbrr()
   
   if ((s_data = accept(s_listen,
 		       (struct sockaddr *)&peeraddr_in,
-		       &addrlen)) ==  -1) {
+		       &addrlen)) == INVALID_SOCKET) {
     /* Let's just punt. The remote will be given some information */
     close(s_listen);
     exit(1);
@@ -9981,6 +9854,16 @@ recv_tcp_nbrr()
   /* first grab the apropriate counters and then start grabbing. */
   
   cpu_start(tcp_rr_request->measure_cpu);
+
+#ifdef WIN32
+  /* this is used so the timer thread can close the socket out from */
+  /* under us, which to date is the easiest/cleanest/least */
+  /* Windows-specific way I can find to force the winsock calls to */
+  /* return WSAEINTR with the test is over. anything that will run on */
+  /* 95 and NT and is closer to what netperf expects from Unix signals */
+  /* and such would be appreciated raj 1/96 */
+  win_kludge_socket = s_data;
+#endif /* WIN32 */
   
   /* The loop will exit when the sender does a shutdown, which will */
   /* return a length of zero   */
@@ -10004,30 +9887,26 @@ recv_tcp_nbrr()
       if((request_bytes_recvd=recv(s_data,
 				   temp_message_ptr,
 				   request_bytes_remaining,
-				   0)) < 0) {
-#ifdef WIN32
-	if ( request_bytes_recvd == SOCKET_ERROR &&
-	     WSAGetLastError() == WSAEINTR ) {
-#else
-	if (errno == EINTR) {
-#endif /* WIN32 */
-	  /* the timer popped */
-	  timed_out = 1;
-	  break;
-	}
-	else if (errno == EAGAIN) {
-	  errno = 0;
-	  if (times_up) {
-	    timed_out = 1;
-	    break;
-	  }
-	  continue;
-	}
-	else {
-	  netperf_response.content.serv_errno = errno;
-	  send_response();
-	  exit(1);
-	}
+				   0)) == SOCKET_ERROR) {
+	    if ( SOCKET_EINTR(request_bytes_recvd))
+		{
+	      /* the timer popped */
+	      timed_out = 1;
+	      break;
+		}
+	    else if (errno == EAGAIN) {
+	      Set_errno(0);
+	      if (times_up) {
+	        timed_out = 1;
+	        break;
+		  }
+	      continue;
+		}
+	    else {
+	      netperf_response.content.serv_errno = errno;
+	      send_response();
+	      exit(1);
+		}
       }
       else {
 	request_bytes_remaining -= request_bytes_recvd;
@@ -10049,12 +9928,8 @@ recv_tcp_nbrr()
     if((bytes_sent=send(s_data,
 			send_ring->buffer_ptr,
 			tcp_rr_request->response_size,
-			0)) == -1) {
-#ifdef WIN32
-      if (bytes_sent == SOCKET_ERROR && WSAGetLastError() == WSAEINTR ){
-#else
-      if (errno == EINTR) {
-#endif /* WIN32 */
+			0)) == SOCKET_ERROR) {
+      if (SOCKET_EINTR(bytes_sent)) {
 	/* the test timer has popped */
 	timed_out = 1;
 	fprintf(where,"yo6\n");
@@ -10134,8 +10009,7 @@ recv_tcp_nbrr()
  /* TCP_RR test - presumeably, they would all relate */
 
 void
-send_tcp_cc(remote_host)
-     char	remote_host[];
+send_tcp_cc(char remote_host[])
 {
   
   char *tput_title = "\
@@ -10178,10 +10052,9 @@ Send   Recv    Send   Recv\n\
   int			timed_out = 0;
   float			elapsed_time;
   
-  int	len;
   char	temp_message_ptr[1];
   int	nummessages;
-  int	send_socket;
+  SOCKET	send_socket;
   int	trans_remaining;
   double	bytes_xferd;
   int	sock_opt_len = sizeof(int);
@@ -10223,6 +10096,10 @@ Send   Recv    Send   Recv\n\
   /* must turn that into the test specific addressing information. */
   
   myaddr = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
+  if (myaddr == NULL) {
+    printf("malloc(%ld) failed!\n", sizeof(struct sockaddr_in));
+    exit(1);
+  }
 
   bzero((char *)&server,
 	sizeof(server));
@@ -10235,7 +10112,7 @@ Send   Recv    Send   Recv\n\
   /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
   /* order changed to check for IP address first. raj 7/96 */
 
-  if ((addr = inet_addr(remote_host)) == -1) {
+  if ((addr = inet_addr(remote_host)) == SOCKET_ERROR) {
     /* it was not an IP address, try it as a name */
     if ((hp = gethostbyname(remote_host)) == NULL) {
       /* we have no idea what it is */
@@ -10368,7 +10245,7 @@ Send   Recv    Send   Recv\n\
     remote_cpu_usage=	tcp_cc_response->measure_cpu;
     remote_cpu_rate = 	tcp_cc_response->cpu_rate;
     /* make sure that port numbers are in network order */
-    server.sin_port	=	tcp_cc_response->data_port_number;
+    server.sin_port	=	(unsigned short)tcp_cc_response->data_port_number;
     server.sin_port =	htons(server.sin_port);
     if (debug) {
       fprintf(where,"remote listen done.\n");
@@ -10377,7 +10254,7 @@ Send   Recv    Send   Recv\n\
     }
   }
   else {
-    errno = netperf_response.content.serv_errno;
+    Set_errno(netperf_response.content.serv_errno);
     fprintf(where,
 	    "netperf: remote error %d",
 	    netperf_response.content.serv_errno);
@@ -10442,7 +10319,7 @@ Send   Recv    Send   Recv\n\
     send_socket = create_data_socket(AF_INET, 
 				     SOCK_STREAM);
 
-    if (send_socket < 0) {
+    if (send_socket == INVALID_SOCKET) {
       perror("netperf: send_tcp_cc: tcp stream data socket");
       exit(1);
     }
@@ -10456,7 +10333,7 @@ Send   Recv    Send   Recv\n\
     /* the length of the TIME_WAIT state raj 8/94 */
     one = 1;
     if(setsockopt(send_socket, SOL_SOCKET, SO_REUSEADDR,
-		  (char *)&one, sock_opt_len) < 0) {
+		  (char *)&one, sock_opt_len) == SOCKET_ERROR) {
       perror("netperf: send_tcp_cc: so_reuseaddr");
       exit(1);
     }
@@ -10484,7 +10361,7 @@ newport:
 
     if (myport == ntohs(server.sin_port)) myport++;
 
-    myaddr->sin_port = htons(myport);
+    myaddr->sin_port = htons((unsigned short)myport);
 
     if (debug) {
       if ((nummessages % 100) == 0) {
@@ -10495,20 +10372,17 @@ newport:
     /* we want to bind our socket to a particular port number. */
     if ((ret = bind(send_socket,
 		   (struct sockaddr *)myaddr,
-		   sizeof(struct sockaddr_in))) < 0) {
+		   sizeof(struct sockaddr_in))) == SOCKET_ERROR) {
       /* if the bind failed, someone else must have that port number */
       /* - perhaps in the listen state. since we can't use it, skip to */
       /* the next port number. we may have to do this again later, but */
       /* that's just too bad :) */
-#ifdef WIN32
-      if (ret == SOCKET_ERROR && WSAGetLastError() == WSAEINTR ){
-#else
-      if (errno == EINTR) {
-#endif /* WIN32 */
-	/* we hit the end of a */
-	/* timed test. */
-	timed_out = 1;
-	break;
+      if (SOCKET_EINTR(ret))
+	  {
+	    /* we hit the end of a */
+	    /* timed test. */
+	    timed_out = 1;
+	    break;
       }
       if (debug > 1) {
 	fprintf(where,
@@ -10526,16 +10400,13 @@ newport:
     /* Connect up to the remote port on the data socket  */
     if ((ret = connect(send_socket, 
 		(struct sockaddr *)&server,
-		sizeof(server))) <0){
-#ifdef WIN32
-      if (ret == SOCKET_ERROR && WSAGetLastError() == WSAEINTR ){
-#else
-      if (errno == EINTR) {
-#endif /* WIN32 */
-	/* we hit the end of a */
-	/* timed test. */
-	timed_out = 1;
-	break;
+		sizeof(server))) == INVALID_SOCKET){
+      if (SOCKET_EINTR(ret))
+	  {
+	    /* we hit the end of a */
+	    /* timed test. */
+	    timed_out = 1;
+	    break;
       }
       perror("netperf: data socket connect failed");
       printf("\tattempted to connect on socket %d to port %d",
@@ -10579,17 +10450,14 @@ newport:
     }
     else {
       /* it was less than zero - an error occured */
-#ifdef WIN32
-      if (rsp_bytes_recvd == SOCKET_ERROR && WSAGetLastError() == WSAEINTR) {
-#else
-      if (errno == EINTR) {
-#endif /* WIN32 */
-	  /* We hit the end of a timed test. */
-	  timed_out = 1;
-	  break;
-	}
-	perror("send_tcp_cc: data recv error");
-	exit(1);
+      if (SOCKET_EINTR(rsp_bytes_recvd))
+	  {
+	    /* We hit the end of a timed test. */
+	    timed_out = 1;
+	    break;
+	  }
+	  perror("send_tcp_cc: data recv error");
+	  exit(1);
     }
       
   }
@@ -10611,7 +10479,7 @@ newport:
       fprintf(where,"remote results obtained\n");
   }
   else {
-    errno = netperf_response.content.serv_errno;
+    Set_errno(netperf_response.content.serv_errno);
     fprintf(where,
 	    "netperf: remote error %d",
 	     netperf_response.content.serv_errno);
@@ -10634,7 +10502,7 @@ newport:
   /* unit selections. */ 
   
   bytes_xferd	= (req_size * nummessages) + (rsp_size * nummessages);
-  thruput	= (double) calc_thruput(bytes_xferd);
+  thruput	= calc_thruput(bytes_xferd);
   
   if (local_cpu_usage || remote_cpu_usage) {
     /* We must now do a little math for service demand and cpu */
@@ -10798,19 +10666,15 @@ void
 recv_tcp_cc()
 {
   
-  char message[MAXMESSAGESIZE+MAXALIGNMENT+MAXOFFSET];
+  char  *message;
   struct	sockaddr_in        myaddr_in,
   peeraddr_in;
-  int	s_listen,s_data;
+  SOCKET	s_listen,s_data;
   int 	addrlen;
   char	*recv_message_ptr;
   char	*send_message_ptr;
-  char	*temp_message_ptr;
   int	trans_received;
   int	trans_remaining;
-  int	bytes_sent;
-  int	request_bytes_recvd;
-  int	request_bytes_remaining;
   int	timed_out = 0;
   float	elapsed_time;
   
@@ -10854,6 +10718,13 @@ recv_tcp_cc()
     fprintf(where,"recv_tcp_cc: the response type is set...\n");
     fflush(where);
   }
+
+  /* set-up the data buffer with the requested alignment and offset */
+  message = (char *)malloc(DATABUFFERLEN);
+  if (message == NULL) {
+    printf("malloc(%d) failed!\n", DATABUFFERLEN);
+    exit(1);
+  }
   
   /* We now alter the message_ptr variables to be at the desired */
   /* alignments with the desired offsets. */
@@ -10869,16 +10740,11 @@ recv_tcp_cc()
 	    tcp_cc_request->send_offset);
     fflush(where);
   }
-  recv_message_ptr = (char *)(( (long)message + 
-			(long) tcp_cc_request->recv_alignment -1) & 
-			~((long) tcp_cc_request->recv_alignment - 1));
-  recv_message_ptr = recv_message_ptr + tcp_cc_request->recv_offset;
+
+  recv_message_ptr = ALIGN_BUFFER(message, tcp_cc_request->recv_alignment, tcp_cc_request->recv_offset);
   
-  send_message_ptr = (char *)(( (long)message + 
-			(long) tcp_cc_request->send_alignment -1) & 
-			~((long) tcp_cc_request->send_alignment - 1));
-  send_message_ptr = send_message_ptr + tcp_cc_request->send_offset;
-  
+  send_message_ptr = ALIGN_BUFFER(message, tcp_cc_request->send_alignment, tcp_cc_request->send_offset);
+
   if (debug) {
     fprintf(where,"recv_tcp_cc: receive alignment and offset set...\n");
     fflush(where);
@@ -10915,7 +10781,7 @@ recv_tcp_cc()
   s_listen = create_data_socket(AF_INET,
 				SOCK_STREAM);
   
-  if (s_listen < 0) {
+  if (s_listen == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
     send_response();
     if (debug) {
@@ -10933,7 +10799,7 @@ recv_tcp_cc()
   
   if (bind(s_listen,
 	   (struct sockaddr *)&myaddr_in,
-	   sizeof(myaddr_in)) == -1) {
+	   sizeof(myaddr_in)) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -10945,7 +10811,7 @@ recv_tcp_cc()
   }
 
   /* Now, let's set-up the socket to listen for connections */
-  if (listen(s_listen, 5) == -1) {
+  if (listen(s_listen, 5) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -10960,7 +10826,7 @@ recv_tcp_cc()
   addrlen = sizeof(myaddr_in);
   if (getsockname(s_listen,
 		  (struct sockaddr *)&myaddr_in,
-		  &addrlen) == -1){
+		  &addrlen) == SOCKET_ERROR){
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -11035,7 +10901,7 @@ recv_tcp_cc()
     /* accept a connection from the remote */
     if ((s_data=accept(s_listen,
 		       (struct sockaddr *)&peeraddr_in,
-		       &addrlen)) == -1) {
+		       &addrlen)) == INVALID_SOCKET) {
       if (errno == EINTR) {
 	/* the timer popped */
 	timed_out = 1;
@@ -11140,14 +11006,12 @@ void
 print_sockets_usage()
 {
 
-  printf("%s",sockets_usage);
+  fwrite(sockets_usage, sizeof(char), strlen(sockets_usage), stdout);
   exit(1);
 
 }
 void
-scan_sockets_args(argc, argv)
-     int	argc;
-     char	*argv[];
+scan_sockets_args(int argc, char *argv[])
 
 {
 

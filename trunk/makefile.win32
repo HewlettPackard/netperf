@@ -18,7 +18,7 @@ cflags   = $(cflags)
 # WIN32 is the common point, we rely on a WIN32 being defined, along 
 # with _CONSOLE_
 
-DFLAGS   = -D_CONSOLE_ -DDEBUG_LOG_FILE="\"netperf.log\"" -DUSE_LOOPER
+DFLAGS   = -D_CONSOLE_ 
 #LIBS     = wsock32.lib ntdll.lib
 LIBS     = wsock32.lib
 #INCS     = -Iy:\nt\public\sdk\inc  -Iy:\nt\public\sdk\inc\crt

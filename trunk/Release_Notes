@@ -1,3 +1,16 @@
+These are the Release Notes for revision 2.2pl5 of netperf:
+
+Things changed in this release
+
+*) Improved (perhaps even usable :) support for Windows, including
+compilation and run on Win64.
+
+*) Fixes for MacOS X and FreeBSD
+
+Things not changed in this release
+
+*) Specifying the port number(s) for the data connection
+
 These are the Release Notes for Revision 2.2pl4 of netperf:
 
 Things changed in this release
