@@ -155,6 +155,15 @@
 #define         LWPDG_RR_RESPONSE         200
 #define         LWPDG_RR_RESULTS          210
 
+#define         DO_TCP_CC             300
+#define         TCP_CC_RESPONSE       301
+#define         TCP_CC_RESULTS        302
+
+#define         DO_DNS_RR             400
+#define         DNS_RR_RESPONSE       401
+#define         DNS_RR_RESULTS        402
+
+
  /* some of the fields in these structures are going to be doubles and */
  /* such. so, we probably want to ensure that they will start on */
  /* "double" boundaries. this will break compatability to pre-2.1 */
@@ -185,6 +194,30 @@ struct ring_elt {
   char *buffer_ptr;       /* the aligned and offset pointer */
 };
 
+#ifdef HAVE_SENDFILE
+
+struct sendfile_ring_elt {
+  struct sendfile_ring_elt *next; /* next element in the ring */
+  int fildes;                     /* the file descriptor of the source
+				     file */ 
+  off_t offset;                   /* the offset from the beginning of
+				     the file for this send */
+  size_t length;                  /* the number of bytes to send -
+				     this is redundant with the
+				     send_size variable but I decided
+				     to include it anyway */
+  struct iovec *hdtrl;            /* a pointer to a header/trailer
+				     that we do not initially use and
+				     so should be set to NULL when the 
+				     ring is setup. */
+  int flags;                      /* the flags to pass to sendfile() - 
+				     presently unused and should be
+				     set to zero when the ring is
+				     setup. */
+};
+
+#endif /* HAVE_SENDFILE */
+
  /* the diferent codes to denote the type of CPU utilization */
  /* methods used */
 #define CPU_UNKNOWN     0
@@ -194,6 +227,7 @@ struct ring_elt {
 #define LOOPER          4
 #define GETRUSAGE       5
 #define NT_METHOD       6
+#define KSTAT           7
 
 #define BADCH ('?')
 
@@ -257,6 +291,9 @@ extern  float   calc_cpu_util();
 extern  float   calc_service_demand();
 extern  void    catcher();
 extern  struct ring_elt *allocate_buffer_ring();
+#ifdef HAVE_SENDFILE
+extern  struct sendfile_ring_elt *alloc_sendfile_buf_ring();
+#endif /* HAVE_SENDFILE */
 extern  int     dl_connect();
 extern  int     dl_bind();
 extern  int     dl_open();

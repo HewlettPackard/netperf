@@ -1,5 +1,5 @@
 char	netsh_id[]="\
-@(#)netsh.c (c) Copyright 1993, 1994 Hewlett-Packard Company. Version 2.1";
+@(#)netsh.c (c) Copyright 1993-2000 Hewlett-Packard Company. Version 2.2";
 
 
 /****************************************************************/
@@ -97,7 +97,7 @@ char	cmd_file[BUFSIZ];	/* name of the commands file		*/
 
 /* stuff to say where this test is going                                */
 char	host_name[HOSTNAMESIZE];	/* remote host name or ip addr  */
-char    test_name[64];			/* which test to run 		*/
+char    test_name[BUFSIZ];			/* which test to run 		*/
 short	test_port;			/* where is the test waiting    */
 
 /* the source of data for filling the buffers */
@@ -492,7 +492,7 @@ scan_cmd_line(argc, argv)
       /* measure local cpu usage please. the user */
       /* may have specified the cpu rate as an */
       /* optional parm */
-      if (isdigit(argv[optind][0])){
+      if (argv[optind] && isdigit(argv[optind][0])){
 	/* there was an optional parm */
 	local_cpu_rate = (float)atof(argv[optind]);
 	optind++;
@@ -501,7 +501,7 @@ scan_cmd_line(argc, argv)
       break;
     case 'C':
       /* measure remote cpu usage please */
-      if (isdigit(argv[optind][0])){
+      if (argv[optind] && isdigit(argv[optind][0])){
 	/* there was an optional parm */
 	remote_cpu_rate = (float)atof(argv[optind]);
 	optind++;
@@ -547,6 +547,9 @@ scan_cmd_line(argc, argv)
   /* a better solution, i would love to see it */
   if (optind != argc) {
     if ((strcmp(test_name,"TCP_STREAM") == 0) || 
+#ifdef HAVE_SENDFILE
+	(strcmp(test_name,"TCP_SENDFILE") == 0) ||
+#endif /* HAVE_SENDFILE */
 	(strcmp(test_name,"TCP_RR") == 0) ||
 	(strcmp(test_name,"TCP_CRR") == 0) ||
 #ifdef DO_1644
@@ -620,6 +623,12 @@ scan_cmd_line(argc, argv)
 	scan_ipv6_args(argc, argv);
       }
 #endif /* DO_IPV6 */
+#ifdef DO_DNS
+    else if (strcmp(test_name,"DNS_RR") == 0)
+      {
+	scan_dns_args(argc, argv);
+      }
+#endif /* DO_DNS */
   }
 }
 

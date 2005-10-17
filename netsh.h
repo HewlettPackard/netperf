@@ -28,7 +28,9 @@
 #define 	REM_SEND_ALIGN	4	/* alignment for remote sends	*/
 
 /* misc defines for the hell of it					*/
-#define 	MAXLONG  	4294967295L
+#ifndef MAXLONG
+#define 	MAXLONG  	4294967295UL
+#endif /* MAXLONG */
 
 #ifndef NETSH
 /* stuff to say where this test is going                                */

@@ -1,7 +1,7 @@
 #ifdef DO_IPV6
 #ifndef lint
 char	nettest_ipv6_id[]="\
-@(#)nettest_ipv6.c (c) Copyright 1995 Hewlett-Packard Co. Version 2.1";
+@(#)nettest_ipv6.c (c) Copyright 1995 Hewlett-Packard Co. Version 2.1pl4";
 #else
 #define DIRTY
 #define HISTOGRAM
@@ -60,6 +60,9 @@ char	nettest_ipv6_id[]="\
 #include "nettest_ipv6.h"
 
 #ifdef HISTOGRAM
+#ifdef __sgi
+#include <sys/time.h>
+#endif /* __sgi */
 #include "hist.h"
 #endif /* HISTOGRAM */
 

@@ -43,7 +43,7 @@
  
 */
 char	netperf_id[]="\
-@(#)netperf.c (c) Copyright 1993, 1994 Hewlett-Packard Company. Version 2.1";
+@(#)netperf.c (c) Copyright 1993, 1994 Hewlett-Packard Company. Version 2.2";
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -74,6 +74,9 @@ char	netperf_id[]="\
 #ifdef DO_IPV6
 #include "nettest_ipv6.h"
 #endif /* DO_IPV6 */
+#ifdef DO_DNS
+#include "nettest_dns.h"
+#endif /* DO_DNS */
 
  /* this file contains the main for the netperf program. all the other */
  /* routines can be found in the file netsh.c */
@@ -116,11 +119,19 @@ establish_control(host_name,test_port);
 if (strcmp(test_name,"TCP_STREAM") == 0) {
 	send_tcp_stream(host_name);
 }
+#ifdef HAVE_SENDFILE
+else if (strcmp(test_name,"TCP_SENDFILE") == 0) {
+	sendfile_tcp_stream(host_name);
+}
+#endif /* HAVE_SENDFILE */
 else if (strcmp(test_name,"TCP_RR") == 0) {
 	send_tcp_rr(host_name);
 }
 else if (strcmp(test_name,"TCP_CRR") == 0) {
 	send_tcp_conn_rr(host_name);
+}
+else if (strcmp(test_name,"TCP_CC") == 0) {
+	send_tcp_cc(host_name);
 }
 #ifdef DO_1644
 else if (strcmp(test_name,"TCP_TRR") == 0) {
@@ -233,6 +244,11 @@ else if (strcmp(test_name,"UDPIPV6_RR") == 0) {
 	send_udpipv6_rr(host_name);
 }
 #endif /* DO_IPV6 */
+#ifdef DO_DNS
+else if (strcmp(test_name,"DNS_RR") == 0) {
+	send_dns_rr(host_name);
+}
+#endif /* DO_DNS */
 else {
 	printf("The test you requested is unknown to this netperf.\n");
 	printf("Please verify that you have the correct test name, \n");

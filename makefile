@@ -7,7 +7,7 @@
 #SHELL="/bin/sh"
 
 #what version of netperf is this for?
-VERSION = 2.1pl2
+VERSION = 2.2alpha
 
 #
 # This tells the script where the executables and scripts are supposed
@@ -44,21 +44,16 @@ CC = cc
 #               compilation is required for -DHISTOGRAM
 # -DDIRTY     - include code to dirty buffers before calls to send
 # -DHISTOGRAM - include code to keep a histogram of r/r times or
-#               time spent in send()
+#               time spent in send() - requires -Ae on HP-UX
+#               This option requires -D_BSD_TYPES under IRIX
 # -DINTERVALS - include code to allow pacing of sends in a UDP or TCP 
 #               test. this may have unexpected results on non-HP-UX
 #               systems as I have not learned how to emulate the
 #               functionality found within the __hpux defines in
 #               the catcher() routine of netlib.c
-# -DDO_DLPI   - include code to test the DLPI interface (may also 
+# -DDO_DLPI   - include code to test the DLPI implementation (may also 
 #               require changes to LIBS. see below)
 # -DDO_UNIX   - include code to test Unix Domain sockets
-# -DDO_FORE   - include code to test the Fore ATM API (requires 
-#               -DFORE_KLUDGE and -I/usr/fore/include).  Also, add
-#               -DFORE_FT400 if you're running FT 4.0.0 or above.
-# -DDO_HIPPI  - include code to test the HP HiPPI LLA interface. if 
-#               you just want vanilla HP LLA, then also add
-#               -DBUTNOTHIPPI
 # -D$(LOG_FILE) Specifies where netserver should put its debug output 
 #               when debug is enabled
 # -DUSE_LOOPER- use looper or soaker processes to measure CPU
@@ -78,12 +73,19 @@ CC = cc
 #               measurement. Astute observers will notice that the
 #               LOC_CPU and REM_CPU rates with this method look
 #               remarkably close to the clockrate of the machine :)
+# -DUSE_KSTAT - If used on Solaris 2.mumble, this will make CPU
+#               utilization measurements using the kstat interface.
 # -DDO_IPV6   - Include tests which use a sockets interface to IPV6.
 #               The control connection remains IPV4
 # -U__hpux    - Use this when compiling _on_ HP-UX *for* an HP-RT system
+#
+# -DDO_DNS    - Include tests (experimental) that measure the performance
+#               of a DNS server.
+# -DHAVE_SENDFILE - Include the TCP_SENDFILE test to test the perf of
+#               sending data using sendfile() instead of send().
 
 LOG_FILE=DEBUG_LOG_FILE="\"/tmp/netperf.debug\""
-CFLAGS = -O -Ae -D$(LOG_FILE) -DUSE_LOOPER 
+CFLAGS = -Ae -O -D$(LOG_FILE) -DUSE_PSTAT -DHAVE_SENDFILE
 
 # Some platforms, and some options, require additional libraries.
 # you can add to the "LIBS =" line to accomplish this. if you find
@@ -114,10 +116,9 @@ SHAR_SOURCE_FILES = netlib.c netlib.h netperf.c netserver.c \
 		    nettest_bsd.c nettest_bsd.h \
 		    nettest_dlpi.c nettest_dlpi.h \
 		    nettest_unix.c nettest_unix.h \
-		    nettest_fore.c nettest_fore.h \
-		    nettest_hippi.c nettest_hippi.h \
                     nettest_xti.c nettest_xti.h \
                     nettest_ipv6.c nettest_ipv6.h \
+                    nettest_dns.c nettest_dns.h \
                     hist.h \
 		    makefile makefile.win32
 
@@ -136,12 +137,14 @@ SHAR_SCRIPT_FILES = tcp_stream_script udp_stream_script \
                     snapshot_script arr_script
 
 NETSERVER_OBJS	  = netserver.o nettest_bsd.o nettest_dlpi.o \
-                    nettest_unix.o netlib.o netsh.o nettest_fore.o \
-		    nettest_hippi.o nettest_xti.o nettest_ipv6.o
+                    nettest_unix.o netlib.o netsh.o  \
+		    nettest_xti.o nettest_ipv6.o \
+                    nettest_dns.o
 
 NETPERF_OBJS	  = netperf.o netsh.o netlib.o nettest_bsd.o \
-                    nettest_dlpi.o nettest_unix.o nettest_fore.o \
-		    nettest_hippi.o nettest_xti.o nettest_ipv6.o
+                    nettest_dlpi.o nettest_unix.o  \
+		    nettest_xti.o nettest_ipv6.o \
+                    nettest_dns.o
 
 NETPERF_SCRIPTS   = tcp_range_script tcp_stream_script tcp_rr_script \
                     udp_stream_script udp_rr_script \
@@ -170,22 +173,27 @@ nettest_dlpi.o:	nettest_dlpi.c nettest_dlpi.h netlib.h netsh.h makefile
 
 nettest_unix.o:	nettest_unix.c nettest_unix.h netlib.h netsh.h makefile
 
-nettest_fore.o: nettest_fore.c nettest_fore.h netlib.h netsh.h makefile
-
-nettest_hippi.o: nettest_hippi.c nettest_hippi.h netlib.h netsh.h makefile
-
 nettest_xti.o:   nettest_xti.c nettest_xti.h netlib.h netsh.h makefile
 
 nettest_ipv6.o:  nettest_ipv6.c nettest_ipv6.h netlib.h netsh.h makefile
+
+nettest_dns.o:  nettest_dns.c nettest_dns.h netlib.h netsh.h makefile
 
 netserver.o:	netserver.c nettest_bsd.h netlib.h makefile
 
 install:	netperf netserver
 		chmod -w *.[ch]
 		chmod +x $(NETPERF_SCRIPTS)
+		@if [ ! -d $(NETPERF_HOME) ]; then \
+			mkdir $(NETPERF_HOME) && chmod a+rx $(NETPERF_HOME); \
+		fi
 		cp netperf $(NETPERF_HOME)
 		cp netserver $(NETPERF_HOME)
 		cp $(NETPERF_SCRIPTS) $(NETPERF_HOME)
+		chmod a+rx $(NETPERF_HOME)/netperf $(NETPERF_HOME)/netserver
+		@for i in $(NETPERF_SCRIPTS); do \
+			chmod a+rx $(NETPERF_HOME)/$$i; \
+		done
 clean:
 	rm -f *.o netperf netserver core
 
@@ -236,7 +244,7 @@ netperf-scaf.tar:	$(SHAR_EXE_FILES) \
 		$(SHAR_EXE_FILES) \
 		$(SHAR_SCRIPT_FILES) $(SCAF_FILES)
 	compress netperf-scaf.tar
-	
+
 netperf-scaf.shar:	$(SHAR_EXE_FILES) \
 			$(SHAR_SCRIPT_FILES) \
 			$(SCAF_FILES)

@@ -1,8 +1,10 @@
 This file is here for people to list their contributions to the
 netperf benchmark. When you enhance or fix something, put your name
 and a description of the what/where/whey/why/how here. If you like,
-feel free to include an email address. I would like to apologize in
-advance to anyone I've forgotten to include.
+feel free to include an email address. 
+
+I would like to apologize in advance to anyone I've forgotten to
+include.
 
 Rick Jones <raj@cup.hp.com>
 Responsible for initial packaging and release of netperf and
@@ -72,3 +74,13 @@ code clean-ups and help with CPU utilization measurements.
 For offering to take-on support of the Fore ATM API files with 2.1 and
 for his help in making the tar files and such more user-friendly
 
+Michael Shuldman <michaels@inet.no>
+Improvements to the makefile and additional checks for OpenBSD
+
+Kris Corwin
+discovery of a debug statement outside of if (debug) that may have
+been the cause of all the nasty connection refused errors in random
+UDP_RR tests... 
+
+Charles Harris
+Initial prototype of the TCP_SENDFILE test support
