@@ -1,0 +1,23 @@
+This file is here for people to list their contributions to the
+netperf benchmark. When you enhance or fix something, put your name
+and a description of the what/where/whey/why/how here. If you like,
+feel free to include an email address.
+
+Rick Jones <raj@cup.hp.com>
+Initial packaging and release of netperf. 
+
+Karen Choy
+Code to allow netserver to run as a standalone daemon. 
+
+Dave Shield <daves@csc.liv.ac.uk>
+Wrote the first revision of the netperf and netserver manpages.
+
+Sarr Blumson <sarr@citi.umich.edu>
+Fixes for AIX 3.1 and 3.2. Also fixes for Solaris 2.1 without
+realizing it ;-) 
+
+Jeff Smits <jgs@usl.com>
+Fixes for TCP_RR and UDP_RR on sytems with an htonl that is not a no-op.
+
+Warren Burnett 
+Example code for DLPI tests.
