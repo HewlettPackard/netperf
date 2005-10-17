@@ -5,7 +5,7 @@
 #endif /* lint */
 #ifdef DO_FORE
 char	nettest_fore[]="\
-@(#)nettest_fore.c (c) Copyright 1994,1995 Hewlett-Packard Co. Version 2.0PL1";
+@(#)nettest_fore.c (c) Copyright 1994,1995 Hewlett-Packard Co. Version 2.0PL2";
      
 /****************************************************************/
 /*								*/

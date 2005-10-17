@@ -39,7 +39,7 @@ TEST_TIME=60
 # How accurate we want the estimate of performance: 
 #      maximum and minimum test iterations (-i)
 #      confidence level (99 or 95) and interval (percent)
-STATS_STUFF="-i 10,3 -I 99,10"
+STATS_STUFF="-i 10,3 -I 99,5"
 
 # The socket sizes that we will be testing - using zero will let it 
 # be the system default.
@@ -97,7 +97,7 @@ for SOCKET_SIZE in $SOCKET_SIZES
    # need to repeat a test multiple times from the shell
    $NETHOME/netperf $PORT -l $TEST_TIME -H $REM_HOST -t TCP_RR \
    $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF --\
-   -m $RR_SIZE -s $SOCKET_SIZE -S $SOCKET_SIZE
+   -r $RR_SIZE -s $SOCKET_SIZE -S $SOCKET_SIZE
  done
 done
 echo

@@ -43,7 +43,7 @@
  
 */
 char	netperf_id[]="\
-@(#)netperf.c (c) Copyright 1993, 1994 Hewlett-Packard Company. Version 2.0PL1";
+@(#)netperf.c (c) Copyright 1993, 1994 Hewlett-Packard Company. Version 2.0PL2";
 
 #include <stdio.h>
 #include "netsh.h"
@@ -90,6 +90,11 @@ else if (strcmp(test_name,"TCP_TRR") == 0) {
 	send_tcp_tran_rr(host_name);
 }
 #endif /* DO_1644 */
+#ifdef DO_NBRR
+else if (strcmp(test_name,"TCP_NBRR") == 0) {
+	send_tcp_nbrr(host_name);
+}
+#endif /* DO_NBRR */
 else if (strcmp(test_name,"UDP_STREAM") == 0) {
 	send_udp_stream(host_name);
 }

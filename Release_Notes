@@ -1,0 +1,51 @@
+
+These are the Release Notes for the 2.0PL2 revision of netperf:
+
+Things Changed in this release:
+
+*) Netperf.ps is a dummy file in this patch release. If you want the
+   manual, either consult the Web page, or grab an earlier 2.0
+   release.
+
+*) fixed the looper process CPU util for SGI Irix, thanks to pointers
+   from folks on the net on how to do it. It should now be both
+   accurate, and unobtrusive.
+
+*) added similar looper process code for AIX - untested. Feedback
+   appreciated.
+
+*) fixed a bug in the CPU utilization code when the soaker gets zero
+   CPU time. Exposed on Digital Unix where nice(39) is *really*
+   effective...
+
+*) fixed a bug where netperf -t REM_CPU would leave the soaker
+   proceses behind after the test, and not cleanup the
+   /tmp/netperf_cpu file. There is still a problem with trying to
+   measure CPU on both sides of a loopback test.
+
+*) started fixing bugs where sockets were left behind, precluding
+   running more than ~57 iterations for a confidence interval test.
+   initially pointed-out by Jim Yun. some of these may not have been
+   found by the time PL2 is released. Of course, the code also limits
+   the max iterations to 32, so it should be rather rare that someone
+   hits this.
+
+*) added progress indications to snapshot_script so people can know
+   that the script is making forward progress. These indications go to
+   stderr.
+
+*) changed the permissions on the debug file
+
+*) just saying "./netserver" should be enough to start the standalone
+   daemon  
+
+*) other things I've probably forgotten :)
+
+Things Not Changed in this release:
+
+*) USE_LOOPER and USE_PSTAT still require support for "long long"
+
+*) Still seem to be problems with Solaris 2.[34] and gcc 2.6.3 and
+   2.7.0. I am unsure if this is Solaris, gcc, or netperf. Netperf
+   appears to work with the Sun compilers.
+

@@ -1,5 +1,5 @@
 char	netlib_id[]="\
-@(#)netlib.c (c) Copyright 1993, 1994 Hewlett-Packard Company. Version 2.0PL1";
+@(#)netlib.c (c) Copyright 1993, 1994 Hewlett-Packard Company. Version 2.0PL2";
 
 /****************************************************************/
 /*								*/
@@ -73,6 +73,15 @@ char	netlib_id[]="\
 
 #ifdef _AIX
 #include <sys/select.h>
+#include <sys/sched.h>
+#include <sys/pri.h>
+#define PRIORITY PRI_LOW
+#else/* _AIX */
+#ifdef __sgi 
+#include <sys/prctl.h>
+#include <sys/schedctl.h>
+#define PRIORITY NDPLOMIN
+#endif /* __sgi */
 #endif /* _AIX */
 
 #ifdef USE_PSTAT
@@ -354,7 +363,7 @@ get_num_cpus()
 #else
   /* we need to know some other ways to do this, or just fall-back on */
   /* a global command line option - raj 4/95 */
-  temp_cpus = 1;
+  temp_cpus = shell_num_cpus;
 #endif /*  __hpux */
   if (temp_cpus > MAXCPUS) {
     fprintf(where,
@@ -948,7 +957,7 @@ shutdown_control()
 
   FD_ZERO(&readfds);
   FD_SET(netlib_control,&readfds);
-  timeout.tv_sec  = 60; /* wait one minute then punt */
+  timeout.tv_sec  = 60; /* wait two minutes then punt */
   timeout.tv_usec = 0;
 
   /* select had better return one, or there was either a problem or a */
@@ -1196,13 +1205,16 @@ timeout.tv_usec = 0;
 
  /* select had better return one, or there was either a problem or a */
  /* timeout... */
-if (select(FD_SETSIZE,
-	   &readfds,
-	   0,
-	   0,
-	   &timeout) != 1) {
-  fprintf(where,"netperf: receive_response: no response received.\n");
-  perror("");
+
+if ((counter = select(FD_SETSIZE,
+		      &readfds,
+		      0,
+		      0,
+		      &timeout)) != 1) {
+  fprintf(where,
+	  "netperf: receive_response: no response received. errno %d counter %d\n",
+	  errno,
+	  counter);
   exit(1);
 }
 
@@ -1291,7 +1303,7 @@ lo_32(big_int)
  /* calibrate_looper */
 
  /* Loop a number of times, sleeping wait_time seconds each and */
- /* count how high tnhe idle counter gets each time. Return  the */
+ /* count how high the idle counter gets each time. Return  the */
  /* measured cpu rate to the calling routine. raj 4/95 */
 
 float
@@ -1968,6 +1980,15 @@ calc_cpu_util(elapsed_time)
   
   if (lib_use_idle) {
     for (i = 0; i < lib_num_cpus; i++) {
+
+      /* it would appear that on some systems, in loopback, nice */
+      /* is *very* effective, causing the looper process to stop */
+      /* dead in its tracks. if this happens, we need to ensure  */
+      /* that the calculation does not go south. raj 6/95        */
+      if (lib_end_count[i] == lib_start_count[i]) {
+        lib_end_count[i]++;
+      }
+
       actual_rate = (lib_end_count[i] > lib_start_count[i]) ?
 	(float)(lib_end_count[i] - lib_start_count[i])/lib_elapsed :
 	  (float)(lib_end_count[i] - lib_start_count[i] +
@@ -2143,6 +2164,9 @@ start_looper_processes()
     i,
     file_size;
   
+  int pid,
+      prio;
+
   lib_idle_fd = open("/tmp/netperf_cpu",O_RDWR | O_CREAT | O_EXCL);
   
   if (lib_idle_fd == -1) {
@@ -2180,6 +2204,9 @@ start_looper_processes()
 #ifndef MAP_VARIABLE
 #define MAP_VARIABLE 0x0000
 #endif /* MAP_VARIABLE */
+#ifndef MAP_FILE
+#define MAP_FILE 0x0000
+#endif /* MAP_FILE */
   if ((lib_base_pointer = (long long *)mmap(NULL,
 					    file_size,
 					    PROT_READ | PROT_WRITE,
@@ -2223,10 +2250,23 @@ start_looper_processes()
       for (*lib_base_pointer = 0LL;
 	   ;
 	   (*lib_base_pointer)++) {
-	if (!(*lib_base_pointer % 1000000)) {
+	if (!(*lib_base_pointer % 1)) {
 	  /* every once and again, make sure that our process priority is */
 	  /* nice and low */
+#ifdef _AIX
+	  prio = PRIORITY;
+	  pid = getpid();
+	  setpri(pid, prio);
+#else /* _AIX */
+#ifdef __sgi
+	  prio = PRIORITY;
+	  pid = getpid();
+	  schedctl(NDPRI, pid, prio);
+	  sginap(0);
+#else /* __sgi */
 	  nice(39);
+#endif /* __sgi */
+#endif /* _AIX */
 	}
       }
       /* we should never really get here, but if we do, just exit(0) */
@@ -2304,6 +2344,10 @@ calibrate_remote_cpu()
 
   netperf_request->request_type = CPU_CALIBRATE;
   send_request();
+  /* we know that calibration will last at least 40 seconds, so go to */
+  /* sleep for that long so the 60 second select in recv_response will */
+  /* not pop. raj 7/95 */
+  sleep(40);
   recv_response();
   if (netperf_response->serv_errno) {
     /* initially, silently ignore remote errors and pass */
