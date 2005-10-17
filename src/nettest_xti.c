@@ -5,7 +5,7 @@
 #ifdef WANT_XTI
 #ifndef lint
 char	nettest_xti_id[]="\
-@(#)nettest_xti.c (c) Copyright 1995-2005 Hewlett-Packard Co. Version 2.4.0";
+@(#)nettest_xti.c (c) Copyright 1995-2005 Hewlett-Packard Co. Version 2.4.1";
 #else
 #define DIRTY
 #define WANT_HISTOGRAM
@@ -1738,7 +1738,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 Alignment      Offset\n\
 Local  Remote  Local  Remote\n\
 Send   Recv    Send   Recv\n\
-%5d  %5d   %5d  %5d";
+%5d  %5d   %5d  %5d\n";
   
   
   int			timed_out = 0;
@@ -3461,7 +3461,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 Alignment      Offset\n\
 Local  Remote  Local  Remote\n\
 Send   Recv    Send   Recv\n\
-%5d  %5d   %5d  %5d";
+%5d  %5d   %5d  %5d\n";
   
   
   float			elapsed_time;
@@ -5025,7 +5025,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      us/Tr   us/Tr\n\n"
 Alignment      Offset\n\
 Local  Remote  Local  Remote\n\
 Send   Recv    Send   Recv\n\
-%5d  %5d   %5d  %5d";
+%5d  %5d   %5d  %5d\n";
   
   
   int 			one = 1;

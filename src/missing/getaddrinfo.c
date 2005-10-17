@@ -81,7 +81,19 @@
 
 #include <sys/types.h>
 #include <stdio.h>
+
+#ifdef WIN32
+#include <time.h>
+#include <winsock2.h>
+#ifdef DO_IPV6
+#include <ws2tcpip.h>
+#endif  /* DO_IPV6 */
+#include <windows.h>
+#else
 #include <sys/socket.h>
+#endif
+ 
+
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>

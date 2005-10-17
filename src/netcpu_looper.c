@@ -9,7 +9,10 @@ char   netcpu_looper_id[]="\
    twisty, CPU-util-related, #ifdefs, all different.  raj 2005-01-26
    */
 
+#ifdef HAVE_CONFIG_H
 #include <config.h>
+#endif
+
 #include <stdio.h>
 
 #ifdef HAVE_FCNTL_H
@@ -120,7 +123,21 @@ bind_to_processor(int child_num)
   return;
 #else
 #ifdef WIN32
-        SetThreadAffinityMask(GetCurrentThread(), (ULONG_PTR)1 << (child_num % lib_num_loc_cpus));
+
+  if (!SetThreadAffinityMask(GetCurrentThread(), (ULONG_PTR)1 << (child_num % lib_num_loc_cpus))) {
+    perror("SetThreadAffinityMask failed");
+    fflush(stderr);
+  }
+
+  if (debug) {
+    fprintf(where,
+            "bind_to_processor: child %d asking for CPU %d of %d CPUs\n",
+            child_num,
+            (child_num % lib_num_loc_cpus),
+            lib_num_loc_cpus);
+    fflush(where);
+  }
+
 #endif
   return;
 #endif /* __sun && _SVR4 */

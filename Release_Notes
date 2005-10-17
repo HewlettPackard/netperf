@@ -1,3 +1,48 @@
+These are the Release Notes for Revision 2.4.1 of netperf:
+
+Things changed in this release:
+
+*) netcpu_pstatnew.c has been altered to workaround a bug in the
+   interrupt cycle accounting in HP-UX 11.23 that is not expected to
+   be resolved until a later release.  basically, some interrupt time
+   is not counted, which means the sum of idle, user, kernel and
+   interrupt is less than the cycles per second multiplied by the
+   elapsed time.  the workaround preserves the "no calibration
+   required" nature of the pstatnew CPU utilization mechanism.  you
+   can see more in netcpu_pstatnew.c and/or in debug output.
+
+*) in netlib.c recv_response has been renamed
+   recv_response_timed(addl_time) which is now used in
+   calibrate_remote_cpu in place of the "sleep(40);recv_response()"
+   sequence.  This then allows the REM_CPU test to complete in less
+   than 40 seconds when the remote's CPU utilization mechanism does
+   not require calibration.  The value of "addl_time" is added to the
+   tc_sec field of the select() timeout.  A "new" recv_response has
+   been added that simply calls recv_response_timed(0) - this is to
+   minimize the number of changes needed elsewhere in the code.
+
+*) hopefully, this release fixes problems people have been having with
+   the configure script failing when picking a type for socklen_t.
+   now, instead of generating an error, it emits a warning and simply
+   tries socklen_t
+
+*) the configure script no longer looks for the size of an in_port_t
+
+*) netlib.c now has code to perform processor binding for Tru64, but
+   the configure script may or may not detect it correctly. This means
+   that one may have to edit the config.h file by hand to get the
+   functionality.
+
+*) it is known that netperf will compile under Windows XP and 2003
+   using the DDK it is possible that netperf 2.4.1 will compile on a
+   Windows system under VC++/Visual Studio.  It might even work!-) See
+   the README.window file for additional details.
+
+Things _NOT_ changed in this release:
+
+*) The automagic determination of the number and type of parameters to
+   sched_setaffinity under Linux remains brittle at best.
+
 These are the Release Notes for Revision 2.4.0 of netperf:
 
 Things changed in this release:

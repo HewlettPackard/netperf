@@ -4,11 +4,13 @@
 #define WANT_INTERVALS
 #endif /* lint */
 
+#ifdef HAVE_CONFIG_H
 #include <config.h>
+#endif
 
 #ifdef WANT_UNIX
 char	nettest_unix_id[]="\
-@(#)nettest_unix.c (c) Copyright 1994-2004 Hewlett-Packard Co. Version 2.3";
+@(#)nettest_unix.c (c) Copyright 1994-2004 Hewlett-Packard Co. Version 2.4.1";
      
 /****************************************************************/
 /*								*/
@@ -55,12 +57,16 @@ char	nettest_unix_id[]="\
 #include <string.h>
 #include <time.h>
 #include <sys/time.h>
-#if ! defined(__bsdi__) && ! defined(_APPLE_)
+
+#ifdef NOSTDLIBH
 #include <malloc.h>
-#else
-#include <sys/malloc.h>
-#endif
-     
+#else /* NOSTDLIBH */
+#include <stdlib.h>
+#endif /* NOSTDLIBH */
+
+#include <sys/stat.h>
+
+   
 #include "netlib.h"
 #include "netsh.h"
 #include "nettest_unix.h"
@@ -71,6 +77,7 @@ char	nettest_unix_id[]="\
  /* them static to make them global only to this file. */
 
 #define UNIX_PRFX "netperf."
+#define UNIX_LENGTH_MAX 0xFFFF - 28
 
 static char
   path_prefix[32]; 
@@ -239,6 +246,7 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
 #ifdef DIRTY
   int	*message_int_ptr;
 #endif
+#include <sys/stat.h>
 
   struct ring_elt *send_ring;
   
@@ -819,6 +827,7 @@ recv_stream_stream()
     exit(1);
   }
   
+  chmod(myaddr_un.sun_path, 0666);
 
   /* what sort of sizes did we end-up with? */
   if (stream_stream_request->receive_size == 0) {
@@ -1053,7 +1062,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      us/Tr   us/Tr\n\n"
 Alignment      Offset\n\
 Local  Remote  Local  Remote\n\
 Send   Recv    Send   Recv\n\
-%5d  %5d   %5d  %5d";
+%5d  %5d   %5d  %5d\n";
   
   
   int			timed_out = 0;
@@ -1607,7 +1616,7 @@ bytes   bytes    secs            #      #   %s/sec   %%       us/KB\n\n";
   /* now, we want to see if we need to set the send_size */
   if (send_size == 0) {
     if (lss_size > 0) {
-      send_size = lss_size;
+      send_size = (lss_size < UNIX_LENGTH_MAX ? lss_size : UNIX_LENGTH_MAX);
     }
     else {
       send_size = 4096;
@@ -2035,7 +2044,9 @@ recv_dg_stream()
     send_response();
     exit(1);
   }
-  
+
+  chmod(myaddr_un.sun_path, 0666);
+
   dg_stream_response->test_length = dg_stream_request->test_length;
   
   /* Now myaddr_un contains the port and the internet address this is */

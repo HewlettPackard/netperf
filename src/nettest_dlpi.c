@@ -1,8 +1,4 @@
-#ifdef lint
-#define WANT_DLPI
-#define DIRTY
-#define WANT_INTERVALS
-#endif /* lint */
+
 /****************************************************************/
 /*								*/
 /*	nettest_dlpi.c						*/
@@ -20,11 +16,13 @@
 /*								*/
 /****************************************************************/
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #ifdef WANT_DLPI
 char	nettest_dlpi_id[]="\
-@(#)nettest_dlpi.c (c) Copyright 1993,1995,2004 Hewlett-Packard Co. Version 2.2pl6";
+@(#)nettest_dlpi.c (c) Copyright 1993,1995,2004 Hewlett-Packard Co. Version 2.4.1";
 
 #include <sys/types.h>
 #include <fcntl.h>
@@ -1030,7 +1028,7 @@ int send_dlpi_co_rr(char remote_host[])
  Alignment      Offset\n\
  Local  Remote  Local  Remote\n\
  Send   Recv    Send   Recv\n\
- %5d  %5d   %5d  %5d";
+ %5d  %5d   %5d  %5d\n";
   
   
   int			timed_out = 0;
@@ -2382,7 +2380,7 @@ frames frames bytes   bytes  secs.   per sec  %%      %%      us/Tr   us/Tr\n\n"
 Alignment      Offset\n\
 Local  Remote  Local  Remote\n\
 Send   Recv    Send   Recv\n\
-%5d  %5d   %5d  %5d";
+%5d  %5d   %5d  %5d\n";
   
   
   float			elapsed_time;

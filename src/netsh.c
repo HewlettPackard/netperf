@@ -8,7 +8,10 @@ char	netsh_id[]="\
 /*								*/
 /****************************************************************/
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <sys/types.h>
 #ifndef WIN32
 #include <unistd.h>
@@ -33,6 +36,7 @@ char	netsh_id[]="\
 #else
 #include <time.h>
 #include <winsock2.h>
+#define netperf_socklen_t socklen_t
 #endif
 
 #ifndef STRINGS
@@ -222,6 +226,10 @@ Options:\n\
     -v verbosity      Specify the verbosity level\n\
 \n";
 
+/* netperf_usage done as two concatenated strings to make the MS
+   compiler happy when compiling for x86_32.  fix from Spencer
+   Frink.  */
+
 char netperf_usage[] = "\n\
 Usage: netperf [global options] -- [test options] \n\
 \n\
@@ -248,7 +256,7 @@ Global options:\n\
     -p port,lport*    Specify netserver port number and/or local port\n\
     -P 0|1            Don't/Do display test headers\n\
     -t testname       Specify test to perform\n\
-    -T cpu            Request remote netserver be bound to cpu\n\
+    -T lcpu,rcpu      Request netperf/netserver be bound to local/remote cpu\n\
     -v verbosity      Specify the verbosity level\n\
     -W send,recv      Set the number of send,recv buffers\n\
 \n\
@@ -258,8 +266,8 @@ value, specifying a value with a leading comma will set just the second\n\
 parm, a value with a trailing comma will set just the first. To set\n\
 each parm to unique values, specify both and separate them with a\n\
 comma.\n\
-\n\
-* For these options taking two parms, specifying one value with no comma\n\
+\n"
+"* For these options taking two parms, specifying one value with no comma\n\
 will only set the first parms and will leave the second at the default\n\
 value. To set the second value it must be preceded with a comma or be a\n\
 comma-separated pair. This is to retain previous netperf behaviour.\n"; 

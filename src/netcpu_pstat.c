@@ -90,7 +90,7 @@ get_cpu_idle(uint64_t *res)
 }
 
 /* calibrate_pstat
-/* Loop a number of iterations, sleeping wait_time seconds each and
+   Loop a number of iterations, sleeping wait_time seconds each and
    count how high the idle counter gets each time. Return  the measured
    cpu rate to the calling routine.  */
 
