@@ -1,5 +1,5 @@
 char	netlib_id[]="@(#)netlib.c (c) Copyright 1993, \
-Hewlett-Packard Company.	Version 1.8alpha";
+Hewlett-Packard Company.	Version 1.9";
 
 /****************************************************************/
 /*								*/
@@ -50,7 +50,10 @@ Hewlett-Packard Company.	Version 1.8alpha";
 #include <sys/signal.h>
 #include <sys/types.h>
 #include <sys/times.h>
-#include <sys/fcntl.h>
+ /* seems that POSIX specifies that fcntl.h is simply <fctnl.h> while */
+ /* for some reason, I was including <sys/fcntl.h>. This breaks */
+ /* Ultrix, and was discovered by Johnathan Stone at Stanford. */
+#include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/time.h>
@@ -94,7 +97,7 @@ Hewlett-Packard Company.	Version 1.8alpha";
 /*							       	*/
 /****************************************************************/
 
-#define KERNEL_NAME "/hp-ux"
+#define KERNEL_NAME "/vmunix"
 /* #define KERNEL_NAME "/unix" */
 
 #define SIZEOFIDLE 4
@@ -211,6 +214,50 @@ netperf_request		= (struct netperf_request_struct *)request_array;
 netperf_response	= (struct netperf_response_struct *)response_array;
 }
 
+
+ /* this routine will allocate a circular list of buffers for either */
+ /* send or receive operations. each of these buffers will be aligned */
+ /* and offset as per the users request. the circumference of this */
+ /* ring will be controlled by the setting of send_width */
+
+struct ring_elt *
+allocate_buffer_ring(width, buffer_size, alignment, offset)
+     int width;
+     int buffer_size;
+     int alignment;
+     int offset;
+{
+
+  struct ring_elt *first_link;
+  struct ring_elt *temp_link;
+  struct ring_elt *prev_link;
+
+  int i;
+  int malloc_size;
+
+  malloc_size = buffer_size + alignment + offset;
+
+  prev_link = NULL;
+  for (i = 1; i <= width; i++) {
+    /* get the ring element */
+    temp_link = (struct ring_elt *)malloc(sizeof(struct ring_elt));
+    /* remember the first one so we can close the ring at the end */
+    if (i == 1) {
+      first_link = temp_link;
+    }
+    temp_link->buffer_base = (char *)malloc(malloc_size);
+    temp_link->buffer_ptr = (char *)(( (long)(temp_link->buffer_base) + 
+			  (long)alignment - 1) &	
+			 ~((long)alignment - 1));
+    temp_link->buffer_ptr += offset;
+    temp_link->next = prev_link;
+    prev_link = temp_link;
+  }
+  first_link->next = temp_link;
+
+  return(first_link); /* it's a circle, doesn't matter which we return */
+}
+
  /***********************************************************************/
  /*									*/
  /*	dump_request()							*/
@@ -387,7 +434,7 @@ send_request()
 	}
 	
 	if (send(netlib_control,
-		 netperf_request,
+		 (char *)netperf_request,
 		 sizeof(request_array),
 		 0) != sizeof(request_array)) {
 		perror("send_request: send call failure");
@@ -431,7 +478,7 @@ for (counter=0;counter < sizeof(request_array)/4; counter++) {
 
 /*KC*/
 if (send(server_sock,
-	 netperf_response,
+	 (char *)netperf_response,
 	 sizeof(response_array),
 	 0) != sizeof(response_array)) {
 	perror("send_response: send call failure");
@@ -939,19 +986,19 @@ gettimeofday(&time1,
 	     &tz);
 
 if (measure_cpu) {
-	if (lib_use_idle) {
-		lib_start_count = getcpured(lib_idle_address);
-	}
-	else {
+  if (lib_use_idle) {
+    lib_start_count = getcpured(lib_idle_address);
+  }
+  else {
 #ifdef	USE_PSTAT
-		pstat(PSTAT_DYNAMIC, &pst_dynamic_info, sizeof(pst_dynamic_info),1,0);
-		for (i = 0; i < CPUSTATES; i++)
-			cp_time1[i] = pst_dynamic_info.psd_cpu_time[i];
-		
+    pstat(PSTAT_DYNAMIC, &pst_dynamic_info, sizeof(pst_dynamic_info),1,0);
+    for (i = 0; i < CPUSTATES; i++)
+      cp_time1[i] = pst_dynamic_info.psd_cpu_time[i];
+    
 #else
-		times(&times_data1);
+    times(&times_data1);
 #endif
-	}
+  }
 }
 
 }
@@ -966,17 +1013,17 @@ int	sec,
 int	i;
 
 if (measure_cpu) {
-	if (lib_use_idle) {
-		lib_end_count = getcpured(lib_idle_address);
-	}
-	else {
+  if (lib_use_idle) {
+    lib_end_count = getcpured(lib_idle_address);
+  }
+  else {
 #ifdef	USE_PSTAT
-		pstat(PSTAT_DYNAMIC, &pst_dynamic_info, sizeof(pst_dynamic_info),1,0);
-		for (i = 0; i < CPUSTATES; i++)
-			cp_time2[i] = pst_dynamic_info.psd_cpu_time[i];
-		
+    pstat(PSTAT_DYNAMIC, &pst_dynamic_info, sizeof(pst_dynamic_info),1,0);
+    for (i = 0; i < CPUSTATES; i++)
+      cp_time2[i] = pst_dynamic_info.psd_cpu_time[i];
+    
 #else
-		times(&times_data2);
+    times(&times_data2);
 #endif
 	}
 }
@@ -984,8 +1031,8 @@ gettimeofday(&time2,
 	     &tz);
 
 if (time2.tv_usec < time1.tv_usec) {
-	time2.tv_usec	+= 1000000;
-	time2.tv_sec	-= 1;
+  time2.tv_usec	+= 1000000;
+  time2.tv_sec	-= 1;
 }
 
 sec	= time2.tv_sec - time1.tv_sec;
@@ -1002,35 +1049,35 @@ calc_thruput(units_received)
 double	units_received;
 
 {
-	double	tmp_tput;
-	double	divisor;
+  double	tmp_tput;
+  double	divisor;
 
-	/* We will calculate the thruput in libfmt units/second */
-	switch (libfmt) {
-	case 'K':
-		divisor = 1024.0;
-		break;
-	case 'M':
-		divisor = 1024.0 * 1024.0;
-		break;
-	case 'G':
-		divisor = 1024.0 * 1024.0 * 1024.0;
-		break;
-	case 'k':
-		divisor = 1000.0 / 8.0;
-		break;
-	case 'm':
-		divisor = 1000.0 * 1000.0 / 8.0;
-		break;
-	case 'g':
-		divisor = 1000.0 * 1000.0 * 1000.0 / 8.0;
-		break;
-
-		default:
-		divisor = 1024.0;
-	}
-
-	return (units_received / divisor / lib_elapsed);
+  /* We will calculate the thruput in libfmt units/second */
+  switch (libfmt) {
+  case 'K':
+    divisor = 1024.0;
+    break;
+  case 'M':
+    divisor = 1024.0 * 1024.0;
+    break;
+  case 'G':
+    divisor = 1024.0 * 1024.0 * 1024.0;
+    break;
+  case 'k':
+    divisor = 1000.0 / 8.0;
+    break;
+  case 'm':
+    divisor = 1000.0 * 1000.0 / 8.0;
+    break;
+  case 'g':
+    divisor = 1000.0 * 1000.0 * 1000.0 / 8.0;
+    break;
+    
+  default:
+    divisor = 1024.0;
+  }
+  
+  return (units_received / divisor / lib_elapsed);
 
 }
 
@@ -1151,20 +1198,20 @@ float	local_cpu_rate;
 lib_idle_address	= getaddr();
 
 if (lib_use_idle) {
-	if (local_cpu_rate > 0) {
-		/* The user think that he knows what the cpu rate is */
-		lib_local_maxrate = local_cpu_rate;
-	}
-	else {
-		lib_local_maxrate = calibrate(4,	/* four iterations */
-			  		      10	/* ten seconds each */
-			  		      );
-	}
-	return lib_local_maxrate;
+  if (local_cpu_rate > 0) {
+    /* The user think that he knows what the cpu rate is */
+    lib_local_maxrate = local_cpu_rate;
+  }
+  else {
+    lib_local_maxrate = calibrate(4,	/* four iterations */
+				  10	/* ten seconds each */
+				  );
+  }
+  return lib_local_maxrate;
 }
 else {
-	/* use the times statistics or the pstat stuff */
-	return 0.0;
+  /* use the times statistics or the pstat stuff */
+  return 0.0;
 }
 }
 
@@ -1176,44 +1223,44 @@ calibrate_remote_cpu()
  /* approximating it with the local, because the sod running the test */
  /* might not be using machines that are the same type. */
 {
-	float	*remrate;
+  float	*remrate;
 
-	netperf_request->request_type = CPU_CALIBRATE;
-	send_request();
-	recv_response();
-	if (netperf_response->serv_errno) {
-		/* initially, silently ignore remote errors and pass */
-		/* back a zero to the caller this should allow us to */
-		/* mix rev 1.0 and rev 1.1 netperfs... */
-		return(0.0);
-	}
-	else {
-		remrate = (float *)
-			netperf_response->test_specific_data;
-		return(*remrate);
-	}	
+  netperf_request->request_type = CPU_CALIBRATE;
+  send_request();
+  recv_response();
+  if (netperf_response->serv_errno) {
+    /* initially, silently ignore remote errors and pass */
+    /* back a zero to the caller this should allow us to */
+    /* mix rev 1.0 and rev 1.1 netperfs... */
+    return(0.0);
+  }
+  else {
+    remrate = (float *)
+      netperf_response->test_specific_data;
+    return(*remrate);
+  }	
 }
 int
 msec_sleep( msecs )
 int	msecs;
 {
 
-	struct	timeval	interval;
-
-	interval.tv_sec = msecs / 1000;
-	interval.tv_usec = (msecs - (msecs/1000) *1000) * 1000;
-	if (select(0,
-		   0,
-		   0,
-		   0,
-		   &interval)) {
-		if (errno == EINTR) {
-			return(1);
-		}
-		perror("msec_sleep: select");
-		exit(1);
-		}
-	return(0);
+  struct	timeval	interval;
+  
+  interval.tv_sec = msecs / 1000;
+  interval.tv_usec = (msecs - (msecs/1000) *1000) * 1000;
+  if (select(0,
+	     0,
+	     0,
+	     0,
+	     &interval)) {
+    if (errno == EINTR) {
+      return(1);
+    }
+    perror("msec_sleep: select");
+    exit(1);
+  }
+  return(0);
 }
 
 #ifdef DO_DLPI

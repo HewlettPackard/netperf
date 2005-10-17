@@ -29,7 +29,7 @@ Listen on the specified port.
 This is used when running as a standalone daemon.
 
 .SH BUGS
-No known bugs at this time.   
+No known bugs at this time. If you think you have found a bug, please send email to Rick Jones <raj@cup.hp.com>.
 
 .SH SEE ALSO
 .C netperf
@@ -45,3 +45,5 @@ Rick Jones	<raj@cup.hp.com>
 Karen Choy	HP IND
 .br
 Dave Shield	<daves@csc.liv.ac.uk>	(man pages)
+.br
+Others too numerous to mention here - see the ACKNWLDGMNTS file

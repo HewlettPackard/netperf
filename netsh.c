@@ -1,6 +1,6 @@
 
 char	netsh_id[]="@(#)netsh.c (c) Copyright 1993, Hewlett-Packard Company.\
-	Version 1.8alpha";
+	Version 1.9";
 
 
 /****************************************************************/
@@ -53,7 +53,7 @@ double atof();
  /* Some of the args take optional parameters. Since we are using */
  /* getopt to parse the command line, we will tell getopt that they do */
  /* not take parms, and then look for them ourselves */
-#define GLOBAL_CMD_LINE_ARGS "A:a:Ccdf:H:hl:O:o:P:p:t:v:"
+#define GLOBAL_CMD_LINE_ARGS "A:a:Ccdf:H:hl:O:o:P:p:t:v:W:"
 
 /************************************************************************/
 /*									*/
@@ -129,8 +129,10 @@ int	rem_dirty_count;
 int	rem_clean_count;
 #endif /* DIRTY */
 
-/* stuff to controll the bufferspace "width" */
+ /* stuff to control the "width" of the buffer rings for sending and */
+ /* receiving data */
 int	send_width;
+int     recv_width;
 
 char netserver_usage[] = "\n\
 Usage: netserver [options] \n\
@@ -144,6 +146,8 @@ char netperf_usage[] = "\n\
 Usage: netperf [global options] -- [test options] \n\
 \n\
 Global options:\n\
+    -a send,recv      Set the local send,recv buffer alignment\n\
+    -A send,recv      Set the remote send,recv buffer alignment\n\
     -c [cpu_rate]     Report local CPU usage\n\
     -C [cpu_rate]     Report remote CPU usage\n\
     -d                Increase debugging output\n\
@@ -151,10 +155,13 @@ Global options:\n\
     -h                Display this text\n\
     -H name|ip        Specify the target machine\n\
     -l testlen        Specify test duration (>0 secs) (<0 bytes|trans)\n\
+    -o send,recv      Set the local send,recv buffer offsets\n\
+    -O send,recv      Set the remote send,recv buffer offset\n\
     -p port           Specify netserver port number\n\
     -P 0|1            Don't/Do display test headers\n\
     -t testname       Specify test to perform\n\
     -v verbosity      Specify the verbosity level\n\
+    -W send,recv      Set the number of send,recv buffers\n\
 \n\
 For those options taking two parms, at least one must be specified;\n\
 specifying one value without a comma will set both parms to that\n\
@@ -358,13 +365,13 @@ scan_cmd_line(argc, argv)
       strcpy(test_name,optarg);
       break;
     case 'W':
-      /* set the "width" of the user space data */
-      /* buffer. This will be the number of */
-      /* send_size buffers malloc'd in the */
-      /* *_STREAM test. It may be enhanced to set */
-      /* both send and receive "widths" but for now */
-      /* it is just the sending *_STREAM. */
-      send_width = atoi(optarg);
+      /* set the "width" of the user space data buffer ring. This will */
+      /* be the number of send_size buffers malloc'd in the tests */  
+      break_args(optarg,arg1,arg2);
+      if (arg1[0]) 
+	send_width = atoi(arg1);
+      if (arg2[0])
+	recv_width = atoi(arg2);
       break;
     case 'l':
       /* determine test end conditions */
@@ -433,7 +440,7 @@ scan_cmd_line(argc, argv)
 #else
       fprintf(where,
 	      "Packet burst size is not compiled in. \n");
-#endif INTERVALS
+#endif /* INTERVALS */
       break;
     };
   }
@@ -450,6 +457,7 @@ scan_cmd_line(argc, argv)
       {
 	scan_sockets_args(argc, argv);
       }
+#ifdef DO_DLPI
     else if ((strcmp(test_name,"DLCO_RR") == 0) ||
 	     (strcmp(test_name,"DLCL_RR") == 0) ||
 	     (strcmp(test_name,"DLCO_STREAM") == 0) ||
@@ -457,6 +465,23 @@ scan_cmd_line(argc, argv)
       {
 	scan_dlpi_args(argc, argv);
       }
+#endif /* DO_DLPI */
+#ifdef DO_UNIX
+    else if ((strcmp(test_name,"STREAM_RR") == 0) ||
+	     (strcmp(test_name,"DG_RR") == 0) ||
+	     (strcmp(test_name,"STREAM_STREAM") == 0) ||
+	     (strcmp(test_name,"DG_STREAM") == 0))
+      {
+	scan_unix_args(argc, argv);
+      }
+#endif /* DO_UNIX */
+#ifdef DO_FORE
+    else if ((strcmp(test_name,"FORE_RR") == 0) ||
+	     (strcmp(test_name,"FORE_STREAM") == 0))
+      {
+	scan_fore_args(argc, argv);
+      }
+#endif /* DO_FORE */
   }
 }
 

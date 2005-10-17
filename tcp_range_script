@@ -25,8 +25,11 @@ else
 	exit 1
 fi
 
-# where is netperf
+# where is netperf, and are there any "constant" options such as 
+# the netserver port number
 NETHOME=/usr/etc/net_perf
+NETPERF=$NETHOME/netperf
+#NETPERF="./nepterf -p 12865"
 
 #
 # some stuff for the arithmatic 
@@ -53,12 +56,12 @@ REM_CPU=""
 # them in during the real tests. So, we execute the new CPU "tests"
 # of netperf and put the values into shell vars.
 case $LOC_CPU in
-\-c) LOC_RATE=`$NETHOME/netperf -t LOC_CPU`;;
+\-c) LOC_RATE=`$NETPERF -t LOC_CPU`;;
 *) LOC_RATE=""
 esac
 
 case $REM_CPU in
-\-C) REM_RATE=`$NETHOME/netperf -t REM_CPU -H $REMHOST`;;
+\-C) REM_RATE=`$NETPERF -t REM_CPU -H $REMHOST`;;
 *) REM_RATE=""
 esac
 
@@ -71,7 +74,7 @@ NO_HDR=""
 
 MESSAGE=$START
 while [ $MESSAGE -le $END ]; do
-	$NETHOME/netperf -l $TIME -H $REMHOST -t TCP_STREAM\
+	$NETPERF -l $TIME -H $REMHOST -t TCP_STREAM\
           $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $NO_HDR --\
           -m $MESSAGE -s 32768 -S 32768 
 	NO_HDR="-P 0"

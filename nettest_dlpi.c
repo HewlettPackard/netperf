@@ -1,24 +1,30 @@
-     /***********************************************************/
-     /*								*/
-     /*	nettest_dlpi.c						*/
-     /*								*/
-     /*	the actual test routines...				*/
-     /*								*/
-     /*	send_dlpi_co_stream()	perform a CO DLPI stream test	*/
-     /*	recv_dlpi_co_stream()					*/
-     /*	send_dlpi_co_rr()	perform a CO DLPI req/res	*/
-     /*	recv_dlpi_co_rr()					*/
-     /*	send_dlpi_cl_stream()	perform a CL DLPI stream test	*/
-     /*	recv_dlpi_cl_stream()					*/
-     /*	send_dlpi_cl_rr()	perform a CL DLPI req/res	*/
-     /*	recv_dlpi_cl_rr()					*/
-     /*								*/
-     /***********************************************************/
+#ifdef lint
+#define DO_DLPI
+#define DIRTY
+#define INTERVALS
+#define SUNOS4
+#endif /* lint */
+/****************************************************************/
+/*								*/
+/*	nettest_dlpi.c						*/
+/*								*/
+/*	the actual test routines...				*/
+/*								*/
+/*	send_dlpi_co_stream()	perform a CO DLPI stream test	*/
+/*	recv_dlpi_co_stream()					*/
+/*	send_dlpi_co_rr()	perform a CO DLPI req/res	*/
+/*	recv_dlpi_co_rr()					*/
+/*	send_dlpi_cl_stream()	perform a CL DLPI stream test	*/
+/*	recv_dlpi_cl_stream()					*/
+/*	send_dlpi_cl_rr()	perform a CL DLPI req/res	*/
+/*	recv_dlpi_cl_rr()					*/
+/*								*/
+/****************************************************************/
 
 #ifdef DO_DLPI
 char	nettest_dlpi_id[]="@(#)nettest_dlpi.c (c) Copyright 1993, \
-Hewlett-Packard Company. Version 1.8alpha";
-     
+Hewlett-Packard Company. Version 1.9";
+
 #include <sys/types.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -38,13 +44,13 @@ Hewlett-Packard Company. Version 1.8alpha";
 #include <sys/dlpi_ext.h>
 #endif /* __hpux__ */
 #endif /* __osf__ */
-     
+
 #include "netlib.h"
 #include "netsh.h"
 #include "nettest_dlpi.h"
 
- /* these are some variables global to all the DLPI tests. declare */
- /* them static to make them global only to this file */
+/* these are some variables global to all the DLPI tests. declare */
+/* them static to make them global only to this file */
 
 static int 
   rsw_size,		/* remote send window size	*/
@@ -58,7 +64,7 @@ static int
 
 int
   loc_ppa = 4,          /* the ppa for the local interface, */
-                        /* as shown as the NM Id in lanscan */
+  /* as shown as the NM Id in lanscan */
   rem_ppa = 4,          /* the ppa for the remote interface */
   dlpi_sap = 84;        /* which 802.2 SAP should we use?   */
 
@@ -86,7 +92,7 @@ value, specifying a value with a leading comma will set just the second\n\
 parm, a value with a trailing comma will set just the first. To set\n\
 each parm to unique values, specify both and separate them with a\n\
 comma.\n"; 
-     
+
 
 /* This routine implements the CO unidirectional data transfer test */
 /* (a.k.a. stream) for the sockets interface. It receives its */
@@ -95,7 +101,7 @@ comma.\n";
 
 
 void 
-send_dlpi_co_stream()
+  send_dlpi_co_stream()
 {
   
   char *tput_title = "\
@@ -129,12 +135,11 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
 %5d   %5d  %5d   %5d %6.4g  %6.2f     %6d %6.2f   %6d\n";
   
   
-  int 			one = 1;
   float			elapsed_time;
   
 #ifdef INTERVALS
   int interval_count;
-#endif
+#endif /* INTERVALS */
   
   /* what we want is to have a buffer space that is at least one */
   /* send-size greater than our send window. this will insure that we */
@@ -143,13 +148,13 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
   /* the size of the local senc socket buffer. We will want to deal */
   /* with alignment and offset concerns as well. */
   
+  struct ring_elt *send_ring;
   char	*message_base;
   char	*message_ptr;
   struct strbuf send_message;
   char  dlsap[BUFSIZ];
   int   dlsap_len;
   int	*message_int_ptr;
-  int	message_max_offset;
   int	message_offset;
   int	malloc_size;
   
@@ -174,14 +179,17 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
 #ifdef SUNOS4
   struct        sigaction action;
 #endif /* SUNOS4 */
-
+  
   struct	dlpi_co_stream_request_struct	*dlpi_co_stream_request;
   struct	dlpi_co_stream_response_struct	*dlpi_co_stream_response;
   struct	dlpi_co_stream_results_struct	*dlpi_co_stream_result;
   
-  dlpi_co_stream_request	= (struct dlpi_co_stream_request_struct *)netperf_request->test_specific_data;
-  dlpi_co_stream_response	= (struct dlpi_co_stream_response_struct *)netperf_response->test_specific_data;
-  dlpi_co_stream_result	        = (struct dlpi_co_stream_results_struct *)netperf_response->test_specific_data;
+  dlpi_co_stream_request	= 
+    (struct dlpi_co_stream_request_struct *)netperf_request->test_specific_data;
+  dlpi_co_stream_response	=
+    (struct dlpi_co_stream_response_struct *)netperf_response->test_specific_data;
+  dlpi_co_stream_result	        = 
+    (struct dlpi_co_stream_results_struct *)netperf_response->test_specific_data;
   
   if ( print_headers ) {
     fprintf(where,"DLPI CO STREAM TEST\n");
@@ -196,7 +204,6 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
   nummessages	=	0;
   bytes_sent	=	0.0;
   times_up 	= 	0;
-  message_offset 	=	0;
   
   /*set up the data descriptor                        */
   send_descriptor = dl_open(loc_dlpi_device,loc_ppa);  
@@ -204,7 +211,7 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
     perror("netperf: send_dlpi_co_stream: dlpi stream data descriptor");
     exit(1);
   }
-
+  
   /* bind the puppy and get the assigned dlsap */
   dlsap_len = BUFSIZ;
   if (dl_bind(send_descriptor, 
@@ -228,7 +235,7 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
   if (lrw_size > 0) {
     if (debug > 1) {
       fprintf(where,
-"netperf: send_dlpi_co_stream: window recv size altered from system default...\n");
+	      "netperf: send_dlpi_co_stream: window recv size altered from system default...\n");
       fprintf(where,"                          recv: %d\n",lrw_size);
     }
   }
@@ -240,8 +247,10 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
   
   
   if (debug) {
-    fprintf(where,"netperf: send_dlpi_co_stream: window sizes determined...\n");
+    fprintf(where,
+	    "netperf: send_dlpi_co_stream: window sizes determined...\n");
     fprintf(where,"         send: %d recv: %d\n",lsw_size,lrw_size);
+    ffluch(where);
   }
   
 #else /* DL_HP_SET_LOCAL_WIN_REQ */
@@ -256,9 +265,9 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
   /* the Interface MTU, but for now, we will default it to 1024... if */
   /* someone wants to change this, the should change the corresponding */
   /* lines in the recv_dlpi_co_stream routine */
-
+  
   if (send_size == 0) {
-      send_size = 1024;
+    send_size = 1024;
   }
   
   /* set-up the data buffer with the requested alignment and offset. */
@@ -279,19 +288,15 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
     if (send_width == 1) send_width++;
   }
   
-  malloc_size = ((send_width * send_size) + 
-		 local_send_align + 
-		 local_send_offset);
-  message_base = (char *)malloc(malloc_size);
-  message_ptr = (char *)(( (long)message_base + 
-			  (long)local_send_align - 1) &	
-			 ~((long)local_send_align - 1));
-  message_ptr = message_ptr + local_send_offset;
-  message_base = message_ptr;
+  send_ring = allocate_buffer_ring(send_width,
+				   send_size,
+				   local_send_align,
+				   local_send_offset);
+  
   send_message.maxlen = send_size;
   send_message.len = send_size;
-  send_message.buf = message_ptr;
-
+  send_message.buf = send_ring->buffer_ptr;
+  
   /* If the user has requested cpu utilization measurements, we must */
   /* calibrate the cpu(s). We will perform this task within the tests */
   /* themselves. If the user has specified the cpu rate, then */
@@ -310,23 +315,23 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
   /* will indicate to the remote that no changes beyond the system's */
   /* default should be used. */
   
-  netperf_request->request_type		=	DO_DLPI_CO_STREAM;
-  dlpi_co_stream_request->send_win_size	=	rsw_size;
-  dlpi_co_stream_request->recv_win_size	=	rrw_size;
-  dlpi_co_stream_request->receive_size	=	recv_size;
+  netperf_request->request_type	 =	DO_DLPI_CO_STREAM;
+  dlpi_co_stream_request->send_win_size =	rsw_size;
+  dlpi_co_stream_request->recv_win_size =	rrw_size;
+  dlpi_co_stream_request->receive_size	 =	recv_size;
   dlpi_co_stream_request->recv_alignment=	remote_recv_align;
-  dlpi_co_stream_request->recv_offset	=	remote_recv_offset;
-  dlpi_co_stream_request->measure_cpu	=	remote_cpu_usage;
-  dlpi_co_stream_request->cpu_rate	=	remote_cpu_rate;
-  dlpi_co_stream_request->ppa           =       rem_ppa;
-  dlpi_co_stream_request->sap           =       dlpi_sap;
-  dlpi_co_stream_request->dev_name_len  =       strlen(rem_dlpi_device);
+  dlpi_co_stream_request->recv_offset	 =	remote_recv_offset;
+  dlpi_co_stream_request->measure_cpu	 =	remote_cpu_usage;
+  dlpi_co_stream_request->cpu_rate	 =	remote_cpu_rate;
+  dlpi_co_stream_request->ppa           =      rem_ppa;
+  dlpi_co_stream_request->sap           =      dlpi_sap;
+  dlpi_co_stream_request->dev_name_len  =      strlen(rem_dlpi_device);
   strcpy(dlpi_co_stream_request->dlpi_device,
 	 rem_dlpi_device);
-
+  
 #ifdef __alpha
-
-  /* ok - even on a DEC box, strings are strings. I din't really want */
+  
+  /* ok - even on a DEC box, strings are strings. I didn't really want */
   /* to ntohl the words of a string. since I don't want to teach the */
   /* send_ and recv_ _request and _response routines about the types, */
   /* I will put "anti-ntohl" calls here. I imagine that the "pure" */
@@ -336,19 +341,19 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
     int *charword;
     int *initword;
     int *lastword;
-
+    
     initword = (int *) dlpi_co_stream_request->dlpi_device;
     lastword = initword + ((strlen(rem_dlpi_device) + 3) / 4);
-
+    
     for (charword = initword;
 	 charword < lastword;
 	 charword++) {
-
+      
       *charword = ntohl(*charword);
     }
   }
 #endif /* __alpha */
-
+  
   if (test_time) {
     dlpi_co_stream_request->test_length	=	test_time;
   }
@@ -416,7 +421,7 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
     /* The user wanted to end the test after a period of time. */
     times_up = 0;
     bytes_remaining = 0;
-#ifdef SUNOS4 */
+#ifdef SUNOS4
     /* on some systems (SunOS 4.blah), system calls are restarted. we do */
     /* not want that for a request/response test */
     action.sa_handler = catcher;
@@ -453,10 +458,10 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
   /* initialize the random number generator for putting dirty stuff */
   /* into the send buffer. raj */
   srand((int) getpid());
-#endif
+#endif /* DIRTY */
   
   while ((!times_up) || (bytes_remaining > 0)) {
-
+    
 #ifdef DIRTY
     /* we want to dirty some number of consecutive integers in the buffer */
     /* we are about to send. we may also want to bring some number of */
@@ -482,18 +487,20 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
       perror("netperf: data send error");
       exit(1);
     }
+    send_ring = send_ring->next;
+    send_message.buf = send_ring->buffer_ptr;
 #ifdef INTERVALS
     for (interval_count = 0;
 	 interval_count < interval_wate;
 	 interval_count++);
-#endif
-
+#endif /* INTERVALS */
+    
     if (debug > 4) {
       fprintf(where,"netperf: send_clpi_co_stream: putmsg called ");
       fprintf(where,"len is %d\n",send_message.len);
       fflush(where);
     }
-
+    
     nummessages++;          
     if (bytes_remaining) {
       bytes_remaining -= send_size;
@@ -502,16 +509,19 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
   
   /* The test is over. Flush the buffers to the remote end. We do a */
   /* graceful release to insure that all data has been taken by the */
-  /* remote. this needs a little work */ 
+  /* remote. this needs a little work - there is no three-way */
+  /* handshake with type two as there is with TCP, so there really */
+  /* should be a message exchange here. however, we will finesse it by */
+  /* saying that the tests shoudl run for a while. */ 
   
   if (debug) {
     fprintf(where,"sending test end signal \n");
     fflush(where);
   }
-
+  
   send_message.len = (send_size - 1);
   if (send_message.len == 0) send_message.len = 2;
-
+  
   if((putmsg(send_descriptor,
 	     0,
 	     &send_message,
@@ -519,7 +529,7 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
     perror("netperf: data send error");
     exit(1);
   }
-
+  
   /* this call will always give us the elapsed time for the test, and */
   /* will also store-away the necessaries for cpu utilization */
   
@@ -563,9 +573,9 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
     if (local_cpu_usage) {
       if (local_cpu_rate == 0.0) {
 	fprintf(where,
-	      "WARNING WARNING WARNING  WARNING WARNING WARNING  WARNING!\n");
+		"WARNING WARNING WARNING  WARNING WARNING WARNING  WARNING!\n");
 	fprintf(where,
-	      "Local CPU usage numbers based on process information only!\n");
+		"Local CPU usage numbers based on process information only!\n");
 	fflush(where);
       }
       local_cpu_utilization	= calc_cpu_util(0.0);
@@ -581,9 +591,9 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
     if (remote_cpu_usage) {
       if (remote_cpu_rate == 0.0) {
 	fprintf(where,
-	      "DANGER   DANGER  DANGER   DANGER   DANGER  DANGER   DANGER!\n");
+		"DANGER   DANGER  DANGER   DANGER   DANGER  DANGER   DANGER!\n");
 	fprintf(where,
-	      "Remote CPU usage numbers based on process information only!\n");
+		"Remote CPU usage numbers based on process information only!\n");
 	fflush(where);
       }
       remote_cpu_utilization	= dlpi_co_stream_result->cpu_util;
@@ -691,25 +701,21 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
 /* didn't feel it was necessary. */
 
 int 
-recv_dlpi_co_stream()
+  recv_dlpi_co_stream()
 {
   
   int	data_descriptor;
-  int 	addrlen;
-  int	len;
   int	flags = 0;
   int	measure_cpu;
   int	bytes_received;
   int	receive_calls;
   float	elapsed_time;
   
+  struct ring_elt *recv_ring;
   char	*message_ptr;
   char	*message_base;
   int   *message_int_ptr;
   struct strbuf recv_message;
-  int	malloc_size;
-  int	message_offset;
-  int	message_max_offset;
   int   dirty_count;
   int   clean_count;
   int   i;
@@ -717,7 +723,7 @@ recv_dlpi_co_stream()
 #ifdef SUNOS4
   struct        sigaction action;
 #endif /* SUNOS4 */
-
+  
   struct	dlpi_co_stream_request_struct	*dlpi_co_stream_request;
   struct	dlpi_co_stream_response_struct	*dlpi_co_stream_response;
   struct	dlpi_co_stream_results_struct	*dlpi_co_stream_results;
@@ -763,10 +769,10 @@ recv_dlpi_co_stream()
     fflush(where);
   }
   
-
+  
   
 #ifdef __alpha
-
+  
   /* ok - even on a DEC box, strings are strings. I din't really want */
   /* to ntohl the words of a string. since I don't want to teach the */
   /* send_ and recv_ _request and _response routines about the types, */
@@ -777,19 +783,19 @@ recv_dlpi_co_stream()
     int *charword;
     int *initword;
     int *lastword;
-
+    
     initword = (int *) dlpi_co_stream_request->dlpi_device;
     lastword = initword + ((dlpi_co_stream_request->dev_name_len + 3) / 4);
-
+    
     for (charword = initword;
 	 charword < lastword;
 	 charword++) {
-
+      
       *charword = htonl(*charword);
     }
   }
 #endif /* __alpha */
-
+  
   data_descriptor = dl_open(dlpi_co_stream_request->dlpi_device,
 			    dlpi_co_stream_request->ppa);
   if (data_descriptor < 0) {
@@ -797,7 +803,7 @@ recv_dlpi_co_stream()
     send_response();
     exit(1);
   }
-
+  
   /* Let's get an address assigned to this descriptor so we can tell the */
   /* initiator how to reach the data descriptor. There may be a desire to */
   /* nail this descriptor to a specific address in a multi-homed, */
@@ -815,7 +821,7 @@ recv_dlpi_co_stream()
     fflush(where);
     exit(1);
   }
-
+  
   /* The initiator may have wished-us to modify the socket buffer */
   /* sizes. We should give it a shot. If he didn't ask us to change the */
   /* sizes, we should let him know what sizes were in use at this end. */
@@ -853,8 +859,8 @@ recv_dlpi_co_stream()
   /* sending side... */
   message_base = (char *)malloc(recv_size * 2);
   message_ptr = (char *)(((long)message_base + 
-		(long)dlpi_co_stream_request->recv_alignment -1) &
-		 ~((long)dlpi_co_stream_request->recv_alignment - 1));
+			  (long)dlpi_co_stream_request->recv_alignment -1) &
+			 ~((long)dlpi_co_stream_request->recv_alignment - 1));
   message_ptr = message_ptr + dlpi_co_stream_request->recv_offset;
   recv_message.maxlen = recv_size;
   recv_message.len = 0;
@@ -896,23 +902,23 @@ recv_dlpi_co_stream()
     send_response();
     exit(1);
   }
-
+  
   if (debug) {
     fprintf(where,"netserver:recv_dlpi_co_stream: connection accepted\n");
     fflush(where);
   }
-
+  
   /* Now it's time to start receiving data on the connection. We will */
   /* first grab the apropriate counters and then start grabbing. */
   
   cpu_start(dlpi_co_stream_request->measure_cpu);
   
 #ifdef DIRTY
-    /* we want to dirty some number of consecutive integers in the buffer */
-    /* we are about to recv. we may also want to bring some number of */
-    /* them cleanly into the cache. The clean ones will follow any dirty */
-    /* ones into the cache. */
-
+  /* we want to dirty some number of consecutive integers in the buffer */
+  /* we are about to recv. we may also want to bring some number of */
+  /* them cleanly into the cache. The clean ones will follow any dirty */
+  /* ones into the cache. */
+  
   dirty_count = dlpi_co_stream_request->dirty_count;
   clean_count = dlpi_co_stream_request->clean_count;
   message_int_ptr = (int *)message_ptr;
@@ -924,7 +930,7 @@ recv_dlpi_co_stream()
     dirty_count = *message_int_ptr;
     message_int_ptr++;
   }
-#endif DIRTY
+#endif /* DIRTY */
   
   recv_message.len = recv_size; 
   while (recv_message.len == recv_size) {
@@ -938,15 +944,15 @@ recv_dlpi_co_stream()
     }
     bytes_received += recv_message.len;
     receive_calls++;
-
-  if (debug) {
-    fprintf(where,
-	    "netserver:recv_dlpi_co_stream: getmsg accepted %d bytes\n",
-	    recv_message.len);
-    fflush(where);
-  }
-
-
+    
+    if (debug) {
+      fprintf(where,
+	      "netserver:recv_dlpi_co_stream: getmsg accepted %d bytes\n",
+	      recv_message.len);
+      fflush(where);
+    }
+    
+    
 #ifdef DIRTY
     message_int_ptr = (int *)message_ptr;
     for (i = 0; i < dirty_count; i++) {
@@ -957,14 +963,14 @@ recv_dlpi_co_stream()
       dirty_count = *message_int_ptr;
       message_int_ptr++;
     }
-#endif DIRTY
-
+#endif /* DIRTY */
+    
   }
   
   /* The loop now exits due to zero bytes received. */
   /* should perform a disconnect to signal the sender that */
   /* we have received all the data sent. */
-
+  
   if (close(data_descriptor) == -1) {
     netperf_response->serv_errno = errno;
     send_response();
@@ -1009,66 +1015,63 @@ int send_dlpi_co_rr(remote_host)
 {
   
   char *tput_title = "\
-Local /Remote\n\
-Window Size   Request  Resp.   Elapsed  Trans.\n\
-Send   Recv   Size     Size    Time     Rate         \n\
-frames frames bytes    bytes   secs.    per sec   \n\n";
+ Local /Remote\n\
+ Window Size   Request  Resp.   Elapsed  Trans.\n\
+ Send   Recv   Size     Size    Time     Rate         \n\
+ frames frames bytes    bytes   secs.    per sec   \n\n";
   
   char *tput_fmt_0 =
     "%7.2f\n";
   
   char *tput_fmt_1_line_1 = "\
-%-6d %-6d %-6d   %-6d  %-6.2f   %7.2f   \n";
+ %-6d %-6d %-6d   %-6d  %-6.2f   %7.2f   \n";
   char *tput_fmt_1_line_2 = "\
-%-6d %-6d\n";
+ %-6d %-6d\n";
   
   char *cpu_title = "\
-Local /Remote\n\
-Window Size   Request Resp.  Elapsed Trans.   CPU    CPU    S.dem   S.dem\n\
-Send   Recv   Size    Size   Time    Rate     local  remote local   remote\n\
-frames frames bytes   bytes  secs.   per sec  %%      %%      ms/Tr   ms/Tr\n\n";
+ Local /Remote\n\
+ Window Size   Request Resp.  Elapsed Trans.   CPU    CPU    S.dem   S.dem\n\
+ Send   Recv   Size    Size   Time    Rate     local  remote local   remote\n\
+ frames frames bytes   bytes  secs.   per sec  %%      %%      ms/Tr   ms/Tr\n\n";
   
   char *cpu_fmt_0 =
     "%6.3f\n";
   
   char *cpu_fmt_1_line_1 = "\
-%-6d %-6d %-6d  %-6d %-6.2f  %-6.2f   %-6.2f %-6.2f %-6.3f  %-6.3f\n";
+ %-6d %-6d %-6d  %-6d %-6.2f  %-6.2f   %-6.2f %-6.2f %-6.3f  %-6.3f\n";
   
   char *cpu_fmt_1_line_2 = "\
-%-6d %-6d\n";
+ %-6d %-6d\n";
   
   char *ksink_fmt = "\
-Alignment      Offset\n\
-Local  Remote  Local  Remote\n\
-Send   Recv    Send   Recv\n\
-%5d  %5d   %5d  %5d";
+ Alignment      Offset\n\
+ Local  Remote  Local  Remote\n\
+ Send   Recv    Send   Recv\n\
+ %5d  %5d   %5d  %5d";
   
   
-  int 			one = 1;
   int			timed_out = 0;
   float			elapsed_time;
   int	    dlsap_len;
   char      dlsap[BUFSIZ];
   
-  int	len;
   int   flags = 0;
   char	*send_message_ptr;
   char	*recv_message_ptr;
   char	*temp_message_ptr;
   struct strbuf send_message;
   struct strbuf recv_message;
-
+  
   int	nummessages;
   int	send_descriptor;
   int	trans_remaining;
   double	bytes_xferd;
   
   int	rsp_bytes_left;
-  int	rsp_bytes_recvd;
   
   /* we assume that station adresses fit within two ints */
   unsigned int   remote_address[1];
-
+  
   float	local_cpu_utilization;
   float	local_service_demand;
   float	remote_cpu_utilization;
@@ -1078,7 +1081,7 @@ Send   Recv    Send   Recv\n\
 #ifdef SUNOS4
   struct        sigaction action;
 #endif /* SUNOS4 */
-
+  
   struct	dlpi_co_rr_request_struct	*dlpi_co_rr_request;
   struct	dlpi_co_rr_response_struct	*dlpi_co_rr_response;
   struct	dlpi_co_rr_results_struct	*dlpi_co_rr_result;
@@ -1112,17 +1115,17 @@ Send   Recv    Send   Recv\n\
   /* set-up the data buffers with the requested alignment and offset */
   temp_message_ptr = (char *)malloc(req_size+MAXALIGNMENT+MAXOFFSET);
   send_message_ptr = (char *)(( (long) temp_message_ptr + 
-			(long) local_send_align - 1) &	
-			~((long) local_send_align - 1));
+			       (long) local_send_align - 1) &	
+			      ~((long) local_send_align - 1));
   send_message_ptr = send_message_ptr + local_send_offset;
   send_message.maxlen = req_size+MAXALIGNMENT+MAXOFFSET;
   send_message.len    = req_size;
   send_message.buf    = send_message_ptr;
-
+  
   temp_message_ptr = (char *)malloc(rsp_size+MAXALIGNMENT+MAXOFFSET);
   recv_message_ptr = (char *)(( (long) temp_message_ptr + 
-			(long) local_recv_align - 1) &	
-			~((long) local_recv_align - 1));
+			       (long) local_recv_align - 1) &	
+			      ~((long) local_recv_align - 1));
   recv_message_ptr = recv_message_ptr + local_recv_offset;
   recv_message.maxlen = rsp_size+MAXALIGNMENT+MAXOFFSET;
   recv_message.len    = 0;
@@ -1141,15 +1144,15 @@ Send   Recv    Send   Recv\n\
   }
   
   /* bind the puppy and get the assigned dlsap */
-
+  
   dlsap_len = BUFSIZ;
   if (dl_bind(send_descriptor, 
-              dlpi_sap, DL_CODLS, dlsap, &dlsap_len) != 0) {
+	      dlpi_sap, DL_CODLS, dlsap, &dlsap_len) != 0) {
     fprintf(where,"send_dlpi_co_rr: bind failure\n");
     fflush(where);
     exit(1);
   }
-
+  
   /* Modify the local socket size. The reason we alter the send buffer */
   /* size here rather than when the connection is made is to take care */
   /* of decreases in buffer size. Decreasing the window size after */
@@ -1231,7 +1234,7 @@ Send   Recv    Send   Recv\n\
   strcpy(dlpi_co_rr_request->dlpi_device,
 	 rem_dlpi_device);
 #ifdef __alpha
-
+  
   /* ok - even on a DEC box, strings are strings. I din't really want */
   /* to ntohl the words of a string. since I don't want to teach the */
   /* send_ and recv_ _request and _response routines about the types, */
@@ -1242,19 +1245,19 @@ Send   Recv    Send   Recv\n\
     int *charword;
     int *initword;
     int *lastword;
-
+    
     initword = (int *) dlpi_co_rr_request->dlpi_device;
     lastword = initword + ((strlen(rem_dlpi_device) + 3) / 4);
-
+    
     for (charword = initword;
 	 charword < lastword;
 	 charword++) {
-
+      
       *charword = ntohl(*charword);
     }
   }
 #endif /* __alpha */
-
+  
   if (test_time) {
     dlpi_co_rr_request->test_length	=	test_time;
   }
@@ -1287,7 +1290,7 @@ Send   Recv    Send   Recv\n\
     rsw_size	=	dlpi_co_rr_response->send_win_size;
     remote_cpu_usage=	dlpi_co_rr_response->measure_cpu;
     remote_cpu_rate = 	dlpi_co_rr_response->cpu_rate;
-
+    
   }
   else {
     errno = netperf_response->serv_errno;
@@ -1297,7 +1300,7 @@ Send   Recv    Send   Recv\n\
   }
   
   /*Connect up to the remote port on the data descriptor  */
-
+  
   if(dl_connect(send_descriptor,
 		dlpi_co_rr_response->station_addr,
 		dlpi_co_rr_response->station_addr_len) != 0) {
@@ -1305,7 +1308,7 @@ Send   Recv    Send   Recv\n\
     fflush(where);
     exit(1);
   }
-
+  
   /* Data Socket set-up is finished. If there were problems, either the */
   /* connect would have failed, or the previous response would have */
   /* indicated a problem. I failed to see the value of the extra */
@@ -1319,7 +1322,7 @@ Send   Recv    Send   Recv\n\
     /* The user wanted to end the test after a period of time. */
     times_up = 0;
     trans_remaining = 0;
-#ifdef SUNOS4 */
+#ifdef SUNOS4
     /* on some systems (SunOS 4.blah), system calls are restarted. we do */
     /* not want that for a request/response test */
     action.sa_handler = catcher;
@@ -1372,11 +1375,11 @@ Send   Recv    Send   Recv\n\
     }
     
     if (debug) {
-        fprintf(where,"recv_message.len %d\n",recv_message.len);
-        fprintf(where,"send_message.len %d\n",send_message.len);
-        fflush(where);
+      fprintf(where,"recv_message.len %d\n",recv_message.len);
+      fprintf(where,"send_message.len %d\n",send_message.len);
+      fflush(where);
     }
-
+    
     /* receive the response */
     /* this needs some work with streams buffers if we are going to */
     /* support requests and responses larger than the MTU of the */
@@ -1479,8 +1482,8 @@ Send   Recv    Send   Recv\n\
       /* multiply the number of transaction by 1024 to get */
       /* "good" numbers */
       local_service_demand  = calc_service_demand((double) nummessages*1024,
-						      0.0,
-						      0.0);
+						  0.0,
+						  0.0);
     }
     else {
       local_cpu_utilization	= -1.0;
@@ -1632,8 +1635,7 @@ frames  bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
 %5d            %-7.2f   %7d           %7.1f      %-6.2f  %-6.3f\n\n";
   
   int	messages_recvd;
-  float	elapsed_time, 
-  recv_elapsed, 
+  float	elapsed_time,
   local_cpu_utilization, 
   remote_cpu_utilization;
   
@@ -1643,7 +1645,6 @@ frames  bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
   double	bytes_recvd;
   
   
-  int	len;
   int	*message_int_ptr;
   char	*message_ptr;
   char	*message_base;
@@ -1651,7 +1652,7 @@ frames  bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
   struct strbuf send_message;
   struct strbuf sctl_message;
   dl_unitdata_req_t *data_req = (dl_unitdata_req_t *)sctl_data;
-
+  
   char dlsap[BUFSIZ];
   int  dlsap_len;
   int	message_offset;
@@ -1661,19 +1662,18 @@ frames  bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
   int 	messages_sent;
   int 	data_descriptor;
   
-  int	sock_opt_len=sizeof(int);
   
 #ifdef INTERVALS
   int	interval_count;
-#endif INTERVALS
+#endif /* INTERVALS */
 #ifdef DIRTY
   int	i;
-#endif DIRTY
+#endif /* DIRTY */
   
 #ifdef SUNOS4
   struct        sigaction action;
 #endif /* SUNOS4 */
-
+  
   struct	dlpi_cl_stream_request_struct	*dlpi_cl_stream_request;
   struct	dlpi_cl_stream_response_struct	*dlpi_cl_stream_response;
   struct	dlpi_cl_stream_results_struct	*dlpi_cl_stream_results;
@@ -1691,7 +1691,6 @@ frames  bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
   }	
   
   failed_sends	= 0;
-  failed_cows	= 0;
   messages_sent	= 0;
   times_up	= 0;
   
@@ -1711,7 +1710,7 @@ frames  bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
     fflush(where);
     exit(1);
   }
-
+  
   /* Modify the local socket size (SNDBUF size)    */
   
 #ifdef DL_HP_SET_LOCAL_WIN_REQ
@@ -1752,22 +1751,20 @@ frames  bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
   /* before it leaves the node...unless the user set the width */
   /* explicitly. */
   if (send_width == 0) send_width = 32;
-  message_max_offset = send_size * send_width;
-  message_offset = 0;
   message_base = (char *)malloc(send_size * (send_width + 1) + local_send_align + local_send_offset);
   message_ptr = (char *)(( (long) message_base + 
-			(long) local_send_align - 1) &	
-			~((long) local_send_align - 1));
+			  (long) local_send_align - 1) &	
+			 ~((long) local_send_align - 1));
   message_ptr = message_ptr + local_send_offset;
   message_base = message_ptr;
   send_message.maxlen = send_size;
   send_message.len = send_size;
   send_message.buf = message_base;
-
+  
   sctl_message.maxlen = BUFSIZ;
   sctl_message.len    = 0;
   sctl_message.buf    = sctl_data;
-
+  
   /* if the user supplied a cpu rate, this call will complete rather */
   /* quickly, otherwise, the cpu rate will be retured to us for */
   /* possible display. The Library will keep it's own copy of this data */
@@ -1794,9 +1791,9 @@ frames  bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
   dlpi_cl_stream_request->dev_name_len          = strlen(rem_dlpi_device);
   strcpy(dlpi_cl_stream_request->dlpi_device,
 	 rem_dlpi_device);
-
+  
 #ifdef __alpha
-
+  
   /* ok - even on a DEC box, strings are strings. I din't really want */
   /* to ntohl the words of a string. since I don't want to teach the */
   /* send_ and recv_ _request and _response routines about the types, */
@@ -1807,26 +1804,26 @@ frames  bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
     int *charword;
     int *initword;
     int *lastword;
-
+    
     initword = (int *) dlpi_cl_stream_request->dlpi_device;
     lastword = initword + ((strlen(rem_dlpi_device) + 3) / 4);
-
+    
     for (charword = initword;
 	 charword < lastword;
 	 charword++) {
-
+      
       *charword = ntohl(*charword);
     }
   }
 #endif /* __alpha */
-
+  
   if (test_time) {
     dlpi_cl_stream_request->test_length	=	test_time;
   }
   else {
     dlpi_cl_stream_request->test_length	=	test_bytes * -1;
   }
-
+  
   
   send_request();
   
@@ -1857,25 +1854,25 @@ frames  bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
   /* the time being. */
   sctl_message.len = sizeof(dl_unitdata_req_t) + 
     data_req->dl_dest_addr_length;
-
+  
   rrw_size	        = dlpi_cl_stream_response->recv_win_size;
   rsw_size	        = dlpi_cl_stream_response->send_win_size;
   remote_cpu_rate	= dlpi_cl_stream_response->cpu_rate;
   
   
   /* set up the timer to call us after test_time	*/
-#ifdef SUNOS4 */
-    /* on some systems (SunOS 4.blah), system calls are restarted. we do */
-    /* not want that for a request/response test */
-    action.sa_handler = catcher;
-    action.sa_flags = SA_INTERRUPT;
-    if (sigaction(SIGALRM, &action, NULL) < 0) {
-      fprintf(where,"recv_udp_stream: error creating alarm signal.\n");
-      fflush(where);
-      exit(1);
-    }
+#ifdef SUNOS4
+  /* on some systems (SunOS 4.blah), system calls are restarted. we do */
+  /* not want that for a request/response test */
+  action.sa_handler = catcher;
+  action.sa_flags = SA_INTERRUPT;
+  if (sigaction(SIGALRM, &action, NULL) < 0) {
+    fprintf(where,"recv_udp_stream: error creating alarm signal.\n");
+    fflush(where);
+    exit(1);
+  }
 #else /* SUNOS4 */
-    signal(SIGALRM, catcher);
+  signal(SIGALRM, catcher);
 #endif /* SUNOS4 */
   alarm(test_time);
   
@@ -1885,7 +1882,7 @@ frames  bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
   
 #ifdef INTERVALS
   interval_count = interval_burst;
-#endif
+#endif /* INTERVALS */
   
   /* Send datagrams like there was no tomorrow */
   while (!times_up) {
@@ -1903,7 +1900,7 @@ frames  bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
       loc_dirty_count = *message_int_ptr;
       message_int_ptr++;
     }
-#endif DIRTY
+#endif /* DIRTY */
     if (putmsg(data_descriptor,
 	       &sctl_message,
 	       &send_message,
@@ -1945,7 +1942,7 @@ frames  bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
       interval_count = interval_burst;
     }
     
-#endif
+#endif /* INTERVALS */
     
   }
   
@@ -2099,9 +2096,7 @@ int
   
   char message[MAXMESSAGESIZE+MAXALIGNMENT+MAXOFFSET];
   int	data_descriptor;
-  int 	addrlen;
   int	len;
-  int	sock_opt_len = sizeof(int);
   char	*message_ptr;
   char  rctl_data[BUFSIZ];
   struct strbuf recv_message;
@@ -2110,7 +2105,7 @@ int
   /* these are to make reading some of the DLPI control messages easier */
   dl_unitdata_ind_t *data_ind = (dl_unitdata_ind_t *)rctl_data;
   dl_uderror_ind_t  *uder_ind = (dl_uderror_ind_t *)rctl_data;
-
+  
   int	bytes_received = 0;
   float	elapsed_time;
   
@@ -2121,7 +2116,7 @@ int
 #ifdef SUNOS4
   struct        sigaction action;
 #endif /* SUNOS4 */
-
+  
   struct	dlpi_cl_stream_request_struct	*dlpi_cl_stream_request;
   struct	dlpi_cl_stream_response_struct	*dlpi_cl_stream_response;
   struct	dlpi_cl_stream_results_struct	*dlpi_cl_stream_results;
@@ -2175,11 +2170,11 @@ int
   recv_message.maxlen = 4096;
   recv_message.len    = 0;
   recv_message.buf    = message_ptr;
-
+  
   rctl_message.maxlen = BUFSIZ;
   rctl_message.len    = 0;
   rctl_message.buf    = rctl_data;
-
+  
   if (debug > 1) {
     fprintf(where,
 	    "recv_dlpi_cl_stream: receive alignment and offset set...\n");
@@ -2192,7 +2187,7 @@ int
   }
   
 #ifdef __alpha
-
+  
   /* ok - even on a DEC box, strings are strings. I din't really want */
   /* to ntohl the words of a string. since I don't want to teach the */
   /* send_ and recv_ _request and _response routines about the types, */
@@ -2203,19 +2198,19 @@ int
     int *charword;
     int *initword;
     int *lastword;
-
+    
     initword = (int *) dlpi_cl_stream_request->dlpi_device;
     lastword = initword + ((dlpi_cl_stream_request->dev_name_len + 3) / 4);
-
+    
     for (charword = initword;
 	 charword < lastword;
 	 charword++) {
-
+      
       *charword = htonl(*charword);
     }
   }
 #endif /* __alpha */
-
+  
   data_descriptor = dl_open(dlpi_cl_stream_request->dlpi_device,
 			    dlpi_cl_stream_request->ppa);
   if (data_descriptor < 0) {
@@ -2289,18 +2284,18 @@ int
   /* message of less than send_size bytes... */
   
   times_up = 0;
-#ifdef SUNOS4 */
-    /* on some systems (SunOS 4.blah), system calls are restarted. we do */
-    /* not want that for a request/response test */
-    action.sa_handler = catcher;
-    action.sa_flags = SA_INTERRUPT;
-    if (sigaction(SIGALRM, &action, NULL) < 0) {
-      fprintf(where,"recv_udp_stream: error creating alarm signal.\n");
-      fflush(where);
-      exit(1);
-    }
+#ifdef SUNOS4
+  /* on some systems (SunOS 4.blah), system calls are restarted. we do */
+  /* not want that for a request/response test */
+  action.sa_handler = catcher;
+  action.sa_flags = SA_INTERRUPT;
+  if (sigaction(SIGALRM, &action, NULL) < 0) {
+    fprintf(where,"recv_udp_stream: error creating alarm signal.\n");
+    fflush(where);
+    exit(1);
+  }
 #else /* SUNOS4 */
-    signal(SIGALRM, catcher);
+  signal(SIGALRM, catcher);
 #endif /* SUNOS4 */
   alarm(test_time + PAD_TIME);
   
@@ -2324,7 +2319,7 @@ int
 	      errno,
 	      data_ind->dl_primitive);
       fflush(where);
-      netperf_response->serv_errno = 999;
+      netperf_response->serv_errno = 996;
       send_response();
       exit(1);
     }
@@ -2428,10 +2423,8 @@ Send   Recv    Send   Recv\n\
 %5d  %5d   %5d  %5d";
   
   
-  int 			one = 1;
   float			elapsed_time;
   
-  int	len;
   int   dlsap_len;
   int   flags = 0;
   char	*send_message_ptr;
@@ -2444,20 +2437,16 @@ Send   Recv    Send   Recv\n\
   struct strbuf recv_message;
   struct strbuf sctl_message;
   struct strbuf rctl_message;
-
+  
   /* these are to make reading some of the DLPI control messages easier */
   dl_unitdata_ind_t *data_ind = (dl_unitdata_ind_t *)rctl_data;
   dl_unitdata_req_t *data_req = (dl_unitdata_req_t *)sctl_data;
   dl_uderror_ind_t  *uder_ind = (dl_uderror_ind_t *)rctl_data;
-
+  
   int	nummessages;
   int	send_descriptor;
   int	trans_remaining;
   int	bytes_xferd;
-  int	sock_opt_len = sizeof(int);
-  
-  int	rsp_bytes_left;
-  int	rsp_bytes_recvd;
   
   float	local_cpu_utilization;
   float	local_service_demand;
@@ -2477,14 +2466,12 @@ Send   Recv    Send   Recv\n\
   struct	timeval		send_time;
   struct	timeval		recv_time;
   struct	timeval		sleep_timeval;
-#endif
-  
-  int	addrlen;
+#endif /* INTERVALS */
   
 #ifdef SUNOS4
   struct        sigaction action;
 #endif /* SUNOS4 */
-
+  
   struct	dlpi_cl_rr_request_struct	*dlpi_cl_rr_request;
   struct	dlpi_cl_rr_response_struct	*dlpi_cl_rr_response;
   struct	dlpi_cl_rr_results_struct	*dlpi_cl_rr_result;
@@ -2504,7 +2491,7 @@ Send   Recv    Send   Recv\n\
     time_index += 1;
   }
   time_index = 0;
-#endif
+#endif /* INTERVALS *?
   
   if (print_headers) {
     fprintf(where,"DLPI CL REQUEST/RESPONSE TEST\n");
@@ -2523,17 +2510,17 @@ Send   Recv    Send   Recv\n\
   /* set-up the data buffer with the requested alignment and offset */
   temp_message_ptr = (char *)malloc(req_size+MAXALIGNMENT+MAXOFFSET);
   send_message_ptr = (char *)(( (long)temp_message_ptr + 
-			(long) local_send_align - 1) &	
-			~((long) local_send_align - 1));
+			       (long) local_send_align - 1) &	
+			      ~((long) local_send_align - 1));
   send_message_ptr = send_message_ptr + local_send_offset;
   send_message.maxlen = req_size;
   send_message.len    = req_size;
   send_message.buf    = send_message_ptr;
-
+  
   temp_message_ptr = (char *)malloc(rsp_size+MAXALIGNMENT+MAXOFFSET);
   recv_message_ptr = (char *)(( (long)temp_message_ptr + 
-			(long) local_recv_align - 1) &	
-			~((long) local_recv_align - 1));
+			       (long) local_recv_align - 1) &	
+			      ~((long) local_recv_align - 1));
   recv_message_ptr = recv_message_ptr + local_recv_offset;
   recv_message.maxlen = rsp_size;
   recv_message.len    = 0;
@@ -2542,13 +2529,13 @@ Send   Recv    Send   Recv\n\
   sctl_message.maxlen = BUFSIZ;
   sctl_message.len    = 0;
   sctl_message.buf    = sctl_data;
-
+  
   rctl_message.maxlen = BUFSIZ;
   rctl_message.len    = 0;
   rctl_message.buf    = rctl_data;
-
+  
   /* lets get ourselves a file descriptor */
-
+  
   send_descriptor = dl_open(loc_dlpi_device,loc_ppa);
   if (send_descriptor < 0){
     perror("netperf: send_dlpi_cl_rr: dlpi cl rr send descriptor");
@@ -2558,7 +2545,7 @@ Send   Recv    Send   Recv\n\
   if (debug) {
     fprintf(where,"send_dlpi_cl_rr: send_descriptor obtained...\n");
   }
-
+  
   /* bind the sap to the descriptor and get the dlsap */
   dlsap_len = BUFSIZ;
   if (dl_bind(send_descriptor,
@@ -2578,6 +2565,9 @@ Send   Recv    Send   Recv\n\
   /* must have enough space to hold addressing information so += a */
   /* sizeof struct sockaddr_in to it. */ 
   
+  /* this is actually nothing code, and should be replaced with the */
+  /* alalagous calls in the STREAM test where the window size is set */
+  /* with the HP DLPI Extension. raj 8/94 */
 #ifdef SO_SNDBUF
   if (lsw_size > 0) {
     if (debug > 1) {
@@ -2602,12 +2592,12 @@ Send   Recv    Send   Recv\n\
     fprintf(where,"         send: %d recv: %d\n",lsw_size,lrw_size);
   }
   
-#else SO_SNDBUF
+#else /* SO_SNDBUF */
   
   lsw_size = -1;
   lrw_size = -1;
   
-#endif SO_SNDBUF
+#endif /* SO_SNDBUF */
   
   /* If the user has requested cpu utilization measurements, we must */
   /* calibrate the cpu(s). We will perform this task within the tests */
@@ -2646,9 +2636,9 @@ Send   Recv    Send   Recv\n\
   dlpi_cl_rr_request->dev_name_len      =       strlen(rem_dlpi_device);
   strcpy(dlpi_cl_rr_request->dlpi_device,
 	 rem_dlpi_device);
-
+  
 #ifdef __alpha
-
+  
   /* ok - even on a DEC box, strings are strings. I din't really want */
   /* to ntohl the words of a string. since I don't want to teach the */
   /* send_ and recv_ _request and _response routines about the types, */
@@ -2659,19 +2649,19 @@ Send   Recv    Send   Recv\n\
     int *charword;
     int *initword;
     int *lastword;
-
+    
     initword = (int *) dlpi_cl_rr_request->dlpi_device;
     lastword = initword + ((strlen(rem_dlpi_device) + 3) / 4);
-
+    
     for (charword = initword;
 	 charword < lastword;
 	 charword++) {
-
+      
       *charword = ntohl(*charword);
     }
   }
 #endif /* __alpha */
-
+  
   if (test_time) {
     dlpi_cl_rr_request->test_length	=	test_time;
   }
@@ -2704,7 +2694,7 @@ Send   Recv    Send   Recv\n\
     rsw_size	=	dlpi_cl_rr_response->send_win_size;
     remote_cpu_usage=	dlpi_cl_rr_response->measure_cpu;
     remote_cpu_rate = 	dlpi_cl_rr_response->cpu_rate;
-
+    
     /* set-up the destination addressing control info */
     data_req->dl_primitive = DL_UNITDATA_REQ;
     bcopy((char *)(dlpi_cl_rr_response->station_addr),
@@ -2715,7 +2705,7 @@ Send   Recv    Send   Recv\n\
     /* there is a dl_priority structure too, but I am ignoring it for */
     /* the time being. */
     sctl_message.len = sizeof(dl_unitdata_req_t) + 
-                       data_req->dl_dest_addr_length;
+      data_req->dl_dest_addr_length;
   }
   else {
     errno = netperf_response->serv_errno;
@@ -2736,7 +2726,7 @@ Send   Recv    Send   Recv\n\
     /* The user wanted to end the test after a period of time. */
     times_up = 0;
     trans_remaining = 0;
-#ifdef SUNOS4 */
+#ifdef SUNOS4
     /* on some systems (SunOS 4.blah), system calls are restarted. we do */
     /* not want that for a request/response test */
     action.sa_handler = catcher;
@@ -2775,11 +2765,11 @@ Send   Recv    Send   Recv\n\
     /* send the request */
 #ifdef INTERVALS
     gettimeofday(&send_time,&dummy_zone);
-#endif
+#endif /* INTERVALS */
     if(putmsg(send_descriptor,
-	       &sctl_message,
-	       &send_message,
-	       0) != 0) {
+	      &sctl_message,
+	      &send_message,
+	      0) != 0) {
       if (errno == EINTR) {
 	/* We likely hit */
 	/* test-end time. */
@@ -2847,7 +2837,7 @@ Send   Recv    Send   Recv\n\
     
     /* now up the time index */
     time_index = (time_index +1)%MAX_KEPT_TIMES;
-#endif
+#endif /* INTERVALS */
     nummessages++;          
     if (trans_remaining) {
       trans_remaining--;
@@ -3045,13 +3035,11 @@ int
   
   char message[MAXMESSAGESIZE+MAXALIGNMENT+MAXOFFSET];
   int	data_descriptor;
-  int	len;
   int   flags = 0;
   int	measure_cpu;
-
+  
   char	*recv_message_ptr;
   char	*send_message_ptr;
-  char	*temp_message_ptr;
   char  sctl_data[BUFSIZ];
   char  rctl_data[BUFSIZ];
   char  dlsap[BUFSIZ];
@@ -3059,24 +3047,20 @@ int
   struct strbuf recv_message;
   struct strbuf sctl_message;
   struct strbuf rctl_message;
-
+  
   /* these are to make reading some of the DLPI control messages easier */
   dl_unitdata_ind_t *data_ind = (dl_unitdata_ind_t *)rctl_data;
   dl_unitdata_req_t *data_req = (dl_unitdata_req_t *)sctl_data;
   dl_uderror_ind_t  *uder_ind = (dl_uderror_ind_t *)rctl_data;
-
+  
   int	trans_received;
   int	trans_remaining;
-  int	bytes_received;
-  int	bytes_sent;
-  int	request_bytes_recvd;
-  int	request_bytes_remaining;
   float	elapsed_time;
   
 #ifdef SUNOS4
   struct        sigaction action;
 #endif /* SUNOS4 */
-
+  
   struct	dlpi_cl_rr_request_struct	*dlpi_cl_rr_request;
   struct	dlpi_cl_rr_response_struct	*dlpi_cl_rr_response;
   struct	dlpi_cl_rr_results_struct	*dlpi_cl_rr_results;
@@ -3133,38 +3117,38 @@ int
     fflush(where);
   }
   recv_message_ptr = (char *)(( (long)message + 
-			(long) dlpi_cl_rr_request->recv_alignment -1) & 
-			~((long) dlpi_cl_rr_request->recv_alignment - 1));
+			       (long) dlpi_cl_rr_request->recv_alignment -1) & 
+			      ~((long) dlpi_cl_rr_request->recv_alignment - 1));
   recv_message_ptr = recv_message_ptr + dlpi_cl_rr_request->recv_offset;
   recv_message.maxlen = dlpi_cl_rr_request->request_size;
   recv_message.len    = 0;
   recv_message.buf    = recv_message_ptr;
   
   send_message_ptr = (char *)(( (long)message + 
-			(long) dlpi_cl_rr_request->send_alignment -1) & 
-			~((long) dlpi_cl_rr_request->send_alignment - 1));
+			       (long) dlpi_cl_rr_request->send_alignment -1) & 
+			      ~((long) dlpi_cl_rr_request->send_alignment - 1));
   send_message_ptr = send_message_ptr + dlpi_cl_rr_request->send_offset;
   send_message.maxlen = dlpi_cl_rr_request->response_size;
   send_message.len    = dlpi_cl_rr_request->response_size;
   send_message.buf    = send_message_ptr;
-   
+  
   sctl_message.maxlen = BUFSIZ;
   sctl_message.len    = 0;
   sctl_message.buf    = sctl_data;
-
+  
   rctl_message.maxlen = BUFSIZ;
   rctl_message.len    = 0;
   rctl_message.buf    = rctl_data;
-
+  
   if (debug) {
     fprintf(where,"recv_dlpi_cl_rr: receive alignment and offset set...\n");
     fprintf(where,"recv_dlpi_cl_rr: grabbing a socket...\n");
     fflush(where);
   }
   
-
+  
 #ifdef __alpha
-
+  
   /* ok - even on a DEC box, strings are strings. I din't really want */
   /* to ntohl the words of a string. since I don't want to teach the */
   /* send_ and recv_ _request and _response routines about the types, */
@@ -3175,19 +3159,19 @@ int
     int *charword;
     int *initword;
     int *lastword;
-
+    
     initword = (int *) dlpi_cl_rr_request->dlpi_device;
     lastword = initword + ((dlpi_cl_rr_request->dev_name_len + 3) / 4);
-
+    
     for (charword = initword;
 	 charword < lastword;
 	 charword++) {
-
+      
       *charword = htonl(*charword);
     }
   }
 #endif /* __alpha */
-
+  
   data_descriptor = dl_open(dlpi_cl_rr_request->dlpi_device,
 			    dlpi_cl_rr_request->ppa);
   if (data_descriptor < 0) {
@@ -3211,7 +3195,7 @@ int
   
   if (dlpi_cl_rr_request->send_win_size) {
   }
-
+  
   /* Now, we will find-out what the sizes actually became, and report */
   /* them back to the user. If the calls fail, we will just report a -1 */
   /* back to the initiator for the buffer size. */
@@ -3221,7 +3205,7 @@ int
   dlpi_cl_rr_response->recv_win_size	= -1;
   dlpi_cl_rr_response->send_win_size	= -1;
   
-#endif DL_HP_SET_LOCAL_WIN_REQ
+#endif /* DL_HP_SET_LOCAL_WIN_REQ */
   
   /* bind the sap and retrieve the dlsap assigned by the system  */
   dlpi_cl_rr_response->station_addr_len = 14; /* arbitrary */
@@ -3259,7 +3243,7 @@ int
   if (dlpi_cl_rr_request->test_length > 0) {
     times_up = 0;
     trans_remaining = 0;
-#ifdef SUNOS4 */
+#ifdef SUNOS4
     /* on some systems (SunOS 4.blah), system calls are restarted. we do */
     /* not want that for a request/response test */
     action.sa_handler = catcher;
@@ -3274,17 +3258,17 @@ int
 #endif /* SUNOS4 */
     alarm(dlpi_cl_rr_request->test_length + PAD_TIME);
   }
-  else {
-    times_up = 1;
-    trans_remaining = dlpi_cl_rr_request->test_length * -1;
-  }
+else {
+  times_up = 1;
+  trans_remaining = dlpi_cl_rr_request->test_length * -1;
+}
   
   while ((!times_up) || (trans_remaining > 0)) {
     
     /* receive the request from the other side. at some point we need */
     /* to handle "logical" requests and responses which are larger */
     /* than the data link MTU */
-
+    
     if((getmsg(data_descriptor, 
 	       &rctl_message,    
 	       &recv_message,
@@ -3302,11 +3286,11 @@ int
 	      "                 recevied %u transactions\n",
 	      trans_received);
       fflush(where);
-      netperf_response->serv_errno = 999;
+      netperf_response->serv_errno = 995;
       send_response();
       exit(1);
     }
-
+    
     /* Now, send the response to the remote. first copy the dlsap */
     /* information from the receive to the sending control message */
     
@@ -3317,7 +3301,7 @@ int
     data_req->dl_dest_addr_length = data_ind->dl_src_addr_length;
     data_req->dl_primitive = DL_UNITDATA_REQ;
     sctl_message.len = sizeof(dl_unitdata_req_t) +
-                       data_ind->dl_src_addr_length;
+      data_ind->dl_src_addr_length;
     if(putmsg(data_descriptor,
 	      &sctl_message,
 	      &send_message,
@@ -3332,7 +3316,7 @@ int
 	      "dlpi_recv_cl_rr: putmsg failure: errno %d\n",
 	      errno);
       fflush(where);
-      netperf_response->serv_errno = 999;
+      netperf_response->serv_errno = 993;
       send_response();
       exit(1);
     }
@@ -3392,28 +3376,22 @@ int
 }
 
 int 
-recv_dlpi_co_rr()
+  recv_dlpi_co_rr()
 {
   
   char message[MAXMESSAGESIZE+MAXALIGNMENT+MAXOFFSET];
   int	s_listen,data_descriptor;
-  int 	addrlen;
-
+  
   int	measure_cpu;
-
-  int	len;
+  
   int   flags = 0;
   char	*recv_message_ptr;
   char	*send_message_ptr;
-  char	*temp_message_ptr;
   struct strbuf send_message;
   struct strbuf recv_message;
-
+  
   int	trans_received;
   int	trans_remaining;
-  int	bytes_received;
-  int	bytes_sent;
-  int	request_bytes_recvd;
   int	request_bytes_remaining;
   int	timed_out = 0;
   float	elapsed_time;
@@ -3421,7 +3399,7 @@ recv_dlpi_co_rr()
 #ifdef SUNOS4
   struct        sigaction action;
 #endif /* SUNOS4 */
-
+  
   struct	dlpi_co_rr_request_struct	*dlpi_co_rr_request;
   struct	dlpi_co_rr_response_struct	*dlpi_co_rr_response;
   struct	dlpi_co_rr_results_struct	*dlpi_co_rr_results;
@@ -3475,16 +3453,16 @@ recv_dlpi_co_rr()
     fflush(where);
   }
   recv_message_ptr = (char *)(( (long)message + 
-			(long) dlpi_co_rr_request->recv_alignment -1) & 
-			~((long) dlpi_co_rr_request->recv_alignment - 1));
+			       (long) dlpi_co_rr_request->recv_alignment -1) & 
+			      ~((long) dlpi_co_rr_request->recv_alignment - 1));
   recv_message_ptr = recv_message_ptr + dlpi_co_rr_request->recv_offset;
   recv_message.maxlen = dlpi_co_rr_request->request_size;
   recv_message.len    = 0;
   recv_message.buf    = recv_message_ptr;
   
   send_message_ptr = (char *)(( (long)message + 
-			(long) dlpi_co_rr_request->send_alignment -1) & 
-			~((long) dlpi_co_rr_request->send_alignment - 1));
+			       (long) dlpi_co_rr_request->send_alignment -1) & 
+			      ~((long) dlpi_co_rr_request->send_alignment - 1));
   send_message_ptr = send_message_ptr + dlpi_co_rr_request->send_offset;
   send_message.maxlen = dlpi_co_rr_request->response_size;
   send_message.len    = dlpi_co_rr_request->response_size;
@@ -3493,9 +3471,9 @@ recv_dlpi_co_rr()
   if (debug) {
     fprintf(where,"recv_dlpi_co_rr: receive alignment and offset set...\n");
     fprintf(where,"recv_dlpi_co_rr: send_message.buf %x .len %d .maxlen %d\n",
-                  send_message.buf,send_message.len,send_message.maxlen);
+	    send_message.buf,send_message.len,send_message.maxlen);
     fprintf(where,"recv_dlpi_co_rr: recv_message.buf %x .len %d .maxlen %d\n",
-                  recv_message.buf,recv_message.len,recv_message.maxlen);
+	    recv_message.buf,recv_message.len,recv_message.maxlen);
     fflush(where);
   }
   
@@ -3514,7 +3492,7 @@ recv_dlpi_co_rr()
   /* lets grab a file descriptor for a particular link */
   
 #ifdef __alpha
-
+  
   /* ok - even on a DEC box, strings are strings. I din't really want */
   /* to ntohl the words of a string. since I don't want to teach the */
   /* send_ and recv_ _request and _response routines about the types, */
@@ -3525,19 +3503,19 @@ recv_dlpi_co_rr()
     int *charword;
     int *initword;
     int *lastword;
-
+    
     initword = (int *) dlpi_co_rr_request->dlpi_device;
     lastword = initword + ((dlpi_co_rr_request->dev_name_len + 3) / 4);
-
+    
     for (charword = initword;
 	 charword < lastword;
 	 charword++) {
-
+      
       *charword = htonl(*charword);
     }
   }
 #endif /* __alpha */
-
+  
   if ((data_descriptor = dl_open(dlpi_co_rr_request->dlpi_device,
 				 dlpi_co_rr_request->ppa)) < 0) {
     netperf_response->serv_errno = errno;
@@ -3573,7 +3551,7 @@ recv_dlpi_co_rr()
   if (dlpi_co_rr_request->send_win_size) {
     /* SMOP */
   }
-
+  
   /* Now, we will find-out what the sizes actually became, and report */
   /* them back to the user. If the calls fail, we will just report a -1 */
   /* back to the initiator for the buffer size. */
@@ -3587,7 +3565,7 @@ recv_dlpi_co_rr()
   
   /* we may have been requested to enable the copy avoidance features. */
   /* can we actually do this with DLPI, the world wonders */
-
+  
   if (dlpi_co_rr_request->so_rcvavoid) {
 #ifdef SO_RCV_COPYAVOID
     dlpi_co_rr_response->so_rcvavoid = 0;
@@ -3635,7 +3613,7 @@ recv_dlpi_co_rr()
     send_response();
     exit(1);
   }
-
+  
   if (debug) {
     fprintf(where,
 	    "recv_dlpi_co_rr: accept completes on the data connection.\n");
@@ -3653,7 +3631,7 @@ recv_dlpi_co_rr()
   if (dlpi_co_rr_request->test_length > 0) {
     times_up = 0;
     trans_remaining = 0;
-#ifdef SUNOS4 */
+#ifdef SUNOS4
     /* on some systems (SunOS 4.blah), system calls are restarted. we do */
     /* not want that for a request/response test */
     action.sa_handler = catcher;
@@ -3668,10 +3646,10 @@ recv_dlpi_co_rr()
 #endif /* SUNOS4 */
     alarm(dlpi_co_rr_request->test_length + PAD_TIME);
   }
-  else {
-    times_up = 1;
-    trans_remaining = dlpi_co_rr_request->test_length * -1;
-  }
+else {
+  times_up = 1;
+  trans_remaining = dlpi_co_rr_request->test_length * -1;
+}
   
   while ((!times_up) || (trans_remaining > 0)) {
     request_bytes_remaining	= dlpi_co_rr_request->request_size;
@@ -3681,22 +3659,22 @@ recv_dlpi_co_rr()
     /* but that can wait for later */
     while(request_bytes_remaining > 0) {
       if((getmsg(data_descriptor,
-		  0,
-		  &recv_message,
-		  &flags)) < 0) {
+		 0,
+		 &recv_message,
+		 &flags)) < 0) {
 	if (errno == EINTR) {
 	  /* the timer popped */
 	  timed_out = 1;
 	  break;
 	}
-
+	
         if (debug) {
-	    fprintf(where,"failed getmsg call errno %d\n",errno);
-            fprintf(where,"recv_message.len %d\n",recv_message.len);
-            fprintf(where,"send_message.len %d\n",send_message.len);
-            fflush(where);
+	  fprintf(where,"failed getmsg call errno %d\n",errno);
+	  fprintf(where,"recv_message.len %d\n",recv_message.len);
+	  fprintf(where,"send_message.len %d\n",send_message.len);
+	  fflush(where);
         }
-
+	
 	netperf_response->serv_errno = errno;
 	send_response();
 	exit(1);
@@ -3713,22 +3691,22 @@ recv_dlpi_co_rr()
     }
     
     if (debug) {
-	fprintf(where,"recv_message.len %d\n",recv_message.len);
-	fprintf(where,"send_message.len %d\n",send_message.len);
-	fflush(where);
+      fprintf(where,"recv_message.len %d\n",recv_message.len);
+      fprintf(where,"send_message.len %d\n",send_message.len);
+      fflush(where);
     }
-
+    
     /* Now, send the response to the remote */
     if((putmsg(data_descriptor,
-		0,
-		&send_message,
-		0)) != 0) {
+	       0,
+	       &send_message,
+	       0)) != 0) {
       if (errno == EINTR) {
 	/* the test timer has popped */
 	timed_out = 1;
 	break;
       }
-      netperf_response->serv_errno = 999;
+      netperf_response->serv_errno = 994;
       send_response();
       exit(1);
     }
@@ -3786,20 +3764,20 @@ recv_dlpi_co_rr()
   
 }
 
- /* this routine will display the usage string for the DLPI tests */
+/* this routine will display the usage string for the DLPI tests */
 void
-print_dlpi_usage()
+  print_dlpi_usage()
 
 {
   printf("%s",dlpi_usage);
 }
 
 
- /* this routine will scan the command line for DLPI test arguments */
+/* this routine will scan the command line for DLPI test arguments */
 void
-scan_dlpi_args(argc, argv)
-     int	argc;
-     char	*argv[];
+  scan_dlpi_args(argc, argv)
+int	argc;
+char	*argv[];
 
 {
   extern int	optind, opterrs;  /* index of first unused arg 	*/
@@ -3815,9 +3793,9 @@ scan_dlpi_args(argc, argv)
   /* the first will set both to that value. Specifying only the */
   /* second will leave the first untouched. To change only the */
   /* first, use the form first, (see the routine break_args.. */
-
+  
 #define DLPI_ARGS "D:hM:m:p:r:W:w:"
-
+  
   while ((c= getopt(argc, argv, DLPI_ARGS)) != EOF) {
     switch (c) {
     case '?':	
@@ -3880,74 +3858,5 @@ scan_dlpi_args(argc, argv)
   }
 }
 
-
-#else /* DO_DLPI */
- /* this is where some code for "NULL" DLPI should go - probably just a */
- /* parsing routine which prints an error message and exits */
-void
-scan_dlpi_args(argc, argv)
-     int	argc;
-     char	*argv[];
-
-{
-  printf("DLPI tests were not compiled into this netperf binary.\n");
-  exit(1);
-}
-
-void
-send_dlpi_co_stream()
-{
-  printf("DLPI tests were not compiled into this netperf binary.\n");
-  exit(1);
-}
-
-void
-recv_dlpi_co_stream()
-{
-  printf("DLPI tests were not compiled into this netperf binary.\n");
-  exit(1);
-}
-
-void
-send_dlpi_cl_stream()
-{
-  printf("DLPI tests were not compiled into this netperf binary.\n");
-  exit(1);
-}
-
-void
-recv_dlpi_cl_stream()
-{
-  printf("DLPI tests were not compiled into this netperf binary.\n");
-  exit(1);
-}
-
-void
-send_dlpi_co_rr()
-{
-  printf("DLPI tests were not compiled into this netperf binary.\n");
-  exit(1);
-}
-
-void
-recv_dlpi_co_rr()
-{
-  printf("DLPI tests were not compiled into this netperf binary.\n");
-  exit(1);
-}
-
-void
-send_dlpi_cl_rr()
-{
-  printf("DLPI tests were not compiled into this netperf binary.\n");
-  exit(1);
-}
-
-void
-recv_dlpi_cl_rr()
-{
-  printf("DLPI tests were not compiled into this netperf binary.\n");
-  exit(1);
-}
 
 #endif /* DO_DLPI */

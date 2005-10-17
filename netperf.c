@@ -43,7 +43,7 @@
  
 */
 char	netperf_id[]="@(#)netperf.c (c) Copyright 1993, \
-Hewlett-Packard Company.	Version 1.8alpha";
+Hewlett-Packard Company.	Version 1.9";
 
 #include <stdio.h>
 #include "netsh.h"
@@ -81,8 +81,8 @@ if (strcmp(test_name,"TCP_STREAM") == 0) {
 else if (strcmp(test_name,"TCP_RR") == 0) {
 	send_tcp_rr(host_name);
 }
-else if (strcmp(test_name,"TCP_ARR") == 0) {
-	send_tcp_rr(host_name);
+else if (strcmp(test_name,"TCP_CRR") == 0) {
+	send_tcp_conn_rr(host_name);
 }
 else if (strcmp(test_name,"UDP_STREAM") == 0) {
 	send_udp_stream(host_name);
@@ -96,6 +96,7 @@ else if (strcmp(test_name,"LOC_CPU") == 0) {
 else if (strcmp(test_name,"REM_CPU") == 0) {
 	rem_cpu_rate();
 }
+#ifdef DO_DLPI
 else if (strcmp(test_name,"DLCO_RR") == 0) {
 	send_dlpi_co_rr();
 }
@@ -108,8 +109,33 @@ else if (strcmp(test_name,"DLCO_STREAM") == 0) {
 else if (strcmp(test_name,"DLCL_STREAM") == 0) {
 	send_dlpi_cl_stream();
 }
+#endif /* DO_DLPI */
+#ifdef DO_UNIX
+else if (strcmp(test_name,"STREAM_RR") == 0) {
+	send_stream_rr();
+}
+else if (strcmp(test_name,"DG_RR") == 0) {
+	send_dg_rr();
+}
+else if (strcmp(test_name,"STREAM_STREAM") == 0) {
+	send_stream_stream();
+}
+else if (strcmp(test_name,"DG_STREAM") == 0) {
+	send_dg_stream();
+}
+#endif /* DO_UNIX */
+#ifdef DO_FORE
+else if (strcmp(test_name,"FORE_STREAM") == 0) {
+	send_fore_stream(host_name);
+}
+else if (strcmp(test_name,"FORE_RR") == 0) {
+	send_fore_rr(host_name);
+}
+#endif /* DO_FORE */
 else {
-	printf("unknown test name.\n");
+	printf("The test you requested is unknown to this netperf.\n");
+	printf("Please verify that you have the correct test name, \n");
+	printf("and that test family has been compiled into this netperf.\n");
 	exit(1);
 }
 return(0);

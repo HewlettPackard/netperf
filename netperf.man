@@ -6,16 +6,18 @@ netperf \- a network performance benchmark
 .SH SYNOPSIS
 
 .B netperf
-[-H remotehost] [-t testname ]
+[global options] -- [test specific options]
 
 .SH DESCRIPTION
 .B Netperf
 is a benchmark that can be used to measure various aspects of
 networking performance.
 Currently, its focus is on bulk data transfer and request/response
-performance using either TCP or UDP, and the Berkeley Sockets interface.
+performance using either TCP or UDP, and the Berkeley Sockets
+interface. In addition, tests with DLPI - either connection oriented,
+or connectionless, are included.
 
-.SS OPTIONS
+.SS GLOBAL OPTIONS
 
 .TP
 .B \-a sizespec
@@ -38,11 +40,9 @@ As -c, but for the remote system.
 Increase the quantity of debugging output displayed during
 a test (possibly at the expense of performance).
 .TP
-.B \-D
-Set the TCP_NODELAY option on both the local and remote systems.
-.TP
 .B \-f GMKgmk
-Change the units of measure for stream tests.
+Change the units of measure for stream tests. Capital letters are
+powers of two, lowercase are powers of ten.
 .TP
 .B \-h
 Display a usage string, and exit.
@@ -54,12 +54,6 @@ Set the hostname (or IP address) of the remote system.
 Specify the length of the test (default 10 seconds).
 A negative value sets the number of request/response transactions,
 or the number of bytes for a stream test.
-.TP
-.B \-m size
-Set the number of bytes in each send call (STREAM tests only).
-.TP
-.B \-M size
-Set the size of the receives on the remote system (STREAM tests only).
 .TP
 .B \-o sizespec
 Set an offset from the alignment specified with -a.
@@ -75,26 +69,27 @@ listening on the specified port, rather than using /etc/services.
 .B \-P 0|1
 Show (1) or suppress (0) the test banner.
 .TP
-.B \-r sizespec
-Set the size of requests and responses.
-This defaults to 100 bte requests, and 200 bytes responses.
-.TP
-.B \-s sizespec
-Set the send and receive socket buffer sizes for the local system.
-.TP
-.B \-S sizespec
-As -s, but for the remote system.
-.TP
 .B \-t testname
 Specify the test to perform.
-Valid testnames are:
+Valid testnames are (but not always compiled-in):
 .RS
 .RS
 .nf
 .I TCP_STREAM
 .I TCP_RR
+.I TCP_CRR
 .I UDP_STREAM
 .I UDP_RR
+.I DLCO_STREAM
+.I DLCO_RR
+.I DLCL_STREAM
+.I DLCL_RR
+.I STREAM_STREAM
+.I STREAM_RR
+.I DG_STREAM
+.I DG_RR
+.I FORE_STREAM
+.I FORE_RR
 .I LOC_CPU
 .I REM_CPU
 .fi
@@ -105,7 +100,23 @@ Valid testnames are:
 Set the verbosity level for the test (only with -P).
 .TP
 .B \-V
-Enable the copy-avoidance features (HP-UX 9.0 only).
+Enable the copy-avoidance features (HP-UX 9.0 and later only).
+
+.SS TEST SPECIFIC OPTIONS
+
+.TP
+.B \-h
+Display a usage string based on the test name set with -t, and exit.
+
+Please consult the netperf manual
+.I 
+Netperf: A Network Performance Benchamrk 
+(netperf.ps) for more information.
+
+.SH BUGS 
+There is a fairly large list of known defects and misfeatures in the
+manual. If you think you have found a bug, please send email to Rick
+Jones <raj@cup.hp.com>.
 
 .SH SEE ALSO
 .C netserver
@@ -121,3 +132,5 @@ Rick Jones	<raj@cup.hp.com>
 Karen Choy	HP IND
 .br
 Dave Shield	<daves@csc.liv.ac.uk>	(man pages)
+.br
+Others too numerous to mention here - see the ACKNWLDGMNTS file
