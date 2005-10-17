@@ -35,6 +35,12 @@
 extern char	host_name[HOSTNAMESIZE];/* remote host name or ip addr  */
 extern short	test_port;		/* where is the test waiting    */
 
+extern void     set_defaults();
+extern void     scan_cmd_line();
+extern void     dump_globals();
+extern void     break_args();
+extern void     print_netserver_usage();
+
 /* output controlling variables                                         */
 extern int
   debug,		/* debugging level			*/
@@ -116,9 +122,3 @@ extern int
 #endif /* DO_DLPI */
 
 #endif
-
-
-
-
-
-

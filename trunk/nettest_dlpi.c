@@ -22,7 +22,7 @@
 
 #ifdef DO_DLPI
 char	nettest_dlpi_id[]="\
-@(#)nettest_dlpi.c (c) Copyright 1993,1995 Hewlett-Packard Co. Version 2.0PL2";
+@(#)nettest_dlpi.c (c) Copyright 1993,1995 Hewlett-Packard Co. Version 2.1";
 
 #include <sys/types.h>
 #include <fcntl.h>
@@ -119,7 +119,7 @@ frames frames  bytes    secs.    %s/sec  \n\n";
 Recv   Send    Send                          Utilization    Service Demand\n\
 Window Window  Message  Elapsed              Send   Recv    Send    Recv\n\
 Size   Size    Size     Time     Throughput  local  remote  local   remote\n\
-frames frames  bytes    secs.    %-8.8s/s  %%      %%       ms/KB   ms/KB\n\n";
+frames frames  bytes    secs.    %-8.8s/s  %%      %%       us/KB   us/KB\n\n";
   
   char *cpu_fmt_0 =
     "%6.3f\n";
@@ -180,11 +180,11 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
   struct	dlpi_co_stream_results_struct	*dlpi_co_stream_result;
   
   dlpi_co_stream_request	= 
-    (struct dlpi_co_stream_request_struct *)netperf_request->test_specific_data;
+    (struct dlpi_co_stream_request_struct *)netperf_request.content.test_specific_data;
   dlpi_co_stream_response	=
-    (struct dlpi_co_stream_response_struct *)netperf_response->test_specific_data;
+    (struct dlpi_co_stream_response_struct *)netperf_response.content.test_specific_data;
   dlpi_co_stream_result	        = 
-    (struct dlpi_co_stream_results_struct *)netperf_response->test_specific_data;
+    (struct dlpi_co_stream_results_struct *)netperf_response.content.test_specific_data;
   
   if ( print_headers ) {
     fprintf(where,"DLPI CO STREAM TEST\n");
@@ -310,7 +310,7 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
   /* will indicate to the remote that no changes beyond the system's */
   /* default should be used. */
   
-  netperf_request->request_type	 =	DO_DLPI_CO_STREAM;
+  netperf_request.content.request_type	 =	DO_DLPI_CO_STREAM;
   dlpi_co_stream_request->send_win_size =	rsw_size;
   dlpi_co_stream_request->recv_win_size =	rrw_size;
   dlpi_co_stream_request->receive_size	 =	recv_size;
@@ -380,7 +380,7 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
   
   recv_response();
   
-  if (!netperf_response->serv_errno) {
+  if (!netperf_response.content.serv_errno) {
     if (debug)
       fprintf(where,"remote listen done.\n");
     rrw_size	=	dlpi_co_stream_response->recv_win_size;
@@ -389,7 +389,7 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
     remote_cpu_rate = 	dlpi_co_stream_response->cpu_rate;
   }
   else {
-    errno = netperf_response->serv_errno;
+    errno = netperf_response.content.serv_errno;
     perror("netperf: remote error");
     exit(1);
   }
@@ -523,12 +523,12 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
   /* wasn't supposed to care, it will return obvious values. */
   
   recv_response();
-  if (!netperf_response->serv_errno) {
+  if (!netperf_response.content.serv_errno) {
     if (debug)
       fprintf(where,"remote results obtained\n");
   }
   else {
-    errno = netperf_response->serv_errno;
+    errno = netperf_response.content.serv_errno;
     perror("netperf: remote error");
     
     exit(1);
@@ -706,9 +706,9 @@ int
   struct	dlpi_co_stream_response_struct	*dlpi_co_stream_response;
   struct	dlpi_co_stream_results_struct	*dlpi_co_stream_results;
   
-  dlpi_co_stream_request	= (struct dlpi_co_stream_request_struct *)netperf_request->test_specific_data;
-  dlpi_co_stream_response	= (struct dlpi_co_stream_response_struct *)netperf_response->test_specific_data;
-  dlpi_co_stream_results	= (struct dlpi_co_stream_results_struct *)netperf_response->test_specific_data;
+  dlpi_co_stream_request	= (struct dlpi_co_stream_request_struct *)netperf_request.content.test_specific_data;
+  dlpi_co_stream_response	= (struct dlpi_co_stream_response_struct *)netperf_response.content.test_specific_data;
+  dlpi_co_stream_results	= (struct dlpi_co_stream_results_struct *)netperf_response.content.test_specific_data;
   
   if (debug) {
     fprintf(where,"netserver: recv_dlpi_co_stream: entered...\n");
@@ -728,7 +728,7 @@ int
   /* the actual error we encountered, rather than some bogus unexpected */
   /* response type message. */
   
-  netperf_response->response_type = DLPI_CO_STREAM_RESPONSE;
+  netperf_response.content.response_type = DLPI_CO_STREAM_RESPONSE;
   
   /* We now alter the message_ptr variable to be at the desired */
   /* alignment with the desired offset. */
@@ -777,7 +777,7 @@ int
   data_descriptor = dl_open(dlpi_co_stream_request->dlpi_device,
 			    dlpi_co_stream_request->ppa);
   if (data_descriptor < 0) {
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
   }
@@ -850,7 +850,7 @@ int
     fflush(where);
   }
   
-  netperf_response->serv_errno   = 0;
+  netperf_response.content.serv_errno   = 0;
   
   /* But wait, there's more. If the initiator wanted cpu measurements, */
   /* then we must call the calibrate routine, which will return the max */
@@ -876,7 +876,7 @@ int
 	    "recv_dlpi_co_stream: error in accept, errno %d\n",
 	    errno);
     fflush(where);
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
   }
@@ -916,7 +916,7 @@ int
 	       0,
 	       &recv_message, 
 	       &flags) != 0) {
-      netperf_response->serv_errno = errno;
+      netperf_response.content.serv_errno = errno;
       send_response();
       exit(1);
     }
@@ -950,7 +950,7 @@ int
   /* we have received all the data sent. */
   
   if (close(data_descriptor) == -1) {
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
   }
@@ -1010,7 +1010,7 @@ int send_dlpi_co_rr(remote_host)
  Local /Remote\n\
  Window Size   Request Resp.  Elapsed Trans.   CPU    CPU    S.dem   S.dem\n\
  Send   Recv   Size    Size   Time    Rate     local  remote local   remote\n\
- frames frames bytes   bytes  secs.   per sec  %%      %%      ms/Tr   ms/Tr\n\n";
+ frames frames bytes   bytes  secs.   per sec  %%      %%      us/Tr   us/Tr\n\n";
   
   char *cpu_fmt_0 =
     "%6.3f\n";
@@ -1061,11 +1061,11 @@ int send_dlpi_co_rr(remote_host)
   struct	dlpi_co_rr_results_struct	*dlpi_co_rr_result;
   
   dlpi_co_rr_request	= 
-    (struct dlpi_co_rr_request_struct *)netperf_request->test_specific_data;
+    (struct dlpi_co_rr_request_struct *)netperf_request.content.test_specific_data;
   dlpi_co_rr_response	= 
-    (struct dlpi_co_rr_response_struct *)netperf_response->test_specific_data;
+    (struct dlpi_co_rr_response_struct *)netperf_response.content.test_specific_data;
   dlpi_co_rr_result	= 
-    (struct dlpi_co_rr_results_struct *)netperf_response->test_specific_data;
+    (struct dlpi_co_rr_results_struct *)netperf_response.content.test_specific_data;
   
   /* since we are now disconnected from the code that established the */
   /* control socket, and since we want to be able to use different */
@@ -1191,7 +1191,7 @@ int send_dlpi_co_rr(remote_host)
   /* default should be used. Alignment is the exception, it will */
   /* default to 8, which will be no alignment alterations. */
   
-  netperf_request->request_type	        =	DO_DLPI_CO_RR;
+  netperf_request.content.request_type	        =	DO_DLPI_CO_RR;
   dlpi_co_rr_request->recv_win_size	=	rrw_size;
   dlpi_co_rr_request->send_win_size	=	rsw_size;
   dlpi_co_rr_request->recv_alignment	=	remote_recv_align;
@@ -1257,7 +1257,7 @@ int send_dlpi_co_rr(remote_host)
   
   recv_response();
   
-  if (!netperf_response->serv_errno) {
+  if (!netperf_response.content.serv_errno) {
     if (debug)
       fprintf(where,"remote listen done.\n");
     rrw_size	=	dlpi_co_rr_response->recv_win_size;
@@ -1267,7 +1267,7 @@ int send_dlpi_co_rr(remote_host)
     
   }
   else {
-    errno = netperf_response->serv_errno;
+    errno = netperf_response.content.serv_errno;
     perror("netperf: remote error");
     
     exit(1);
@@ -1400,12 +1400,12 @@ int send_dlpi_co_rr(remote_host)
   /* wasn't supposed to care, it will return obvious values. */
   
   recv_response();
-  if (!netperf_response->serv_errno) {
+  if (!netperf_response.content.serv_errno) {
     if (debug)
       fprintf(where,"remote results obtained\n");
   }
   else {
-    errno = netperf_response->serv_errno;
+    errno = netperf_response.content.serv_errno;
     perror("netperf: remote error");
     
     exit(1);
@@ -1586,7 +1586,7 @@ frames  bytes    secs            #      #   %s/sec\n\n";
   char *cpu_title =
     "Window  Message  Elapsed      Messages                   CPU     Service\n\
 Size    Size     Time         Okay Errors   Throughput   Util    Demand\n\
-frames  bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
+frames  bytes    secs            #      #   %s/sec   %%       us/KB\n\n";
   
   char *cpu_fmt_0 =
     "%6.2f\n";
@@ -1635,9 +1635,9 @@ frames  bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
   struct	dlpi_cl_stream_response_struct	*dlpi_cl_stream_response;
   struct	dlpi_cl_stream_results_struct	*dlpi_cl_stream_results;
   
-  dlpi_cl_stream_request	= (struct dlpi_cl_stream_request_struct *)netperf_request->test_specific_data;
-  dlpi_cl_stream_response	= (struct dlpi_cl_stream_response_struct *)netperf_response->test_specific_data;
-  dlpi_cl_stream_results	= (struct dlpi_cl_stream_results_struct *)netperf_response->test_specific_data;
+  dlpi_cl_stream_request	= (struct dlpi_cl_stream_request_struct *)netperf_request.content.test_specific_data;
+  dlpi_cl_stream_response	= (struct dlpi_cl_stream_response_struct *)netperf_response.content.test_specific_data;
+  dlpi_cl_stream_results	= (struct dlpi_cl_stream_results_struct *)netperf_response.content.test_specific_data;
   
   if ( print_headers ) {
     printf("DLPI CL UNIDIRECTIONAL SEND TEST\n");
@@ -1736,7 +1736,7 @@ frames  bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
   /* Of course this is a datagram service so no connection is actually */
   /* set up, the server just sets up the socket and binds it. */
   
-  netperf_request->request_type                 = DO_DLPI_CL_STREAM;
+  netperf_request.content.request_type                 = DO_DLPI_CL_STREAM;
   dlpi_cl_stream_request->recv_win_size	        = rrw_size;
   dlpi_cl_stream_request->message_size	        = send_size;
   dlpi_cl_stream_request->recv_alignment	= remote_recv_align;
@@ -1786,12 +1786,12 @@ frames  bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
   
   recv_response();
   
-  if (!netperf_response->serv_errno) {
+  if (!netperf_response.content.serv_errno) {
     if (debug)
       fprintf(where,"send_dlpi_cl_stream: remote data connection done.\n");
   }
   else {
-    errno = netperf_response->serv_errno;
+    errno = netperf_response.content.serv_errno;
     perror("send_dlpi_cl_stream: error on remote");
     exit(1);
   }
@@ -1901,12 +1901,12 @@ frames  bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
   
   /* Get the statistics from the remote end	*/
   recv_response();
-  if (!netperf_response->serv_errno) {
+  if (!netperf_response.content.serv_errno) {
     if (debug)
       fprintf(where,"send_dlpi_cl_stream: remote results obtained\n");
   }
   else {
-    errno = netperf_response->serv_errno;
+    errno = netperf_response.content.serv_errno;
     perror("send_dlpi_cl_stream: error on remote");
     exit(1);
   }
@@ -2061,9 +2061,9 @@ int
   struct	dlpi_cl_stream_response_struct	*dlpi_cl_stream_response;
   struct	dlpi_cl_stream_results_struct	*dlpi_cl_stream_results;
   
-  dlpi_cl_stream_request	= (struct dlpi_cl_stream_request_struct *)netperf_request->test_specific_data;
-  dlpi_cl_stream_response	= (struct dlpi_cl_stream_response_struct *)netperf_response->test_specific_data;
-  dlpi_cl_stream_results	= (struct dlpi_cl_stream_results_struct *)netperf_response->test_specific_data;
+  dlpi_cl_stream_request	= (struct dlpi_cl_stream_request_struct *)netperf_request.content.test_specific_data;
+  dlpi_cl_stream_response	= (struct dlpi_cl_stream_response_struct *)netperf_response.content.test_specific_data;
+  dlpi_cl_stream_results	= (struct dlpi_cl_stream_results_struct *)netperf_response.content.test_specific_data;
   
   if (debug) {
     fprintf(where,"netserver: recv_dlpi_cl_stream: entered...\n");
@@ -2088,7 +2088,7 @@ int
     fflush(where);
   }
   
-  netperf_response->response_type = DLPI_CL_STREAM_RESPONSE;
+  netperf_response.content.response_type = DLPI_CL_STREAM_RESPONSE;
   
   if (debug > 2) {
     fprintf(where,"recv_dlpi_cl_stream: the response type is set...\n");
@@ -2160,7 +2160,7 @@ int
   data_descriptor = dl_open(dlpi_cl_stream_request->dlpi_device,
 			    dlpi_cl_stream_request->ppa);
   if (data_descriptor < 0) {
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
   }
@@ -2198,7 +2198,7 @@ int
     exit(1);
   }
   
-  netperf_response->serv_errno   = 0;
+  netperf_response.content.serv_errno   = 0;
   
   /* But wait, there's more. If the initiator wanted cpu measurements, */
   /* then we must call the calibrate routine, which will return the max */
@@ -2252,7 +2252,7 @@ int
 	      errno,
 	      data_ind->dl_primitive);
       fflush(where);
-      netperf_response->serv_errno = 996;
+      netperf_response.content.serv_errno = 996;
       send_response();
       exit(1);
     }
@@ -2295,7 +2295,7 @@ int
     fflush(where);
   }
   
-  netperf_response->response_type		= DLPI_CL_STREAM_RESULTS;
+  netperf_response.content.response_type		= DLPI_CL_STREAM_RESULTS;
   dlpi_cl_stream_results->bytes_received	= bytes_received;
   dlpi_cl_stream_results->messages_recvd	= messages_recvd;
   dlpi_cl_stream_results->elapsed_time	= elapsed_time;
@@ -2338,7 +2338,7 @@ frames frames bytes    bytes   secs.    per sec   \n\n";
 Local /Remote\n\
 Window Size   Request Resp.  Elapsed Trans.   CPU    CPU    S.dem   S.dem\n\
 Send   Recv   Size    Size   Time    Rate     local  remote local   remote\n\
-frames frames bytes   bytes  secs.   per sec  %%      %%      ms/Tr   ms/Tr\n\n";
+frames frames bytes   bytes  secs.   per sec  %%      %%      us/Tr   us/Tr\n\n";
   
   char *cpu_fmt_0 =
     "%6.3f\n";
@@ -2406,11 +2406,11 @@ Send   Recv    Send   Recv\n\
   struct	dlpi_cl_rr_results_struct	*dlpi_cl_rr_result;
   
   dlpi_cl_rr_request	= 
-    (struct dlpi_cl_rr_request_struct *)netperf_request->test_specific_data;
+    (struct dlpi_cl_rr_request_struct *)netperf_request.content.test_specific_data;
   dlpi_cl_rr_response	= 
-    (struct dlpi_cl_rr_response_struct *)netperf_response->test_specific_data;
+    (struct dlpi_cl_rr_response_struct *)netperf_response.content.test_specific_data;
   dlpi_cl_rr_result	= 
-    (struct dlpi_cl_rr_results_struct *)netperf_response->test_specific_data;
+    (struct dlpi_cl_rr_results_struct *)netperf_response.content.test_specific_data;
   
   /* we want to zero out the times, so we can detect unused entries. */
 #ifdef INTERVALS
@@ -2420,7 +2420,7 @@ Send   Recv    Send   Recv\n\
     time_index += 1;
   }
   time_index = 0;
-#endif /* INTERVALS *?
+#endif /* INTERVALS */
   
   if (print_headers) {
     fprintf(where,"DLPI CL REQUEST/RESPONSE TEST\n");
@@ -2549,7 +2549,7 @@ Send   Recv    Send   Recv\n\
   /* default should be used. Alignment is the exception, it will */
   /* default to 8, which will be no alignment alterations. */
   
-  netperf_request->request_type	        =	DO_DLPI_CL_RR;
+  netperf_request.content.request_type	        =	DO_DLPI_CL_RR;
   dlpi_cl_rr_request->recv_win_size	=	rrw_size;
   dlpi_cl_rr_request->send_win_size	=	rsw_size;
   dlpi_cl_rr_request->recv_alignment	=	remote_recv_align;
@@ -2616,7 +2616,7 @@ Send   Recv    Send   Recv\n\
   
   recv_response();
   
-  if (!netperf_response->serv_errno) {
+  if (!netperf_response.content.serv_errno) {
     if (debug)
       fprintf(where,"remote listen done.\n");
     rrw_size	=	dlpi_cl_rr_response->recv_win_size;
@@ -2637,7 +2637,7 @@ Send   Recv    Send   Recv\n\
       data_req->dl_dest_addr_length;
   }
   else {
-    errno = netperf_response->serv_errno;
+    errno = netperf_response.content.serv_errno;
     perror("netperf: remote error");
     exit(1);
   }
@@ -2777,12 +2777,12 @@ Send   Recv    Send   Recv\n\
   /* wasn't supposed to care, it will return obvious values. */
   
   recv_response();
-  if (!netperf_response->serv_errno) {
+  if (!netperf_response.content.serv_errno) {
     if (debug)
       fprintf(where,"remote results obtained\n");
   }
   else {
-    errno = netperf_response->serv_errno;
+    errno = netperf_response.content.serv_errno;
     perror("netperf: remote error");
     
     exit(1);
@@ -2978,11 +2978,11 @@ int
   struct	dlpi_cl_rr_results_struct	*dlpi_cl_rr_results;
   
   dlpi_cl_rr_request  = 
-    (struct dlpi_cl_rr_request_struct *)netperf_request->test_specific_data;
+    (struct dlpi_cl_rr_request_struct *)netperf_request.content.test_specific_data;
   dlpi_cl_rr_response = 
-    (struct dlpi_cl_rr_response_struct *)netperf_response->test_specific_data;
+    (struct dlpi_cl_rr_response_struct *)netperf_response.content.test_specific_data;
   dlpi_cl_rr_results  = 
-    (struct dlpi_cl_rr_results_struct *)netperf_response->test_specific_data;
+    (struct dlpi_cl_rr_results_struct *)netperf_response.content.test_specific_data;
   
   if (debug) {
     fprintf(where,"netserver: recv_dlpi_cl_rr: entered...\n");
@@ -3007,7 +3007,7 @@ int
     fflush(where);
   }
   
-  netperf_response->response_type = DLPI_CL_RR_RESPONSE;
+  netperf_response.content.response_type = DLPI_CL_RR_RESPONSE;
   
   if (debug) {
     fprintf(where,"recv_dlpi_cl_rr: the response type is set...\n");
@@ -3087,7 +3087,7 @@ int
   data_descriptor = dl_open(dlpi_cl_rr_request->dlpi_device,
 			    dlpi_cl_rr_request->ppa);
   if (data_descriptor < 0) {
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
   }
@@ -3131,7 +3131,7 @@ int
     exit(1);
   }
   
-  netperf_response->serv_errno   = 0;
+  netperf_response.content.serv_errno   = 0;
   
   /* But wait, there's more. If the initiator wanted cpu measurements, */
   /* then we must call the calibrate routine, which will return the max */
@@ -3185,7 +3185,7 @@ else {
 	      "                 recevied %u transactions\n",
 	      trans_received);
       fflush(where);
-      netperf_response->serv_errno = 995;
+      netperf_response.content.serv_errno = 995;
       send_response();
       exit(1);
     }
@@ -3215,7 +3215,7 @@ else {
 	      "dlpi_recv_cl_rr: putmsg failure: errno %d\n",
 	      errno);
       fflush(where);
-      netperf_response->serv_errno = 993;
+      netperf_response.content.serv_errno = 993;
       send_response();
       exit(1);
     }
@@ -3299,9 +3299,9 @@ int
   struct	dlpi_co_rr_response_struct	*dlpi_co_rr_response;
   struct	dlpi_co_rr_results_struct	*dlpi_co_rr_results;
   
-  dlpi_co_rr_request	= (struct dlpi_co_rr_request_struct *)netperf_request->test_specific_data;
-  dlpi_co_rr_response	= (struct dlpi_co_rr_response_struct *)netperf_response->test_specific_data;
-  dlpi_co_rr_results	= (struct dlpi_co_rr_results_struct *)netperf_response->test_specific_data;
+  dlpi_co_rr_request	= (struct dlpi_co_rr_request_struct *)netperf_request.content.test_specific_data;
+  dlpi_co_rr_response	= (struct dlpi_co_rr_response_struct *)netperf_response.content.test_specific_data;
+  dlpi_co_rr_results	= (struct dlpi_co_rr_results_struct *)netperf_response.content.test_specific_data;
   
   if (debug) {
     fprintf(where,"netserver: recv_dlpi_co_rr: entered...\n");
@@ -3326,7 +3326,7 @@ int
     fflush(where);
   }
   
-  netperf_response->response_type = DLPI_CO_RR_RESPONSE;
+  netperf_response.content.response_type = DLPI_CO_RR_RESPONSE;
   
   if (debug) {
     fprintf(where,"recv_dlpi_co_rr: the response type is set...\n");
@@ -3413,7 +3413,7 @@ int
   
   if ((data_descriptor = dl_open(dlpi_co_rr_request->dlpi_device,
 				 dlpi_co_rr_request->ppa)) < 0) {
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
   }
@@ -3425,7 +3425,7 @@ int
               DL_CODLS,
               (char *)dlpi_co_rr_response->station_addr,
               &dlpi_co_rr_response->station_addr_len) != 0) {
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
   }
@@ -3479,7 +3479,7 @@ int
 #endif
   }
   
-  netperf_response->serv_errno   = 0;
+  netperf_response.content.serv_errno   = 0;
   
   /* But wait, there's more. If the initiator wanted cpu measurements, */
   /* then we must call the calibrate routine, which will return the max */
@@ -3504,7 +3504,7 @@ int
 	    "recv_dlpi_co_rr: error in accept, errno %d\n",
 	    errno);
     fflush(where);
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
   }
@@ -3557,7 +3557,7 @@ else {
 	  fflush(where);
         }
 	
-	netperf_response->serv_errno = errno;
+	netperf_response.content.serv_errno = errno;
 	send_response();
 	exit(1);
       }
@@ -3588,7 +3588,7 @@ else {
 	timed_out = 1;
 	break;
       }
-      netperf_response->serv_errno = 994;
+      netperf_response.content.serv_errno = 994;
       send_response();
       exit(1);
     }

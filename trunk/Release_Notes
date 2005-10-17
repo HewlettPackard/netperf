@@ -1,51 +1,77 @@
 
-These are the Release Notes for the 2.0PL2 revision of netperf:
+These are the Release Notes for the 2.1 revision of netperf:
 
 Things Changed in this release:
 
-*) Netperf.ps is a dummy file in this patch release. If you want the
-   manual, either consult the Web page, or grab an earlier 2.0
-   release.
+*) The XTI (Version 2 of the spec) tests are now documented in the
+   manual. 
 
-*) fixed the looper process CPU util for SGI Irix, thanks to pointers
-   from folks on the net on how to do it. It should now be both
-   accurate, and unobtrusive.
+*) The TCP_CRR (Connect Request/Response) test is now documented in
+   the manual, including a description of how it mimics the behaviour
+   of http (the protocol underlying the WWW).
 
-*) added similar looper process code for AIX - untested. Feedback
-   appreciated.
+*) Support for for Windows NT 3.51 OS in the BSD Sockets tests (ok, so
+   they are really Winsock in that case :). Other test suites may be
+   ported as required/desired/appropriate. 
 
-*) fixed a bug in the CPU utilization code when the soaker gets zero
-   CPU time. Exposed on Digital Unix where nice(39) is *really*
-   effective...
+*) Tests for TCP and UDP, using the IPv6 extensions to BSD sockets are
+   included in this release. They are included by adding -DUSE_IPv6 to
+   the makefile and recompiling.
 
-*) fixed a bug where netperf -t REM_CPU would leave the soaker
-   proceses behind after the test, and not cleanup the
-   /tmp/netperf_cpu file. There is still a problem with trying to
-   measure CPU on both sides of a loopback test.
+*) Support for a "long long" datatype should only be required for
+   -DUSE_PSTAT compilation which is an HP-UX only thing. The
+   *unbundled* HP compilers from at least "HP92453-01 A.09.61 HP C
+   Compiler" and later should have the required support. The bundled
+   compiler may not. GCC should work - check the archives listed in
+   the comp.sys.hp.hpux FAQ for copies. The FAQ is archived on
+   rtfm.mit.edu under the path pub/usenet/comp.sys.hp.hpux.
 
-*) started fixing bugs where sockets were left behind, precluding
-   running more than ~57 iterations for a confidence interval test.
-   initially pointed-out by Jim Yun. some of these may not have been
-   found by the time PL2 is released. Of course, the code also limits
-   the max iterations to 32, so it should be rather rare that someone
-   hits this.
+*) A "proper" fix for double data type alignment has been included.
 
-*) added progress indications to snapshot_script so people can know
-   that the script is making forward progress. These indications go to
-   stderr.
+*) A new script is included with this release which can be used to
+   measure aggregate TCP_RR performance (multiple, concurrent
+   instances of the TCP_RR test). A related use of this script would
+   be measuring MP scaling. A single-byte TCP_RR test is good for this
+   purpose for two reasons:
 
-*) changed the permissions on the debug file
+      1) it excercises the control/protocol paths heavily without
+         using much in the way of data copies which may be easier to
+         scale.
+      2) most systems can easily saturate cards with bandwidth, but
+         not so easily with request/response
 
-*) just saying "./netserver" should be enough to start the standalone
-   daemon  
+   Of course, feedback on this is most welcome.
+
+*) When measuring CPU utilization, the units for service demand have
+   been changed from milliseconds (designated ms) of CPU per unit (KB
+   or Transaction) to microseconds (desginated us).
+
+*) For accurate reporting of service demand, netperf needs to know the
+   number of CPU's present on a system. On some systems (HP-UX), this
+   is automatic. For others (All), it is necessary to add a global "-n
+   <numcpu>" option to both netperf and netserver.
+
+   !! IF THIS IS LEFT-OUT CPU UTILIZATION AND SERVICE DEMAND FOR !!
+	     !! MULTI-PROCESSOR SYSTEMS WILL BE WRONG. !!
+
+   If you know of ways to programatically determine the number of
+   active CPUs on a system, please let the author Rick Jones
+   <raj@cup.hp.com> know.
 
 *) other things I've probably forgotten :)
 
 Things Not Changed in this release:
 
-*) USE_LOOPER and USE_PSTAT still require support for "long long"
+*) The ancillary test suites are essentially unchanged - DLPI,
+   HiPPI/LLA, Unix Domain, and Fore ATM API. Unless there is much
+   interest expressed in these tests, 2.1 may be the last release in
+   which they are included. The order of retirement would likely be
+   Unix Domain, HiPPI/LLA, Fore ATM API, and then DLPI.
 
-*) Still seem to be problems with Solaris 2.[34] and gcc 2.6.3 and
-   2.7.0. I am unsure if this is Solaris, gcc, or netperf. Netperf
-   appears to work with the Sun compilers.
+Miscelaneous Comments:
 
+*) The -DUSE_LOOPER CPU utilization _seems_ to be nice and low-impact
+   on HP-UX, Digital Unix, and IRIX. It does not yet seem to be
+   low-impact on Solaris (I need an example of priocntl usage), AIX
+   (setpri only works if you are root), and NT (not sure of the
+   reason). Help with those problems would be most appreciated.

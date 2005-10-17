@@ -3,11 +3,11 @@
 */
 
 /* library routine specifc defines                                      */
-#define         MAXSPECDATA     14      /* how many ints worth of data  */
+#define         MAXSPECDATA     62      /* how many ints worth of data  */
                                         /* can tests send...            */
 #define         MAXTIMES        4       /* how many times may we loop   */
                                         /* to calibrate                 */
-#define         MAXCPUS         32      /* how amny CPU's can we track */
+#define         MAXCPUS         32      /* how many CPU's can we track */
 #define         MAXMESSAGESIZE  65536
 #define         MAXALIGNMENT    16384
 #define         MAXOFFSET        4096
@@ -115,6 +115,30 @@
 #define         TCP_NBRR_RESPONSE       74
 #define         TCP_NBRR_RESULTS        75
 
+#define         DO_TCPIPV6_STREAM           76
+#define         TCPIPV6_STREAM_RESPONSE     77
+#define         TCPIPV6_STREAM_RESULTS      78
+
+#define         DO_TCPIPV6_RR               79
+#define         TCPIPV6_RR_RESPONSE         80
+#define         TCPIPV6_RR_RESULTS          81
+
+#define         DO_UDPIPV6_STREAM           82
+#define         UDPIPV6_STREAM_RESPONSE     83
+#define         UDPIPV6_STREAM_RESULTS      84
+
+#define         DO_UDPIPV6_RR               85
+#define         UDPIPV6_RR_RESPONSE         86
+#define         UDPIPV6_RR_RESULTS          87
+
+#define         DO_TCPIPV6_CRR               88
+#define         TCPIPV6_CRR_RESPONSE         89
+#define         TCPIPV6_CRR_RESULTS          90
+
+#define         DO_TCPIPV6_TRR               91
+#define         TCPIPV6_TRR_RESPONSE         92
+#define         TCPIPV6_TRR_RESULTS          93
+
 #define         DO_LWPSTR_STREAM           100
 #define         LWPSTR_STREAM_RESPONSE     110
 #define         LWPSTR_STREAM_RESULTS      120
@@ -131,15 +155,28 @@
 #define         LWPDG_RR_RESPONSE         200
 #define         LWPDG_RR_RESULTS          210
 
-struct netperf_request_struct {
-        int     request_type;
-        int     test_specific_data[MAXSPECDATA];
+ /* some of the fields in these structures are going to be doubles and */
+ /* such. so, we probably want to ensure that they will start on */
+ /* "double" boundaries. this will break compatability to pre-2.1 */
+ /* releases, but then, backwards compatability has never been a */
+ /* stated goal of netperf. raj 11/95 */
+
+union netperf_request_struct {
+  struct {
+    int     request_type;
+    int     dummy;
+    int     test_specific_data[MAXSPECDATA];
+  } content;
+  double dummy;
 };
 
-struct netperf_response_struct {
-        int response_type;
-        int serv_errno;
-        int test_specific_data[MAXSPECDATA];
+union netperf_response_struct {
+  struct {
+    int response_type;
+    int serv_errno;
+    int test_specific_data[MAXSPECDATA];
+  } content;
+  double dummy;
 };
 
 struct ring_elt {
@@ -156,21 +193,60 @@ struct ring_elt {
 #define TIMES           3
 #define LOOPER          4
 #define GETRUSAGE       5
+#define NT_METHOD       6
+
+#define BADCH ('?')
 
 #ifndef NETLIB
+#ifdef WIN32
+#ifndef _GETOPT_
+#define _GETOPT_
 
-extern  struct netperf_request_struct *netperf_request;
-extern  struct netperf_response_struct *netperf_response;
+int getopt(int argc, char **argv, char *optstring);
+
+extern char *optarg;		/* returned arg to go with this option */
+extern int optind;		/* index to next argv element to process */
+extern int opterr;		/* should error messages be printed? */
+extern int optopt;		/* */
+
+#endif /* _GETOPT_ */
+
+extern  int     win_kludge_socket;
+#endif /* WIN32 */
+
+extern  union netperf_request_struct netperf_request;
+extern  union netperf_response_struct netperf_response;
 
 extern  char    libfmt;
 
 extern  int     cpu_method;
+extern  int     lib_num_loc_cpus;
 extern  int     server_sock;
 extern  int     times_up;
+extern  FILE    *where;
+extern  int     loops_per_msec;
+  
+extern  void    netlib_init();
+extern  void    install_signal_catchers();
+extern  void    establish_control();
+extern  void    shutdown_control();
+extern  void    init_stat();
+extern  void    send_request();
+extern  void    recv_response();
+extern  void    send_response();
+extern  void    recv_request();
+extern  void    dump_request();
+extern  void    start_timer();
+extern  void    stop_timer();
+extern  void    cpu_start();
+extern  void    cpu_stop();
+extern  void    calculate_confidence();
+extern  void    retrieve_confident_values();
+extern  void    display_confidence();
+extern  char   *format_units();
 
 extern  double  ntohd();
 extern  double  htond();
-extern  FILE    *where;
 extern  void    libmain();
 extern  double  calc_thruput();
 extern  float   calc_xfered();
@@ -185,7 +261,6 @@ extern  int     dl_bind();
 extern  int     dl_open();
 extern  char    format_cpu_method();
 extern unsigned int convert();
-extern  int     loops_per_msec;
 
  /* these are all for the confidence interval stuff */
 extern double confidence;

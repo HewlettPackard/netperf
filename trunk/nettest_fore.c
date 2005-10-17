@@ -5,7 +5,7 @@
 #endif /* lint */
 #ifdef DO_FORE
 char	nettest_fore[]="\
-@(#)nettest_fore.c (c) Copyright 1994,1995 Hewlett-Packard Co. Version 2.0PL2";
+@(#)nettest_fore.c (c) Copyright 1994,1995 Hewlett-Packard Co. Version 2.1";
      
 /****************************************************************/
 /*								*/
@@ -209,7 +209,7 @@ bytes   bytes    secs            #      #   %s/sec\n\n";
   char *cpu_title =
     "Socket  Message  Elapsed      Messages                   CPU     Service\n\
 Size    Size     Time         Okay Errors   Throughput   Util    Demand\n\
-bytes   bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
+bytes   bytes    secs            #      #   %s/sec   %%       us/KB\n\n";
   
   char *cpu_fmt_0 =
     "%6.2f\n";
@@ -255,11 +255,11 @@ bytes   bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
   init_test_vars();
 
   fore_stream_request	= 
-    (struct fore_stream_request_struct *)netperf_request->test_specific_data;
+    (struct fore_stream_request_struct *)netperf_request.content.test_specific_data;
   fore_stream_response	= 
-    (struct fore_stream_response_struct *)netperf_response->test_specific_data;
+    (struct fore_stream_response_struct *)netperf_response.content.test_specific_data;
   fore_stream_results	= 
-    (struct fore_stream_results_struct *)netperf_response->test_specific_data;
+    (struct fore_stream_results_struct *)netperf_response.content.test_specific_data;
   
   bzero((char *)&server,
 	sizeof(server));
@@ -342,7 +342,7 @@ bytes   bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
   /* Of course this is a datagram service so no connection is actually */
   /* set up, the server just sets up the socket and binds it. */
   
-  netperf_request->request_type = DO_FORE_STREAM;
+  netperf_request.content.request_type = DO_FORE_STREAM;
   fore_stream_request->message_size	= send_size;
   fore_stream_request->recv_alignment	= remote_recv_align;
   fore_stream_request->recv_offset	= remote_recv_offset;
@@ -385,12 +385,12 @@ bytes   bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
   /* atm_errno and a unix errno. perhaps I'll make one negative or */
   /* something raj 8/94 in the meantime, I'll just live with bogus */
   /* error messages */
-  if (!netperf_response->serv_errno) {
+  if (!netperf_response.content.serv_errno) {
     if (debug)
       fprintf(where,"send_fore_stream: remote data connection done.\n");
   }
   else {
-    errno = netperf_response->serv_errno;
+    errno = netperf_response.content.serv_errno;
     perror("send_fore_stream: error on remote");
     exit(1);
   }
@@ -503,12 +503,12 @@ bytes   bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
   
   /* Get the statistics from the remote end	*/
   recv_response();
-  if (!netperf_response->serv_errno) {
+  if (!netperf_response.content.serv_errno) {
     if (debug)
       fprintf(where,"send_fore_stream: remote results obtained\n");
   }
   else {
-    errno = netperf_response->serv_errno;
+    errno = netperf_response.content.serv_errno;
     perror("send_fore_stream: error on remote");
     exit(1);
   }
@@ -550,7 +550,8 @@ bytes   bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
       local_cpu_utilization	= calc_cpu_util(0.0);
       local_service_demand	= calc_service_demand(bytes_sent,
 						      0.0,
-						      0.0);
+						      0.0,
+						      0);
     }
     else {
       local_cpu_utilization	= -1.0;
@@ -570,7 +571,8 @@ bytes   bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
       remote_cpu_utilization	= fore_stream_results->cpu_util;
       remote_service_demand	= calc_service_demand(bytes_recvd,
 						      0.0,
-						      remote_cpu_utilization);
+						      remote_cpu_utilization,
+						      fore_stream_results->num_cpus);
     }
     else {
       remote_cpu_utilization	= -1.0;
@@ -678,11 +680,11 @@ recv_fore_stream()
   init_test_vars();
 
   fore_stream_request  = 
-    (struct fore_stream_request_struct *)netperf_request->test_specific_data;
+    (struct fore_stream_request_struct *)netperf_request.content.test_specific_data;
   fore_stream_response = 
-    (struct fore_stream_response_struct *)netperf_response->test_specific_data;
+    (struct fore_stream_response_struct *)netperf_response.content.test_specific_data;
   fore_stream_results  = 
-    (struct fore_stream_results_struct *)netperf_response->test_specific_data;
+    (struct fore_stream_results_struct *)netperf_response.content.test_specific_data;
   
   if (debug) {
     fprintf(where,"netserver: recv_fore_stream: entered...\n");
@@ -707,7 +709,7 @@ recv_fore_stream()
     fflush(where);
   }
   
-  netperf_response->response_type = FORE_STREAM_RESPONSE;
+  netperf_response.content.response_type = FORE_STREAM_RESPONSE;
   
   if (debug > 2) {
     fprintf(where,"recv_fore_stream: the response type is set...\n");
@@ -774,7 +776,7 @@ recv_fore_stream()
   s_data = create_fore_socket();
   
   if (s_data < 0) {
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
   }
@@ -790,14 +792,14 @@ recv_fore_stream()
 	       loc_atm_sap,
 	       (Atm_sap *)(&fore_stream_response->server_asap),
 	       1) == -1) {
-    netperf_response->serv_errno = atm_errno;
+    netperf_response.content.serv_errno = atm_errno;
     send_response();
     exit(1);
   }
   
   fore_stream_response->test_length = fore_stream_request->test_length;
   
-  netperf_response->serv_errno   = 0;
+  netperf_response.content.serv_errno   = 0;
   
   /* But wait, there's more. If the initiator wanted cpu measurements, */
   /* then we must call the calibrate routine, which will return the max */
@@ -836,7 +838,7 @@ recv_fore_stream()
 	    "netperf: recv_fore_stream: atm_listen: atm_errno = %d\n",
 	    atm_errno);
     fflush(where);
-    netperf_response->serv_errno = atm_errno;
+    netperf_response.content.serv_errno = atm_errno;
     send_response();
     exit(1);
   }
@@ -853,7 +855,7 @@ recv_fore_stream()
 	    "netperf: recv_fore_stream: atm_accept: atm_errno = %d\n",
 	    atm_errno);
     fflush(where);
-    netperf_response->serv_errno = atm_errno;
+    netperf_response.content.serv_errno = atm_errno;
     send_response();
     exit(1);
   }
@@ -882,7 +884,7 @@ recv_fore_stream()
 			recv_ring->buffer_ptr,
 			message_size)) != message_size) {
       if ((len == -1) && (errno != EINTR)) {
-	netperf_response->serv_errno = atm_errno;
+	netperf_response.content.serv_errno = atm_errno;
 	send_response();
 	exit(1);
       }
@@ -929,7 +931,7 @@ recv_fore_stream()
     fflush(where);
   }
   
-  netperf_response->response_type	= FORE_STREAM_RESULTS;
+  netperf_response.content.response_type	= FORE_STREAM_RESULTS;
   fore_stream_results->bytes_received	= bytes_received;
   fore_stream_results->messages_recvd	= messages_recvd;
   fore_stream_results->elapsed_time	= elapsed_time;
@@ -1034,11 +1036,11 @@ Send   Recv    Send   Recv\n\
   init_test_vars();
 
   fore_rr_request  =
-    (struct fore_rr_request_struct *)netperf_request->test_specific_data;
+    (struct fore_rr_request_struct *)netperf_request.content.test_specific_data;
   fore_rr_response =
-    (struct fore_rr_response_struct *)netperf_response->test_specific_data;
+    (struct fore_rr_response_struct *)netperf_response.content.test_specific_data;
   fore_rr_result	 =
-    (struct fore_rr_results_struct *)netperf_response->test_specific_data;
+    (struct fore_rr_results_struct *)netperf_response.content.test_specific_data;
   
   /* we want to zero out the times, so we can detect unused entries. */
 #ifdef INTERVALS
@@ -1145,7 +1147,7 @@ Send   Recv    Send   Recv\n\
   /* default should be used. Alignment is the exception, it will */
   /* default to 8, which will be no alignment alterations. */
   
-  netperf_request->request_type	  =	DO_FORE_RR;
+  netperf_request.content.request_type	  =	DO_FORE_RR;
   fore_rr_request->recv_buf_size  =	desired_atm_qos.mean_burst.target;
   fore_rr_request->send_buf_size  =	desired_atm_qos.mean_burst.target;
   fore_rr_request->recv_alignment =	remote_recv_align;
@@ -1210,7 +1212,7 @@ Send   Recv    Send   Recv\n\
   
   recv_response();
   
-  if (!netperf_response->serv_errno) {
+  if (!netperf_response.content.serv_errno) {
     if (debug)
       fprintf(where,"remote listen done.\n");
     desired_atm_qos.mean_burst.target = fore_rr_response->recv_buf_size;
@@ -1220,7 +1222,7 @@ Send   Recv    Send   Recv\n\
     server.asap     = fore_rr_response->server_asap;
   }
   else {
-    errno = netperf_response->serv_errno;
+    errno = netperf_response.content.serv_errno;
     perror("netperf: remote error");
     
     exit(1);
@@ -1391,13 +1393,13 @@ Send   Recv    Send   Recv\n\
   /* wasn't supposed to care, it will return obvious values. */
   
   recv_response();
-  if (!netperf_response->serv_errno) {
+  if (!netperf_response.content.serv_errno) {
     if (debug)
       fprintf(where,"remote results obtained\n");
   }
   else {
-    errno = netperf_response->serv_errno;
-    atm_errno = netperf_response->serv_errno;
+    errno = netperf_response.content.serv_errno;
+    atm_errno = netperf_response.content.serv_errno;
     perror("netperf: remote error");
     atm_error("        if it was atm");
     fprintf(stderr,"        the errno was: %d atm_errno %d\n",
@@ -1447,7 +1449,8 @@ Send   Recv    Send   Recv\n\
       /* "good" numbers */
       local_service_demand  = calc_service_demand((double) nummessages*1024,
 						  0.0,
-						  0.0);
+						  0.0,
+						  0);
     }
     else {
       local_cpu_utilization	= -1.0;
@@ -1466,7 +1469,8 @@ Send   Recv    Send   Recv\n\
       /* "good" numbers */
       remote_service_demand  = calc_service_demand((double) nummessages*1024,
 						   0.0,
-						   remote_cpu_utilization);
+						   remote_cpu_utilization,
+						   fore_rr_results->num_cpus);
     }
     else {
       remote_cpu_utilization = -1.0;
@@ -1602,11 +1606,11 @@ recv_fore_rr()
   init_test_vars();
 
   fore_rr_request  = 
-    (struct fore_rr_request_struct *)netperf_request->test_specific_data;
+    (struct fore_rr_request_struct *)netperf_request.content.test_specific_data;
   fore_rr_response = 
-    (struct fore_rr_response_struct *)netperf_response->test_specific_data;
+    (struct fore_rr_response_struct *)netperf_response.content.test_specific_data;
   fore_rr_results  = 
-    (struct fore_rr_results_struct *)netperf_response->test_specific_data;
+    (struct fore_rr_results_struct *)netperf_response.content.test_specific_data;
   
   if (debug) {
     fprintf(where,"netserver: recv_fore_rr: entered...\n");
@@ -1631,7 +1635,7 @@ recv_fore_rr()
     fflush(where);
   }
   
-  netperf_response->response_type = FORE_RR_RESPONSE;
+  netperf_response.content.response_type = FORE_RR_RESPONSE;
   
   if (debug) {
     fprintf(where,"recv_fore_rr: the response type is set...\n");
@@ -1721,7 +1725,7 @@ recv_fore_rr()
   s_data = create_fore_socket();
   
   if (s_data < 0) {
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
     
     exit(1);
@@ -1743,7 +1747,7 @@ recv_fore_rr()
 
 	       (Atm_sap *)(&fore_rr_response->server_asap),
 	       2) == -1) {
-    netperf_response->serv_errno = atm_errno;
+    netperf_response.content.serv_errno = atm_errno;
     send_response();
     exit(1);
   }
@@ -1755,7 +1759,7 @@ recv_fore_rr()
   }
 
   
-  netperf_response->serv_errno   = 0;
+  netperf_response.content.serv_errno   = 0;
   
   /* But wait, there's more. If the initiator wanted cpu measurements, */
   /* then we must call the calibrate routine, which will return the max */
@@ -1812,7 +1816,7 @@ recv_fore_rr()
 	    "netperf: recv_fore_rr: atm_listen: atm_errno = %d\n",
 	    atm_errno);
     fflush(where);
-    netperf_response->serv_errno = atm_errno;
+    netperf_response.content.serv_errno = atm_errno;
     send_response();
     exit(1);
   }
@@ -1842,7 +1846,7 @@ recv_fore_rr()
 	    "netperf: recv_fore_rr: atm_accept: atm_errno = %d\n",
 	    atm_errno);
     fflush(where);
-    netperf_response->serv_errno = atm_errno;
+    netperf_response.content.serv_errno = atm_errno;
     send_response();
     exit(1);
   }
@@ -1887,7 +1891,7 @@ recv_fore_rr()
 		atm_errno);
 	fflush(where);
       }
-      netperf_response->serv_errno = atm_errno;
+      netperf_response.content.serv_errno = atm_errno;
       send_response();
       exit(1);
     }
@@ -1909,7 +1913,7 @@ recv_fore_rr()
 		atm_errno);
 	fflush(where);
       }
-      netperf_response->serv_errno = atm_errno;
+      netperf_response.content.serv_errno = atm_errno;
       send_response();
       exit(1);
     }
@@ -2053,11 +2057,11 @@ Send   Recv    Send   Recv\n\
   init_test_vars();
 
   fore_rr_request  =
-    (struct fore_rr_request_struct *)netperf_request->test_specific_data;
+    (struct fore_rr_request_struct *)netperf_request.content.test_specific_data;
   fore_rr_response =
-    (struct fore_rr_response_struct *)netperf_response->test_specific_data;
+    (struct fore_rr_response_struct *)netperf_response.content.test_specific_data;
   fore_rr_result	 =
-    (struct fore_rr_results_struct *)netperf_response->test_specific_data;
+    (struct fore_rr_results_struct *)netperf_response.content.test_specific_data;
   
   /* we want to zero out the times, so we can detect unused entries. */
 #ifdef INTERVALS
@@ -2164,7 +2168,7 @@ Send   Recv    Send   Recv\n\
   /* default should be used. Alignment is the exception, it will */
   /* default to 8, which will be no alignment alterations. */
   
-  netperf_request->request_type	  =	DO_FORE_RR;
+  netperf_request.content.request_type	  =	DO_FORE_RR;
   fore_rr_request->recv_buf_size  =	desired_atm_qos.mean_burst.target;
   fore_rr_request->send_buf_size  =	desired_atm_qos.mean_burst.target;
   fore_rr_request->recv_alignment =	remote_recv_align;
@@ -2229,7 +2233,7 @@ Send   Recv    Send   Recv\n\
   
   recv_response();
   
-  if (!netperf_response->serv_errno) {
+  if (!netperf_response.content.serv_errno) {
     if (debug)
       fprintf(where,"remote listen done.\n");
     desired_atm_qos.mean_burst.target = fore_rr_response->recv_buf_size;
@@ -2239,7 +2243,7 @@ Send   Recv    Send   Recv\n\
     server.asap     = fore_rr_response->server_asap;
   }
   else {
-    errno = netperf_response->serv_errno;
+    errno = netperf_response.content.serv_errno;
     perror("netperf: remote error");
     
     exit(1);
@@ -2410,13 +2414,13 @@ Send   Recv    Send   Recv\n\
   /* wasn't supposed to care, it will return obvious values. */
   
   recv_response();
-  if (!netperf_response->serv_errno) {
+  if (!netperf_response.content.serv_errno) {
     if (debug)
       fprintf(where,"remote results obtained\n");
   }
   else {
-    errno = netperf_response->serv_errno;
-    atm_errno = netperf_response->serv_errno;
+    errno = netperf_response.content.serv_errno;
+    atm_errno = netperf_response.content.serv_errno;
     perror("netperf: remote error");
     atm_error("        if it was atm");
     fprintf(stderr,"        the errno was: %d atm_errno %d\n",
@@ -2466,7 +2470,8 @@ Send   Recv    Send   Recv\n\
       /* "good" numbers */
       local_service_demand  = calc_service_demand((double) nummessages*1024,
 						  0.0,
-						  0.0);
+						  0.0,
+						  0);
     }
     else {
       local_cpu_utilization	= -1.0;
@@ -2485,7 +2490,8 @@ Send   Recv    Send   Recv\n\
       /* "good" numbers */
       remote_service_demand  = calc_service_demand((double) nummessages*1024,
 						   0.0,
-						   remote_cpu_utilization);
+						   remote_cpu_utilization,
+						   fore_rr_result->num_cpus);
     }
     else {
       remote_cpu_utilization = -1.0;
@@ -2621,11 +2627,11 @@ recv_fore_crr()
   init_test_vars();
 
   fore_rr_request  = 
-    (struct fore_rr_request_struct *)netperf_request->test_specific_data;
+    (struct fore_rr_request_struct *)netperf_request.content.test_specific_data;
   fore_rr_response = 
-    (struct fore_rr_response_struct *)netperf_response->test_specific_data;
+    (struct fore_rr_response_struct *)netperf_response.content.test_specific_data;
   fore_rr_results  = 
-    (struct fore_rr_results_struct *)netperf_response->test_specific_data;
+    (struct fore_rr_results_struct *)netperf_response.content.test_specific_data;
   
   if (debug) {
     fprintf(where,"netserver: recv_fore_crr: entered...\n");
@@ -2650,7 +2656,7 @@ recv_fore_crr()
     fflush(where);
   }
   
-  netperf_response->response_type = FORE_RR_RESPONSE;
+  netperf_response.content.response_type = FORE_RR_RESPONSE;
   
   if (debug) {
     fprintf(where,"recv_fore_crr: the response type is set...\n");
@@ -2740,7 +2746,7 @@ recv_fore_crr()
   s_data = create_fore_socket();
   
   if (s_data < 0) {
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
     
     exit(1);
@@ -2762,7 +2768,7 @@ recv_fore_crr()
 
 	       (Atm_sap *)(&fore_rr_response->server_asap),
 	       2) == -1) {
-    netperf_response->serv_errno = atm_errno;
+    netperf_response.content.serv_errno = atm_errno;
     send_response();
     exit(1);
   }
@@ -2774,7 +2780,7 @@ recv_fore_crr()
   }
 
   
-  netperf_response->serv_errno   = 0;
+  netperf_response.content.serv_errno   = 0;
   
   /* But wait, there's more. If the initiator wanted cpu measurements, */
   /* then we must call the calibrate routine, which will return the max */
@@ -2831,7 +2837,7 @@ recv_fore_crr()
 	    "netperf: recv_fore_crr: atm_listen: atm_errno = %d\n",
 	    atm_errno);
     fflush(where);
-    netperf_response->serv_errno = atm_errno;
+    netperf_response.content.serv_errno = atm_errno;
     send_response();
     exit(1);
   }
@@ -2861,7 +2867,7 @@ recv_fore_crr()
 	    "netperf: recv_fore_crr: atm_accept: atm_errno = %d\n",
 	    atm_errno);
     fflush(where);
-    netperf_response->serv_errno = atm_errno;
+    netperf_response.content.serv_errno = atm_errno;
     send_response();
     exit(1);
   }
@@ -2906,7 +2912,7 @@ recv_fore_crr()
 		atm_errno);
 	fflush(where);
       }
-      netperf_response->serv_errno = atm_errno;
+      netperf_response.content.serv_errno = atm_errno;
       send_response();
       exit(1);
     }
@@ -2928,7 +2934,7 @@ recv_fore_crr()
 		atm_errno);
 	fflush(where);
       }
-      netperf_response->serv_errno = atm_errno;
+      netperf_response.content.serv_errno = atm_errno;
       send_response();
       exit(1);
     }

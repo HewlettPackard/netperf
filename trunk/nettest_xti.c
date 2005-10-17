@@ -1,6 +1,6 @@
 #ifndef lint
 char	nettest_xti_id[]="\
-@(#)nettest_xti.c (c) Copyright 1995 Hewlett-Packard Co. Version 2.1alpha";
+@(#)nettest_xti.c (c) Copyright 1995 Hewlett-Packard Co. Version 2.1";
 #else
 #define DIRTY
 #define HISTOGRAM
@@ -45,7 +45,7 @@ char	nettest_xti_id[]="\
  /* conflicts!( Silly standards people... raj 2/95 fortuenately, the */
  /* confilcts are on IP_TOP and IP_TTL, whcih netperf does not yet use */
 #include <xti.h>
-     
+
 #include "netlib.h"
 #include "netsh.h"
 #include "nettest_xti.h"
@@ -453,7 +453,7 @@ bytes  bytes   bytes    secs.    %s/sec  \n\n";
 Recv   Send    Send                          Utilization       Service Demand\n\
 Socket Socket  Message  Elapsed              Send     Recv     Send    Recv\n\
 Size   Size    Size     Time     Throughput  local    remote   local   remote\n\
-bytes  bytes   bytes    secs.    %-8.8s/s  %% %c      %% %c      ms/KB   ms/KB\n\n";
+bytes  bytes   bytes    secs.    %-8.8s/s  %% %c      %% %c      us/KB   us/KB\n\n";
   
   char *cpu_fmt_0 =
     "%6.3f %c\n";
@@ -518,6 +518,7 @@ Size (bytes)\n\
   /* some addressing information */
   struct	hostent	        *hp;
   struct	sockaddr_in	server;
+  unsigned      int             addr;
 
   struct t_call server_call;
   
@@ -526,11 +527,11 @@ Size (bytes)\n\
   struct	xti_tcp_stream_results_struct	*xti_tcp_stream_result;
   
   xti_tcp_stream_request  = 
-    (struct xti_tcp_stream_request_struct *)netperf_request->test_specific_data;
+    (struct xti_tcp_stream_request_struct *)netperf_request.content.test_specific_data;
   xti_tcp_stream_response =
-    (struct xti_tcp_stream_response_struct *)netperf_response->test_specific_data;
+    (struct xti_tcp_stream_response_struct *)netperf_response.content.test_specific_data;
   xti_tcp_stream_result   = 
-    (struct xti_tcp_stream_results_struct *)netperf_response->test_specific_data;
+    (struct xti_tcp_stream_results_struct *)netperf_response.content.test_specific_data;
   
 #ifdef HISTOGRAM
   time_hist = HIST_new();
@@ -543,18 +544,27 @@ Size (bytes)\n\
   bzero((char *)&server,
 	sizeof(server));
   
+ /* it would seem that while HP-UX will allow an IP address (as a */
+ /* string) in a call to gethostbyname, other, less enlightened */
+ /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
   if ((hp = gethostbyname(remote_host)) == NULL) {
-    fprintf(where,
-	    "send_xti_tcp_stream: could not resolve the name %s\n",
-	    remote_host);
-    fflush(where);
+    if ((addr = inet_addr(remote_host)) == -1) {
+      fprintf(where,
+	      "send_xti_tcp_stream: could not resolve the name %s\n",
+	      remote_host);
+      fflush(where);
+      exit(1);
+    }
+    server.sin_addr.s_addr = addr;
+    server.sin_family == AF_INET;
   }
-  
-  bcopy(hp->h_addr,
-	(char *)&server.sin_addr,
-	hp->h_length);
-  
-  server.sin_family = hp->h_addrtype;
+  else {
+    bcopy(hp->h_addr,
+	  (char *)&server.sin_addr,
+	  hp->h_length);
+    server.sin_family = hp->h_addrtype;
+  }
+
   
   
   if ( print_headers ) {
@@ -693,7 +703,7 @@ Size (bytes)\n\
     /* default should be used. Alignment is the exception, it will */
     /* default to 1, which will be no alignment alterations. */
     
-    netperf_request->request_type          = DO_XTI_TCP_STREAM;
+    netperf_request.content.request_type          = DO_XTI_TCP_STREAM;
     xti_tcp_stream_request->send_buf_size  = rss_size;
     xti_tcp_stream_request->recv_buf_size  = rsr_size;
     xti_tcp_stream_request->receive_size   = recv_size;
@@ -763,7 +773,7 @@ Size (bytes)\n\
     
     recv_response();
     
-    if (!netperf_response->serv_errno) {
+    if (!netperf_response.content.serv_errno) {
       if (debug)
         fprintf(where,"remote listen done.\n");
       rsr_size         = xti_tcp_stream_response->recv_buf_size;
@@ -780,7 +790,7 @@ Size (bytes)\n\
       rem_sndavoid      = xti_tcp_stream_response->so_sndavoid;
     }
     else {
-      errno = netperf_response->serv_errno;
+      errno = netperf_response.content.serv_errno;
       perror("netperf: remote error");
       
       exit(1);
@@ -990,12 +1000,12 @@ Size (bytes)\n\
     /* wasn't supposed to care, it will return obvious values. */
     
     recv_response();
-    if (!netperf_response->serv_errno) {
+    if (!netperf_response.content.serv_errno) {
       if (debug)
         fprintf(where,"remote results obtained\n");
     }
     else {
-      errno = netperf_response->serv_errno;
+      errno = netperf_response.content.serv_errno;
       perror("netperf: remote error");
       
       exit(1);
@@ -1025,7 +1035,8 @@ Size (bytes)\n\
         local_cpu_utilization   = calc_cpu_util(0.0);
         local_service_demand    = calc_service_demand(bytes_sent,
                                                       0.0,
-                                                      0.0);
+                                                      0.0,
+						      0);
       }
       else {
         local_cpu_utilization   = -1.0;
@@ -1037,7 +1048,8 @@ Size (bytes)\n\
         remote_cpu_utilization  = xti_tcp_stream_result->cpu_util;
         remote_service_demand   = calc_service_demand(bytes_sent,
                                                       0.0,
-                                                      remote_cpu_utilization);
+                                                      remote_cpu_utilization,
+						      xti_tcp_stream_result->num_cpus);
       }
       else {
         remote_cpu_utilization = -1.0;
@@ -1242,11 +1254,11 @@ recv_xti_tcp_stream()
   struct xti_tcp_stream_results_struct	*xti_tcp_stream_results;
   
   xti_tcp_stream_request	= 
-    (struct xti_tcp_stream_request_struct *)netperf_request->test_specific_data;
+    (struct xti_tcp_stream_request_struct *)netperf_request.content.test_specific_data;
   xti_tcp_stream_response	= 
-    (struct xti_tcp_stream_response_struct *)netperf_response->test_specific_data;
+    (struct xti_tcp_stream_response_struct *)netperf_response.content.test_specific_data;
   xti_tcp_stream_results	= 
-    (struct xti_tcp_stream_results_struct *)netperf_response->test_specific_data;
+    (struct xti_tcp_stream_results_struct *)netperf_response.content.test_specific_data;
   
   if (debug) {
     fprintf(where,"netserver: recv_xti_tcp_stream: entered...\n");
@@ -1271,7 +1283,7 @@ recv_xti_tcp_stream()
     fflush(where);
   }
   
-  netperf_response->response_type = XTI_TCP_STREAM_RESPONSE;
+  netperf_response.content.response_type = XTI_TCP_STREAM_RESPONSE;
   
   if (debug) {
     fprintf(where,"recv_xti_tcp_stream: the response type is set...\n");
@@ -1344,7 +1356,7 @@ recv_xti_tcp_stream()
   s_listen = create_xti_endpoint(xti_tcp_stream_request->xti_device);
   
   if (s_listen < 0) {
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
   }
@@ -1368,7 +1380,7 @@ recv_xti_tcp_stream()
   if (t_bind(s_listen,
 	     &bind_req,
 	     &bind_resp) == -1) {
-    netperf_response->serv_errno = t_errno;
+    netperf_response.content.serv_errno = t_errno;
     close(s_listen);
     send_response();
     
@@ -1423,7 +1435,7 @@ recv_xti_tcp_stream()
   
   xti_tcp_stream_response->data_port_number = 
     (int) ntohs(myaddr_in.sin_port);
-  netperf_response->serv_errno   = 0;
+  netperf_response.content.serv_errno   = 0;
   
   /* But wait, there's more. If the initiator wanted cpu measurements, */
   /* then we must call the calibrate routine, which will return the max */
@@ -1472,7 +1484,7 @@ recv_xti_tcp_stream()
 	    errno,
 	    t_errno);
     fflush(where);
-    netperf_response->serv_errno = t_errno;
+    netperf_response.content.serv_errno = t_errno;
     close(s_listen);
     send_response();
     exit(1);
@@ -1584,7 +1596,7 @@ recv_xti_tcp_stream()
 	    " t_look 0x%.4x",
 	    t_look(s_data));
     fflush(where);
-    netperf_response->serv_errno = t_errno;
+    netperf_response.content.serv_errno = t_errno;
     send_response();
     exit(1);
   }
@@ -1593,7 +1605,7 @@ recv_xti_tcp_stream()
   /* received all the data. raj 3/95 */
 
   if (t_rcvrel(s_data) == -1) {
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
   }    
@@ -1605,7 +1617,7 @@ recv_xti_tcp_stream()
   }
 
   if (t_sndrel(s_data) == -1) {
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
   }
@@ -1686,7 +1698,7 @@ bytes  Bytes  bytes    bytes   secs.    per sec   \n\n";
 Local /Remote\n\
 Socket Size   Request Resp.  Elapsed Trans.   CPU    CPU    S.dem   S.dem\n\
 Send   Recv   Size    Size   Time    Rate     local  remote local   remote\n\
-bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    ms/Tr   ms/Tr\n\n";
+bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\n";
   
   char *cpu_fmt_0 =
     "%6.3f %c\n";
@@ -1728,6 +1740,7 @@ Send   Recv    Send   Recv\n\
   
   struct	hostent	        *hp;
   struct	sockaddr_in	server;
+  unsigned      int             addr;
   
   struct t_call server_call;
 
@@ -1741,11 +1754,11 @@ Send   Recv    Send   Recv\n\
 #endif /* INTERVALS */
 
   xti_tcp_rr_request = 
-    (struct xti_tcp_rr_request_struct *)netperf_request->test_specific_data;
+    (struct xti_tcp_rr_request_struct *)netperf_request.content.test_specific_data;
   xti_tcp_rr_response=
-    (struct xti_tcp_rr_response_struct *)netperf_response->test_specific_data;
+    (struct xti_tcp_rr_response_struct *)netperf_response.content.test_specific_data;
   xti_tcp_rr_result	=
-    (struct xti_tcp_rr_results_struct *)netperf_response->test_specific_data;
+    (struct xti_tcp_rr_results_struct *)netperf_response.content.test_specific_data;
   
 #ifdef HISTOGRAM
   time_hist = HIST_new();
@@ -1759,18 +1772,26 @@ Send   Recv    Send   Recv\n\
   bzero((char *)&server,
 	sizeof(server));
   
+ /* it would seem that while HP-UX will allow an IP address (as a */
+ /* string) in a call to gethostbyname, other, less enlightened */
+ /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
   if ((hp = gethostbyname(remote_host)) == NULL) {
-    fprintf(where,
-	    "send_xti_tcp_rr: could not resolve the name%s\n",
-	    remote_host);
-    fflush(where);
+    if ((addr = inet_addr(remote_host)) == -1) {
+      fprintf(where,
+	      "send_xti_tcp_rr: could not resolve the name %s\n",
+	      remote_host);
+      fflush(where);
+      exit(1);
+    }
+    server.sin_addr.s_addr = addr;
+    server.sin_family == AF_INET;
   }
-  
-  bcopy(hp->h_addr,
-	(char *)&server.sin_addr,
-	hp->h_length);
-  
-  server.sin_family = hp->h_addrtype;
+  else {
+    bcopy(hp->h_addr,
+	  (char *)&server.sin_addr,
+	  hp->h_length);
+    server.sin_family = hp->h_addrtype;
+  }
   
   
   if ( print_headers ) {
@@ -1891,20 +1912,20 @@ Send   Recv    Send   Recv\n\
     /* default should be used. Alignment is the exception, it will */
     /* default to 8, which will be no alignment alterations. */
     
-    netperf_request->request_type	=	DO_XTI_TCP_RR;
+    netperf_request.content.request_type	=	DO_XTI_TCP_RR;
     xti_tcp_rr_request->recv_buf_size	=	rsr_size;
     xti_tcp_rr_request->send_buf_size	=	rss_size;
-    xti_tcp_rr_request->recv_alignment      =	remote_recv_align;
-    xti_tcp_rr_request->recv_offset	        =	remote_recv_offset;
-    xti_tcp_rr_request->send_alignment      =	remote_send_align;
-    xti_tcp_rr_request->send_offset	        =	remote_send_offset;
+    xti_tcp_rr_request->recv_alignment  =	remote_recv_align;
+    xti_tcp_rr_request->recv_offset	=	remote_recv_offset;
+    xti_tcp_rr_request->send_alignment  =	remote_send_align;
+    xti_tcp_rr_request->send_offset	=	remote_send_offset;
     xti_tcp_rr_request->request_size	=	req_size;
     xti_tcp_rr_request->response_size	=	rsp_size;
-    xti_tcp_rr_request->no_delay	        =	rem_nodelay;
-    xti_tcp_rr_request->measure_cpu	        =	remote_cpu_usage;
-    xti_tcp_rr_request->cpu_rate	        =	remote_cpu_rate;
-    xti_tcp_rr_request->so_rcvavoid	        =	rem_rcvavoid;
-    xti_tcp_rr_request->so_sndavoid	        =	rem_sndavoid;
+    xti_tcp_rr_request->no_delay	=	rem_nodelay;
+    xti_tcp_rr_request->measure_cpu	=	remote_cpu_usage;
+    xti_tcp_rr_request->cpu_rate	=	remote_cpu_rate;
+    xti_tcp_rr_request->so_rcvavoid	=	rem_rcvavoid;
+    xti_tcp_rr_request->so_sndavoid	=	rem_sndavoid;
     if (test_time) {
       xti_tcp_rr_request->test_length	=	test_time;
     }
@@ -1957,7 +1978,7 @@ Send   Recv    Send   Recv\n\
   
     recv_response();
   
-    if (!netperf_response->serv_errno) {
+    if (!netperf_response.content.serv_errno) {
       if (debug)
 	fprintf(where,"remote listen done.\n");
       rsr_size          = xti_tcp_rr_response->recv_buf_size;
@@ -1970,7 +1991,7 @@ Send   Recv    Send   Recv\n\
       server.sin_port   = htons(server.sin_port);
     }
     else {
-      errno = netperf_response->serv_errno;
+      errno = netperf_response.content.serv_errno;
       perror("netperf: remote error");
       
       exit(1);
@@ -2147,12 +2168,6 @@ Send   Recv    Send   Recv\n\
       }
     }
 
-    /* At this point we used to call shutdown on the data socket to be */
-    /* sure all the data was delivered, but this was not germane in a */
-    /* request/response test, and it was causing the tests to "hang" when */
-    /* they were being controlled by time. So, I have replaced this */
-    /* shutdown call with a call to close that can be found later in the */
-    /* procedure. */
     
     /* this call will always give us the elapsed time for the test, and */
     /* will also store-away the necessaries for cpu utilization */
@@ -2166,12 +2181,12 @@ Send   Recv    Send   Recv\n\
     /* wasn't supposed to care, it will return obvious values. */
     
     recv_response();
-    if (!netperf_response->serv_errno) {
+    if (!netperf_response.content.serv_errno) {
       if (debug)
 	fprintf(where,"remote results obtained\n");
     }
     else {
-      errno = netperf_response->serv_errno;
+      errno = netperf_response.content.serv_errno;
       perror("netperf: remote error");
       
       exit(1);
@@ -2195,7 +2210,8 @@ Send   Recv    Send   Recv\n\
 	/* "good" numbers */
 	local_service_demand  = calc_service_demand((double) nummessages*1024,
 						    0.0,
-						    0.0);
+						    0.0,
+						    0);
       }
       else {
 	local_cpu_utilization	= -1.0;
@@ -2209,7 +2225,8 @@ Send   Recv    Send   Recv\n\
 	/* "good" numbers */
 	remote_service_demand = calc_service_demand((double) nummessages*1024,
 						    0.0,
-						    remote_cpu_utilization);
+						    remote_cpu_utilization,
+						    xti_tcp_rr_result->num_cpus);
       }
       else {
 	remote_cpu_utilization = -1.0;
@@ -2404,7 +2421,7 @@ bytes   bytes    secs            #      #   %s/sec\n\n";
   char *cpu_title = "\
 Socket  Message  Elapsed      Messages                   CPU      Service\n\
 Size    Size     Time         Okay Errors   Throughput   Util     Demand\n\
-bytes   bytes    secs            #      #   %s/sec %% %c%c     ms/KB\n\n";
+bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
   
   char *cpu_fmt_0 =
     "%6.2f %c\n";
@@ -2446,8 +2463,9 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     ms/KB\n\n";
   int	i;
 #endif /* DIRTY */
   
-  struct hostent     *hp;
-  struct sockaddr_in server;
+  struct   hostent     *hp;
+  struct   sockaddr_in server;
+  unsigned int         addr;
   
   struct t_unitdata unitdata;
    
@@ -2456,11 +2474,11 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     ms/KB\n\n";
   struct xti_udp_stream_results_struct	*xti_udp_stream_results;
   
   xti_udp_stream_request  = 
-    (struct xti_udp_stream_request_struct *)netperf_request->test_specific_data;
+    (struct xti_udp_stream_request_struct *)netperf_request.content.test_specific_data;
   xti_udp_stream_response = 
-    (struct xti_udp_stream_response_struct *)netperf_response->test_specific_data;
+    (struct xti_udp_stream_response_struct *)netperf_response.content.test_specific_data;
   xti_udp_stream_results  = 
-    (struct xti_udp_stream_results_struct *)netperf_response->test_specific_data;
+    (struct xti_udp_stream_results_struct *)netperf_response.content.test_specific_data;
   
 #ifdef HISTOGRAM
   time_hist = HIST_new();
@@ -2474,18 +2492,26 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     ms/KB\n\n";
   bzero((char *)&server,
 	sizeof(server));
   
+ /* it would seem that while HP-UX will allow an IP address (as a */
+ /* string) in a call to gethostbyname, other, less enlightened */
+ /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
   if ((hp = gethostbyname(remote_host)) == NULL) {
-    fprintf(where,
-	    "send_xti_udp_stream: could not resolve the name %s\n",
-	    remote_host);
-    fflush(where);
+    if ((addr = inet_addr(remote_host)) == -1) {
+      fprintf(where,
+	      "send_xti_udp_stream: could not resolve the name %s\n",
+	      remote_host);
+      fflush(where);
+      exit(1);
+    }
+    server.sin_addr.s_addr = addr;
+    server.sin_family == AF_INET;
   }
-  
-  bcopy(hp->h_addr,
-	(char *)&server.sin_addr,
-	hp->h_length);
-  
-  server.sin_family = hp->h_addrtype;
+  else {
+    bcopy(hp->h_addr,
+	  (char *)&server.sin_addr,
+	  hp->h_length);
+    server.sin_family = hp->h_addrtype;
+  }
   
   if ( print_headers ) {
     fprintf(where,"UDP UNIDIRECTIONAL SEND TEST");
@@ -2591,7 +2617,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     ms/KB\n\n";
     /* Of course this is a datagram service so no connection is actually */
     /* set up, the server just sets up the socket and binds it. */
     
-    netperf_request->request_type      = DO_XTI_UDP_STREAM;
+    netperf_request.content.request_type      = DO_XTI_UDP_STREAM;
     xti_udp_stream_request->recv_buf_size  = rsr_size;
     xti_udp_stream_request->message_size   = send_size;
     xti_udp_stream_request->recv_alignment = remote_recv_align;
@@ -2633,12 +2659,12 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     ms/KB\n\n";
     
     recv_response();
     
-    if (!netperf_response->serv_errno) {
+    if (!netperf_response.content.serv_errno) {
       if (debug)
 	fprintf(where,"send_xti_udp_stream: remote data connection done.\n");
     }
     else {
-      errno = netperf_response->serv_errno;
+      errno = netperf_response.content.serv_errno;
       perror("send_xti_udp_stream: error on remote");
       exit(1);
     }
@@ -2807,12 +2833,12 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     ms/KB\n\n";
     
     /* Get the statistics from the remote end	*/
     recv_response();
-    if (!netperf_response->serv_errno) {
+    if (!netperf_response.content.serv_errno) {
       if (debug)
 	fprintf(where,"send_xti_udp_stream: remote results obtained\n");
     }
     else {
-      errno = netperf_response->serv_errno;
+      errno = netperf_response.content.serv_errno;
       perror("send_xti_udp_stream: error on remote");
       exit(1);
     }
@@ -2841,7 +2867,8 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     ms/KB\n\n";
 	/* so will make the change raj 11/94 */
 	local_service_demand	= calc_service_demand(bytes_recvd,
 						      0.0,
-						      0.0);
+						      0.0,
+						      0);
       }
       else {
 	local_cpu_utilization	= -1.0;
@@ -2855,7 +2882,8 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     ms/KB\n\n";
 	remote_cpu_utilization	= xti_udp_stream_results->cpu_util;
 	remote_service_demand	= calc_service_demand(bytes_recvd,
 						      0.0,
-						      remote_cpu_utilization);
+						      remote_cpu_utilization,
+						      xti_udp_stream_results->num_cpus);
       }
       else {
 	remote_cpu_utilization	= -1.0;
@@ -3048,11 +3076,11 @@ recv_xti_udp_stream()
   struct xti_udp_stream_results_struct	*xti_udp_stream_results;
   
   xti_udp_stream_request  = 
-    (struct xti_udp_stream_request_struct *)netperf_request->test_specific_data;
+    (struct xti_udp_stream_request_struct *)netperf_request.content.test_specific_data;
   xti_udp_stream_response = 
-    (struct xti_udp_stream_response_struct *)netperf_response->test_specific_data;
+    (struct xti_udp_stream_response_struct *)netperf_response.content.test_specific_data;
   xti_udp_stream_results  = 
-    (struct xti_udp_stream_results_struct *)netperf_response->test_specific_data;
+    (struct xti_udp_stream_results_struct *)netperf_response.content.test_specific_data;
   
   if (debug) {
     fprintf(where,"netserver: recv_xti_udp_stream: entered...\n");
@@ -3077,7 +3105,7 @@ recv_xti_udp_stream()
     fflush(where);
   }
   
-  netperf_response->response_type = XTI_UDP_STREAM_RESPONSE;
+  netperf_response.content.response_type = XTI_UDP_STREAM_RESPONSE;
   
   if (debug > 2) {
     fprintf(where,"recv_xti_udp_stream: the response type is set...\n");
@@ -3160,7 +3188,7 @@ recv_xti_udp_stream()
   s_data = create_xti_endpoint(xti_udp_stream_request->xti_device);
   
   if (s_data < 0) {
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
   }
@@ -3184,7 +3212,7 @@ recv_xti_udp_stream()
   if (t_bind(s_data,
 	     &bind_req,
 	     &bind_resp) == -1) {
-    netperf_response->serv_errno = t_errno;
+    netperf_response.content.serv_errno = t_errno;
     send_response();
     
     exit(1);
@@ -3199,7 +3227,7 @@ recv_xti_udp_stream()
   
   xti_udp_stream_response->data_port_number = 
     (int) ntohs(myaddr_in.sin_port);
-  netperf_response->serv_errno   = 0;
+  netperf_response.content.serv_errno   = 0;
   
   /* But wait, there's more. If the initiator wanted cpu measurements, */
   /* then we must call the calibrate routine, which will return the max */
@@ -3291,7 +3319,7 @@ recv_xti_udp_stream()
 	continue;
       }
       if (errno != EINTR) {
-	netperf_response->serv_errno = t_errno;
+	netperf_response.content.serv_errno = t_errno;
 	send_response();
 	exit(1);
       }
@@ -3336,7 +3364,7 @@ recv_xti_udp_stream()
     fflush(where);
   }
   
-  netperf_response->response_type	= XTI_UDP_STREAM_RESULTS;
+  netperf_response.content.response_type	= XTI_UDP_STREAM_RESULTS;
   xti_udp_stream_results->bytes_received	= bytes_received;
   xti_udp_stream_results->messages_recvd	= messages_recvd;
   xti_udp_stream_results->elapsed_time	= elapsed_time;
@@ -3380,7 +3408,7 @@ bytes  Bytes  bytes    bytes   secs.    per sec   \n\n";
 Local /Remote\n\
 Socket Size   Request Resp.  Elapsed Trans.   CPU    CPU    S.dem   S.dem\n\
 Send   Recv   Size    Size   Time    Rate     local  remote local   remote\n\
-bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    ms/Tr   ms/Tr\n\n";
+bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\n";
   
   char *cpu_fmt_0 =
     "%6.3f %c\n";
@@ -3403,6 +3431,12 @@ Send   Recv    Send   Recv\n\
   struct ring_elt *send_ring;
   struct ring_elt *recv_ring;
 
+  struct t_bind bind_req, bind_resp;
+  struct t_unitdata unitdata;
+  struct t_unitdata send_unitdata;
+  struct t_unitdata recv_unitdata;
+  int	            flags = 0;
+
   int	len;
   int	nummessages;
   int	send_socket;
@@ -3419,7 +3453,8 @@ Send   Recv    Send   Recv\n\
   
   struct	hostent	        *hp;
   struct	sockaddr_in	server, myaddr_in;
-  int	        addrlen;
+  unsigned      int             addr;
+  int	                        addrlen;
   
   struct	xti_udp_rr_request_struct	*xti_udp_rr_request;
   struct	xti_udp_rr_response_struct	*xti_udp_rr_response;
@@ -3431,11 +3466,11 @@ Send   Recv    Send   Recv\n\
 #endif /* INTERVALS */
   
   xti_udp_rr_request  =
-    (struct xti_udp_rr_request_struct *)netperf_request->test_specific_data;
+    (struct xti_udp_rr_request_struct *)netperf_request.content.test_specific_data;
   xti_udp_rr_response =
-    (struct xti_udp_rr_response_struct *)netperf_response->test_specific_data;
+    (struct xti_udp_rr_response_struct *)netperf_response.content.test_specific_data;
   xti_udp_rr_result	 =
-    (struct xti_udp_rr_results_struct *)netperf_response->test_specific_data;
+    (struct xti_udp_rr_results_struct *)netperf_response.content.test_specific_data;
   
 #ifdef HISTOGRAM
   time_hist = HIST_new();
@@ -3449,22 +3484,30 @@ Send   Recv    Send   Recv\n\
   bzero((char *)&server,
 	sizeof(server));
   
+ /* it would seem that while HP-UX will allow an IP address (as a */
+ /* string) in a call to gethostbyname, other, less enlightened */
+ /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
   if ((hp = gethostbyname(remote_host)) == NULL) {
-    fprintf(where,
-	    "send_xti_udp_rr: could not resolve the name%s\n",
-	    remote_host);
-    fflush(where);
+    if ((addr = inet_addr(remote_host)) == -1) {
+      fprintf(where,
+	      "send_xti_udp_rr: could not resolve the name %s\n",
+	      remote_host);
+      fflush(where);
+      exit(1);
+    }
+    server.sin_addr.s_addr = addr;
+    server.sin_family == AF_INET;
   }
-  
-  bcopy(hp->h_addr,
-	(char *)&server.sin_addr,
-	hp->h_length);
-  
-  server.sin_family = hp->h_addrtype;
+  else {
+    bcopy(hp->h_addr,
+	  (char *)&server.sin_addr,
+	  hp->h_length);
+    server.sin_family = hp->h_addrtype;
+  }
   
   
   if ( print_headers ) {
-    fprintf(where,"UDP REQUEST/RESPONSE TEST");
+    fprintf(where,"XTI UDP REQUEST/RESPONSE TEST");
         fprintf(where," to %s", remote_host);
     if (iteration_max > 1) {
       fprintf(where,
@@ -3500,6 +3543,7 @@ Send   Recv    Send   Recv\n\
   confidence_iteration = 1;
   init_stat();
 
+
   /* we have a great-big while loop which controls the number of times */
   /* we run a particular test. this is for the calculation of a */
   /* confidence interval (I really should have stayed awake during */
@@ -3534,9 +3578,40 @@ Send   Recv    Send   Recv\n\
 				       local_recv_offset);
     }
     
+  /* since we are going to call t_rcvudata() instead of t_rcv() we */
+  /* need to init the unitdata structure raj 8/95 */
+
+    memset (&recv_unitdata, 0, sizeof(recv_unitdata));
+    recv_unitdata.addr.maxlen = sizeof(struct sockaddr_in);
+    recv_unitdata.addr.len    = sizeof(struct sockaddr_in);
+    recv_unitdata.addr.buf    = (char *)&server;
+    
+    recv_unitdata.opt.maxlen = 0;
+    recv_unitdata.opt.len    = 0;
+    recv_unitdata.opt.buf    = NULL;
+    
+    recv_unitdata.udata.maxlen = rsp_size;
+    recv_unitdata.udata.len    = rsp_size;
+    recv_unitdata.udata.buf    = recv_ring->buffer_ptr;
+    
+    /* since we are going to call t_sndudata() instead of t_snd() we */
+    /* need to init the unitdata structure raj 8/95 */
+    
+    memset (&send_unitdata, 0, sizeof(send_unitdata));
+    send_unitdata.addr.maxlen = sizeof(struct sockaddr_in);
+    send_unitdata.addr.len    = sizeof(struct sockaddr_in);
+    send_unitdata.addr.buf    = (char *)&server;
+    
+    send_unitdata.opt.maxlen = 0;
+    send_unitdata.opt.len    = 0;
+    send_unitdata.opt.buf    = NULL;
+    
+    send_unitdata.udata.maxlen = req_size;
+    send_unitdata.udata.len    = req_size;
+    send_unitdata.udata.buf    = send_ring->buffer_ptr;
+
     /*set up the data socket                        */
-    send_socket = create_xti_endpoint(AF_INET, 
-				     SOCK_DGRAM);
+    send_socket = create_xti_endpoint(loc_xti_device);
     
     if (send_socket < 0){
       perror("netperf: send_xti_udp_rr: udp rr data socket");
@@ -3547,6 +3622,16 @@ Send   Recv    Send   Recv\n\
       fprintf(where,"send_xti_udp_rr: send_socket obtained...\n");
     }
     
+    /* it would seem that with XTI, there is no implicit bind  */
+    /* so we have to make a call to t_bind. this is not */
+    /* terribly convenient, but I suppose that "standard is better */
+    /* than better" :) raj 2/95 */
+
+    if (t_bind(send_socket, NULL, NULL) == -1) {
+      t_error("send_xti_tcp_stream: t_bind");
+      exit(1);
+    }
+
     /* If the user has requested cpu utilization measurements, we must */
     /* calibrate the cpu(s). We will perform this task within the tests */
     /* themselves. If the user has specified the cpu rate, then */
@@ -3568,19 +3653,19 @@ Send   Recv    Send   Recv\n\
     /* default should be used. Alignment is the exception, it will */
     /* default to 8, which will be no alignment alterations. */
     
-    netperf_request->request_type	= DO_XTI_UDP_RR;
+    netperf_request.content.request_type	= DO_XTI_UDP_RR;
     xti_udp_rr_request->recv_buf_size	= rsr_size;
     xti_udp_rr_request->send_buf_size	= rss_size;
-    xti_udp_rr_request->recv_alignment      = remote_recv_align;
-    xti_udp_rr_request->recv_offset	        = remote_recv_offset;
-    xti_udp_rr_request->send_alignment      = remote_send_align;
-    xti_udp_rr_request->send_offset	        = remote_send_offset;
+    xti_udp_rr_request->recv_alignment  = remote_recv_align;
+    xti_udp_rr_request->recv_offset	= remote_recv_offset;
+    xti_udp_rr_request->send_alignment  = remote_send_align;
+    xti_udp_rr_request->send_offset	= remote_send_offset;
     xti_udp_rr_request->request_size	= req_size;
     xti_udp_rr_request->response_size	= rsp_size;
-    xti_udp_rr_request->measure_cpu	        = remote_cpu_usage;
-    xti_udp_rr_request->cpu_rate	        = remote_cpu_rate;
-    xti_udp_rr_request->so_rcvavoid	        = rem_rcvavoid;
-    xti_udp_rr_request->so_sndavoid	        = rem_sndavoid;
+    xti_udp_rr_request->measure_cpu	= remote_cpu_usage;
+    xti_udp_rr_request->cpu_rate	= remote_cpu_rate;
+    xti_udp_rr_request->so_rcvavoid	= rem_rcvavoid;
+    xti_udp_rr_request->so_sndavoid	= rem_sndavoid;
     if (test_time) {
       xti_udp_rr_request->test_length	= test_time;
     }
@@ -3588,6 +3673,33 @@ Send   Recv    Send   Recv\n\
       xti_udp_rr_request->test_length	= test_trans * -1;
     }
     
+    strcpy(xti_udp_rr_request->xti_device, rem_xti_device);
+  
+#ifdef __alpha
+  
+    /* ok - even on a DEC box, strings are strings. I didn't really want */
+    /* to ntohl the words of a string. since I don't want to teach the */
+    /* send_ and recv_ _request and _response routines about the types, */
+    /* I will put "anti-ntohl" calls here. I imagine that the "pure" */
+    /* solution would be to use XDR, but I am still leary of being able */
+    /* to find XDR libs on all platforms I want running netperf. raj */
+    {
+      int *charword;
+      int *initword;
+      int *lastword;
+      
+      initword = (int *) xti_udp_rr_request->xti_device;
+      lastword = initword + ((strlen(rem_xti_device) + 3) / 4);
+      
+      for (charword = initword;
+	   charword < lastword;
+	   charword++) {
+	
+	*charword = ntohl(*charword);
+      }
+    }
+#endif /* __alpha */
+
     if (debug > 1) {
       fprintf(where,"netperf: send_xti_udp_rr: requesting UDP r/r test\n");
     }
@@ -3606,7 +3718,7 @@ Send   Recv    Send   Recv\n\
     
     recv_response();
     
-    if (!netperf_response->serv_errno) {
+    if (!netperf_response.content.serv_errno) {
       if (debug)
 	fprintf(where,"remote listen done.\n");
       rsr_size	       =	xti_udp_rr_response->recv_buf_size;
@@ -3618,31 +3730,9 @@ Send   Recv    Send   Recv\n\
       server.sin_port  = 	htons(server.sin_port);
     }
     else {
-      errno = netperf_response->serv_errno;
+      errno = netperf_response.content.serv_errno;
       perror("netperf: remote error");
       
-      exit(1);
-    }
-    
-    /* Connect up to the remote port on the data socket. This will set */
-    /* the default destination address on this socket. With UDP, this */
-    /* does make a performance difference as we may not have to do as */
-    /* many routing lookups, however, I expect that a client would */
-    /* behave this way. raj 1/94 */
-    
-    if ( connect(send_socket, 
-		 (struct sockaddr *)&server,
-		 sizeof(server)) < 0 ) {
-      perror("netperf: data socket connect failed");
-      exit(1);
-    }
-    
-    /* now get the port number assigned by the system  */
-    addrlen = sizeof(myaddr_in);
-    if (getsockname(send_socket, 
-		    (struct sockaddr *)&myaddr_in,
-		    &addrlen) == -1){
-      perror("send_xti_udp_rr: getsockname");
       exit(1);
     }
     
@@ -3705,31 +3795,53 @@ Send   Recv    Send   Recv\n\
 #ifdef HISTOGRAM
       gettimeofday(&time_one,NULL);
 #endif
-      if((len=send(send_socket,
-		   send_ring->buffer_ptr,
-		   req_size,
-		   0)) != req_size) {
+      if((t_sndudata(send_socket,
+		     &send_unitdata)) != 0) {
 	if (errno == EINTR) {
 	  /* We likely hit */
 	  /* test-end time. */
 	  break;
 	}
-	perror("send_xti_udp_rr: data send error");
+        fprintf(where,
+		"send_xti_udp_rr: t_sndudata: errno %d t_errno %d t_look 0x%.4x\n",
+		errno,
+		t_errno,
+		t_look(send_socket));
+	fflush(where);
 	exit(1);
       }
       send_ring = send_ring->next;
       
       /* receive the response. with UDP we will get it all, or nothing */
       
-      if((rsp_bytes_recvd=recv(send_socket,
-			       recv_ring->buffer_ptr,
-			       rsp_size,
-			       0)) != rsp_size) {
+      if((t_rcvudata(send_socket,
+		     &recv_unitdata,
+		     &flags)) != 0) {
+	if (errno == TNODATA) {
+	  continue;
+	}
 	if (errno == EINTR) {
 	  /* Again, we have likely hit test-end time */
 	  break;
 	}
-	perror("send_xti_udp_rr: data recv error");
+	fprintf(where,
+		"send_xti_udp_rr: t_rcvudata: errno %d t_errno %d t_look 0x%x\n",
+		errno,
+		t_errno,
+		t_look(send_socket));
+	fprintf(where,
+		"recv_unitdata.udata.buf %x\n",recv_unitdata.udata.buf);
+	fprintf(where,
+		"recv_unitdata.udata.maxlen %x\n",recv_unitdata.udata.maxlen);
+	fprintf(where,
+		"recv_unitdata.udata.len %x\n",recv_unitdata.udata.len);
+	fprintf(where,
+		"recv_unitdata.addr.buf %x\n",recv_unitdata.addr.buf);
+	fprintf(where,
+		"recv_unitdata.addr.maxlen %x\n",recv_unitdata.addr.maxlen);
+	fprintf(where,
+		"recv_unitdata.addr.len %x\n",recv_unitdata.addr.len);
+	fflush(where);
 	exit(1);
       }
       recv_ring = recv_ring->next;
@@ -3781,10 +3893,6 @@ Send   Recv    Send   Recv\n\
       
     }
     
-    /* for some strange reason, I used to call shutdown on the UDP */
-    /* data socket here. I'm not sure why, because it would not have */
-    /* any effect... raj 11/94 */
-    
     /* this call will always give us the elapsed time for the test, and */
     /* will also store-away the necessaries for cpu utilization */
     
@@ -3797,12 +3905,12 @@ Send   Recv    Send   Recv\n\
     /* it wasn't supposed to care, it will return obvious values. */
     
     recv_response();
-    if (!netperf_response->serv_errno) {
+    if (!netperf_response.content.serv_errno) {
       if (debug)
 	fprintf(where,"remote results obtained\n");
     }
     else {
-      errno = netperf_response->serv_errno;
+      errno = netperf_response.content.serv_errno;
       perror("netperf: remote error");
       
       exit(1);
@@ -3836,7 +3944,8 @@ Send   Recv    Send   Recv\n\
 	
 	local_service_demand  = calc_service_demand((double) nummessages*1024,
 						    0.0,
-						    0.0);
+						    0.0,
+						    0);
       }
       else {
 	local_cpu_utilization	= -1.0;
@@ -3852,7 +3961,8 @@ Send   Recv    Send   Recv\n\
 	
 	remote_service_demand  = calc_service_demand((double) nummessages*1024,
 						     0.0,
-						     remote_cpu_utilization);
+						     remote_cpu_utilization,
+						     xti_udp_rr_result->num_cpus);
       }
       else {
 	remote_cpu_utilization = -1.0;
@@ -3884,7 +3994,7 @@ Send   Recv    Send   Recv\n\
     confidence_iteration++;
     
     /* we are done with the socket */
-    close(send_socket);
+    t_close(send_socket);
   }
 
   /* at this point, we have made all the iterations we are going to */
@@ -4023,8 +4133,12 @@ int
   struct ring_elt *recv_ring;
   struct ring_elt *send_ring;
 
-  struct	sockaddr_in        myaddr_in,
-  peeraddr_in;
+  struct t_bind bind_req, bind_resp;
+  struct t_unitdata send_unitdata;
+  struct t_unitdata recv_unitdata;
+  int	            flags = 0;
+
+  struct sockaddr_in myaddr_in, peeraddr_in;
   int	s_data;
   int 	addrlen;
   int	trans_received;
@@ -4035,12 +4149,21 @@ int
   struct	xti_udp_rr_response_struct	*xti_udp_rr_response;
   struct	xti_udp_rr_results_struct	*xti_udp_rr_results;
   
+  
+  /* a little variable initialization */
+  memset (&myaddr_in, 0, sizeof(struct sockaddr_in));
+  myaddr_in.sin_family      = AF_INET;
+  myaddr_in.sin_addr.s_addr = INADDR_ANY;
+  myaddr_in.sin_port        = 0;
+  memset (&peeraddr_in, 0, sizeof(struct sockaddr_in));
+
+  /* and some not so paranoid :) */
   xti_udp_rr_request  = 
-    (struct xti_udp_rr_request_struct *)netperf_request->test_specific_data;
+    (struct xti_udp_rr_request_struct *)netperf_request.content.test_specific_data;
   xti_udp_rr_response = 
-    (struct xti_udp_rr_response_struct *)netperf_response->test_specific_data;
+    (struct xti_udp_rr_response_struct *)netperf_response.content.test_specific_data;
   xti_udp_rr_results  = 
-    (struct xti_udp_rr_results_struct *)netperf_response->test_specific_data;
+    (struct xti_udp_rr_results_struct *)netperf_response.content.test_specific_data;
   
   if (debug) {
     fprintf(where,"netserver: recv_xti_udp_rr: entered...\n");
@@ -4065,7 +4188,7 @@ int
     fflush(where);
   }
   
-  netperf_response->response_type = XTI_UDP_RR_RESPONSE;
+  netperf_response.content.response_type = XTI_UDP_RR_RESPONSE;
   
   if (debug) {
     fprintf(where,"recv_xti_udp_rr: the response type is set...\n");
@@ -4103,25 +4226,6 @@ int
     fflush(where);
   }
   
-  /* Let's clear-out our sockaddr for the sake of cleanlines. Then we */
-  /* can put in OUR values !-) At some point, we may want to nail this */
-  /* socket to a particular network-level address, but for now, */
-  /* INADDR_ANY should be just fine. */
-  
-  bzero((char *)&myaddr_in,
-	sizeof(myaddr_in));
-  myaddr_in.sin_family      = AF_INET;
-  myaddr_in.sin_addr.s_addr = INADDR_ANY;
-  myaddr_in.sin_port        = 0;
-  
-  /* Grab a socket to listen on, and then listen on it. */
-  
-  if (debug) {
-    fprintf(where,"recv_xti_udp_rr: grabbing a socket...\n");
-    fflush(where);
-  }
-  
-
   /* create_xti_endpoint expects to find some things in the global */
   /* variables, so set the globals based on the values in the request. */
   /* once the socket has been created, we will set the response values */
@@ -4131,14 +4235,43 @@ int
   loc_rcvavoid = xti_udp_rr_request->so_rcvavoid;
   loc_sndavoid = xti_udp_rr_request->so_sndavoid;
 
-  s_data = create_xti_endpoint(AF_INET,
-			      SOCK_DGRAM);
+#ifdef __alpha
+  
+  /* ok - even on a DEC box, strings are strings. I din't really want */
+  /* to ntohl the words of a string. since I don't want to teach the */
+  /* send_ and recv_ _request and _response routines about the types, */
+  /* I will put "anti-ntohl" calls here. I imagine that the "pure" */
+  /* solution would be to use XDR, but I am still leary of being able */
+  /* to find XDR libs on all platforms I want running netperf. raj */
+  {
+    int *charword;
+    int *initword;
+    int *lastword;
+    
+    initword = (int *) xti_udp_rr_request->xti_device;
+    lastword = initword + ((xti_udp_rr_request->dev_name_len + 3) / 4);
+    
+    for (charword = initword;
+	 charword < lastword;
+	 charword++) {
+      
+      *charword = htonl(*charword);
+    }
+  }
+  
+#endif /* __alpha */
+    
+  s_data = create_xti_endpoint(xti_udp_rr_request->xti_device);
   
   if (s_data < 0) {
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
-    
     exit(1);
+  }
+
+  if (debug) {
+    fprintf(where,"recv_xti_udp_rr: endpoint created...\n");
+    fflush(where);
   }
   
   /* Let's get an address assigned to this socket so we can tell the */
@@ -4146,35 +4279,51 @@ int
   /* nail this socket to a specific IP address in a multi-homed, */
   /* multi-connection situation, but for now, we'll ignore the issue */
   /* and concentrate on single connection testing. */
-  
-  if (bind(s_data,
-	   (struct sockaddr *)&myaddr_in,
-	   sizeof(myaddr_in)) == -1) {
-    netperf_response->serv_errno = errno;
-    close(s_data);
+
+  bind_req.addr.maxlen = sizeof(struct sockaddr_in);
+  bind_req.addr.len    = sizeof(struct sockaddr_in);
+  bind_req.addr.buf    = (char *)&myaddr_in;
+  bind_req.qlen        = 1;
+
+  bind_resp.addr.maxlen = sizeof(struct sockaddr_in);
+  bind_resp.addr.len    = sizeof(struct sockaddr_in);
+  bind_resp.addr.buf    = (char *)&myaddr_in;
+  bind_resp.qlen        = 1;
+
+  if (t_bind(s_data,
+	     &bind_req,
+	     &bind_resp) == -1) {
+    if (debug) {
+      fprintf(where,
+	      "recv_xti_udp_rr: t_bind failed, t_errno %d errno %d\n",
+	      t_errno,
+	      errno);
+      fflush(where);
+    }
+
+    netperf_response.content.serv_errno = t_errno;
     send_response();
     
     exit(1);
   }
-  
-  /* now get the port number assigned by the system  */
-  addrlen = sizeof(myaddr_in);
-  if (getsockname(s_data, 
-		  (struct sockaddr *)&myaddr_in,
-		  &addrlen) == -1){
-    netperf_response->serv_errno = errno;
-    close(s_data);
-    send_response();
-    
-    exit(1);
+
+  if (debug) {
+    fprintf(where,
+	    "recv_xti_udp_rr: endpoint bound to port %d...\n",
+	    ntohs(myaddr_in.sin_port));
+    fflush(where);
   }
+
+  xti_udp_rr_response->test_length = 
+    xti_udp_rr_request->test_length;
+
   
   /* Now myaddr_in contains the port and the internet address this is */
   /* returned to the sender also implicitly telling the sender that the */
   /* socket buffer sizing has been done. */
   
   xti_udp_rr_response->data_port_number = (int) ntohs(myaddr_in.sin_port);
-  netperf_response->serv_errno   = 0;
+  netperf_response.content.serv_errno   = 0;
   
   fprintf(where,"recv port number %d\n",myaddr_in.sin_port);
   fflush(where);
@@ -4189,7 +4338,8 @@ int
   xti_udp_rr_response->measure_cpu = 0;
   if (xti_udp_rr_request->measure_cpu) {
     xti_udp_rr_response->measure_cpu = 1;
-    xti_udp_rr_response->cpu_rate = calibrate_local_cpu(xti_udp_rr_request->cpu_rate);
+    xti_udp_rr_response->cpu_rate = 
+      calibrate_local_cpu(xti_udp_rr_request->cpu_rate);
   }
    
   /* before we send the response back to the initiator, pull some of */
@@ -4199,6 +4349,38 @@ int
   xti_udp_rr_response->so_rcvavoid   = loc_rcvavoid;
   xti_udp_rr_response->so_sndavoid   = loc_sndavoid;
  
+  /* since we are going to call t_rcvudata() instead of t_rcv() we */
+  /* need to init the unitdata structure raj 3/95 */
+
+  memset (&recv_unitdata, 0, sizeof(recv_unitdata));
+  recv_unitdata.addr.maxlen = sizeof(struct sockaddr_in);
+  recv_unitdata.addr.len    = sizeof(struct sockaddr_in);
+  recv_unitdata.addr.buf    = (char *)&peeraddr_in;
+
+  recv_unitdata.opt.maxlen = 0;
+  recv_unitdata.opt.len    = 0;
+  recv_unitdata.opt.buf    = NULL;
+
+  recv_unitdata.udata.maxlen = xti_udp_rr_request->request_size;
+  recv_unitdata.udata.len    = xti_udp_rr_request->request_size;
+  recv_unitdata.udata.buf    = recv_ring->buffer_ptr;
+
+  /* since we are going to call t_sndudata() instead of t_snd() we */
+  /* need to init the unitdata structure raj 8/95 */
+
+  memset (&send_unitdata, 0, sizeof(send_unitdata));
+  send_unitdata.addr.maxlen = sizeof(struct sockaddr_in);
+  send_unitdata.addr.len    = sizeof(struct sockaddr_in);
+  send_unitdata.addr.buf    = (char *)&peeraddr_in;
+
+  send_unitdata.opt.maxlen = 0;
+  send_unitdata.opt.len    = 0;
+  send_unitdata.opt.buf    = NULL;
+
+  send_unitdata.udata.maxlen = xti_udp_rr_request->response_size;
+  send_unitdata.udata.len    = xti_udp_rr_request->response_size;
+  send_unitdata.udata.buf    = send_ring->buffer_ptr;
+
   send_response();
   
   
@@ -4225,38 +4407,50 @@ int
   while ((!times_up) || (trans_remaining > 0)) {
     
     /* receive the request from the other side */
-    if (recvfrom(s_data,
-		 recv_ring->buffer_ptr,
-		 xti_udp_rr_request->request_size,
-		 0,
-		 (struct sockaddr *)&peeraddr_in,
-		 &addrlen) != xti_udp_rr_request->request_size) {
+    if (t_rcvudata(s_data,
+		   &recv_unitdata,
+		   &flags) != 0) {
+      if (errno == TNODATA) {
+	continue;
+      }
       if (errno == EINTR) {
 	/* we must have hit the end of test time. */
 	break;
       }
-      netperf_response->serv_errno = errno;
+      if (debug) {
+	fprintf(where,
+		"recv_xti_udp_rr: t_rcvudata failed, t_errno %d errno %d\n",
+		t_errno,
+		errno);
+	fflush(where);
+      }
+      netperf_response.content.serv_errno = t_errno;
       send_response();
       exit(1);
     }
     recv_ring = recv_ring->next;
+    recv_unitdata.udata.buf = recv_ring->buffer_ptr;
 
     /* Now, send the response to the remote */
-    if (sendto(s_data,
-	       send_ring->buffer_ptr,
-	       xti_udp_rr_request->response_size,
-	       0,
-	       (struct sockaddr *)&peeraddr_in,
-	       addrlen) != xti_udp_rr_request->response_size) {
+    if (t_sndudata(s_data,
+		   &send_unitdata) != 0) {
       if (errno == EINTR) {
 	/* we have hit end of test time. */
 	break;
       }
-      netperf_response->serv_errno = errno;
+      if (debug) {
+	fprintf(where,
+		"recv_xti_udp_rr: t_sndudata failed, t_errno %d errno %d\n",
+		t_errno,
+		errno);
+	fflush(where);
+      }
+      netperf_response.content.serv_errno = errno;
       send_response();
       exit(1);
     }
     send_ring = send_ring->next;
+    send_unitdata.udata.buf = send_ring->buffer_ptr;
     
     trans_received++;
     if (trans_remaining) {
@@ -4345,11 +4539,11 @@ recv_xti_tcp_rr()
   struct	xti_tcp_rr_results_struct	*xti_tcp_rr_results;
   
   xti_tcp_rr_request = 
-    (struct xti_tcp_rr_request_struct *)netperf_request->test_specific_data;
+    (struct xti_tcp_rr_request_struct *)netperf_request.content.test_specific_data;
   xti_tcp_rr_response =
-    (struct xti_tcp_rr_response_struct *)netperf_response->test_specific_data;
+    (struct xti_tcp_rr_response_struct *)netperf_response.content.test_specific_data;
   xti_tcp_rr_results =
-    (struct xti_tcp_rr_results_struct *)netperf_response->test_specific_data;
+    (struct xti_tcp_rr_results_struct *)netperf_response.content.test_specific_data;
   
   if (debug) {
     fprintf(where,"netserver: recv_xti_tcp_rr: entered...\n");
@@ -4374,7 +4568,7 @@ recv_xti_tcp_rr()
     fflush(where);
   }
   
-  netperf_response->response_type = XTI_TCP_RR_RESPONSE;
+  netperf_response.content.response_type = XTI_TCP_RR_RESPONSE;
   
   if (debug) {
     fprintf(where,"recv_xti_tcp_rr: the response type is set...\n");
@@ -4465,7 +4659,7 @@ recv_xti_tcp_rr()
   s_listen = create_xti_endpoint(xti_tcp_rr_request->xti_device);
   
   if (s_listen < 0) {
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
     
     exit(1);
@@ -4490,7 +4684,7 @@ recv_xti_tcp_rr()
   if (t_bind(s_listen,
 	     &bind_req,
 	     &bind_resp) == -1) {
-    netperf_response->serv_errno = t_errno;
+    netperf_response.content.serv_errno = t_errno;
     close(s_listen);
     send_response();
     
@@ -4509,7 +4703,7 @@ recv_xti_tcp_rr()
   /* socket buffer sizing has been done. */
   
   xti_tcp_rr_response->data_port_number = (int) ntohs(myaddr_in.sin_port);
-  netperf_response->serv_errno   = 0;
+  netperf_response.content.serv_errno   = 0;
   
   /* But wait, there's more. If the initiator wanted cpu measurements, */
   /* then we must call the calibrate routine, which will return the max */
@@ -4556,7 +4750,7 @@ recv_xti_tcp_rr()
 	    errno,
 	    t_errno);
     fflush(where);
-    netperf_response->serv_errno = t_errno;
+    netperf_response.content.serv_errno = t_errno;
     close(s_listen);
     send_response();
     exit(1);
@@ -4635,7 +4829,7 @@ recv_xti_tcp_rr()
 		" t_look 0x%x",
 		t_look(s_data));
 	fflush(where);
-	netperf_response->serv_errno = t_errno;
+	netperf_response.content.serv_errno = t_errno;
 	send_response();
 	exit(1);
       }
@@ -4680,7 +4874,7 @@ recv_xti_tcp_rr()
 	      " t_look 0x%x",
 	      t_look(s_data));
       fflush(where);
-      netperf_response->serv_errno = t_errno;
+      netperf_response.content.serv_errno = t_errno;
       send_response();
       exit(1);
     }
@@ -4772,7 +4966,7 @@ bytes  Bytes  bytes    bytes   secs.    per sec   \n\n";
 Local /Remote\n\
 Socket Size   Request Resp.  Elapsed Trans.   CPU    CPU    S.dem   S.dem\n\
 Send   Recv   Size    Size   Time    Rate     local  remote local   remote\n\
-bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      ms/Tr   ms/Tr\n\n";
+bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      us/Tr   us/Tr\n\n";
   
   char *cpu_fmt_0 =
     "%6.3f\n";
@@ -4815,18 +5009,19 @@ Send   Recv    Send   Recv\n\
   struct	hostent	        *hp;
   struct	sockaddr_in	server;
   struct        sockaddr_in     *myaddr;
-  int                            myport;
+  unsigned      int             addr;
+  int                           myport;
 
   struct	xti_tcp_conn_rr_request_struct	*xti_tcp_conn_rr_request;
   struct	xti_tcp_conn_rr_response_struct	*xti_tcp_conn_rr_response;
   struct	xti_tcp_conn_rr_results_struct	*xti_tcp_conn_rr_result;
   
   xti_tcp_conn_rr_request = 
-    (struct xti_tcp_conn_rr_request_struct *)netperf_request->test_specific_data;
+    (struct xti_tcp_conn_rr_request_struct *)netperf_request.content.test_specific_data;
   xti_tcp_conn_rr_response = 
-    (struct xti_tcp_conn_rr_response_struct *)netperf_response->test_specific_data;
+    (struct xti_tcp_conn_rr_response_struct *)netperf_response.content.test_specific_data;
   xti_tcp_conn_rr_result =
-    (struct xti_tcp_conn_rr_results_struct *)netperf_response->test_specific_data;
+    (struct xti_tcp_conn_rr_results_struct *)netperf_response.content.test_specific_data;
   
   /* since we are now disconnected from the code that established the */
   /* control socket, and since we want to be able to use different */
@@ -4841,19 +5036,26 @@ Send   Recv    Send   Recv\n\
 	sizeof(struct sockaddr_in));
   myaddr->sin_family = AF_INET;
 
+ /* it would seem that while HP-UX will allow an IP address (as a */
+ /* string) in a call to gethostbyname, other, less enlightened */
+ /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
   if ((hp = gethostbyname(remote_host)) == NULL) {
-    fprintf(where,
-	    "send_xti_tcp_conn_rr: could not resolve the name%s\n",
-	    remote_host);
-    fflush(where);
+    if ((addr = inet_addr(remote_host)) == -1) {
+      fprintf(where,
+	      "send_xti_tcp_conn_rr: could not resolve the name %s\n",
+	      remote_host);
+      fflush(where);
+      exit(1);
+    }
+    server.sin_addr.s_addr = addr;
+    server.sin_family == AF_INET;
   }
-  
-  bcopy(hp->h_addr,
-	(char *)&server.sin_addr,
-	hp->h_length);
-  
-  server.sin_family = hp->h_addrtype;
-  
+  else {
+    bcopy(hp->h_addr,
+	  (char *)&server.sin_addr,
+	  hp->h_length);
+    server.sin_family = hp->h_addrtype;
+  }
   
   if ( print_headers ) {
     fprintf(where,"TCP Connect/Request/Response Test\n");
@@ -4907,7 +5109,7 @@ Send   Recv    Send   Recv\n\
   /* default should be used. Alignment is the exception, it will */
   /* default to 8, which will be no alignment alterations. */
   
-  netperf_request->request_type	        =	DO_XTI_TCP_CRR;
+  netperf_request.content.request_type	        =	DO_XTI_TCP_CRR;
   xti_tcp_conn_rr_request->recv_buf_size	=	rsr_size;
   xti_tcp_conn_rr_request->send_buf_size	=	rss_size;
   xti_tcp_conn_rr_request->recv_alignment	=	remote_recv_align;
@@ -4946,7 +5148,7 @@ Send   Recv    Send   Recv\n\
   
   recv_response();
   
-  if (!netperf_response->serv_errno) {
+  if (!netperf_response.content.serv_errno) {
     rsr_size	=	xti_tcp_conn_rr_response->recv_buf_size;
     rss_size	=	xti_tcp_conn_rr_response->send_buf_size;
     rem_nodelay	=	xti_tcp_conn_rr_response->no_delay;
@@ -4962,7 +5164,7 @@ Send   Recv    Send   Recv\n\
     }
   }
   else {
-    errno = netperf_response->serv_errno;
+    errno = netperf_response.content.serv_errno;
     perror("netperf: remote error");
     
     exit(1);
@@ -5156,12 +5358,12 @@ newport:
   /* wasn't supposed to care, it will return obvious values. */
   
   recv_response();
-  if (!netperf_response->serv_errno) {
+  if (!netperf_response.content.serv_errno) {
     if (debug)
       fprintf(where,"remote results obtained\n");
   }
   else {
-    errno = netperf_response->serv_errno;
+    errno = netperf_response.content.serv_errno;
     perror("netperf: remote error");
     
     exit(1);
@@ -5199,8 +5401,9 @@ newport:
       /* multiply the number of transaction by 1024 to get */
       /* "good" numbers */
       local_service_demand  = calc_service_demand((double) nummessages*1024,
-						      0.0,
-						      0.0);
+						  0.0,
+						  0.0,
+						  0);
     }
     else {
       local_cpu_utilization	= -1.0;
@@ -5219,7 +5422,8 @@ newport:
       /* "good" numbers */
       remote_service_demand = calc_service_demand((double) nummessages*1024,
 						  0.0,
-						  remote_cpu_utilization);
+						  remote_cpu_utilization,
+						  xti_tcp_conn_rr_result->num_cpus);
     }
     else {
       remote_cpu_utilization = -1.0;
@@ -5338,11 +5542,11 @@ recv_xti_tcp_conn_rr()
   struct	xti_tcp_conn_rr_results_struct	*xti_tcp_conn_rr_results;
   
   xti_tcp_conn_rr_request = 
-    (struct xti_tcp_conn_rr_request_struct *)netperf_request->test_specific_data;
+    (struct xti_tcp_conn_rr_request_struct *)netperf_request.content.test_specific_data;
   xti_tcp_conn_rr_response = 
-    (struct xti_tcp_conn_rr_response_struct *)netperf_response->test_specific_data;
+    (struct xti_tcp_conn_rr_response_struct *)netperf_response.content.test_specific_data;
   xti_tcp_conn_rr_results = 
-    (struct xti_tcp_conn_rr_results_struct *)netperf_response->test_specific_data;
+    (struct xti_tcp_conn_rr_results_struct *)netperf_response.content.test_specific_data;
   
   if (debug) {
     fprintf(where,"netserver: recv_xti_tcp_conn_rr: entered...\n");
@@ -5367,7 +5571,7 @@ recv_xti_tcp_conn_rr()
     fflush(where);
   }
   
-  netperf_response->response_type = XTI_TCP_CRR_RESPONSE;
+  netperf_response.content.response_type = XTI_TCP_CRR_RESPONSE;
   
   if (debug) {
     fprintf(where,"recv_xti_tcp_conn_rr: the response type is set...\n");
@@ -5435,7 +5639,7 @@ recv_xti_tcp_conn_rr()
 				SOCK_STREAM);
   
   if (s_listen < 0) {
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
     if (debug) {
       fprintf(where,"could not create data socket\n");
@@ -5453,7 +5657,7 @@ recv_xti_tcp_conn_rr()
   if (bind(s_listen,
 	   (struct sockaddr *)&myaddr_in,
 	   sizeof(myaddr_in)) == -1) {
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
     if (debug) {
@@ -5465,7 +5669,7 @@ recv_xti_tcp_conn_rr()
 
   /* Now, let's set-up the socket to listen for connections */
   if (listen(s_listen, 5) == -1) {
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
     if (debug) {
@@ -5480,7 +5684,7 @@ recv_xti_tcp_conn_rr()
   if (getsockname(s_listen,
 		  (struct sockaddr *)&myaddr_in,
 		  &addrlen) == -1){
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
     if (debug) {
@@ -5500,7 +5704,7 @@ recv_xti_tcp_conn_rr()
 	    xti_tcp_conn_rr_response->data_port_number);
     fflush(where);
   }
-  netperf_response->serv_errno   = 0;
+  netperf_response.content.serv_errno   = 0;
   
   /* But wait, there's more. If the initiator wanted cpu measurements, */
   /* then we must call the calibrate routine, which will return the max */
@@ -5586,7 +5790,7 @@ recv_xti_tcp_conn_rr()
 	  timed_out = 1;
 	  break;
 	}
-	netperf_response->serv_errno = errno;
+	netperf_response.content.serv_errno = errno;
 	send_response();
 	exit(1);
       }
@@ -5616,7 +5820,7 @@ recv_xti_tcp_conn_rr()
 	fflush(where);						
 	break;
       }
-      netperf_response->serv_errno = 99;
+      netperf_response.content.serv_errno = 99;
       send_response();
       exit(1);
     }

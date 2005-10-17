@@ -70,6 +70,11 @@ Specify the length of the test (default 10 seconds).
 A negative value sets the number of request/response transactions,
 or the number of bytes for a stream test.
 .TP
+.B \-n numcpus
+Specify the number of CPU's in the system on those systems for which
+netperf has no way to find the number of CPU's programatically. (all
+but HP-UX)
+.TP
 .B \-o sizespec
 Set an offset from the alignment specified with -a.
 .TP

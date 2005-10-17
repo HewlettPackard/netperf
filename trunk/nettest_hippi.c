@@ -5,7 +5,7 @@
 #endif /* lint */
 #ifdef DO_HIPPI
 char	nettest_hippi[]="\
-@(#)nettest_hippi.c (c) Copyright 1994, 1995 Hewlett-Packard Co. Version 2.0PL2";
+@(#)nettest_hippi.c (c) Copyright 1994, 1995 Hewlett-Packard Co. Version 2.1";
      
 /****************************************************************/
 /*								*/
@@ -319,7 +319,7 @@ bytes   bytes    secs            #      #   %s/sec\n\n";
   char *cpu_title =
     "Socket  Message  Elapsed      Messages                   CPU     Service\n\
 Size    Size     Time         Okay Errors   Throughput   Util    Demand\n\
-bytes   bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
+bytes   bytes    secs            #      #   %s/sec   %%       us/KB\n\n";
   
   char *cpu_fmt_0 =
     "%6.2f\n";
@@ -368,11 +368,11 @@ bytes   bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
   init_test_vars();
 
   hippi_stream_request	= 
-    (struct hippi_stream_request_struct *)netperf_request->test_specific_data;
+    (struct hippi_stream_request_struct *)netperf_request.content.test_specific_data;
   hippi_stream_response	= 
-    (struct hippi_stream_response_struct *)netperf_response->test_specific_data;
+    (struct hippi_stream_response_struct *)netperf_response.content.test_specific_data;
   hippi_stream_results	= 
-    (struct hippi_stream_results_struct *)netperf_response->test_specific_data;
+    (struct hippi_stream_results_struct *)netperf_response.content.test_specific_data;
   
   if ( print_headers ) {
     printf("HIPPI UNIDIRECTIONAL SEND TEST\n");
@@ -428,7 +428,7 @@ bytes   bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
   /* Of course this is a datagram service so no connection is actually */
   /* set up, the server just sets up the socket and binds it. */
   
-  netperf_request->request_type = DO_HIPPI_STREAM;
+  netperf_request.content.request_type = DO_HIPPI_STREAM;
   hippi_stream_request->message_size	= send_size;
   hippi_stream_request->recv_alignment	= remote_recv_align;
   hippi_stream_request->recv_offset	= remote_recv_offset;
@@ -446,12 +446,12 @@ bytes   bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
   
   recv_response();
   
-  if (!netperf_response->serv_errno) {
+  if (!netperf_response.content.serv_errno) {
     if (debug)
       fprintf(where,"send_hippi_stream: remote data connection done.\n");
   }
   else {
-    errno = netperf_response->serv_errno;
+    errno = netperf_response.content.serv_errno;
     perror("send_hippi_stream: error on remote");
     exit(1);
   }
@@ -602,12 +602,12 @@ bytes   bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
   
   /* Get the statistics from the remote end	*/
   recv_response();
-  if (!netperf_response->serv_errno) {
+  if (!netperf_response.content.serv_errno) {
     if (debug)
       fprintf(where,"send_hippi_stream: remote results obtained\n");
   }
   else {
-    errno = netperf_response->serv_errno;
+    errno = netperf_response.content.serv_errno;
     perror("send_hippi_stream: error on remote");
     exit(1);
   }
@@ -648,7 +648,8 @@ bytes   bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
       local_cpu_utilization	= calc_cpu_util(0.0);
       local_service_demand	= calc_service_demand(bytes_sent,
 						      0.0,
-						      0.0);
+						      0.0,
+						      0);
     }
     else {
       local_cpu_utilization	= -1.0;
@@ -668,7 +669,8 @@ bytes   bytes    secs            #      #   %s/sec   %%       ms/KB\n\n";
       remote_cpu_utilization	= hippi_stream_results->cpu_util;
       remote_service_demand	= calc_service_demand(bytes_recvd,
 						      0.0,
-						      remote_cpu_utilization);
+						      remote_cpu_utilization,
+						      hippi_stream_results->num_cpus);
     }
     else {
       remote_cpu_utilization	= -1.0;
@@ -773,11 +775,11 @@ recv_hippi_stream()
   init_test_vars();
 
   hippi_stream_request  = 
-    (struct hippi_stream_request_struct *)netperf_request->test_specific_data;
+    (struct hippi_stream_request_struct *)netperf_request.content.test_specific_data;
   hippi_stream_response = 
-    (struct hippi_stream_response_struct *)netperf_response->test_specific_data;
+    (struct hippi_stream_response_struct *)netperf_response.content.test_specific_data;
   hippi_stream_results  = 
-    (struct hippi_stream_results_struct *)netperf_response->test_specific_data;
+    (struct hippi_stream_results_struct *)netperf_response.content.test_specific_data;
   
   if (debug) {
     fprintf(where,"netserver: recv_hippi_stream: entered...\n");
@@ -802,7 +804,7 @@ recv_hippi_stream()
     fflush(where);
   }
   
-  netperf_response->response_type = HIPPI_STREAM_RESPONSE;
+  netperf_response.content.response_type = HIPPI_STREAM_RESPONSE;
   
   if (debug > 2) {
     fprintf(where,"recv_hippi_stream: the response type is set...\n");
@@ -847,7 +849,7 @@ recv_hippi_stream()
   s_data = create_hippi_socket();
   
   if (s_data < 0) {
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
   }
@@ -858,7 +860,7 @@ recv_hippi_stream()
   hippi_stream_response->server_sap = loc_hippi_sap;
   memcpy(hippi_stream_response->mac_addr,loc_hippi_mac,6);
 
-  netperf_response->serv_errno   = 0;
+  netperf_response.content.serv_errno   = 0;
   
   /* But wait, there's more. If the initiator wanted cpu measurements, */
   /* then we must call the calibrate routine, which will return the max */
@@ -910,7 +912,7 @@ recv_hippi_stream()
 		    recv_ring->buffer_ptr,
 		    message_size)) != message_size) {
       if ((len == -1) && (errno != EINTR)) {
-	netperf_response->serv_errno = errno;
+	netperf_response.content.serv_errno = errno;
 	send_response();
 	exit(1);
       }
@@ -955,7 +957,7 @@ recv_hippi_stream()
     fflush(where);
   }
   
-  netperf_response->response_type	= HIPPI_STREAM_RESULTS;
+  netperf_response.content.response_type	= HIPPI_STREAM_RESULTS;
   hippi_stream_results->bytes_received	= bytes_received;
   hippi_stream_results->messages_recvd	= messages_recvd;
   hippi_stream_results->elapsed_time	= elapsed_time;
@@ -998,7 +1000,7 @@ bytes  Bytes  bytes    bytes   secs.    per sec   \n\n";
 Local /Remote\n\
 Socket Size   Request Resp.  Elapsed Trans.   CPU    CPU    S.dem   S.dem\n\
 Send   Recv   Size    Size   Time    Rate     local  remote local   remote\n\
-bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      ms/Tr   ms/Tr\n\n";
+bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      us/Tr   us/Tr\n\n";
   
   char *cpu_fmt_0 =
     "%6.3f\n";
@@ -1059,11 +1061,11 @@ Send   Recv    Send   Recv\n\
   init_test_vars();
 
   hippi_rr_request  =
-    (struct hippi_rr_request_struct *)netperf_request->test_specific_data;
+    (struct hippi_rr_request_struct *)netperf_request.content.test_specific_data;
   hippi_rr_response =
-    (struct hippi_rr_response_struct *)netperf_response->test_specific_data;
+    (struct hippi_rr_response_struct *)netperf_response.content.test_specific_data;
   hippi_rr_result	 =
-    (struct hippi_rr_results_struct *)netperf_response->test_specific_data;
+    (struct hippi_rr_results_struct *)netperf_response.content.test_specific_data;
   
   /* we want to zero out the times, so we can detect unused entries. */
 #ifdef INTERVALS
@@ -1142,7 +1144,7 @@ Send   Recv    Send   Recv\n\
   /* default should be used. Alignment is the exception, it will */
   /* default to 8, which will be no alignment alterations. */
   
-  netperf_request->request_type	  =	DO_HIPPI_RR;
+  netperf_request.content.request_type	  =	DO_HIPPI_RR;
   hippi_rr_request->num_recv_bufs  =	rem_recv_bufs;
   hippi_rr_request->recv_alignment =	remote_recv_align;
   hippi_rr_request->recv_offset	  =	remote_recv_offset;
@@ -1184,14 +1186,14 @@ Send   Recv    Send   Recv\n\
   
   recv_response();
   
-  if (!netperf_response->serv_errno) {
+  if (!netperf_response.content.serv_errno) {
     if (debug)
       fprintf(where,"remote listen done.\n");
     remote_cpu_usage= hippi_rr_response->measure_cpu;
     remote_cpu_rate = hippi_rr_response->cpu_rate;
   }
   else {
-    errno = netperf_response->serv_errno;
+    errno = netperf_response.content.serv_errno;
     perror("netperf: remote error");
     exit(1);
   }
@@ -1209,7 +1211,7 @@ Send   Recv    Send   Recv\n\
 	    rem_hippi_sap,
 	    errno);
     fflush(where);
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
   }
@@ -1232,7 +1234,7 @@ Send   Recv    Send   Recv\n\
 	    "netserver: send_hippi_rr: could not bind remote MAC: errno %d\n",
 	    errno);
     fflush(where);
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
   }
@@ -1386,12 +1388,12 @@ Send   Recv    Send   Recv\n\
   /* wasn't supposed to care, it will return obvious values. */
   
   recv_response();
-  if (!netperf_response->serv_errno) {
+  if (!netperf_response.content.serv_errno) {
     if (debug)
       fprintf(where,"remote results obtained\n");
   }
   else {
-    errno = netperf_response->serv_errno;
+    errno = netperf_response.content.serv_errno;
     perror("netperf: remote error");
     fprintf(stderr,"        the errno was: %d\n",
 	    errno);
@@ -1438,7 +1440,8 @@ Send   Recv    Send   Recv\n\
       /* "good" numbers */
       local_service_demand  = calc_service_demand((double) nummessages*1024,
 						  0.0,
-						  0.0);
+						  0.0,
+						  0);
     }
     else {
       local_cpu_utilization	= -1.0;
@@ -1457,7 +1460,8 @@ Send   Recv    Send   Recv\n\
       /* "good" numbers */
       remote_service_demand  = calc_service_demand((double) nummessages*1024,
 						   0.0,
-						   remote_cpu_utilization);
+						   remote_cpu_utilization,
+						   hippi_rr_result->num_cpus);
     }
     else {
       remote_cpu_utilization = -1.0;
@@ -1592,11 +1596,11 @@ recv_hippi_rr()
   init_test_vars();
 
   hippi_rr_request  = 
-    (struct hippi_rr_request_struct *)netperf_request->test_specific_data;
+    (struct hippi_rr_request_struct *)netperf_request.content.test_specific_data;
   hippi_rr_response = 
-    (struct hippi_rr_response_struct *)netperf_response->test_specific_data;
+    (struct hippi_rr_response_struct *)netperf_response.content.test_specific_data;
   hippi_rr_results  = 
-    (struct hippi_rr_results_struct *)netperf_response->test_specific_data;
+    (struct hippi_rr_results_struct *)netperf_response.content.test_specific_data;
   
   if (debug) {
     fprintf(where,"netserver: recv_hippi_rr: entered...\n");
@@ -1621,7 +1625,7 @@ recv_hippi_rr()
     fflush(where);
   }
   
-  netperf_response->response_type = HIPPI_RR_RESPONSE;
+  netperf_response.content.response_type = HIPPI_RR_RESPONSE;
   
   if (debug) {
     fprintf(where,"recv_hippi_rr: the response type is set...\n");
@@ -1686,7 +1690,7 @@ recv_hippi_rr()
   s_data = create_hippi_socket();
   
   if (s_data < 0) {
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
   }
@@ -1704,7 +1708,7 @@ recv_hippi_rr()
 	    rem_hippi_sap,
 	    errno);
     fflush(where);
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
   }
@@ -1720,7 +1724,7 @@ recv_hippi_rr()
 	    "netserver: recv_hippi_rr: could not bind remote MAC: errno %d\n",
 	    errno);
     fflush(where);
-    netperf_response->serv_errno = errno;
+    netperf_response.content.serv_errno = errno;
     send_response();
     exit(1);
   }
@@ -1744,7 +1748,7 @@ recv_hippi_rr()
   
   memcpy(hippi_rr_response->mac_addr,loc_hippi_mac,6);
   hippi_rr_response->server_sap = loc_hippi_sap;
-  netperf_response->serv_errno   = 0;
+  netperf_response.content.serv_errno   = 0;
   
   /* But wait, there's more. If the initiator wanted cpu measurements, */
   /* then we must call the calibrate routine, which will return the max */
@@ -1805,7 +1809,7 @@ recv_hippi_rr()
 		errno);
 	fflush(where);
       }
-      netperf_response->serv_errno = errno;
+      netperf_response.content.serv_errno = errno;
       send_response();
       exit(1);
     }
@@ -1831,7 +1835,7 @@ recv_hippi_rr()
 		errno);
 	fflush(where);
       }
-      netperf_response->serv_errno = errno;
+      netperf_response.content.serv_errno = errno;
       send_response();
       exit(1);
     }

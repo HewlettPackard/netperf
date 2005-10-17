@@ -55,6 +55,7 @@ struct stream_stream_results_struct {
   float	elapsed_time;	/* how long the test ran */
   float	cpu_util;	/* -1 if not measured */
   float	serv_dem;	/* -1 if not measured */
+  int   num_cpus;
 };
 
 struct	stream_rr_request_struct {
@@ -98,6 +99,7 @@ struct stream_rr_results_struct {
   float	elapsed_time;	/* how long the test ran */
   float	cpu_util;	/* -1 if not measured */
   float	serv_dem;	/* -1 if not measured */
+  int   num_cpus;
 };
 
 struct	dg_stream_request_struct {
@@ -135,6 +137,7 @@ struct	dg_stream_results_struct {
   int	bytes_received;
   float	elapsed_time;
   float	cpu_util;
+  int   num_cpus;
 };
 
 
@@ -181,4 +184,17 @@ struct dg_rr_results_struct {
   float	elapsed_time;	/* how long the test ran */
   float	cpu_util;	/* -1 if not measured */
   float	serv_dem;	/* -1 if not measured */
+  int   num_cpus;
 };
+
+extern void scan_unix_args();
+
+extern void send_stream_stream();
+extern void send_stream_rr();
+extern void send_dg_stream();
+extern void send_dg_rr();
+
+extern void recv_stream_stream();
+extern void recv_stream_rr();
+extern void recv_dg_stream();
+extern void recv_dg_rr();

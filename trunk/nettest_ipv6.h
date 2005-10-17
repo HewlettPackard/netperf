@@ -7,7 +7,7 @@
 
 #define PAD_TIME 2
 
-struct	tcp_stream_request_struct {
+struct	tcpipv6_stream_request_struct {
   int	send_buf_size;
   int	recv_buf_size;	/* how big does the client want it - the */
 			/* receive socket buffer that is */ 
@@ -31,7 +31,7 @@ struct	tcp_stream_request_struct {
 			/* recv buffer before calling recv? */ 
 };
 
-struct	tcp_stream_response_struct {
+struct	tcpipv6_stream_response_struct {
   int	recv_buf_size;	/* how big does the client want it	*/
   int	receive_size;
   int	no_delay;
@@ -44,17 +44,16 @@ struct	tcp_stream_response_struct {
   int	so_sndavoid;	/* could the remote avoid send copies? */
 };
 
-struct tcp_stream_results_struct {
+struct tcpipv6_stream_results_struct {
   double         bytes_received;
   unsigned int	 recv_calls;	
   float	         elapsed_time;	/* how long the test ran */
   float	         cpu_util;	/* -1 if not measured */
   float	         serv_dem;	/* -1 if not measured */
   int            cpu_method;    /* how was cpu util measured? */
-  int            num_cpus;      /* how many CPUs had the remote? */
 };
 
-struct	tcp_rr_request_struct {
+struct	tcpipv6_rr_request_struct {
   int	recv_buf_size;	/* how big does the client want it	*/
   int	send_buf_size;
   int	recv_alignment;
@@ -72,7 +71,7 @@ struct	tcp_rr_request_struct {
   int	so_sndavoid;    /* do we want the remote to avoid send copies? */
 };
 
-struct	tcp_rr_response_struct {
+struct	tcpipv6_rr_response_struct {
   int	recv_buf_size;	/* how big does the client want it	*/
   int	no_delay;
   int	measure_cpu;	/* does the client want server cpu	*/
@@ -84,7 +83,7 @@ struct	tcp_rr_response_struct {
   int	so_sndavoid;	/* could the remote avoid send copies? */
 };
 
-struct tcp_rr_results_struct {
+struct tcpipv6_rr_results_struct {
   unsigned int  bytes_received;	/* ignored initially */
   unsigned int	recv_calls;	/* ignored initially */
   unsigned int	trans_received;	/* not ignored  */
@@ -92,10 +91,9 @@ struct tcp_rr_results_struct {
   float	        cpu_util;	/* -1 if not measured */
   float	        serv_dem;	/* -1 if not measured */
   int           cpu_method;    /* how was cpu util measured? */
-  int           num_cpus;      /* how many CPUs had the remote? */
 };
 
-struct	tcp_conn_rr_request_struct {
+struct	tcpipv6_conn_rr_request_struct {
   int	recv_buf_size;	/* how big does the client want it	*/
   int	send_buf_size;
   int	recv_alignment;
@@ -114,7 +112,7 @@ struct	tcp_conn_rr_request_struct {
 };
 
 
-struct	tcp_conn_rr_response_struct {
+struct	tcpipv6_conn_rr_response_struct {
   int	recv_buf_size;	/* how big does the client want it	*/
   int	no_delay;
   int	measure_cpu;	/* does the client want server cpu	*/
@@ -126,18 +124,17 @@ struct	tcp_conn_rr_response_struct {
   int	so_sndavoid;	/* could the remote avoid send copies? */
 };
 
-struct tcp_conn_rr_results_struct {
+struct tcpipv6_conn_rr_results_struct {
   unsigned int	bytes_received;	/* ignored initially */
   unsigned int	recv_calls;	/* ignored initially */
   unsigned int	trans_received;	/* not ignored  */
-  float	        elapsed_time;	/* how long the test ran */
-  float	        cpu_util;	/* -1 if not measured */
-  float	        serv_dem;	/* -1 if not measured */
-  int           cpu_method;    /* how was cpu util measured? */
-  int           num_cpus;      /* how many CPUs had the remote? */
+  float	elapsed_time;	/* how long the test ran */
+  float	cpu_util;	/* -1 if not measured */
+  float	serv_dem;	/* -1 if not measured */
+  int   cpu_method;    /* how was cpu util measured? */
 };
 
-struct	tcp_tran_rr_request_struct {
+struct	tcpipv6_tran_rr_request_struct {
   int	recv_buf_size;	/* how big does the client want it	*/
   int	send_buf_size;
   int	recv_alignment;
@@ -156,7 +153,7 @@ struct	tcp_tran_rr_request_struct {
 };
 
 
-struct	tcp_tran_rr_response_struct {
+struct	tcpipv6_tran_rr_response_struct {
   int	recv_buf_size;	/* how big does the client want it	*/
   int	no_delay;
   int	measure_cpu;	/* does the client want server cpu	*/
@@ -168,19 +165,17 @@ struct	tcp_tran_rr_response_struct {
   int	so_sndavoid;	/* could the remote avoid send copies? */
 };
 
-struct tcp_tran_rr_results_struct {
+struct tcpipv6_tran_rr_results_struct {
   unsigned int	bytes_received;	/* ignored initially */
   unsigned int	recv_calls;	/* ignored initially */
   unsigned int	trans_received;	/* not ignored  */
-  float	        elapsed_time;	/* how long the test ran */
-  float	        cpu_util;	/* -1 if not measured */
-  float	        serv_dem;	/* -1 if not measured */
-  int           cpu_method;    /* how was cpu util measured? */
-  int           num_cpus;      /* how many CPUs had the remote? */
-
+  float	elapsed_time;	/* how long the test ran */
+  float	cpu_util;	/* -1 if not measured */
+  float	serv_dem;	/* -1 if not measured */
+  int   cpu_method;    /* how was cpu util measured? */
 };
 
-struct	udp_stream_request_struct {
+struct	udpipv6_stream_request_struct {
   int	recv_buf_size;
   int	message_size;
   int	recv_alignment;
@@ -194,7 +189,7 @@ struct	udp_stream_request_struct {
   int	so_sndavoid;    /* do we want the remote to avoid send copies? */
 };
 
-struct	udp_stream_response_struct {
+struct	udpipv6_stream_response_struct {
   int	recv_buf_size;
   int	send_buf_size;
   int	measure_cpu;
@@ -205,17 +200,16 @@ struct	udp_stream_response_struct {
   int	so_sndavoid;	/* could the remote avoid send copies? */
 };
 
-struct	udp_stream_results_struct {
+struct	udpipv6_stream_results_struct {
   unsigned int	messages_recvd;
   unsigned int	bytes_received;
   float	        elapsed_time;
   float	        cpu_util;
   int           cpu_method;    /* how was cpu util measured? */
-  int           num_cpus;      /* how many CPUs had the remote? */
 };
 
 
-struct	udp_rr_request_struct {
+struct	udpipv6_rr_request_struct {
   int	recv_buf_size;	/* how big does the client want it	*/
   int	send_buf_size;
   int	recv_alignment;
@@ -233,7 +227,7 @@ struct	udp_rr_request_struct {
   int	so_sndavoid;    /* do we want the remote to avoid send copies? */
 };
 
-struct	udp_rr_response_struct {
+struct	udpipv6_rr_response_struct {
   int	recv_buf_size;	/* how big does the client want it	*/
   int	no_delay;
   int	measure_cpu;	/* does the client want server cpu	*/
@@ -245,7 +239,7 @@ struct	udp_rr_response_struct {
   int	so_sndavoid;	/* could the remote avoid send copies? */
 };
 
-struct udp_rr_results_struct {
+struct udpipv6_rr_results_struct {
   unsigned int	bytes_received;	/* ignored initially */
   unsigned int	recv_calls;	/* ignored initially */
   unsigned int	trans_received;	/* not ignored  */
@@ -253,22 +247,18 @@ struct udp_rr_results_struct {
   float	        cpu_util;	/* -1 if not measured */
   float	        serv_dem;	/* -1 if not measured */
   int           cpu_method;    /* how was cpu util measured? */
-  int           num_cpus;      /* how many CPUs had the remote? */
 };
 
 extern void scan_sockets_args();
 
-extern void send_tcp_stream();
-extern void send_tcp_rr();
-extern void send_tcp_conn_rr();
-extern void send_udp_stream();
-extern void send_udp_rr();
+extern void send_tcpipv6_stream();
+extern void send_tcpipv6_rr();
+extern void send_tcpipv6_conn_rr();
+extern void send_udpipv6_stream();
+extern void send_udpipv6_rr();
 
-extern void recv_tcp_stream();
-extern void recv_tcp_rr();
-extern void recv_tcp_conn_rr();
-extern void recv_udp_stream();
-extern void recv_udp_rr();
-
-extern void loc_cpu_rate();
-extern void rem_cpu_rate();
+extern void recv_tcpipv6_stream();
+extern void recv_tcpipv6_rr();
+extern void recv_tcpipv6_conn_rr();
+extern void recv_udpipv6_stream();
+extern void recv_udpipv6_rr();
