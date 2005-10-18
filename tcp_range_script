@@ -1,0 +1,84 @@
+#!/bin/sh
+#
+# stream_range
+#
+# generate a whole lot of numbers from netperf to see the effects
+# of send size on thruput
+#
+
+#
+# usage : tcp_stream_range hostname
+#
+
+if [ $# -gt 1 ]; then
+	echo "try again, correctly -> tcp_stream_range hostname"
+	exit 1
+fi
+
+#
+# some params
+#
+if [ $# -eq 1 ]; then
+	REMHOST=$1
+else
+	echo "try again, correctly -> tcp_stream_range hostname"
+	exit 1
+fi
+
+# where is netperf, and are there any "constant" options such as 
+# the netserver port number
+NETHOME=/usr/etc/net_perf
+NETPERF=$NETHOME/netperf
+#NETPERF="./nepterf -p 12865"
+
+#
+# some stuff for the arithmatic 
+#
+# we start at start, and then multiply by MULT and add ADD. by changing
+# these numbers, we can double each time, or increase by a fixed ammount
+#
+START=1
+
+END=32768
+
+MULT=2
+
+ADD=0
+
+# Do we wish to measure CPU utilization?
+LOC_CPU=""
+REM_CPU=""
+#LOC_CPU="-c"
+#REM_CPU="-C"
+
+# If we are measuring CPU utilization, then we can save beaucoup
+# time by saving the results of the CPU calibration and passing
+# them in during the real tests. So, we execute the new CPU "tests"
+# of netperf and put the values into shell vars.
+case $LOC_CPU in
+\-c) LOC_RATE=`$NETPERF -t LOC_CPU`;;
+*) LOC_RATE=""
+esac
+
+case $REM_CPU in
+\-C) REM_RATE=`$NETPERF -t REM_CPU -H $REMHOST`;;
+*) REM_RATE=""
+esac
+
+TIME="60"
+
+# after the first datapoint, we don't want more headers
+# but we want one for the first one
+NO_HDR=""
+
+
+MESSAGE=$START
+while [ $MESSAGE -le $END ]; do
+	$NETPERF -l $TIME -H $REMHOST -t TCP_STREAM\
+          $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $NO_HDR --\
+          -m $MESSAGE -s 32768 -S 32768 
+	NO_HDR="-P 0"
+	MESSAGE=`expr $MESSAGE + $ADD`
+	MESSAGE=`expr $MESSAGE \* $MULT`
+done
+
