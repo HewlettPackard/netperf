@@ -62,10 +62,7 @@ char	netserver_id[]="\
 /*	Global include files						*/
 /*									*/
 /************************************************************************/
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
+#include <config.h>
 #if HAVE_STRING_H
 # if !STDC_HEADERS && HAVE_MEMORY_H
 #  include <memory.h>
@@ -88,13 +85,11 @@ char	netserver_id[]="\
 #ifdef WIN32
 #include <time.h>
 #include <winsock2.h>
-#define netperf_socklen_t socklen_t
 /* we need to find some other way to decide to include ws2 */
 #ifdef DO_IPV6
 #include <ws2tcpip.h>
 #endif  /* DO_IPV6 */
 #include <windows.h>
-#define sleep(x) Sleep((x)*1000)
 #else
 #ifndef MPE
 #include <sys/time.h>
@@ -369,7 +364,7 @@ set_up_server(char hostname[], char port[], int af)
   struct addrinfo     *local_res_temp;
 
   struct sockaddr_storage     peeraddr;
-  netperf_socklen_t                 peeraddr_len = sizeof(peeraddr);
+  socklen_t                 peeraddr_len = sizeof(peeraddr);
   
   SOCKET server_control;
   int on=1;
@@ -480,10 +475,10 @@ set_up_server(char hostname[], char port[], int af)
     exit(-1);
   }
   else {
-    printf("Starting netserver at hostname %s port %s and family %s\n",
+    printf("Starting netserver at hostname %s port %s and family %d\n",
 	   hostname,
 	   port,
-	   inet_ftos(af));
+	   af);
   }
 
   /*
@@ -670,7 +665,7 @@ main(int argc, char *argv[])
   char arg1[BUFSIZ], arg2[BUFSIZ];
 
   struct sockaddr name;
-  netperf_socklen_t namelen = sizeof(name);
+  socklen_t namelen = sizeof(name);
   
 
 #ifdef WIN32
@@ -790,29 +785,28 @@ main(int argc, char *argv[])
   }
 #else
   {
-    char FileName[MAX_PATH];
-    
-    strcpy(FileName, DEBUG_LOG_FILE);
-    
-    if (child) {
-      snprintf(&FileName[strlen(FileName)], sizeof(FileName) - strlen(FileName), "_%x", getpid());
-    }
-    
-    /* Hopefully, by closing stdout & stderr, the subsequent
-       fopen calls will get mapped to the correct std handles. */
-    fclose(stdout);
-    
-    if ((where = fopen(FileName, "w")) == NULL) {
-      perror("netserver: fopen of debug file as new stdout failed!");
-      exit(1);
-    }
-    
-    fclose(stderr);
-    
-    if ((where = fopen(FileName, "w")) == NULL) {
-      fprintf(stdout, "fopen of debug file as new stderr failed!\n");
-      exit(1);
-    }
+	  char FileName[MAX_PATH];
+
+	  strcpy(FileName, DEBUG_LOG_FILE);
+
+	  if (child) {
+		  snprintf(&FileName[strlen(FileName)], sizeof(FileName) - strlen(FileName), "_%x", getpid());
+	  }
+  
+	  if ((where = fopen(FileName, "w")) == NULL) {
+		  perror("netserver: debug file");
+		  exit(1);
+	  }
+
+	  /* Just in case there are some errant printfs... */
+	  CloseHandle(GetStdHandle(STD_OUTPUT_HANDLE));
+	  if (!SetStdHandle(STD_OUTPUT_HANDLE, where)) {
+		  perror("SetStdHandle failed");
+	  }
+	  CloseHandle(GetStdHandle(STD_ERROR_HANDLE));
+	  if (!SetStdHandle(STD_ERROR_HANDLE, where)) {
+		  perror("SetStdHandle failed");
+	  }
   }
 #endif
  

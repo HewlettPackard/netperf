@@ -27,17 +27,9 @@ dnl Check for socklen_t: historically on BSD it is an int, and in
 dnl POSIX 1g it is a type of its own, but some platforms use different
 dnl types for the argument to getsockopt, getpeername, etc.  So we
 dnl have to test to find something that will work.
-
-dnl Remove the AC_CHECK_TYPE - on HP-UX it would find a socklen_t, but the 
-dnl function prototypes for getsockopt et al will not actually use 
-dnl socklen_t args unless _XOPEN_SOURCE_EXTENDED is defined. so, the
-dnl AC_CHECK_TYPE will find a socklen_t and think all is happiness and
-dnl joy when you will really get warnings about mismatch types - type
-dnl mismatches that would be possibly Bad (tm) in a 64-bit compile.
-dnl raj 2005-05-11 this change may be redistributed at will 
-
 AC_DEFUN([TYPE_SOCKLEN_T],
 [
+   AC_CHECK_TYPE([socklen_t], ,[
       AC_MSG_CHECKING([for socklen_t equivalent])
       AC_CACHE_VAL([curl_cv_socklen_t_equiv],
       [
@@ -45,7 +37,7 @@ AC_DEFUN([TYPE_SOCKLEN_T],
          # "void *" as the second argument to getpeername
          curl_cv_socklen_t_equiv=
          for arg2 in "struct sockaddr" void; do
-            for t in int size_t unsigned long "unsigned long" socklen_t; do
+            for t in int size_t unsigned long "unsigned long"; do
                AC_TRY_COMPILE([
                   #ifdef HAVE_SYS_TYPES_H
                   #include <sys/types.h>
@@ -71,5 +63,7 @@ AC_DEFUN([TYPE_SOCKLEN_T],
       ])
       AC_MSG_RESULT($curl_cv_socklen_t_equiv)
       AC_DEFINE_UNQUOTED(socklen_t, $curl_cv_socklen_t_equiv,
-                        [type to use in place of socklen_t if not defined])
+                        [type to use in place of socklen_t if not defined])],
+      [#include <sys/types.h>
+#include <sys/socket.h>])
 ])

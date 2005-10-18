@@ -9,10 +9,7 @@ char   netcpu_procstat_id[]="\
    twisty, CPU-util-related, #ifdefs, all different.  raj 2005-01-26
    */
 
-#ifdef HAVE_CONFIG_H
 #include <config.h>
-#endif
-
 #include <stdio.h>
 
 #ifdef HAVE_FCNTL_H
@@ -125,10 +122,6 @@ get_cpu_idle (uint64_t *res)
   lseek (proc_stat_fd, 0, SEEK_SET);
   read (proc_stat_fd, p, proc_stat_buflen);
 
-  if (debug) {
-    fprintf(where,"proc_stat_buf %s\n",p);
-    fflush(where);
-  }
   /* Skip first line (total) on SMP */
   if (n > 1) p = strchr (p, '\n');
 
@@ -138,11 +131,8 @@ get_cpu_idle (uint64_t *res)
       p = strchr (p, ' ');
       while (*++p == ' ');
     };
+
     res[i] = strtoul (p, &p, 10);
-    if (debug) {
-      fprintf(where,"res[%d] is %d\n",i,res[i]);
-      fflush(where);
-    }
     p = strchr (p, '\n');
   };
 

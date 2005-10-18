@@ -2,15 +2,15 @@
 # Process this file with autoconf to produce a configure script.
 
 FULL-PACKAGE-NAME=netperf
-VERSION=2.4.1
+VERSION=2.4.0
 BUG-REPORT-ADDRESS=netperf-feedback@netperf.org
 
 AC_PREREQ(2.59)
-AC_INIT(netperf, 2.4.1)
+AC_INIT(netperf, 2.4.0)
 # use the target version rather than host - one day we may want cross-compile
 AC_CANONICAL_TARGET
 AC_CONFIG_SRCDIR([src/hist.h])
-AM_INIT_AUTOMAKE(netperf, 2.4.1)
+AM_INIT_AUTOMAKE(netperf, 2.4.0)
 AM_CONFIG_HEADER(config.h)
 # AC_CONFIG_HEADER(config.h)
 
@@ -35,18 +35,15 @@ if test "$ac_cv_lib_socket_main" = yes ; then
     AC_HAVE_LIBRARY(nsl)
 fi
 
-# this one is for Tru64 and bind_to_cpu_id
-AC_HAVE_LIBRARY(mach)
-
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_TYPE_OFF_T
 AC_TYPE_SIZE_T
 # AC_TYPE_SOCKLEN_T
 
-OLD_TYPE_SOCKLEN_T
+TYPE_SOCKLEN_T
 
-# AC_TYPE_IN_PORT_T
+AC_TYPE_IN_PORT_T
 AC_DECL_H_ERRNO
 AC_STRUCT_SOCKADDR_STORAGE
 AC_HEADER_TIME
@@ -61,9 +58,7 @@ AC_FUNC_SELECT_ARGTYPES
 AC_FUNC_SETPGRP
 AC_TYPE_SIGNAL
 # AC_FUNC_STAT
-# remove pstat_getdynamic (at least for now) since we don't do
-# anything conditional with the check anyway...
-AC_CHECK_FUNCS([alarm bzero gethostbyname gethrtime gettimeofday inet_ntoa memset memcpy munmap select socket sqrt strcasecmp strchr strstr strtoul uname])
+AC_CHECK_FUNCS([alarm bzero gethostbyname gethrtime gettimeofday inet_ntoa memset memcpy munmap pstat_getdynamic select socket sqrt strcasecmp strchr strstr strtoul uname])
 
 #AC_CONFIG_SUBDIRS(src/missing)
 
@@ -84,7 +79,7 @@ fi
 
 AC_CHECK_FUNCS(sendfile)
 
-AC_CHECK_FUNCS(mpctl processor_bind sched_setaffinity bind_to_cpu_id)
+AC_CHECK_FUNCS(mpctl processor_bind sched_setaffinity)
 
 # see if we should be enabling histogram support
 
@@ -458,7 +453,7 @@ case "$enable_cpuutil" in
 			enable_cpuutil="procstat - auto"
 			NETCPU_SOURCE="procstat"
 			;;
-		     *-*-hpux11.23 | *-*-hpux11.31)
+		     *-*-hpux11.23)
 			use_cpuutil=true
 			AC_DEFINE([USE_PSTAT],,[Use HP-UX's pstat interface to measure CPU util.])
 			enable_cpuutil="pstatnew - auto"

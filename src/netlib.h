@@ -2,10 +2,7 @@
         Copyright (C) 1993-2005 Hewlett-Packard Company
 */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
+#include <config.h>
 #if defined(HAVE_SYS_SOCKET_H)
 # include <sys/socket.h>
 #endif
@@ -272,11 +269,6 @@ struct ring_elt {
 #define EINTR    WSAEINTR
 #define ENOBUFS  WSAENOBUFS
 #define EWOULDBLOCK    WSAEWOULDBLOCK
-#define EAFNOSUPPORT  WSAEAFNOSUPPORT
-/* I don't use a C++ style of comment because it upsets some C
-   compilers, possibly even when it is inside an ifdef WIN32... */
-/* from public\sdk\inc\crt\errno.h */
-#define ENOSPC          28
 
 #ifdef errno
 /* delete the one from stdlib.h  */
@@ -329,10 +321,10 @@ extern void PrintWin32Error(FILE *stream, LPSTR text);
 	      (errno == WSAECONNRESET) ))
 #define SOCKET_EADDRINUSE(return_value) \
 		(((return_value) == SOCKET_ERROR) && \
-	     ((errno == WSAEADDRINUSE) ))
+	     ((errno == EADDRINUSE) ))
 #define SOCKET_EADDRNOTAVAIL(return_value) \
 		(((return_value) == SOCKET_ERROR) && \
-	     ((errno == WSAEADDRNOTAVAIL) ))
+	     ((errno == EADDRNOTAVAIL) ))
 #endif
 
 #ifdef HAVE_SENDFILE
@@ -459,7 +451,7 @@ extern  void	retrieve_confident_values(float *elapsed_time,
 			  float *local_service_demand,
 			  float *remote_service_demand);
 extern  void    display_confidence();
-extern  void    set_sock_buffer(SOCKET sd,
+extern  void    set_sock_buffer(int sd,
 				enum sock_buffer which,
 				int requested_size,
 				int *effective_sizep);
@@ -502,11 +494,9 @@ extern  struct ring_elt *allocate_exs_buffer_ring();
 #ifdef HAVE_SENDFILE
 extern  struct sendfile_ring_elt *alloc_sendfile_buf_ring();
 #endif /* HAVE_SENDFILE */
-#ifdef WANT_DLPI
 extern  int     dl_connect(int fd, unsigned char *rem_addr, int rem_addr_len);
 extern  int     dl_bind(int fd, int sap, int mode, char *dlsap_ptr, int *dlsap_len);
 extern  int     dl_open(char devfile[], int ppa);
-#endif /* WANT_DLPI */
 extern  char    format_cpu_method(int method);
 extern unsigned int convert(char *string);
 

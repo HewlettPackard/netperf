@@ -109,17 +109,8 @@ char	nettest_id[]="\
 #include <netdb.h>
 #else /* WIN32 */
 #include <process.h>
-#define netperf_socklen_t socklen_t
 #include <winsock2.h>
-/* is ifdef DO_IPV6 the right thing here?  netperf doesn't really use
-   that any more. should this just be an arbitrary include? raj
-   2005/07/28 */ 
-#ifdef DO_IPV6
-#include <ws2tcpip.h>
-#endif
 #include <windows.h>
-
-#define sleep(x) Sleep((x)*1000)
 #endif /* WIN32 */
 
 #if !defined(HAVE_GETADDRINFO) || !defined(HAVE_GETNAMEINFO)
@@ -388,9 +379,9 @@ get_tcp_info(SOCKET socket, int *mss)
 {
 
 #ifdef TCP_MAXSEG
-  netperf_socklen_t sock_opt_len;
+  socklen_t sock_opt_len;
 
-  sock_opt_len = sizeof(netperf_socklen_t);
+  sock_opt_len = sizeof(socklen_t);
   if (getsockopt(socket,
 		 getprotobyname("tcp")->p_proto,	
 		 TCP_MAXSEG,
@@ -706,7 +697,7 @@ create_data_socket(struct addrinfo *res)
     if (setsockopt(temp_socket,
 		   SOL_SOCKET,
 		   SO_RCV_COPYAVOID,
-		   (const char *)&loc_rcvavoid,
+		   &loc_rcvavoid,
 		   sizeof(int)) == SOCKET_ERROR) {
       fprintf(where,
 	      "netperf: create_data_socket: Could not enable receive copy avoidance");
@@ -724,7 +715,7 @@ create_data_socket(struct addrinfo *res)
     if (setsockopt(temp_socket,
 		   SOL_SOCKET,
 		   SO_SND_COPYAVOID,
-		   (const char *)&loc_sndavoid,
+		   &loc_sndavoid,
 		   sizeof(int)) == SOCKET_ERROR) {
       fprintf(where,
 	      "netperf: create_data_socket: Could not enable send copy avoidance");
@@ -832,7 +823,7 @@ create_data_socket(struct addrinfo *res)
   if (setsockopt(temp_socket,
 		 SOL_SOCKET,
 		 SO_REUSEADDR,
-		 (const char *)&on,
+		 &on,
 		 sizeof(on)) < 0) {
     fprintf(where,
 	    "netperf: create_data_socket: SO_REUSEADDR failled %d\n",
@@ -939,12 +930,6 @@ get_address_address(struct addrinfo *info)
     exit(-1);
   }
 }
-
-#if defined(WIN32) 
-/* +*+ Why isn't this in the winsock headers yet? */
-const char *
-inet_ntop(int af, const void *src, char *dst, size_t size);
-#endif
 
 /* This routine is a generic test header printer for the topmost header */
 void
@@ -4116,7 +4101,7 @@ recv_tcp_stream()
   
   struct sockaddr_in myaddr_in, peeraddr_in;
   SOCKET s_listen,s_data;
-  netperf_socklen_t addrlen;
+  socklen_t addrlen;
   int	len;
   unsigned int	receive_calls;
   float	elapsed_time;
@@ -4472,7 +4457,7 @@ recv_tcp_maerts()
   char  port_buffer[PORTBUFSIZE];
 
   SOCKET	s_listen,s_data;
-  netperf_socklen_t 	addrlen;
+  socklen_t 	addrlen;
   int	len;
   unsigned int	send_calls;
   float	elapsed_time;
@@ -4864,7 +4849,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 Alignment      Offset\n\
 Local  Remote  Local  Remote\n\
 Send   Recv    Send   Recv\n\
-%5d  %5d   %5d  %5d\n";
+%5d  %5d   %5d  %5d";
   
   
   int			timed_out = 0;
@@ -6073,7 +6058,7 @@ recv_udp_stream()
 
   struct sockaddr_in myaddr_in;
   SOCKET	s_data;
-  netperf_socklen_t 	addrlen;
+  socklen_t 	addrlen;
   int	len = 0;
   unsigned int	bytes_received = 0;
   float	elapsed_time;
@@ -6991,7 +6976,7 @@ recv_udp_rr()
   struct sockaddr_in        myaddr_in;
   struct sockaddr_storage    peeraddr; 
   SOCKET	s_data;
-  netperf_socklen_t 	addrlen;
+  socklen_t 	addrlen;
   int	trans_received;
   int	trans_remaining;
   int   request_bytes_recvd;
@@ -7301,7 +7286,7 @@ recv_tcp_rr()
   struct	sockaddr_in        myaddr_in,
   peeraddr_in;
   SOCKET	s_listen,s_data;
-  netperf_socklen_t 	addrlen;
+  socklen_t 	addrlen;
   char	*temp_message_ptr;
   int	trans_received;
   int	trans_remaining;
@@ -7994,7 +7979,7 @@ newport:
     }
 
     /* set up the data socket */
-    set_port_number(local_res, (unsigned short)myport);
+    set_port_number(local_res,myport);
     send_socket = create_data_socket(local_res);
   
     if (send_socket == INVALID_SOCKET) {
@@ -8330,7 +8315,7 @@ recv_tcp_conn_rr()
 
   struct	sockaddr_in        myaddr_in, peeraddr_in;
   SOCKET	s_listen,s_data;
-  netperf_socklen_t 	addrlen;
+  socklen_t 	addrlen;
   char	*recv_message_ptr;
   char	*send_message_ptr;
   char	*temp_message_ptr;
@@ -9347,7 +9332,7 @@ recv_tcp_tran_rr()
   struct	sockaddr_in        myaddr_in,
   peeraddr_in;
   SOCKET	s_listen,s_data;
-  netperf_socklen_t 	addrlen;
+  socklen_t 	addrlen;
   int   NoPush = 1;
 
   char	*recv_message_ptr;
@@ -9510,7 +9495,7 @@ recv_tcp_tran_rr()
   if (setsockopt(s_listen,
 		 IPPROTO_TCP,
 		 TCP_NOPUSH, 
-		 (const char *)&NoPush,
+		 &NoPush,
 		 sizeof(int)) == SOCKET_ERROR) {
     fprintf(where,
 	    "recv_tcp_tran_rr: could not set TCP_NOPUSH errno %d\n",
@@ -9808,7 +9793,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 Alignment      Offset\n\
 Local  Remote  Local  Remote\n\
 Send   Recv    Send   Recv\n\
-%5d  %5d   %5d  %5d\n";
+%5d  %5d   %5d  %5d";
   
   
   int			timed_out = 0;
@@ -10438,7 +10423,7 @@ recv_tcp_nbrr()
   struct	sockaddr_in        myaddr_in,
   peeraddr_in;
   SOCKET	s_listen,s_data;
-  netperf_socklen_t 	addrlen;
+  socklen_t 	addrlen;
   char	*temp_message_ptr;
   int	trans_received;
   int	trans_remaining;
@@ -11078,7 +11063,7 @@ Send   Recv    Send   Recv\n\
 #endif /* WANT_HISTOGRAM */
 
     /* set up the data socket */
-    /* newport: is this label really required any longer? */
+newport:
     /* pick a new port number */
     myport++;
 
@@ -11105,7 +11090,7 @@ Send   Recv    Send   Recv\n\
 	printf("port %d\n",myport);
       }
     }
-    set_port_number(local_res, (unsigned short)myport);
+    set_port_number(local_res,myport);
     send_socket = create_data_socket(local_res);
 
     if (send_socket == INVALID_SOCKET) {
@@ -11398,7 +11383,7 @@ recv_tcp_cc()
 
   struct	sockaddr_in        myaddr_in,  peeraddr_in;
   SOCKET	s_listen,s_data;
-  netperf_socklen_t 	addrlen;
+  socklen_t 	addrlen;
   char	*recv_message_ptr;
   char	*send_message_ptr;
   int	trans_received;
