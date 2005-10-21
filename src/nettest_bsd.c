@@ -541,24 +541,44 @@ complete_addrinfos(struct addrinfo **remote,struct addrinfo **local, char remote
 			      type,
 			      protocol,
 			      flags);
-  /* OK, if the user has not specified a local endpoint address pick
-     something based on the local address family.  if the local
-     address family is AF_UNSPEC, then base it on the
-     remote_address_family.  if the remote_address_family is !AF_INET6
-     then use "0.0.0.0" for INADDR_ANY */
+
+  /* OK, if the user has not specified a local data endpoint address
+     (test-specific -L), pick the local data endpoint address based on
+     the remote data family info (test-specific -H or -4 or -6
+     option).  if the user has not specified remote data addressing
+     info (test-specific -H, -4 -6) pick something based on the local
+     control connection address (ie the global -L option). */
 
   if (NULL == local_data_address) {
     local_data_address = malloc(HOSTNAMESIZE);
-    strcpy(local_data_address,"0.0.0.0");  /* INADDR_ANY */
-#if defined(AF_INET6)
-    if ((AF_INET6 == local_data_family) ||
-	((AF_UNSPEC == local_data_family) && 
-	 (AF_INET6 == (*remote)->ai_family))) {
-      strcpy(local_data_address,"::0");
+    if (NULL == remote_data_address) {
+      if (debug) {
+	fprintf(where,
+		"local_data_address not set, using local_host_name of '%s'\n",
+		local_host_name);
+	fflush(where);
+      }
+      strcpy(local_data_address,local_host_name);
     }
+    else {
+      if (debug) {
+	fprintf(where,
+		"local_data_address not set, using address family info\n");
+	fflush(where);
+      }
+      /* by default, use 0.0.0.0 - assume IPv4 */
+      strcpy(local_data_address,"0.0.0.0");
+#if defined(AF_INET6)
+      if ((AF_INET6 == local_data_family) ||
+	  ((AF_UNSPEC == local_data_family) &&
+	   (AF_INET6 == remote_data_family)) ||
+	  ((AF_UNSPEC == local_data_family) && 
+	   (AF_INET6 == (*remote)->ai_family))) {
+	strcpy(local_data_address,"::0");
+      }
 #endif
+    }
   }
-
 
   *local = complete_addrinfo("what to put here?",
 			     local_data_address,
