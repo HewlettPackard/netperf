@@ -1704,37 +1704,9 @@ bind_to_specific_processor(int processor_affinity)
 #include <sys/procset.h>
   processor_bind(P_PID,P_MYID,processor_affinity,NULL);
 #elif HAVE_SCHED_SETAFFINITY
- printf("bind_to_specific_processor: sched_setaffinity\n");
-#define _GNU_SOURCE
-  /* follow the bouncing interface... oy */
-#if __GNUC__ > 3 || \
-    (__GNUC__ == 3 && (__GNUC_MINOR__ > 2 || \
-                       (__GNUC_MINOR__ == 2 && __GNUC_PATCHLEVEL__ > 3)))
-#define USE_CPU_SET                     /* Defined if the affinity call
-                                         * interface (sched_setaffinity,
-                                         * sched_getaffinity) uses cpu_set_t
-                                         * parameters
-                                         */
-#endif
-#undef _GNU_SOURCE
-#ifdef USE_CPU_SET
 #include <sched.h>
-  cpu_set_t           cpu_set;
-  printf("bind_to_specific_processor: USE_CPU_SET %p %d\n",&cpu_set,sizeof(cpu_\
-set));
-  __CPU_ZERO(&cpu_set);
-  printf("zeroed");
-  __CPU_SET(processor_affinity, &cpu_set);
-  printf("set");
-  if (sched_setaffinity(getpid(), &cpu_set)) {
-    fprintf(stderr, "failed to set PID %d's CPU affinity errno %d\n",
-            getpid(),errno);
-    fflush(stderr);
-  }
-#else
-#undef __USE_GNU
-#include <sched.h>
-#define __USE_GNU
+  /* gee, I wonder what we would do on a system with > 32 or 64
+     CPUs... raj 2005-11-08 */
   unsigned long       this_mask;
   unsigned int        len = sizeof(this_mask);
   printf("masking\n");
@@ -1745,7 +1717,6 @@ set));
             getpid(),errno);
     fflush(stderr);
   }
-#endif
 #elif HAVE_BIND_TO_CPU_ID
   /* this is the one for Tru64 */
 #include <sys/types.h>
