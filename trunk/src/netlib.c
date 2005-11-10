@@ -1709,13 +1709,15 @@ bind_to_specific_processor(int processor_affinity)
      CPUs... raj 2005-11-08 */
   unsigned long       this_mask;
   unsigned int        len = sizeof(this_mask);
-  printf("masking\n");
+
   this_mask = 1 << processor_affinity;
-  printf("masked\n");
+
   if (sched_setaffinity(getpid(), len, &this_mask)) {
-    fprintf(stderr, "failed to set PID %d's CPU affinity errno %d\n",
-            getpid(),errno);
-    fflush(stderr);
+    if (debug) {
+      fprintf(stderr, "failed to set PID %d's CPU affinity errno %d\n",
+	      getpid(),errno);
+      fflush(stderr);
+    }
   }
 #elif HAVE_BIND_TO_CPU_ID
   /* this is the one for Tru64 */

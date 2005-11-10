@@ -1026,6 +1026,14 @@ print_top_test_header(char test_name[], struct addrinfo *source, struct addrinfo
 #ifdef WANT_DEMO
   fprintf(where," : demo");
 #endif
+#ifdef WANT_FIRST_BURST
+  /* a little hokey perhaps, but we really only want this to be
+     emitted for tests where it actually is used, which means a
+     "REQUEST/RESPONSE" test. raj 2005-11-10 */
+  if (strstr(test_name,"REQUEST/RESPONSE")) {
+    fprintf(where," : first burst %d",first_burst_size);
+  }
+#endif
   fprintf(where,"\n");
   
 }
