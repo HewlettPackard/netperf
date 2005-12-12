@@ -3084,6 +3084,22 @@ delta_micro(hrtime_t *begin, hrtime_t *end)
   return(nsecs/1000);
 }
 
+#elif defined(HAVE_GET_HRT)
+#include "hrt.h"
+
+void
+HIST_timestamp(hrt_t *timestamp)
+{
+  *timestamp = get_hrt();
+}
+
+int
+delta_micro(hrt_t *begin, hrt_t *end)
+{
+
+  return((int)get_hrt_delta(*end,*begin));
+
+}
 #else
 
 void

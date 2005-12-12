@@ -189,6 +189,10 @@ int
 #ifdef HAVE_GETHRTIME
 static hrtime_t time_one;
 static hrtime_t time_two;
+#elif HAVE_GET_HRT
+#include "hrt.h"
+static hrt_t time_one;
+static hrt_t time_two;
 #else
 static struct timeval time_one;
 static struct timeval time_two;
