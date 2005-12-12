@@ -343,7 +343,7 @@ double ReportPerfCntrs(PerfObj *PerfCntrs)
   
   if (verbosity > 1)
     {
-      fprintf(where,"ActualDuation (ms): %d\n", duration/10);
+      fprintf(where,"ActualDuration (ms): %d\n", duration/10);
     }
   
   if (verbosity > 1)
@@ -456,11 +456,13 @@ void ClosePerfCntrs(PerfObj *PerfCntrs)
 void
 cpu_start_internal(void)
 {
+  RestartPerfCntrs(PerfCntrs);
 }
 
 void
 cpu_stop_internal(void)
 {
+  RestartPerfCntrs(PerfCntrs);
 }
 
 float
