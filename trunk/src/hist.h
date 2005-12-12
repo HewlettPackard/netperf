@@ -38,6 +38,10 @@
 #ifdef IRIX
 #include <sys/time.h>
 #endif /* IRIX */
+
+#if defined(HAVE_GET_HRT)
+#include "hrt.h"
+#endif
    
 struct histogram_struct {
   int unit_usec[10];
@@ -86,6 +90,8 @@ void HIST_report(HIST h);
 
 #ifdef HAVE_GETHRTIME
 void HIST_timestamp(hrtime_t *timestamp);
+#elif defined(HAVE_GET_HRT)
+void HIST_timestamp(hrt_t *timestamp);
 #else
 void HIST_timestamp(struct timeval *timestamp);
 #endif
@@ -96,6 +102,8 @@ void HIST_timestamp(struct timeval *timestamp);
 */
 #ifdef HAVE_GETHRTIME
 int delta_micro(hrtime_t *begin, hrtime_t *end);
+#elif defined(HAVE_GET_HRT)
+int delta_micro(hrt_t *begin, hrt_t *end);
 #else
 int delta_micro(struct timeval *begin, struct timeval *end);
 #endif
