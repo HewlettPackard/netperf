@@ -4929,6 +4929,7 @@ Send   Recv    Send   Recv\n\
   struct	tcp_rr_results_struct	*tcp_rr_result;
 
 #ifdef WANT_FIRST_BURST
+#define REQUEST_CWND_INITIAL 2
   /* "in the beginning..." the WANT_FIRST_BURST stuff was like both
      Unix and the state of New Jersey - both were simple an unspoiled.
      then it was realized that some stacks are quite picky about
@@ -4939,12 +4940,17 @@ Send   Recv    Send   Recv\n\
      happen that frankly, we cannot guarantee with the specification
      of TCP.  ain't that grand?-)  raj 2006-01-30 */
   int requests_outstanding = 0;
-  int request_cwnd = 2;  /* we ass-u-me that having three requests
-			    outstanding at the beginning of the test
-			    is ok with TCP stacks of interest. the
-			    first two will come from our first_burst
-			    loop, and the third from our regularly
-			    scheduled send */
+  int request_cwnd = REQUEST_CWND_INITIAL;  /* we ass-u-me that having
+					       three requests
+					       outstanding at the
+					       beginning of the test
+					       is ok with TCP stacks
+					       of interest. the first
+					       two will come from our
+					       first_burst loop, and
+					       the third from our
+					       regularly scheduled
+					       send */
 #endif
 
 #ifdef WANT_INTERVALS
@@ -5004,6 +5010,15 @@ Send   Recv    Send   Recv\n\
     times_up        = 0;
     timed_out       = 0;
     trans_remaining = 0;
+
+#ifdef WANT_FIRST_BURST
+    /* we have to remember to reset the number of transactions
+       outstanding and the "congestion window for each new
+       iteration. raj 2006-01-31 */
+    requests_outstanding = 0;
+    request_cwnd = REQUEST_CWND_INITIAL;
+#endif
+
 
     /* set-up the data buffers with the requested alignment and offset. */
     /* since this is a request/response test, default the send_width and */
