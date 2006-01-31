@@ -4927,7 +4927,26 @@ Send   Recv    Send   Recv\n\
   struct	tcp_rr_request_struct	*tcp_rr_request;
   struct	tcp_rr_response_struct	*tcp_rr_response;
   struct	tcp_rr_results_struct	*tcp_rr_result;
-  
+
+#ifdef WANT_FIRST_BURST
+  /* "in the beginning..." the WANT_FIRST_BURST stuff was like both
+     Unix and the state of New Jersey - both were simple an unspoiled.
+     then it was realized that some stacks are quite picky about
+     initial congestion windows and a non-trivial initial burst of
+     requests would not be individual segments even with TCP_NODELAY
+     set. so, we have to start tracking a poor-man's congestion window
+     up here in window space because we want to try to make something
+     happen that frankly, we cannot guarantee with the specification
+     of TCP.  ain't that grand?-)  raj 2006-01-30 */
+  int requests_outstanding = 0;
+  int request_cwnd = 2;  /* we ass-u-me that having three requests
+			    outstanding at the beginning of the test
+			    is ok with TCP stacks of interest. the
+			    first two will come from our first_burst
+			    loop, and the third from our regularly
+			    scheduled send */
+#endif
+
 #ifdef WANT_INTERVALS
   int	interval_count;
   sigset_t signal_set;
@@ -5167,22 +5186,6 @@ Send   Recv    Send   Recv\n\
     /* will not do that just yet... One other question is whether or not */
     /* the send buffer and the receive buffer should be the same buffer. */
 
-#ifdef WANT_FIRST_BURST
-    {
-      int i;
-      for (i = 0; i < first_burst_size; i++) {
-	if((len=send(send_socket,
-		     send_ring->buffer_ptr,
-		     req_size,
-		     0)) != req_size) {
-	  /* we should never hit the end of the test in the first burst */
-	  perror("send_tcp_rr: initial burst data send error");
-	  exit(1);
-	}
-      }
-    }
-#endif /* WANT_FIRST_BURST */
-
 #ifdef WANT_DEMO
       if (demo_mode) {
 	HIST_timestamp(demo_one_ptr);
@@ -5192,6 +5195,40 @@ Send   Recv    Send   Recv\n\
     while ((!times_up) || (trans_remaining > 0)) {
       /* send the request. we assume that if we use a blocking socket, */
       /* the request will be sent at one shot. */
+
+#ifdef WANT_FIRST_BURST
+      /* we can inject no more than request_cwnd, which will grow with
+	 time, and no more than first_burst_size.  we don't use <= to
+	 account for the "regularly scheduled" send call.  of course
+	 that makes it more a "max_outstanding_ than a
+	 "first_burst_size" but for now we won't fix the names. also,
+	 I suspect the extra check against < first_burst_size is
+	 redundant since later I expect to make sure that request_cwnd
+	 can never get larger than first_burst_size, but just at the
+	 moment I'm feeling like a belt and suspenders kind of
+	 programmer. raj 2006-01-30 */
+      while ((first_burst_size > 0) &&
+	     (requests_outstanding < request_cwnd) &&
+	     (requests_outstanding < first_burst_size)) {
+	if (debug) {
+	  fprintf(where,
+		  "injecting, requests_outstanding %d request_cwnd %d burst %d\n",
+		  requests_outstanding,
+		  request_cwnd,
+		  first_burst_size);
+	}
+	if((len=send(send_socket,
+		     send_ring->buffer_ptr,
+		     req_size,
+		     0)) != req_size) {
+	  /* we should never hit the end of the test in the first burst */
+	  perror("send_tcp_rr: initial burst data send error");
+	  exit(-1);
+	}
+	requests_outstanding += 1;
+      }
+
+#endif /* WANT_FIRST_BURST */
       
 #ifdef WANT_HISTOGRAM
       /* timestamp just before our call to send, and then again just */
@@ -5213,7 +5250,11 @@ Send   Recv    Send   Recv\n\
 	exit(1);
       }
       send_ring = send_ring->next;
-      
+
+#ifdef WANT_FIRST_BURST
+      requests_outstanding += 1;
+#endif
+
       /* receive the response */
       rsp_bytes_left = rsp_size;
       temp_message_ptr  = recv_ring->buffer_ptr;
@@ -5235,6 +5276,22 @@ Send   Recv    Send   Recv\n\
       }	
       recv_ring = recv_ring->next;
       
+#ifdef WANT_FIRST_BURST
+      /* so, since we've gotten a response back, update the
+	 bookkeeping accordingly.  there is one less request
+	 outstanding and we can put one more out there than before. */
+      requests_outstanding -= 1;
+      if (request_cwnd < first_burst_size) {
+	request_cwnd += 1;
+	if (debug) {
+	  fprintf(where,
+		  "increased request_cwnd to %d with first_burst_size %d requests_outstanding %d\n",
+		  request_cwnd,
+		  first_burst_size,
+		  requests_outstanding);
+	}
+      }
+#endif
       if (timed_out) {
 	/* we may have been in a nested while loop - we need */
 	/* another call to break. */
@@ -6683,6 +6740,22 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
     /* test, but will not do that just yet... One other question is */
     /* whether or not the send buffer and the receive buffer should be */
     /* the same buffer. */
+
+#ifdef WANT_FIRST_BURST
+    {
+      int i;
+      for (i = 0; i < first_burst_size; i++) {
+	if((len=send(send_socket,
+		     send_ring->buffer_ptr,
+		     req_size,
+		     0)) != req_size) {
+	  /* we should never hit the end of the test in the first burst */
+	  perror("send_udp_rr: initial burst data send error");
+	  exit(-1);
+	}
+      }
+    }
+#endif /* WANT_FIRST_BURST */
 
     while ((!times_up) || (trans_remaining > 0)) {
       /* send the request */
@@ -11939,6 +12012,26 @@ scan_sockets_args(int argc, char *argv[])
     };
   }
 
+#if defined(WANT_FIRST_BURST) 
+#if defined(WANT_HISTOGRAM)
+  /* if WANT_FIRST_BURST and WANT_HISTOGRAM are defined and the user
+     indeed wants a non-zero first burst size, and we would emit a
+     histogram, then we should emit a warning that the two are not
+     compatible. raj 2006-01-31 */
+  if ((first_burst_size > 0) && (verbosity >= 2)) {
+    fprintf(stderr,
+	    "WARNING! Histograms and first bursts are incompatible!\n");
+    fflush(stderr);
+  }
+#endif
+  /* Emit a warning for first burst and not setting TCP_NODELAY */
+  if ((first_burst_size > 0) && 
+      ((!loc_nodelay) || (!rem_nodelay))) {
+    fprintf(stderr,
+	    "WARNING! Enabling first burst without setting -D for NODELAY!\n");
+    fflush(stderr);
+  }
+#endif
   /* we do not want to make remote_data_address non-NULL because if
      the user has not specified a remote adata address, we want to
      take it from the hostname in the -H global option. raj
