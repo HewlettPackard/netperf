@@ -59,6 +59,17 @@ char	nettest_sctp[]="\
 #include <arpa/inet.h>
 #include <netdb.h>
 
+/* would seem that not all sctp.h files define a MSG_EOF, but that
+   MSG_EOF can be the same as MSG_FIN so lets work with that
+   assumption.  initial find by Jon Pedersen. raj 2006-02-01 */
+#ifndef MSG_EOF
+#ifdef MSG_FIN
+#define MSG_EOF MSG_FIN
+#else
+#error Must have either MSG_EOF or MSG_FIN defined
+#endif
+#endif 
+
 #include "netlib.h"
 #include "netsh.h"
 /* get some of the functions from nettest_bsd.c */
