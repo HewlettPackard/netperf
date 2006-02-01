@@ -213,6 +213,9 @@ int     recv_width;
 /* address family */
 int	af = AF_INET;
 
+/* did someone request processor affinity? */
+int cpu_binding_requested = 0;
+
 char netserver_usage[] = "\n\
 Usage: netserver [options] \n\
 \n\
@@ -631,8 +634,10 @@ scan_cmd_line(int argc, char *argv[])
 	local_proc_affinity = convert(arg1);
 	bind_to_specific_processor(local_proc_affinity);
       }
-      if (arg2[0])
+      if (arg2[0]) {
 	remote_proc_affinity = convert(arg2);
+      }
+      cpu_binding_requested = 1;
       break;
     case 'W':
       /* set the "width" of the user space data buffer ring. This will */
