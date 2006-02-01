@@ -103,6 +103,8 @@ extern int  iteration_min;
 extern int  iteration_max;
 extern double interval;
 
+extern int cpu_binding_requested;
+
 /* stuff to controll the bufferspace "width" */
 extern int	send_width;
 extern int      recv_width;

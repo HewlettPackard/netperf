@@ -1038,6 +1038,9 @@ print_top_test_header(char test_name[], struct addrinfo *source, struct addrinfo
     fprintf(where," : first burst %d",first_burst_size);
   }
 #endif
+  if (cpu_binding_requested) {
+    fprintf(where," : cpu bind");
+  }
   fprintf(where,"\n");
   
 }
@@ -12039,13 +12042,6 @@ scan_sockets_args(int argc, char *argv[])
     fflush(stderr);
   }
 #endif
-  /* Emit a warning for first burst and not setting TCP_NODELAY */
-  if ((first_burst_size > 0) && 
-      ((!loc_nodelay) || (!rem_nodelay))) {
-    fprintf(stderr,
-	    "WARNING! Enabling first burst without setting -D for NODELAY!\n");
-    fflush(stderr);
-  }
 #endif
   /* we do not want to make remote_data_address non-NULL because if
      the user has not specified a remote adata address, we want to
