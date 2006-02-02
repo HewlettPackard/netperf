@@ -1063,10 +1063,10 @@ Size   Size    Size     Time     Throughput  \n\
 bytes  bytes   bytes    secs.    %s/sec  \n\n";
   
   char *tput_fmt_0 =
-    "%7.2f\n";
+    "%7.2f %s\n";
   
   char *tput_fmt_1 =
-    "%6d %6d %6d    %-6.2f   %7.2f   \n";
+    "%6d %6d %6d    %-6.2f   %7.2f   %s\n";
   
   char *cpu_title = "\
 Recv   Send    Send                          Utilization       Service Demand\n\
@@ -1075,10 +1075,10 @@ Size   Size    Size     Time     Throughput  local    remote   local   remote\n\
 bytes  bytes   bytes    secs.    %-8.8s/s  %% %c      %% %c      us/KB   us/KB\n\n";
   
   char *cpu_fmt_0 =
-    "%6.3f %c\n";
+    "%6.3f %c %s\n";
 
   char *cpu_fmt_1 =
-    "%6d %6d %6d    %-6.2f     %7.2f   %-6.2f   %-6.2f   %-6.3f  %-6.3f\n";
+    "%6d %6d %6d    %-6.2f     %7.2f   %-6.2f   %-6.2f   %-6.3f  %-6.3f %s\n";
   
   char *ksink_fmt = "\n\
 Alignment      Offset         %-8.8s %-8.8s    Sends   %-8.8s Recvs\n\
@@ -1656,16 +1656,20 @@ Size (bytes)\n\
     switch (verbosity) {
     case 0:
       if (local_cpu_usage) {
-		fprintf(where,
+	fprintf(where,
 		cpu_fmt_0,
 		local_service_demand,
-		local_cpu_method);
+		local_cpu_method,
+		((print_headers) || 
+		 (result_brand == NULL)) ? "" : result_brand);
       }
       else {
-		fprintf(where,
+	fprintf(where,
 		cpu_fmt_0,
 		remote_service_demand,
-		remote_cpu_method);
+		remote_cpu_method,
+		((print_headers) || 
+		 (result_brand == NULL)) ? "" : result_brand);
       }
       break;
     case 1:
@@ -1688,7 +1692,9 @@ Size (bytes)\n\
 	      local_cpu_utilization,	/* local cpu */
 	      remote_cpu_utilization,	/* remote cpu */
 	      local_service_demand,	/* local service demand */
-	      remote_service_demand);	/* remote service demand */
+	      remote_service_demand,	/* remote service demand */
+	      ((print_headers) || 
+	       (result_brand == NULL)) ? "" : result_brand);
       break;
     }
   }
@@ -1699,7 +1705,9 @@ Size (bytes)\n\
     case 0:
       fprintf(where,
 	      tput_fmt_0,
-	      thruput);
+	      thruput,
+	      ((print_headers) || 
+	       (result_brand == NULL)) ? "" : result_brand);
       break;
     case 1:
     case 2:
@@ -1712,7 +1720,9 @@ Size (bytes)\n\
 	      lss_size, 		/* local sendbuf size */
 	      send_size,		/* how large were the sends */
 	      elapsed_time, 		/* how long did it take */
-	      thruput);/* how fast did it go */
+	      thruput,                  /* how fast did it go */
+	      ((print_headers) || 
+	       (result_brand == NULL)) ? "" : result_brand);
       break;
     }
   }
@@ -1779,10 +1789,10 @@ Size   Size    Size     Time     Throughput  \n\
 bytes  bytes   bytes    secs.    %s/sec  \n\n";
   
   char *tput_fmt_0 =
-    "%7.2f\n";
+    "%7.2f %s\n";
   
   char *tput_fmt_1 =
-    "%6d %6d %6d    %-6.2f   %7.2f   \n";
+    "%6d %6d %6d    %-6.2f   %7.2f   \n %s";
   
   char *cpu_title = "\
 Recv   Send    Send                          Utilization       Service Demand\n\
@@ -1791,10 +1801,10 @@ Size   Size    Size     Time     Throughput  local    remote   local   remote\n\
 bytes  bytes   bytes    secs.    %-8.8s/s  %% %c      %% %c      us/KB   us/KB\n\n";
   
   char *cpu_fmt_0 =
-    "%6.3f %c\n";
+    "%6.3f %c %s\n";
 
   char *cpu_fmt_1 =
-    "%6d %6d %6d    %-6.2f     %7.2f   %-6.2f   %-6.2f   %-6.3f  %-6.3f\n";
+    "%6d %6d %6d    %-6.2f     %7.2f   %-6.2f   %-6.2f   %-6.3f  %-6.3f %s\n";
   
   char *ksink_fmt = "\n\
 Alignment      Offset         %-8.8s %-8.8s    Recvs   %-8.8s Sends\n\
@@ -2378,13 +2388,17 @@ Size (bytes)\n\
 	fprintf(where,
 		cpu_fmt_0,
 		local_service_demand,
-		local_cpu_method);
+		local_cpu_method,
+		((print_headers) || 
+		 (result_brand == NULL)) ? "" : result_brand);
       }
       else {
 	fprintf(where,
 		cpu_fmt_0,
 		remote_service_demand,
-		remote_cpu_method);
+		remote_cpu_method,
+		((print_headers) || 
+		 (result_brand == NULL)) ? "" : result_brand);
       }
       break;
     case 1:
@@ -2407,7 +2421,9 @@ Size (bytes)\n\
 	      local_cpu_utilization,	/* local cpu */
 	      remote_cpu_utilization,	/* remote cpu */
 	      local_service_demand,	/* local service demand */
-	      remote_service_demand);	/* remote service demand */
+	      remote_service_demand,	/* remote service demand */
+	      ((print_headers) || 
+	       (result_brand == NULL)) ? "" : result_brand);
       break;
     }
   }
@@ -2418,7 +2434,9 @@ Size (bytes)\n\
     case 0:
       fprintf(where,
 	      tput_fmt_0,
-	      thruput);
+	      thruput,
+	      ((print_headers) || 
+	       (result_brand == NULL)) ? "" : result_brand);
       break;
     case 1:
     case 2:
@@ -2431,7 +2449,9 @@ Size (bytes)\n\
 	      rss_size, 		/* remot sendbuf size */
 	      send_size,		/* how large were the recvs */
 	      elapsed_time, 		/* how long did it take */
-	      thruput);/* how fast did it go */
+	      thruput,                  /* how fast did it go */
+	      ((print_headers) || 
+	       (result_brand == NULL)) ? "" : result_brand);
       break;
     }
   }
@@ -2631,7 +2651,7 @@ Size (bytes)\n\
         exit (1);
     }
     if (debug) {
-        fprintf (where, "send_tcp_stream: qhandle=%d\n", exs_qhandle);
+        fprintf (where, "send_exs_tcp_stream: qhandle=%d\n", exs_qhandle);
     }
 
     /* we have a great-big while loop which controls the number of times */
@@ -4873,10 +4893,10 @@ Send   Recv   Size     Size    Time     Rate         \n\
 bytes  Bytes  bytes    bytes   secs.    per sec   \n\n";
   
   char *tput_fmt_0 =
-    "%7.2f\n";
+    "%7.2f %s\n";
   
   char *tput_fmt_1_line_1 = "\
-%-6d %-6d %-6d   %-6d  %-6.2f   %7.2f   \n";
+%-6d %-6d %-6d   %-6d  %-6.2f   %7.2f   %s\n";
   char *tput_fmt_1_line_2 = "\
 %-6d %-6d\n";
   
@@ -4887,10 +4907,10 @@ Send   Recv   Size    Size   Time    Rate     local  remote local   remote\n\
 bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\n";
   
   char *cpu_fmt_0 =
-    "%6.3f %c\n";
+    "%6.3f %c %s\n";
   
   char *cpu_fmt_1_line_1 = "\
-%-6d %-6d %-6d  %-6d %-6.2f  %-6.2f  %-6.2f %-6.2f %-6.3f  %-6.3f\n";
+%-6d %-6d %-6d  %-6d %-6.2f  %-6.2f  %-6.2f %-6.2f %-6.3f  %-6.3f %s\n";
   
   char *cpu_fmt_1_line_2 = "\
 %-6d %-6d\n";
@@ -5496,13 +5516,17 @@ Send   Recv    Send   Recv\n\
 	fprintf(where,
 		cpu_fmt_0,
 		local_service_demand,
-		local_cpu_method);
+		local_cpu_method,
+		((print_headers) || 
+		 (result_brand == NULL)) ? "" : result_brand);
       }
       else {
 	fprintf(where,
 		cpu_fmt_0,
 		remote_service_demand,
-		remote_cpu_method);
+		remote_cpu_method,
+		((print_headers) || 
+		 (result_brand == NULL)) ? "" : result_brand);
       }
       break;
     case 1:
@@ -5525,7 +5549,9 @@ Send   Recv    Send   Recv\n\
 	      local_cpu_utilization,	/* local cpu */
 	      remote_cpu_utilization,	/* remote cpu */
 	      local_service_demand,	/* local service demand */
-	      remote_service_demand);	/* remote service demand */
+	      remote_service_demand,	/* remote service demand */
+	      ((print_headers) || 
+	       (result_brand == NULL)) ? "" : result_brand);
       fprintf(where,
 	      cpu_fmt_1_line_2,
 	      rss_size,
@@ -5540,7 +5566,9 @@ Send   Recv    Send   Recv\n\
     case 0:
       fprintf(where,
 	      tput_fmt_0,
-	      thruput);
+	      thruput,
+	      ((print_headers) || 
+	       (result_brand == NULL)) ? "" : result_brand);
       break;
     case 1:
     case 2:
@@ -5555,7 +5583,9 @@ Send   Recv    Send   Recv\n\
 	      req_size,		/* how large were the requests */
 	      rsp_size,		/* how large were the responses */
 	      elapsed_time, 		/* how long did it take */
-	      thruput);
+	      thruput,
+	      ((print_headers) || 
+	       (result_brand == NULL)) ? "" : result_brand);
       fprintf(where,
 	      tput_fmt_1_line_2,
 	      rss_size, 		/* remote recvbuf size */
@@ -12043,6 +12073,7 @@ scan_sockets_args(int argc, char *argv[])
   }
 #endif
 #endif
+
   /* we do not want to make remote_data_address non-NULL because if
      the user has not specified a remote adata address, we want to
      take it from the hostname in the -H global option. raj
