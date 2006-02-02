@@ -130,6 +130,9 @@ extern	char
 extern char
   fill_file[BUFSIZ];
 
+extern char *
+  result_brand;
+
 #ifdef WANT_DLPI
 
 extern int

@@ -94,7 +94,7 @@ double atof(const char *);
  /* Some of the args take optional parameters. Since we are using */
  /* getopt to parse the command line, we will tell getopt that they do */
  /* not take parms, and then look for them ourselves */
-#define GLOBAL_CMD_LINE_ARGS "A:a:b:CcdDf:F:H:hi:I:l:L:n:O:o:P:p:t:T:v:W:w:46"
+#define GLOBAL_CMD_LINE_ARGS "A:a:b:B:CcdDf:F:H:hi:I:l:L:n:O:o:P:p:t:T:v:W:w:46"
 
 /************************************************************************/
 /*									*/
@@ -136,6 +136,12 @@ int
   debug,			/* debugging level */
   print_headers,		/* do/don't display headers */
   verbosity;		/* verbosity level */
+
+/* When specified with -B, this will be displayed at the end of the line
+   for output that does not include the test header.  mostly this is
+   to help identify a specific netperf result when concurrent netperfs
+   are run. raj 2006-02-01 */
+char *result_brand = NULL;
 
 /* cpu variables */
 int
@@ -239,6 +245,7 @@ Usage: netperf [global options] -- [test options] \n\
 Global options:\n\
     -a send,recv      Set the local send,recv buffer alignment\n\
     -A send,recv      Set the remote send,recv buffer alignment\n\
+    -B brandstr       Specify a string to be emitted with brief output\n\
     -c [cpu_rate]     Report local CPU usage\n\
     -C [cpu_rate]     Report remote CPU usage\n\
     -d                Increase debugging output\n\
@@ -716,6 +723,16 @@ scan_cmd_line(int argc, char *argv[])
       fprintf(where,
 	      "Packet burst size is not compiled in. \n");
 #endif /* WANT_INTERVALS */
+      break;
+    case 'B':
+      result_brand = malloc(strlen(optarg)+1);
+      if (NULL != result_brand) {
+	strcpy(result_brand,optarg);
+      }
+      else {
+	fprintf(where,
+		"Unable to malloc space for result brand\n");
+      }
       break;
     case '4':
       address_family = AF_INET;
