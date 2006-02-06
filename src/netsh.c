@@ -175,23 +175,21 @@ int
   remote_send_offset = 0,
   remote_recv_offset = 0;
 
-#ifdef WANT_INTERVALS
+#if defined(WANT_INTERVALS) || defined(WANT_DEMO)
 int
   interval_usecs,
   interval_wate,
   interval_burst;
-#endif /* WANT_INTERVALS */
 
-#ifdef WANT_DEMO
-int demo_mode;               /* are we actually in demo mode? */
+int demo_mode;                    /* are we actually in demo mode? */
 double demo_interval = 1000000.0; /* what is the desired interval to
 				     display interval results. default
 				     is one second in units of
 				     microseconds */
-double demo_units = 0.0;     /* what is our current best guess as to
-				how many work units must be done to be
-				near the desired reporting
-				interval? */ 
+double demo_units = 0.0;          /* what is our current best guess as
+				     to how many work units must be
+				     done to be near the desired
+				     reporting interval? */ 
 
 double units_this_tick;
 #endif
