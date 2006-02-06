@@ -734,7 +734,7 @@ catcher(int sig)
         fflush(where);
       }
       times_up = 1;
-#ifdef WANT_INTERVALS
+#if defined(WANT_INTERVALS) && !defined(WANT_SPIN)
       stop_itimer();
 #endif /* WANT_INTERVALS */
       break;

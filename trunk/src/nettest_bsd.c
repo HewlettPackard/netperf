@@ -200,6 +200,52 @@ static struct timeval time_two;
 static HIST time_hist;
 #endif /* WANT_HISTOGRAM */
 
+#ifdef WANT_INTERVALS
+int interval_count;
+#ifndef WANT_SPIN
+sigset_t signal_set;
+#define INTERVALS_INIT() \
+    if (interval_burst) { \
+      /* zero means that we never pause, so we never should need the \
+      /* interval timer. we used to use it for demo mode, but we deal \
+	 with that with a variant on watching the clock rather than \
+	 waiting for a timer. raj 2006-02-06 */ \
+      start_itimer(interval_wate); \
+    } \
+    interval_count = interval_burst; \
+    /* get the signal set for the call to sigsuspend */ \
+    if (sigprocmask(SIG_BLOCK, (sigset_t *)NULL, &signal_set) != 0) { \
+      fprintf(where, \
+	      "%s: unable to get sigmask errno %d\n", \
+	      __func__, \
+	      errno); \
+      fflush(where); \
+      exit(1); \
+    }
+#define INTERVALS_WAIT() \
+      /* in this case, the interval count is the count-down couter \
+	 to decide to sleep for a little bit */ \
+      if ((interval_burst) && (--interval_count == 0)) { \
+	/* call sigsuspend and wait for the interval timer to get us \
+	   out */ \
+	if (debug) { \
+	  fprintf(where,"about to suspend\n"); \
+	  fflush(where); \
+	} \
+	if (sigsuspend(&signal_set) == EFAULT) { \
+	  fprintf(where, \
+		  "%s: fault with sigsuspend.\n", \
+                  __func__); \
+	  fflush(where); \
+	  exit(1); \
+	} \
+	interval_count = interval_burst; \
+      }
+
+#else
+#endif
+#endif
+
 #ifdef WANT_DEMO
 #ifdef HAVE_GETHRTIME
 static hrtime_t demo_one;
@@ -1021,9 +1067,15 @@ print_top_test_header(char test_name[], struct addrinfo *source, struct addrinfo
 #ifdef WANT_HISTOGRAM
   fprintf(where," : histogram");
 #endif /* WANT_HISTOGRAM */
+
 #ifdef WANT_INTERVALS
+#ifndef WANT_SPIN
   fprintf(where," : interval");
+#else
+  fprintf(where," : spin interval");
+#endif
 #endif /* WANT_INTERVALS */
+
 #ifdef DIRTY 
   fprintf(where," : dirty data");
 #endif /* DIRTY */
@@ -1094,11 +1146,6 @@ Size (bytes)\n\
   
   
   float			elapsed_time;
-  
-#ifdef WANT_INTERVALS
-  int interval_count;
-  sigset_t signal_set;
-#endif
   
   /* what we want is to have a buffer space that is at least one */
   /* send-size greater than our send window. this will insure that we */
@@ -1372,22 +1419,12 @@ Size (bytes)\n\
     /* utilization and/or service demand and thruput. */
     
     cpu_start(local_cpu_usage);
-    
-#ifdef WANT_INTERVALS
-    if (interval_burst) {
-      /* zero means that we never pause, so we never should need the */
-      /* interval timer, unless we are in demo_mode */
-      start_itimer(interval_wate);
-    }
-    interval_count = interval_burst;
-    /* get the signal set for the call to sigsuspend */
-    if (sigprocmask(SIG_BLOCK, (sigset_t *)NULL, &signal_set) != 0) {
-      fprintf(where,
-	      "send_tcp_stream: unable to get sigmask errno %d\n",
-	      errno);
-      fflush(where);
-      exit(1);
-    }
+
+    /* we only start the interval timer if we are using the
+       timer-timed intervals rather than the sit and spin ones. raj
+       2006-02-06 */    
+#if defined(WANT_INTERVALS)
+    INTERVALS_INIT();
 #endif /* WANT_INTERVALS */
 
 #ifdef DIRTY
@@ -1460,24 +1497,8 @@ Size (bytes)\n\
       DEMO_STREAM_INTERVAL(send_size)
 #endif 
 
-#ifdef WANT_INTERVALS      
-      /* in this case, the interval count is the count-down couter */
-      /* to decide to sleep for a little bit */
-      if ((interval_burst) && (--interval_count == 0)) {
-	/* call sigsuspend and wait for the interval timer to get us */
-	/* out */
-	if (debug) {
-	  fprintf(where,"about to suspend\n");
-	  fflush(where);
-	}
-	if (sigsuspend(&signal_set) == EFAULT) {
-	  fprintf(where,
-		  "send_tcp_stream: fault with sigsuspend.\n");
-	  fflush(where);
-	  exit(1);
-	}
-	interval_count = interval_burst;
-      }
+#if defined(WANT_INTERVALS)
+      INTERVALS_WAIT();
 #endif /* WANT_INTERVALS */
       
       /* now we want to move our pointer to the next position in the */
@@ -1821,11 +1842,6 @@ Size (bytes)\n\
   
   float			elapsed_time;
   
-#ifdef WANT_INTERVALS
-  int interval_count;
-  sigset_t signal_set;
-#endif
-  
   /* what we want is to have a buffer space that is at least one */
   /* recv-size greater than our recv window. this will insure that we */
   /* are never trying to re-use a buffer that may still be in the hands */
@@ -2102,20 +2118,7 @@ Size (bytes)\n\
     cpu_start(local_cpu_usage);
     
 #ifdef WANT_INTERVALS
-    if ((interval_burst) || (demo_mode)) {
-      /* zero means that we never pause, so we never should need the */
-      /* interval timer, unless we are in demo_mode */
-      start_itimer(interval_wate);
-    }
-    interval_count = interval_burst;
-    /* get the signal set for the call to sigsuspend */
-    if (sigprocmask(SIG_BLOCK, (sigset_t *)NULL, &signal_set) != 0) {
-      fprintf(where,
-	      "send_tcp_maerts: unable to get sigmask errno %d\n",
-	      errno);
-      fflush(where);
-      exit(1);
-    }
+    INTERVALS_INIT();
 #endif /* WANT_INTERVALS */
 
 #ifdef DIRTY
@@ -2172,30 +2175,11 @@ Size (bytes)\n\
 #endif /* WANT_HISTOGRAM */      
 
 #ifdef WANT_DEMO
-      DEMO_STREAM_INTERVAL(len)
+      DEMO_STREAM_INTERVAL(len);
 #endif
 
 #ifdef WANT_INTERVALS      
-      if (demo_mode) {
-	units_this_tick += recv_size;
-      }
-      /* in this case, the interval count is the count-down couter */
-      /* to decide to sleep for a little bit */
-      if ((interval_burst) && (--interval_count == 0)) {
-	/* call sigsuspend and wait for the interval timer to get us */
-	/* out */
-	if (debug) {
-	  fprintf(where,"about to suspend\n");
-	  fflush(where);
-	}
-	if (sigsuspend(&signal_set) == EFAULT) {
-	  fprintf(where,
-		  "send_tcp_maerts: fault with sigsuspend.\n");
-	  fflush(where);
-	  exit(1);
-	}
-	interval_count = interval_burst;
-      }
+      INTERVALS_WAIT();
 #endif /* WANT_INTERVALS */
       
       /* now we want to move our pointer to the next position in the */
@@ -2553,11 +2537,6 @@ Size (bytes)\n\
 
     float         elapsed_time;
 
-#if 0 /* def WANT_INTERVALS */
-    int interval_count;
-    sigset_t signal_set;
-#endif
-
     /* what we want is to have a buffer space that is at least one */
     /* send-size greater than our send window. this will insure that we */
     /* are never trying to re-use a buffer that may still be in the hands */
@@ -2858,20 +2837,7 @@ Size (bytes)\n\
         cpu_start(local_cpu_usage);
 
 #if 0 /* def WANT_INTERVALS */
-        if (interval_burst) {
-            /* zero means that we never pause, so we never should need the */
-            /* interval timer, unless we are in demo_mode */
-            start_itimer(interval_wate);
-        }
-        interval_count = interval_burst;
-        /* get the signal set for the call to sigsuspend */
-        if (sigprocmask(SIG_BLOCK, (sigset_t *)NULL, &signal_set) != 0) {
-            fprintf(where,
-                    "send_tcp_stream: unable to get sigmask errno %d\n",
-                    errno);
-            fflush(where);
-            exit(1);
-        }
+	INTERVALS_INIT();
 #endif /* WANT_INTERVALS */
 
 #ifdef DIRTY
@@ -2988,27 +2954,11 @@ Size (bytes)\n\
 #endif /* WANT_HISTOGRAM */
 
 #if 0 /* def WANT_DEMO */
-            DEMO_STREAM_INTERVAL(send_size)
+            DEMO_STREAM_INTERVAL(send_size);
 #endif
 
 #if 0 /* def WANT_INTERVALS */
-                /* in this case, the interval count is the count-down couter */
-                /* to decide to sleep for a little bit */
-                if ((interval_burst) && (--interval_count == 0)) {
-                    /* call sigsuspend and wait for the interval timer to get us */
-                    /* out */
-                    if (debug) {
-                        fprintf(where,"about to suspend\n");
-                        fflush(where);
-                    }
-                    if (sigsuspend(&signal_set) == EFAULT) {
-                        fprintf(where,
-                                "send_tcp_stream: fault with sigsuspend.\n");
-                        fflush(where);
-                        exit(1);
-                    }
-                    interval_count = interval_burst;
-                }
+	    INTERVALS_WAIT();
 #endif /* WANT_INTERVALS */
 
         }
@@ -3373,11 +3323,6 @@ Size (bytes)\n\
 
   float			elapsed_time;
   
-#ifdef WANT_INTERVALS
-  int interval_count;
-  sigset_t signal_set;
-#endif
-  
   /* what we want is to have a buffer space that is at least one */
   /* send-size greater than our send window. this will insure that we */
   /* are never trying to re-use a buffer that may still be in the hands */
@@ -3710,23 +3655,7 @@ Size (bytes)\n\
     cpu_start(local_cpu_usage);
     
 #ifdef WANT_INTERVALS
-    if (interval_burst) {
-      /* zero means that we never pause, so we never should need the */
-      /* interval timer, unless we are in demo_mode */
-      start_itimer(interval_wate);
-    }
-
-    interval_count = interval_burst;
-
-    /* get the signal set for the call to sigsuspend */
-    
-    if (sigprocmask(SIG_BLOCK, (sigset_t *)NULL, &signal_set) != 0) {
-      fprintf(where,
-	      "sendfile_tcp_stream: unable to get sigmask errno %d\n",
-	      errno);
-      fflush(where);
-      exit(1);
-    }
+    INTERVALS_INIT();
 #endif /* WANT_INTERVALS */
 
 #ifdef DIRTY
@@ -3822,34 +3751,11 @@ Size (bytes)\n\
 #endif /* WANT_HISTOGRAM */      
     
 #ifdef WANT_DEMO
-      DEMO_STREAM_INTERVAL(send_size)
+      DEMO_STREAM_INTERVAL(send_size);
 #endif 
   
 #ifdef WANT_INTERVALS      
-      
-      /* in this case, the interval count is the count-down couter */
-      /* to decide to sleep for a little bit */
-      
-      if ((interval_burst) && (--interval_count == 0)) {
-	
-	/* call sigsuspend and wait for the interval timer to get us */
-	/* out */
-	
-	if (debug) {
-	  fprintf(where,"about to suspend\n");
-	  fflush(where);
-	}
-	
-	if (sigsuspend(&signal_set) == EFAULT) {
-	  fprintf(where,
-		  "sendfile_tcp_stream: fault with sigsuspend.\n");
-	  fflush(where);
-	  exit(1);
-	}
-	
-	interval_count = interval_burst;
-      }
-      
+      INTERVALS_WAIT();
 #endif /* WANT_INTERVALS */
       
       /* now we want to move our pointer to the next position in the */
@@ -4976,11 +4882,6 @@ Send   Recv    Send   Recv\n\
 					       send */
 #endif
 
-#ifdef WANT_INTERVALS
-  int	interval_count;
-  sigset_t signal_set;
-#endif /* WANT_INTERVALS */
-
   tcp_rr_request = 
     (struct tcp_rr_request_struct *)netperf_request.content.test_specific_data;
   tcp_rr_response=
@@ -5199,20 +5100,7 @@ Send   Recv    Send   Recv\n\
     cpu_start(local_cpu_usage);
 
 #ifdef WANT_INTERVALS
-    if (interval_burst) {
-      /* zero means that we never pause, so we never should need the */
-      /* interval timer, unless we are in demo_mode */
-      start_itimer(interval_wate);
-    }
-    interval_count = interval_burst;
-    /* get the signal set for the call to sigsuspend */
-    if (sigprocmask(SIG_BLOCK, (sigset_t *)NULL, &signal_set) != 0) {
-      fprintf(where,
-	      "send_tcp_rr: unable to get sigmask errno %d\n",
-	      errno);
-      fflush(where);
-      exit(1);
-    }
+    INTERVALS_INIT();
 #endif /* WANT_INTERVALS */
     
     /* We use an "OR" to control test execution. When the test is */
@@ -5342,27 +5230,11 @@ Send   Recv    Send   Recv\n\
 #endif /* WANT_HISTOGRAM */
 
 #ifdef WANT_DEMO
-      DEMO_RR_INTERVAL(1)
+      DEMO_RR_INTERVAL(1);
 #endif
 
 #ifdef WANT_INTERVALS      
-      /* in this case, the interval count is the count-down couter */
-      /* to decide to sleep for a little bit */
-      if ((interval_burst) && (--interval_count == 0)) {
-	/* call sigsuspend and wait for the interval timer to get us */
-	/* out */
-	if (debug) {
-	  fprintf(where,"about to suspend\n");
-	  fflush(where);
-	}
-	if (sigsuspend(&signal_set) == EFAULT) {
-	  fprintf(where,
-		  "send_tcp_rr: fault with signal set!\n");
-	  fflush(where);
-	  exit(1);
-	}
-	interval_count = interval_burst;
-      }
+      INTERVALS_WAIT();
 #endif /* WANT_INTERVALS */
       
       nummessages++;          
@@ -5685,10 +5557,6 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
   unsigned int sum_failed_sends;
   double sum_local_thruput;
 
-#ifdef WANT_INTERVALS
-  int	interval_count;
-  sigset_t signal_set;
-#endif /* WANT_INTERVALS */
 #ifdef DIRTY
   int	*message_int_ptr;
   int	i;
@@ -5873,20 +5741,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     cpu_start(local_cpu_usage);
     
 #ifdef WANT_INTERVALS
-    if ((interval_burst) || (demo_mode)) {
-      /* zero means that we never pause, so we never should need the */
-      /* interval timer, unless we are in demo_mode */
-      start_itimer(interval_wate);
-    }
-    interval_count = interval_burst;
-    /* get the signal set for the call to sigsuspend */
-    if (sigprocmask(SIG_BLOCK, (sigset_t *)NULL, &signal_set) != 0) {
-      fprintf(where,
-	      "send_udp_stream: unable to get sigmask errno %d\n",
-	      errno);
-      fflush(where);
-      exit(1);
-    }
+    INTERVALS_INIT();
 #endif /* WANT_INTERVALS */
     
     /* Send datagrams like there was no tomorrow. at somepoint it might */
@@ -5945,27 +5800,9 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
       HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
 #endif /* WANT_HISTOGRAM */
+
 #ifdef WANT_INTERVALS      
-      if (demo_mode) {
-	units_this_tick += send_size;
-      }
-      /* in this case, the interval count is the count-down couter */
-      /* to decide to sleep for a little bit */
-      if ((interval_burst) && (--interval_count == 0)) {
-	/* call sigsuspend and wait for the interval timer to get us */
-	/* out */
-	if (debug) {
-	  fprintf(where,"about to suspend\n");
-	  fflush(where);
-	}
-	if (sigsuspend(&signal_set) == EFAULT) {
-	  fprintf(where,
-		  "send_udp_stream: fault with signal set!\n");
-	  fflush(where);
-	  exit(1);
-	}
-	interval_count = interval_burst;
-      }
+      INTERVALS_WAIT();
 #endif /* WANT_INTERVALS */
       
     }
@@ -6543,11 +6380,6 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
   struct	udp_rr_response_struct	*udp_rr_response;
   struct	udp_rr_results_struct	*udp_rr_result;
 
-#ifdef WANT_INTERVALS
-  int	interval_count;
-  sigset_t signal_set;
-#endif /* WANT_INTERVALS */
-  
   udp_rr_request  =
     (struct udp_rr_request_struct *)netperf_request.content.test_specific_data;
   udp_rr_response =
@@ -6763,20 +6595,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 #endif 
 
 #ifdef WANT_INTERVALS
-    if (interval_burst) {
-      /* zero means that we never pause, so we never should need the */
-      /* interval timer, unless we are in demo_mode */
-      start_itimer(interval_wate);
-    }
-    interval_count = interval_burst;
-    /* get the signal set for the call to sigsuspend */
-    if (sigprocmask(SIG_BLOCK, (sigset_t *)NULL, &signal_set) != 0) {
-      fprintf(where,
-	      "send_udp_rr: unable to get sigmask errno %d\n",
-	      errno);
-      fflush(where);
-      exit(1);
-    }
+    INTERVALS_INIT();
 #endif /* WANT_INTERVALS */
     
     /* We use an "OR" to control test execution. When the test is */
@@ -6852,28 +6671,11 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 #endif
 
 #ifdef WANT_DEMO
-      DEMO_RR_INTERVAL(1)
+      DEMO_RR_INTERVAL(1);
 #endif
 
 #ifdef WANT_INTERVALS      
-
-      /* in this case, the interval count is the count-down couter */
-      /* to decide to sleep for a little bit */
-      if ((interval_burst) && (--interval_count == 0)) {
-	/* call sigsuspend and wait for the interval timer to get us */
-	/* out */
-	if (debug) {
-	  fprintf(where,"about to suspend\n");
-	  fflush(where);
-	}
-	if (sigsuspend(&signal_set) == EFAULT) {
-	  fprintf(where,
-		  "send_udp_rr: fault with signal set!\n");
-	  fflush(where);
-	  exit(1);
-	}
-	interval_count = interval_burst;
-      }
+      INTERVALS_WAIT();
 #endif /* WANT_INTERVALS */
       
       nummessages++;          
@@ -9994,11 +9796,6 @@ Send   Recv    Send   Recv\n\
   struct	tcp_rr_response_struct	*tcp_rr_response;
   struct	tcp_rr_results_struct	*tcp_rr_result;
   
-#ifdef WANT_INTERVALS
-  int	interval_count;
-  sigset_t signal_set;
-#endif /* WANT_INTERVALS */
-
   tcp_rr_request = 
     (struct tcp_rr_request_struct *)netperf_request.content.test_specific_data;
   tcp_rr_response=
@@ -10211,20 +10008,7 @@ Send   Recv    Send   Recv\n\
     cpu_start(local_cpu_usage);
 
 #ifdef WANT_INTERVALS
-    if ((interval_burst) || (demo_mode)) {
-      /* zero means that we never pause, so we never should need the */
-      /* interval timer, unless we are in demo_mode */
-      start_itimer(interval_wate);
-    }
-    interval_count = interval_burst;
-    /* get the signal set for the call to sigsuspend */
-    if (sigprocmask(SIG_BLOCK, (sigset_t *)NULL, &signal_set) != 0) {
-      fprintf(where,
-	      "send_tcp_nbrr: unable to get sigmask errno %d\n",
-	      errno);
-      fflush(where);
-      exit(1);
-    }
+    INTERVALS_INIT();
 #endif /* WANT_INTERVALS */
     
     /* We use an "OR" to control test execution. When the test is */
@@ -10304,26 +10088,7 @@ Send   Recv    Send   Recv\n\
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
 #endif /* WANT_HISTOGRAM */
 #ifdef WANT_INTERVALS      
-      if (demo_mode) {
-	units_this_tick += 1;
-      }
-      /* in this case, the interval count is the count-down couter */
-      /* to decide to sleep for a little bit */
-      if ((interval_burst) && (--interval_count == 0)) {
-	/* call sigsuspend and wait for the interval timer to get us */
-	/* out */
-	if (debug) {
-	  fprintf(where,"about to suspend\n");
-	  fflush(where);
-	}
-	if (sigsuspend(&signal_set) == EFAULT) {
-	  fprintf(where,
-		  "send_udp_rr: fault with signal set!\n");
-	  fflush(where);
-	  exit(1);
-	}
-	interval_count = interval_burst;
-      }
+      INTERVALS_WAIT();
 #endif /* WANT_INTERVALS */
       
       nummessages++;          
