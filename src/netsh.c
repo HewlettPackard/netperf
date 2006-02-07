@@ -705,8 +705,8 @@ scan_cmd_line(int argc, char *argv[])
       /* second, and that the packet rate is */
       /* expressed in packets per millisecond. */
 #ifdef WANT_INTERVALS
-      interval_wate  = convert(optarg);
-      interval_usecs = interval_wate * 1000;
+      interval_usecs = convert_timespec(optarg);
+      interval_wate  = interval_usecs / 1000;
 #else
       fprintf(where,
 	      "Packet rate control is not compiled in.\n");

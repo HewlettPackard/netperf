@@ -863,6 +863,7 @@ Optional Features:
   --enable-exs  include ICSC async sockets tests
   --enable-sctp   include tests to measure SCTP performance
   --enable-intervals  include ability to pace operations, may affect result
+  --enable-spin  paces operations should sit and spin - WILL affect result
   --enable-burst  include intial request burst ability in _RR tests, may affect result
   --enable-cpuutil  include code to measure CPU utilization using specified mechanism
 
@@ -7300,6 +7301,57 @@ then
 
 cat >>confdefs.h <<\_ACEOF
 #define WANT_INTERVALS
+_ACEOF
+
+fi
+
+# see if paced sends should wait and spin
+
+echo "$as_me:$LINENO: checking whether paced sends should spin" >&5
+echo $ECHO_N "checking whether paced sends should spin... $ECHO_C" >&6
+
+# Check whether --enable-spin or --disable-spin was given.
+if test "${enable_spin+set}" = set; then
+  enableval="$enable_spin"
+
+fi;
+
+case "$enable_spin" in
+	yes)
+		use_spin=true
+		;;
+	no)
+		use_spin=false
+		;;
+	'')
+		use_spin=false
+		;;
+	*)
+		{ { echo "$as_me:$LINENO: error: --enable-spin takes yes or no" >&5
+echo "$as_me: error: --enable-spin takes yes or no" >&2;}
+   { (exit 1); exit 1; }; }
+		;;
+esac
+
+if $use_spin
+then
+	echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+else
+	echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+fi
+
+if $use_spin
+then
+
+cat >>confdefs.h <<\_ACEOF
+#define WANT_INTERVALS
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define WANT_SPIN
 _ACEOF
 
 fi

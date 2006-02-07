@@ -1089,6 +1089,38 @@ convert(char *string)
   return(base);
 }
 
+/* this routine is like convert, but it is used for an interval time
+   specification instead of stuff like socket buffer or send sizes.
+   it converts everything to microseconds for internal use.  if there
+   is an 'm' at the end it assumes the user provided milliseconds, s
+   will imply seconds, u will imply microseconds.  in the future n
+   will imply nanoseconds but for now it will be ignored. if there is
+   no suffix or an unrecognized suffix, it will be assumed the user
+   provided milliseconds, which was the long-time netperf default. one
+   of these days, we should probably revisit that nanosecond business
+   wrt the return value being just an int rather than a uint64_t or
+   something.  raj 2006-02-06 */
+
+unsigned int
+convert_timespec(char *string) {
+
+  unsigned int base;
+  base = atoi(string);
+  if (strstr(string,"m")) {
+    base *= 1000;
+  }
+  else if (strstr(string,"u")) {
+    base *= (1);
+  }
+  else if (strstr(string,"s")) {
+    base *= (1000 * 1000);
+  }
+  else {
+    base *= (1000);
+  }
+  return(base);
+}
+
 
  /* this routine will allocate a circular list of buffers for either */
  /* send or receive operations. each of these buffers will be aligned */
@@ -3065,9 +3097,9 @@ HIST_report(HIST h){
 
 #endif
 
-/* we split these out so we can use HIST_timestamp and delta_micro for
-   _either_  WANT_HISTOGRAM, or WANT_DEMO modes. raj 2005-04-06 */
-#if defined(WANT_HISTOGRAM) || defined(WANT_DEMO)
+/* with the advent of sit-and-spin intervals support, we might as well
+   make these things available all the time, not just for demo or
+   histogram modes. raj 2006-02-06 */
 #ifdef HAVE_GETHRTIME
 
 void
@@ -3131,7 +3163,7 @@ delta_micro(struct timeval *begin,struct timeval *end)
 
 }
 #endif /* HAVE_GETHRTIME */
-#endif /* WANT_HISTOGRAM */
+
 
 #ifdef WANT_DLPI
 

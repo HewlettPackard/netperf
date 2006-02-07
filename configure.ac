@@ -372,6 +372,41 @@ then
 	AC_DEFINE([WANT_INTERVALS],,[Define to one to enable paced operation support. May affect results.])
 fi
 
+# see if paced sends should wait and spin
+
+AC_MSG_CHECKING([whether paced sends should spin])
+
+AC_ARG_ENABLE(spin,
+	[  --enable-spin  paces operations should sit and spin - WILL affect result])
+
+case "$enable_spin" in
+	yes)
+		use_spin=true
+		;;
+	no)
+		use_spin=false
+		;;
+	'')
+		use_spin=false
+		;;
+	*)
+		AC_MSG_ERROR([--enable-spin takes yes or no])
+		;;
+esac
+
+if $use_spin
+then
+	AC_MSG_RESULT(yes)
+else
+	AC_MSG_RESULT(no)
+fi
+
+if $use_spin
+then
+	AC_DEFINE([WANT_INTERVALS],,[Define to one to enable paced operation support. May affect results.])
+	AC_DEFINE([WANT_SPIN],,[Define to one to spin waiting on paced operation. WILL AFFEFCT CPU UTILIZATION])
+fi
+
 # see if we should be enabling initial request bursts
 
 AC_MSG_CHECKING([whether to include initial burst support in _RR tests])

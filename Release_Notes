@@ -2,6 +2,56 @@ These are the Release Notes for Revision 2.4.1 of netperf:
 
 Things changed in this release:
 
+*) There is now a -B global command-line argument that will append its
+   parameter as a string to the end of result lines when test banners
+   have been suppressed.  this is to make it easier to distinguish one
+   result from another when aggregate restults are being run in
+   parallel, without having to resort to having the individual results
+   shell redirected to a file. This has been done for some of the
+   tests in nettest_bsd.c, but not all of them, nor for the tests in
+   the other nettest_mumble.c files.
+
+*) There is now an --enable-spin configure option that will enable
+   intervals if not already enabled and will have the sender sit and
+   spin in a tight loop until time for the next interval rather than
+   wait for an interval timer to expire.  This means it should be
+   possible to have a much finer granularity on the interval, at the
+   expense of an EXTREME increase in CPU utilization.  (To the extent
+   I'm considering disabling measurement of local CPU utilization when
+   that mode is enabled, and bursts have been requested - your
+   feedback on that topic would be most appreciated) 
+
+   If only --enable-intervals is used with configure, the old set the
+   interval timer and wait method is still used.
+
+   If --enable-spin is configured, the test banner will include "spin
+   intervals" rather than the "intervals" from a plain
+   --enable-intervals.  The sit and spin will either use
+   gettimeofday(), or gethrtime() if gethrtime() is available.
+
+   This has been implemented in the tests of nettest_bsd.c but none of
+   the others.  Volunteers would be most welcome.  I would entertain
+   the notion of making the implementation a series of inline
+   functions in netlib. This holds true for the demo mode - why will
+   become clear when you look at nettest_bsd.c.  While things are
+   considerably cleaner than they were before, with reuse within
+   nettest_bsd.c, there is no resuse with the rest of the
+   nettest_mumble.c files.
+
+*) the -w option for the interval time now takes three optional
+   suffixes. if the suffix is 'm' (eg 10m) it will assume the user has
+   specified time in units of milliseconds.  if the suffix is 'u' it
+   will assume microseconds, and if 's' seconds. no suffix remains
+   milliseconds for backwards compatability with previous netperf
+   versions.
+
+*) It should be possible to successfully compile with
+   --enable-intervals.
+
+These are the Release Notes for Revision 2.4.1 of netperf:
+
+Things changed in this release:
+
 *) netcpu_pstatnew.c has been altered to workaround a bug in the
    interrupt cycle accounting in HP-UX 11.23 that is not expected to
    be resolved until a later release.  basically, some interrupt time
