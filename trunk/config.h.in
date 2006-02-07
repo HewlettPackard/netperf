@@ -282,6 +282,10 @@
 /* Define to one to include SCTP tests. */
 #undef WANT_SCTP
 
+/* Define to one to spin waiting on paced operation. WILL AFFEFCT CPU
+   UTILIZATION */
+#undef WANT_SPIN
+
 /* Define to one to include Unix Domain socket tests. */
 #undef WANT_UNIX
 
