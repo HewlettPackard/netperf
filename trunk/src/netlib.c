@@ -1724,7 +1724,6 @@ void
 bind_to_specific_processor(int processor_affinity)
 {
 
-  printf("bind_to_specific_processor: enter\n");
 #ifdef HAVE_MPCTL
 #include <sys/mpctl.h>
   /* indeed, at some point it would be a good idea to check the return
