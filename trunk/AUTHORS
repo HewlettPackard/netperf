@@ -162,3 +162,6 @@ is > max UDP datagram size.
 Michael Dorff
 Getting netperf/netserver to compile under Windows with MS Visual
 Studio 2003
+
+George Davis
+Changes to deal with different floating-point formats.
