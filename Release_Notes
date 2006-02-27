@@ -1,3 +1,10 @@
+These are the Release Notes for Revision 2.4.2 of netperf:
+
+Things changed in this release:
+
+*) Fixes for floating point format differences, courtesy of George
+   Davis.
+
 These are the Release Notes for Revision 2.4.1 of netperf:
 
 Things changed in this release:

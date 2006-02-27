@@ -69,6 +69,9 @@ char    netlib_id[]="\
 #include <math.h>
 #include <string.h>
 #include <assert.h>
+#ifdef HAVE_ENDIAN_H
+#include <endian.h>
+#endif
 
 
 #ifndef WIN32
@@ -547,6 +550,15 @@ ntohd(double net_double)
     conv_rec.bytes[7-i] = scratch;
   }
   
+#if __FLOAT_WORD_ORDER != __BYTE_ORDER
+  {
+    /* Fixup mixed endian floating point machines */
+    unsigned int scratch = conv_rec.words[0];
+    conv_rec.words[0] = conv_rec.words[1];
+    conv_rec.words[1] = scratch;
+  }
+#endif
+
   return(conv_rec.whole_thing);
   
 }
@@ -581,6 +593,15 @@ htond(double host_double)
     conv_rec.bytes[7-i] = scratch;
   }
   
+#if __FLOAT_WORD_ORDER != __BYTE_ORDER
+  {
+    /* Fixup mixed endian floating point machines */
+    unsigned int scratch = conv_rec.words[0];
+    conv_rec.words[0] = conv_rec.words[1];
+    conv_rec.words[1] = scratch;
+  }
+#endif
+
   /* we know that in the message passing routines htonl will */
   /* be called on the 32 bit quantities. we need to set things up so */
   /* that when this happens, the proper order will go out on the */
