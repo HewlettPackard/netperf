@@ -18,6 +18,9 @@ D) the target files will be in a directory like:
    NetPerf\objchk_wnet_IA64\IA64, NetServer\objchk_wnet_IA64\IA64
    NetPerf\objfre_wnet_x86\i386, or NetPerf\objfre_wnet_AMD64\amd64
 
+NOTE: If any components of the path (ie the full names of the files,
+including parent directories) contain spaces (eg "My Documents"),
+build will charge off into the weeds.
 
 And if that weren't enough, it is also known that netperf has been
 compiled using MS Visual Studio 2003.  Here are the instructions from
