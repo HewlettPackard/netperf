@@ -91,7 +91,7 @@ AC_CHECK_FUNCS(mpctl processor_bind sched_setaffinity bind_to_cpu_id)
 AC_MSG_CHECKING(whether to include histogram support)
 
 AC_ARG_ENABLE(histogram,
-	[  --enable-histogram   include individual op timing, may affect result ])
+	[AS_HELP_STRING([--enable-histogram],[include individual op timing, may affect result]) ])
 
 case "$enable_histogram" in
 	yes)
@@ -126,7 +126,7 @@ fi
 AC_MSG_CHECKING(whether to include demo support)
 
 AC_ARG_ENABLE(demo,
-	[  --enable-demo   emit interim results during the run. May affect results.])
+	[AS_HELP_STRING([--enable-demo],[emit interim results during the run. May affect results.])])
 
 case "$enable_demo" in
 	yes)
@@ -161,7 +161,7 @@ fi
 AC_MSG_CHECKING(whether to include Unix-domain socket tests)
 
 AC_ARG_ENABLE(unixdomain,
-	[  --enable-unixdomain  include Unix Domain socket tests])
+	[AS_HELP_STRING([--enable-unixdomain],[include Unix Domain socket tests])])
 
 case "$enable_unixdomain" in
      yes)
@@ -195,7 +195,7 @@ fi
 AC_MSG_CHECKING(whether to include DLPI tests)
 
 AC_ARG_ENABLE(dlpi,
-	[  --enable-dlpi  include Unix Domain socket tests])
+	[AS_HELP_STRING([--enable-dlpi],[include DLPI (link-layer) tests])])
 
 case "$enable_dlpi" in
      yes)
@@ -230,7 +230,7 @@ fi
 AC_MSG_CHECKING(whether to include XTI tests)
 
 AC_ARG_ENABLE(xti,
-	[  --enable-xti  include Unix Domain socket tests])
+	[AS_HELP_STRING([--enable-xti],[include XTI socket tests])])
 
 case "$enable_xti" in
      yes)
@@ -266,7 +266,7 @@ fi
 AC_MSG_CHECKING(whether to include ICSC-EXS tests)
 
 AC_ARG_ENABLE(exs,
-	[  --enable-exs  include ICSC async sockets tests])
+	[AS_HELP_STRING([--enable-exs],[include ICSC async sockets tests])])
 
 case "$enable_exs" in
      yes)
@@ -301,7 +301,7 @@ fi
 
 
 AC_ARG_ENABLE(sctp,
-	[  --enable-sctp   include tests to measure SCTP performance ])
+	[AS_HELP_STRING([--enable-sctp],[include tests to measure SCTP performance ])])
 
 case "$enable_sctp" in
 	yes)
@@ -343,7 +343,7 @@ fi
 AC_MSG_CHECKING([whether to include paced send (intervals) support])
 
 AC_ARG_ENABLE(intervals,
-	[  --enable-intervals  include ability to pace operations, may affect result])
+	[AS_HELP_STRING([--enable-intervals],[include ability to pace operations, may affect result])])
 
 case "$enable_intervals" in
 	yes)
@@ -377,7 +377,7 @@ fi
 AC_MSG_CHECKING([whether paced sends should spin])
 
 AC_ARG_ENABLE(spin,
-	[  --enable-spin  paces operations should sit and spin - WILL affect result])
+	[AS_HELP_STRING([--enable-spin],[paces operations should sit and spin - WILL affect result])])
 
 case "$enable_spin" in
 	yes)
@@ -412,7 +412,7 @@ fi
 AC_MSG_CHECKING([whether to include initial burst support in _RR tests])
 
 AC_ARG_ENABLE(burst,
-	[  --enable-burst  include intial request burst ability in _RR tests, may affect result])
+	[AS_HELP_STRING([--enable-burst],[include intial request burst ability in _RR tests, may affect result])])
 
 case "$enable_burst" in
 	yes)
@@ -446,7 +446,7 @@ fi
 AC_MSG_CHECKING([which CPU utilization measurement type to use])
 
 AC_ARG_ENABLE(cpuutil,
-	[  --enable-cpuutil  include code to measure CPU utilization using specified mechanism])
+	[AS_HELP_STRING([--enable-cpuutil],[include code to measure CPU utilization using specified mechanism])])
 
 NETCPU_SOURCE="$enable_cpuutil"
 case "$enable_cpuutil" in

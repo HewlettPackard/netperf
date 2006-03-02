@@ -855,17 +855,22 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --disable-dependency-tracking Speeds up one-time builds
   --enable-dependency-tracking  Do not reject slow dependency extractors
-  --enable-histogram   include individual op timing, may affect result
-  --enable-demo   emit interim results during the run. May affect results.
-  --enable-unixdomain  include Unix Domain socket tests
-  --enable-dlpi  include Unix Domain socket tests
-  --enable-xti  include Unix Domain socket tests
-  --enable-exs  include ICSC async sockets tests
-  --enable-sctp   include tests to measure SCTP performance
-  --enable-intervals  include ability to pace operations, may affect result
-  --enable-spin  paces operations should sit and spin - WILL affect result
-  --enable-burst  include intial request burst ability in _RR tests, may affect result
-  --enable-cpuutil  include code to measure CPU utilization using specified mechanism
+  --enable-histogram      include individual op timing, may affect result
+  --enable-demo           emit interim results during the run. May affect
+                          results.
+  --enable-unixdomain     include Unix Domain socket tests
+  --enable-dlpi           include DLPI (link-layer) tests
+  --enable-xti            include XTI socket tests
+  --enable-exs            include ICSC async sockets tests
+  --enable-sctp           include tests to measure SCTP performance
+  --enable-intervals      include ability to pace operations, may affect
+                          result
+  --enable-spin           paces operations should sit and spin - WILL affect
+                          result
+  --enable-burst          include intial request burst ability in _RR tests,
+                          may affect result
+  --enable-cpuutil        include code to measure CPU utilization using
+                          specified mechanism
 
 Some influential environment variables:
   CC          C compiler command
