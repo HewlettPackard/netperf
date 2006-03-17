@@ -5747,6 +5747,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     rss_size        = udp_stream_response->send_buf_size;
     remote_cpu_rate = udp_stream_response->cpu_rate;
 
+#ifndef UDP_ALWAYS_SENDTO
     /* We "connect" up to the remote post to allow is to use the send */
     /* call instead of the sendto call. Presumeably, this is a little */
     /* simpler, and a little more efficient. I think that it also means */
@@ -5760,6 +5761,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
       perror("send_udp_stream: data socket connect failed");
       exit(1);
     }
+#endif
     
     /* set up the timer to call us after test_time. one of these days, */
     /* it might be nice to figure-out a nice reliable way to have the */
@@ -5813,13 +5815,23 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
       HIST_timestamp(&time_one);
 #endif /* WANT_HISTOGRAM */
       
-      if ((len=send(data_socket,
-		    send_ring->buffer_ptr,
-		    send_size,
-		    0))  != send_size) {
-      if ((len >= 0) || 
-          SOCKET_EINTR(len))
-		      break;
+#ifndef UDP_ALWAYS_SENDTO
+      len = send(data_socket,
+		 send_ring->buffer_ptr,
+		 send_size,
+		 0);
+#else
+      len = sendto(data_socket,
+		   send_ring->buffer_ptr,
+		   send_size,
+		   0,
+		   remote_res->ai_addr,
+		   remote_res->ai_addrlen);
+#endif
+      if (len != send_size) {
+	if ((len >= 0) || 
+	    SOCKET_EINTR(len))
+	  break;
 	if (errno == ENOBUFS) {
 	  failed_sends++;
 	  continue;
