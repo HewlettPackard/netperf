@@ -7682,6 +7682,14 @@ fi
 ac_cv_lib_kstat=ac_cv_lib_kstat_main
 
 		;;
+	osx)
+		use_cpuutil=true
+
+cat >>confdefs.h <<\_ACEOF
+#define USE_OSX
+_ACEOF
+
+		;;
 	'')
 # ia64-hp-hpux11.23
 # i386-pc-solaris2.10
@@ -7960,6 +7968,16 @@ _ACEOF
 
 			enable_cpuutil="sysctl - auto"
 			NETCPU_SOURCE="sysctl"
+			;;
+		    *-*-darwin*)
+			use_cpuutil=true
+
+cat >>confdefs.h <<\_ACEOF
+#define USE_OSX
+_ACEOF
+
+			enable_cpuutil="osx - auto"
+			NETCPU_SOURCE="osx"
 			;;
 		     *)
 			use_cpuutil=false
