@@ -373,6 +373,7 @@ struct sendfile_ring_elt {
 #define SYSCTL          9
 #define PERFSTAT       10
 #define KSTAT_10       11
+#define OSX            12
 
 #define BADCH ('?')
 

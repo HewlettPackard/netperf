@@ -5,6 +5,8 @@ Things changed in this release:
 *) Fixes for floating point format differences, courtesy of George
    Davis.
 
+*) Additions for CPU util support on MacOS X, courtesy of Anonymous.
+
 These are the Release Notes for Revision 2.4.1 of netperf:
 
 Things changed in this release:

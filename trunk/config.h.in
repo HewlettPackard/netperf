@@ -252,6 +252,9 @@
 /* Use looper/soaker processes to measure CPU util. */
 #undef USE_LOOPER
 
+/* Use MacOS X's host_info interface to measure CPU util. */
+#undef USE_OSX
+
 /* Use AIX's perfstat interface to measure CPU util. */
 #undef USE_PERFSTAT
 

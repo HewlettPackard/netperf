@@ -482,6 +482,10 @@ case "$enable_cpuutil" in
 		AC_DEFINE([USE_KSTAT],,[Use Solaris's kstat interface to measure CPU util.])
 		AC_HAVE_LIBRARY(kstat)
 		;;
+	osx)
+		use_cpuutil=true
+		AC_DEFINE([USE_OSX],,[Use MacOS X's host_info interface to measure CPU util.])
+		;;
 	'')
 # ia64-hp-hpux11.23
 # i386-pc-solaris2.10
@@ -531,6 +535,12 @@ case "$enable_cpuutil" in
 			AC_DEFINE([USE_SYSCTL],,[Use FreeBSD's sysctl interface to measure CPU util.])
 			enable_cpuutil="sysctl - auto"
 			NETCPU_SOURCE="sysctl"
+			;;
+		    *-*-darwin*)
+			use_cpuutil=true
+			AC_DEFINE([USE_OSX],,[Use MacOS X's host_info interface to measure CPU util.])
+			enable_cpuutil="osx - auto"
+			NETCPU_SOURCE="osx"
 			;;
 		     *)
 			use_cpuutil=false

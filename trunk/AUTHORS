@@ -165,3 +165,6 @@ Studio 2003
 
 George Davis
 Changes to deal with different floating-point formats.
+
+Anonymous
+Changes to retrieve CPU util on MacOS X.

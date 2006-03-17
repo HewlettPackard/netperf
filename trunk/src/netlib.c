@@ -1629,6 +1629,9 @@ format_cpu_method(int method)
   case SYSCTL:
     method_char = 'C';
     break;
+  case OSX:
+    method_char = 'O';
+    break;
   default:
     method_char = '?';
   }
