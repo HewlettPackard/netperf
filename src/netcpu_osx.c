@@ -125,7 +125,7 @@ calc_cpu_util_internal(float elapsed_time)
   idleticks = UNSIGNED_DIFFERENCE(lib_end_ticks.cpu_ticks[CPU_STATE_IDLE], lib_start_ticks.cpu_ticks[CPU_STATE_IDLE]);
   totalticks = userticks + systicks + idleticks;
 
-  lib_local_cpu_util = (float)idleticks/(float)totalticks * 100.0f;
+  lib_local_cpu_util = ((float)userticks + (float)systicks)/(float)totalticks * 100.0f;
   lib_local_cpu_util *= correction_factor;
 
   return lib_local_cpu_util;
