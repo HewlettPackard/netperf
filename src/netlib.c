@@ -173,6 +173,7 @@ struct  timezone {
         } ;
 #ifndef __VMS
 SOCKET     win_kludge_socket = INVALID_SOCKET;
+SOCKET     win_kludge_socket2 = INVALID_SOCKET;
 #endif /* __VMS */
 #endif /* WIN32 || __VMS */
 
@@ -874,6 +875,9 @@ emulate_alarm( int seconds )
 
         if (win_kludge_socket != INVALID_SOCKET) {
           closesocket(win_kludge_socket);
+        }
+        if (win_kludge_socket2 != INVALID_SOCKET) {
+          closesocket(win_kludge_socket2);
         }
 	}
 }

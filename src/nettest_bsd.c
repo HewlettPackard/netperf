@@ -4228,6 +4228,13 @@ recv_tcp_stream()
     exit(1);
   }
   
+#ifdef WIN32
+  /* The test timer can fire during operations on the listening socket,
+     so to make the start_timer below work we have to move
+     it to close s_listen while we are blocked on accept. */
+  win_kludge_socket2 = s_listen;
+#endif
+  
   /* what sort of sizes did we end-up with? */
   if (tcp_stream_request->receive_size == 0) {
     if (lsr_size > 0) {
@@ -4575,6 +4582,14 @@ recv_tcp_maerts()
     send_response();
     exit(1);
   }
+  
+#ifdef WIN32
+  /* The test timer can fire during operations on the listening socket,
+     so to make the start_timer below work we have to move
+     it to close s_listen while we are blocked on accept. */
+  win_kludge_socket2 = s_listen;
+#endif
+
   
   /* what sort of sizes did we end-up with? */
   if (tcp_maerts_request->send_size == 0) {
@@ -7426,6 +7441,15 @@ recv_tcp_rr()
     exit(1);
   }
   
+  
+#ifdef WIN32
+  /* The test timer can fire during operations on the listening socket,
+     so to make the start_timer below work we have to move
+     it to close s_listen while we are blocked on accept. */
+  win_kludge_socket2 = s_listen;
+#endif
+
+  
   /* Now, let's set-up the socket to listen for connections */
   if (listen(s_listen, 5) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
@@ -8463,6 +8487,14 @@ recv_tcp_conn_rr()
     exit(1);
   }
 
+#ifdef WIN32
+    /* The test timer can fire during operations on the listening socket,
+       so to make the start_timer below work we have to move
+       it to close s_listen while we are blocked on accept. */
+    win_kludge_socket2 = s_listen;
+#endif
+
+
   /* Now, let's set-up the socket to listen for connections */
   if (listen(s_listen, 5) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
@@ -8552,6 +8584,12 @@ recv_tcp_conn_rr()
   while ((!times_up) || (trans_remaining > 0)) {
 
     /* accept a connection from the remote */
+#ifdef WIN32
+    /* The test timer will probably fire during this accept, 
+       so to make the start_timer above work we have to move
+       it to close s_listen while we are blocked on accept. */
+    win_kludge_socket = s_listen;
+#endif
     if ((s_data=accept(s_listen,
 		       (struct sockaddr *)&peeraddr_in,
 		       &addrlen)) == INVALID_SOCKET) {
@@ -9492,6 +9530,14 @@ recv_tcp_tran_rr()
     }
     exit(1);
   }
+
+#ifdef WIN32
+  /* The test timer can fire during operations on the listening socket,
+     so to make the start_timer below work we have to move
+     it to close s_listen while we are blocked on accept. */
+  win_kludge_socket2 = s_listen;
+#endif
+
 
   /* Let's get an address assigned to this socket so we can tell the */
   /* initiator how to reach the data socket. There may be a desire to */
@@ -11501,6 +11547,14 @@ recv_tcp_cc()
     exit(1);
   }
 
+#ifdef WIN32
+  /* The test timer can fire during operations on the listening socket,
+     so to make the start_timer below work we have to move
+     it to close s_listen while we are blocked on accept. */
+  win_kludge_socket2 = s_listen;
+#endif
+
+
   /* Now, let's set-up the socket to listen for connections */
   if (listen(s_listen, 5) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
@@ -11588,7 +11642,12 @@ recv_tcp_cc()
   trans_received = 0;
 
   while ((!times_up) || (trans_remaining > 0)) {
-
+#ifdef WIN32
+    /* The test timer will probably fire during this accept, 
+       so to make the start_timer above work we have to move
+       it to close s_listen while we are blocked on accept. */
+    win_kludge_socket = s_listen;
+#endif
     /* accept a connection from the remote */
     if ((s_data=accept(s_listen,
 		       (struct sockaddr *)&peeraddr_in,
