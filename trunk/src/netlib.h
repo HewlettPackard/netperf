@@ -391,7 +391,7 @@ extern int optopt;		/* */
 
 #endif /* _GETOPT_ */
 
-extern  SOCKET     win_kludge_socket;
+extern  SOCKET     win_kludge_socket, win_kludge_socket2;
 #endif /* WIN32 */
 
 extern  int   local_proc_affinity, remote_proc_affinity;
