@@ -37,7 +37,12 @@ char   netcpu_sysctl_id[]="\
 
 #include <mach/host_info.h>
 #include <mach/mach_types.h>
-
+/* it would seem that on 10.3.9 mach_msg_type_number_t is in
+   <mach/message.h> so we'll see about including that one too.
+   hopefully it still exists in 10.4. if not, we will need to add some
+   .h file checks in configure so we can use "HAVE_mumble" ifdefs
+   here */
+#include <mach/message.h>
 
 #include "netsh.h"
 #include "netlib.h"
