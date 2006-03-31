@@ -1762,6 +1762,17 @@ bind_to_specific_processor(int processor_affinity)
 #include <sys/processor.h>
 #include <sys/procset.h>
   processor_bind(P_PID,P_MYID,processor_affinity,NULL);
+#elif HAVE_BINDPROCESSOR
+#include <sys/processor.h>
+  /* this is the call on AIX.  It takes a "what" of BINDPROCESS or
+     BINDTHRAD, then "who" and finally "where" which is a CPU number
+     or it seems PROCESSOR_CLASS_ANY there also seems to be a mycpu()
+     call to return the current CPU assignment.  this is all based on
+     the sys/processor.h include file.  from empirical testing, it
+     would seem that the my_cpu() call returns the current CPU on
+     which we are running rather than the CPU binding, so it's return
+     value will not tell you if you are bound vs unbound. */
+  bindprocessor(BINDPROCESS,getpid(),(cpu_t)processor_affinity);
 #elif HAVE_SCHED_SETAFFINITY
 #include <sched.h>
   /* gee, I wonder what we would do on a system with > 32 or 64
