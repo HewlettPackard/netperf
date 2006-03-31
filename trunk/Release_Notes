@@ -7,6 +7,12 @@ Things changed in this release:
 
 *) Additions for CPU util support on MacOS X, courtesy of Anonymous.
 
+*) Processor affinity is now supported on AIX 5.3 (perhaps earlier)
+   via the bindprocessor system call.
+
+*) Fixes for test lockups with TCP_CRR and TCP_CC under Windows
+   courtesy of Dikon Reed.
+
 These are the Release Notes for Revision 2.4.1 of netperf:
 
 Things changed in this release:

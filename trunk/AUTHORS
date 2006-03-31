@@ -168,3 +168,6 @@ Changes to deal with different floating-point formats.
 
 Anonymous
 Changes to retrieve CPU util on MacOS X.
+
+Dickon Reed
+Patches to attend to some windows in TCP_CRR and TCP_CC under Windows

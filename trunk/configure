@@ -6407,11 +6407,13 @@ fi
 done
 
 
+# check for the various CPU binding calls
 
 
 
 
-for ac_func in mpctl processor_bind sched_setaffinity bind_to_cpu_id
+
+for ac_func in mpctl processor_bind sched_setaffinity bind_to_cpu_id bindprocessor
 do
 as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
 echo "$as_me:$LINENO: checking for $ac_func" >&5
