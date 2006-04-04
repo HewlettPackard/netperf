@@ -477,7 +477,7 @@ extern  double  calc_thruput(double units_received);
 extern  double  calc_thruput_interval(double units_received,double elapsed);
 extern  float   calibrate_local_cpu(float local_cpu_rate);
 extern  float   calibrate_remote_cpu();
-extern  void    bind_to_specific_processor(int processor_affinity);
+extern  void    bind_to_specific_processor(int processor_affinity,int use_cpu_map);
 #ifndef WIN32
 
 /* WIN32 requires that at least one of the file sets to select be

@@ -13,6 +13,16 @@ Things changed in this release:
 *) Fixes for test lockups with TCP_CRR and TCP_CC under Windows
    courtesy of Dikon Reed.
 
+*) Fixes to netcpu_looper.c to get it to actually compile :)
+
+*) Have netcpu_looper use the bind_to_specific_processor() call
+   provided by netlib since that knows about more platforms than the
+   code in netcpu_looper did. The looper CPU binding will use a
+   mapping to handle cases where the CPU id's on the system may not be
+   a contiguous space starting from zero.  At present, the code that
+   setups the mapping only knows about retrieving actual CPU ids under
+   HP-UX.
+
 These are the Release Notes for Revision 2.4.1 of netperf:
 
 Things changed in this release:

@@ -637,7 +637,7 @@ scan_cmd_line(int argc, char *argv[])
       break_args(optarg,arg1,arg2);
       if (arg1[0]) {
 	local_proc_affinity = convert(arg1);
-	bind_to_specific_processor(local_proc_affinity);
+	bind_to_specific_processor(local_proc_affinity,0);
       }
       if (arg2[0]) {
 	remote_proc_affinity = convert(arg2);

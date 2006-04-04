@@ -3663,7 +3663,10 @@ done
 
 
 
-for ac_header in arpa/inet.h endian.h fcntl.h limits.h malloc.h netdb.h netinet/in.h stdlib.h string.h strings.h sys/ioctl.h sys/param.h sys/socket.h sys/time.h unistd.h
+
+
+
+for ac_header in arpa/inet.h endian.h errno.h fcntl.h limits.h malloc.h netdb.h netinet/in.h signal.h stdlib.h string.h strings.h sys/ioctl.h sys/mman.h sys/param.h sys/socket.h sys/time.h unistd.h
 do
 as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
 if eval "test \"\${$as_ac_Header+set}\" = set"; then
