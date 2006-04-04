@@ -1,5 +1,5 @@
 char    netlib_id[]="\
-@(#)netlib.c (c) Copyright 1993-2004 Hewlett-Packard Company. Version 2.3pl2";
+@(#)netlib.c (c) Copyright 1993-2006 Hewlett-Packard Company. Version 2.4.2";
 
 /****************************************************************/
 /*                                                              */
@@ -143,6 +143,10 @@ char    netlib_id[]="\
 #endif /* __osf__ */
 #endif /* WANT_DLPI */
 
+#ifdef HAVE_MPCTL
+#include <sys/mpctl.h>
+#endif
+
 #if !defined(HAVE_GETADDRINFO) || !defined(HAVE_GETNAMEINFO)
 # include "missing/getaddrinfo.h"
 #endif
@@ -203,6 +207,7 @@ float   lib_elapsed,
         lib_remote_cpu_util;
 
 float   lib_local_per_cpu_util[MAXCPUS];
+int     lib_cpu_map[MAXCPUS];
 
 int     *request_array;
 int     *response_array;
@@ -1045,6 +1050,37 @@ start_itimer( interval_len_msec )
   }
 }
 #endif /* WANT_INTERVALS */
+
+void
+netlib_init_cpu_map() {
+
+  int i;
+  int num;
+#ifdef HAVE_MPCTL
+  i = 0;
+  /* I go back and forth on whether this should be the system-wide set
+     of calls, or if the processor set versions (sans the _SYS) should
+     be used.  at the moment I believe that the system-wide version
+     should be used. raj 2006-04-03 */
+  num = mpctl(MPC_GETNUMSPUS_SYS,0,0);
+  lib_cpu_map[i] = mpctl(MPC_GETFIRSTSPU_SYS,0,0);
+  for (i = 1;((i < num) && (i < MAXCPUS)); i++) {
+    lib_cpu_map[i] = mpctl(MPC_GETNEXTSPU_SYS,lib_cpu_map[i-1],0);
+  }
+  /* from here, we set them all to -1 because if we launch more
+     loopers than actual CPUs, well, I'm not sure why :) */
+  for (; i < MAXCPUS; i++) {
+    lib_cpu_map[i] = -1;
+  }
+
+#else
+  /* we assume that there is indeed a contiguous mapping */
+  for (i = 0; i < MAXCPUS; i++) {
+    lib_cpu_map[i] = i;
+  }
+#endif
+}
+
 
 /****************************************************************/
 /*                                                              */
@@ -1067,6 +1103,16 @@ netlib_init()
   for (i = 0; i < MAXCPUS; i++) {
     lib_local_per_cpu_util[i] = 0.0;
   }
+
+  /* on those systems where we know that CPU numbers may not start at
+     zero and be contiguous, we provide a way to map from a
+     contiguous, starting from 0 CPU id space to the actual CPU ids.
+     at present this is only used for the netcpu_looper stuff because
+     we ass-u-me that someone setting processor affinity from the
+     netperf commandline will provide a "proper" CPU identifier. raj
+     2006-04-03 */
+
+  netlib_init_cpu_map();
 
   if (debug) {
     fprintf(where,
@@ -1749,19 +1795,32 @@ shutdown_control()
   2004/12/13 */
 
 void
-bind_to_specific_processor(int processor_affinity)
+bind_to_specific_processor(int processor_affinity, int use_cpu_map)
 {
 
+  int mapped_affinity;
+
+  /* this is in place because the netcpu_looper processor affinity
+     ass-u-me-s a contiguous CPU id space starting with 0. for the
+     regular netperf/netserver affinity, we ass-u-me the user has used
+     a suitable CPU id even when the space is not contiguous and
+     starting from zero */
+  if (use_cpu_map) {
+    mapped_affinity = lib_cpu_map[processor_affinity];
+  }
+  else {
+    mapped_affinity = processor_affinity;
+  }
+
 #ifdef HAVE_MPCTL
-#include <sys/mpctl.h>
   /* indeed, at some point it would be a good idea to check the return
      status and pass-along notification of error... raj 2004/12/13 */
-  mpctl(MPC_SETPROCESS_FORCE, processor_affinity, getpid());
+  mpctl(MPC_SETPROCESS_FORCE, mapped_affinity, getpid());
 #elif HAVE_PROCESSOR_BIND
 #include <sys/types.h>
 #include <sys/processor.h>
 #include <sys/procset.h>
-  processor_bind(P_PID,P_MYID,processor_affinity,NULL);
+  processor_bind(P_PID,P_MYID,mapped_affinity,NULL);
 #elif HAVE_BINDPROCESSOR
 #include <sys/processor.h>
   /* this is the call on AIX.  It takes a "what" of BINDPROCESS or
@@ -1772,7 +1831,7 @@ bind_to_specific_processor(int processor_affinity)
      would seem that the my_cpu() call returns the current CPU on
      which we are running rather than the CPU binding, so it's return
      value will not tell you if you are bound vs unbound. */
-  bindprocessor(BINDPROCESS,getpid(),(cpu_t)processor_affinity);
+  bindprocessor(BINDPROCESS,getpid(),(cpu_t)mapped_affinity);
 #elif HAVE_SCHED_SETAFFINITY
 #include <sched.h>
   /* gee, I wonder what we would do on a system with > 32 or 64
@@ -1780,7 +1839,7 @@ bind_to_specific_processor(int processor_affinity)
   unsigned long       this_mask;
   unsigned int        len = sizeof(this_mask);
 
-  this_mask = 1 << processor_affinity;
+  this_mask = 1 << mapped_affinity;
 
   if (sched_setaffinity(getpid(), len, &this_mask)) {
     if (debug) {
@@ -1798,7 +1857,7 @@ bind_to_specific_processor(int processor_affinity)
   /* really should be checking a return code one of these days. raj
      2005/08/31 */ 
 
-  bind_to_cpu_id(getpid(), processor_affinity,0);
+  bind_to_cpu_id(getpid(), mapped_affinity,0);
 
 #elif WIN32
 
@@ -1807,10 +1866,10 @@ bind_to_specific_processor(int processor_affinity)
     ULONG_PTR ProcessAffinityMask;
     ULONG_PTR SystemAffinityMask;
     
-    if ((processor_affinity < 0) || 
-	(processor_affinity > MAXIMUM_PROCESSORS)) {
+    if ((mapped_affinity < 0) || 
+	(mapped_affinity > MAXIMUM_PROCESSORS)) {
       fprintf(where,
-	      "Invalid processor_affinity specified: %d\n", processor_affinity);      fflush(where);
+	      "Invalid processor_affinity specified: %d\n", mapped_affinity);      fflush(where);
       return;
     }
     
@@ -1824,7 +1883,7 @@ bind_to_specific_processor(int processor_affinity)
 	exit(1);
       }
     
-    AffinityMask = (ULONG_PTR)1 << processor_affinity;
+    AffinityMask = (ULONG_PTR)1 << mapped_affinity;
     
     if (AffinityMask & ProcessAffinityMask) {
       if (!SetThreadAffinityMask( GetCurrentThread(), AffinityMask)) {
@@ -1833,7 +1892,7 @@ bind_to_specific_processor(int processor_affinity)
       }
     } else if (debug) {
       fprintf(where,
-	      "Processor affinity set to CPU# %d\n", processor_affinity);
+	      "Processor affinity set to CPU# %d\n", mapped_affinity);
       fflush(where);
     }
   }
@@ -2061,7 +2120,7 @@ if (tot_bytes_recvd < buflen) {
   local_proc_affinity = netperf_request.content.dummy;
 
   if (local_proc_affinity != -1) {
-    bind_to_specific_processor(local_proc_affinity);
+    bind_to_specific_processor(local_proc_affinity,0);
   } 
 
 }

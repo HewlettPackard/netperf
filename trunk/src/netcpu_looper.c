@@ -21,7 +21,7 @@ char   netcpu_looper_id[]="\
 #if HAVE_UNISTD_H
 # include <unistd.h>
 #endif
-#if HAVE_MMAP
+#if defined(HAVE_MMAP) || defined(HAVE_SYS_MMAN_H)
 # include <sys/mman.h>
 #else
 # error netcpu_looper requires mmap
@@ -46,13 +46,28 @@ char   netcpu_looper_id[]="\
 # include <sys/wait.h>
 #endif
 
+#ifdef HAVE_SIGNAL_H
 #include <signal.h>
+#endif
+
+#ifdef HAVE_ERRNO_H
 #include <errno.h>
+#endif
 
 #include "netsh.h"
 #include "netlib.h"
 
 #define PAGES_PER_CHILD 2
+
+/* the lib_start_count and lib_end_count arrays hold the starting
+   and ending values of whatever is counting when the system is
+   idle. The rate at which this increments during a test is compared
+   with a previous calibrarion to arrive at a CPU utilization
+   percentage. raj 2005-01-26 */
+static uint64_t  lib_start_count[MAXCPUS];
+static uint64_t  lib_end_count[MAXCPUS];
+
+static int *cpu_mappings;
 
 static int lib_idle_fd;
 static uint64_t *lib_idle_address[MAXCPUS];
@@ -60,6 +75,12 @@ static long     *lib_base_pointer;
 static pid_t     lib_idle_pids[MAXCPUS];
 static int       lib_loopers_running=0;
 
+/* we used to use this code to bind the loopers, but since we have
+   decided to enable processor affinity for the actual
+   netperf/netserver processes we will use that affinity routine,
+   which happens to know about more systems than this */
+
+#ifdef NOTDEF
 static void
 bind_to_processor(int child_num)
 {
@@ -143,6 +164,7 @@ bind_to_processor(int child_num)
 #endif /* __sun && _SVR4 */
 #endif /* __hpux */
 }
+#endif
 
  /* sit_and_spin will just spin about incrementing a value */
  /* this value will either be in a memory mapped region on Unix shared */
@@ -155,7 +177,7 @@ static void
 sit_and_spin(int child_index)
 
 {
-  long *my_counter_ptr;
+  uint64_t *my_counter_ptr;
 
  /* only use C stuff if we are not WIN32 unless and until we */
  /* switch from CreateThread to _beginthread. raj 1/96 */
@@ -173,7 +195,7 @@ sit_and_spin(int child_index)
 #endif /* WIN32 */
 
   /* reset our base pointer to be at the appropriate offset */
-  my_counter_ptr = (long *) ((char *)lib_base_pointer + 
+  my_counter_ptr = (uint64_t *) ((char *)lib_base_pointer + 
                              (netlib_get_page_size() * 
                               PAGES_PER_CHILD * child_index));
   
@@ -186,11 +208,11 @@ sit_and_spin(int child_index)
   /* area more readable. I'll probably do the same thine with the */
   /* "low pri code" raj 10/95 */
   
-  /* NOTE. I do *NOT* think it would be appropriate for the actual */
-  /* test processes to be bound to a  particular processor - that */
-  /* is something that should be left up to the operating system. */
-  
-  bind_to_processor(child_index);
+  /* since we are "flying blind" wrt where we should bind the looper
+     processes, we want to use the cpu_map that was prepared by netlib
+     rather than assume that the CPU ids on the system start at zero
+     and are contiguous. raj 2006-04-03 */
+  bind_to_specific_processor(child_index % lib_num_loc_cpus,1);
   
   for (*my_counter_ptr = 0L;
        ;
@@ -338,6 +360,7 @@ start_looper_processes()
       /* we are the child. we could decide to exec some separate */
       /* program, but that doesn't really seem worthwhile - raj 4/95 */
 
+      signal(SIGTERM, SIG_DFL);
       sit_and_spin(i);
 
       /* we should never really get here, but if we do, just exit(0) */
@@ -345,7 +368,7 @@ start_looper_processes()
       break;
     default:
       /* we must be the parent */
-      lib_idle_address[i] = (long *) ((char *)lib_base_pointer + 
+      lib_idle_address[i] = (uint64_t *) ((char *)lib_base_pointer + 
                                       (netlib_get_page_size() * 
                                        PAGES_PER_CHILD * i));
       if (debug) {
@@ -461,7 +484,7 @@ float
 calibrate_idle_rate (int iterations, int interval)
 {
 
-  long  
+  uint64_t
     firstcnt[MAXCPUS],
     secondcnt[MAXCPUS];
 
@@ -520,11 +543,11 @@ calibrate_idle_rate (int iterations, int interval)
         fprintf(where,
                 "\tfirstcnt[%d] = 0x%8.8lx%8.8lx secondcnt[%d] = 0x%8.8lx%8.8lx\n",
                 j,
-                firstcnt[j],
-                firstcnt[j],
+                (uint32_t)(firstcnt[j]>>32),
+                (uint32_t)(firstcnt[j]&0xffffffff),
                 j,
-                secondcnt[j],
-                secondcnt[j]);
+                (uint32_t)(secondcnt[j]>>32),
+                (uint32_t)(secondcnt[j]&0xffffffff));
       }
       /* we assume that it would wrap no more than once. we also */
       /* assume that the result of subtracting will "fit" raj 4/95 */
@@ -558,19 +581,76 @@ get_cpu_idle (uint64_t *res)
 
 }
 
-/* take the initial timestamp and start collecting CPU utilization if
-   requested */
-
-void
-measure_cpu_start()
+float
+calc_cpu_util_internal(float elapsed_time)
 {
-  cpu_method = PROC_STAT;
+  int i;
+  float correction_factor;
+  float actual_rate;
+
+  lib_local_cpu_util = (float)0.0;
+  /* It is possible that the library measured a time other than */
+  /* the one that the user want for the cpu utilization */
+  /* calculations - for example, tests that were ended by */
+  /* watchdog timers such as the udp stream test. We let these */
+  /* tests tell up what the elapsed time should be. */
+  
+  if (elapsed_time != 0.0) {
+    correction_factor = (float) 1.0 + 
+      ((lib_elapsed - elapsed_time) / elapsed_time);
+  }
+  else {
+    correction_factor = (float) 1.0;
+  }
+
+  for (i = 0; i < lib_num_loc_cpus; i++) {
+
+    /* it would appear that on some systems, in loopback, nice is
+     *very* effective, causing the looper process to stop dead in its
+     tracks. if this happens, we need to ensure that the calculation
+     does not go south. raj 6/95 and if we run completely out of idle,
+     the same thing could in theory happen to the USE_KSTAT path. raj
+     8/2000 */ 
+    
+    if (lib_end_count[i] == lib_start_count[i]) {
+      lib_end_count[i]++;
+    }
+    
+    actual_rate = (lib_end_count[i] > lib_start_count[i]) ?
+      (float)(lib_end_count[i] - lib_start_count[i])/lib_elapsed :
+      (float)(lib_end_count[i] - lib_start_count[i] +
+	      MAXLONG)/ lib_elapsed;
+    if (debug) {
+      fprintf(where,
+              "calc_cpu_util: actual_rate on processor %d is %f start 0x%8.8lx%8.8lx end 0x%8.8lx%8.8lx\n",
+              i,
+              actual_rate,
+              (uint32_t)(lib_start_count[i]>>32),
+              (uint32_t)(lib_start_count[i]&0xffffffff),
+              (uint32_t)(lib_end_count[i]>>32),
+              (uint32_t)(lib_end_count[i]&0xffffffff));
+    }
+    lib_local_per_cpu_util[i] = (lib_local_maxrate - actual_rate) /
+      lib_local_maxrate * 100;
+    lib_local_cpu_util += lib_local_per_cpu_util[i];
+  }
+  /* we want the average across all n processors */
+  lib_local_cpu_util /= (float)lib_num_loc_cpus;
+  
+  lib_local_cpu_util *= correction_factor;
+  return lib_local_cpu_util;
+
+
+}
+void
+cpu_start_internal(void)
+{
   get_cpu_idle(lib_start_count);
+  return;
 }
 
-/* collect final CPU utilization raw data */
 void
-measure_cpu_stop()
+cpu_stop_internal(void)
 {
   get_cpu_idle(lib_end_count);
 }
