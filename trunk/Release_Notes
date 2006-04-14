@@ -23,6 +23,9 @@ Things changed in this release:
    setups the mapping only knows about retrieving actual CPU ids under
    HP-UX.
 
+*) The netcpu_sysctl method becomes calibration-free, courtesy of 
+   Adnrew Gallatin
+
 These are the Release Notes for Revision 2.4.1 of netperf:
 
 Things changed in this release:
