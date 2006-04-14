@@ -50,12 +50,20 @@ static uint64_t  lib_end_count[MAXCPUS];
 #define N_CPU_LINES(nr) (nr == 1 ? 1 : 1 + nr)
 
 static int proc_stat_fd = -1;
-static char* proc_stat_buf = NULL;
+static char *proc_stat_buf = NULL;
 static int proc_stat_buflen = 0;
 
 void
 cpu_util_init(void) 
 {
+
+  if (debug) {
+    fprintf(where,
+	    "cpu_util_init enter, proc_stat_fd %d proc_stat_buf %p\n",
+	    proc_stat_fd,
+	    proc_stat_buf);
+    fflush(where);
+  }
   if (proc_stat_fd < 0) {
     proc_stat_fd = open (PROC_STAT_FILE_NAME, O_RDONLY, NULL);
     if (proc_stat_fd < 0) {
@@ -66,12 +74,21 @@ cpu_util_init(void)
 
   if (!proc_stat_buf) {
     proc_stat_buflen = N_CPU_LINES (lib_num_loc_cpus) * CPU_LINE_LENGTH;
+    if (debug) {
+      fprintf(where,
+	      "lib_num_loc_cpus %d lines %d CPU_LINE_LENGTH %d proc_stat_buflen %d\n",
+	      lib_num_loc_cpus,
+	      N_CPU_LINES(lib_num_loc_cpus),
+	      CPU_LINE_LENGTH,
+	      proc_stat_buflen);
+      fflush(where);
+    }
     proc_stat_buf = (char *)malloc (proc_stat_buflen);
     if (!proc_stat_buf) {
       fprintf (stderr, "Cannot allocate buffer memory!\n");
       exit (1);
-    };
-  };
+    }
+  }
   return;
 }
 
@@ -104,6 +121,15 @@ calibrate_idle_rate (int iterations, int interval)
 
   if (!proc_stat_buf) {
     proc_stat_buflen = N_CPU_LINES (lib_num_loc_cpus) * CPU_LINE_LENGTH;
+    if (debug) {
+      fprintf(where,
+	      "calibrate: lib_num_loc_cpus %d lines %d CPU_LINE_LENGTH %d proc_stat_buflen %d\n",
+	      lib_num_loc_cpus,
+	      N_CPU_LINES(lib_num_loc_cpus),
+	      CPU_LINE_LENGTH,
+	      proc_stat_buflen);
+      fflush(where);
+    }
     proc_stat_buf = (char *)malloc (proc_stat_buflen);
     if (!proc_stat_buf) {
       fprintf (stderr, "Cannot allocate buffer memory!\n");
@@ -126,7 +152,7 @@ get_cpu_idle (uint64_t *res)
   read (proc_stat_fd, p, proc_stat_buflen);
 
   if (debug) {
-    fprintf(where,"proc_stat_buf %s\n",p);
+    fprintf(where,"proc_stat_buf '%.*s'\n",proc_stat_buflen,p);
     fflush(where);
   }
   /* Skip first line (total) on SMP */
