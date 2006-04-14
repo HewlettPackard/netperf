@@ -497,6 +497,11 @@ extern  void    catcher(int, siginfo_t *,void *);
 extern  void    catcher(int);
 #endif /* __hpux */
 extern  struct ring_elt *allocate_buffer_ring();
+extern void access_buffer(char *buffer_ptr,
+			  int length,
+			  int dirty_count,
+			  int clean_count);
+
 #ifdef HAVE_ICSC_EXS
 extern  struct ring_elt *allocate_exs_buffer_ring();
 #endif /* HAVE_ICSC_EXS */
