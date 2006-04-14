@@ -1288,6 +1288,44 @@ allocate_buffer_ring(int width, int buffer_size, int alignment, int offset)
   return(first_link); /* it's a circle, doesn't matter which we return */
 }
 
+/* this routine will dirty the first dirty_count bytes of the
+   specified buffer and/or read clean_count bytes from the buffer. it
+   will go N bytes at a time, the only question is how large should N
+   be and if we should be going continguously, or based on some
+   assumption of cache line size */
+
+void
+access_buffer(char *buffer_ptr,int length, int dirty_count, int clean_count) {
+
+  char *temp_buffer;
+  char *limit;
+  int  i, dirty_totals;
+
+  temp_buffer = buffer_ptr;
+  limit = temp_buffer + length;
+
+  for (i = 0; 
+       ((i < dirty_count) && (temp_buffer < limit));
+       i++) {
+    *temp_buffer += i;
+    dirty_totals += *temp_buffer;
+    temp_buffer++;
+  }
+
+  for (i = 0; 
+       ((i < clean_count) && (temp_buffer < limit));
+       i++) {
+    dirty_totals += *temp_buffer;
+    temp_buffer++;
+  }
+
+  if (debug > 100) {
+    fprintf(where,
+	    "This was here to try to avoid dead-code elimination %d\n",
+	    dirty_totals);
+    fflush(where);
+  }
+}
 
 
 #ifdef HAVE_ICSC_EXS
