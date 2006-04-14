@@ -1,5 +1,8 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* Define to one to enable dirty buffer support. May affect results. */
+#undef DIRTY
+
 /* Define to 1 if you have the `alarm' function. */
 #undef HAVE_ALARM
 

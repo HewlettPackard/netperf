@@ -121,6 +121,40 @@ if $use_histogram
 then
 	AC_DEFINE([WANT_HISTOGRAM],,[Define to one to enable histogram support. May affect results.])
 fi
+# see if we should be enabling histogram support
+
+AC_MSG_CHECKING(whether to include dirty support)
+
+AC_ARG_ENABLE(dirty,
+	[AS_HELP_STRING([--enable-dirty],[write to buffers each time, may affect result]) ])
+
+case "$enable_dirty" in
+	yes)
+		use_dirty=true
+		;;
+	no)
+		use_dirty=false
+		;;
+	'')
+		# whatever
+		use_dirty=false
+		;;
+	*)
+		AC_MSG_ERROR([--enable-dirty takes yes or no])
+		;;
+esac
+
+if $use_dirty
+then
+	AC_MSG_RESULT(yes)
+else
+	AC_MSG_RESULT(no)
+fi
+
+if $use_dirty
+then
+	AC_DEFINE([DIRTY],,[Define to one to enable dirty buffer support. May affect results.])
+fi
 
 # see if we should be enabling demo support
 
@@ -378,7 +412,7 @@ fi
 AC_MSG_CHECKING([whether paced sends should spin])
 
 AC_ARG_ENABLE(spin,
-	[AS_HELP_STRING([--enable-spin],[paces operations should sit and spin - WILL affect result])])
+	[AS_HELP_STRING([--enable-spin],[paced operations (--enable-intervals) should sit and spin - WILL affect result])])
 
 case "$enable_spin" in
 	yes)
