@@ -856,6 +856,7 @@ Optional Features:
   --disable-dependency-tracking Speeds up one-time builds
   --enable-dependency-tracking  Do not reject slow dependency extractors
   --enable-histogram      include individual op timing, may affect result
+  --enable-dirty          write to buffers each time, may affect result
   --enable-demo           emit interim results during the run. May affect
                           results.
   --enable-unixdomain     include Unix Domain socket tests
@@ -865,8 +866,8 @@ Optional Features:
   --enable-sctp           include tests to measure SCTP performance
   --enable-intervals      include ability to pace operations, may affect
                           result
-  --enable-spin           paces operations should sit and spin - WILL affect
-                          result
+  --enable-spin           paced operations (--enable-intervals) should sit and
+                          spin - WILL affect result
   --enable-burst          include intial request burst ability in _RR tests,
                           may affect result
   --enable-cpuutil        include code to measure CPU utilization using
@@ -6566,6 +6567,52 @@ then
 
 cat >>confdefs.h <<\_ACEOF
 #define WANT_HISTOGRAM
+_ACEOF
+
+fi
+# see if we should be enabling histogram support
+
+echo "$as_me:$LINENO: checking whether to include dirty support" >&5
+echo $ECHO_N "checking whether to include dirty support... $ECHO_C" >&6
+
+# Check whether --enable-dirty or --disable-dirty was given.
+if test "${enable_dirty+set}" = set; then
+  enableval="$enable_dirty"
+
+fi;
+
+case "$enable_dirty" in
+	yes)
+		use_dirty=true
+		;;
+	no)
+		use_dirty=false
+		;;
+	'')
+		# whatever
+		use_dirty=false
+		;;
+	*)
+		{ { echo "$as_me:$LINENO: error: --enable-dirty takes yes or no" >&5
+echo "$as_me: error: --enable-dirty takes yes or no" >&2;}
+   { (exit 1); exit 1; }; }
+		;;
+esac
+
+if $use_dirty
+then
+	echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+else
+	echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+fi
+
+if $use_dirty
+then
+
+cat >>confdefs.h <<\_ACEOF
+#define DIRTY
 _ACEOF
 
 fi

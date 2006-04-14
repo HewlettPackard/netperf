@@ -1196,7 +1196,7 @@ Size (bytes)\n\
   
 #ifdef DIRTY
   int	*message_int_ptr;
-  int	i;
+  int	i,dirty_totals;
 #endif
 
   struct ring_elt *send_ring;
@@ -1491,20 +1491,40 @@ Size (bytes)\n\
     while ((!times_up) || (bytes_remaining > 0)) {
       
 #ifdef DIRTY
-      /* we want to dirty some number of consecutive integers in the buffer */
-      /* we are about to send. we may also want to bring some number of */
-      /* them cleanly into the cache. The clean ones will follow any dirty */
-      /* ones into the cache. at some point, we might want to replace */
-      /* the rand() call with something from a table to reduce our call */
-      /* overhead during the test, but it is not a high priority item. */
+      /* we want to dirty some number of consecutive integers in the
+       buffer we are about to send. we may also want to bring some
+       number of them cleanly into the cache. The clean ones will
+       follow any dirty ones into the cache. at some point, we might
+       want to replace the rand() call with something from a table to
+       reduce our call overhead during the test, but it is not a high
+       priority item.
+
+       we should probably make sure that we don't go charging past the
+       end of the buffer, nor changing the counts when running with
+       confidence intervals.  also, we probably neeed to do something
+       to make sure that a compiler's dead code elimination doesn't
+       take this stuff out. raj 2006-04-14 */
       message_int_ptr = (int *)(send_ring->buffer_ptr);
-      for (i = 0; i < loc_dirty_count; i++) {
+      for (i = 0; 
+	   ((i < loc_dirty_count) && 
+	    (message_int_ptr < (send_ring->buffer_ptr + send_size)));
+	   i++) {
 	*message_int_ptr = rand();
+	dirty_totals += *message_int_ptr;
 	message_int_ptr++;
       }
-      for (i = 0; i < loc_clean_count; i++) {
-	loc_dirty_count = *message_int_ptr;
+      for (i = 0;
+	   ((i < loc_clean_count) &&
+	    (message_int_ptr < (send_ring->buffer_ptr + send_size)));
+	   i++) {
+	dirty_totals += *message_int_ptr;
 	message_int_ptr++;
+      }
+      if (debug > 100) {
+	fprintf(where,
+		"This was here to try to avoid dead-code elimination %d\n",
+		dirty_totals);
+	fflush(where);
       }
 #endif /* DIRTY */
       
