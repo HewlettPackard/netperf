@@ -7970,8 +7970,7 @@ ac_cv_lib_kstat=ac_cv_lib_kstat_main
 			enable_cpuutil="kstat - auto"
 			NETCPU_SOURCE="kstat"
 			;;
-                     *-*-freebsd4.* | *-*-freebsd5.* | *-*-freebsd6.* | *-*-fre
-ebsd7.* )
+                     *-*-freebsd4.* | *-*-freebsd5.* | *-*-freebsd6.* | *-*-freebsd7.* )
 			use_cpuutil=true
 
 cat >>confdefs.h <<\_ACEOF

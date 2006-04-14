@@ -101,7 +101,8 @@ Fabrice Bacchella
 for pointing-out that Solaris 9 has a copy of Linux sendfile()
 
 Andrew Gallatin 
-for assistance with the FreeBSD sysctl() stuff
+for assistance with the FreeBSD sysctl() stuff, and later making it
+calibration-free
 
 Mark Cooper
 pointing-out the need for -lresolv when compiling -DDO_DNS on RedHat
