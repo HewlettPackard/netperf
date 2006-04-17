@@ -5068,15 +5068,15 @@ Send   Recv    Send   Recv\n\
 	     (requests_outstanding < first_burst_size)) {
 	if (debug) {
 	  fprintf(where,
-		  "injecting, requests_outstanding %d request_cwnd %d burst %d\n",
+		  "injecting, req_outstndng %d req_cwnd %d burst %d\n",
 		  requests_outstanding,
 		  request_cwnd,
 		  first_burst_size);
 	}
-	if((len=send(send_socket,
-		     send_ring->buffer_ptr,
-		     req_size,
-		     0)) != req_size) {
+	if ((len = send(send_socket,
+			send_ring->buffer_ptr,
+			req_size,
+			0)) != req_size) {
 	  /* we should never hit the end of the test in the first burst */
 	  perror("send_tcp_rr: initial burst data send error");
 	  exit(-1);
@@ -5092,10 +5092,10 @@ Send   Recv    Send   Recv\n\
       HIST_timestamp(&time_one);
 #endif /* WANT_HISTOGRAM */
       
-      if((len=send(send_socket,
-		   send_ring->buffer_ptr,
-		   req_size,
-		   0)) != req_size) {
+      if ((len = send(send_socket,
+		      send_ring->buffer_ptr,
+		      req_size,
+		      0)) != req_size) {
 	if (SOCKET_EINTR(len) || (errno == 0)) {
 	  /* we hit the end of a */
 	  /* timed test. */
@@ -5141,7 +5141,7 @@ Send   Recv    Send   Recv\n\
 	request_cwnd += 1;
 	if (debug) {
 	  fprintf(where,
-		  "increased request_cwnd to %d with first_burst_size %d requests_outstanding %d\n",
+		  "incr req_cwnd to %d first_burst %d reqs_outstndng %d\n",
 		  request_cwnd,
 		  first_burst_size,
 		  requests_outstanding);
@@ -5182,23 +5182,23 @@ Send   Recv    Send   Recv\n\
       }
     }
 
-    /* At this point we used to call shutdown on the data socket to be */
-    /* sure all the data was delivered, but this was not germane in a */
-    /* request/response test, and it was causing the tests to "hang" when */
-    /* they were being controlled by time. So, I have replaced this */
-    /* shutdown call with a call to close that can be found later in the */
-    /* procedure. */
+    /* At this point we used to call shutdown on the data socket to be
+       sure all the data was delivered, but this was not germane in a
+       request/response test, and it was causing the tests to "hang"
+       when they were being controlled by time. So, I have replaced
+       this shutdown call with a call to close that can be found later
+       in the procedure. */
     
-    /* this call will always give us the elapsed time for the test, and */
-    /* will also store-away the necessaries for cpu utilization */
+    /* this call will always give us the elapsed time for the test,
+       and will also store-away the necessaries for cpu utilization */
     
     cpu_stop(local_cpu_usage,&elapsed_time);	/* was cpu being */
 						/* measured? how long */
 						/* did we really run? */
     
-    /* Get the statistics from the remote end. The remote will have */
-    /* calculated CPU utilization. If it wasn't supposed to care, it */
-    /* will return obvious values. */ 
+    /* Get the statistics from the remote end. The remote will have
+       calculated CPU utilization. If it wasn't supposed to care, it
+       will return obvious values. */ 
     
     recv_response();
     if (!netperf_response.content.serv_errno) {
@@ -5220,16 +5220,16 @@ Send   Recv    Send   Recv\n\
     thruput	= nummessages/elapsed_time;
   
     if (local_cpu_usage || remote_cpu_usage) {
-      /* We must now do a little math for service demand and cpu */
-      /* utilization for the system(s) */
-      /* Of course, some of the information might be bogus because */
-      /* there was no idle counter in the kernel(s). We need to make */
-      /* a note of this for the user's benefit...*/
+      /* We must now do a little math for service demand and cpu
+       utilization for the system(s) Of course, some of the
+       information might be bogus because there was no idle counter in
+       the kernel(s). We need to make a note of this for the user's
+       benefit... */
       if (local_cpu_usage) {
 	local_cpu_utilization = calc_cpu_util(0.0);
-	/* since calc_service demand is doing ms/Kunit we will */
-	/* multiply the number of transaction by 1024 to get */
-	/* "good" numbers */
+ 	/* since calc_service demand is doing ms/Kunit we will
+	   multiply the number of transaction by 1024 to get "good"
+	   numbers */
 	local_service_demand  = calc_service_demand((double) nummessages*1024,
 						    0.0,
 						    0.0,
@@ -5242,9 +5242,9 @@ Send   Recv    Send   Recv\n\
       
       if (remote_cpu_usage) {
 	remote_cpu_utilization = tcp_rr_result->cpu_util;
-	/* since calc_service demand is doing ms/Kunit we will */
-	/* multiply the number of transaction by 1024 to get */
-	/* "good" numbers */
+	/* since calc_service demand is doing ms/Kunit we will
+	   multiply the number of transaction by 1024 to get "good"
+	   numbers */
 	remote_service_demand = calc_service_demand((double) nummessages*1024,
 						    0.0,
 						    remote_cpu_utilization,
@@ -5265,9 +5265,9 @@ Send   Recv    Send   Recv\n\
       remote_service_demand  = (float) -1.0;
     }
 
-    /* at this point, we want to calculate the confidence information. */
-    /* if debugging is on, calculate_confidence will print-out the */
-    /* parameters we pass it */
+    /* at this point, we want to calculate the confidence information.
+       if debugging is on, calculate_confidence will print-out the
+       parameters we pass it */
     
     calculate_confidence(confidence_iteration,
 			 elapsed_time,
@@ -5292,14 +5292,14 @@ Send   Recv    Send   Recv\n\
 			    &local_service_demand,
 			    &remote_service_demand);
 
-  /* We are now ready to print all the information. If the user */
-  /* has specified zero-level verbosity, we will just print the */
-  /* local service demand, or the remote service demand. If the */
-  /* user has requested verbosity level 1, he will get the basic */
-  /* "streamperf" numbers. If the user has specified a verbosity */
-  /* of greater than 1, we will display a veritable plethora of */
-  /* background information from outside of this block as it it */
-  /* not cpu_measurement specific...  */
+  /* We are now ready to print all the information. If the user has
+     specified zero-level verbosity, we will just print the local
+     service demand, or the remote service demand. If the user has
+     requested verbosity level 1, he will get the basic "streamperf"
+     numbers. If the user has specified a verbosity of greater than 1,
+     we will display a veritable plethora of background information
+     from outside of this block as it it not cpu_measurement
+     specific...  */
 
   if (confidence < 0) {
     /* we did not hit confidence, but were we asked to look for it? */

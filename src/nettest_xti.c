@@ -524,10 +524,6 @@ Size (bytes)\n\
 
   double	bytes_sent;
   
-#ifdef DIRTY
-  int	i;
-#endif /* DIRTY */
-  
   float	local_cpu_utilization;
   float	local_service_demand;
   float	remote_cpu_utilization;
@@ -887,12 +883,6 @@ Size (bytes)\n\
     }
 #endif /* WANT_INTERVALS */
 
-#ifdef DIRTY
-    /* initialize the random number generator for putting dirty stuff */
-    /* into the send buffer. raj */
-    srand((int) getpid());
-#endif
-    
     /* before we start, initialize a few variables */
 
     /* We use an "OR" to control test execution. When the test is */
@@ -910,15 +900,10 @@ Size (bytes)\n\
       /* ones into the cache. at some point, we might want to replace */
       /* the rand() call with something from a table to reduce our call */
       /* overhead during the test, but it is not a high priority item. */
-      message_int_ptr = (int *)(send_ring->buffer_ptr);
-      for (i = 0; i < loc_dirty_count; i++) {
-        *message_int_ptr = rand();
-        message_int_ptr++;
-      }
-      for (i = 0; i < loc_clean_count; i++) {
-        loc_dirty_count = *message_int_ptr;
-        message_int_ptr++;
-      }
+      access_buffer(send_ring->buffer_ptr,
+		    send_size,
+		    loc_dirty_count,
+		    loc_clean_count);
 #endif /* DIRTY */
       
 #ifdef WANT_HISTOGRAM
@@ -1253,7 +1238,7 @@ Size (bytes)\n\
 /* implemented as one routine. I could break things-out somewhat, but */
 /* didn't feel it was necessary. */
 
-int 
+void 
 recv_xti_tcp_stream()
 {
   
@@ -1271,8 +1256,6 @@ recv_xti_tcp_stream()
   struct ring_elt *recv_ring;
 
   int   *message_int_ptr;
-  int   dirty_count;
-  int   clean_count;
   int   i;
   
   struct xti_tcp_stream_request_struct	*xti_tcp_stream_request;
@@ -1564,17 +1547,11 @@ recv_xti_tcp_stream()
     /* them cleanly into the cache. The clean ones will follow any dirty */
     /* ones into the cache. */
 
-  dirty_count = xti_tcp_stream_request->dirty_count;
-  clean_count = xti_tcp_stream_request->clean_count;
-  message_int_ptr = (int *)recv_ring->buffer_ptr;
-  for (i = 0; i < dirty_count; i++) {
-    *message_int_ptr = rand();
-    message_int_ptr++;
-  }
-  for (i = 0; i < clean_count; i++) {
-    dirty_count = *message_int_ptr;
-    message_int_ptr++;
-  }
+  access_buffer(recv_ring->buffer_ptr,
+		recv_size,
+		xti_tcp_stream_request->dirty_count,
+		xti_tcp_stream_request->clean_count);
+
 #endif /* DIRTY */
 
   bytes_received = 0;
@@ -1591,15 +1568,12 @@ recv_xti_tcp_stream()
     recv_ring = recv_ring->next;
     
 #ifdef DIRTY
-    message_int_ptr = (int *)(recv_ring->buffer_ptr);
-    for (i = 0; i < dirty_count; i++) {
-      *message_int_ptr = rand();
-      message_int_ptr++;
-    }
-    for (i = 0; i < clean_count; i++) {
-      dirty_count = *message_int_ptr;
-      message_int_ptr++;
-    }
+
+  access_buffer(recv_ring->buffer_ptr,
+		recv_size,
+		xti_tcp_stream_request->dirty_count,
+		xti_tcp_stream_request->clean_count);
+
 #endif /* DIRTY */
   }
   
@@ -1701,7 +1675,7 @@ recv_xti_tcp_stream()
  /* this routine implements the sending (netperf) side of the XTI_TCP_RR */
  /* test. */
 
-int 
+void 
 send_xti_tcp_rr(char remote_host[])
 {
   
@@ -2490,9 +2464,6 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
   int	interval_count;
   sigset_t signal_set;
 #endif /* WANT_INTERVALS */
-#ifdef DIRTY
-  int	i;
-#endif /* DIRTY */
   
   struct   hostent     *hp;
   struct   sockaddr_in server;
@@ -2796,15 +2767,12 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
       /* we are about to send. we may also want to bring some number of */
       /* them cleanly into the cache. The clean ones will follow any dirty */
       /* ones into the cache. */
-      message_int_ptr = (int *)(send_ring->buffer_ptr);
-      for (i = 0; i < loc_dirty_count; i++) {
-	*message_int_ptr = 4;
-	message_int_ptr++;
-      }
-      for (i = 0; i < loc_clean_count; i++) {
-	loc_dirty_count = *message_int_ptr;
-	message_int_ptr++;
-      }
+
+      access_buffer(send_ring->buffer_ptr,
+		    send_size,
+		    loc_dirty_count,
+		    loc_clean_count);
+
 #endif /* DIRTY */
       
 #ifdef WANT_HISTOGRAM
@@ -3090,7 +3058,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
  /* this routine implements the receive side (netserver) of the */
  /* XTI_UDP_STREAM performance test. */
 
-int
+void
 recv_xti_udp_stream()
 {
   struct ring_elt *recv_ring;
@@ -3425,7 +3393,7 @@ recv_xti_udp_stream()
   
 }
 
-int send_xti_udp_rr(char remote_host[])
+void send_xti_udp_rr(char remote_host[])
 {
   
   char *tput_title = "\
@@ -4171,7 +4139,7 @@ Send   Recv    Send   Recv\n\
 
  /* this routine implements the receive side (netserver) of a XTI_UDP_RR */
  /* test. */
-int 
+void 
   recv_xti_udp_rr()
 {
   
@@ -4557,7 +4525,7 @@ int
 
  /* this routine implements the receive (netserver) side of a XTI_TCP_RR */
  /* test */
-int 
+void 
 recv_xti_tcp_rr()
 {
   
@@ -4988,7 +4956,7 @@ recv_xti_tcp_rr()
  /* it will also look (can look) much like the communication pattern */
  /* of http for www access. */
 
-int 
+void 
 send_xti_tcp_conn_rr(char remote_host[])
 {
   
@@ -5572,7 +5540,7 @@ newport:
 }
 
 
-int 
+void 
 recv_xti_tcp_conn_rr()
 {
   
