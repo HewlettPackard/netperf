@@ -233,23 +233,23 @@ struct xti_udp_rr_results_struct {
 
 extern void send_xti_tcp_stream(char remote_host[]);
 
-extern int recv_xti_tcp_stream();
+extern void recv_xti_tcp_stream();
 
-extern int send_xti_tcp_rr(char remote_host[]);
+extern void send_xti_tcp_rr(char remote_host[]);
 
 extern void send_xti_udp_stream(char remote_host[]);
 
-extern int recv_xti_udp_stream();
+extern void recv_xti_udp_stream();
 
-extern int send_xti_udp_rr(char remote_host[]);
+extern void send_xti_udp_rr(char remote_host[]);
 
-extern int recv_xti_udp_rr();
+extern void recv_xti_udp_rr();
 
-extern int recv_xti_tcp_rr();
+extern void recv_xti_tcp_rr();
 
-extern int send_xti_tcp_conn_rr(char remote_host[]);
+extern void send_xti_tcp_conn_rr(char remote_host[]);
 
-extern int recv_xti_tcp_conn_rr();
+extern void recv_xti_tcp_conn_rr();
 
 extern void scan_xti_args(int argc, char *argv[]);
 
