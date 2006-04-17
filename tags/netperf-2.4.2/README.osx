@@ -1,0 +1,16 @@
+When compiling under MacOS X you may encounter problems with the
+NetPerf and NetServer directories in src/.  Seems that filenames can
+be case insensitive in OSX and so there are conflicts with the netperf
+and netserver binaries the makefile will try to create.  Brilliant!
+
+As NetPerf/ and NetServer/ are only for Windows compilation, you can
+safely rename them to NetPerf.dir and NetServer.dir and the make will
+be fat dumb and happy.
+
+However, if you are using subversion to grab bits, it will become
+rather cranky at commit or update time - it will miss NetPerf and
+NetServer and will complain bitterly until you move them back again.
+
+At some point it is hoped that those two directories can be renamed so
+there is no case-insensitive conflict between them and the names of
+the binaries.
