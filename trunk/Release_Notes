@@ -24,7 +24,7 @@ Things changed in this release:
    HP-UX.
 
 *) The netcpu_sysctl method becomes calibration-free, courtesy of 
-   Adnrew Gallatin
+   Andrew Gallatin
 
 These are the Release Notes for Revision 2.4.1 of netperf:
 
