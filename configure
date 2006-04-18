@@ -1688,8 +1688,8 @@ fi
 
 
 # Define the identity of the package.
- PACKAGE=netperf
- VERSION=2.4.2
+ PACKAGE='netperf'
+ VERSION='2.4.2'
 
 
 cat >>confdefs.h <<_ACEOF

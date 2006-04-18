@@ -10,7 +10,7 @@ AC_INIT(netperf, 2.4.2)
 # use the target version rather than host - one day we may want cross-compile
 AC_CANONICAL_TARGET
 AC_CONFIG_SRCDIR([src/hist.h])
-AM_INIT_AUTOMAKE(netperf, 2.4.2)
+AM_INIT_AUTOMAKE([dist-zip])
 AM_CONFIG_HEADER(config.h)
 # AC_CONFIG_HEADER(config.h)
 
