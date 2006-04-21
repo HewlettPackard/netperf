@@ -2144,13 +2144,6 @@ Size (bytes)\n\
        we trust that we get a zero-byte recieve from the socket. raj
        2002-06-21 */
 
-#ifdef DIRTY
-    access_buffer(recv_ring->buffer_ptr,
-		  recv_size,
-		  loc_dirty_count,
-		  loc_clean_count);
-#endif /* DIRTY */
-      
 #ifdef WANT_HISTOGRAM
       /* timestamp just before we go into recv and then again just after */
       /* we come out raj 8/94 */
@@ -2158,14 +2151,22 @@ Size (bytes)\n\
 #endif /* WANT_HISTOGRAM */
     
     while ((len=recv(recv_socket,
-		   recv_ring->buffer_ptr,
-		   recv_size,
-		   0)) > 0 ) {
+		     recv_ring->buffer_ptr,
+		     recv_size,
+		     0)) > 0 ) {
+
 #ifdef WANT_HISTOGRAM
       /* timestamp the exit from the recv call and update the histogram */
       HIST_timestamp(&time_two);
       HIST_add(time_hist,delta_micro(&time_one,&time_two));
 #endif /* WANT_HISTOGRAM */      
+
+#ifdef DIRTY
+      access_buffer(recv_ring->buffer_ptr,
+		    recv_size,
+		    loc_dirty_count,
+		    loc_clean_count);
+#endif /* DIRTY */
 
 #ifdef WANT_DEMO
       DEMO_STREAM_INTERVAL(len);
@@ -4264,18 +4265,11 @@ recv_tcp_stream()
   /* The loop will exit when the sender does a shutdown, which will */
   /* return a length of zero   */
   
-#ifdef DIRTY
-    /* we want to dirty some number of consecutive integers in the buffer */
-    /* we are about to recv. we may also want to bring some number of */
-    /* them cleanly into the cache. The clean ones will follow any dirty */
-    /* ones into the cache. */
-
-  access_buffer(recv_ring->buffer_ptr,
-		recv_size,
-		tcp_stream_request->dirty_count,
-		tcp_stream_request->clean_count);
-
-#endif /* DIRTY */
+  /* there used to be an #ifdef DIRTY call to access_buffer() here,
+     but we have switched from accessing the buffer before the recv()
+     call to accessing the buffer after the recv() call.  The
+     accessing before was, IIRC, related to having dirty data when
+     doing page-flipping copy avoidance. */
 
   bytes_received = 0;
   receive_calls  = 0;
@@ -4290,19 +4284,21 @@ recv_tcp_stream()
     bytes_received += len;
     receive_calls++;
 
-    /* more to the next buffer in the recv_ring */
-    recv_ring = recv_ring->next;
-
-#ifdef PAUSE
-    sleep(1);
-#endif /* PAUSE */
-
 #ifdef DIRTY
+    /* we access the buffer after the recv() call now, rather than before */
     access_buffer(recv_ring->buffer_ptr,
 		  recv_size,
 		  tcp_stream_request->dirty_count,
 		  tcp_stream_request->clean_count);
 #endif /* DIRTY */
+
+
+    /* move to the next buffer in the recv_ring */
+    recv_ring = recv_ring->next;
+
+#ifdef PAUSE
+    sleep(1);
+#endif /* PAUSE */
 
 #ifdef DO_SELECT
 	FD_SET(s_data,&readfds);
