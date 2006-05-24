@@ -81,6 +81,9 @@
 /* Define to 1 if you have the `sctp' library (-lsctp). */
 #undef HAVE_LIBSCTP
 
+/* Define to 1 if you have the `sendfile' library (-lsendfile). */
+#undef HAVE_LIBSENDFILE
+
 /* Define to 1 if you have the `socket' library (-lsocket). */
 #undef HAVE_LIBSOCKET
 
@@ -312,6 +315,12 @@
 
 /* Define to one to include XTI tests. */
 #undef WANT_XTI
+
+/* Number of bits in a file offset, on hosts where this is settable. */
+#undef _FILE_OFFSET_BITS
+
+/* Define for large files, on AIX-style hosts. */
+#undef _LARGE_FILES
 
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const

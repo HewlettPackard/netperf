@@ -1,3 +1,13 @@
+These are the Release Notes leading-up to Revision 2.4.3 of netperf:
+
+Things changed in this release:
+
+*) More complete closing/redirecting of stdin/stdout/stderr/where in
+   netserver to make it easier to launch netserver at the far-end of a
+   remote shell.  Courtesy of Hans Blom.
+
+*) Sendfile changes for Solaris courtesy of Andrew Gallatin.
+
 These are the Release Notes for Revision 2.4.2 of netperf:
 
 Things changed in this release:

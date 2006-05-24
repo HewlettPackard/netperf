@@ -176,3 +176,6 @@ Patches to attend to some windows in TCP_CRR and TCP_CC under Windows
 Bret McKee <bret@hp.com>
 Fixes to get netcpu_looper compiling and working after the "netcpu"
 split
+
+Hans Blom
+Improvements to closing/redirecting stdin/stdout/stderr in netserver

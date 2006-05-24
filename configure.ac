@@ -33,6 +33,8 @@ AC_CHECK_HEADERS([arpa/inet.h endian.h errno.h fcntl.h limits.h malloc.h netdb.h
 AC_HAVE_LIBRARY(socket)
 if test "$ac_cv_lib_socket_main" = yes ; then
     AC_HAVE_LIBRARY(nsl)
+    AC_HAVE_LIBRARY(sendfile)
+    AC_SYS_LARGEFILE
 fi
 
 # this one is for Tru64 and bind_to_cpu_id
