@@ -138,9 +138,9 @@ char	nettest_id[]="\
 int first_burst_size=0;
 #endif /* WANT_FIRST_BURST */
 
-#if defined(HAVE_SENDFILE) && (defined(__linux) || defined(__SunOS_5_9))
+#if defined(HAVE_SENDFILE) && (defined(__linux) || defined(__sun__))
 #include <sys/sendfile.h>
-#endif /* HAVE_SENDFILE && (__linux || __SunOS_5_9 */
+#endif /* HAVE_SENDFILE && (__linux || __sun__) */
 
 
 
@@ -3326,13 +3326,19 @@ Size (bytes)\n\
   struct  addrinfo *local_res;
   struct	sockaddr_in	server;
 
-#if defined(__linux) || defined(__SunOS_5_9)
+#if defined(__linux) || defined(__sun__)
   off_t     scratch_offset;   /* the linux sendfile() call will update
 				 the offset variable, which is
 				 something we do _not_ want to happen
 				 to the value in the send_ring! so, we
 				 have to use a scratch variable. */
-#endif /* __linux  || defined(__SunOS_5_9) */
+#endif /* __linux  || defined(__sun__) */
+#if defined (__sun__)
+   size_t  scratch_len;	/* the sun sendfilev() needs a place to 
+			   tell us how many bytes were written,
+			   even though it also returns the value */
+   sendfilevec_t sv;
+#endif /* __sun__ */
   
   struct	tcp_stream_request_struct	*tcp_stream_request;
   struct	tcp_stream_response_struct	*tcp_stream_response;
@@ -3659,12 +3665,21 @@ Size (bytes)\n\
 			send_ring->length,
 			send_ring->hdtrl,
 			send_ring->flags)) != send_size)
-#elif defined(__linux)  || defined(__SunOS_5_9)
+#elif defined(__linux)
 	scratch_offset = send_ring->offset;
       if ((len=sendfile(send_socket, 
 			send_ring->fildes, 
 			&scratch_offset,   /* modified after the call! */
 			send_ring->length)) != send_size)
+#elif defined (__sun__)
+      /* We must call with SFV_NOWAIT and a large file size (>= 16MB) to
+	 get zero-copy, as well as compiling with  -D_LARGEFILE_SOURCE
+	  -D_FILE_OFFSET_BITS=64 */
+      sv.sfv_fd = send_ring->fildes;
+      sv.sfv_flag = SFV_NOWAIT;
+      sv.sfv_off = send_ring->offset;
+      sv.sfv_len =  send_ring->length;
+      if ((len = sendfilev(send_socket, &sv, 1, &scratch_len)) != send_size)
 #elif defined(__FreeBSD__)
 	/* so close to HP-UX and yet so far away... :) */
 	if ((sendfile(send_ring->fildes, 
