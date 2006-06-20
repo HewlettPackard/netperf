@@ -179,3 +179,7 @@ split
 
 Hans Blom
 Improvements to closing/redirecting stdin/stdout/stderr in netserver
+
+Martin Brown
+RPM support in the form of netperf.spec.in and related configure.ac
+etc changes

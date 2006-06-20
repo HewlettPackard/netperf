@@ -604,5 +604,7 @@ AC_CONFIG_FILES([Makefile
                  src/Makefile
 		 doc/Makefile])
 
+m4_pattern_allow([^AC_PACKAGE_VERSION])dnl
+AC_CONFIG_COMMANDS_POST(sed -e 's|@[[AC_PACKAGE_VERSION]]\@|AC_PACKAGE_VERSION|g' AC_PACKAGE_NAME.spec.in > AC_PACKAGE_NAME.spec)
 
 AC_OUTPUT

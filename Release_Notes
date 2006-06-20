@@ -8,6 +8,8 @@ Things changed in this release:
 
 *) Sendfile changes for Solaris courtesy of Andrew Gallatin.
 
+*) "spec" file support to generate RPMs courtesy of Martin Brown
+
 These are the Release Notes for Revision 2.4.2 of netperf:
 
 Things changed in this release:
