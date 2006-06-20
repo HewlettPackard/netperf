@@ -119,7 +119,7 @@ target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
 SUBDIRS = src doc
-EXTRA_DIST = m4/ README.* Release_Notes inet_ntop.c
+EXTRA_DIST = m4/ README.* Release_Notes inet_ntop.c netperf.spec*
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
@@ -133,9 +133,9 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 	installdirs-recursive install-recursive uninstall-recursive \
 	check-recursive installcheck-recursive
 DIST_COMMON = README $(srcdir)/Makefile.in $(srcdir)/configure AUTHORS \
-	COPYING ChangeLog INSTALL Makefile.am NEWS aclocal.m4 \
-	config.guess config.h.in config.sub configure configure.ac \
-	depcomp install-sh missing mkinstalldirs
+	COPYING ChangeLog INSTALL Makefile.am NEWS acinclude.m4 \
+	aclocal.m4 config.guess config.h.in config.sub configure \
+	configure.ac depcomp install-sh missing mkinstalldirs
 DIST_SUBDIRS = $(SUBDIRS)
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -155,7 +155,7 @@ $(top_builddir)/config.status: $(srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 $(srcdir)/configure:  $(srcdir)/configure.ac $(ACLOCAL_M4) $(CONFIGURE_DEPENDENCIES)
 	cd $(srcdir) && $(AUTOCONF)
 
-$(ACLOCAL_M4):  configure.ac 
+$(ACLOCAL_M4):  configure.ac acinclude.m4
 	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
 
 config.h: stamp-h1

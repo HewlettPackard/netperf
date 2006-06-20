@@ -8492,6 +8492,7 @@ echo "${ECHO_T}\"$enable_cpuutil\"" >&6
 
 
 
+
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -9884,6 +9885,7 @@ _ACEOF
 chmod +x $CONFIG_STATUS
 ac_clean_files=$ac_clean_files_save
 
+sed -e 's|@AC_PACKAGE_VERSION\@|2.4.2|g' netperf.spec.in > netperf.spec
 
 # configure is writing to config.log, and then calls config.status.
 # config.status does its own redirection, appending to config.log.
