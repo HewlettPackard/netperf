@@ -118,8 +118,10 @@ target_alias = @target_alias@
 target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
+
+AUTOMAKE_OPTIONS = dist-bzip2 dist-zip
 SUBDIRS = src doc
-EXTRA_DIST = m4/ README.* Release_Notes inet_ntop.c netperf.spec*
+EXTRA_DIST = README.* Release_Notes inet_ntop.c netperf.spec.in
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
@@ -367,6 +369,10 @@ dist-gzip: distdir
 	$(AMTAR) chof - $(distdir) | GZIP=$(GZIP_ENV) gzip -c >$(distdir).tar.gz
 	$(am__remove_distdir)
 
+dist-bzip2: distdir
+	$(AMTAR) chof - $(distdir) | bzip2 -9 -c >$(distdir).tar.bz2
+	$(am__remove_distdir)
+
 dist-zip: distdir
 	-rm -f $(distdir).zip
 	zip -rq $(distdir).zip $(distdir)
@@ -374,6 +380,7 @@ dist-zip: distdir
 
 dist dist-all: distdir
 	$(AMTAR) chof - $(distdir) | GZIP=$(GZIP_ENV) gzip -c >$(distdir).tar.gz
+	$(AMTAR) chof - $(distdir) | bzip2 -9 -c >$(distdir).tar.bz2
 	-rm -f $(distdir).zip
 	zip -rq $(distdir).zip $(distdir)
 	$(am__remove_distdir)
@@ -515,7 +522,7 @@ uninstall-info: uninstall-info-recursive
 
 .PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am check check-am clean \
 	clean-generic clean-recursive ctags ctags-recursive dist \
-	dist-all dist-gzip dist-zip distcheck distclean \
+	dist-all dist-bzip2 dist-gzip dist-zip distcheck distclean \
 	distclean-generic distclean-hdr distclean-recursive \
 	distclean-tags distcleancheck distdir distuninstallcheck dvi \
 	dvi-am dvi-recursive info info-am info-recursive install \
@@ -533,6 +540,8 @@ uninstall-info: uninstall-info-recursive
 
 dist-hook:
 	rm -rf `find $(distdir) -name .svn`
+	sed -e 's|@VERSION\@|$(VERSION)|g' $(PACKAGE).spec.in > $(PACKAGE).spec
+	cp $(PACKAGE).spec $(distdir)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

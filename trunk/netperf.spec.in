@@ -1,6 +1,6 @@
 Summary: Network Performance Testing Tool
 Name: netperf
-Version: @AC_PACKAGE_VERSION@
+Version: @VERSION@
 Release: 1
 Copyright: Unknown
 Group: System Environment/Base

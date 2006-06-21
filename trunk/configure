@@ -4766,7 +4766,7 @@ rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
          done
 
          if test "x$curl_cv_socklen_t_equiv" = x; then
-	# take a wild guess
+        # take a wild guess
             curl_cv_socklen_t_equiv="socklen_t"
             { echo "$as_me:$LINENO: WARNING: Cannot find a type to use in place of socklen_t, guessing socklen_t" >&5
 echo "$as_me: WARNING: Cannot find a type to use in place of socklen_t, guessing socklen_t" >&2;}
@@ -8491,8 +8491,6 @@ echo "${ECHO_T}\"$enable_cpuutil\"" >&6
                               ac_config_files="$ac_config_files Makefile src/Makefile doc/Makefile"
 
 
-
-
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -9885,7 +9883,6 @@ _ACEOF
 chmod +x $CONFIG_STATUS
 ac_clean_files=$ac_clean_files_save
 
-sed -e 's|@AC_PACKAGE_VERSION\@|2.4.2|g' netperf.spec.in > netperf.spec
 
 # configure is writing to config.log, and then calls config.status.
 # config.status does its own redirection, appending to config.log.
