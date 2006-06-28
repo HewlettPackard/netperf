@@ -555,9 +555,9 @@ ntohd(double net_double)
     conv_rec.bytes[i] = conv_rec.bytes[7-i];
     conv_rec.bytes[7-i] = scratch;
   }
-  
-#if __FLOAT_WORD_ORDER != __BYTE_ORDER
-  {
+
+#if defined(__FLOAT_WORD_ORDER) && defined(__BYTE_ORDER)
+  if (__FLOAT_WORD_ORDER != __BYTE_ORDER) {
     /* Fixup mixed endian floating point machines */
     unsigned int scratch = conv_rec.words[0];
     conv_rec.words[0] = conv_rec.words[1];
@@ -599,8 +599,8 @@ htond(double host_double)
     conv_rec.bytes[7-i] = scratch;
   }
   
-#if __FLOAT_WORD_ORDER != __BYTE_ORDER
-  {
+#if defined(__FLOAT_WORD_ORDER) && defined(__BYTE_ORDER)
+  if (__FLOAT_WORD_ORDER != __BYTE_ORDER) {
     /* Fixup mixed endian floating point machines */
     unsigned int scratch = conv_rec.words[0];
     conv_rec.words[0] = conv_rec.words[1];
@@ -1303,11 +1303,12 @@ access_buffer(char *buffer_ptr,int length, int dirty_count, int clean_count) {
 
   temp_buffer = buffer_ptr;
   limit = temp_buffer + length;
+  dirty_totals = 0;
 
   for (i = 0; 
        ((i < dirty_count) && (temp_buffer < limit));
        i++) {
-    *temp_buffer += i;
+    *temp_buffer += (char)i;
     dirty_totals += *temp_buffer;
     temp_buffer++;
   }
