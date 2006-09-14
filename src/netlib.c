@@ -1873,20 +1873,48 @@ bind_to_specific_processor(int processor_affinity, int use_cpu_map)
   bindprocessor(BINDPROCESS,getpid(),(cpu_t)mapped_affinity);
 #elif HAVE_SCHED_SETAFFINITY
 #include <sched.h>
-  /* gee, I wonder what we would do on a system with > 32 or 64
-     CPUs... raj 2005-11-08 */
-  unsigned long       this_mask;
-  unsigned int        len = sizeof(this_mask);
+  /* in theory this should cover systems with more CPUs than bits in a
+     long, without having to specify __USE_GNU.  we "cheat" by taking
+     defines from /usr/include/bits/sched.h, which we ass-u-me is
+     included by <sched.h>.  If they are not there we will just
+     fall-back on what we had before, which is to use just the size of
+     an unsigned long. raj 2006-09-14 */
 
-  this_mask = 1 << mapped_affinity;
+#if defined(__CPU_SETSIZE)
+#define NETPERF_CPU_SETSIZE __CPU_SETSIZE
+#define NETPERF_CPU_SET(cpu, cpusetp)  __CPU_SET(cpu, cpusetp)
+#define NETPERF_CPU_ZERO(cpusetp)      __CPU_ZERO (cpusetp)
+  typedef cpu_set_t netperf_cpu_set_t;
+#else
+#define NETPERF_CPU_SETSIZE sizeof(unsigned long)
+#define NETPERF_CPU_SET(cpu, cpusetp) *cpusetp = 1 << cpu
+#define NETPERF_CPU_ZERO(cpusetp) *cpusetp = (unsigned long)0
+  typedef unsigned long netperf_cpu_set_t;
+#endif
 
-  if (sched_setaffinity(getpid(), len, &this_mask)) {
-    if (debug) {
-      fprintf(stderr, "failed to set PID %d's CPU affinity errno %d\n",
-	      getpid(),errno);
-      fflush(stderr);
+  netperf_cpu_set_t   netperf_cpu_set;
+  unsigned int        len = sizeof(netperf_cpu_set);
+
+  if (mapped_affinity < 8*sizeof(netperf_cpu_set)) {
+    NETPERF_CPU_ZERO(&netperf_cpu_set);
+    NETPERF_CPU_SET(mapped_affinity,&netperf_cpu_set);
+    
+    if (sched_setaffinity(getpid(), len, &netperf_cpu_set)) {
+      if (debug) {
+	fprintf(stderr, "failed to set PID %d's CPU affinity errno %d\n",
+		getpid(),errno);
+	fflush(stderr);
+      }
     }
   }
+  else {
+    if (debug) {
+	fprintf(stderr,
+		"CPU number larger than pre-compiled limits. Consider a recompile.\n");
+	fflush(stderr);
+      }
+  }
+      
 #elif HAVE_BIND_TO_CPU_ID
   /* this is the one for Tru64 */
 #include <sys/types.h>
