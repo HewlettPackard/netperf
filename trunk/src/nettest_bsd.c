@@ -507,11 +507,15 @@ complete_addrinfo(char *controlhost, char *data_address, char *port, int family,
 {
   struct addrinfo hints;
   struct addrinfo *res;
+  struct addrinfo *temp_res;
+
+#define CHANGED_SOCK_TYPE  0x1
+#define CHANGED_PROTOCOL   0x2
+  int    change_info = 0;
+  static int change_warning_displayed = 0;
+
   int count = 0;
   int error = 0;
-#define CHANGE_SOCK_TYPE  0x1
-#define CHANGE_PROTOCOL   0x2
-  int change_info = 0;
 
   char *hostname;
 
@@ -535,35 +539,10 @@ complete_addrinfo(char *controlhost, char *data_address, char *port, int family,
 
   memset(&hints, 0, sizeof(hints));
   hints.ai_family = family;
-  switch (type) {
-      case 0:
-      case SOCK_STREAM:
-      case SOCK_DGRAM:
-	  /* Right now most implementations only support these socket
-	   * types.
-	   */
-	  hints.ai_socktype = type;
-	  break;
-      default:
-	  /* we'll default to STREAM and will change the type if successfull */
-	  hints.ai_socktype = SOCK_STREAM;
-	  change_info |= CHANGE_SOCK_TYPE;
-	  break;
-  }
-  switch (protocol) {
-    case 0:
-    case IPPROTO_TCP:
-    case IPPROTO_UDP:
-	/* This is supported on all implementations */
-	hints.ai_protocol = protocol;
-	break;
-    default:
-	hints.ai_protocol = 0;
-	change_info |= CHANGE_PROTOCOL;
-	break;
-  }
-
+  hints.ai_socktype = type;
+  hints.ai_protocol = protocol;
   hints.ai_flags = flags|AI_CANONNAME;
+
   count = 0;
   do {
     error = getaddrinfo((char *)hostname,
@@ -594,29 +573,73 @@ complete_addrinfo(char *controlhost, char *data_address, char *port, int family,
     exit(-1);
   }
 
-  if (change_info) {
-    struct addrinfo *temp = res;
+  /* there exists at least one platform - Solaris 10 - that does not
+     seem to completely honor the ai_protocol and/or ai_socktype one
+     sets in the hints parm to the getaddrinfo call.  so, we need to
+     walk the list of entries returned and if either of those do not
+     match what we asked for, we need to go ahead and set them
+     "correctly" this is based in part on some earlier SCTP-only code
+     from previous revisions.  raj 2006-10-09 */
 
-    fprintf(where,
-		"Warning! getaddrinfo returned a result which did not match\n");
-    fprintf(where,
-		"requested protocol. Kludging. Please contact your vendor for a fix.\n");
-    fflush(where);
-    while (temp) {
-      if (change_info & CHANGE_SOCK_TYPE)
-	  temp->ai_socktype = type;
+  temp_res = res;
 
-      if (change_info & CHANGE_PROTOCOL)
-	  temp->ai_protocol = protocol;
+  while (temp_res) {
 
-      temp = temp->ai_next;
+    if ((type)  &&
+	(temp_res->ai_socktype != type)) {
+      change_info |= CHANGED_SOCK_TYPE;
+      if (debug) {
+	fprintf(where,
+		"WARNING! Changed bogus getaddrinfo socket type %d to %d\n",
+		temp_res->ai_socktype,
+		type);
+	fflush(where);
+      }
+      temp_res->ai_socktype = type;
     }
+
+    if ((protocol) &&
+	(temp_res->ai_protocol != protocol)) {
+      change_info |= CHANGED_PROTOCOL;
+      if (debug) {
+	fprintf(where,
+		"WARNING! Changed bogus getaddrinfo protocol %d to %d\n",
+		temp_res->ai_protocol,
+		protocol);
+	fflush(where);
+      }
+      temp_res->ai_protocol = protocol;
+    }
+    temp_res = temp_res->ai_next;
+  }
+	
+  if ((change_info & CHANGED_SOCK_TYPE) &&
+      !(change_warning_displayed & CHANGED_SOCK_TYPE)) {
+    change_warning_displayed |= CHANGED_SOCK_TYPE;
+    fprintf(where,
+	    "WARNING! getaddrinfo returned a socket type which did not\n");
+    fprintf(where,
+	    "match the requested type.  Please contact your vendor for\n");
+    fprintf(where,
+	    "a fix to this bug in getaddrinfo()\n");
+    fflush(where);
+  }
+
+  if ((change_info & CHANGED_PROTOCOL) &&
+      !(change_warning_displayed & CHANGED_PROTOCOL)) {
+    change_warning_displayed |= CHANGED_PROTOCOL;
+    fprintf(where,
+	    "WARNING! getaddrinfo returned a protocol other than the\n");
+    fprintf(where,
+	    "requested protocol.  Please contact your vendor for\n");
+    fprintf(where,
+	    "a fix to this bug in getaddrinfo()\n");
+    fflush(where);
   }
 
   if (debug) {
     dump_addrinfo(where, res, hostname, port, family);
   }
-
 
   return(res);
 }
