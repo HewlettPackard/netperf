@@ -2,6 +2,15 @@ These are the Release Notes leading-up to Revision 2.4.3 of netperf:
 
 Things changed in this release:
 
+*) The check to make sure that getaddrinfo returned ai_protocol and/or
+   ai_socktype's matching that which we requested is done for all socket
+   and/or protocol types and a warning is emitted if it returns any which
+   do not match.
+
+*) The linux CPU affinity code has been made capable of binding to
+   CPU's >=32 on a 32-bit compilation and >=64 on a 64-bit
+   compilation.
+
 *) More complete closing/redirecting of stdin/stdout/stderr/where in
    netserver to make it easier to launch netserver at the far-end of a
    remote shell.  Courtesy of Hans Blom.
