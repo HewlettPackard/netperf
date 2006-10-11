@@ -258,6 +258,7 @@ struct tcp_tran_rr_results_struct {
 struct	udp_stream_request_struct {
   int	recv_buf_size;
   int	message_size;
+  int   recv_connected;
   int	recv_alignment;
   int	recv_offset;
   int	checksum_off;
@@ -271,6 +272,7 @@ struct	udp_stream_request_struct {
 			   to allow netperf to run through those evil
 			   firewall things */
   int   ipfamily;
+  
 };
 
 struct	udp_stream_response_struct {

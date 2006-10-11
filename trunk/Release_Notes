@@ -2,6 +2,12 @@ These are the Release Notes leading-up to Revision 2.4.3 of netperf:
 
 Things changed in this release:
 
+*) Enable certain UDP tests which previously used unconnected sockets 
+   to use connected sockets.  Courtesy of Shilpi Agarwal.
+
+*) The OSX CPU utilization code actually gets put into the tarball in
+   a make dist now :)
+
 *) The check to make sure that getaddrinfo returned ai_protocol and/or
    ai_socktype's matching that which we requested is done for all socket
    and/or protocol types and a warning is emitted if it returns any which

@@ -183,7 +183,9 @@ int
   loc_sndavoid,		/* avoid send copies locally		*/
   loc_rcvavoid,		/* avoid recv copies locally		*/
   rem_sndavoid,		/* avoid send copies remotely		*/
-  rem_rcvavoid;		/* avoid recv_copies remotely		*/
+  rem_rcvavoid, 	/* avoid recv_copies remotely		*/
+  local_connected = 0,  /* local socket type, connected/non-connected */
+  remote_connected = 0; /* remote socket type, connected/non-connected */
 
 #ifdef WANT_HISTOGRAM
 #ifdef HAVE_GETHRTIME
@@ -400,6 +402,8 @@ TCP/UDP BSD Sockets Test Options:\n\
     -L name,fam       Use name (or IP) and family as source of data connection\n\
     -m bytes          Set the send size (TCP_STREAM, UDP_STREAM)\n\
     -M bytes          Set the recv size (TCP_STREAM, UDP_STREAM)\n\
+    -n                Use the connected socket for UDP locally\n\
+    -N                Use the connected socket for UDP remotely\n\
     -p min[,max]      Set the min/max port numbers for TCP_CRR, TCP_TRR\n\
     -P local[,remote] Set the local/remote port for the data socket\n\
     -r req,[rsp]      Set request/response sizes (TCP_RR, UDP_RR)\n\
@@ -5510,8 +5514,8 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
   double local_thruput, remote_thruput;
   double bytes_sent;
   double bytes_recvd;
-  
-  
+ 
+ 
   int	len;
   struct ring_elt *send_ring;
   SOCKET 	data_socket;
@@ -5631,6 +5635,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     netperf_request.content.request_type      = DO_UDP_STREAM;
     udp_stream_request->recv_buf_size  = rsr_size_req;
     udp_stream_request->message_size   = send_size;
+    udp_stream_request->recv_connected = remote_connected;
     udp_stream_request->recv_alignment = remote_recv_align;
     udp_stream_request->recv_offset    = remote_recv_offset;
     udp_stream_request->measure_cpu    = remote_cpu_usage;
@@ -5640,7 +5645,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     udp_stream_request->so_sndavoid    = rem_sndavoid;
     udp_stream_request->port           = atoi(remote_data_port);
     udp_stream_request->ipfamily = af_to_nf(remote_res->ai_family);
-
+    
     send_request();
     
     recv_response();
@@ -5666,21 +5671,23 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     rss_size        = udp_stream_response->send_buf_size;
     remote_cpu_rate = udp_stream_response->cpu_rate;
 
-#ifndef UDP_ALWAYS_SENDTO
     /* We "connect" up to the remote post to allow is to use the send */
     /* call instead of the sendto call. Presumeably, this is a little */
     /* simpler, and a little more efficient. I think that it also means */
     /* that we can be informed of certain things, but am not sure */
     /* yet...also, this is the way I would expect a client to behave */
     /* when talking to a server */
-    
-    if (connect(data_socket,
-		remote_res->ai_addr,
-		remote_res->ai_addrlen) == INVALID_SOCKET){
-      perror("send_udp_stream: data socket connect failed");
-      exit(1);
+    if (local_connected) { 
+       if (connect(data_socket,
+      		   remote_res->ai_addr,
+		   remote_res->ai_addrlen) == INVALID_SOCKET){
+          perror("send_udp_stream: data socket connect failed");
+          exit(1);
+       } else if (debug) {
+          fprintf(where,"send_udp_stream: connected data socket.\n");
+          fflush(where);
+       }
     }
-#endif
     
     /* set up the timer to call us after test_time. one of these days, */
     /* it might be nice to figure-out a nice reliable way to have the */
@@ -5729,20 +5736,21 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
 #ifdef WANT_HISTOGRAM
       HIST_timestamp(&time_one);
 #endif /* WANT_HISTOGRAM */
-      
-#ifndef UDP_ALWAYS_SENDTO
-      len = send(data_socket,
-		 send_ring->buffer_ptr,
-		 send_size,
-		 0);
-#else
-      len = sendto(data_socket,
-		   send_ring->buffer_ptr,
-		   send_size,
-		   0,
-		   remote_res->ai_addr,
-		   remote_res->ai_addrlen);
-#endif
+     
+      if (local_connected) { 
+         len = send(data_socket,
+	  	    send_ring->buffer_ptr,
+		    send_size,
+		    0);
+      } else {
+         len = sendto(data_socket,
+		      send_ring->buffer_ptr,
+		      send_size,
+		      0,
+		      remote_res->ai_addr,
+		      remote_res->ai_addrlen);
+      }
+
       if (len != send_size) {
 	if ((len >= 0) || 
 	    SOCKET_EINTR(len))
@@ -6007,7 +6015,6 @@ void
 recv_udp_stream()
 {
   struct ring_elt *recv_ring;
-
   struct addrinfo *local_res;
   char local_name[BUFSIZ];
   char port_buffer[PORTBUFSIZE];
@@ -6015,6 +6022,9 @@ recv_udp_stream()
   struct sockaddr_in myaddr_in;
   SOCKET	s_data;
   netperf_socklen_t 	addrlen;
+  struct sockaddr_in remote_addr;
+  netperf_socklen_t remote_addrlen;
+
   int	len = 0;
   unsigned int	bytes_received = 0;
   float	elapsed_time;
@@ -6098,6 +6108,7 @@ recv_udp_stream()
   lsr_size_req = udp_stream_request->recv_buf_size;
   loc_rcvavoid = udp_stream_request->so_rcvavoid;
   loc_sndavoid = udp_stream_request->so_sndavoid;
+  local_connected = udp_stream_request->recv_connected;
 
   set_hostname_and_port(local_name,
 			port_buffer,
@@ -6119,7 +6130,7 @@ recv_udp_stream()
     send_response();
     exit(1);
   }
-  
+
   udp_stream_response->test_length = udp_stream_request->test_length;
   
   /* now get the port number assigned by the system  */
@@ -6197,25 +6208,61 @@ recv_udp_stream()
     fprintf(where,"recv_udp_stream: about to enter inner sanctum.\n");
     fflush(where);
   }
+
+  /* We "connect" up to the remote post to allow us to use the recv */
+  /* call instead of the recvfrom call. Presumeably, this is a little */
+  /* simpler, and a little more efficient. */
+ 
+  if (local_connected) {
+
+    /* Receive the first message using recvfrom to find the remote address */
+    remote_addrlen = sizeof(remote_addr);
+    len = recvfrom(s_data, recv_ring->buffer_ptr,
+                   message_size, 0,
+                   (struct sockaddr*)&remote_addr, &remote_addrlen);
+    if (len != message_size) {
+      if ((len == SOCKET_ERROR) && !SOCKET_EINTR(len)) {
+            netperf_response.content.serv_errno = errno;
+            send_response();
+            exit(1);
+      }
+    }
+    messages_recvd++;
+    recv_ring = recv_ring->next;
+
+
+    /* Now connect with the remote socket address */
+    if (connect(s_data,
+                (struct sockaddr*)&remote_addr,
+                remote_addrlen )== INVALID_SOCKET) {
+        netperf_response.content.serv_errno = errno;
+        close(s_data);
+        send_response();
+        exit(1);
+    }
+
+    if (debug) {
+        fprintf(where,"recv_udp_stream: connected data socket\n");
+        fflush(where);
+     }
+  }
   
   while (!times_up) {
-#ifdef WIN32
-    /* for some reason, winsock does not like calling recv() on a UDP */
-    /* socket, unlike BSD sockets. NIH strikes again :( raj 1/96 */
-    if((len = recvfrom(s_data,
-		       recv_ring->buffer_ptr,
-		       message_size, 
-		       0,0,0)        
-	) != message_size)     
-#else
-    if ((len = recv(s_data, 
-		    recv_ring->buffer_ptr,
-		    message_size, 
-		    0)) != message_size) 
-#endif
-	{
+    if(local_connected) {
+       len = recv(s_data,
+                  recv_ring->buffer_ptr,
+                  message_size,
+                  0);
+    } else {
+       len = recvfrom(s_data,
+                      recv_ring->buffer_ptr,
+    	              message_size, 
+		      0,0,0);
+    }
+       
+    if (len != message_size) {
       if ((len == SOCKET_ERROR) && !SOCKET_EINTR(len)) {
-        netperf_response.content.serv_errno = errno;
+            netperf_response.content.serv_errno = errno;
 	    send_response();
 	    exit(1);
       }
@@ -11650,7 +11697,6 @@ recv_tcp_cc()
   send_response();
   
 }
-
 
 void
 print_sockets_usage()
@@ -11660,12 +11706,13 @@ print_sockets_usage()
   exit(1);
 
 }
+
 void
 scan_sockets_args(int argc, char *argv[])
 
 {
 
-#define SOCKETS_ARGS "b:CDhH:L:m:M:p:P:r:s:S:Vw:W:z46"
+#define SOCKETS_ARGS "b:CDnNhH:L:m:M:p:P:r:s:S:T:Vw:W:z46"
 
   extern char	*optarg;	  /* pointer to option string	*/
   
@@ -11780,6 +11827,14 @@ scan_sockets_args(int argc, char *argv[])
     case 'M':
       /* set the recv size */
       recv_size = convert(optarg);
+      break;
+    case 'n':
+      /* set the local socket type*/
+      local_connected = 1;
+      break;
+    case 'N':
+      /* set the remote socket type*/
+      remote_connected = 1;
       break;
     case 'p':
       /* set the min and max port numbers for the TCP_CRR and TCP_TRR */
