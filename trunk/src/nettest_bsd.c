@@ -515,6 +515,7 @@ complete_addrinfo(char *controlhost, char *data_address, char *port, int family,
 
 #define CHANGED_SOCK_TYPE  0x1
 #define CHANGED_PROTOCOL   0x2
+#define CHANGED_SCTP       0x4
   int    change_info = 0;
   static int change_warning_displayed = 0;
 
@@ -561,6 +562,27 @@ complete_addrinfo(char *controlhost, char *data_address, char *port, int family,
       }
       sleep(1);
     }
+    /* while you see this kludge first, it is actually the second, the
+       first being the one for Solaris below. The need for this kludge
+       came after implementing the Solaris broken getaddrinfo kludge -
+       now we see a kludge in Linux getaddrinfo where if it is given
+       SOCK_STREAM and IPPROTO_SCTP it barfs with a -7
+       EAI_SOCKTYPE. so, we check if the error was EAI_SOCKTYPE and if
+       we were asking for IPPROTO_SCTP and if so, kludge, again... raj
+       2008-10-13 */
+#ifdef WANT_SCTP
+    if (EAI_SOCKTYPE == error) {
+      /* we ass-u-me this is the Linux getaddrinfo bug, clear the
+	 hints.ai_protocol field, and set some state "remembering"
+	 that we did this so the code for the Solaris kludge can do
+	 the fix-up for us.  also flip error over to EAI_AGAIN and
+	 make sure we don't "count" this time around the loop. */
+      hints.ai_protocol = 0;
+      error = EAI_AGAIN;
+      count -= 1;
+      change_info |= CHANGED_SCTP;
+    }
+#endif
   } while ((error == EAI_AGAIN) && (count <= 5));
 
   if (error) {
@@ -629,8 +651,12 @@ complete_addrinfo(char *controlhost, char *data_address, char *port, int family,
     fflush(where);
   }
 
+  /* if we dropped the protocol hint, it would be for a protocol that
+     getaddrinfo() wasn't supporting yet, not for the bug that it took
+     our hint and still returned zero. raj 2006-10-16 */
   if ((change_info & CHANGED_PROTOCOL) &&
-      !(change_warning_displayed & CHANGED_PROTOCOL)) {
+      !(change_warning_displayed & CHANGED_PROTOCOL) &&
+      (hints.ai_protocol != 0)) {
     change_warning_displayed |= CHANGED_PROTOCOL;
     fprintf(where,
 	    "WARNING! getaddrinfo returned a protocol other than the\n");
@@ -640,6 +666,17 @@ complete_addrinfo(char *controlhost, char *data_address, char *port, int family,
 	    "a fix to this bug in getaddrinfo()\n");
     fflush(where);
   }
+
+  if ((change_info & CHANGED_SCTP) &&
+      !(change_warning_displayed & CHANGED_SCTP)) {
+    change_warning_displayed |= CHANGED_SCTP;
+    fprintf(where,
+	    "WARNING! getaddrinfo on this platform does not accept IPPROTO_SCTP!\n");
+    fprintf(where,
+	    "Please contact your vendor for a fix to this bug in getaddrinfo().\n");
+    fflush(where);
+  }
+
 
   if (debug) {
     dump_addrinfo(where, res, hostname, port, family);
