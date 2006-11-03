@@ -187,5 +187,5 @@ etc changes
 Shilpi Agarwal
 Changes to allow UDP_STREAM to use connected sockets on both sides.
 
-Steve
+Steve Reinhardt <stever@eecs.umich.edu>
 Fixes for buffer filling.
