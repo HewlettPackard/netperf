@@ -1266,15 +1266,17 @@ allocate_buffer_ring(int width, int buffer_size, int alignment, int offset)
     temp_link->buffer_ptr += offset;
     /* is where the buffer fill code goes. */
     if (do_fill) {
+      char *bufptr = temp_link->buffer_ptr;
       bytes_left = buffer_size;
       while (bytes_left) {
-        if (((bytes_read = (int)fread(temp_link->buffer_ptr,
-                                 1,
-                                 bytes_left,
-                                 fill_source)) == 0) &&
+        if (((bytes_read = (int)fread(bufptr,
+				      1,
+				      bytes_left,
+				      fill_source)) == 0) &&
             (feof(fill_source))){
           rewind(fill_source);
         }
+	bufptr += bytes_read;
         bytes_left -= bytes_read;
       }
     }

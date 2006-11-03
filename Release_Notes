@@ -2,6 +2,9 @@ These are the Release Notes leading-up to Revision 2.4.3 of netperf:
 
 Things changed in this release:
 
+*) A bug fix for buffer filling from a file to properly advance the
+   buffer pointer when the file is smaller than the send buffer.
+
 *) Enable certain UDP tests which previously used unconnected sockets 
    to use connected sockets.  Courtesy of Shilpi Agarwal.
 
