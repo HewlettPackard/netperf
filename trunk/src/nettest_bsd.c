@@ -2074,7 +2074,7 @@ Size (bytes)\n\
     /* will indicate to the remote that no changes beyond the system's */
     /* default should be used. Alignment is the exception, it will */
     /* default to 1, which will be no alignment alterations. */
-    
+
     netperf_request.content.request_type	=	DO_TCP_MAERTS;
     tcp_maerts_request->send_buf_size	=	rss_size_req;
     tcp_maerts_request->recv_buf_size	=	rsr_size_req;
@@ -2331,7 +2331,7 @@ Size (bytes)\n\
     bytes_sent	= ntohd(tcp_maerts_result->bytes_sent);
 
     thruput	= calc_thruput(bytes_sent);
-    
+
     if (local_cpu_usage || remote_cpu_usage) {
       /* We must now do a little math for service demand and cpu */
       /* utilization for the system(s) */
@@ -2376,7 +2376,7 @@ Size (bytes)\n\
     /* at this point, we want to calculate the confidence information. */
     /* if debugging is on, calculate_confidence will print-out the */
     /* parameters we pass it */
-    
+
     calculate_confidence(confidence_iteration,
 			 elapsed_time,
 			 thruput,
@@ -2457,7 +2457,7 @@ Size (bytes)\n\
 	      cpu_fmt_1,		/* the format string */
 	      rsr_size,		        /* remote recvbuf size */
 	      lss_size,		        /* local sendbuf size */
-	      recv_size,		/* how large were the recvs */
+	      send_size,		/* how large were the recvs */
 	      elapsed_time,		/* how long was the test */
 	      thruput, 		        /* what was the xfer rate */
 	      local_cpu_utilization,	/* local cpu */
@@ -11759,6 +11759,15 @@ scan_sockets_args(int argc, char *argv[])
     arg1[BUFSIZ],  /* argument holders		*/
     arg2[BUFSIZ];
 
+  if (debug) {
+    int i;
+    printf("%s called with the following argument vector\n",
+	   __func__);
+    for (i = 0; i< argc; i++) {
+      printf("%s ",argv[i]);
+    }
+    printf("\n");
+  }
 
   strncpy(local_data_port,"0",sizeof(local_data_port));
   strncpy(remote_data_port,"0",sizeof(remote_data_port));
