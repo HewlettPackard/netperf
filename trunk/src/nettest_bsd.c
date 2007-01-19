@@ -2933,11 +2933,14 @@ Size (bytes)\n\
                    (exs_send (send_socket, send_ring->buffer_ptr, send_size,
                               0, exs_qhandle, (exs_ahandle_t)-1, exs_mhandle) == 0)) {
                 exs_aio_pending++;
-                /* now we want to move our pointer to the next position in the */
-                /* data buffer...we may also want to wrap back to the "beginning" */
-                /* of the bufferspace, so we will mod the number of messages sent */
-                /* by the send width, and use that to calculate the offset to add */
-                /* to the base pointer. */
+
+                /* now we want to move our pointer to the next
+		   position in the data buffer...we may also want to
+		   wrap back to the "beginning" of the bufferspace, so
+		   we will mod the number of messages sent by the send
+		   width, and use that to calculate the offset to add
+		   to the base pointer. */
+
                 nummessages++;
                 send_ring = send_ring->next;
                 if (bytes_remaining) {

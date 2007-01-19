@@ -2,6 +2,9 @@ These are the Release Notes leading-up to Revision 2.4.3 of netperf:
 
 Things changed in this release:
 
+*) A bug fix reporting recv_size rather than send_size in TCP_MAERTS
+   when CPU utilization was requested.
+
 *) A bug fix for buffer filling from a file to properly advance the
    buffer pointer when the file is smaller than the send buffer.
 
