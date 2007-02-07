@@ -1,6 +1,6 @@
 #ifndef lint
 char	nettest_sctp[]="\
-@(#)nettest_sctp.c (c) Copyright 2005 Hewlett-Packard Co. Version 2.4.1";
+@(#)nettest_sctp.c (c) Copyright 2005 Hewlett-Packard Co. Version 2.4.3";
 #else
 #define DIRTY
 #define WANT_HISTOGRAM

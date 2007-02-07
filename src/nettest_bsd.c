@@ -1,11 +1,8 @@
 #ifndef lint
 char	nettest_id[]="\
-@(#)nettest_bsd.c (c) Copyright 1993-2004 Hewlett-Packard Co. Version 2.3pl2";
-#else
-#define DIRTY
-#define WANT_HISTOGRAM
-#define WANT_INTERVALS
+@(#)nettest_bsd.c (c) Copyright 1993-2004 Hewlett-Packard Co. Version 2.4.3";
 #endif /* lint */
+
 
 /****************************************************************/
 /*								*/
@@ -120,6 +117,8 @@ char	nettest_id[]="\
 #include <windows.h>
 
 #define sleep(x) Sleep((x)*1000)
+
+#define __func__ __FUNCTION__
 #endif /* WIN32 */
 
 #if !defined(HAVE_GETADDRINFO) || !defined(HAVE_GETNAMEINFO)
@@ -195,6 +194,9 @@ static hrtime_t time_two;
 #include "hrt.h"
 static hrt_t time_one;
 static hrt_t time_two;
+#elif defined(WIN32)
+static LARGE_INTEGER time_one;
+static LARGE_INTEGER time_two;
 #else
 static struct timeval time_one;
 static struct timeval time_two;
@@ -252,6 +254,12 @@ static hrtime_t intvl_two;
 static hrtime_t *intvl_one_ptr = &intvl_one;
 static hrtime_t *intvl_two_ptr = &intvl_two;
 static hrtime_t *temp_intvl_ptr = &intvl_one;
+#elif defined(WIN32)
+static LARGE_INTEGER intvl_one;
+static LARGE_INTEGER intvl_two;
+static LARGE_INTEGER *intvl_one_ptr = &intvl_one;
+static LARGE_INTEGER *intvl_two_ptr = &intvl_two;
+static LARGE_INTEGER *temp_intvl_ptr = &intvl_one;
 #else
 static struct timeval intvl_one;
 static struct timeval intvl_two;
@@ -295,6 +303,12 @@ static hrtime_t demo_two;
 static hrtime_t *demo_one_ptr = &demo_one;
 static hrtime_t *demo_two_ptr = &demo_two;
 static hrtime_t *temp_demo_ptr = &demo_one;
+#elif defined(WIN32)
+static LARGE_INTEGER demo_one;
+static LARGE_INTEGER demo_two;
+static LARGE_INTEGER *demo_one_ptr = &demo_one;
+static LARGE_INTEGER *demo_two_ptr = &demo_two;
+static LARGE_INTEGER *temp_demo_ptr = &demo_one;
 #else
 static struct timeval demo_one;
 static struct timeval demo_two;

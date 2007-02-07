@@ -75,7 +75,7 @@ typedef ULONG (__stdcall *NT_QUERY_SYSTEM_INFORMATION)(
 NT_QUERY_SYSTEM_INFORMATION NtQuerySystemInformation = NULL;
 
 
-static LARGE_INTEGER TickHz;
+static LARGE_INTEGER TickHz = {0,0};
 
 _inline LARGE_INTEGER ReadPerformanceCounter(VOID)
 {

@@ -1,5 +1,6 @@
 char    netlib_id[]="\
-@(#)netlib.c (c) Copyright 1993-2006 Hewlett-Packard Company. Version 2.4.2";
+@(#)netlib.c (c) Copyright 1993-2007 Hewlett-Packard Company. Version 2.4.3";
+
 
 /****************************************************************/
 /*                                                              */
@@ -3235,7 +3236,7 @@ output_row(FILE *fd, char *title, int *row){
 
 int
 sum_row(int *row) {
-  int sum;
+  int sum = 0;
   int i;
   for (i = 0; i < 10; i++) sum += row[i];
   return(sum);
@@ -3298,6 +3299,34 @@ delta_micro(hrt_t *begin, hrt_t *end)
   return((int)get_hrt_delta(*end,*begin));
 
 }
+#elif defined(WIN32)
+void HIST_timestamp(LARGE_INTEGER *timestamp)
+{
+	QueryPerformanceCounter(timestamp);
+}
+
+int delta_micro(LARGE_INTEGER *begin, LARGE_INTEGER *end)
+{
+	LARGE_INTEGER DeltaTimestamp;
+	static LARGE_INTEGER TickHz = {0,0};
+
+	if (TickHz.QuadPart == 0) 
+	{
+		QueryPerformanceFrequency(&TickHz);
+	}
+
+	/*+*+ Rick; this will overflow after ~2000 seconds, is that
+	  good enough? Spencer: Yes, that should be more than good
+	  enough for histogram support */
+
+	DeltaTimestamp.QuadPart = (end->QuadPart - begin->QuadPart) * 
+	  1000000/TickHz.QuadPart;
+	assert((DeltaTimestamp.HighPart == 0) && 
+	       ((int)DeltaTimestamp.LowPart >= 0));
+
+	return (int)DeltaTimestamp.LowPart;
+}
+
 #else
 
 void
