@@ -2,6 +2,11 @@ These are the Release Notes leading-up to Revision 2.4.3 of netperf:
 
 Things changed in this release:
 
+*) Use a higher resolution "time" source for HISTOGRAM support under
+   Windows, courtesy of Spencer Frink. Prior to this it had no better
+   than 10ms granularity which could lead to some rather strange
+   looking results :)
+
 *) A bug fix reporting recv_size rather than send_size in TCP_MAERTS
    when CPU utilization was requested.
 
