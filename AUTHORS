@@ -115,7 +115,7 @@ Fabrice Bacchella
 Fixes for -DHISTOGRAM and -DUNIX on Mac OS X, updates to usage strings
 
 Spencer Frink
-Fixes and Cleanup for WIN32
+Fixes and Cleanup for WIN32.  Many over many years.
 
 Nicholas Thomas
 Fixes for DLPI on SVR4 Streams under Linux

@@ -21,7 +21,6 @@ SOURCES= \
 	..\netlib.c \
 	..\netsh.c \
 	..\nettest_bsd.c \
-	..\nettest_ipv6.c \
 	inet_ntop.c \
 	..\netperf.c
 

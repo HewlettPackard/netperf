@@ -322,7 +322,7 @@ stop_itimer()
   new_interval.it_value.tv_usec = 0;  
   if (setitimer(ITIMER_REAL,&new_interval,&old_interval) != 0) {
     /* there was a problem arming the interval timer */ 
-    perror("clusterperf: cluster_root: setitimer");
+    perror("netperf: setitimer");
     exit(1);
   }
   return;
@@ -785,16 +785,6 @@ catcher(int sig)
         scp->sc_syscall_action = SIG_RESTART;
       }
 #endif /* __hpux */
-      if (demo_mode) {
-        /* spit-out what the performance was in units/s. based on our */
-        /* knowledge of the interval length we do not need to call */
-        /* gettimeofday() raj 2/95 */
-        fprintf(where,"%g\n",(units_this_tick * 
-                              (double) 1000000 / 
-                              (double) usec_per_itvl));
-        fflush(where);
-        units_this_tick = (double) 0.0;
-      }
 #else /* WANT_INTERVALS */
       fprintf(where,
               "catcher: interval timer running unexpectedly!\n");
@@ -1046,7 +1036,7 @@ start_itimer( interval_len_msec )
   new_interval.it_value.tv_usec = usec_per_itvl % 1000000;  
   if (setitimer(ITIMER_REAL,&new_interval,&old_interval) != 0) {
     /* there was a problem arming the interval timer */ 
-    perror("clusterperf: cluster_root: setitimer");
+    perror("netperf: setitimer");
     exit(1);
   }
 }
