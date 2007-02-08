@@ -748,7 +748,7 @@ Size (bytes)\n\
       if ((interval_burst) && (--interval_count == 0)) {
 	/* call sigsuspend and wait for the interval timer to get us */
 	/* out */
-	if (debug) {
+	if (debug > 1) {
 	  fprintf(where,"about to suspend\n");
 	  fflush(where);
 	}
@@ -1898,7 +1898,7 @@ Size (bytes)\n\
       if ((interval_burst) && (--interval_count == 0)) {
 	/* call sigsuspend and wait for the interval timer to get us */
 	/* out */
-	if (debug) {
+	if (debug > 1) {
 	  fprintf(where,"about to suspend\n");
 	  fflush(where);
 	}
@@ -2981,7 +2981,7 @@ Send   Recv    Send   Recv\n\
       if ((interval_burst) && (--interval_count == 0)) {
 	/* call sigsuspend and wait for the interval timer to get us */
 	/* out */
-	if (debug) {
+	if (debug > ) {
 	  fprintf(where,"about to suspend\n");
 	  fflush(where);
 	}

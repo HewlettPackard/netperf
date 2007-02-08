@@ -1,6 +1,17 @@
-These are the Release Notes leading-up to Revision 2.4.3 of netperf:
+These are the Release Notes for Revision 2.4.3 of netperf:
 
 Things changed in this release:
+
+*) Eliminate a bogus fprintf from the signal catching routine which
+   was being executed when both intervals and demo mode were active at
+   the same time.
+
+*) The nettest_ipv6.* files are no longer included in the source
+   tar/zip file. IPv6 functionality has been subsumed into the
+   nettest_bsd.* files for some time now.  Paranoia keeps the Netperf
+   Contributing Editor from removing it from the top of trunk of the
+   source repository until after he can do a bit more reading about
+   subversion :)
 
 *) Use a higher resolution "time" source for HISTOGRAM support under
    Windows, courtesy of Spencer Frink. Prior to this it had no better

@@ -233,7 +233,7 @@ sigset_t signal_set;
       if ((interval_burst) && (--interval_count == 0)) { \
 	/* call sigsuspend and wait for the interval timer to get us \
 	   out */ \
-	if (debug) { \
+	if (debug > 1) { \
 	  fprintf(where,"about to suspend\n"); \
 	  fflush(where); \
 	} \
@@ -280,7 +280,7 @@ static struct timeval *temp_intvl_ptr = &intvl_one;
       if ((interval_burst) && (--interval_count == 0)) { \
 	/* call sigsuspend and wait for the interval timer to get us \
 	   out */ \
-	if (debug) { \
+	if (debug > 1) { \
 	  fprintf(where,"about to spin suspend\n"); \
 	  fflush(where); \
 	} \
