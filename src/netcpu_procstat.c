@@ -166,7 +166,7 @@ get_cpu_idle (uint64_t *res)
     };
     res[i] = strtoul (p, &p, 10);
     if (debug) {
-      fprintf(where,"res[%d] is %d\n",i,res[i]);
+      fprintf(where,"res[%d] is %llu\n",i,res[i]);
       fflush(where);
     }
     p = strchr (p, '\n');

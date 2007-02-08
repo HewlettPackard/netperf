@@ -129,7 +129,7 @@ char	nettest_id[]="\
 #include "netsh.h"
 #include "nettest_bsd.h"
 
-#ifdef WANT_HISTOGRAM
+#if defined(WANT_HISTOGRAM) || defined(WANT_DEMO) 
 #include "hist.h"
 #endif /* WANT_HISTOGRAM */
 
@@ -1308,7 +1308,9 @@ Size (bytes)\n\
     (struct tcp_stream_results_struct *)netperf_response.content.test_specific_data;
   
 #ifdef WANT_HISTOGRAM
-  time_hist = HIST_new();
+  if (verbosity > 1) {
+    time_hist = HIST_new();
+  }
 #endif /* WANT_HISTOGRAM */
   /* since we are now disconnected from the code that established the */
   /* control socket, and since we want to be able to use different */
@@ -1565,9 +1567,13 @@ Size (bytes)\n\
 #endif /* DIRTY */
       
 #ifdef WANT_HISTOGRAM
-      /* timestamp just before we go into send and then again just after */
-      /* we come out raj 8/94 */
-      HIST_timestamp(&time_one);
+      if (verbosity > 1) {
+	/* timestamp just before we go into send and then again just
+	 after we come out raj 8/94 */
+	/* but lets only do this if there is going to be a histogram
+	   displayed */
+	HIST_timestamp(&time_one);
+      }
 #endif /* WANT_HISTOGRAM */
 
       if((len=send(send_socket,
@@ -1584,9 +1590,11 @@ Size (bytes)\n\
       }
 
 #ifdef WANT_HISTOGRAM
-      /* timestamp the exit from the send call and update the histogram */
-      HIST_timestamp(&time_two);
-      HIST_add(time_hist,delta_micro(&time_one,&time_two));
+      if (verbosity > 1) {
+	/* timestamp the exit from the send call and update the histogram */
+	HIST_timestamp(&time_two);
+	HIST_add(time_hist,delta_micro(&time_one,&time_two));
+      }
 #endif /* WANT_HISTOGRAM */      
 
 #ifdef WANT_DEMO
@@ -1980,7 +1988,9 @@ Size (bytes)\n\
     (struct tcp_maerts_results_struct *)netperf_response.content.test_specific_data;
   
 #ifdef WANT_HISTOGRAM
-  time_hist = HIST_new();
+  if (verbosity > 1) {
+    time_hist = HIST_new();
+  }
 #endif /* WANT_HISTOGRAM */
   /* since we are now disconnected from the code that established the */
   /* control socket, and since we want to be able to use different */
@@ -2223,9 +2233,13 @@ Size (bytes)\n\
        2002-06-21 */
 
 #ifdef WANT_HISTOGRAM
-      /* timestamp just before we go into recv and then again just after */
-      /* we come out raj 8/94 */
+    if (verbosity > 1) {
+      /* timestamp just before we go into recv and then again just
+	 after we come out raj 8/94 */
+      /* but only if we are actually going to display a histogram. raj
+	 2006-02-07 */
       HIST_timestamp(&time_one);
+    }
 #endif /* WANT_HISTOGRAM */
     
     while ((len=recv(recv_socket,
@@ -2234,9 +2248,11 @@ Size (bytes)\n\
 		     0)) > 0 ) {
 
 #ifdef WANT_HISTOGRAM
-      /* timestamp the exit from the recv call and update the histogram */
-      HIST_timestamp(&time_two);
-      HIST_add(time_hist,delta_micro(&time_one,&time_two));
+      if (verbosity > 1) {
+	/* timestamp the exit from the recv call and update the histogram */
+	HIST_timestamp(&time_two);
+	HIST_add(time_hist,delta_micro(&time_one,&time_two));
+      }
 #endif /* WANT_HISTOGRAM */      
 
 #ifdef DIRTY
@@ -2266,9 +2282,11 @@ Size (bytes)\n\
       }
 
 #ifdef WANT_HISTOGRAM
-      /* make sure we timestamp just before we go into recv  */
-      /* raj 2004-06-15 */
-      HIST_timestamp(&time_one);
+      if (verbosity > 1) {
+	/* make sure we timestamp just before we go into recv  */
+	/* raj 2004-06-15 */
+	HIST_timestamp(&time_one);
+      }
 #endif /* WANT_HISTOGRAM */
     
     }
@@ -3433,7 +3451,9 @@ Size (bytes)\n\
     (struct tcp_stream_results_struct *)netperf_response.content.test_specific_data;
   
 #ifdef WANT_HISTOGRAM
-  time_hist = HIST_new();
+  if (verbosity > 1) {
+    time_hist = HIST_new();
+  }
 #endif /* WANT_HISTOGRAM */
 
   /* since we are now disconnected from the code that established the */
@@ -3730,11 +3750,12 @@ Size (bytes)\n\
 	 dirty. 08/2000 */
       
 #ifdef WANT_HISTOGRAM
-      
-      /* timestamp just before we go into sendfile() and then again just
-         after we come out raj 08/2000 */
-      
-      HIST_timestamp(&time_one);
+      if (verbosity > 1) {
+	/* timestamp just before we go into sendfile() and then again
+         just after we come out raj 08/2000 */
+	/* but only if we are actually going to display a histogram */
+	HIST_timestamp(&time_one);
+      }
 #endif /* WANT_HISTOGRAM */
       
       /* you can look at netlib.h for a description of the fields we
@@ -3798,11 +3819,13 @@ Size (bytes)\n\
       /*	offset += len;*/
       
 #ifdef WANT_HISTOGRAM
-      /* timestamp the exit from the send call and update the histogram */
+      if (verbosity > 1) {
+	/* timestamp the exit from the send call and update the
+	   histogram */
       
-      HIST_timestamp(&time_two);
-      HIST_add(time_hist,delta_micro(&time_one,&time_two));
-
+	HIST_timestamp(&time_two);
+	HIST_add(time_hist,delta_micro(&time_one,&time_two));
+      }
 #endif /* WANT_HISTOGRAM */      
     
 #ifdef WANT_DEMO
@@ -4912,7 +4935,9 @@ Send   Recv    Send   Recv\n\
     (struct tcp_rr_results_struct *)netperf_response.content.test_specific_data;
   
 #ifdef WANT_HISTOGRAM
-  time_hist = HIST_new();
+  if (verbosity > 1) {
+    time_hist = HIST_new();
+  }
 #endif /* WANT_HISTOGRAM */
 
   /* since we are now disconnected from the code that established the */
@@ -5179,9 +5204,14 @@ Send   Recv    Send   Recv\n\
 #endif /* WANT_FIRST_BURST */
       
 #ifdef WANT_HISTOGRAM
-      /* timestamp just before our call to send, and then again just */
-      /* after the receive raj 8/94 */
-      HIST_timestamp(&time_one);
+      if (verbosity > 1) {
+	/* timestamp just before our call to send, and then again just
+	   after the receive raj 8/94 */
+	/* but only if we are actually going to display one. raj
+	   2007-02-07 */
+
+	HIST_timestamp(&time_one);
+      }
 #endif /* WANT_HISTOGRAM */
       
       if ((len = send(send_socket,
@@ -5247,8 +5277,10 @@ Send   Recv    Send   Recv\n\
       }
       
 #ifdef WANT_HISTOGRAM
-      HIST_timestamp(&time_two);
-      HIST_add(time_hist,delta_micro(&time_one,&time_two));
+      if (verbosity > 1) {
+	HIST_timestamp(&time_two);
+	HIST_add(time_hist,delta_micro(&time_one,&time_two));
+      }
 #endif /* WANT_HISTOGRAM */
 
 #ifdef WANT_DEMO
@@ -5594,7 +5626,9 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     (struct udp_stream_results_struct *)netperf_response.content.test_specific_data;
   
 #ifdef WANT_HISTOGRAM
-  time_hist = HIST_new();
+  if (verbosity > 1) {
+    time_hist = HIST_new();
+  }
 #endif /* WANT_HISTOGRAM */
 
   /* since we are now disconnected from the code that established the */
@@ -5788,7 +5822,9 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
 #endif /* DIRTY */
       
 #ifdef WANT_HISTOGRAM
-      HIST_timestamp(&time_one);
+      if (verbosity > 1) {
+	HIST_timestamp(&time_one);
+      }
 #endif /* WANT_HISTOGRAM */
      
       if (local_connected) { 
@@ -5825,9 +5861,11 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
       
       
 #ifdef WANT_HISTOGRAM
-      /* get the second timestamp */
-      HIST_timestamp(&time_two);
-      HIST_add(time_hist,delta_micro(&time_one,&time_two));
+      if (verbosity > 1) {
+	/* get the second timestamp */
+	HIST_timestamp(&time_two);
+	HIST_add(time_hist,delta_micro(&time_one,&time_two));
+      }
 #endif /* WANT_HISTOGRAM */
 
 #ifdef WANT_INTERVALS      
@@ -6456,7 +6494,9 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
     (struct udp_rr_results_struct *)netperf_response.content.test_specific_data;
   
 #ifdef WANT_HISTOGRAM
-  time_hist = HIST_new();
+  if (verbosity > 1) {
+    time_hist = HIST_new();
+  }
 #endif
   
   /* since we are now disconnected from the code that established the */
@@ -6695,7 +6735,9 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
     while ((!times_up) || (trans_remaining > 0)) {
       /* send the request */
 #ifdef WANT_HISTOGRAM
-      HIST_timestamp(&time_one);
+      if (verbosity > 1) {
+	HIST_timestamp(&time_one);
+      }
 #endif
       if((len=send(send_socket,
 		   send_ring->buffer_ptr,
@@ -6728,15 +6770,18 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
       recv_ring = recv_ring->next;
       
 #ifdef WANT_HISTOGRAM
-      HIST_timestamp(&time_two);
-      HIST_add(time_hist,delta_micro(&time_one,&time_two));
-      
+      if (verbosity > 1) {
+	HIST_timestamp(&time_two);
+	HIST_add(time_hist,delta_micro(&time_one,&time_two));
+      }
+
+#endif
+
       /* at this point, we may wish to sleep for some period of */
       /* time, so we see how long that last transaction just took, */
       /* and sleep for the difference of that and the interval. We */
       /* will not sleep if the time would be less than a */
       /* millisecond.  */
-#endif
 
 #ifdef WANT_DEMO
       DEMO_RR_INTERVAL(1);
@@ -7807,7 +7852,9 @@ Send   Recv    Send   Recv\n\
   
   
 #ifdef WANT_HISTOGRAM
-  time_hist = HIST_new();
+  if (verbosity > 1) {
+    time_hist = HIST_new();
+  }
 #endif /* WANT_HISTOGRAM */
 
   /* since we are now disconnected from the code that established the */
@@ -7992,9 +8039,11 @@ Send   Recv    Send   Recv\n\
   while ((!times_up) || (trans_remaining > 0)) {
 
 #ifdef WANT_HISTOGRAM
-    /* timestamp just before our call to create the socket, and then */
-    /* again just after the receive raj 3/95 */
-    HIST_timestamp(&time_one);
+    if (verbosity > 1) {
+      /* timestamp just before our call to create the socket, and then */
+      /* again just after the receive raj 3/95 */
+      HIST_timestamp(&time_one);
+    }
 #endif /* WANT_HISTOGRAM */
 
 newport:
@@ -8113,8 +8162,10 @@ newport:
       recv_ring = recv_ring->next;
 
 #ifdef WANT_HISTOGRAM
-      HIST_timestamp(&time_two);
-      HIST_add(time_hist,delta_micro(&time_one,&time_two));
+      if (verbosity > 1) {
+	HIST_timestamp(&time_two);
+	HIST_add(time_hist,delta_micro(&time_one,&time_two));
+      }
 #endif /* WANT_HISTOGRAM */
 
 #ifdef WANT_DEMO
@@ -8842,7 +8893,9 @@ Send   Recv    Send   Recv\n\
   
   
 #ifdef WANT_HISTOGRAM
-  time_hist = HIST_new();
+  if (verbosity > 1) {
+    time_hist = HIST_new();
+  }
 #endif /* WANT_HISTOGRAM */
 
   /* since we are now disconnected from the code that established the */
@@ -9032,9 +9085,11 @@ Send   Recv    Send   Recv\n\
   while ((!times_up) || (trans_remaining > 0)) {
 
 #ifdef WANT_HISTOGRAM
-    /* timestamp just before our call to create the socket, and then */
-    /* again just after the receive raj 3/95 */
-    HIST_timestamp(&time_one);
+    if (verbosity > 1) {
+      /* timestamp just before our call to create the socket, and then */
+      /* again just after the receive raj 3/95 */
+      HIST_timestamp(&time_one);
+    }
 #endif /* WANT_HISTOGRAM */
 
     /* set up the data socket - is this really necessary or can I just */
@@ -9167,8 +9222,10 @@ newport:
     close(send_socket);
 
 #ifdef WANT_HISTOGRAM
-    HIST_timestamp(&time_two);
-    HIST_add(time_hist,delta_micro(&time_one,&time_two));
+    if (verbosity > 1) {
+      HIST_timestamp(&time_two);
+      HIST_add(time_hist,delta_micro(&time_one,&time_two));
+    }
 #endif /* WANT_HISTOGRAM */
 
     nummessages++;          
@@ -9903,7 +9960,9 @@ Send   Recv    Send   Recv\n\
     (struct tcp_rr_results_struct *)netperf_response.content.test_specific_data;
   
 #ifdef WANT_HISTOGRAM
-  time_hist = HIST_new();
+  if (verbosity > 1) {
+    time_hist = HIST_new();
+  }
 #endif /* WANT_HISTOGRAM */
 
   /* since we are now disconnected from the code that established the */
@@ -10124,9 +10183,11 @@ Send   Recv    Send   Recv\n\
       /* the request will be sent at one shot. */
       
 #ifdef WANT_HISTOGRAM
-      /* timestamp just before our call to send, and then again just */
-      /* after the receive raj 8/94 */
-      HIST_timestamp(&time_one);
+      if (verbosity > 1) {
+	/* timestamp just before our call to send, and then again just */
+	/* after the receive raj 8/94 */
+	HIST_timestamp(&time_one);
+      }
 #endif /* WANT_HISTOGRAM */
 
       /* even though this is a non-blocking socket, we will assume for */
@@ -10183,8 +10244,10 @@ Send   Recv    Send   Recv\n\
       }
       
 #ifdef WANT_HISTOGRAM
-      HIST_timestamp(&time_two);
-      HIST_add(time_hist,delta_micro(&time_one,&time_two));
+      if (verbosity > 1) {
+	HIST_timestamp(&time_two);
+	HIST_add(time_hist,delta_micro(&time_one,&time_two));
+      }
 #endif /* WANT_HISTOGRAM */
 #ifdef WANT_INTERVALS      
       INTERVALS_WAIT();
@@ -10916,7 +10979,9 @@ Send   Recv    Send   Recv\n\
   
   
 #ifdef WANT_HISTOGRAM
-  time_hist = HIST_new();
+  if (verbosity > 1) {
+    time_hist = HIST_new();
+  }
 #endif /* WANT_HISTOGRAM */
 
   /* since we are now disconnected from the code that established the */
@@ -11089,9 +11154,11 @@ Send   Recv    Send   Recv\n\
   while ((!times_up) || (trans_remaining > 0)) {
 
 #ifdef WANT_HISTOGRAM
-    /* timestamp just before our call to create the socket, and then */
-    /* again just after the receive raj 3/95 */
-    HIST_timestamp(&time_one);
+    if (verbosity > 1) {
+      /* timestamp just before our call to create the socket, and then */
+      /* again just after the receive raj 3/95 */
+      HIST_timestamp(&time_one);
+    }
 #endif /* WANT_HISTOGRAM */
 
     /* set up the data socket */
@@ -11165,8 +11232,10 @@ Send   Recv    Send   Recv\n\
       /* number of bytes have been received */
 
 #ifdef WANT_HISTOGRAM
-      HIST_timestamp(&time_two);
-      HIST_add(time_hist,delta_micro(&time_one,&time_two));
+      if (verbosity > 1) {
+	HIST_timestamp(&time_two);
+	HIST_add(time_hist,delta_micro(&time_one,&time_two));
+      }
 #endif /* WANT_HISTOGRAM */
 
 #ifdef WANT_DEMO

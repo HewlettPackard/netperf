@@ -44,9 +44,11 @@
 char	netperf_id[]="\
 @(#)netperf.c (c) Copyright 1993-2004 Hewlett-Packard Company. Version 2.3";
 
+#include "config.h"
+
 #include <stdio.h>
 #include <stdlib.h>
-#if HAVE_STRINGS_H
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
 

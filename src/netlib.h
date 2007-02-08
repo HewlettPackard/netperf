@@ -515,7 +515,11 @@ extern  int     dl_open(char devfile[], int ppa);
 #endif /* WANT_DLPI */
 extern  char    format_cpu_method(int method);
 extern unsigned int convert(char *string);
+extern unsigned int convert_timespec(char *string);
 
+#ifdef WANT_INTERVALS
+extern void start_itimer(unsigned int interval_len_msec);
+#endif
  /* these are all for the confidence interval stuff */
 extern double confidence;
 
