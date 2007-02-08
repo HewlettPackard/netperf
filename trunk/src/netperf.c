@@ -44,7 +44,9 @@
 char	netperf_id[]="\
 @(#)netperf.c (c) Copyright 1993-2004 Hewlett-Packard Company. Version 2.3";
 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -124,8 +126,10 @@ main(int argc, char *argv[])
   }
   
   
-  establish_control(host_name,test_port,address_family,
-		    local_host_name,local_test_port,local_address_family);
+  if (!no_control) {
+    establish_control(host_name,test_port,address_family,
+		      local_host_name,local_test_port,local_address_family);
+  }
   
   if (strcasecmp(test_name,"TCP_STREAM") == 0) {
     send_tcp_stream(host_name);
@@ -244,7 +248,9 @@ main(int argc, char *argv[])
     exit(1);
   }
   
-  shutdown_control();
+  if (!no_control) {
+    shutdown_control();
+  }
   
 #ifdef WIN32
   /* Cleanup the winsock lib */

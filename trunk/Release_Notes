@@ -1,6 +1,16 @@
-These are the Release Notes for Revision 2.4.3 of netperf:
+These are the Release Notes leading to Revision 2.4.3 of netperf:
 
 Things changed in this release:
+
+*) The tests in nettest_bsd.c have been altered to not actually take
+   timestamps and deltas in --enable-histogram unless the verbosity
+   level has been set to actually display a histogram.  This reduces
+   the overhead measurably, even on systems with "fast" time calls,
+   which _may_ mean that a future release of netperf may have
+   histogram support enabled by default.
+
+   This still needs to be propagated to other test files.  Patches
+   from the community would be most welcome :)
 
 *) Eliminate a bogus fprintf from the signal catching routine which
    was being executed when both intervals and demo mode were active at

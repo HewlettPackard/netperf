@@ -2981,7 +2981,7 @@ Send   Recv    Send   Recv\n\
       if ((interval_burst) && (--interval_count == 0)) {
 	/* call sigsuspend and wait for the interval timer to get us */
 	/* out */
-	if (debug > ) {
+	if (debug > 1) {
 	  fprintf(where,"about to suspend\n");
 	  fflush(where);
 	}
@@ -4692,6 +4692,12 @@ scan_sctp_args(argc, argv)
   char	
     arg1[BUFSIZ],  /* argument holders		*/
     arg2[BUFSIZ];
+
+  if (no_control) {
+    fprintf(where,
+	    "The SCTP tests do not know how to deal with no control tests\n");
+    exit(-1);
+  }
 
   strncpy(local_data_port,"0",sizeof(local_data_port));
   strncpy(remote_data_port,"0",sizeof(remote_data_port));

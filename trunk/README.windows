@@ -14,8 +14,8 @@ B) open a Cmd windows (i.e., a DOS box) for the target environment
 
 C) enter the netperf\src directory
 
-D) Edit NetPerfDir\config.h and/or NetServerDir\config.h to enable the
-   desired optional features.
+D) Edit sources to enable any desired optional features (eg
+   -DWANT_HISTOGRAM)
 
 E) while still in the netperf\src directory type "build /cD".
 

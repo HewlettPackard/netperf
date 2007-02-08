@@ -131,6 +131,9 @@ extern char
 extern char *
   result_brand;
 
+extern int
+  no_control;
+
 #ifdef WANT_DLPI
 
 extern int
