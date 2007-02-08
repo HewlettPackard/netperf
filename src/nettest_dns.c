@@ -878,6 +878,12 @@ scan_dns_args(int argc, char *argv[])
   
   struct hostent *hp;
 
+  if (no_control) {
+    fprintf(where,
+	    "The DNS tests do not know how to run with no control connection\n");
+    exit(-1);
+  }
+
   /* Go through all the command line arguments and break them */
   /* out. For those options that take two parms, specifying only */
   /* the first will set both to that value. Specifying only the */

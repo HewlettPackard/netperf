@@ -121,6 +121,14 @@ char	nettest_id[]="\
 #define __func__ __FUNCTION__
 #endif /* WIN32 */
 
+/* We don't want to use bare constants in the shutdown() call.  In the
+   extremely unlikely event that SHUT_WR isn't defined, we will define
+   it to the value we used to be passing to shutdown() anyway.  raj
+   2007-02-08 */
+#if !defined(SHUT_WR)
+#define SHUT_WR 1
+#endif
+
 #if !defined(HAVE_GETADDRINFO) || !defined(HAVE_GETNAMEINFO)
 # include "missing/getaddrinfo.h"
 #endif
@@ -1173,15 +1181,20 @@ print_top_test_header(char test_name[], struct addrinfo *source, struct addrinfo
 	    interval/0.02,
 	    confidence_level);
   }
-  if (loc_nodelay || rem_nodelay) {
+  if ((loc_nodelay > 0) || (rem_nodelay > 0)) {
     fprintf(where," : nodelay");
   }
-  if (loc_sndavoid || 
-      loc_rcvavoid ||
-      rem_sndavoid ||
-      rem_rcvavoid) {
+  if ((loc_sndavoid > 0) || 
+      (loc_rcvavoid > 0) ||
+      (rem_sndavoid > 0) ||
+      (rem_rcvavoid > 0)) {
     fprintf(where," : copy avoidance");
   }
+
+  if (no_control) {
+    fprintf(where," : no control");
+  }
+
 #ifdef WANT_HISTOGRAM
   fprintf(where," : histogram");
 #endif /* WANT_HISTOGRAM */
@@ -1284,6 +1297,7 @@ Size (bytes)\n\
   /* during a test... ;-) at some point, this should probably become a */
   /* 64bit integral type, but those are not entirely common yet */
 
+  unsigned long long local_bytes_sent = 0;
   double	bytes_sent = 0.0;
   
   float	local_cpu_utilization;
@@ -1412,81 +1426,86 @@ Size (bytes)\n\
       local_cpu_rate = calibrate_local_cpu(local_cpu_rate);
     }
     
-    /* Tell the remote end to do a listen. The server alters the socket */
-    /* paramters on the other side at this point, hence the reason for */
-    /* all the values being passed in the setup message. If the user did */
-    /* not specify any of the parameters, they will be passed as 0, which */
-    /* will indicate to the remote that no changes beyond the system's */
-    /* default should be used. Alignment is the exception, it will */
-    /* default to 1, which will be no alignment alterations. */
+    if (!no_control) {
+      /* Tell the remote end to do a listen. The server alters the
+	 socket paramters on the other side at this point, hence the
+	 reason for all the values being passed in the setup
+	 message. If the user did not specify any of the parameters,
+	 they will be passed as 0, which will indicate to the remote
+	 that no changes beyond the system's default should be
+	 used. Alignment is the exception, it will default to 1, which
+	 will be no alignment alterations. */
     
-    netperf_request.content.request_type =	DO_TCP_STREAM;
-    tcp_stream_request->send_buf_size	=	rss_size_req;
-    tcp_stream_request->recv_buf_size	=	rsr_size_req;
-    tcp_stream_request->receive_size	=	recv_size;
-    tcp_stream_request->no_delay	=	rem_nodelay;
-    tcp_stream_request->recv_alignment	=	remote_recv_align;
-    tcp_stream_request->recv_offset	=	remote_recv_offset;
-    tcp_stream_request->measure_cpu	=	remote_cpu_usage;
-    tcp_stream_request->cpu_rate	=	remote_cpu_rate;
-    if (test_time) {
-      tcp_stream_request->test_length	=	test_time;
-    }
-    else {
-      tcp_stream_request->test_length	=	test_bytes;
-    }
-    tcp_stream_request->so_rcvavoid	=	rem_rcvavoid;
-    tcp_stream_request->so_sndavoid	=	rem_sndavoid;
+      netperf_request.content.request_type =	DO_TCP_STREAM;
+      tcp_stream_request->send_buf_size	=	rss_size_req;
+      tcp_stream_request->recv_buf_size	=	rsr_size_req;
+      tcp_stream_request->receive_size	=	recv_size;
+      tcp_stream_request->no_delay	=	rem_nodelay;
+      tcp_stream_request->recv_alignment	=	remote_recv_align;
+      tcp_stream_request->recv_offset	=	remote_recv_offset;
+      tcp_stream_request->measure_cpu	=	remote_cpu_usage;
+      tcp_stream_request->cpu_rate	=	remote_cpu_rate;
+      if (test_time) {
+	tcp_stream_request->test_length	=	test_time;
+      }
+      else {
+	tcp_stream_request->test_length	=	test_bytes;
+      }
+      tcp_stream_request->so_rcvavoid	=	rem_rcvavoid;
+      tcp_stream_request->so_sndavoid	=	rem_sndavoid;
 #ifdef DIRTY
-    tcp_stream_request->dirty_count     =       rem_dirty_count;
-    tcp_stream_request->clean_count     =       rem_clean_count;
+      tcp_stream_request->dirty_count     =       rem_dirty_count;
+      tcp_stream_request->clean_count     =       rem_clean_count;
 #endif /* DIRTY */
-    tcp_stream_request->port            =    atoi(remote_data_port);
-    tcp_stream_request->ipfamily = af_to_nf(remote_res->ai_family);
-    if (debug > 1) {
-      fprintf(where,
-	      "netperf: send_tcp_stream: requesting TCP stream test\n");
-    }
-    
-    send_request();
-    
-    /* The response from the remote will contain all of the relevant 	*/
-    /* socket parameters for this test type. We will put them back into */
-    /* the variables here so they can be displayed if desired.  The	*/
-    /* remote will have calibrated CPU if necessary, and will have done	*/
-    /* all the needed set-up we will have calibrated the cpu locally	*/
-    /* before sending the request, and will grab the counter value right*/
-    /* after the connect returns. The remote will grab the counter right*/
-    /* after the accept call. This saves the hassle of extra messages	*/
-    /* being sent for the TCP tests.					*/
-    
-    recv_response();
-    
-    if (!netperf_response.content.serv_errno) {
-      if (debug)
-	fprintf(where,"remote listen done.\n");
-      rsr_size	      =	tcp_stream_response->recv_buf_size;
-      rss_size	      =	tcp_stream_response->send_buf_size;
-      rem_nodelay     =	tcp_stream_response->no_delay;
-      remote_cpu_usage=	tcp_stream_response->measure_cpu;
-      remote_cpu_rate = tcp_stream_response->cpu_rate;
-
-      /* we have to make sure that the server port number is in */
-      /* network order */
-      set_port_number(remote_res,(short)tcp_stream_response->data_port_number);
-
-      rem_rcvavoid	= tcp_stream_response->so_rcvavoid;
-      rem_sndavoid	= tcp_stream_response->so_sndavoid;
-    }
-    else {
-      Set_errno(netperf_response.content.serv_errno);
-      fprintf(where,
-	      "netperf: remote error %d",
-	      netperf_response.content.serv_errno);
-      perror("");
-      fflush(where);
+      tcp_stream_request->port            =    atoi(remote_data_port);
+      tcp_stream_request->ipfamily = af_to_nf(remote_res->ai_family);
+      if (debug > 1) {
+	fprintf(where,
+		"netperf: send_tcp_stream: requesting TCP stream test\n");
+      }
       
-      exit(1);
+      send_request();
+      
+      /* The response from the remote will contain all of the relevant
+         socket parameters for this test type. We will put them back
+         into the variables here so they can be displayed if desired.
+         The remote will have calibrated CPU if necessary, and will
+         have done all the needed set-up we will have calibrated the
+         cpu locally before sending the request, and will grab the
+         counter value right after the connect returns. The remote
+         will grab the counter right after the accept call. This saves
+         the hassle of extra messages being sent for the TCP
+         tests.  */
+    
+      recv_response();
+    
+      if (!netperf_response.content.serv_errno) {
+	if (debug)
+	  fprintf(where,"remote listen done.\n");
+	rsr_size	      =	tcp_stream_response->recv_buf_size;
+	rss_size	      =	tcp_stream_response->send_buf_size;
+	rem_nodelay     =	tcp_stream_response->no_delay;
+	remote_cpu_usage=	tcp_stream_response->measure_cpu;
+	remote_cpu_rate = tcp_stream_response->cpu_rate;
+	
+	/* we have to make sure that the server port number is in
+	   network order */
+	set_port_number(remote_res,
+			(short)tcp_stream_response->data_port_number);
+	
+	rem_rcvavoid	= tcp_stream_response->so_rcvavoid;
+	rem_sndavoid	= tcp_stream_response->so_sndavoid;
+      }
+      else {
+	Set_errno(netperf_response.content.serv_errno);
+	fprintf(where,
+		"netperf: remote error %d",
+		netperf_response.content.serv_errno);
+	perror("");
+	fflush(where);
+	
+	exit(1);
+      }
     }
 
 #ifdef WANT_DEMO
@@ -1589,6 +1608,8 @@ Size (bytes)\n\
 	exit(1);
       }
 
+      local_bytes_sent += send_size;
+
 #ifdef WANT_HISTOGRAM
       if (verbosity > 1) {
 	/* timestamp the exit from the send call and update the histogram */
@@ -1628,7 +1649,7 @@ Size (bytes)\n\
       get_tcp_info(send_socket,&tcp_mss);
     }
     
-    if (shutdown(send_socket,1) == SOCKET_ERROR) {
+    if (shutdown(send_socket,SHUT_WR) == SOCKET_ERROR) {
       perror("netperf: cannot shutdown tcp stream socket");
       exit(1);
     }
@@ -1653,36 +1674,43 @@ Size (bytes)\n\
 
     close(send_socket);
 
-    /* Get the statistics from the remote end. The remote will have */
-    /* calculated service demand and all those interesting things. If it */
-    /* wasn't supposed to care, it will return obvious values. */
+    if (!no_control) {
+      /* Get the statistics from the remote end. The remote will have
+	 calculated service demand and all those interesting
+	 things. If it wasn't supposed to care, it will return obvious
+	 values. */
     
-    recv_response();
-    if (!netperf_response.content.serv_errno) {
-      if (debug)
-	fprintf(where,"remote results obtained\n");
+      recv_response();
+      if (!netperf_response.content.serv_errno) {
+	if (debug)
+	  fprintf(where,"remote results obtained\n");
+      }
+      else {
+	Set_errno(netperf_response.content.serv_errno);
+	fprintf(where,
+		"netperf: remote error %d",
+		netperf_response.content.serv_errno);
+	perror("");
+	fflush(where);
+	
+	exit(1);
+      }
+    
+      /* We now calculate what our thruput was for the test. In the
+	 future, we may want to include a calculation of the thruput
+	 measured by the remote, but it should be the case that for a
+	 TCP stream test, that the two numbers should be *very*
+	 close... We calculate bytes_sent regardless of the way the
+	 test length was controlled.  If it was time, we needed to,
+	 and if it was by bytes, the user may have specified a number
+	 of bytes that wasn't a multiple of the send_size, so we
+	 really didn't send what he asked for ;-) */
+    
+      bytes_sent	= ntohd(tcp_stream_result->bytes_received);
     }
     else {
-      Set_errno(netperf_response.content.serv_errno);
-      fprintf(where,
-	      "netperf: remote error %d",
-	      netperf_response.content.serv_errno);
-      perror("");
-      fflush(where);
-      
-      exit(1);
+      bytes_sent = (double)local_bytes_sent;
     }
-    
-    /* We now calculate what our thruput was for the test. In the future, */
-    /* we may want to include a calculation of the thruput measured by */
-    /* the remote, but it should be the case that for a TCP stream test, */
-    /* that the two numbers should be *very* close... We calculate */
-    /* bytes_sent regardless of the way the test length was controlled. */
-    /* If it was time, we needed to, and if it was by bytes, the user may */
-    /* have specified a number of bytes that wasn't a multiple of the */
-    /* send_size, so we really didn't send what he asked for ;-) */
-    
-    bytes_sent	= ntohd(tcp_stream_result->bytes_received);
 
     thruput	= calc_thruput(bytes_sent);
     
@@ -1965,7 +1993,8 @@ Size (bytes)\n\
   /* during a test... ;-) at some point, this should probably become a */
   /* 64bit integral type, but those are not entirely common yet */
   double	bytes_sent = 0.0;
-  
+  unsigned long long local_bytes_recvd = 0;
+
   float	local_cpu_utilization;
   float	local_service_demand;
   float	remote_cpu_utilization;
@@ -2091,81 +2120,86 @@ Size (bytes)\n\
       local_cpu_rate = calibrate_local_cpu(local_cpu_rate);
     }
     
-    /* Tell the remote end to do a listen. The server alters the socket */
-    /* paramters on the other side at this point, hence the reason for */
-    /* all the values being passed in the setup message. If the user did */
-    /* not specify any of the parameters, they will be passed as 0, which */
-    /* will indicate to the remote that no changes beyond the system's */
-    /* default should be used. Alignment is the exception, it will */
-    /* default to 1, which will be no alignment alterations. */
+    if (!no_control) {
+      /* Tell the remote end to do a listen. The server alters the
+	 socket paramters on the other side at this point, hence the
+	 reason for all the values being passed in the setup
+	 message. If the user did not specify any of the parameters,
+	 they will be passed as 0, which will indicate to the remote
+	 that no changes beyond the system's default should be
+	 used. Alignment is the exception, it will default to 1, which
+	 will be no alignment alterations. */
 
-    netperf_request.content.request_type	=	DO_TCP_MAERTS;
-    tcp_maerts_request->send_buf_size	=	rss_size_req;
-    tcp_maerts_request->recv_buf_size	=	rsr_size_req;
-    tcp_maerts_request->send_size	=	send_size;
-    tcp_maerts_request->no_delay	=	rem_nodelay;
-    tcp_maerts_request->send_alignment	=	remote_send_align;
-    tcp_maerts_request->send_offset	=	remote_send_offset;
-    tcp_maerts_request->measure_cpu	=	remote_cpu_usage;
-    tcp_maerts_request->cpu_rate	=	remote_cpu_rate;
-    if (test_time) {
-      tcp_maerts_request->test_length	=	test_time;
-    }
-    else {
-      tcp_maerts_request->test_length	=	test_bytes;
-    }
-    tcp_maerts_request->so_rcvavoid	=	rem_rcvavoid;
-    tcp_maerts_request->so_sndavoid	=	rem_sndavoid;
+      netperf_request.content.request_type	=	DO_TCP_MAERTS;
+      tcp_maerts_request->send_buf_size	=	rss_size_req;
+      tcp_maerts_request->recv_buf_size	=	rsr_size_req;
+      tcp_maerts_request->send_size	=	send_size;
+      tcp_maerts_request->no_delay	=	rem_nodelay;
+      tcp_maerts_request->send_alignment	=	remote_send_align;
+      tcp_maerts_request->send_offset	=	remote_send_offset;
+      tcp_maerts_request->measure_cpu	=	remote_cpu_usage;
+      tcp_maerts_request->cpu_rate	=	remote_cpu_rate;
+      if (test_time) {
+	tcp_maerts_request->test_length	=	test_time;
+      }
+      else {
+	tcp_maerts_request->test_length	=	test_bytes;
+      }
+      tcp_maerts_request->so_rcvavoid	=	rem_rcvavoid;
+      tcp_maerts_request->so_sndavoid	=	rem_sndavoid;
 #ifdef DIRTY
-    tcp_maerts_request->dirty_count       =       rem_dirty_count;
-    tcp_maerts_request->clean_count       =       rem_clean_count;
+      tcp_maerts_request->dirty_count       =       rem_dirty_count;
+      tcp_maerts_request->clean_count       =       rem_clean_count;
 #endif /* DIRTY */
-    tcp_maerts_request->port            = atoi(remote_data_port);
-    tcp_maerts_request->ipfamily        = af_to_nf(remote_res->ai_family);
-    if (debug > 1) {
-      fprintf(where,
-	      "netperf: send_tcp_maerts: requesting TCP maerts test\n");
-    }
+      tcp_maerts_request->port            = atoi(remote_data_port);
+      tcp_maerts_request->ipfamily        = af_to_nf(remote_res->ai_family);
+      if (debug > 1) {
+	fprintf(where,
+		"netperf: send_tcp_maerts: requesting TCP maerts test\n");
+      }
+      
+      send_request();
+      
+      /* The response from the remote will contain all of the relevant
+	 socket parameters for this test type. We will put them back
+	 into the variables here so they can be displayed if desired.
+	 The remote will have calibrated CPU if necessary, and will
+	 have done all the needed set-up we will have calibrated the
+	 cpu locally before sending the request, and will grab the
+	 counter value right after the connect returns. The remote
+	 will grab the counter right after the accept call. This saves
+	 the hassle of extra messages being sent for the TCP
+	 tests.  */
+      
+      recv_response();
     
-    send_request();
-    
-    /* The response from the remote will contain all of the relevant 	*/
-    /* socket parameters for this test type. We will put them back into */
-    /* the variables here so they can be displayed if desired.  The	*/
-    /* remote will have calibrated CPU if necessary, and will have done	*/
-    /* all the needed set-up we will have calibrated the cpu locally	*/
-    /* before sending the request, and will grab the counter value right*/
-    /* after the connect returns. The remote will grab the counter right*/
-    /* after the accept call. This saves the hassle of extra messages	*/
-    /* being sent for the TCP tests.					*/
-    
-    recv_response();
-    
-    if (!netperf_response.content.serv_errno) {
-      if (debug)
-	fprintf(where,"remote listen done.\n");
-      rsr_size	      =	tcp_maerts_response->recv_buf_size;
-      rss_size	      =	tcp_maerts_response->send_buf_size;
-      rem_nodelay     =	tcp_maerts_response->no_delay;
-      remote_cpu_usage=	tcp_maerts_response->measure_cpu;
-      remote_cpu_rate = tcp_maerts_response->cpu_rate;
-      send_size       = tcp_maerts_response->send_size;
-
-      /* we have to make sure that the server port number is in */
-      /* network order */
-      set_port_number(remote_res, (short)tcp_maerts_response->data_port_number);
+      if (!netperf_response.content.serv_errno) {
+	if (debug)
+	  fprintf(where,"remote listen done.\n");
+	rsr_size	=	tcp_maerts_response->recv_buf_size;
+	rss_size	=	tcp_maerts_response->send_buf_size;
+	rem_nodelay     =	tcp_maerts_response->no_delay;
+	remote_cpu_usage=	tcp_maerts_response->measure_cpu;
+	remote_cpu_rate = tcp_maerts_response->cpu_rate;
+	send_size       = tcp_maerts_response->send_size;
+	
+	/* we have to make sure that the server port number is in
+	 network order */
+      set_port_number(remote_res,
+		      (short)tcp_maerts_response->data_port_number);
       rem_rcvavoid	= tcp_maerts_response->so_rcvavoid;
       rem_sndavoid	= tcp_maerts_response->so_sndavoid;
-    }
-    else {
-      Set_errno(netperf_response.content.serv_errno);
-      fprintf(where,
-	      "netperf: remote error %d",
-	      netperf_response.content.serv_errno);
-      perror("");
-      fflush(where);
-      
-      exit(1);
+      }
+      else {
+	Set_errno(netperf_response.content.serv_errno);
+	fprintf(where,
+		"netperf: remote error %d",
+		netperf_response.content.serv_errno);
+	perror("");
+	fflush(where);
+	
+	exit(1);
+      }
     }
 
 #ifdef WANT_DEMO
@@ -2200,7 +2234,16 @@ Size (bytes)\n\
       /* have abstracted this out into a routine in netlib.c. if you */
       /* are experiencing signal problems, you might want to look */
       /* there. raj 11/94 */
-      start_timer(test_time + PAD_TIME);
+      if (!no_control) {
+	/* this is a netperf to netserver test, netserver will close
+	   to tell us the test is over, so use PAD_TIME to avoid
+	   causing the netserver fits. */
+	start_timer(test_time + PAD_TIME);
+      }
+      else {
+	/* this is a netperf to data source test, no PAD_TIME */
+	start_timer(test_time);
+      }
     }
     else {
       /* The tester wanted to recv a number of bytes. we don't do that 
@@ -2242,10 +2285,10 @@ Size (bytes)\n\
     }
 #endif /* WANT_HISTOGRAM */
     
-    while ((len=recv(recv_socket,
-		     recv_ring->buffer_ptr,
-		     recv_size,
-		     0)) > 0 ) {
+    while ((!times_up) && (len=recv(recv_socket,
+				    recv_ring->buffer_ptr,
+				    recv_size,
+				    0)) > 0 ) {
 
 #ifdef WANT_HISTOGRAM
       if (verbosity > 1) {
@@ -2278,8 +2321,10 @@ Size (bytes)\n\
       nummessages++;          
       recv_ring = recv_ring->next;
       if (bytes_remaining) {
-	bytes_remaining -= recv_size;
+	bytes_remaining -= len;
       }
+
+      local_bytes_recvd += len;
 
 #ifdef WANT_HISTOGRAM
       if (verbosity > 1) {
@@ -2291,14 +2336,16 @@ Size (bytes)\n\
     
     }
 
-    if ((len < 0) || SOCKET_EINTR(len)) {
+    /* an EINTR is to be expected when this is a no_control test */
+    if (((len < 0) || SOCKET_EINTR(len)) && (!no_control)) {
       perror("send_tcp_maerts: data recv error");
       printf("len was %d\n",len);
       exit(1);
     }
     
     /* if we get here, it must mean we had a recv return of 0 before
-       the watchdog timer expired */
+       the watchdog timer expired, or the watchdog timer expired and
+       this was a no_control test */
 
     /* The test is over. Flush the buffers to the remote end. We do a
        graceful release to tell the  remote we have all the data. */  
@@ -2310,7 +2357,7 @@ Size (bytes)\n\
       get_tcp_info(recv_socket,&tcp_mss);
     }
     
-    if (shutdown(recv_socket,1) == SOCKET_ERROR) {
+    if (shutdown(recv_socket,SHUT_WR) == SOCKET_ERROR) {
       perror("netperf: cannot shutdown tcp maerts socket");
       exit(1);
     }
@@ -2331,36 +2378,44 @@ Size (bytes)\n\
 
     close(recv_socket);
 
-    /* Get the statistics from the remote end. The remote will have */
-    /* calculated service demand and all those interesting things. If it */
-    /* wasn't supposed to care, it will return obvious values. */
+    if (!no_control) {
+      /* Get the statistics from the remote end. The remote will have
+         calculated service demand and all those interesting
+         things. If it wasn't supposed to care, it will return obvious
+         values. */
     
-    recv_response();
-    if (!netperf_response.content.serv_errno) {
-      if (debug)
-	fprintf(where,"remote results obtained\n");
+      recv_response();
+      if (!netperf_response.content.serv_errno) {
+	if (debug)
+	  fprintf(where,"remote results obtained\n");
+      }
+      else {
+	Set_errno(netperf_response.content.serv_errno);
+	fprintf(where,
+		"netperf: remote error %d",
+		netperf_response.content.serv_errno);
+	perror("");
+	fflush(where);
+	
+	exit(1);
+      }
+      
+      /* We now calculate what our thruput was for the test. In the
+	 future, we may want to include a calculation of the thruput
+	 measured by the remote, but it should be the case that for a
+	 TCP maerts test, that the two numbers should be *very*
+	 close... We calculate bytes_sent regardless of the way the
+	 test length was controlled.  If it was time, we needed to,
+	 and if it was by bytes, the user may have specified a number
+	 of bytes that wasn't a multiple of the recv_size, so we
+	 really didn't recv what he asked for ;-) */
+    
+      bytes_sent	= ntohd(tcp_maerts_result->bytes_sent);
     }
     else {
-      Set_errno(netperf_response.content.serv_errno);
-      fprintf(where,
-	      "netperf: remote error %d",
-	      netperf_response.content.serv_errno);
-      perror("");
-      fflush(where);
-      
-      exit(1);
+      bytes_sent = (double)local_bytes_recvd;
     }
-    
-    /* We now calculate what our thruput was for the test. In the future, */
-    /* we may want to include a calculation of the thruput measured by */
-    /* the remote, but it should be the case that for a TCP maerts test, */
-    /* that the two numbers should be *very* close... We calculate */
-    /* bytes_sent regardless of the way the test length was controlled. */
-    /* If it was time, we needed to, and if it was by bytes, the user may */
-    /* have specified a number of bytes that wasn't a multiple of the */
-    /* recv_size, so we really didn't recv what he asked for ;-) */
-    
-    bytes_sent	= ntohd(tcp_maerts_result->bytes_sent);
+
 
     thruput	= calc_thruput(bytes_sent);
 
@@ -3063,7 +3118,7 @@ Size (bytes)\n\
             get_tcp_info(send_socket,&tcp_mss);
         }
 
-        if (shutdown(send_socket,1) == SOCKET_ERROR) {
+        if (shutdown(send_socket,SHUT_WR) == SOCKET_ERROR) {
             perror("netperf: cannot shutdown tcp stream socket");
             exit(1);
         }
@@ -3860,7 +3915,7 @@ Size (bytes)\n\
       get_tcp_info(send_socket,&tcp_mss);
     }
     
-    if (shutdown(send_socket,1) == SOCKET_ERROR) {
+    if (shutdown(send_socket,SHUT_WR) == SOCKET_ERROR) {
       perror("netperf: cannot shutdown tcp stream socket");
       exit(1);
     }
@@ -4429,7 +4484,7 @@ recv_tcp_stream()
   /* perform a shutdown to signal the sender that */
   /* we have received all the data sent. raj 4/93 */
 
-  if (shutdown(s_data,1) == SOCKET_ERROR) {
+  if (shutdown(s_data,SHUT_WR) == SOCKET_ERROR) {
       netperf_response.content.serv_errno = errno;
       send_response();
       exit(1);
@@ -4770,7 +4825,7 @@ recv_tcp_maerts()
   /* perform a shutdown to signal the sender that */
   /* we have received all the data sent. raj 4/93 */
 
-  if (shutdown(s_data,1) == SOCKET_ERROR) {
+  if (shutdown(s_data,SHUT_WR) == SOCKET_ERROR) {
       netperf_response.content.serv_errno = errno;
       send_response();
       exit(1);
@@ -5035,75 +5090,79 @@ Send   Recv    Send   Recv\n\
       local_cpu_rate = calibrate_local_cpu(local_cpu_rate);
     }
     
-    /* Tell the remote end to do a listen. The server alters the socket */
-    /* paramters on the other side at this point, hence the reason for */
-    /* all the values being passed in the setup message. If the user did */
-    /* not specify any of the parameters, they will be passed as 0, which */
-    /* will indicate to the remote that no changes beyond the system's */
-    /* default should be used. Alignment is the exception, it will */
-    /* default to 8, which will be no alignment alterations. */
+    if (!no_control) {
+      /* Tell the remote end to do a listen. The server alters the
+	 socket paramters on the other side at this point, hence the
+	 reason for all the values being passed in the setup
+	 message. If the user did not specify any of the parameters,
+	 they will be passed as 0, which will indicate to the remote
+	 that no changes beyond the system's default should be
+	 used. Alignment is the exception, it will default to 8, which
+	 will be no alignment alterations. */
     
-    netperf_request.content.request_type	=	DO_TCP_RR;
-    tcp_rr_request->recv_buf_size	=	rsr_size_req;
-    tcp_rr_request->send_buf_size	=	rss_size_req;
-    tcp_rr_request->recv_alignment      =	remote_recv_align;
-    tcp_rr_request->recv_offset	        =	remote_recv_offset;
-    tcp_rr_request->send_alignment      =	remote_send_align;
-    tcp_rr_request->send_offset	        =	remote_send_offset;
-    tcp_rr_request->request_size	=	req_size;
-    tcp_rr_request->response_size	=	rsp_size;
-    tcp_rr_request->no_delay	        =	rem_nodelay;
-    tcp_rr_request->measure_cpu	        =	remote_cpu_usage;
-    tcp_rr_request->cpu_rate	        =	remote_cpu_rate;
-    tcp_rr_request->so_rcvavoid	        =	rem_rcvavoid;
-    tcp_rr_request->so_sndavoid	        =	rem_sndavoid;
-    if (test_time) {
-      tcp_rr_request->test_length	=	test_time;
-    }
-    else {
-      tcp_rr_request->test_length	=	test_trans * -1;
-    }
-    tcp_rr_request->port                =      atoi(remote_data_port);
-    tcp_rr_request->ipfamily = af_to_nf(remote_res->ai_family);
-
-    if (debug > 1) {
-      fprintf(where,"netperf: send_tcp_rr: requesting TCP rr test\n");
-    }
-    
-    send_request();
-    
-    /* The response from the remote will contain all of the relevant 	*/
-    /* socket parameters for this test type. We will put them back into */
-    /* the variables here so they can be displayed if desired.  The	*/
-    /* remote will have calibrated CPU if necessary, and will have done	*/
-    /* all the needed set-up we will have calibrated the cpu locally	*/
-    /* before sending the request, and will grab the counter value right*/
-    /* after the connect returns. The remote will grab the counter right*/
-    /* after the accept call. This saves the hassle of extra messages	*/
-    /* being sent for the TCP tests.					*/
-  
-    recv_response();
-  
-    if (!netperf_response.content.serv_errno) {
-      if (debug)
-	fprintf(where,"remote listen done.\n");
-      rsr_size          = tcp_rr_response->recv_buf_size;
-      rss_size          = tcp_rr_response->send_buf_size;
-      rem_nodelay       = tcp_rr_response->no_delay;
-      remote_cpu_usage  = tcp_rr_response->measure_cpu;
-      remote_cpu_rate   = tcp_rr_response->cpu_rate;
-      /* make sure that port numbers are in network order */
-      set_port_number(remote_res,(short)tcp_rr_response->data_port_number);
-    }
-    else {
-      Set_errno(netperf_response.content.serv_errno);
-      fprintf(where,
-	      "netperf: remote error %d",
-	      netperf_response.content.serv_errno);
-      perror("");
-      fflush(where);
+      netperf_request.content.request_type	=	DO_TCP_RR;
+      tcp_rr_request->recv_buf_size	=	rsr_size_req;
+      tcp_rr_request->send_buf_size	=	rss_size_req;
+      tcp_rr_request->recv_alignment    =	remote_recv_align;
+      tcp_rr_request->recv_offset	=	remote_recv_offset;
+      tcp_rr_request->send_alignment    =	remote_send_align;
+      tcp_rr_request->send_offset	=	remote_send_offset;
+      tcp_rr_request->request_size	=	req_size;
+      tcp_rr_request->response_size	=	rsp_size;
+      tcp_rr_request->no_delay	        =	rem_nodelay;
+      tcp_rr_request->measure_cpu	=	remote_cpu_usage;
+      tcp_rr_request->cpu_rate	        =	remote_cpu_rate;
+      tcp_rr_request->so_rcvavoid	=	rem_rcvavoid;
+      tcp_rr_request->so_sndavoid	=	rem_sndavoid;
+      if (test_time) {
+	tcp_rr_request->test_length	=	test_time;
+      }
+      else {
+	tcp_rr_request->test_length	=	test_trans * -1;
+      }
+      tcp_rr_request->port              =      atoi(remote_data_port);
+      tcp_rr_request->ipfamily = af_to_nf(remote_res->ai_family);
       
-      exit(1);
+      if (debug > 1) {
+	fprintf(where,"netperf: send_tcp_rr: requesting TCP rr test\n");
+      }
+      
+      send_request();
+      
+      /* The response from the remote will contain all of the relevant
+	 socket parameters for this test type. We will put them back
+	 into the variables here so they can be displayed if desired.
+	 The remote will have calibrated CPU if necessary, and will
+	 have done all the needed set-up we will have calibrated the
+	 cpu locally before sending the request, and will grab the
+	 counter value right after the connect returns. The remote
+	 will grab the counter right after the accept call. This saves
+	 the hassle of extra messages being sent for the TCP
+	 tests.  */
+  
+      recv_response();
+  
+      if (!netperf_response.content.serv_errno) {
+	if (debug)
+	  fprintf(where,"remote listen done.\n");
+	rsr_size          = tcp_rr_response->recv_buf_size;
+	rss_size          = tcp_rr_response->send_buf_size;
+	rem_nodelay       = tcp_rr_response->no_delay;
+	remote_cpu_usage  = tcp_rr_response->measure_cpu;
+	remote_cpu_rate   = tcp_rr_response->cpu_rate;
+	/* make sure that port numbers are in network order */
+	set_port_number(remote_res,(short)tcp_rr_response->data_port_number);
+      }
+      else {
+	Set_errno(netperf_response.content.serv_errno);
+	fprintf(where,
+		"netperf: remote error %d",
+		netperf_response.content.serv_errno);
+	perror("");
+	fflush(where);
+	
+	exit(1);
+      }
     }
 
 #ifdef WANT_DEMO
@@ -5320,22 +5379,24 @@ Send   Recv    Send   Recv\n\
 						/* measured? how long */
 						/* did we really run? */
     
-    /* Get the statistics from the remote end. The remote will have
-       calculated CPU utilization. If it wasn't supposed to care, it
-       will return obvious values. */ 
+    if (!no_control) {
+      /* Get the statistics from the remote end. The remote will have
+	 calculated CPU utilization. If it wasn't supposed to care, it
+	 will return obvious values. */ 
     
-    recv_response();
-    if (!netperf_response.content.serv_errno) {
-      if (debug)
-	fprintf(where,"remote results obtained\n");
-    }
-    else {
-      Set_errno(netperf_response.content.serv_errno);
-      fprintf(where,"netperf: remote error %d",
-	      netperf_response.content.serv_errno);
-      perror("");
-      fflush(where);
-      exit(1);
+      recv_response();
+      if (!netperf_response.content.serv_errno) {
+	if (debug)
+	  fprintf(where,"remote results obtained\n");
+      }
+      else {
+	Set_errno(netperf_response.content.serv_errno);
+	fprintf(where,"netperf: remote error %d",
+		netperf_response.content.serv_errno);
+	perror("");
+	fflush(where);
+	exit(1);
+      }
     }
     
     /* We now calculate what our throughput was for the test. */
@@ -7766,12 +7827,12 @@ rem_cpu_rate()
 }
 
 
- /* this test is intended to test the performance of establishing a */
- /* connection, exchanging a request/response pair, and repeating. it */
- /* is expected that this would be a good starting-point for */
- /* comparision of T/TCP with classic TCP for transactional workloads. */
- /* it will also look (can look) much like the communication pattern */
- /* of http for www access. */
+ /* this test is intended to test the performance of establishing a
+    connection, exchanging a request/response pair, and repeating. it
+    is expected that this would be a good starting-point for
+    comparision of T/TCP with classic TCP for transactional workloads.
+    it will also look (can look) much like the communication pattern
+    of http for www access. */
 
 void
 send_tcp_conn_rr(char remote_host[])
@@ -7908,81 +7969,85 @@ Send   Recv    Send   Recv\n\
   if (local_cpu_usage) {
     local_cpu_rate = calibrate_local_cpu(local_cpu_rate);
   }
-  
-  /* Tell the remote end to do a listen. The server alters the socket */
-  /* paramters on the other side at this point, hence the reason for */
-  /* all the values being passed in the setup message. If the user did */
-  /* not specify any of the parameters, they will be passed as 0, which */
-  /* will indicate to the remote that no changes beyond the system's */
-  /* default should be used. Alignment is the exception, it will */
-  /* default to 8, which will be no alignment alterations. */
-  
-  netperf_request.content.request_type	        =	DO_TCP_CRR;
-  tcp_conn_rr_request->recv_buf_size	=	rsr_size_req;
-  tcp_conn_rr_request->send_buf_size	=	rss_size_req;
-  tcp_conn_rr_request->recv_alignment	=	remote_recv_align;
-  tcp_conn_rr_request->recv_offset	=	remote_recv_offset;
-  tcp_conn_rr_request->send_alignment	=	remote_send_align;
-  tcp_conn_rr_request->send_offset	=	remote_send_offset;
-  tcp_conn_rr_request->request_size	=	req_size;
-  tcp_conn_rr_request->response_size	=	rsp_size;
-  tcp_conn_rr_request->no_delay	        =	rem_nodelay;
-  tcp_conn_rr_request->measure_cpu	=	remote_cpu_usage;
-  tcp_conn_rr_request->cpu_rate	        =	remote_cpu_rate;
-  tcp_conn_rr_request->so_rcvavoid	=	rem_rcvavoid;
-  tcp_conn_rr_request->so_sndavoid	=	rem_sndavoid;
-  if (test_time) {
-    tcp_conn_rr_request->test_length	=	test_time;
-  }
-  else {
-    tcp_conn_rr_request->test_length	=	test_trans * -1;
-  }
-  tcp_conn_rr_request->port             = atoi(remote_data_port);
-  tcp_conn_rr_request->ipfamily = af_to_nf(remote_res->ai_family);
 
-  if (debug > 1) {
-    fprintf(where,"netperf: send_tcp_conn_rr: requesting TCP crr test\n");
-  }
+  if (!no_control) {
   
-  send_request();
+    /* Tell the remote end to do a listen. The server alters the
+       socket paramters on the other side at this point, hence the
+       reason for all the values being passed in the setup message. If
+       the user did not specify any of the parameters, they will be
+       passed as 0, which will indicate to the remote that no changes
+       beyond the system's default should be used. Alignment is the
+       exception, it will default to 8, which will be no alignment
+       alterations. */
   
-  /* The response from the remote will contain all of the relevant 	*/
-  /* socket parameters for this test type. We will put them back into 	*/
-  /* the variables here so they can be displayed if desired.  The	*/
-  /* remote will have calibrated CPU if necessary, and will have done	*/
-  /* all the needed set-up we will have calibrated the cpu locally	*/
-  /* before sending the request, and will grab the counter value right	*/
-  /* after the connect returns. The remote will grab the counter right	*/
-  /* after the accept call. This saves the hassle of extra messages	*/
-  /* being sent for the TCP tests.					*/
+    netperf_request.content.request_type =	DO_TCP_CRR;
+    tcp_conn_rr_request->recv_buf_size	=	rsr_size_req;
+    tcp_conn_rr_request->send_buf_size	=	rss_size_req;
+    tcp_conn_rr_request->recv_alignment	=	remote_recv_align;
+    tcp_conn_rr_request->recv_offset	=	remote_recv_offset;
+    tcp_conn_rr_request->send_alignment	=	remote_send_align;
+    tcp_conn_rr_request->send_offset	=	remote_send_offset;
+    tcp_conn_rr_request->request_size	=	req_size;
+    tcp_conn_rr_request->response_size	=	rsp_size;
+    tcp_conn_rr_request->no_delay	=	rem_nodelay;
+    tcp_conn_rr_request->measure_cpu	=	remote_cpu_usage;
+    tcp_conn_rr_request->cpu_rate	=	remote_cpu_rate;
+    tcp_conn_rr_request->so_rcvavoid	=	rem_rcvavoid;
+    tcp_conn_rr_request->so_sndavoid	=	rem_sndavoid;
+    if (test_time) {
+      tcp_conn_rr_request->test_length	=	test_time;
+    }
+    else {
+      tcp_conn_rr_request->test_length	=	test_trans * -1;
+    }
+    tcp_conn_rr_request->port           = atoi(remote_data_port);
+    tcp_conn_rr_request->ipfamily       = af_to_nf(remote_res->ai_family);
+    
+    if (debug > 1) {
+      fprintf(where,"netperf: send_tcp_conn_rr: requesting TCP crr test\n");
+    }
+    
+    send_request();
+    
+    /* The response from the remote will contain all of the relevant
+       socket parameters for this test type. We will put them back
+       into the variables here so they can be displayed if desired.
+       The remote will have calibrated CPU if necessary, and will have
+       done all the needed set-up we will have calibrated the cpu
+       locally before sending the request, and will grab the counter
+       value right after the connect returns. The remote will grab the
+       counter right after the accept call. This saves the hassle of
+       extra messages being sent for the TCP tests.  */
   
-  recv_response();
+    recv_response();
   
-  if (!netperf_response.content.serv_errno) {
-    rsr_size	=	tcp_conn_rr_response->recv_buf_size;
-    rss_size	=	tcp_conn_rr_response->send_buf_size;
-    rem_nodelay	=	tcp_conn_rr_response->no_delay;
-    remote_cpu_usage=	tcp_conn_rr_response->measure_cpu;
-    remote_cpu_rate = 	tcp_conn_rr_response->cpu_rate;
-    /* make sure that port numbers are in network order */
-    set_port_number(remote_res,(unsigned short)tcp_conn_rr_response->data_port_number);
-
-    if (debug) {
-      fprintf(where,"remote listen done.\n");
-      fprintf(where,"remote port is %u\n",get_port_number(remote_res));
+    if (!netperf_response.content.serv_errno) {
+      rsr_size	       =	tcp_conn_rr_response->recv_buf_size;
+      rss_size	       =	tcp_conn_rr_response->send_buf_size;
+      rem_nodelay      =	tcp_conn_rr_response->no_delay;
+      remote_cpu_usage =	tcp_conn_rr_response->measure_cpu;
+      remote_cpu_rate  = 	tcp_conn_rr_response->cpu_rate;
+      /* make sure that port numbers are in network order */
+      set_port_number(remote_res,
+		      (unsigned short)tcp_conn_rr_response->data_port_number);
+      
+      if (debug) {
+	fprintf(where,"remote listen done.\n");
+	fprintf(where,"remote port is %u\n",get_port_number(remote_res));
+	fflush(where);
+      }
+    }
+    else {
+      Set_errno(netperf_response.content.serv_errno);
+      fprintf(where,
+	      "netperf: remote error %d",
+	      netperf_response.content.serv_errno);
+      perror("");
       fflush(where);
+      exit(1);
     }
   }
-  else {
-    Set_errno(netperf_response.content.serv_errno);
-    fprintf(where,
-	    "netperf: remote error %d",
-	    netperf_response.content.serv_errno);
-    perror("");
-    fflush(where);
-    exit(1);
-  }
-  
 #ifdef WANT_DEMO
   DEMO_RR_SETUP(100)
 #endif
@@ -8137,18 +8202,47 @@ newport:
     temp_message_ptr  = recv_ring->buffer_ptr;
 
 
-    while((rsp_bytes_recvd=recv(send_socket,
-			       temp_message_ptr,
-			       rsp_bytes_left,
-			       0)) > 0) {
-      rsp_bytes_left -= rsp_bytes_recvd;
-      /* if we allow rsp_bytes_left to go to zero, we may mistankenly */
-      /* detect connection close - ask for zero bytes, get zero */
-      /* bytes... so, make sure that we always ask for at least one */
-      /* byte. raj 10/96 */
-      if (rsp_bytes_left == 0) rsp_bytes_left = 1;
-      temp_message_ptr += rsp_bytes_recvd;
+    do {
+      rsp_bytes_recvd = recv(send_socket,
+			     temp_message_ptr,
+			     rsp_bytes_left,
+			     0);
+      if (rsp_bytes_recvd > 0) {
+	rsp_bytes_left -= rsp_bytes_recvd;
+	temp_message_ptr += rsp_bytes_recvd;
+      }
+      else {
+	break;
+      }
+    } while (rsp_bytes_left);
+
+
+    /* OK, we are out of the loop - now what? */
+    if (rsp_bytes_recvd < 0) {
+      /* did the timer hit, or was there an error? */
+      if (SOCKET_EINTR(rsp_bytes_recvd))
+	  {
+	    /* We hit the end of a timed test. */
+	    timed_out = 1;
+	    break;
+	  }
+	  perror("send_tcp_conn_rr: data recv error");
+	  exit(1);
     }
+
+    /* if this is a no_control test, we initiate connection close,
+       otherwise the remote netserver does it to remain just like
+       previous behaviour. raj 2007-27-08 */
+    if (!no_control) {
+      shutdown(send_socket,SHUT_WR);
+    }
+
+    /* we are expecting to get either a return of zero indicating
+       connection close, or an error.  */
+    rsp_bytes_recvd = recv(send_socket,
+			   temp_message_ptr,
+			   1,
+			   0);
 
     /* our exit from the while loop should generally be when */
     /* tmp_bytes_recvd is equal to zero, which implies the connection */
@@ -8209,26 +8303,28 @@ newport:
   cpu_stop(local_cpu_usage,&elapsed_time);	/* was cpu being measured? */
   /* how long did we really run? */
   
-  /* Get the statistics from the remote end. The remote will have */
-  /* calculated service demand and all those interesting things. If it */
-  /* wasn't supposed to care, it will return obvious values. */
+  if (!no_control) {
+    /* Get the statistics from the remote end. The remote will have
+       calculated service demand and all those interesting things. If
+       it wasn't supposed to care, it will return obvious values. */
   
-  recv_response();
-  if (!netperf_response.content.serv_errno) {
-    if (debug)
-      fprintf(where,"remote results obtained\n");
-  }
-  else {
-    Set_errno(netperf_response.content.serv_errno);
-    fprintf(where,
-	    "netperf: remote error %d",
-	     netperf_response.content.serv_errno);
-    perror("");
-    fflush(where);
+    recv_response();
+    if (!netperf_response.content.serv_errno) {
+      if (debug)
+	fprintf(where,"remote results obtained\n");
+    }
+    else {
+      Set_errno(netperf_response.content.serv_errno);
+      fprintf(where,
+	      "netperf: remote error %d",
+	      netperf_response.content.serv_errno);
+      perror("");
+      fflush(where);
       
-    exit(1);
+      exit(1);
+    }
   }
-  
+
   /* We now calculate what our thruput was for the test. In the future, */
   /* we may want to include a calculation of the thruput measured by */
   /* the remote, but it should be the case that for a TCP stream test, */
@@ -8252,8 +8348,10 @@ newport:
     /* a note of this for the user's benefit...*/
     if (local_cpu_usage) {
       if (local_cpu_rate == 0.0) {
-	fprintf(where,"WARNING WARNING WARNING  WARNING WARNING WARNING  WARNING!\n");
-	fprintf(where,"Local CPU usage numbers based on process information only!\n");
+	fprintf(where,
+		"WARNING WARNING WARNING  WARNING WARNING WARNING  WARNING!\n");
+	fprintf(where,
+		"Local CPU usage numbers based on process information only!\n");
 	fflush(where);
       }
       local_cpu_utilization = calc_cpu_util(0.0);
@@ -8272,8 +8370,10 @@ newport:
     
     if (remote_cpu_usage) {
       if (remote_cpu_rate == 0.0) {
-	fprintf(where,"DANGER  DANGER  DANGER    DANGER  DANGER  DANGER    DANGER!\n");
-	fprintf(where,"Remote CPU usage numbers based on process information only!\n");
+	fprintf(where,
+		"DANGER  DANGER  DANGER    DANGER  DANGER  DANGER    DANGER!\n");
+	fprintf(where,
+		"Remote CPU usage numbers based on process information only!\n");
 	fflush(where);
       }
       remote_cpu_utilization = tcp_conn_rr_result->cpu_util;
@@ -12042,4 +12142,57 @@ scan_sockets_args(int argc, char *argv[])
      take it from the hostname in the -H global option. raj
      2005-02-08 */
 
+  /* so, if there is to be no control connection, we want to have some
+     different settings for a few things */
+
+  if (no_control) {
+
+    if (strcmp(remote_data_port,"0") == 0) {
+      /* we need to select either the discard port, echo port or
+	 chargen port dedepending on the test name. raj 2007-02-08 */
+      if (strstr(test_name,"STREAM") ||
+	  strstr(test_name,"SENDFILE")) {
+	strncpy(remote_data_port,"discard",sizeof(remote_data_port));
+      }
+      else if (strstr(test_name,"RR")) {
+	strncpy(remote_data_port,"echo",sizeof(remote_data_port));
+      }
+      else if (strstr(test_name,"MAERTS")) {
+	strncpy(remote_data_port,"chargen",sizeof(remote_data_port));
+      }
+      else {
+	printf("No default port known for the %s test, please set one yourself\n",test_name);
+	exit(-1);
+      }
+    }
+    remote_data_port[sizeof(remote_data_port) - 1] = '\0';
+
+    /* I go back and forth on whether these should become -1 or if
+       they should become 0 for a no_control test. what do you think?
+       raj 2006-02-08 */
+
+    rem_rcvavoid = -1;
+    rem_sndavoid = -1;
+    rss_size_req = -1;
+    rsr_size_req = -1;
+    rem_nodelay = -1;
+
+    if (strstr(test_name,"STREAM") ||
+	strstr(test_name,"SENDFILE")) {
+      recv_size = -1;
+    }
+    else if (strstr(test_name,"RR")) {
+      /* I am however _certain_ that for a no control RR test the
+	 response size must equal the request size since 99 times out
+	 of ten we will be speaking to the echo service somewhere */
+      rsp_size = req_size;
+    }
+    else if (strstr(test_name,"MAERTS")) {
+      send_size = -1;
+    }
+    else {
+      printf("No default port known for the %s test, please set one yourself\n",test_name);
+      exit(-1);
+    }
+  }
 }

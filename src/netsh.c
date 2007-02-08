@@ -94,7 +94,7 @@ double atof(const char *);
  /* Some of the args take optional parameters. Since we are using */
  /* getopt to parse the command line, we will tell getopt that they do */
  /* not take parms, and then look for them ourselves */
-#define GLOBAL_CMD_LINE_ARGS "A:a:b:B:CcdDf:F:H:hi:I:k:K:l:L:n:O:o:P:p:t:T:v:W:w:46"
+#define GLOBAL_CMD_LINE_ARGS "A:a:b:B:CcdDf:F:H:hi:I:k:K:l:L:n:NO:o:P:p:t:T:v:W:w:46"
 
 /************************************************************************/
 /*									*/
@@ -220,6 +220,9 @@ int	af = AF_INET;
 /* did someone request processor affinity? */
 int cpu_binding_requested = 0;
 
+/* are we not establishing a control connection? */
+int no_control = 0;
+
 char netserver_usage[] = "\n\
 Usage: netserver [options] \n\
 \n\
@@ -261,6 +264,7 @@ Global options:\n\
     -o send,recv      Set the local send,recv buffer offsets\n\
     -O send,recv      Set the remote send,recv buffer offset\n\
     -n numcpu         Set the number of processors for CPU util\n\
+    -N                Establish no control connection, do 'send' side only\n\
     -p port,lport*    Specify netserver port number and/or local port\n\
     -P 0|1            Don't/Do display test headers\n\
     -t testname       Specify test to perform\n\
@@ -432,6 +436,7 @@ set_defaults()
   iteration_max = 1;
   interval = 0.05; /* five percent? */
 
+  no_control = 0;
   strcpy(fill_file,"");
 }
      
@@ -605,6 +610,9 @@ scan_cmd_line(int argc, char *argv[])
       break;
     case 'n':
       shell_num_cpus = atoi(optarg);
+      break;
+    case 'N':
+      no_control = 1;
       break;
     case 'o':
       /* set the local offsets */
@@ -820,6 +828,18 @@ scan_cmd_line(int argc, char *argv[])
 	     address_family);
       exit(-1);
     }
+  }
+
+  /* so, if we aren't even going to establish a control connection we
+     should set certain "remote" settings to reflect this, regardless
+     of what else may have been set on the command line */
+  if (no_control) {
+    remote_recv_align = -1;
+    remote_send_align = -1;
+    remote_send_offset = -1;
+    remote_recv_offset = -1;
+    remote_cpu_rate = (float)-1.0;
+    remote_cpu_usage = 0;
   }
 
   /* parsing test-specific options used to be conditional on there
