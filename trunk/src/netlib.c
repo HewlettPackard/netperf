@@ -984,8 +984,7 @@ stop_timer()
  /* should detect the presence of POSIX.4 timer_* routines one of */
  /* these days */
 void
-start_itimer( interval_len_msec )
-     unsigned int interval_len_msec;
+start_itimer(unsigned int interval_len_msec )
 {
 
   unsigned int ticks_per_itvl;
@@ -1046,8 +1045,8 @@ void
 netlib_init_cpu_map() {
 
   int i;
-  int num;
 #ifdef HAVE_MPCTL
+  int num;
   i = 0;
   /* I go back and forth on whether this should be the system-wide set
      of calls, or if the processor set versions (sans the _SYS) should
