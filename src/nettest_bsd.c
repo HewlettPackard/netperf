@@ -5776,49 +5776,52 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     if (local_cpu_usage)
       local_cpu_rate = calibrate_local_cpu(local_cpu_rate);
     
-    /* Tell the remote end to set up the data connection. The server */
-    /* sends back the port number and alters the socket parameters there. */
-    /* Of course this is a datagram service so no connection is actually */
-    /* set up, the server just sets up the socket and binds it. */
+    if (!no_control) {
+      /* Tell the remote end to set up the data connection. The server
+         sends back the port number and alters the socket parameters
+         there.  Of course this is a datagram service so no connection
+         is actually set up, the server just sets up the socket and
+         binds it. */
     
-    netperf_request.content.request_type      = DO_UDP_STREAM;
-    udp_stream_request->recv_buf_size  = rsr_size_req;
-    udp_stream_request->message_size   = send_size;
-    udp_stream_request->recv_connected = remote_connected;
-    udp_stream_request->recv_alignment = remote_recv_align;
-    udp_stream_request->recv_offset    = remote_recv_offset;
-    udp_stream_request->measure_cpu    = remote_cpu_usage;
-    udp_stream_request->cpu_rate       = remote_cpu_rate;
-    udp_stream_request->test_length    = test_time;
-    udp_stream_request->so_rcvavoid    = rem_rcvavoid;
-    udp_stream_request->so_sndavoid    = rem_sndavoid;
-    udp_stream_request->port           = atoi(remote_data_port);
-    udp_stream_request->ipfamily = af_to_nf(remote_res->ai_family);
-    
-    send_request();
-    
-    recv_response();
-    
-    if (!netperf_response.content.serv_errno) {
-      if (debug)
-	fprintf(where,"send_udp_stream: remote data connection done.\n");
+      netperf_request.content.request_type      = DO_UDP_STREAM;
+      udp_stream_request->recv_buf_size  = rsr_size_req;
+      udp_stream_request->message_size   = send_size;
+      udp_stream_request->recv_connected = remote_connected;
+      udp_stream_request->recv_alignment = remote_recv_align;
+      udp_stream_request->recv_offset    = remote_recv_offset;
+      udp_stream_request->measure_cpu    = remote_cpu_usage;
+      udp_stream_request->cpu_rate       = remote_cpu_rate;
+      udp_stream_request->test_length    = test_time;
+      udp_stream_request->so_rcvavoid    = rem_rcvavoid;
+      udp_stream_request->so_sndavoid    = rem_sndavoid;
+      udp_stream_request->port           = atoi(remote_data_port);
+      udp_stream_request->ipfamily = af_to_nf(remote_res->ai_family);
+      
+      send_request();
+      
+      recv_response();
+      
+      if (!netperf_response.content.serv_errno) {
+	if (debug)
+	  fprintf(where,"send_udp_stream: remote data connection done.\n");
+      }
+      else {
+	Set_errno(netperf_response.content.serv_errno);
+	perror("send_udp_stream: error on remote");
+	exit(1);
+      }
+      
+      /* Place the port number returned by the remote into the sockaddr */
+      /* structure so our sends can be sent to the correct place. Also get */
+      /* some of the returned socket buffer information for user display. */
+      
+      /* make sure that port numbers are in the proper order */
+      set_port_number(remote_res,(short)udp_stream_response->data_port_number);
+      
+      rsr_size        = udp_stream_response->recv_buf_size;
+      rss_size        = udp_stream_response->send_buf_size;
+      remote_cpu_rate = udp_stream_response->cpu_rate;
     }
-    else {
-      Set_errno(netperf_response.content.serv_errno);
-      perror("send_udp_stream: error on remote");
-      exit(1);
-    }
-    
-    /* Place the port number returned by the remote into the sockaddr */
-    /* structure so our sends can be sent to the correct place. Also get */
-    /* some of the returned socket buffer information for user display. */
-    
-    /* make sure that port numbers are in the proper order */
-    set_port_number(remote_res,(short)udp_stream_response->data_port_number);
-
-    rsr_size        = udp_stream_response->recv_buf_size;
-    rss_size        = udp_stream_response->send_buf_size;
-    remote_cpu_rate = udp_stream_response->cpu_rate;
 
     /* We "connect" up to the remote post to allow is to use the send */
     /* call instead of the sendto call. Presumeably, this is a little */
@@ -5944,23 +5947,31 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     cpu_stop(local_cpu_usage,	
 	     &elapsed_time);
     
-    /* Get the statistics from the remote end	*/
-    recv_response();
-    if (!netperf_response.content.serv_errno) {
-      if (debug)
-	fprintf(where,"send_udp_stream: remote results obtained\n");
+    if (!no_control) {
+      /* Get the statistics from the remote end	*/
+      recv_response();
+      if (!netperf_response.content.serv_errno) {
+	if (debug)
+	  fprintf(where,"send_udp_stream: remote results obtained\n");
+      }
+      else {
+	Set_errno(netperf_response.content.serv_errno);
+	perror("send_udp_stream: error on remote");
+	exit(1);
+      }
+      messages_recvd = udp_stream_results->messages_recvd;
+      bytes_recvd    = (double) send_size * (double) messages_recvd;
     }
     else {
-      Set_errno(netperf_response.content.serv_errno);
-      perror("send_udp_stream: error on remote");
-      exit(1);
+      /* since there was no control connection, we've no idea what was
+	 actually received. raj 2007-02-08 */
+      messages_recvd = -1;
+      bytes_recvd = -1.0;
     }
-    
+
     bytes_sent    = (double) send_size * (double) messages_sent;
     local_thruput = calc_thruput(bytes_sent);
     
-    messages_recvd = udp_stream_results->messages_recvd;
-    bytes_recvd    = (double) send_size * (double) messages_recvd;
     
     /* we asume that the remote ran for as long as we did */
     
@@ -6645,72 +6656,76 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
       local_cpu_rate = calibrate_local_cpu(local_cpu_rate);
     }
     
-    /* Tell the remote end to do a listen. The server alters the socket */
-    /* paramters on the other side at this point, hence the reason for */
-    /* all the values being passed in the setup message. If the user did */
-    /* not specify any of the parameters, they will be passed as 0, which */
-    /* will indicate to the remote that no changes beyond the system's */
-    /* default should be used. Alignment is the exception, it will */
-    /* default to 8, which will be no alignment alterations. */
+    if (!no_control) {
+      /* Tell the remote end to do a listen. The server alters the
+	 socket paramters on the other side at this point, hence the
+	 reason for all the values being passed in the setup
+	 message. If the user did not specify any of the parameters,
+	 they will be passed as 0, which will indicate to the remote
+	 that no changes beyond the system's default should be
+	 used. Alignment is the exception, it will default to 8, which
+	 will be no alignment alterations. */
     
-    netperf_request.content.request_type	= DO_UDP_RR;
-    udp_rr_request->recv_buf_size	= rsr_size_req;
-    udp_rr_request->send_buf_size	= rss_size_req;
-    udp_rr_request->recv_alignment      = remote_recv_align;
-    udp_rr_request->recv_offset	        = remote_recv_offset;
-    udp_rr_request->send_alignment      = remote_send_align;
-    udp_rr_request->send_offset	        = remote_send_offset;
-    udp_rr_request->request_size	= req_size;
-    udp_rr_request->response_size	= rsp_size;
-    udp_rr_request->measure_cpu	        = remote_cpu_usage;
-    udp_rr_request->cpu_rate	        = remote_cpu_rate;
-    udp_rr_request->so_rcvavoid	        = rem_rcvavoid;
-    udp_rr_request->so_sndavoid	        = rem_sndavoid;
-    if (test_time) {
-      udp_rr_request->test_length	= test_time;
-    }
-    else {
-      udp_rr_request->test_length	= test_trans * -1;
-    }
-    udp_rr_request->port                = atoi(remote_data_port);
-    udp_rr_request->ipfamily = af_to_nf(remote_res->ai_family);
-
-    if (debug > 1) {
-      fprintf(where,"netperf: send_udp_rr: requesting UDP r/r test\n");
-    }
+      netperf_request.content.request_type	= DO_UDP_RR;
+      udp_rr_request->recv_buf_size	= rsr_size_req;
+      udp_rr_request->send_buf_size	= rss_size_req;
+      udp_rr_request->recv_alignment      = remote_recv_align;
+      udp_rr_request->recv_offset	        = remote_recv_offset;
+      udp_rr_request->send_alignment      = remote_send_align;
+      udp_rr_request->send_offset	        = remote_send_offset;
+      udp_rr_request->request_size	= req_size;
+      udp_rr_request->response_size	= rsp_size;
+      udp_rr_request->measure_cpu	        = remote_cpu_usage;
+      udp_rr_request->cpu_rate	        = remote_cpu_rate;
+      udp_rr_request->so_rcvavoid	        = rem_rcvavoid;
+      udp_rr_request->so_sndavoid	        = rem_sndavoid;
+      if (test_time) {
+	udp_rr_request->test_length	= test_time;
+      }
+      else {
+	udp_rr_request->test_length	= test_trans * -1;
+      }
+      udp_rr_request->port                = atoi(remote_data_port);
+      udp_rr_request->ipfamily = af_to_nf(remote_res->ai_family);
+      
+      if (debug > 1) {
+	fprintf(where,"netperf: send_udp_rr: requesting UDP r/r test\n");
+      }
+      
+      send_request();
     
-    send_request();
+      /* The response from the remote will contain all of the relevant
+	 socket parameters for this test type. We will put them back
+	 into the variables here so they can be displayed if desired.
+	 The remote will have calibrated CPU if necessary, and will
+	 have done all the needed set-up we will have calibrated the
+	 cpu locally before sending the request, and will grab the
+	 counter value right after the connect returns. The remote
+	 will grab the counter right after the accept call. This saves
+	 the hassle of extra messages being sent for the UDP
+	 tests.  */
     
-    /* The response from the remote will contain all of the relevant 	*/
-    /* socket parameters for this test type. We will put them back into */
-    /* the variables here so they can be displayed if desired.  The	*/
-    /* remote will have calibrated CPU if necessary, and will have done	*/
-    /* all the needed set-up we will have calibrated the cpu locally	*/
-    /* before sending the request, and will grab the counter value right*/
-    /* after the connect returns. The remote will grab the counter right*/
-    /* after the accept call. This saves the hassle of extra messages	*/
-    /* being sent for the UDP tests.					*/
+      recv_response();
     
-    recv_response();
-    
-    if (!netperf_response.content.serv_errno) {
-      if (debug)
-	fprintf(where,"remote listen done.\n");
-      rsr_size	       =	udp_rr_response->recv_buf_size;
-      rss_size	       =	udp_rr_response->send_buf_size;
-      remote_cpu_usage =	udp_rr_response->measure_cpu;
-      remote_cpu_rate  = 	udp_rr_response->cpu_rate;
-      /* port numbers in proper order */
-      set_port_number(remote_res,(short)udp_rr_response->data_port_number);
-    }
-    else {
-      Set_errno(netperf_response.content.serv_errno);
-      fprintf(where,
-	      "netperf: remote error %d",
-	      netperf_response.content.serv_errno);
-      perror("");
-      fflush(where);
-      exit(1);
+      if (!netperf_response.content.serv_errno) {
+	if (debug)
+	  fprintf(where,"remote listen done.\n");
+	rsr_size	       =	udp_rr_response->recv_buf_size;
+	rss_size	       =	udp_rr_response->send_buf_size;
+	remote_cpu_usage =	udp_rr_response->measure_cpu;
+	remote_cpu_rate  = 	udp_rr_response->cpu_rate;
+	/* port numbers in proper order */
+	set_port_number(remote_res,(short)udp_rr_response->data_port_number);
+      }
+      else {
+	Set_errno(netperf_response.content.serv_errno);
+	fprintf(where,
+		"netperf: remote error %d",
+		netperf_response.content.serv_errno);
+	perror("");
+	fflush(where);
+	exit(1);
+      }
     }
 
 #ifdef WANT_DEMO
@@ -6877,25 +6892,28 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 						/* measured? how long */
 						/* did we really run? */
     
-    /* Get the statistics from the remote end. The remote will have */
-    /* calculated service demand and all those interesting things. If */
-    /* it wasn't supposed to care, it will return obvious values. */
+    if (!no_control) {
+      /* Get the statistics from the remote end. The remote will have
+	 calculated service demand and all those interesting
+	 things. If it wasn't supposed to care, it will return obvious
+	 values. */
     
-    recv_response();
-    if (!netperf_response.content.serv_errno) {
-      if (debug)
-	fprintf(where,"remote results obtained\n");
+      recv_response();
+      if (!netperf_response.content.serv_errno) {
+	if (debug)
+	  fprintf(where,"remote results obtained\n");
+      }
+      else {
+	Set_errno(netperf_response.content.serv_errno);
+	fprintf(where,
+		"netperf: remote error %d",
+		netperf_response.content.serv_errno);
+	perror("");
+	fflush(where);
+	exit(1);
+      }
     }
-    else {
-      Set_errno(netperf_response.content.serv_errno);
-      fprintf(where,
-	      "netperf: remote error %d",
-	      netperf_response.content.serv_errno);
-      perror("");
-      fflush(where);
-      exit(1);
-    }
-    
+
     /* We now calculate what our thruput was for the test. In the */
     /* future, we may want to include a calculation of the thruput */
     /* measured by the remote, but it should be the case that for a */
