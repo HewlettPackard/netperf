@@ -3,14 +3,14 @@
 <title>Care and Feeding of Netperf 2.4.X</title>
 <meta http-equiv="Content-Type" content="text/html">
 <meta name="description" content="Care and Feeding of Netperf 2.4.X">
-<meta name="generator" content="makeinfo 4.7">
+<meta name="generator" content="makeinfo 4.8">
 <link title="Top" rel="top" href="#Top">
 <link href="http://www.gnu.org/software/texinfo/" rel="generator-home" title="Texinfo Homepage">
 <!--
 This is Rick Jones' feeble attempt at a Texinfo-based manual for the
 netperf benchmark.
 
-Copyright (C) 2005 Hewlett-Packard Company
+Copyright (C) 2005-2007 Hewlett-Packard Company
 
      Permission is granted to copy, distribute and/or modify this
      document per the terms of the netperf source licence, a copy of
@@ -25,8 +25,9 @@ Copyright (C) 2005 Hewlett-Packard Company
   pre.smallformat  { font-family:inherit; font-size:smaller }
   pre.smallexample { font-size:smaller }
   pre.smalllisp    { font-size:smaller }
-  span.sc { font-variant:small-caps }
-  span.roman { font-family: serif; font-weight: normal; } 
+  span.sc    { font-variant:small-caps }
+  span.roman { font-family:serif; font-weight:normal; } 
+  span.sansserif { font-family:sans-serif; font-weight:normal; } 
 --></style>
 </head>
 <body>
@@ -90,12 +91,23 @@ Copyright (C) 2005 Hewlett-Packard Company
 <li><a href="#SCTP_005fRR">6.2.11 SCTP_RR</a>
 </li></ul>
 </li></ul>
-<li><a name="toc_Other-Netperf-Tests" href="#Other-Netperf-Tests">7 Other Netperf Tests</a>
+<li><a name="toc_Using-Netperf-to-Measure-Aggregate-Performance" href="#Using-Netperf-to-Measure-Aggregate-Performance">7 Using Netperf to Measure Aggregate Performance</a>
 <ul>
-<li><a href="#CPU-rate-calibration">7.1 CPU rate calibration</a>
+<li><a href="#Running-Concurrent-Netperf-Tests">7.1 Running Concurrent Netperf Tests</a>
+<li><a href="#Using-_002d_002denable_002dburst">7.2 Using &ndash;enable-burst</a>
 </li></ul>
-<li><a name="toc_Address-Resolution" href="#Address-Resolution">8 Address Resolution</a>
-<li><a name="toc_Enhancing-Netperf" href="#Enhancing-Netperf">9 Enhancing Netperf</a>
+<li><a name="toc_Using-Netperf-to-Measure-Bidirectional-Transfer" href="#Using-Netperf-to-Measure-Bidirectional-Transfer">8 Using Netperf to Measure Bidirectional Transfer</a>
+<ul>
+<li><a href="#Bidirectional-Transfer-with-Concurrent-Tests">8.1 Bidirectional Transfer with Concurrent Tests</a>
+<li><a href="#Bidirectional-Transfer-with-TCP_005fRR">8.2 Bidirectional Transfer with TCP_RR</a>
+</li></ul>
+<li><a name="toc_Other-Netperf-Tests" href="#Other-Netperf-Tests">9 Other Netperf Tests</a>
+<ul>
+<li><a href="#CPU-rate-calibration">9.1 CPU rate calibration</a>
+</li></ul>
+<li><a name="toc_Address-Resolution" href="#Address-Resolution">10 Address Resolution</a>
+<li><a name="toc_Enhancing-Netperf" href="#Enhancing-Netperf">11 Enhancing Netperf</a>
+<li><a name="toc_Netperf4" href="#Netperf4">12 Netperf4</a>
 <li><a name="toc_Index" href="#Index">Index</a>
 </li></ul>
 </div>
@@ -104,10 +116,11 @@ Copyright (C) 2005 Hewlett-Packard Company
 
 <div class="node">
 <p><hr>
-<a name="Top"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#Introduction">Introduction</a>,
+<a name="Top"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Introduction">Introduction</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#dir">(dir)</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#dir">(dir)</a>
-<br>
+
 </div>
 
 <h2 class="unnumbered">Netperf Manual</h2>
@@ -115,34 +128,143 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#dir">(dir)</a>
 <p>This is Rick Jones' feeble attempt at a Texinfo-based manual for the
 netperf benchmark.
 
-   <p>Copyright &copy; 2005 Hewlett-Packard Company
+   <p>Copyright &copy; 2005-2007 Hewlett-Packard Company
 <blockquote>
 Permission is granted to copy, distribute and/or modify this document
 per the terms of the netperf source licence, a copy of which can be
-found in the file <span class="file">COPYING</span> of the basic netperf distribution. 
+found in the file <samp><span class="file">COPYING</span></samp> of the basic netperf distribution. 
 </blockquote>
 
 <ul class="menu">
-<li><a accesskey="1" href="#Introduction">Introduction</a>:                 An introduction to netperf - what it is and what
-                     it is not. 
+<li><a accesskey="1" href="#Introduction">Introduction</a>:                 An introduction to netperf - what it is and whatit is not. 
 <li><a accesskey="2" href="#Installing-Netperf">Installing Netperf</a>:           How to go about installing netperf. 
 <li><a accesskey="3" href="#The-Design-of-Netperf">The Design of Netperf</a>
 <li><a accesskey="4" href="#Global-Command_002dline-Options">Global Command-line Options</a>
 <li><a accesskey="5" href="#Using-Netperf-to-Measure-Bulk-Data-Transfer">Using Netperf to Measure Bulk Data Transfer</a>
 <li><a accesskey="6" href="#Using-Netperf-to-Measure-Request_002fResponse">Using Netperf to Measure Request/Response </a>
-<li><a accesskey="7" href="#Other-Netperf-Tests">Other Netperf Tests</a>
-<li><a accesskey="8" href="#Address-Resolution">Address Resolution</a>
-<li><a accesskey="9" href="#Enhancing-Netperf">Enhancing Netperf</a>
+<li><a accesskey="7" href="#Using-Netperf-to-Measure-Aggregate-Performance">Using Netperf to Measure Aggregate Performance</a>
+<li><a accesskey="8" href="#Using-Netperf-to-Measure-Bidirectional-Transfer">Using Netperf to Measure Bidirectional Transfer</a>
+<li><a accesskey="9" href="#Other-Netperf-Tests">Other Netperf Tests</a>
+<li><a href="#Address-Resolution">Address Resolution</a>
+<li><a href="#Enhancing-Netperf">Enhancing Netperf</a>
+<li><a href="#Netperf4">Netperf4</a>
 <li><a href="#Index">Index</a>:                        Index for this manual.
+
+</li></ul>
+<p>--- The Detailed Node Listing ---
+
+<p>Introduction
+
+</p>
+<ul class="menu">
+<li><a href="#Conventions">Conventions</a>
+
+</li></ul>
+<p>Installing Netperf
+
+</p>
+<ul class="menu">
+<li><a href="#Getting-Netperf-Bits">Getting Netperf Bits</a>
+<li><a href="#Installing-Netperf-Bits">Installing Netperf Bits</a>
+<li><a href="#Verifying-Installation">Verifying Installation</a>
+
+</li></ul>
+<p>The Design of Netperf
+
+</p>
+<ul class="menu">
+<li><a href="#CPU-Utilization">CPU Utilization</a>
+
+</li></ul>
+<p>Global Command-line Options
+
+</p>
+<ul class="menu">
+<li><a href="#Command_002dline-Options-Syntax">Command-line Options Syntax</a>
+<li><a href="#Global-Options">Global Options</a>
+
+</li></ul>
+<p>Using Netperf to Measure Bulk Data Transfer
+
+</p>
+<ul class="menu">
+<li><a href="#Issues-in-Bulk-Transfer">Issues in Bulk Transfer</a>
+<li><a href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a>
+
+</li></ul>
+<p>Options common to TCP UDP and SCTP tests
+
+</p>
+<ul class="menu">
+<li><a href="#TCP_005fSTREAM">TCP_STREAM</a>
+<li><a href="#TCP_005fMAERTS">TCP_MAERTS</a>
+<li><a href="#TCP_005fSENDFILE">TCP_SENDFILE</a>
+<li><a href="#UDP_005fSTREAM">UDP_STREAM</a>
+<li><a href="#XTI_005fTCP_005fSTREAM">XTI_TCP_STREAM</a>
+<li><a href="#XTI_005fUDP_005fSTREAM">XTI_UDP_STREAM</a>
+<li><a href="#SCTP_005fSTREAM">SCTP_STREAM</a>
+<li><a href="#DLCO_005fSTREAM">DLCO_STREAM</a>
+<li><a href="#DLCL_005fSTREAM">DLCL_STREAM</a>
+<li><a href="#STREAM_005fSTREAM">STREAM_STREAM</a>
+<li><a href="#DG_005fSTREAM">DG_STREAM</a>
+
+</li></ul>
+<p>Using Netperf to Measure Request/Response
+
+</p>
+<ul class="menu">
+<li><a href="#Issues-in-Request_002fResponse">Issues in Request/Response</a>
+<li><a href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a>
+
+</li></ul>
+<p>Options Common to TCP UDP and SCTP _RR tests
+
+</p>
+<ul class="menu">
+<li><a href="#TCP_005fRR">TCP_RR</a>
+<li><a href="#TCP_005fCC">TCP_CC</a>
+<li><a href="#TCP_005fCRR">TCP_CRR</a>
+<li><a href="#UDP_005fRR">UDP_RR</a>
+<li><a href="#XTI_005fTCP_005fRR">XTI_TCP_RR</a>
+<li><a href="#XTI_005fTCP_005fCC">XTI_TCP_CC</a>
+<li><a href="#XTI_005fTCP_005fCRR">XTI_TCP_CRR</a>
+<li><a href="#XTI_005fUDP_005fRR">XTI_UDP_RR</a>
+<li><a href="#DLCL_005fRR">DLCL_RR</a>
+<li><a href="#DLCO_005fRR">DLCO_RR</a>
+<li><a href="#SCTP_005fRR">SCTP_RR</a>
+
+</li></ul>
+<p>Using Netperf to Measure Aggregate Performance
+
+</p>
+<ul class="menu">
+<li><a href="#Running-Concurrent-Netperf-Tests">Running Concurrent Netperf Tests</a>
+<li><a href="#Using-_002d_002denable_002dburst">Using --enable-burst</a>
+
+</li></ul>
+<p>Using Netperf to Measure Bidirectional Transfer
+
+</p>
+<ul class="menu">
+<li><a href="#Bidirectional-Transfer-with-Concurrent-Tests">Bidirectional Transfer with Concurrent Tests</a>
+<li><a href="#Bidirectional-Transfer-with-TCP_005fRR">Bidirectional Transfer with TCP_RR</a>
+
+</li></ul>
+<p>Other Netperf Tests
+
+</p>
+<ul class="menu">
+<li><a href="#CPU-rate-calibration">CPU rate calibration</a>
 
    </ul>
 
 <div class="node">
 <p><hr>
-<a name="Introduction"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#Installing-Netperf">Installing Netperf</a>,
+<a name="Introduction"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Installing-Netperf">Installing Netperf</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Top">Top</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
-<br>
+
 </div>
 
 <h2 class="chapter">1 Introduction</h2>
@@ -183,18 +305,25 @@ work on the following platforms:
 Jones, who can perhaps be best described as Netperf Contributing
 Editor.  Non-trivial and very appreciated assistance comes from others
 in the network performance community, who are too numerous to mention
-here. Netperf is NOT supported via any of the formal Hewlett-Packard
-support channels.  You should feel free to make enhancements and
-modifications to netperf to suit your nefarious porpoises, so long as
-you stay within the guidelines of the netperf copyright.  If you feel
-so inclined, you can send your changes to
+here. While it is often used by them, netperf is NOT supported via any
+of the formal Hewlett-Packard support channels.  You should feel free
+to make enhancements and modifications to netperf to suit your
+nefarious porpoises, so long as you stay within the guidelines of the
+netperf copyright.  If you feel so inclined, you can send your changes
+to
 <a href="mailto:netperf-feedback@netperf.org">netperf-feedback</a> for possible
 inclusion into subsequent versions of netperf.
 
-   <p>The <a href="mailto:netperf-talk@netperf.org">netperf-talk</a> mailing list is available to discuss the
-care and feeding of netperf with others who share your interest in
-network performance benchmarking. The netperf-talk mailing list is a
-closed list and you must first subscribe by sending email to <a href="mailto:netperf-talk-request@netperf.org">netperf-talk-request</a>.
+   <p>If you would prefer to make contributions to networking benchmark
+using certified &ldquo;open source&rdquo; license, please considuer netperf4,
+which is distributed under the terms of the GPL.
+
+   <p>The <a href="mailto:netperf-talk@netperf.org">netperf-talk</a> mailing list is
+available to discuss the care and feeding of netperf with others who
+share your interest in network performance benchmarking. The
+netperf-talk mailing list is a closed list and you must first
+subscribe by sending email to
+<a href="mailto:netperf-talk-request@netperf.org">netperf-talk-request</a>.
 
 <ul class="menu">
 <li><a accesskey="1" href="#Conventions">Conventions</a>
@@ -202,9 +331,10 @@ closed list and you must first subscribe by sending email to <a href="mailto:net
 
 <div class="node">
 <p><hr>
-<a name="Conventions"></a>Previous:&nbsp;<a rel="previous" accesskey="p" href="#Introduction">Introduction</a>,
+<a name="Conventions"></a>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Introduction">Introduction</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Introduction">Introduction</a>
-<br>
+
 </div>
 
 <h3 class="section">1.1 Conventions</h3>
@@ -246,7 +376,7 @@ second parameter at its default value.
    <p>Netperf has two types of command-line options.  The first are global
 command line options.  They are essentially any option not tied to a
 particular test or group of tests.  An example of a global
-command-line option is the one which sets the test type - <span class="option">-t</span>.
+command-line option is the one which sets the test type - <samp><span class="option">-t</span></samp>.
 
    <p>The second type of options are test-specific options.  These are
 options which are only applicable to a particular test or set of
@@ -260,10 +390,11 @@ options following after a <code>--</code> as in:
 </pre>
    <div class="node">
 <p><hr>
-<a name="Installing-Netperf"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#The-Design-of-Netperf">The Design of Netperf</a>,
+<a name="Installing-Netperf"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#The-Design-of-Netperf">The Design of Netperf</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Introduction">Introduction</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
-<br>
+
 </div>
 
 <h2 class="chapter">2 Installing Netperf</h2>
@@ -275,12 +406,12 @@ ready access and thus the ability to create binaries.  There are two
 styles of netperf installation.  The first runs the netperf server
 program - netserver - as a child of inetd.  This requires the
 installer to have sufficient privileges to edit the files
-<span class="file">/etc/services</span> and <span class="file">/etc/inetd.conf</span> or their
+<samp><span class="file">/etc/services</span></samp> and <samp><span class="file">/etc/inetd.conf</span></samp> or their
 platform-specific equivalents.
 
    <p>The second style is to run netserver as a standalone daemon.  This
-second method does not require edit privileges on <span class="file">/etc/services</span>
-and <span class="file">/etc/inetd.conf</span> but does mean you must remember to run the
+second method does not require edit privileges on <samp><span class="file">/etc/services</span></samp>
+and <samp><span class="file">/etc/inetd.conf</span></samp> but does mean you must remember to run the
 netserver program explicitly after every system reboot.
 
    <p>This manual assumes that those wishing to measure networking
@@ -301,23 +432,28 @@ likely other excellent sources out there as well.
 
 <div class="node">
 <p><hr>
-<a name="Getting-Netperf-Bits"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#Installing-Netperf-Bits">Installing Netperf Bits</a>,
+<a name="Getting-Netperf-Bits"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Installing-Netperf-Bits">Installing Netperf Bits</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Installing-Netperf">Installing Netperf</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Installing-Netperf">Installing Netperf</a>
-<br>
+
 </div>
 
 <h3 class="section">2.1 Getting Netperf Bits</h3>
 
 <p>Gzipped tar files of netperf sources can be retrieved via
-<a href="ftp://ftp.cup.hp.com/dist/networking/benchmarks/netperf/">anonymous FTP</a>
+<a href="ftp://ftp.netperf.org/netperf">anonymous FTP</a>
 for &ldquo;released&rdquo; versions of the bits.  Pre-release versions of the
 bits can be retrieved via anonymous FTP from the
-<a href="ftp://ftp.cup.hp.com/dist/networking/benchmarks/netperf/experimental/">experimental</a> subdirectory.
+<a href="ftp://ftp.netperf.org/netperf/experimental">experimental</a> subdirectory.
 
    <p>For convenience and ease of remembering, a link to the download site
 is provided via the
 <a href="http://www.netperf.org/">NetperfPage</a>
+
+   <p>Those wishing to be on the bleeding edge of netperf development can
+grab the top of trunk from the netperf subversion
+<a href="http://www.netperf.org/svn/netperf2/trunk">repository</a>.
 
    <p>There are likely other places around the Internet from which one can
 download netperf bits.  These may be simple mirrors of the main
@@ -327,18 +463,19 @@ what you really wanted and isn't some malicious Trojan or whatnot.
 Caveat downloader.
 
    <p>As a general rule, binaries of netperf and netserver are not
-distributed from ftp.cup.hp.com.  From time to time a kind soul or
+distributed from ftp.netperf.org.  From time to time a kind soul or
 souls has packaged netperf as a Debian package available via the
-apt-get mechanism.  I would be most interested in learning how to
-enhance the makefiles to make that easier for people, and perhaps to
-generate RPM's and HP-UX swinstall&ldquo;depots.&rdquo;
+apt-get mechanism or as an RPM.  I would be most interested in
+learning how to enhance the makefiles to make that easier for people,
+and perhaps to generate HP-UX swinstall&ldquo;depots.&rdquo;
 
 <div class="node">
 <p><hr>
-<a name="Installing-Netperf-Bits"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#Verifying-Installation">Verifying Installation</a>,
+<a name="Installing-Netperf-Bits"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Verifying-Installation">Verifying Installation</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Getting-Netperf-Bits">Getting Netperf Bits</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Installing-Netperf">Installing Netperf</a>
-<br>
+
 </div>
 
 <h3 class="section">2.2 Installing Netperf</h3>
@@ -375,7 +512,7 @@ those tests automagically.
    <p>On some platforms, it may be necessary to precede the configure
 command with a CFLAGS and/or LIBS variable as the netperf configure
 script is not yet smart enough to set them itself.  Whenever possible,
-these requirements will be found in <span class="file">README.</span><var>platform</var> files. 
+these requirements will be found in <samp><span class="file">README.</span><var>platform</var></samp> files. 
 Expertise and assistance in making that more automagical in the
 configure script would be most welcome.
 
@@ -422,10 +559,10 @@ we can see that most of the transaction times were on the order of one
 hundred to one-hundred, ninety-nine microseconds, but they were
 occasionally as long as ten to nineteen milliseconds
 
-   <p>The <span class="option">--enable-demo=yes</span> configure option will cause code to be
+   <p>The <samp><span class="option">--enable-demo=yes</span></samp> configure option will cause code to be
 included to report interim results during a test run.  The rate at
 which interim results are reported can then be controlled via the
-global <span class="option">-D</span> option.  Here is an example of &ndash;enable-demo mode
+global <samp><span class="option">-D</span></samp> option.  Here is an example of &ndash;enable-demo mode
 output:
 
 <pre class="example">     src/netperf -D 1.35 -H lag -f M
@@ -445,14 +582,14 @@ output:
       32768  16384  16384    10.00       9.61
 </pre>
    <p>Notice how the units of the interim result track that requested by the
-<span class="option">-f</span> option.  Also notice that sometimes the interval will be
-longer than the value specified in the <span class="option">-D</span> option.  This is
+<samp><span class="option">-f</span></samp> option.  Also notice that sometimes the interval will be
+longer than the value specified in the <samp><span class="option">-D</span></samp> option.  This is
 normal and stems from how demo mode is implemented without relying on
 interval timers, but by calculating how many units of work must be
 performed to take at least the desired interval.
 
    <p>As of this writing, a <code>make install</code> will not actually update the
-files <span class="file">/etc/services</span> and/or <span class="file">/etc/inetd.conf</span> or their
+files <samp><span class="file">/etc/services</span></samp> and/or <samp><span class="file">/etc/inetd.conf</span></samp> or their
 platform-specific equivalents.  It remains necessary to perform that
 bit of installation magic by hand.  Patches to the makefile sources to
 effect an automagic editing of the necessary files to have netperf
@@ -475,9 +612,10 @@ difficult for someone to assist you.
 
 <div class="node">
 <p><hr>
-<a name="Verifying-Installation"></a>Previous:&nbsp;<a rel="previous" accesskey="p" href="#Installing-Netperf-Bits">Installing Netperf Bits</a>,
+<a name="Verifying-Installation"></a>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Installing-Netperf-Bits">Installing Netperf Bits</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Installing-Netperf">Installing Netperf</a>
-<br>
+
 </div>
 
 <h3 class="section">2.3 Verifying Installation</h3>
@@ -498,10 +636,11 @@ child of inetd, or launched as a standalone daemon, simply typing:
 </pre>
    <div class="node">
 <p><hr>
-<a name="The-Design-of-Netperf"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#Global-Command_002dline-Options">Global Command-line Options</a>,
+<a name="The-Design-of-Netperf"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Global-Command_002dline-Options">Global Command-line Options</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Installing-Netperf">Installing Netperf</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
-<br>
+
 </div>
 
 <h2 class="chapter">3 The Design of Netperf</h2>
@@ -538,9 +677,10 @@ the results.
 
 <div class="node">
 <p><hr>
-<a name="CPU-Utilization"></a>Previous:&nbsp;<a rel="previous" accesskey="p" href="#The-Design-of-Netperf">The Design of Netperf</a>,
+<a name="CPU-Utilization"></a>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#The-Design-of-Netperf">The Design of Netperf</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#The-Design-of-Netperf">The Design of Netperf</a>
-<br>
+
 </div>
 
 <h3 class="section">3.1 CPU Utilization</h3>
@@ -577,7 +717,7 @@ remote (netserver) system.
 <dt><code>U</code><dd>The CPU utilization measurement mechanism was unknown to netperf or
 netperf/netserver was not compiled to include CPU utilization
 measurements. The code for the null CPU utilization mechanism can be
-found in <span class="file">src/netcpu_none.c</span>. 
+found in <samp><span class="file">src/netcpu_none.c</span></samp>. 
 <br><dt><code>I</code><dd>An HP-UX-specific CPU utilization mechanism whereby the kernel
 incremented a per-CPU counter by one for each trip through the idle
 loop. This mechanism was only available on specially-compiled HP-UX
@@ -597,8 +737,8 @@ track of time spent in idle, user, kernel and interrupt processing
 (HP-UX 11.23 and later).  The former requires calibration, the latter
 does not.  Values in either case are retrieved via one of the pstat(2)
 family of calls, hence the use of the letter <code>P</code>.  The code for
-these mechanisms is found in <span class="file">src/netcpu_pstat.c</span> and
-<span class="file">src/netcpu_pstatnew.c</span> respectively. 
+these mechanisms is found in <samp><span class="file">src/netcpu_pstat.c</span></samp> and
+<samp><span class="file">src/netcpu_pstatnew.c</span></samp> respectively. 
 <br><dt><code>K</code><dd>A Solaris-specific CPU utilization mechanism where by the kernel
 keeps track of ticks (eg HZ) spent in the idle loop.  This method is
 statistical and is known to be inaccurate when the interrupt rate is
@@ -606,7 +746,7 @@ above epsilon as time spent processing interrupts is not subtracted
 from idle.  The value is retrieved via a kstat() call - hence the use
 of the letter <code>K</code>.  Since this mechanism uses units of ticks (HZ)
 the calibration value should invariably match HZ. (Eg 100)  The code
-for this mechanism is implemented in <span class="file">src/netcpu_kstat.c</span>. 
+for this mechanism is implemented in <samp><span class="file">src/netcpu_kstat.c</span></samp>. 
 <br><dt><code>M</code><dd>A Solaris-specific mechanism available on Solaris 10 and latter which
 uses the new microstate accounting mechanisms.  There are two, alas,
 overlapping, mechanisms.  The first tracks nanoseconds spent in user,
@@ -618,28 +758,28 @@ while better than the <code>K</code> mechanism, this mechanism too is not
 without issues.  The values are retrieved via kstat() calls, but the
 letter code is set to <code>M</code> to distinguish this mechanism from the
 even less accurate <code>K</code> mechanism.  The code for this mechanism is
-implemented in <span class="file">src/netcpu_kstat10.c</span>. 
+implemented in <samp><span class="file">src/netcpu_kstat10.c</span></samp>. 
 <br><dt><code>L</code><dd>A mechanism based on &ldquo;looper&rdquo;or &ldquo;soaker&rdquo; processes which sit in
 tight loops counting as fast as they possibly can. This mechanism
 starts a looper process for each known CPU on the system.  The effect
 of processor hyperthreading on the mechanism is not yet known.  This
 mechanism definitely requires calibration.  The code for the
-&ldquo;looper&rdquo;mechanism can be found in <span class="file">src/netcpu_looper.c</span>
+&ldquo;looper&rdquo;mechanism can be found in <samp><span class="file">src/netcpu_looper.c</span></samp>
 <br><dt><code>N</code><dd>A Microsoft Windows-specific mechanism, the code for which can be
-found in <span class="file">src/netcpu_ntperf.c</span>.  This mechanism too is based on
+found in <samp><span class="file">src/netcpu_ntperf.c</span></samp>.  This mechanism too is based on
 what appears to be a form of micro-state accounting and requires no
 calibration.  On laptops, or other systems which may dynamically alter
 the CPU frequency to minimize power consumtion, it has been suggested
 that this mechanism may become slightly confsed, in which case using
 BIOS settings to disable the power saving would be indicated.
 
-     <br><dt><code>S</code><dd>This mechanism uses <span class="file">/proc/stat</span> on Linux to retrieve time
+     <br><dt><code>S</code><dd>This mechanism uses <samp><span class="file">/proc/stat</span></samp> on Linux to retrieve time
 (ticks) spent in idle mode.  It is thought but not known to be
 reasonably accurate.  The code for this mechanism can be found in
-<span class="file">src/netcpu_procstat.c</span>. 
+<samp><span class="file">src/netcpu_procstat.c</span></samp>. 
 <br><dt><code>C</code><dd>A mechanism somewhat similar to <code>S</code> but using the sysctl() call
 on BSD-like Operating systems (*BSD and MacOS X).  The code for this
-mechanism can be found in <span class="file">src/netcpu_sysctl.c</span>. 
+mechanism can be found in <samp><span class="file">src/netcpu_sysctl.c</span></samp>. 
 <br><dt><code>Others</code><dd>Other mechanisms included in netperf in the past have included using
 the times() and getrusage() calls.  These calls are actually rather
 poorly suited to the task of measuring CPU overhead for networking as
@@ -687,10 +827,12 @@ mpstat are often based on the same mechanisms used by netperf.
 
 <div class="node">
 <p><hr>
-<a name="Global-Command_002dline-Options"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#Using-Netperf-to-Measure-Bulk-Data-Transfer">Using Netperf to Measure Bulk Data Transfer</a>,
+<a name="Global-Command-line-Options"></a>
+<a name="Global-Command_002dline-Options"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Using-Netperf-to-Measure-Bulk-Data-Transfer">Using Netperf to Measure Bulk Data Transfer</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#The-Design-of-Netperf">The Design of Netperf</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
-<br>
+
 </div>
 
 <h2 class="chapter">4 Global Command-line Options</h2>
@@ -698,7 +840,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
 <p>This section describes each of the global command-line options
 available in the netperf and netserver binaries.  Essentially, it is
 an expanded version of the usage information displayed by netperf or
-netserver when invoked with the <span class="option">-h</span> global command-line
+netserver when invoked with the <samp><span class="option">-h</span></samp> global command-line
 option.
 
 <ul class="menu">
@@ -708,10 +850,12 @@ option.
 
 <div class="node">
 <p><hr>
-<a name="Command_002dline-Options-Syntax"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#Global-Options">Global Options</a>,
+<a name="Command-line-Options-Syntax"></a>
+<a name="Command_002dline-Options-Syntax"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Global-Options">Global Options</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Global-Command_002dline-Options">Global Command-line Options</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Global-Command_002dline-Options">Global Command-line Options</a>
-<br>
+
 </div>
 
 <!-- node-name,  next,  previous,  up -->
@@ -720,7 +864,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Global-Command_002dline-Options">Globa
 <p>Revision 1.8 of netperf introduced enough new functionality to overrun
 the English alphabet for mnemonic command-line option names, and the
 author was not and is not quite ready to switch to the contemporary
-<span class="option">--mumble</span> style of command-line options. (Call him a Luddite).
+<samp><span class="option">--mumble</span></samp> style of command-line options. (Call him a Luddite).
 
    <p>For this reason, the command-line options were split into two parts -
 the first are the global command-line options.  They are options that
@@ -744,9 +888,10 @@ options must still be preceded by a <code>--</code>.  For example:
 
 <div class="node">
 <p><hr>
-<a name="Global-Options"></a>Previous:&nbsp;<a rel="previous" accesskey="p" href="#Command_002dline-Options-Syntax">Command-line Options Syntax</a>,
+<a name="Global-Options"></a>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Command_002dline-Options-Syntax">Command-line Options Syntax</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Global-Command_002dline-Options">Global Command-line Options</a>
-<br>
+
 </div>
 
 <!-- node-name,  next,  previous,  up -->
@@ -759,18 +904,18 @@ alignment of the buffers can force the system to use different copy
 schemes, which can have a measurable effect on performance.  If the
 page size for the system were 4096 bytes, and you want to pass
 page-aligned buffers beginning on page boundaries, you could use
-<span class="samp">-a 4096</span>.  By default the units are bytes, but suffix of &ldquo;G,&rdquo;
+`<samp><span class="samp">-a 4096</span></samp>'.  By default the units are bytes, but suffix of &ldquo;G,&rdquo;
 &ldquo;M,&rdquo; or &ldquo;K&rdquo; will specify the units to be 2^30 (GB), 2^20 (MB) or
 2^10 (KB) respectively. A suffix of &ldquo;g,&rdquo; &ldquo;m&rdquo; or &ldquo;k&rdquo; will specify
 units of 10^9, 10^6 or 10^3 bytes respectively. [Default: 8 bytes]
 
-     <br><dt><code>-A &lt;sizespec&gt;</code><dd>This option is identical to the <span class="option">-a</span> option with the difference
+     <br><dt><code>-A &lt;sizespec&gt;</code><dd>This option is identical to the <samp><span class="option">-a</span></samp> option with the difference
 being it affects alignments for the remote system.
 
      <br><dt><code>-b &lt;size&gt;</code><dd>This option is only present when netperf has been configure with
 &ndash;enable-intervals=yes prior to compilation.  It sets the size of the
 burst of send calls in a _STREAM test.  When used in conjunction with
-the <span class="option">-w</span> option it can cause the rate at which data is sent to
+the <samp><span class="option">-w</span></samp> option it can cause the rate at which data is sent to
 be &ldquo;paced.&rdquo;
 
      <br><dt><code>-c [rate]</code><dd>This option will ask that CPU utilization and service demand be
@@ -782,7 +927,7 @@ optional rate parameter will be utterly and completely ignored.
 [Default: no CPU measurements]
 
      <br><dt><code>-C [rate]</code><dd>This option requests CPU utilization and service demand calculations
-for the remote system.  It is otherwise identical to the <span class="option">-c</span>
+for the remote system.  It is otherwise identical to the <samp><span class="option">-c</span></samp>
 option.
 
      <br><dt><code>-d</code><dd>Each instance of this option will increase the quantity of debugging
@@ -790,7 +935,7 @@ output displayed during a test.  If the debugging output level is set
 high enough, it may have a measurable effect on performance. 
 Debugging information for the local system is printed to stdout. 
 Debugging information for the remote system is sent by default to the
-file <span class="file">/tmp/netperf.debug</span>. [Default: no debugging output]
+file <samp><span class="file">/tmp/netperf.debug</span></samp>. [Default: no debugging output]
 
      <br><dt><code>-D [interval,units]</code><dd>This option is only available when netperf is configured with
 &ndash;enable-demo=yes.  When set, it will cause netperf to emit periodic
@@ -845,30 +990,19 @@ addressing.  Similarly, a value of &ldquo;inet6&rdquo; can be used in place of
 &ldquo;6&rdquo; to request IPv6 only addressing.  A value of &ldquo;0&rdquo; can be used
 to request either IPv4 or IPv6 addressing as name resolution dictates.
 
-     <p>By default, the options set with the global <span class="option">-H</span> option are
-inherited by the test for their data connections, unless a
-test-specific <span class="option">-H</span> option is specified.
+     <p>By default, the options set with the global <samp><span class="option">-H</span></samp> option are
+inherited by the test for its data connection, unless a test-specific
+<samp><span class="option">-H</span></samp> option is specified.
 
-     <p>If a <span class="option">-H</span> option follows either the <span class="option">-4</span> or <span class="option">-6</span>
+     <p>If a <samp><span class="option">-H</span></samp> option follows either the <samp><span class="option">-4</span></samp> or <samp><span class="option">-6</span></samp>
 options, the family setting specified with the -H option will override
-the <span class="option">-4</span> or <span class="option">-6</span> options for the remote address
+the <samp><span class="option">-4</span></samp> or <samp><span class="option">-6</span></samp> options for the remote address
 family. If no address family is specified, settings from a previous
-<span class="option">-4</span> or <span class="option">-6</span> option will remain.  In a nutshell, the
+<samp><span class="option">-4</span></samp> or <samp><span class="option">-6</span></samp> option will remain.  In a nutshell, the
 last explicit global command-line option wins.
 
      <p>[Default:  &ldquo;localhost&rdquo; for the remote name/IP address and &ldquo;0&rdquo; (eg
 AF_UNSPEC) for the remote address family.]
-
-     <br><dt><code>-L &lt;optionspec&gt;</code><dd>This option is identical to the <span class="option">-H</span> option with the difference
-being it sets the _local_ hostname/IP and/or address family
-information.  This option is generally unnecessary, but can be useful
-when you wish to make sure that the netperf control and data
-connections go via different paths.  It can also come-in handy if one
-is trying to run netperf through those evil, end-to-end breaking
-things known as firewalls.
-
-     <p>[Default: 0.0.0.0 (eg INADDR_ANY) for IPv4 and ::0 for IPv6 for the
-local name.  AF_UNSPEC for the local address family.]
 
      <br><dt><code>-I &lt;optionspec&gt;</code><dd>This option enables the calculation of confidence intervals and sets
 the confidence and width parameters with the first have of the
@@ -879,13 +1013,13 @@ of the desired confidence interval.  For example
      </pre>
      <p>asks netperf to be 99% confident that the measured mean values for
 throughput and CPU utilization are within +/- 2.5% of the &ldquo;real&rdquo;
-mean values.  If the <span class="option">-i</span> option is specified and the
-<span class="option">-I</span> option is omitted, the confidence defaults to 99% and the
+mean values.  If the <samp><span class="option">-i</span></samp> option is specified and the
+<samp><span class="option">-I</span></samp> option is omitted, the confidence defaults to 99% and the
 width to 5% (giving +/- 2.5%)
 
      <p>If netperf calculates that the desired confidence intervals have not
 been met, it emits a noticeable warning that cannot be suppressed with
-the <span class="option">-P</span> or <span class="option">-v</span> options:
+the <samp><span class="option">-P</span></samp> or <samp><span class="option">-v</span></samp> options:
 
      <pre class="example">          netperf -H tardy.cup -i 3 -I 99,5
           TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to tardy.cup.hp.com (15.244.44.58) port 0 AF_INET : +/-2.5%  99% conf.
@@ -907,9 +1041,9 @@ the <span class="option">-P</span> or <span class="option">-v</span> options:
      <p>Where we see that netperf did not meet the desired convidence
 intervals.  Instead of being 99% confident it was within +/- 2.5% of
 the real mean value of throughput it is only confident it was within
-+/-3.4%.  In this example, increasing the <span class="option">-i</span> option
++/-3.4%.  In this example, increasing the <samp><span class="option">-i</span></samp> option
 (described below) and/or increasing the iteration length with the
-<span class="option">-l</span> option might resolve the situation.
+<samp><span class="option">-l</span></samp> option might resolve the situation.
 
      <br><dt><code>-i &lt;sizespec&gt;</code><dd>This option enables the calculation of confidence intervals and sets
 the minimum and maximum number of iterations to run in attempting to
@@ -921,7 +1055,7 @@ number of iterations and continues until it reaches either the
 desired confidence interval, or the maximum number of iterations,
 whichever comes first.
 
-     <p>If the <span class="option">-I</span> option is specified and the <span class="option">-i</span> option
+     <p>If the <samp><span class="option">-I</span></samp> option is specified and the <samp><span class="option">-i</span></samp> option
 omitted the maximum number of iterations is set to 10 and the minimum
 to three.
 
@@ -937,11 +1071,22 @@ Certain tests, notably those using UDP can only be timed, they cannot
 be limited by transaction or byte count.
 
      <p>In some situations, individual iterations of a test may run for longer
-for the number of seconds specified by the <span class="option">-l</span> option.  In
+for the number of seconds specified by the <samp><span class="option">-l</span></samp> option.  In
 particular, this may occur for those tests where the socket buffer
 size(s) are significantly longer than the bandwidthXdelay product of
 the link(s) over which the data connection passes, or those tests
 where there may be non-trivial numbers of retransmissions.
+
+     <br><dt><code>-L &lt;optionspec&gt;</code><dd>This option is identical to the <samp><span class="option">-H</span></samp> option with the difference
+being it sets the _local_ hostname/IP and/or address family
+information.  This option is generally unnecessary, but can be useful
+when you wish to make sure that the netperf control and data
+connections go via different paths.  It can also come-in handy if one
+is trying to run netperf through those evil, end-to-end breaking
+things known as firewalls.
+
+     <p>[Default: 0.0.0.0 (eg INADDR_ANY) for IPv4 and ::0 for IPv6 for the
+local name.  AF_UNSPEC for the local address family.]
 
      <br><dt><code>-n numcpus</code><dd>This option tells netperf how many CPUs it should ass-u-me are active
 on the system running netperf.  In particular, this is used for the
@@ -953,10 +1098,45 @@ able to determine on its own.
      <p>Note that this option does _not_ set the number of CPUs on the system
 running netserver.  When netperf/netserver cannot automagically
 determine the number of CPUs that can only be set for netserver via a
-netserver <span class="option">-n</span> command-line option.
+netserver <samp><span class="option">-n</span></samp> command-line option.
+
+     <br><dt><code>-N</code><dd>This option tells netperf to forego establishing a control
+connection. This makes it is possible to run some limited netperf
+tests without a corresponding netserver on the remote system.
+
+     <p>With this option set, the test to be run is to get all the addressing
+information it needs to establish its data connection from the command
+line or internal defaults.  If not otherwise specified by
+test-specific command line options, the data connection for a
+&ldquo;STREAM&rdquo; or &ldquo;SENDFILE&rdquo; test will be to the &ldquo;discard&rdquo; port, an
+&ldquo;RR&rdquo; test will be to the &ldquo;echo&rdquo; port, and a &ldquo;MEARTS&rdquo; test will
+be to the chargen port.
+
+     <p>The response size of an &ldquo;RR&rdquo; test will be silently set to be the
+same as the request size.  Otherwise the test would hang if the
+response size was larger than the request size, or would report an
+incorrect, inflated transaction rate if the response size was less
+than the request size.
+
+     <p>Since there is no control connection when this option is specified, it
+is not possible to set &ldquo;remote&rdquo; properties such as socket buffer
+size and the like via the netperf command line. Nor is it possible to
+retrieve such interesting remote information as CPU utilization. 
+These items will be set to values which when displayed should make it
+immediately obvious that was the case.
+
+     <p>The only way to change remote characteristics such as socket buffer
+size or to obtain information such as CPU utilization is to employ
+platform-specific methods on the remote system.  Frankly, if one has
+access to the remote system to employ those methods one aught to be
+able to run a netserver there.  However, that ability may not be
+present in certain &ldquo;support&rdquo; situations, hence the addition of this
+option.
+
+     <p>Added in netperf 2.4.3.
 
      <br><dt><code>-o &lt;sizespec&gt;</code><dd>The value(s) passed-in with this option will be used as an offset
-added to the alignment specified with the <span class="option">-a</span> option.  For
+added to the alignment specified with the <samp><span class="option">-a</span></samp> option.  For
 example:
      <pre class="example">          -o 3 -a 4096
      </pre>
@@ -964,8 +1144,8 @@ example:
 begin three bytes past an address aligned to 4096 bytes. [Default: 0
 bytes]
 
-     <br><dt><code>-O &lt;sizespec&gt;</code><dd>This option behaves just as the <span class="option">-o</span> option by on the remote
-system and in conjunction with the <span class="option">-A</span> option. [Default: 0
+     <br><dt><code>-O &lt;sizespec&gt;</code><dd>This option behaves just as the <samp><span class="option">-o</span></samp> option but on the remote
+system and in conjunction with the <samp><span class="option">-A</span></samp> option. [Default: 0
 bytes]
 
      <br><dt><code>-p &lt;optionspec&gt;</code><dd>The first value of the optionspec passed-in with this option tells
@@ -988,7 +1168,7 @@ connecting to the remote netserver.
 is looking to run netperf through those evil, end-to-end breaking
 things known as firewalls.
 
-     <br><dt><code>-P 0|1</code><dd>A value of &ldquo;1&rdquo; for the <span class="option">-P</span> option will enable display of
+     <br><dt><code>-P 0|1</code><dd>A value of &ldquo;1&rdquo; for the <samp><span class="option">-P</span></samp> option will enable display of
 the test banner.  A value of &ldquo;0&rdquo; will disable display of the test
 banner. One might want to disable display of the test banner when
 running the same basic test type (eg TCP_STREAM) multiple times in
@@ -1009,22 +1189,22 @@ this writing, valid values for <var>testname</var> include:
      Not all tests are always compiled into netperf.  In particular, the
 &ldquo;XTI,&rdquo; &ldquo;SCTP,&rdquo; &ldquo;UNIX,&rdquo; and &ldquo;DL*&rdquo; tests are only included in
 netperf when configured with
-<span class="option">--enable-[xti|sctp|unix|dlpi]=yes</span>.
+<samp><span class="option">--enable-[xti|sctp|unix|dlpi]=yes</span></samp>.
 
-     <p>Netperf only runs one type of test no matter how many <span class="option">-t</span>
-options may be present on the command-line.  The last <span class="option">-t</span>
+     <p>Netperf only runs one type of test no matter how many <samp><span class="option">-t</span></samp>
+options may be present on the command-line.  The last <samp><span class="option">-t</span></samp>
 global command-line option will determine the test to be
 run. [Default: TCP_STREAM]
 
      <br><dt><code>-v verbosity</code><dd>This option controls how verbose netperf will be in its output, and is
-often used in conjunction with the <span class="option">-P</span> option. If the
+often used in conjunction with the <samp><span class="option">-P</span></samp> option. If the
 verbosity is set to a value of &ldquo;0&rdquo; then only the test's SFM (Single
-Figure of Merit) is displayed.  If local <a href="#CPU-Utilization">CPU utilization</a> is requested via the <span class="option">-c</span> option then the SFM is
+Figure of Merit) is displayed.  If local <a href="#CPU-Utilization">CPU utilization</a> is requested via the <samp><span class="option">-c</span></samp> option then the SFM is
 the local service demand.  Othersise, if remote CPU utilization is
-requested via the <span class="option">-C</span> option then the SFM is the remote
+requested via the <samp><span class="option">-C</span></samp> option then the SFM is the remote
 service demand.  If neither local nor remote CPU utilization are
 requested the SFM will be the measured throughput or transaction rate
-as implied by the test specified with the <span class="option">-t</span> option.
+as implied by the test specified with the <samp><span class="option">-t</span></samp> option.
 
      <p>If the verbosity level is set to &ldquo;1&rdquo; then the &ldquo;normal&rdquo; netperf
 result output for each test is displayed.
@@ -1034,11 +1214,11 @@ be displayed.  This may include, but is not limited to the number of
 send or recv calls made and the average number of bytes per send or
 recv call, or a histogram of the time spent in each send() call or for
 each transaction if netperf was configured with
-<span class="option">--enable-histogram=yes</span>. [Default: 1 - normal verbosity]
+<samp><span class="option">--enable-histogram=yes</span></samp>. [Default: 1 - normal verbosity]
 
-     <br><dt><code>-w time</code><dd>If netperf was configured with <span class="option">--enable-intervals=yes</span> then
+     <br><dt><code>-w time</code><dd>If netperf was configured with <samp><span class="option">--enable-intervals=yes</span></samp> then
 this value will set the inter-burst time to time milliseconds, and the
-<span class="option">-b</span> option will set the number of sends per burst.  The actual
+<samp><span class="option">-b</span></samp> option will set the number of sends per burst.  The actual
 inter-burst time may vary depending on the system's timer resolution.
 
      <br><dt><code>-W &lt;sizespec&gt;</code><dd>This option controls the number of buffers in the send (first or only
@@ -1046,22 +1226,22 @@ value) and or receive (second or only value) buffer rings.  Unlike
 some benchmarks, netperf does not continuously send or receive from a
 single buffer.  Instead it rotates through a ring of
 buffers. [Default: One more than the size of the send or receive
-socket buffer sizes (<span class="option">-s</span> and/or <span class="option">-S</span> options) divided
-by the send <span class="option">-m</span> or receive <span class="option">-M</span> buffer size
+socket buffer sizes (<samp><span class="option">-s</span></samp> and/or <samp><span class="option">-S</span></samp> options) divided
+by the send <samp><span class="option">-m</span></samp> or receive <samp><span class="option">-M</span></samp> buffer size
 respectively]
 
      <br><dt><code>-4</code><dd>Specifying this option will set both the local and remote address
 families to AF_INET - that is use only IPv4 addresses on the control
-connection.  This can be overridden by a subsequent <span class="option">-6</span>,
-<span class="option">-H</span> or <span class="option">-L</span> option.  Basically, the last option
+connection.  This can be overridden by a subsequent <samp><span class="option">-6</span></samp>,
+<samp><span class="option">-H</span></samp> or <samp><span class="option">-L</span></samp> option.  Basically, the last option
 explicitly specifying an address family wins.  Unless overridden by a
 test-specific option, this will be inherited for the data connection
 as well.
 
      <br><dt><code>-6</code><dd>Specifying this option will set both local and and remote address
 families to AF_INET6 - that is use only IPv6 addresses on the control
-connection.  This can be overridden by a subsequent <span class="option">-4</span>,
-<span class="option">-H</span> or <span class="option">-L</span> option.  Basically, the last address family
+connection.  This can be overridden by a subsequent <samp><span class="option">-4</span></samp>,
+<samp><span class="option">-H</span></samp> or <samp><span class="option">-L</span></samp> option.  Basically, the last address family
 explicitly specified wins.  Unless overridden by a test-specific
 option, this will be inherited for the data connection as well.
 
@@ -1069,10 +1249,11 @@ option, this will be inherited for the data connection as well.
 
 <div class="node">
 <p><hr>
-<a name="Using-Netperf-to-Measure-Bulk-Data-Transfer"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#Using-Netperf-to-Measure-Request_002fResponse">Using Netperf to Measure Request/Response</a>,
+<a name="Using-Netperf-to-Measure-Bulk-Data-Transfer"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Using-Netperf-to-Measure-Request_002fResponse">Using Netperf to Measure Request/Response</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Global-Command_002dline-Options">Global Command-line Options</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
-<br>
+
 </div>
 
 <h2 class="chapter">5 Using Netperf to Measure Bulk Data Transfer</h2>
@@ -1090,10 +1271,11 @@ to tack a &ldquo;_STREAM&rdquo; suffix to a test name.
 
 <div class="node">
 <p><hr>
-<a name="Issues-in-Bulk-Transfer"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a>,
+<a name="Issues-in-Bulk-Transfer"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Using-Netperf-to-Measure-Bulk-Data-Transfer">Using Netperf to Measure Bulk Data Transfer</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Using-Netperf-to-Measure-Bulk-Data-Transfer">Using Netperf to Measure Bulk Data Transfer</a>
-<br>
+
 </div>
 
 <!-- node-name,  next,  previous,  up -->
@@ -1119,7 +1301,9 @@ than 100% CPU utilization.  This can happen on an MP system where one
 or more of the CPUs saturate at 100% but other CPU's remain idle. 
 Typically, a single flow of data, such as that from a single instance
 of a netperf _STREAM test cannot make use of much more than the power
-of one CPU.
+of one CPU. Exceptions to this generally occur when netperf and/or
+netserver run on CPU(s) other than the CPU(s) taking interrupts from
+the NIC(s).
 
    <p>Distance and the speed-of-light can affect performance for a
 bulk-transfer; often this can be mitigated by using larger windows. 
@@ -1138,7 +1322,7 @@ retransmission timeouts for the protocol(s) involved.  By the time a
 retransmission timeout has happened, the flow or connection has sat
 idle for a considerable length of time.
 
-   <p>On many platforms, some variant on the <span class="command">netstat</span> command can
+   <p>On many platforms, some variant on the <samp><span class="command">netstat</span></samp> command can
 be used to retrieve statistics about packet loss and
 retransmission. For example:
 <pre class="example">     netstat -p tcp
@@ -1159,19 +1343,23 @@ netperf was running.  In such situations something along the lines of:
 </pre>
    <p>is indicated.  The
 <a href="ftp://ftp.cup.hp.com/dist/networking/tools/">beforeafter</a> utility
-can be used to subtract the statistics in <span class="file">before</span> from the
-statistics in <span class="file">after</span>
+can be used to subtract the statistics in <samp><span class="file">before</span></samp> from the
+statistics in <samp><span class="file">after</span></samp>
 <pre class="example">     beforeafter before after &gt; delta
 </pre>
-   <p>and then one can look at the statistics in <span class="file">delta</span>.  While it was
-written with HP-UX's netstat in mind, the
+   <p>and then one can look at the statistics in <samp><span class="file">delta</span></samp>.  Beforeafter
+is distributed in source form so one can compile it on the platofrm(s)
+of interest.
+
+   <p>While it was written with HP-UX's netstat in mind, the
 <a href="ftp://ftp.cup.hp.com/dist/networking/briefs/annotated_netstat.txt">annotated netstat</a> writeup may be helpful with other platforms as well.
 
 <div class="node">
 <p><hr>
-<a name="Options-common-to-TCP-UDP-and-SCTP-tests"></a>Previous:&nbsp;<a rel="previous" accesskey="p" href="#Issues-in-Bulk-Transfer">Issues in Bulk Transfer</a>,
+<a name="Options-common-to-TCP-UDP-and-SCTP-tests"></a>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Issues-in-Bulk-Transfer">Issues in Bulk Transfer</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Using-Netperf-to-Measure-Bulk-Data-Transfer">Using Netperf to Measure Bulk Data Transfer</a>
-<br>
+
 </div>
 
 <!-- node-name,  next,  previous,  up -->
@@ -1191,13 +1379,13 @@ usage string from the source file nettest_sctp.c.
 
      <br><dt><code>-H &lt;optionspec&gt;</code><dd>Normally, the remote hostname|IP and address family information is
 inherited from the settings for the control connection (eg global
-command-line <span class="option">-H</span>, <span class="option">-4</span> and/or <span class="option">-6</span> options). 
-The test-specific <span class="option">-H</span> will override those settings for the
+command-line <samp><span class="option">-H</span></samp>, <samp><span class="option">-4</span></samp> and/or <samp><span class="option">-6</span></samp> options). 
+The test-specific <samp><span class="option">-H</span></samp> will override those settings for the
 data (aka test) connection only.  Settings for the control connection
 are left unchanged.
 
-     <br><dt><code>-L &lt;optionspec&gt;</code><dd>The test-specific <span class="option">-L</span> option is identical to the test-specific
-<span class="option">-H</span> option except it affects the local hostname|IP and address
+     <br><dt><code>-L &lt;optionspec&gt;</code><dd>The test-specific <samp><span class="option">-L</span></samp> option is identical to the test-specific
+<samp><span class="option">-H</span></samp> option except it affects the local hostname|IP and address
 family information.  As with its global command-line counterpart, this
 is generally only useful when measuring though those evil, end-to-end
 breaking things called firewalls.
@@ -1206,7 +1394,7 @@ breaking things called firewalls.
 _STREAM test.  Note that this may have only an indirect effect on the
 size of the packets sent over the network, and certain Layer 4
 protocols do _not_ preserve or enforce message boundaries, so setting
-<span class="option">-m</span> for the send size does not necessarily mean the receiver
+<samp><span class="option">-m</span></samp> for the send size does not necessarily mean the receiver
 will receive that many bytes at any one time. By default the units are
 bytes, but suffix of &ldquo;G,&rdquo; &ldquo;M,&rdquo; or &ldquo;K&rdquo; will specify the units to
 be 2^30 (GB), 2^20 (MB) or 2^10 (KB) respectively. A suffix of &ldquo;g,&rdquo;
@@ -1216,7 +1404,7 @@ respectively. For example:
      </pre>
      <p>will set the size to 32KB or 32768 bytes. [Default: the local send
 socket buffer size for the connection - either the system's default or
-the value set via the <span class="option">-s</span> option.]
+the value set via the <samp><span class="option">-s</span></samp> option.]
 
      <br><dt><code>-M bytes</code><dd>Set the size of the buffer passed-in to the &ldquo;recv&rdquo; calls of a
 _STREAM test.  This will be an upper bound on the number of bytes
@@ -1229,7 +1417,7 @@ example:
      </pre>
      <p>will set the size to 32KB or 32768 bytes. [Default: the remote receive
 socket buffer size for the data connection - either the system's
-default or the value set via the <span class="option">-S</span> option.]
+default or the value set via the <samp><span class="option">-S</span></samp> option.]
 
      <br><dt><code>-P &lt;optionspec&gt;</code><dd>Set the local and/or remote port numbers for the data connection.
 
@@ -1277,11 +1465,11 @@ sizes]
 
      <br><dt><code>-4</code><dd>Set the local and remote address family for the data connection to
 AF_INET - ie use IPv4 addressing only.  Just as with their global
-command-line counterparts the last of the <span class="option">-4</span>, <span class="option">-6</span>,
-<span class="option">-H</span> or <span class="option">-L</span> option wins for their respective address
+command-line counterparts the last of the <samp><span class="option">-4</span></samp>, <samp><span class="option">-6</span></samp>,
+<samp><span class="option">-H</span></samp> or <samp><span class="option">-L</span></samp> option wins for their respective address
 families.
 
-     <br><dt><code>-6</code><dd>This option is identical to its <span class="option">-4</span> cousin, but requests IPv6
+     <br><dt><code>-6</code><dd>This option is identical to its <samp><span class="option">-4</span></samp> cousin, but requests IPv6
 addresses for the local and remote ends of the data connection.
 
    </dl>
@@ -1302,10 +1490,12 @@ addresses for the local and remote ends of the data connection.
 
 <div class="node">
 <p><hr>
-<a name="TCP_005fSTREAM"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#TCP_005fMAERTS">TCP_MAERTS</a>,
+<a name="TCP_STREAM"></a>
+<a name="TCP_005fSTREAM"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#TCP_005fMAERTS">TCP_MAERTS</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a>
-<br>
+
 </div>
 
 <h4 class="subsection">5.2.1 TCP_STREAM</h4>
@@ -1327,13 +1517,13 @@ description of TCP_CORK is beyond the scope of this manual, but in a
 nutshell it forces sub-MSS sends to be buffered so every segment sent
 is Maximum Segment Size (MSS) unless the application performs an
 explicit flush operation or the connection is closed.  At present
-netperf does not perform an explicit flush operations.  Setting
+netperf does not perform any explicit flush operations.  Setting
 TCP_CORK may improve the bitrate of tests where the &ldquo;send size&rdquo;
-(<span class="option">-m</span> option) is smaller than the MSS.  It should also improve
+(<samp><span class="option">-m</span></samp> option) is smaller than the MSS.  It should also improve
 (make smaller) the service demand.
 
      <p>The Linux tcp(7) manpage states that TCP_CORK cannot be used in
-conjunction with TCP_NODELAY (set via the <span class="option">-d</span> option), however
+conjunction with TCP_NODELAY (set via the <samp><span class="option">-d</span></samp> option), however
 netperf does not validate command-line options to enforce that.
 
      <br><dt><code>-D</code><dd>This option will set TCP_NODELAY on the data connection on those
@@ -1341,15 +1531,15 @@ systems where TCP_NODELAY is defined.  This disables something known
 as the Nagle Algorithm, which is intended to make the segments TCP
 sends as large as reasonably possible.  Setting TCP_NODELAY for a
 TCP_STREAM test should either have no effect when the send size
-(<span class="option">-m</span> option) is larger than the MSS or will decrease reported
+(<samp><span class="option">-m</span></samp> option) is larger than the MSS or will decrease reported
 bitrate and increase service demand when the send size is smaller than
 the MSS.  This stems from TCP_NODELAY causing each sub-MSS send to be
 its own TCP segment rather than being aggregated with other small
 sends.  This means more trips up and down the protocol stack per KB of
 data transferred, which means greater CPU utilization.
 
-     <p>If setting TCP_NODELAY with <span class="option">-D</span> affects throughput and/or
-service demand for tests where the send size (<span class="option">-m</span>) is larger
+     <p>If setting TCP_NODELAY with <samp><span class="option">-D</span></samp> affects throughput and/or
+service demand for tests where the send size (<samp><span class="option">-m</span></samp>) is larger
 than the MSS it suggests the TCP/IP stack's implementation of the
 Nagle Algorithm _may_ be broken, perhaps interpreting the Nagle
 Algorithm on a segment by segment basis rather than the proper user
@@ -1379,10 +1569,12 @@ seconds.  IPv4 addresses (AF_INET) were used.
 
 <div class="node">
 <p><hr>
-<a name="TCP_005fMAERTS"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#TCP_005fSENDFILE">TCP_SENDFILE</a>,
+<a name="TCP_MAERTS"></a>
+<a name="TCP_005fMAERTS"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#TCP_005fSENDFILE">TCP_SENDFILE</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#TCP_005fSTREAM">TCP_STREAM</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a>
-<br>
+
 </div>
 
 <!-- node-name,  next,  previous,  up -->
@@ -1390,13 +1582,13 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Options-common-to-TCP-UDP-and-SCTP-tes
 
 <p>A TCP_MAERTS (MAERTS is STREAM backwards) test is &ldquo;just like&rdquo; a
 <a href="#TCP_005fSTREAM">TCP_STREAM</a> test except the data flows from the netserver to the
-netperf. The global command-line <span class="option">-F</span> option is ignored for
-this test type.  The test-specific command-line <span class="option">-C</span> option is
+netperf. The global command-line <samp><span class="option">-F</span></samp> option is ignored for
+this test type.  The test-specific command-line <samp><span class="option">-C</span></samp> option is
 ignored for this test type.
 
    <p>Here is an example of a TCP_MAERTS test between the same two systems
 as in the example for the <a href="#TCP_005fSTREAM">TCP_STREAM</a> test.  This time we request
-larger socket buffers with <span class="option">-s</span> and <span class="option">-S</span> options:
+larger socket buffers with <samp><span class="option">-s</span></samp> and <samp><span class="option">-S</span></samp> options:
 
 <pre class="example">     $ netperf -H lag -t TCP_MAERTS -- -s 128K -S 128K
      TCP MAERTS TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to lag.hpl.hp.com (15.4.89.214) port 0 AF_INET
@@ -1415,23 +1607,24 @@ else.
 
 <div class="node">
 <p><hr>
-<a name="TCP_005fSENDFILE"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#UDP_005fSTREAM">UDP_STREAM</a>,
+<a name="TCP_SENDFILE"></a>
+<a name="TCP_005fSENDFILE"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#UDP_005fSTREAM">UDP_STREAM</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#TCP_005fMAERTS">TCP_MAERTS</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a>
-<br>
+
 </div>
 
 <!-- node-name,  next,  previous,  up -->
 <h4 class="subsection">5.2.3 TCP_SENDFILE</h4>
 
 <p>The TCP_SENDFILE test is &ldquo;just like&rdquo; a <a href="#TCP_005fSTREAM">TCP_STREAM</a> test except
-netperf calls the platform's equivalent to HP-UX's <code>sendfile()</code>
-instead of calling <code>send()</code>.  Often this results in a
-<dfn>zero-copy</dfn> operation where data is sent directly from the
-filesystem buffer cache.  This _should_ result in lower CPU
-utilization and possibly higher throughput.  If it does not, then you
-may want to contact your vendor(s) because they have a problem on
-their hands.
+netperf the platform's <code>sendfile()</code> call instead of calling
+<code>send()</code>.  Often this results in a <dfn>zero-copy</dfn> operation
+where data is sent directly from the filesystem buffer cache.  This
+_should_ result in lower CPU utilization and possibly higher
+throughput.  If it does not, then you may want to contact your
+vendor(s) because they have a problem on their hands.
 
    <p>Zero-copy mechanisms may also alter the characteristics (size and
 number of buffers per) of packets passed to the NIC.  In many stacks,
@@ -1442,9 +1635,9 @@ can be easier to DMA to the NIC.  When no copy is performed, there is
 no opportunity to reserve space for headers and so a packet will be
 contained in two or more buffers.
 
-   <p>The <a href="#Global-Options">global <span class="option">-F</span> option</a> is required for this test and it must
-specify a file of at least the size of the send ring (See <a href="#Global-Options">the global <span class="option">-W</span> option</a>.) multiplied by the send size
-(See <a href="#Options-common-to-TCP-UDP-and-SCTP-tests">the test-specific <span class="option">-m</span> option</a>.).  All other TCP-specific options are available
+   <p>The <a href="#Global-Options">global <samp><span class="option">-F</span></samp> option</a> is required for this test and it must
+specify a file of at least the size of the send ring (See <a href="#Global-Options">the global <samp><span class="option">-W</span></samp> option</a>.) multiplied by the send size
+(See <a href="#Options-common-to-TCP-UDP-and-SCTP-tests">the test-specific <samp><span class="option">-m</span></samp> option</a>.).  All other TCP-specific options are available
 and optional.
 
    <p>In this first example:
@@ -1468,10 +1661,12 @@ and optional.
 
 <div class="node">
 <p><hr>
-<a name="UDP_005fSTREAM"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#XTI_005fTCP_005fSTREAM">XTI_TCP_STREAM</a>,
+<a name="UDP_STREAM"></a>
+<a name="UDP_005fSTREAM"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#XTI_005fTCP_005fSTREAM">XTI_TCP_STREAM</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#TCP_005fSENDFILE">TCP_SENDFILE</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a>
-<br>
+
 </div>
 
 <h4 class="subsection">5.2.4 UDP_STREAM</h4>
@@ -1482,7 +1677,7 @@ used as the transport rather than TCP.
    <p>A UDP_STREAM test has no end-to-end flow control - UDP provides none
 and neither does netperf.  However, if you wish, you can configure
 netperf with <code>--enable-intervals=yes</code> to enable the global
-command-line <span class="option">-b</span> and <span class="option">-w</span> options to pace bursts of
+command-line <samp><span class="option">-b</span></samp> and <samp><span class="option">-w</span></samp> options to pace bursts of
 traffic onto the network.
 
    <p>This has a number of implications.
@@ -1512,15 +1707,15 @@ side. The second line of numbers are from the receiving (netserver)
 side.  In this case, 105672 - 104844 or 828 messages did not make it
 all the way to the remote netserver process.
 
-   <p>If the value of the <span class="option">-m</span> option is larger than the local send
-socket buffer size (<span class="option">-s</span> option) netperf will likely abort with
+   <p>If the value of the <samp><span class="option">-m</span></samp> option is larger than the local send
+socket buffer size (<samp><span class="option">-s</span></samp> option) netperf will likely abort with
 an error message about how the send call failed:
 
 <pre class="example">     netperf -t UDP_STREAM -H 192.168.2.125
      UDP UNIDIRECTIONAL SEND TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to 192.168.2.125 (192.168.2.125) port 0 AF_INET
      udp_send: data send error: Message too long
 </pre>
-   <p>If the value of the <span class="option">-m</span> option is larger than the remote
+   <p>If the value of the <samp><span class="option">-m</span></samp> option is larger than the remote
 socket receive buffer, the reported receive throughput will likely be
 zero as the remote UDP will discard the messages as being too large to
 fit into the socket buffer.
@@ -1534,19 +1729,30 @@ fit into the socket buffer.
      124928   65000   10.00       53595      0    2786.99
       65536           10.00           0              0.00
 </pre>
-   <div class="node">
+   <p>The example above was between a pair of systems running a &ldquo;Linux&rdquo;
+kernel. Notice that the remote Linux system returned a value larger
+than that passed-in to the <samp><span class="option">-S</span></samp> option.  In fact, this value
+was larger than the message size set with the <samp><span class="option">-m</span></samp> option. 
+That the remote socket buffer size is reported as 65536 bytes would
+suggest to any sane person that a message of 65000 bytes would fit,
+but the socket isn't _really_ 65536 bytes, even though Linux is
+telling us so.  Go figure.
+
+<div class="node">
 <p><hr>
-<a name="XTI_005fTCP_005fSTREAM"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#XTI_005fUDP_005fSTREAM">XTI_UDP_STREAM</a>,
+<a name="XTI_TCP_STREAM"></a>
+<a name="XTI_005fTCP_005fSTREAM"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#XTI_005fUDP_005fSTREAM">XTI_UDP_STREAM</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#UDP_005fSTREAM">UDP_STREAM</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a>
-<br>
+
 </div>
 
 <h4 class="subsection">5.2.5 XTI_TCP_STREAM</h4>
 
 <p>An XTI_TCP_STREAM test is simply a <a href="#TCP_005fSTREAM">TCP_STREAM</a> test using the XTI
-rather than BSD Sockets interface.  The test-specific <span class="option">-X
-&lt;devspec&gt;</span> option can be used to specify the name of the local and/or
+rather than BSD Sockets interface.  The test-specific <samp><span class="option">-X
+&lt;devspec&gt;</span></samp> option can be used to specify the name of the local and/or
 remote XTI device files, which is required by the <code>t_open()</code> call
 made by netperf XTI tests.
 
@@ -1556,17 +1762,19 @@ configured with <code>--enable-xti=yes</code>.
 
 <div class="node">
 <p><hr>
-<a name="XTI_005fUDP_005fSTREAM"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#SCTP_005fSTREAM">SCTP_STREAM</a>,
+<a name="XTI_UDP_STREAM"></a>
+<a name="XTI_005fUDP_005fSTREAM"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#SCTP_005fSTREAM">SCTP_STREAM</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#XTI_005fTCP_005fSTREAM">XTI_TCP_STREAM</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a>
-<br>
+
 </div>
 
 <h4 class="subsection">5.2.6 XTI_UDP_STREAM</h4>
 
 <p>An XTI_UDP_STREAM test is simply a <a href="#UDP_005fSTREAM">UDP_STREAM</a> test using the XTI
-rather than BSD Sockets Interface.  The test-specific <span class="option">-X
-&lt;devspec&gt;</span> option can be used to specify the name of the local and/or
+rather than BSD Sockets Interface.  The test-specific <samp><span class="option">-X
+&lt;devspec&gt;</span></samp> option can be used to specify the name of the local and/or
 remote XTI device files, which is required by the <code>t_open()</code> call
 made by netperf XTI tests.
 
@@ -1576,20 +1784,22 @@ configured with <code>--enable-xti=yes</code>.
 
 <div class="node">
 <p><hr>
-<a name="SCTP_005fSTREAM"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#DLCO_005fSTREAM">DLCO_STREAM</a>,
+<a name="SCTP_STREAM"></a>
+<a name="SCTP_005fSTREAM"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#DLCO_005fSTREAM">DLCO_STREAM</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#XTI_005fUDP_005fSTREAM">XTI_UDP_STREAM</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a>
-<br>
+
 </div>
 
 <h4 class="subsection">5.2.7 SCTP_STREAM</h4>
 
 <p>An SCTP_STREAM test is essentially a <a href="#TCP_005fSTREAM">TCP_STREAM</a> test using the SCTP
-rather than TCP.  The <span class="option">-D</span> option will set SCTP_NODELAY, which
-is much like the TCP_NODELAY option for TCP.  The <span class="option">-C</span> option
+rather than TCP.  The <samp><span class="option">-D</span></samp> option will set SCTP_NODELAY, which
+is much like the TCP_NODELAY option for TCP.  The <samp><span class="option">-C</span></samp> option
 is not applicable to an SCTP test as there is no corresponding
 SCTP_CORK option.  The author is still figuring-out what the
-<span class="option">-N</span> option does :)
+test-specific <samp><span class="option">-N</span></samp> option does :)
 
    <p>The SCTP_STREAM test is only present if netperf was configured with
 <code>--enable-sctp=yes</code>. The remote netserver must have also been
@@ -1597,10 +1807,12 @@ configured with <code>--enable-sctp=yes</code>.
 
 <div class="node">
 <p><hr>
-<a name="DLCO_005fSTREAM"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#DLCL_005fSTREAM">DLCL_STREAM</a>,
+<a name="DLCO_STREAM"></a>
+<a name="DLCO_005fSTREAM"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#DLCL_005fSTREAM">DLCL_STREAM</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#SCTP_005fSTREAM">SCTP_STREAM</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a>
-<br>
+
 </div>
 
 <h4 class="subsection">5.2.8 DLCO_STREAM</h4>
@@ -1610,9 +1822,9 @@ in concept to a <a href="#TCP_005fSTREAM">TCP_STREAM</a> test.  Both use reliabl
 connection-oriented protocols.  The DLPI test differs from the TCP
 test in that its protocol operates only at the link-level and does not
 include TCP-style segmentation and reassembly.  This last difference
-means that the value  passed-in  with the <span class="option">-m</span> option must be
-less than the interface MTU.  Otherwise, the <span class="option">-m</span> and
-<span class="option">-M</span> options are just like their TCP/UDP/SCTP counterparts.
+means that the value  passed-in  with the <samp><span class="option">-m</span></samp> option must be
+less than the interface MTU.  Otherwise, the <samp><span class="option">-m</span></samp> and
+<samp><span class="option">-M</span></samp> options are just like their TCP/UDP/SCTP counterparts.
 
    <p>Other DLPI-specific options include:
 
@@ -1627,7 +1839,7 @@ a <dfn>sizespec</dfn>.
 <br><dt><code>-s sap</code><dd>This option specifies the 802.2 SAP for the test.  A SAP is somewhat
 like either the port field of a TCP or UDP header or the protocol
 field of an IP header.  The specified SAP should not conflict with any
-other active SAPs on the specified PPA's (<span class="option">-p</span> option). 
+other active SAPs on the specified PPA's (<samp><span class="option">-p</span></samp> option). 
 <br><dt><code>-w &lt;sizespec&gt;</code><dd>This option specifies the local send and receive window sizes in units
 of frames on those platforms which support setting such things. 
 <br><dt><code>-W &lt;sizespec&gt;</code><dd>This option specifies the remote send and receive window sizes in
@@ -1640,10 +1852,12 @@ configured with <code>--enable-dlpi=yes</code>.
 
 <div class="node">
 <p><hr>
-<a name="DLCL_005fSTREAM"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#STREAM_005fSTREAM">STREAM_STREAM</a>,
+<a name="DLCL_STREAM"></a>
+<a name="DLCL_005fSTREAM"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#STREAM_005fSTREAM">STREAM_STREAM</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#DLCO_005fSTREAM">DLCO_STREAM</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a>
-<br>
+
 </div>
 
 <h4 class="subsection">5.2.9 DLCL_STREAM</h4>
@@ -1651,7 +1865,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Options-common-to-TCP-UDP-and-SCTP-tes
 <p>A DLPI ConnectionLess Stream (DLCL_STREAM) test is analogous to a
 <a href="#UDP_005fSTREAM">UDP_STREAM</a> test in that both make use of unreliable/best-effort,
 connection-less transports.  The DLCL_STREAM test differs from the
-<a href="#UDP_005fSTREAM">UDP_STREAM</a> test in that the message size (<span class="option">-m</span> option) must
+<a href="#UDP_005fSTREAM">UDP_STREAM</a> test in that the message size (<samp><span class="option">-m</span></samp> option) must
 always be less than the link MTU as there is no IP-like fragmentation
 and reassembly available and netperf does not presume to provide one.
 
@@ -1664,10 +1878,12 @@ configured with <code>--enable-dlpi=yes</code>.
 
 <div class="node">
 <p><hr>
-<a name="STREAM_005fSTREAM"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#DG_005fSTREAM">DG_STREAM</a>,
+<a name="STREAM_STREAM"></a>
+<a name="STREAM_005fSTREAM"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#DG_005fSTREAM">DG_STREAM</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#DLCL_005fSTREAM">DLCL_STREAM</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a>
-<br>
+
 </div>
 
 <!-- node-name,  next,  previous,  up -->
@@ -1676,9 +1892,9 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Options-common-to-TCP-UDP-and-SCTP-tes
 <p>A Unix Domain Stream Socket Stream test (STREAM_STREAM) is similar in
 concept to a <a href="#TCP_005fSTREAM">TCP_STREAM</a> test, but using Unix Domain sockets.  It is,
 naturally, limited to intra-machine traffic.  A STREAM_STREAM test
-shares the <span class="option">-m</span>, <span class="option">-M</span>, <span class="option">-s</span> and <span class="option">-S</span>
+shares the <samp><span class="option">-m</span></samp>, <samp><span class="option">-M</span></samp>, <samp><span class="option">-s</span></samp> and <samp><span class="option">-S</span></samp>
 options of the other _STREAM tests.  In a STREAM_STREAM test the
-<span class="option">-p</span> option sets the directory in which the pipes will be
+<samp><span class="option">-p</span></samp> option sets the directory in which the pipes will be
 created rather than setting a port number.  The default is to create
 the pipes in the system default for the <code>tempnam()</code> call.
 
@@ -1688,9 +1904,11 @@ configured with <code>--enable-unix=yes</code>.
 
 <div class="node">
 <p><hr>
-<a name="DG_005fSTREAM"></a>Previous:&nbsp;<a rel="previous" accesskey="p" href="#STREAM_005fSTREAM">STREAM_STREAM</a>,
+<a name="DG_STREAM"></a>
+<a name="DG_005fSTREAM"></a>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#STREAM_005fSTREAM">STREAM_STREAM</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a>
-<br>
+
 </div>
 
 <!-- node-name,  next,  previous,  up -->
@@ -1710,10 +1928,12 @@ configured with <code>--enable-unix=yes</code>.
 
 <div class="node">
 <p><hr>
-<a name="Using-Netperf-to-Measure-Request_002fResponse"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#Other-Netperf-Tests">Other Netperf Tests</a>,
+<a name="Using-Netperf-to-Measure-Request%2fResponse"></a>
+<a name="Using-Netperf-to-Measure-Request_002fResponse"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Using-Netperf-to-Measure-Aggregate-Performance">Using Netperf to Measure Aggregate Performance</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Using-Netperf-to-Measure-Bulk-Data-Transfer">Using Netperf to Measure Bulk Data Transfer</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
-<br>
+
 </div>
 
 <h2 class="chapter">6 Using Netperf to Measure Request/Response</h2>
@@ -1753,10 +1973,12 @@ benchmarker.
 
 <div class="node">
 <p><hr>
-<a name="Issues-in-Request_002fResponse"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a>,
+<a name="Issues-in-Request%2fResponse"></a>
+<a name="Issues-in-Request_002fResponse"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Using-Netperf-to-Measure-Request_002fResponse">Using Netperf to Measure Request/Response</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Using-Netperf-to-Measure-Request_002fResponse">Using Netperf to Measure Request/Response</a>
-<br>
+
 </div>
 
 <!-- node-name,  next,  previous,  up -->
@@ -1764,16 +1986,20 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Using-Netperf-to-Measure-Request_002fR
 
 <p>Most if not all the <a href="#Issues-in-Bulk-Transfer">Issues in Bulk Transfer</a> apply to
 request/response.  The issue of round-trip latency is even more
-important as netperf only has one transaction outstanding at a time.
+important as netperf generally only has one transaction outstanding at
+a time.
 
-   <p>A single instance of an _RR test should _never_ completely saturate
-the CPU of a system.  If testing between otherwise evenly matched
-systems, the symmetric nature of a _RR test with equal request and
-response sizes should result in equal CPU loading on both systems.
+   <p>A single instance of a one transaction outstanding _RR test should
+_never_ completely saturate the CPU of a system.  If testing between
+otherwise evenly matched systems, the symmetric nature of a _RR test
+with equal request and response sizes should result in equal CPU
+loading on both systems. However, this may not hold true on MP
+systems, particularly if one CPU binds the netperf and netserver
+differently via the global <samp><span class="option">-T</span></samp> option.
 
    <p>For smaller request and response sizes packet loss is a bigger issue
 as there is no opportunity for a <dfn>fast retransmit</dfn> or
-retransmission prior to a retrnamission timer expiring.
+retransmission prior to a retransmission timer expiring.
 
    <p>Certain NICs have ways to minimize the number of interrupts sent to
 the host.  If these are strapped badly they can significantly reduce
@@ -1793,9 +2019,11 @@ Particularly if you &ldquo;mix-up&rdquo; _STREAM and _RR tests.
 
 <div class="node">
 <p><hr>
-<a name="Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests"></a>Previous:&nbsp;<a rel="previous" accesskey="p" href="#Issues-in-Request_002fResponse">Issues in Request/Response</a>,
+<a name="Options-Common-to-TCP-UDP-and-SCTP-_RR-tests"></a>
+<a name="Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests"></a>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Issues-in-Request_002fResponse">Issues in Request/Response</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Using-Netperf-to-Measure-Request_002fResponse">Using Netperf to Measure Request/Response</a>
-<br>
+
 </div>
 
 <!-- node-name,  next,  previous,  up -->
@@ -1809,21 +2037,21 @@ include:
      <dl>
 <dt><code>-h</code><dd>Display the test-suite-specific usage string and exit.  For a TCP_ or
 UDP_ test this will be the usage string from the source file
-<span class="file">nettest_bsd.c</span>.  For an XTI_ test, this will be the usage string
-from the source file <span class="file">src/nettest_xti.c</span>.  For an SCTP test, this
+<samp><span class="file">nettest_bsd.c</span></samp>.  For an XTI_ test, this will be the usage string
+from the source file <samp><span class="file">src/nettest_xti.c</span></samp>.  For an SCTP test, this
 will be the usage string from the source file
-<span class="file">src/nettest_sctp.c</span>.
+<samp><span class="file">src/nettest_sctp.c</span></samp>.
 
      <br><dt><code>-H &lt;optionspec&gt;</code><dd>Normally, the remote hostname|IP and address family information is
 inherited from the settings for the control connection (eg global
-command-line <span class="option">-H</span>, <span class="option">-4</span> and/or <span class="option">-6</span> options. 
-The test-specific <span class="option">-H</span> will override those settings for the
+command-line <samp><span class="option">-H</span></samp>, <samp><span class="option">-4</span></samp> and/or <samp><span class="option">-6</span></samp> options. 
+The test-specific <samp><span class="option">-H</span></samp> will override those settings for the
 data (aka test) connection only.  Settings for the control connection
 are left unchanged.  This might be used to cause the control and data
 connections to take different paths through the network.
 
-     <br><dt><code>-L &lt;optionspec&gt;</code><dd>The test-specific <span class="option">-L</span> option is identical to the test-specific
-<span class="option">-H</span> option except it affects the local hostname|IP and address
+     <br><dt><code>-L &lt;optionspec&gt;</code><dd>The test-specific <samp><span class="option">-L</span></samp> option is identical to the test-specific
+<samp><span class="option">-H</span></samp> option except it affects the local hostname|IP and address
 family information.  As with its global command-line counterpart, this
 is generally only useful when measuring though those evil, end-to-end
 breaking things called firewalls.
@@ -1879,11 +2107,11 @@ buffer sizes]
 
      <br><dt><code>-4</code><dd>Set the local and remote address family for the data connection to
 AF_INET - ie use IPv4 addressing only.  Just as with their global
-command-line counterparts the last of the <span class="option">-4</span>, <span class="option">-6</span>,
-<span class="option">-H</span> or <span class="option">-L</span> option wins for their respective address
+command-line counterparts the last of the <samp><span class="option">-4</span></samp>, <samp><span class="option">-6</span></samp>,
+<samp><span class="option">-H</span></samp> or <samp><span class="option">-L</span></samp> option wins for their respective address
 families.
 
-     <br><dt><code>-6</code><dd>This option is identical to its <span class="option">-4</span> cousin, but requests IPv6
+     <br><dt><code>-6</code><dd>This option is identical to its <samp><span class="option">-4</span></samp> cousin, but requests IPv6
 addresses for the local and remote ends of the data connection.
 
    </dl>
@@ -1904,16 +2132,18 @@ addresses for the local and remote ends of the data connection.
 
 <div class="node">
 <p><hr>
-<a name="TCP_005fRR"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#TCP_005fCC">TCP_CC</a>,
+<a name="TCP_RR"></a>
+<a name="TCP_005fRR"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#TCP_005fCC">TCP_CC</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a>
-<br>
+
 </div>
 
 <h4 class="subsection">6.2.1 TCP_RR</h4>
 
 <p>A TCP_RR (TCP Request/Response) test is requested by passing a value
-of &ldquo;TCP_RR&rdquo; to the global <span class="option">-t</span> command-line option.  A TCP_RR
+of &ldquo;TCP_RR&rdquo; to the global <samp><span class="option">-t</span></samp> command-line option.  A TCP_RR
 test can be though-of as a user-space to user-space <code>ping</code> with
 no think time - it is a synchronous, one transaction at a time,
 request/response test.
@@ -1932,7 +2162,7 @@ well, issues measuring CPU utilization completely and accurately.
 you want connection setup overheads included, you should consider the
 TCP_CC or TCP_CRR tests.
 
-   <p>If specifying the <span class="option">-D</span> option to set TCP_NODELAY and disable
+   <p>If specifying the <samp><span class="option">-D</span></samp> option to set TCP_NODELAY and disable
 the Nagle Algorithm increases the transaction rate reported by a
 TCP_RR test, it implies the stack(s) over which the TCP_RR test is
 running have a broken implementation of the Nagle Algorithm.  Likely
@@ -1959,16 +2189,18 @@ of 10 seconds.  The transaction per second rate was rather good :)
 
 <div class="node">
 <p><hr>
-<a name="TCP_005fCC"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#TCP_005fCRR">TCP_CRR</a>,
+<a name="TCP_CC"></a>
+<a name="TCP_005fCC"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#TCP_005fCRR">TCP_CRR</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#TCP_005fRR">TCP_RR</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a>
-<br>
+
 </div>
 
 <h4 class="subsection">6.2.2 TCP_CC</h4>
 
 <p>A TCP_CC (TCP Connect/Close) test is requested by passing a value of
-&ldquo;TCP_CC&rdquo; to the global <span class="option">-t</span> option.  A TCP_CC test simply
+&ldquo;TCP_CC&rdquo; to the global <samp><span class="option">-t</span></samp> option.  A TCP_CC test simply
 measures how fast the pair of systems can open and close connections
 between one another in a synchronous (one at a time) manner.  While
 this is considered an _RR test, no request or response is exchanged
@@ -1979,7 +2211,7 @@ Basically, TIME_WAIT reuse is when a pair of systems churn through
 connections fast enough that they wrap the 16-bit port number space in
 less time than the length of the TIME_WAIT state.  While it is indeed
 theoretically possible to &ldquo;reuse&rdquo; a connection in TIME_WAIT, the
-conditions under which such reuse is possible is rather rare.  An
+conditions under which such reuse is possible are rather rare.  An
 attempt to reuse a connection in TIME_WAIT can result in a non-trivial
 delay in connection establishment.
 
@@ -1992,16 +2224,16 @@ happening, netperf will by default select its own client port numbers
 from the range of 5000 to 65535.  On systems with a 60 second
 TIME_WAIT state, this should allow roughly 1000 transactions per
 second.  The size of the client port space used by netperf can be
-controlled via the test-specific <span class="option">-p</span> option, which takes a
+controlled via the test-specific <samp><span class="option">-p</span></samp> option, which takes a
 <dfn>sizespec</dfn> as a value setting the minimum (first value) and
 maximum (second value) port numbers used by netperf at the client end.
 
    <p>Since no requests or responses are exchanged during a TCP_CC test,
-only the <span class="option">-H</span>, <span class="option">-L</span>, <span class="option">-4</span> and <span class="option">-6</span> of the
+only the <samp><span class="option">-H</span></samp>, <samp><span class="option">-L</span></samp>, <samp><span class="option">-4</span></samp> and <samp><span class="option">-6</span></samp> of the
 &ldquo;common&rdquo; test-specific options are likely to have an effect, if any,
-on the results.  The <span class="option">-s</span> and <span class="option">-S</span> options _may_ have
+on the results.  The <samp><span class="option">-s</span></samp> and <samp><span class="option">-S</span></samp> options _may_ have
 some effect if they alter the number and/or type of options carried in
-the TCP SYNchronize segments.  The <span class="option">-P</span>  and <span class="option">-r</span>
+the TCP SYNchronize segments.  The <samp><span class="option">-P</span></samp>  and <samp><span class="option">-r</span></samp>
 options are utterly ignored.
 
    <p>Since connection establishment and tear-down for TCP is not symmetric,
@@ -2010,16 +2242,18 @@ test.
 
 <div class="node">
 <p><hr>
-<a name="TCP_005fCRR"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#UDP_005fRR">UDP_RR</a>,
+<a name="TCP_CRR"></a>
+<a name="TCP_005fCRR"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#UDP_005fRR">UDP_RR</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#TCP_005fCC">TCP_CC</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a>
-<br>
+
 </div>
 
 <h4 class="subsection">6.2.3 TCP_CRR</h4>
 
 <p>The TCP Connect/Request/Response (TCP_CRR) test is requested by
-passing a value of &ldquo;TCP_CRR&rdquo; to the global <span class="option">-t</span> command-line
+passing a value of &ldquo;TCP_CRR&rdquo; to the global <samp><span class="option">-t</span></samp> command-line
 option.  A TCP_RR test is like a merger of a TCP_RR and TCP_CC test
 which measures the performance of establishing a connection, exchanging
 a single request/response transaction, and tearing-down that
@@ -2027,8 +2261,8 @@ connection.  This is very much like what happens in an HTTP 1.0 or
 HTTP 1.1 connection when HTTP Keepalives are not used.  In fact, the
 TCP_CRR test was added to netperf to simulate just that.
 
-   <p>Since a request and response are exchanged the <span class="option">-r</span>,
-<span class="option">-s</span> and <span class="option">-S</span> options can have an effect on the
+   <p>Since a request and response are exchanged the <samp><span class="option">-r</span></samp>,
+<samp><span class="option">-s</span></samp> and <samp><span class="option">-S</span></samp> options can have an effect on the
 performance.
 
    <p>The issue of TIME_WAIT reuse exists for the TCP_CRR test just as it
@@ -2038,16 +2272,18 @@ when the request and response sizes are the same.
 
 <div class="node">
 <p><hr>
-<a name="UDP_005fRR"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#XTI_005fTCP_005fRR">XTI_TCP_RR</a>,
+<a name="UDP_RR"></a>
+<a name="UDP_005fRR"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#XTI_005fTCP_005fRR">XTI_TCP_RR</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#TCP_005fCRR">TCP_CRR</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a>
-<br>
+
 </div>
 
 <h4 class="subsection">6.2.4 UDP_RR</h4>
 
 <p>A UDP Request/Response (UDP_RR) test is requested by passing a value
-of &ldquo;UDP_RR&rdquo; to a global <span class="option">-t</span> option.  It is very much the
+of &ldquo;UDP_RR&rdquo; to a global <samp><span class="option">-t</span></samp> option.  It is very much the
 same as a TCP_RR test except UDP is used rather than TCP.
 
    <p>UDP does not provide for retransmission of lost UDP datagrams, and
@@ -2078,36 +2314,40 @@ identical two-CPU systems joined via a 1 Gigabit Ethernet network:
      65535  65535  1       1      10.01   15262.48   13.90  16.11  18.221  21.116
      65535  65535
 </pre>
-   <p>This example includes the <span class="option">-c</span> and <span class="option">-C</span> options to
+   <p>This example includes the <samp><span class="option">-c</span></samp> and <samp><span class="option">-C</span></samp> options to
 enable CPU utilization reporting and shows the asymmetry in CPU
-loading.  The <span class="option">-T</span> option was used to make sure netperf and
+loading.  The <samp><span class="option">-T</span></samp> option was used to make sure netperf and
 netserver ran on a given CPU and did not move around during the test.
 
 <div class="node">
 <p><hr>
-<a name="XTI_005fTCP_005fRR"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#XTI_005fTCP_005fCC">XTI_TCP_CC</a>,
+<a name="XTI_TCP_RR"></a>
+<a name="XTI_005fTCP_005fRR"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#XTI_005fTCP_005fCC">XTI_TCP_CC</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#UDP_005fRR">UDP_RR</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a>
-<br>
+
 </div>
 
 <h4 class="subsection">6.2.5 XTI_TCP_RR</h4>
 
 <p>An XTI_TCP_RR test is essentially the same as a <a href="#TCP_005fRR">TCP_RR</a> test only
 using the XTI rather than BSD Sockets interface. It is requested by
-passing a value of &ldquo;XTI_TCP_RR&rdquo; to the <span class="option">-t</span> global
+passing a value of &ldquo;XTI_TCP_RR&rdquo; to the <samp><span class="option">-t</span></samp> global
 command-line option.
 
    <p>The test-specific options for an XTI_TCP_RR test are the same as those
-for a TCP_RR test with the addition of the <span class="option">-X &lt;devspec&gt;</span> option to
+for a TCP_RR test with the addition of the <samp><span class="option">-X &lt;devspec&gt;</span></samp> option to
 specify the names of the local and/or remote XTI device file(s).
 
 <div class="node">
 <p><hr>
-<a name="XTI_005fTCP_005fCC"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#XTI_005fTCP_005fCRR">XTI_TCP_CRR</a>,
+<a name="XTI_TCP_CC"></a>
+<a name="XTI_005fTCP_005fCC"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#XTI_005fTCP_005fCRR">XTI_TCP_CRR</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#XTI_005fTCP_005fRR">XTI_TCP_RR</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a>
-<br>
+
 </div>
 
 <!-- node-name,  next,  previous,  up -->
@@ -2115,10 +2355,12 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Options-Common-to-TCP-UDP-and-SCTP-_00
 
 <div class="node">
 <p><hr>
-<a name="XTI_005fTCP_005fCRR"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#XTI_005fUDP_005fRR">XTI_UDP_RR</a>,
+<a name="XTI_TCP_CRR"></a>
+<a name="XTI_005fTCP_005fCRR"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#XTI_005fUDP_005fRR">XTI_UDP_RR</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#XTI_005fTCP_005fCC">XTI_TCP_CC</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a>
-<br>
+
 </div>
 
 <!-- node-name,  next,  previous,  up -->
@@ -2126,30 +2368,34 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Options-Common-to-TCP-UDP-and-SCTP-_00
 
 <div class="node">
 <p><hr>
-<a name="XTI_005fUDP_005fRR"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#DLCL_005fRR">DLCL_RR</a>,
+<a name="XTI_UDP_RR"></a>
+<a name="XTI_005fUDP_005fRR"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#DLCL_005fRR">DLCL_RR</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#XTI_005fTCP_005fCRR">XTI_TCP_CRR</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a>
-<br>
+
 </div>
 
 <h4 class="subsection">6.2.8 XTI_UDP_RR</h4>
 
 <p>An XTI_UDP_RR test is essentially the same as a UDP_RR test only using
 the XTI rather than BSD Sockets interface.  It is requested by passing
-a value of &ldquo;XTI_UDP_RR&rdquo; to the <span class="option">-t</span> global command-line
+a value of &ldquo;XTI_UDP_RR&rdquo; to the <samp><span class="option">-t</span></samp> global command-line
 option.
 
    <p>The test-specific options for an XTI_UDP_RR test are the same as those
-for a UDP_RR test with the addition of the <span class="option">-X &lt;devspec&gt;</span>
+for a UDP_RR test with the addition of the <samp><span class="option">-X &lt;devspec&gt;</span></samp>
 option to specify the name of the local and/or remote XTI device
 file(s).
 
 <div class="node">
 <p><hr>
-<a name="DLCL_005fRR"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#DLCO_005fRR">DLCO_RR</a>,
+<a name="DLCL_RR"></a>
+<a name="DLCL_005fRR"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#DLCO_005fRR">DLCO_RR</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#XTI_005fUDP_005fRR">XTI_UDP_RR</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a>
-<br>
+
 </div>
 
 <!-- node-name,  next,  previous,  up -->
@@ -2157,10 +2403,12 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Options-Common-to-TCP-UDP-and-SCTP-_00
 
 <div class="node">
 <p><hr>
-<a name="DLCO_005fRR"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#SCTP_005fRR">SCTP_RR</a>,
+<a name="DLCO_RR"></a>
+<a name="DLCO_005fRR"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#SCTP_005fRR">SCTP_RR</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#DLCL_005fRR">DLCL_RR</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a>
-<br>
+
 </div>
 
 <!-- node-name,  next,  previous,  up -->
@@ -2168,9 +2416,11 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Options-Common-to-TCP-UDP-and-SCTP-_00
 
 <div class="node">
 <p><hr>
-<a name="SCTP_005fRR"></a>Previous:&nbsp;<a rel="previous" accesskey="p" href="#DLCO_005fRR">DLCO_RR</a>,
+<a name="SCTP_RR"></a>
+<a name="SCTP_005fRR"></a>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#DLCO_005fRR">DLCO_RR</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a>
-<br>
+
 </div>
 
 <!-- node-name,  next,  previous,  up -->
@@ -2178,13 +2428,454 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Options-Common-to-TCP-UDP-and-SCTP-_00
 
 <div class="node">
 <p><hr>
-<a name="Other-Netperf-Tests"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#Address-Resolution">Address Resolution</a>,
+<a name="Using-Netperf-to-Measure-Aggregate-Performance"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Using-Netperf-to-Measure-Bidirectional-Transfer">Using Netperf to Measure Bidirectional Transfer</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Using-Netperf-to-Measure-Request_002fResponse">Using Netperf to Measure Request/Response</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
-<br>
+
 </div>
 
-<h2 class="chapter">7 Other Netperf Tests</h2>
+<!-- node-name,  next,  previous,  up -->
+<h2 class="chapter">7 Using Netperf to Measure Aggregate Performance</h2>
+
+<p><a href="#Netperf4">Netperf4</a> is the preferred benchmark to use when one
+wants to measure aggregate performance because netperf has no support
+for explicit synchronization of concurrent tests.
+
+   <p>Basically, there are two ways to measure aggregate performance with
+netperf.  The first is to run multiple, concurrent netperf tests and
+can be applied to any of the netperf tests.  The second is to
+configure netperf with <code>--enable-burst</code> and is applicable to the
+TCP_RR test.
+
+<ul class="menu">
+<li><a accesskey="1" href="#Running-Concurrent-Netperf-Tests">Running Concurrent Netperf Tests</a>
+<li><a accesskey="2" href="#Using-_002d_002denable_002dburst">Using --enable-burst</a>
+</ul>
+
+<div class="node">
+<p><hr>
+<a name="Running-Concurrent-Netperf-Tests"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Using-_002d_002denable_002dburst">Using --enable-burst</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Using-Netperf-to-Measure-Aggregate-Performance">Using Netperf to Measure Aggregate Performance</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Using-Netperf-to-Measure-Aggregate-Performance">Using Netperf to Measure Aggregate Performance</a>
+
+</div>
+
+<!-- node-name,  next,  previous,  up -->
+<h3 class="section">7.1 Running Concurrent Netperf Tests</h3>
+
+<p><a href="#Netperf4">Netperf4</a> is the preferred benchmark to use when one
+wants to measure aggregate performance because netperf has no support
+for explicit synchronization of concurrent tests.  This leaves
+netperf2 results vulnerable to <dfn>skew</dfn> errors.
+
+   <p>However, since there are times when netperf4 is unavailable it may be
+necessary to run netperf. The skew error can be minimized by making
+use of the confidence interval functionality.  Then one simply
+launches multiple tests from the shell using a <code>for</code> loop or the
+like:
+
+<pre class="example">     for i in 1 2 3 4
+     do
+     netperf -t TCP_STREAM -H tardy.cup.hp.com -i 10 -P 0 &amp;
+     done
+</pre>
+   <p>which will run four, concurrent <a href="#TCP_005fSTREAM">TCP_STREAM</a> tests from
+the system on which it is executed to tardy.cup.hp.com.  Each
+concurrent netperf will iterate 10 times thanks to the <samp><span class="option">-i</span></samp>
+option and will omit the test banners (option <samp><span class="option">-P</span></samp>) for
+brevity.  The output looks something like this:
+
+<pre class="example">      87380  16384  16384    10.03     235.15
+      87380  16384  16384    10.03     235.09
+      87380  16384  16384    10.03     235.38
+      87380  16384  16384    10.03     233.96
+</pre>
+   <p>We can take the sum of the results and be reasonably confident that
+the aggregate performance was 940 Mbits/s.
+
+   <p>If you see warnings about netperf not achieving the confidence
+intervals, the best thing to do is to increase the number of
+iterations with <samp><span class="option">-i</span></samp> and/or increase the run length of each
+iteration with <samp><span class="option">-l</span></samp>.
+
+   <p>You can also enable local (<samp><span class="option">-c</span></samp>) and/or remote (<samp><span class="option">-C</span></samp>)
+CPU utilization:
+
+<pre class="example">     for i in 1 2 3 4
+     do
+     netperf -t TCP_STREAM -H tardy.cup.hp.com -i 10 -P 0 -c -C &amp;
+     done
+     
+     87380  16384  16384    10.03       235.47   3.67     5.09     10.226  14.180
+     87380  16384  16384    10.03       234.73   3.67     5.09     10.260  14.225
+     87380  16384  16384    10.03       234.64   3.67     5.10     10.263  14.231
+     87380  16384  16384    10.03       234.87   3.67     5.09     10.253  14.215
+</pre>
+   <p>If the CPU utilizations reported for the same system are the same or
+very very close you can be reasonably confident that skew error is
+minimized.  Presumeably one could then omit <samp><span class="option">-i</span></samp> but that is
+not advised, particularly when/if the CPU utilization approaches 100
+percent.  In the example above we see that the CPU utilization on the
+local system remains the same for all four tests, and is only off by
+0.01 out of 5.09 on the remote system.
+
+   <blockquote>
+<b>NOTE: It is very important to rememeber that netperf is calculating
+system-wide CPU utilization.  When calculating the service demand
+(those last two columns in the output above) each netperf assumes it
+is the only thing running on the system.  This means that for
+concurrent tests the service demands reported by netperf will be
+wrong.  One has to compute service demands for concurrent tests by
+hand.</b>
+</blockquote>
+
+   <p>If you wish you can add a unique, global <samp><span class="option">-B</span></samp> option to each
+command line to append the given string to the output:
+
+<pre class="example">     for i in 1 2 3 4
+     do
+     netperf -t TCP_STREAM -H tardy.cup.hp.com -B "this is test $i" -i 10 -P 0 &amp;
+     done
+     
+     87380  16384  16384    10.03     234.90   this is test 4
+     87380  16384  16384    10.03     234.41   this is test 2
+     87380  16384  16384    10.03     235.26   this is test 1
+     87380  16384  16384    10.03     235.09   this is test 3
+</pre>
+   <p>You will notice that the tests completed in an order other than they
+were started from the shell.  This underscores why there is a threat
+of skew error and why netperf4 is the preferred tool for aggregate
+tests.  Even if you see the Netperf Contributing Editor acting to the
+contrary!-)
+
+<div class="node">
+<p><hr>
+<a name="Using---enable-burst"></a>
+<a name="Using-_002d_002denable_002dburst"></a>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Running-Concurrent-Netperf-Tests">Running Concurrent Netperf Tests</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Using-Netperf-to-Measure-Aggregate-Performance">Using Netperf to Measure Aggregate Performance</a>
+
+</div>
+
+<!-- node-name,  next,  previous,  up -->
+<h3 class="section">7.2 Using &ndash;enable-burst</h3>
+
+<p>If one configures netperf with <code>--enable-burst</code>:
+
+<pre class="example">     configure --enable-burst
+</pre>
+   <p>Then a test-specific <samp><span class="option">-b num</span></samp> option is added to the
+<a href="#TCP_005fRR">TCP_RR</a> and <a href="#UDP_005fRR">UDP_RR</a> tests. This option causes
+TCP_RR and UDP_RR to quickly work their way up to having at least
+<samp><span class="option">num</span></samp> transactions in flight at one time.
+
+   <p>This is used as an alternative to or even in conjunction with
+multiple-concurrent _RR tests.  When run with just a single instance
+of netperf, increasing the burst size can determine the maximum number
+of transactions per second can be serviced by a single process:
+
+<pre class="example">     for b in 0 1 2 4 8 16 32
+     do
+      netperf -v 0 -t TCP_RR -B "-b $b" -H hpcpc108 -P 0 -- -b $b
+     done
+     
+     9457.59 -b 0
+     9975.37 -b 1
+     10000.61 -b 2
+     20084.47 -b 4
+     29965.31 -b 8
+     71929.27 -b 16
+     109718.17 -b 32
+</pre>
+   <p>The global <samp><span class="option">-v</span></samp> and <samp><span class="option">-P</span></samp> options were used to minimize
+the output to the single figure of merit which in this case the
+transaction rate.  The global <code>-B</code> option was used to more
+clearly label the output, and the test-specific <samp><span class="option">-b</span></samp> option
+enabled by <code>--enable-burst</code> set the number of transactions in
+flight at one time.
+
+   <p>Now, since the test-specific <samp><span class="option">-D</span></samp> option was not specified to
+set TCP_NODELAY, the stack was free to &ldquo;bundle&rdquo; requests and/or
+responses into TCP segments as it saw fit, and since the default
+request and response size is one byte, there could have been some
+considerable bundling.  If one wants to try to achieve a closer to
+one-to-one correspondence between a request and response and a TCP
+segment, add the test-specific <samp><span class="option">-D</span></samp> option:
+
+<pre class="example">     for b in 0 1 2 4 8 16 32
+     do
+      netperf -v 0 -t TCP_RR -B "-b $b -D" -H hpcpc108 -P 0 -- -b $b -D
+     done
+     
+      8695.12 -b 0 -D
+      19966.48 -b 1 -D
+      20691.07 -b 2 -D
+      49893.58 -b 4 -D
+      62057.31 -b 8 -D
+      108416.88 -b 16 -D
+      114411.66 -b 32 -D
+</pre>
+   <p>You can see that this has a rather large effect on the reported
+transaction rate.  In this particular instance, the author believes it
+relates to interactions between the test and interrupt coalescing
+settings in the driver for the NICs used.
+
+   <blockquote>
+<b>NOTE: Even if you set the <samp></b><span class="option">-D</span><b></samp> option that is still not a
+guarantee that each transaction is in its own TCP segments.  You
+should get into the habit of verifying the relationship between the
+transaction rate and the packet rate via other means</b>
+</blockquote>
+
+   <p>You can also combine <code>--enable-burst</code> functionality with
+concurrent netperf tests.  This would then be an &ldquo;aggregate of
+aggregates&rdquo; if you like:
+
+<pre class="example">     
+     for i in 1 2 3 4
+     do
+      netperf -H hpcpc108 -v 0 -P 0 -i 10 -B "aggregate $i -b 8 -D" -t TCP_RR -- -b 8 -D &amp;
+     done
+     
+      46668.38 aggregate 4 -b 8 -D
+      44890.64 aggregate 2 -b 8 -D
+      45702.04 aggregate 1 -b 8 -D
+      46352.48 aggregate 3 -b 8 -D
+     
+</pre>
+   <p>Since each netperf did hit the confidence intervals, we can be
+reasonably certain that the aggregate transaction per second rate was
+the sum of all four concurrent tests, or something just shy of 184,000
+transactions per second.  To get some idea if that was also the packet
+per second rate, we could bracket that <code>for</code> loop with something
+to gather statistics and run the results through
+<a href="ftp://ftp.cup.hp.com/dist/networking/tools">beforeafter</a>:
+
+<pre class="example">     /usr/sbin/ethtool -S eth2 &gt; before
+     for i in 1 2 3 4
+     do
+      netperf -H 192.168.2.108 -l 60 -v 0 -P 0 -B "aggregate $i -b 8 -D" -t TCP_RR -- -b 8 -D &amp;
+     done
+     wait
+     /usr/sbin/ethtool -S eth2 &gt; after
+     
+      52312.62 aggregate 2 -b 8 -D
+      50105.65 aggregate 4 -b 8 -D
+      50890.82 aggregate 1 -b 8 -D
+      50869.20 aggregate 3 -b 8 -D
+     
+     beforeafter before after &gt; delta
+     
+     grep packets delta
+          rx_packets: 12251544
+          tx_packets: 12251550
+     
+</pre>
+   <p>This example uses <code>ethtool</code> because the system being used is
+running Linux.  Other platforms have other tools - for example HP-UX
+has lanadmin:
+
+<pre class="example">     lanadmin -g mibstats &lt;ppa&gt;
+</pre>
+   <p>and of course one could instead use <code>netstat</code>.
+
+   <p>The <code>wait</code> is important because we are launching concurrent
+netperfs in the background.  Without it, the second ethtool command
+would be run before the tests finished and perhaps even before the
+last of them got started!
+
+   <p>The sum of the reported transaction rates is 204178 over 60 seconds,
+which is a total of 12250680 transactions.  Each transaction is the
+exchange of a request and a response, so we multiply that by 2 to
+arrive at 24501360.
+
+   <p>The sum of the ethtool stats is 24503094 packets which matches what
+netperf was reporting very well.
+
+   <p>Had the request or response size differed, we would need to know how
+it compared with the <dfn>MSS</dfn> for the connection.
+
+   <p>Just for grins, here is the excercise repeated, using <code>netstat</code>
+instead of <code>ethtool</code>
+
+<pre class="example">     netstat -s -t &gt; before
+     for i in 1 2 3 4
+     do
+      netperf -l 60 -H 192.168.2.108 -v 0 -P 0 -B "aggregate $i -b 8 -D" -t TCP_RR -- -b 8 -D &amp; done
+     wait
+     netstat -s -t &gt; after
+     
+      51305.88 aggregate 4 -b 8 -D
+      51847.73 aggregate 2 -b 8 -D
+      50648.19 aggregate 3 -b 8 -D
+      53605.86 aggregate 1 -b 8 -D
+     
+     beforeafter before after &gt; delta
+     
+     grep segments delta
+         12445708 segments received
+         12445730 segments send out
+         1 segments retransmited
+         0 bad segments received.
+</pre>
+   <p>The sums are left as an excercise to the reader :)
+
+   <p>Things become considerably more complicated if there are non-trvial
+packet losses and/or retransmissions.
+
+   <p>Of course all this checking is unnecessary if the test is a UDP_RR
+test because UDP &ldquo;never&rdquo; aggregates multiple sends into the same UDP
+datagram, and there are no ACKnowledgements in UDP.  The loss of a
+single request or response will not bring a &ldquo;burst&rdquo; UDP_RR test to a
+screeching halt, but it will reduce the number of transactions
+outstanding at any one time.  A &ldquo;burst&rdquo; UDP_RR test <b>will</b> come to a
+halt if the sum of the lost requests and responses reaches the value
+specified in the test-specific <samp><span class="option">-b</span></samp> option.
+
+<div class="node">
+<p><hr>
+<a name="Using-Netperf-to-Measure-Bidirectional-Transfer"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Other-Netperf-Tests">Other Netperf Tests</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Using-Netperf-to-Measure-Aggregate-Performance">Using Netperf to Measure Aggregate Performance</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
+
+</div>
+
+<!-- node-name,  next,  previous,  up -->
+<h2 class="chapter">8 Using Netperf to Measure Bidirectional Transfer</h2>
+
+<p>There are two ways to use netperf to measure the perfomance of
+bidirectional transfer.  The first is to run concurrent netperf tests
+from the command line.  The second is to configure netperf with
+<code>--enable-burst</code> and use a single instance of the
+<a href="#TCP_005fRR">TCP_RR</a> test.
+
+   <p>While neither method is more &ldquo;correct&rdquo; than the other, each is doing
+so in different ways, and that has possible implications.  For
+instance, using the concurrent netperf test mechanism means that
+multiple TCP connections and multiple processes are involved, whereas
+using the single instance of TCP_RR there is only one TCP connection
+and one process on each end.  They may behave differently, especially
+on an MP system.
+
+<ul class="menu">
+<li><a accesskey="1" href="#Bidirectional-Transfer-with-Concurrent-Tests">Bidirectional Transfer with Concurrent Tests</a>
+<li><a accesskey="2" href="#Bidirectional-Transfer-with-TCP_005fRR">Bidirectional Transfer with TCP_RR</a>
+</ul>
+
+<div class="node">
+<p><hr>
+<a name="Bidirectional-Transfer-with-Concurrent-Tests"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Bidirectional-Transfer-with-TCP_005fRR">Bidirectional Transfer with TCP_RR</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Using-Netperf-to-Measure-Bidirectional-Transfer">Using Netperf to Measure Bidirectional Transfer</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Using-Netperf-to-Measure-Bidirectional-Transfer">Using Netperf to Measure Bidirectional Transfer</a>
+
+</div>
+
+<!-- node-name,  next,  previous,  up -->
+<h3 class="section">8.1 Bidirectional Transfer with Concurrent Tests</h3>
+
+<p>If we had two hosts Fred and Ethel, we could simply run a netperf
+<a href="#TCP_005fSTREAM">TCP_STREAM</a> test on Fred pointing at Ethel, and a
+concurrent netperf TCP_STREAM test on Ethel pointing at Fred, but
+since there are no mechanisms to synchronize netperf tests and we
+would be starting tests from two different systems, there is a
+considerable risk of skew error.
+
+   <p>Far better would be to run simultaneous TCP_STREAM and
+<a href="#TCP_005fMAERTS">TCP_MAERTS</a> tests from just <b>one</b> system, using the
+concepts and procedures outlined in <a href="#Running-Concurrent-Netperf-Tests">Running Concurrent Netperf Tests</a>. Here then is an example:
+
+<pre class="example">     for i in 1
+     do
+      netperf -H 192.168.2.108 -t TCP_STREAM -B "outbound" -i 10 -P 0 -v 0 -- -s 256K -S 256K &amp;
+      netperf -H 192.168.2.108 -t TCP_MAERTS -B "inbound"  -i 10 -P 0 -v 0 -- -s 256K -S 256K &amp;
+     done
+     
+      892.66 outbound
+      891.34 inbound
+     
+</pre>
+   <p>We have used a <code>for</code> loop in the shell with just one iteration
+because that will be <b>much</b> easier to get both tests started at more or
+less the same time than doing it by hand.  The global <samp><span class="option">-P</span></samp> and
+<samp><span class="option">-v</span></samp> options are used because we aren't interested in anything
+other than the throughput, and the global <samp><span class="option">-B</span></samp> option is used
+to tag each output so we know which was inbound and which outbound
+relative to the system on which we were running netperf.  Of course
+that sense is switched on the system running netserver :)  The use of
+the global <samp><span class="option">-i</span></samp> option is explained in <a href="#Running-Concurrent-Netperf-Tests">Running Concurrent Netperf Tests</a>.
+
+<div class="node">
+<p><hr>
+<a name="Bidirectional-Transfer-with-TCP_RR"></a>
+<a name="Bidirectional-Transfer-with-TCP_005fRR"></a>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Bidirectional-Transfer-with-Concurrent-Tests">Bidirectional Transfer with Concurrent Tests</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Using-Netperf-to-Measure-Bidirectional-Transfer">Using Netperf to Measure Bidirectional Transfer</a>
+
+</div>
+
+<!-- node-name,  next,  previous,  up -->
+<h3 class="section">8.2 Bidirectional Transfer with TCP_RR</h3>
+
+<p>If one configures netperf with <code>--enable-burst</code> then one can use
+the test-specific <samp><span class="option">-b</span></samp> option to increase the number of
+transactions in flight at one time.  If one also uses the -r option to
+make those transactions larger the test starts to look more and more
+like a bidirectional transfer than a request/response test.
+
+   <p>Now, the logic behing <code>--enable-burst</code> is very simple, and there
+are no calls to <code>poll()</code> or <code>select()</code> which means we want
+to make sure that the <code>send()</code> calls will never block, or we run
+the risk of deadlock with each side stuck trying to call <code>send()</code>
+and neither calling <code>recv()</code>.
+
+   <p>Fortunately, this is easily accomplished by setting a &ldquo;large enough&rdquo;
+socket buffer size with the test-specific <samp><span class="option">-s</span></samp> and <samp><span class="option">-S</span></samp>
+options.  Presently this must be performed by the user.  Future
+versions of netperf might attempt to do this automagically, but there
+are some issues to be worked-out.
+
+   <p>Here then is an example of a bidirectional transfer test using
+<code>--enable-burst</code> and the <a href="#TCP_005fRR">TCP_RR</a> test:
+
+<pre class="example">     netperf -t TCP_RR -H hpcpc108 -- -b 6 -r 32K -s 256K -S 256K
+     TCP REQUEST/RESPONSE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to hpcpc108.cup.hp.com (16.89.84.108) port 0 AF_INET : first burst 6
+     Local /Remote
+     Socket Size   Request  Resp.   Elapsed  Trans.
+     Send   Recv   Size     Size    Time     Rate
+     bytes  Bytes  bytes    bytes   secs.    per sec
+     
+     524288 524288 32768    32768   10.01    3525.97
+     524288 524288
+     
+</pre>
+   <p>Now, at present netperf does not include a bit or byte rate in the
+output of an _RR test which means we must calculate it ourselves. Each
+transaction is the exchange of 32768 bytes of request and 32768 bytes
+of response, or 65536 bytes.  Multiply that by 8 and we arrive at
+524288 bits per transaction.  Multiply that by 3525.97 and we arrive
+at 1848623759 bits per second.  Since things were uniform, we can
+divide that by two and arrive at roughly 924311879 bits per second
+each way.  That corresponds to &ldquo;link-rate&rdquo; for a 1 Gigiabit Ethernet
+which happens to be the type of netpwrk used in the example.
+
+   <p>A future version of netperf may perform the calculation on behalf of
+the user, but it would likely not emit it unless the user specified a
+verbosity of 2 or more with the global <samp><span class="option">-v</span></samp> option.
+
+<div class="node">
+<p><hr>
+<a name="Other-Netperf-Tests"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Address-Resolution">Address Resolution</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Using-Netperf-to-Measure-Bidirectional-Transfer">Using Netperf to Measure Bidirectional Transfer</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
+
+</div>
+
+<h2 class="chapter">9 Other Netperf Tests</h2>
 
 <p>Apart from the typical performance tests, netperf contains some tests
 which can be used to streamline measurements and reporting.  These
@@ -2197,12 +2888,13 @@ enhancement).
 
 <div class="node">
 <p><hr>
-<a name="CPU-rate-calibration"></a>Previous:&nbsp;<a rel="previous" accesskey="p" href="#Other-Netperf-Tests">Other Netperf Tests</a>,
+<a name="CPU-rate-calibration"></a>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Other-Netperf-Tests">Other Netperf Tests</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Other-Netperf-Tests">Other Netperf Tests</a>
-<br>
+
 </div>
 
-<h3 class="section">7.1 CPU rate calibration</h3>
+<h3 class="section">9.1 CPU rate calibration</h3>
 
 <p>Some of the CPU utilization measurement mechanisms of netperf work by
 comparing the rate at which some counter increments when the system is
@@ -2217,8 +2909,8 @@ test.  This calibration step takes 40 seconds for each of the local or
 remote ystems, and if repeated for each netperf test would make taking
 repeated measurements rather slow.
 
-   <p>Thus, the netperf CPU utilization options <span class="option">-c</span> and and
-<span class="option">-C</span> can take an optional calibration value.  This value is
+   <p>Thus, the netperf CPU utilization options <samp><span class="option">-c</span></samp> and and
+<samp><span class="option">-C</span></samp> can take an optional calibration value.  This value is
 used as the &ldquo;idle rate&rdquo; and the calibration step is not
 performed. To determine the idle rate, netperf can be used to run
 special tests which only report the value of the calibration - they
@@ -2247,18 +2939,19 @@ calculate service demands by hand.
 
 <div class="node">
 <p><hr>
-<a name="Address-Resolution"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#Enhancing-Netperf">Enhancing Netperf</a>,
+<a name="Address-Resolution"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Enhancing-Netperf">Enhancing Netperf</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Other-Netperf-Tests">Other Netperf Tests</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
-<br>
+
 </div>
 
 <!-- node-name,  next,  previous,  up -->
-<h2 class="chapter">8 Address Resolution</h2>
+<h2 class="chapter">10 Address Resolution</h2>
 
 <p>Netperf versions 2.4.0 and later have merged IPv4 and IPv6 tests so
-the functionality of the tests in <span class="file">src/nettest_ipv6.c</span> has been
-subsumed into the tests in <span class="file">src/nettest_bsd.c</span>  This has been
+the functionality of the tests in <samp><span class="file">src/nettest_ipv6.c</span></samp> has been
+subsumed into the tests in <samp><span class="file">src/nettest_bsd.c</span></samp>  This has been
 accomplished in part by switching from <code>gethostbyname()</code>to
 <code>getaddrinfo()</code> exclusively.  While it was theoretically possible
 to get multiple results for a hostname from <code>gethostbyname()</code> it
@@ -2268,7 +2961,7 @@ results was not much of an issue.
    <p>Now with <code>getaddrinfo</code> and particularly with AF_UNSPEC it is
 increasingly likely that a given hostname will have multiple
 associated addresses.  The <code>establish_control()</code> routine of
-<span class="file">src/netlib.c</span> will indeed attempt to chose from among all the
+<samp><span class="file">src/netlib.c</span></samp> will indeed attempt to chose from among all the
 matching IP addresses when establishing the control connection. 
 Netperf does not _really_ care if the control connection is IPv4 or
 IPv6 or even mixed on either end.
@@ -2279,7 +2972,7 @@ turn-out to be an issue has yet to be determined.
 
    <p>If you do run into problems with this, the easiest workaround is to
 specify IP addresses for the data connection explicitly in the
-test-specific <span class="option">-H</span> and <span class="option">-L</span> options.  At some point, the
+test-specific <samp><span class="option">-H</span></samp> and <samp><span class="option">-L</span></samp> options.  At some point, the
 netperf tests _may_ try to be more sophisticated in their parsing of
 returns from <code>getaddrinfo()</code> - straw-man patches to
 <a href="mailto:netperf-feedback@netperf.org">netperf-feedback@netperf.org</a> would of course be most welcome
@@ -2287,32 +2980,33 @@ returns from <code>getaddrinfo()</code> - straw-man patches to
 
    <p>Netperf has leveraged code from other open-source projects with
 amenable licensing to provide a replacement <code>getaddrinfo()</code> call
-on those platforms where the <span class="command">configure</span> script believes there
+on those platforms where the <samp><span class="command">configure</span></samp> script believes there
 is no native getaddrinfo call.  As of this writing, the replacement
 <code>getaddrinfo()</code> as been tested on HP-UX 11.0 and then presumed to
 run elsewhere.
 
 <div class="node">
 <p><hr>
-<a name="Enhancing-Netperf"></a>Next:&nbsp;<a rel="next" accesskey="n" href="#Index">Index</a>,
+<a name="Enhancing-Netperf"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Netperf4">Netperf4</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Address-Resolution">Address Resolution</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
-<br>
+
 </div>
 
 <!-- node-name,  next,  previous,  up -->
-<h2 class="chapter">9 Enhancing Netperf</h2>
+<h2 class="chapter">11 Enhancing Netperf</h2>
 
 <p>Netperf is constantly evolving.  If you find you want to make
 enhancements to netperf, by all means do so.  If you wish to add a new
 &ldquo;suite&rdquo; of tests to netperf the general idea is to
 
      <ol type=1 start=1>
-<li>Add files <span class="file">src/nettest_mumble.c</span> and <span class="file">src/nettest_mumble.h</span>
+<li>Add files <samp><span class="file">src/nettest_mumble.c</span></samp> and <samp><span class="file">src/nettest_mumble.h</span></samp>
 where mumble is replaced with something meaningful for the test-suite. 
-<li>Add support for an apropriate <span class="option">--enable-mumble</span> option in
-<span class="file">configure.ac</span>. 
-<li>Edit <span class="file">src/netperf.c</span>, <span class="file">netsh.c</span>, and <span class="file">netserver.c</span> as
+<li>Add support for an apropriate <samp><span class="option">--enable-mumble</span></samp> option in
+<samp><span class="file">configure.ac</span></samp>. 
+<li>Edit <samp><span class="file">src/netperf.c</span></samp>, <samp><span class="file">netsh.c</span></samp>, and <samp><span class="file">netserver.c</span></samp> as
 required, using #ifdef WANT_MUMBLE. 
 <li>Compile and test
         </ol>
@@ -2323,20 +3017,44 @@ available sources. (See <a href="#Getting-Netperf-Bits">Getting Netperf Bits</a>
 describing the changes at a high level to
 <a href="mailto:netperf-feedback@netperf.org">netperf-feedback@netperf.org</a> or perhaps
 <a href="mailto:netperf-talk@netperf.org">netperf-talk@netperf.org</a>.  If the concensus is positive, then
-sending context <span class="command">diff</span> results to
+sending context <samp><span class="command">diff</span></samp> results to
 <a href="mailto:netperf-feedback@netperf.org">netperf-feedback@netperf.org</a> is the next step.  From that
 point, it is a matter of pestering the Netperf Contributing Editor
 until he gets the changes incorporated :)
 
-   <p>One of these days, it is hoped that some sort of public version
-control system will be setup - perhaps on netperf.org - to make this
-whole process easier.
+<div class="node">
+<p><hr>
+<a name="Netperf4"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Index">Index</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Enhancing-Netperf">Enhancing Netperf</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
+
+</div>
+
+<!-- node-name,  next,  previous,  up -->
+<h2 class="chapter">12 Netperf4</h2>
+
+<p>Netperf4 is the shorthand name given to version 4.X.X of netperf. 
+This is really a separate benchmark more than a newer version of
+netperf, but it is a decendant of netperf so the netperf name is
+kept.  The facitious way to describe netperf4 is to say it is the
+egg-laying-wolly-milk-pig version of netperf :)  The more respectful
+way to describe it is to say it is the version of netperf with support
+for synchronized, multiple-thread, multiple-test, multiple-system,
+network-oriented benchmarking.
+
+   <p>Netperf4 is still undergoing rapid evolution. Those wishing to work
+with or on netperf4 are encouraged to join the
+<a href="http://www.netperf.org/cgi-bin/mailman/listinfo/netperf-dev">netperf-dev</a>
+mailing list and/or peruse the
+<a href="http://www.netperf.org/svn/netperf4/trunk">current sources</a>.
 
 <div class="node">
 <p><hr>
-<a name="Index"></a>Previous:&nbsp;<a rel="previous" accesskey="p" href="#Enhancing-Netperf">Enhancing Netperf</a>,
+<a name="Index"></a>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Netperf4">Netperf4</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
-<br>
+
 </div>
 
 <h2 class="unnumbered">Index</h2>
