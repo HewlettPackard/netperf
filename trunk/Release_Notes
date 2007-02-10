@@ -2,6 +2,19 @@ These are the Release Notes leading to Revision 2.4.3 of netperf:
 
 Things changed in this release:
 
+*) A new global option - -N - has been added. When specified, this
+   option will tell netperf to not bother to try to establish a
+   control connection with a remote netserver.  Instead, netperf will
+   only attempt to make a data connection to the remote system.  By
+   default, this will be to the "discard" service for a "STREAM" or
+   "SENDFILE" test, the "echo" service for a "RR" test and the
+   "chargen" service for a "MAERTS" test.  Any "remote" settings are
+   changed to reflect their being unused in the test, and a "no
+   control" tag is added to the test banner when -N is specified.
+
+   This still needs to be propagated to other test files - at least
+   for those for which it may make sense.
+
 *) The tests in nettest_bsd.c have been altered to not actually take
    timestamps and deltas in --enable-histogram unless the verbosity
    level has been set to actually display a histogram.  This reduces

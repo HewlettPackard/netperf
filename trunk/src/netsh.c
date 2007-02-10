@@ -1,5 +1,5 @@
 char	netsh_id[]="\
-@(#)netsh.c (c) Copyright 1993-2004 Hewlett-Packard Company. Version 2.4.0";
+@(#)netsh.c (c) Copyright 1993-2004 Hewlett-Packard Company. Version 2.4.3";
 
 
 /****************************************************************/
@@ -240,7 +240,7 @@ Options:\n\
    compiler happy when compiling for x86_32.  fix from Spencer
    Frink.  */
 
-char netperf_usage[] = "\n\
+char netperf_usage1[] = "\n\
 Usage: netperf [global options] -- [test options] \n\
 \n\
 Global options:\n\
@@ -270,8 +270,9 @@ Global options:\n\
     -t testname       Specify test to perform\n\
     -T lcpu,rcpu      Request netperf/netserver be bound to local/remote cpu\n\
     -v verbosity      Specify the verbosity level\n\
-    -W send,recv      Set the number of send,recv buffers\n\
-\n\
+    -W send,recv      Set the number of send,recv buffers\n";
+
+char netperf_usage2[] = "\n\
 For those options taking two parms, at least one must be specified;\n\
 specifying one value without a comma will set both parms to that\n\
 value, specifying a value with a leading comma will set just the second\n\
@@ -451,7 +452,8 @@ print_netserver_usage()
 void
 print_netperf_usage()
 {
-  fwrite(netperf_usage, sizeof(char), strlen(netperf_usage),  stderr);
+  fwrite(netperf_usage1, sizeof(char), strlen(netperf_usage1),  stderr);
+  fwrite(netperf_usage2, sizeof(char), strlen(netperf_usage2),  stderr);
 }
 
 void

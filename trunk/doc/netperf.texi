@@ -8,7 +8,7 @@
 This is Rick Jones' feeble attempt at a Texinfo-based manual for the
 netperf benchmark. 
 
-Copyright @copyright{} 2005 Hewlett-Packard Company
+Copyright @copyright{} 2005-2007 Hewlett-Packard Company
 @quotation
 Permission is granted to copy, distribute and/or modify this document
 per the terms of the netperf source licence, a copy of which can be
@@ -18,7 +18,7 @@ found in the file @file{COPYING} of the basic netperf distribution.
 
 @titlepage
 @title Care and Feeding of Netperf
-@subtitle Versions 2.4.0 and Later
+@subtitle Versions 2.4.3 and Later
 @author Rick Jones @email{rick.jones2@@hp.com}
 @c this is here to start the copyright page
 @page
@@ -37,18 +37,95 @@ found in the file @file{COPYING} of the basic netperf distribution.
 @end ifnottex
 
 @menu
-* Introduction::                An introduction to netperf - what it is and what
-                     it is not.
+* Introduction::                An introduction to netperf - what it is and whatit is not.
 * Installing Netperf::          How to go about installing netperf.
 * The Design of Netperf::       
 * Global Command-line Options::  
 * Using Netperf to Measure Bulk Data Transfer::  
 * Using Netperf to Measure Request/Response ::  
+* Using Netperf to Measure Aggregate Performance::  
+* Using Netperf to Measure Bidirectional Transfer::  
 * Other Netperf Tests::         
 * Address Resolution::          
 * Enhancing Netperf::           
+* Netperf4::                    
 * Index::                       Index for this manual.
 
+@detailmenu
+ --- The Detailed Node Listing ---
+
+Introduction
+
+* Conventions::                 
+
+Installing Netperf
+
+* Getting Netperf Bits::        
+* Installing Netperf Bits::     
+* Verifying Installation::      
+
+The Design of Netperf
+
+* CPU Utilization::             
+
+Global Command-line Options
+
+* Command-line Options Syntax::  
+* Global Options::              
+
+Using Netperf to Measure Bulk Data Transfer
+
+* Issues in Bulk Transfer::     
+* Options common to TCP UDP and SCTP tests::  
+
+Options common to TCP UDP and SCTP tests
+
+* TCP_STREAM::                  
+* TCP_MAERTS::                  
+* TCP_SENDFILE::                
+* UDP_STREAM::                  
+* XTI_TCP_STREAM::              
+* XTI_UDP_STREAM::              
+* SCTP_STREAM::                 
+* DLCO_STREAM::                 
+* DLCL_STREAM::                 
+* STREAM_STREAM::               
+* DG_STREAM::                   
+
+Using Netperf to Measure Request/Response 
+
+* Issues in Request/Response::  
+* Options Common to TCP UDP and SCTP _RR tests::  
+
+Options Common to TCP UDP and SCTP _RR tests
+
+* TCP_RR::                      
+* TCP_CC::                      
+* TCP_CRR::                     
+* UDP_RR::                      
+* XTI_TCP_RR::                  
+* XTI_TCP_CC::                  
+* XTI_TCP_CRR::                 
+* XTI_UDP_RR::                  
+* DLCL_RR::                     
+* DLCO_RR::                     
+* SCTP_RR::                     
+
+Using Netperf to Measure Aggregate Performance
+
+* Running Concurrent Netperf Tests::  
+* Using --enable-burst::        
+
+Using Netperf to Measure Bidirectional Transfer
+
+* Bidirectional Transfer with Concurrent Tests::  
+* Bidirectional Transfer with TCP_RR::  
+
+Other Netperf Tests
+
+* CPU rate calibration::        
+
+@end detailmenu
 @end menu
 
 @node Introduction, Installing Netperf, Top, Top
@@ -101,18 +178,25 @@ Netperf is maintained and informally supported primarily by Rick
 Jones, who can perhaps be best described as Netperf Contributing
 Editor.  Non-trivial and very appreciated assistance comes from others
 in the network performance community, who are too numerous to mention
-here. Netperf is NOT supported via any of the formal Hewlett-Packard
-support channels.  You should feel free to make enhancements and
-modifications to netperf to suit your nefarious porpoises, so long as
-you stay within the guidelines of the netperf copyright.  If you feel
-so inclined, you can send your changes to
+here. While it is often used by them, netperf is NOT supported via any
+of the formal Hewlett-Packard support channels.  You should feel free
+to make enhancements and modifications to netperf to suit your
+nefarious porpoises, so long as you stay within the guidelines of the
+netperf copyright.  If you feel so inclined, you can send your changes
+to
 @email{netperf-feedback@@netperf.org,netperf-feedback} for possible
 inclusion into subsequent versions of netperf.
 
-The @email{netperf-talk@@netperf.org,netperf-talk} mailing list is available to discuss the
-care and feeding of netperf with others who share your interest in
-network performance benchmarking. The netperf-talk mailing list is a
-closed list and you must first subscribe by sending email to @email{netperf-talk-request@@netperf.org,netperf-talk-request}.
+If you would prefer to make contributions to networking benchmark
+using certified ``open source'' license, please considuer netperf4,
+which is distributed under the terms of the GPL.
+
+The @email{netperf-talk@@netperf.org,netperf-talk} mailing list is
+available to discuss the care and feeding of netperf with others who
+share your interest in network performance benchmarking. The
+netperf-talk mailing list is a closed list and you must first
+subscribe by sending email to
+@email{netperf-talk-request@@netperf.org,netperf-talk-request}.
 
 
 @menu
@@ -224,15 +308,18 @@ likely other excellent sources out there as well.
 @section Getting Netperf Bits
 
 Gzipped tar files of netperf sources can be retrieved via 
-@uref{ftp://ftp.cup.hp.com/dist/networking/benchmarks/netperf/,anonymous
-FTP}
+@uref{ftp://ftp.netperf.org/netperf,anonymous FTP}
 for ``released'' versions of the bits.  Pre-release versions of the
 bits can be retrieved via anonymous FTP from the
-@uref{ftp://ftp.cup.hp.com/dist/networking/benchmarks/netperf/experimental/,experimental} subdirectory.
+@uref{ftp://ftp.netperf.org/netperf/experimental,experimental} subdirectory.
 
 For convenience and ease of remembering, a link to the download site
 is provided via the 
 @uref{http://www.netperf.org/, NetperfPage}
+
+Those wishing to be on the bleeding edge of netperf development can
+grab the top of trunk from the netperf subversion
+@uref{http://www.netperf.org/svn/netperf2/trunk,repository}.
 
 There are likely other places around the Internet from which one can
 download netperf bits.  These may be simple mirrors of the main
@@ -242,11 +329,11 @@ what you really wanted and isn't some malicious Trojan or whatnot.
 Caveat downloader.
 
 As a general rule, binaries of netperf and netserver are not
-distributed from ftp.cup.hp.com.  From time to time a kind soul or
+distributed from ftp.netperf.org.  From time to time a kind soul or
 souls has packaged netperf as a Debian package available via the
-apt-get mechanism.  I would be most interested in learning how to
-enhance the makefiles to make that easier for people, and perhaps to
-generate RPM's and HP-UX swinstall``depots.''
+apt-get mechanism or as an RPM.  I would be most interested in
+learning how to enhance the makefiles to make that easier for people,
+and perhaps to generate HP-UX swinstall``depots.''
 
 @node Installing Netperf Bits, Verifying Installation, Getting Netperf Bits, Installing Netperf
 @section Installing Netperf
@@ -758,8 +845,8 @@ addressing.  Similarly, a value of ``inet6'' can be used in place of
 to request either IPv4 or IPv6 addressing as name resolution dictates.
 
 By default, the options set with the global @option{-H} option are
-inherited by the test for their data connections, unless a
-test-specific @option{-H} option is specified.
+inherited by the test for its data connection, unless a test-specific
+@option{-H} option is specified.
 
 If a @option{-H} option follows either the @option{-4} or @option{-6}
 options, the family setting specified with the -H option will override
@@ -770,18 +857,6 @@ last explicit global command-line option wins.
 
 [Default:  ``localhost'' for the remote name/IP address and ``0'' (eg
 AF_UNSPEC) for the remote address family.]
-
-@item -L <optionspec>
-This option is identical to the @option{-H} option with the difference
-being it sets the _local_ hostname/IP and/or address family
-information.  This option is generally unnecessary, but can be useful
-when you wish to make sure that the netperf control and data
-connections go via different paths.  It can also come-in handy if one
-is trying to run netperf through those evil, end-to-end breaking
-things known as firewalls.
-
-[Default: 0.0.0.0 (eg INADDR_ANY) for IPv4 and ::0 for IPv6 for the
-local name.  AF_UNSPEC for the local address family.]
 
 @item -I <optionspec>
 This option enables the calculation of confidence intervals and sets
@@ -862,6 +937,18 @@ size(s) are significantly longer than the bandwidthXdelay product of
 the link(s) over which the data connection passes, or those tests
 where there may be non-trivial numbers of retransmissions.
 
+@item -L <optionspec>
+This option is identical to the @option{-H} option with the difference
+being it sets the _local_ hostname/IP and/or address family
+information.  This option is generally unnecessary, but can be useful
+when you wish to make sure that the netperf control and data
+connections go via different paths.  It can also come-in handy if one
+is trying to run netperf through those evil, end-to-end breaking
+things known as firewalls.
+
+[Default: 0.0.0.0 (eg INADDR_ANY) for IPv4 and ::0 for IPv6 for the
+local name.  AF_UNSPEC for the local address family.]
+
 @item -n numcpus
 This option tells netperf how many CPUs it should ass-u-me are active
 on the system running netperf.  In particular, this is used for the
@@ -875,6 +962,42 @@ running netserver.  When netperf/netserver cannot automagically
 determine the number of CPUs that can only be set for netserver via a
 netserver @option{-n} command-line option.
 
+@item -N
+This option tells netperf to forego establishing a control
+connection. This makes it is possible to run some limited netperf
+tests without a corresponding netserver on the remote system.
+
+With this option set, the test to be run is to get all the addressing
+information it needs to establish its data connection from the command
+line or internal defaults.  If not otherwise specified by
+test-specific command line options, the data connection for a
+``STREAM'' or ``SENDFILE'' test will be to the ``discard'' port, an
+``RR'' test will be to the ``echo'' port, and a ``MEARTS'' test will
+be to the chargen port.  
+
+The response size of an ``RR'' test will be silently set to be the
+same as the request size.  Otherwise the test would hang if the
+response size was larger than the request size, or would report an
+incorrect, inflated transaction rate if the response size was less
+than the request size.
+
+Since there is no control connection when this option is specified, it
+is not possible to set ``remote'' properties such as socket buffer
+size and the like via the netperf command line. Nor is it possible to
+retrieve such interesting remote information as CPU utilization.
+These items will be set to values which when displayed should make it
+immediately obvious that was the case.
+
+The only way to change remote characteristics such as socket buffer
+size or to obtain information such as CPU utilization is to employ
+platform-specific methods on the remote system.  Frankly, if one has
+access to the remote system to employ those methods one aught to be
+able to run a netserver there.  However, that ability may not be
+present in certain ``support'' situations, hence the addition of this
+option.
+
+Added in netperf 2.4.3.
+
 @item -o <sizespec>
 The value(s) passed-in with this option will be used as an offset
 added to the alignment specified with the @option{-a} option.  For
@@ -887,7 +1010,7 @@ begin three bytes past an address aligned to 4096 bytes. [Default: 0
 bytes]
 
 @item -O <sizespec>
-This option behaves just as the @option{-o} option by on the remote
+This option behaves just as the @option{-o} option but on the remote
 system and in conjunction with the @option{-A} option. [Default: 0
 bytes]
 
@@ -1047,7 +1170,9 @@ than 100% CPU utilization.  This can happen on an MP system where one
 or more of the CPUs saturate at 100% but other CPU's remain idle.
 Typically, a single flow of data, such as that from a single instance
 of a netperf _STREAM test cannot make use of much more than the power
-of one CPU.
+of one CPU. Exceptions to this generally occur when netperf and/or
+netserver run on CPU(s) other than the CPU(s) taking interrupts from
+the NIC(s).
 
 Distance and the speed-of-light can affect performance for a
 bulk-transfer; often this can be mitigated by using larger windows.
@@ -1096,8 +1221,11 @@ statistics in @file{after}
 @example
 beforeafter before after > delta
 @end example
-and then one can look at the statistics in @file{delta}.  While it was
-written with HP-UX's netstat in mind, the
+and then one can look at the statistics in @file{delta}.  Beforeafter
+is distributed in source form so one can compile it on the platofrm(s)
+of interest. 
+
+While it was written with HP-UX's netstat in mind, the
 @uref{ftp://ftp.cup.hp.com/dist/networking/briefs/annotated_netstat.txt,annotated
 netstat} writeup may be helpful with other platforms as well.
 
@@ -1265,7 +1393,7 @@ description of TCP_CORK is beyond the scope of this manual, but in a
 nutshell it forces sub-MSS sends to be buffered so every segment sent
 is Maximum Segment Size (MSS) unless the application performs an
 explicit flush operation or the connection is closed.  At present
-netperf does not perform an explicit flush operations.  Setting
+netperf does not perform any explicit flush operations.  Setting
 TCP_CORK may improve the bitrate of tests where the ``send size''
 (@option{-m} option) is smaller than the MSS.  It should also improve
 (make smaller) the service demand.
@@ -1354,13 +1482,12 @@ else.
 @subsection TCP_SENDFILE
 
 The TCP_SENDFILE test is ``just like'' a @ref{TCP_STREAM} test except
-netperf calls the platform's equivalent to HP-UX's @code{sendfile()}
-instead of calling @code{send()}.  Often this results in a
-@dfn{zero-copy} operation where data is sent directly from the
-filesystem buffer cache.  This _should_ result in lower CPU
-utilization and possibly higher throughput.  If it does not, then you
-may want to contact your vendor(s) because they have a problem on
-their hands.
+netperf the platform's @code{sendfile()} call instead of calling
+@code{send()}.  Often this results in a @dfn{zero-copy} operation
+where data is sent directly from the filesystem buffer cache.  This
+_should_ result in lower CPU utilization and possibly higher
+throughput.  If it does not, then you may want to contact your
+vendor(s) because they have a problem on their hands.
 
 Zero-copy mechanisms may also alter the characteristics (size and
 number of buffers per) of packets passed to the NIC.  In many stacks,
@@ -1469,6 +1596,14 @@ bytes   bytes    secs            #      #   10^6bits/sec
  65536           10.00           0              0.00
 @end example
 
+The example above was between a pair of systems running a ``Linux''
+kernel. Notice that the remote Linux system returned a value larger
+than that passed-in to the @option{-S} option.  In fact, this value
+was larger than the message size set with the @option{-m} option.
+That the remote socket buffer size is reported as 65536 bytes would
+suggest to any sane person that a message of 65000 bytes would fit,
+but the socket isn't _really_ 65536 bytes, even though Linux is
+telling us so.  Go figure.
 
 @node XTI_TCP_STREAM, XTI_UDP_STREAM, UDP_STREAM, Options common to TCP UDP and SCTP tests
 @subsection XTI_TCP_STREAM
@@ -1504,7 +1639,7 @@ rather than TCP.  The @option{-D} option will set SCTP_NODELAY, which
 is much like the TCP_NODELAY option for TCP.  The @option{-C} option
 is not applicable to an SCTP test as there is no corresponding
 SCTP_CORK option.  The author is still figuring-out what the
-@option{-N} option does :)
+test-specific @option{-N} option does :)
 
 The SCTP_STREAM test is only present if netperf was configured with
 @code{--enable-sctp=yes}. The remote netserver must have also been
@@ -1603,7 +1738,7 @@ The DG_STREAM test is only present if netperf was configured with
 configured with @code{--enable-unix=yes}.
 
 
-@node Using Netperf to Measure Request/Response , Other Netperf Tests, Using Netperf to Measure Bulk Data Transfer, Top
+@node Using Netperf to Measure Request/Response , Using Netperf to Measure Aggregate Performance, Using Netperf to Measure Bulk Data Transfer, Top
 @chapter Using Netperf to Measure Request/Response 
 
 Request/response performance is often overlooked, yet it is just as
@@ -1645,16 +1780,20 @@ benchmarker.
 
 Most if not all the @ref{Issues in Bulk Transfer} apply to
 request/response.  The issue of round-trip latency is even more
-important as netperf only has one transaction outstanding at a time.
+important as netperf generally only has one transaction outstanding at
+a time.
 
-A single instance of an _RR test should _never_ completely saturate
-the CPU of a system.  If testing between otherwise evenly matched
-systems, the symmetric nature of a _RR test with equal request and
-response sizes should result in equal CPU loading on both systems.
+A single instance of a one transaction outstanding _RR test should
+_never_ completely saturate the CPU of a system.  If testing between
+otherwise evenly matched systems, the symmetric nature of a _RR test
+with equal request and response sizes should result in equal CPU
+loading on both systems. However, this may not hold true on MP
+systems, particularly if one CPU binds the netperf and netserver
+differently via the global @option{-T} option.
 
 For smaller request and response sizes packet loss is a bigger issue
 as there is no opportunity for a @dfn{fast retransmit} or
-retransmission prior to a retrnamission timer expiring.
+retransmission prior to a retransmission timer expiring.
 
 Certain NICs have ways to minimize the number of interrupts sent to
 the host.  If these are strapped badly they can significantly reduce
@@ -1855,7 +1994,7 @@ Basically, TIME_WAIT reuse is when a pair of systems churn through
 connections fast enough that they wrap the 16-bit port number space in
 less time than the length of the TIME_WAIT state.  While it is indeed
 theoretically possible to ``reuse'' a connection in TIME_WAIT, the
-conditions under which such reuse is possible is rather rare.  An
+conditions under which such reuse is possible are rather rare.  An
 attempt to reuse a connection in TIME_WAIT can result in a non-trivial
 delay in connection establishment.
 
@@ -1992,7 +2131,428 @@ file(s).
 @comment  node-name,  next,  previous,  up
 @subsection SCTP_RR
 
-@node Other Netperf Tests, Address Resolution, Using Netperf to Measure Request/Response , Top
+@node Using Netperf to Measure Aggregate Performance, Using Netperf to Measure Bidirectional Transfer, Using Netperf to Measure Request/Response , Top
+@comment  node-name,  next,  previous,  up
+@chapter Using Netperf to Measure Aggregate Performance
+
+@ref{Netperf4,Netperf4} is the preferred benchmark to use when one
+wants to measure aggregate performance because netperf has no support
+for explicit synchronization of concurrent tests.
+
+Basically, there are two ways to measure aggregate performance with
+netperf.  The first is to run multiple, concurrent netperf tests and
+can be applied to any of the netperf tests.  The second is to
+configure netperf with @code{--enable-burst} and is applicable to the
+TCP_RR test.
+
+@menu
+* Running Concurrent Netperf Tests::  
+* Using --enable-burst::        
+@end menu
+
+@node  Running Concurrent Netperf Tests, Using --enable-burst, Using Netperf to Measure Aggregate Performance, Using Netperf to Measure Aggregate Performance
+@comment  node-name,  next,  previous,  up
+@section Running Concurrent Netperf Tests
+
+@ref{Netperf4,Netperf4} is the preferred benchmark to use when one
+wants to measure aggregate performance because netperf has no support
+for explicit synchronization of concurrent tests.  This leaves
+netperf2 results vulnerable to @dfn{skew} errors.
+
+However, since there are times when netperf4 is unavailable it may be
+necessary to run netperf. The skew error can be minimized by making
+use of the confidence interval functionality.  Then one simply
+launches multiple tests from the shell using a @code{for} loop or the
+like:
+
+@example
+for i in 1 2 3 4
+do
+netperf -t TCP_STREAM -H tardy.cup.hp.com -i 10 -P 0 &
+done
+@end example
+
+which will run four, concurrent @ref{TCP_STREAM,TCP_STREAM} tests from
+the system on which it is executed to tardy.cup.hp.com.  Each
+concurrent netperf will iterate 10 times thanks to the @option{-i}
+option and will omit the test banners (option @option{-P}) for
+brevity.  The output looks something like this:
+
+@example
+ 87380  16384  16384    10.03     235.15   
+ 87380  16384  16384    10.03     235.09   
+ 87380  16384  16384    10.03     235.38   
+ 87380  16384  16384    10.03     233.96
+@end example
+
+We can take the sum of the results and be reasonably confident that
+the aggregate performance was 940 Mbits/s.
+
+If you see warnings about netperf not achieving the confidence
+intervals, the best thing to do is to increase the number of
+iterations with @option{-i} and/or increase the run length of each
+iteration with @option{-l}.
+
+You can also enable local (@option{-c}) and/or remote (@option{-C})
+CPU utilization:
+
+@example
+for i in 1 2 3 4
+do
+netperf -t TCP_STREAM -H tardy.cup.hp.com -i 10 -P 0 -c -C &
+done
+
+87380  16384  16384    10.03       235.47   3.67     5.09     10.226  14.180 
+87380  16384  16384    10.03       234.73   3.67     5.09     10.260  14.225 
+87380  16384  16384    10.03       234.64   3.67     5.10     10.263  14.231 
+87380  16384  16384    10.03       234.87   3.67     5.09     10.253  14.215
+@end example
+
+If the CPU utilizations reported for the same system are the same or
+very very close you can be reasonably confident that skew error is
+minimized.  Presumeably one could then omit @option{-i} but that is
+not advised, particularly when/if the CPU utilization approaches 100
+percent.  In the example above we see that the CPU utilization on the
+local system remains the same for all four tests, and is only off by
+0.01 out of 5.09 on the remote system.
+
+@quotation
+@b{NOTE: It is very important to rememeber that netperf is calculating
+system-wide CPU utilization.  When calculating the service demand
+(those last two columns in the output above) each netperf assumes it
+is the only thing running on the system.  This means that for
+concurrent tests the service demands reported by netperf will be
+wrong.  One has to compute service demands for concurrent tests by
+hand.}
+@end quotation
+
+If you wish you can add a unique, global @option{-B} option to each
+command line to append the given string to the output:
+
+@example
+for i in 1 2 3 4
+do
+netperf -t TCP_STREAM -H tardy.cup.hp.com -B "this is test $i" -i 10 -P 0 &
+done
+
+87380  16384  16384    10.03     234.90   this is test 4
+87380  16384  16384    10.03     234.41   this is test 2
+87380  16384  16384    10.03     235.26   this is test 1
+87380  16384  16384    10.03     235.09   this is test 3
+@end example
+
+You will notice that the tests completed in an order other than they
+were started from the shell.  This underscores why there is a threat
+of skew error and why netperf4 is the preferred tool for aggregate
+tests.  Even if you see the Netperf Contributing Editor acting to the
+contrary!-)
+
+@node  Using --enable-burst,  , Running Concurrent Netperf Tests, Using Netperf to Measure Aggregate Performance
+@comment  node-name,  next,  previous,  up
+@section Using --enable-burst
+
+If one configures netperf with @code{--enable-burst}:
+
+@example
+configure --enable-burst
+@end example
+
+Then a test-specific @option{-b num} option is added to the
+@ref{TCP_RR,TCP_RR} and @ref{UDP_RR,UDP_RR} tests. This option causes
+TCP_RR and UDP_RR to quickly work their way up to having at least
+@option{num} transactions in flight at one time.
+
+This is used as an alternative to or even in conjunction with
+multiple-concurrent _RR tests.  When run with just a single instance
+of netperf, increasing the burst size can determine the maximum number
+of transactions per second can be serviced by a single process:
+
+@example
+for b in 0 1 2 4 8 16 32
+do 
+ netperf -v 0 -t TCP_RR -B "-b $b" -H hpcpc108 -P 0 -- -b $b
+done
+
+9457.59 -b 0
+9975.37 -b 1
+10000.61 -b 2
+20084.47 -b 4
+29965.31 -b 8
+71929.27 -b 16
+109718.17 -b 32
+@end example
+
+The global @option{-v} and @option{-P} options were used to minimize
+the output to the single figure of merit which in this case the
+transaction rate.  The global @code{-B} option was used to more
+clearly label the output, and the test-specific @option{-b} option
+enabled by @code{--enable-burst} set the number of transactions in
+flight at one time.
+
+Now, since the test-specific @option{-D} option was not specified to
+set TCP_NODELAY, the stack was free to ``bundle'' requests and/or
+responses into TCP segments as it saw fit, and since the default
+request and response size is one byte, there could have been some
+considerable bundling.  If one wants to try to achieve a closer to
+one-to-one correspondence between a request and response and a TCP
+segment, add the test-specific @option{-D} option:
+
+@example
+for b in 0 1 2 4 8 16 32
+do
+ netperf -v 0 -t TCP_RR -B "-b $b -D" -H hpcpc108 -P 0 -- -b $b -D
+done
+
+ 8695.12 -b 0 -D
+ 19966.48 -b 1 -D
+ 20691.07 -b 2 -D
+ 49893.58 -b 4 -D
+ 62057.31 -b 8 -D
+ 108416.88 -b 16 -D
+ 114411.66 -b 32 -D
+@end example
+
+You can see that this has a rather large effect on the reported
+transaction rate.  In this particular instance, the author believes it
+relates to interactions between the test and interrupt coalescing
+settings in the driver for the NICs used.
+
+@quotation
+@b{NOTE: Even if you set the @option{-D} option that is still not a
+guarantee that each transaction is in its own TCP segments.  You
+should get into the habit of verifying the relationship between the
+transaction rate and the packet rate via other means}
+@end quotation
+
+You can also combine @code{--enable-burst} functionality with
+concurrent netperf tests.  This would then be an ``aggregate of
+aggregates'' if you like:
+
+@example
+
+for i in 1 2 3 4
+do
+ netperf -H hpcpc108 -v 0 -P 0 -i 10 -B "aggregate $i -b 8 -D" -t TCP_RR -- -b 8 -D &
+done
+
+ 46668.38 aggregate 4 -b 8 -D
+ 44890.64 aggregate 2 -b 8 -D
+ 45702.04 aggregate 1 -b 8 -D
+ 46352.48 aggregate 3 -b 8 -D
+
+@end example
+
+Since each netperf did hit the confidence intervals, we can be
+reasonably certain that the aggregate transaction per second rate was
+the sum of all four concurrent tests, or something just shy of 184,000
+transactions per second.  To get some idea if that was also the packet
+per second rate, we could bracket that @code{for} loop with something
+to gather statistics and run the results through
+@uref{ftp://ftp.cup.hp.com/dist/networking/tools,beforeafter}:
+
+@example
+/usr/sbin/ethtool -S eth2 > before
+for i in 1 2 3 4
+do
+ netperf -H 192.168.2.108 -l 60 -v 0 -P 0 -B "aggregate $i -b 8 -D" -t TCP_RR -- -b 8 -D &
+done
+wait
+/usr/sbin/ethtool -S eth2 > after
+
+ 52312.62 aggregate 2 -b 8 -D
+ 50105.65 aggregate 4 -b 8 -D
+ 50890.82 aggregate 1 -b 8 -D
+ 50869.20 aggregate 3 -b 8 -D
+
+beforeafter before after > delta
+
+grep packets delta
+     rx_packets: 12251544
+     tx_packets: 12251550
+
+@end example
+
+This example uses @code{ethtool} because the system being used is
+running Linux.  Other platforms have other tools - for example HP-UX
+has lanadmin:
+
+@example
+lanadmin -g mibstats <ppa>
+@end example
+
+and of course one could instead use @code{netstat}.
+
+The @code{wait} is important because we are launching concurrent
+netperfs in the background.  Without it, the second ethtool command
+would be run before the tests finished and perhaps even before the
+last of them got started!
+
+The sum of the reported transaction rates is 204178 over 60 seconds,
+which is a total of 12250680 transactions.  Each transaction is the
+exchange of a request and a response, so we multiply that by 2 to
+arrive at 24501360.
+
+The sum of the ethtool stats is 24503094 packets which matches what
+netperf was reporting very well. 
+
+Had the request or response size differed, we would need to know how
+it compared with the @dfn{MSS} for the connection.
+
+Just for grins, here is the excercise repeated, using @code{netstat}
+instead of @code{ethtool}
+
+@example
+netstat -s -t > before
+for i in 1 2 3 4
+do
+ netperf -l 60 -H 192.168.2.108 -v 0 -P 0 -B "aggregate $i -b 8 -D" -t TCP_RR -- -b 8 -D & done
+wait
+netstat -s -t > after
+
+ 51305.88 aggregate 4 -b 8 -D
+ 51847.73 aggregate 2 -b 8 -D
+ 50648.19 aggregate 3 -b 8 -D
+ 53605.86 aggregate 1 -b 8 -D
+
+beforeafter before after > delta
+
+grep segments delta
+    12445708 segments received
+    12445730 segments send out
+    1 segments retransmited
+    0 bad segments received.
+@end example
+
+The sums are left as an excercise to the reader :)
+
+Things become considerably more complicated if there are non-trvial
+packet losses and/or retransmissions.
+
+Of course all this checking is unnecessary if the test is a UDP_RR
+test because UDP ``never'' aggregates multiple sends into the same UDP
+datagram, and there are no ACKnowledgements in UDP.  The loss of a
+single request or response will not bring a ``burst'' UDP_RR test to a
+screeching halt, but it will reduce the number of transactions
+outstanding at any one time.  A ``burst'' UDP_RR test @b{will} come to a
+halt if the sum of the lost requests and responses reaches the value
+specified in the test-specific @option{-b} option.
+
+
+@node Using Netperf to Measure Bidirectional Transfer, Other Netperf Tests, Using Netperf to Measure Aggregate Performance, Top
+@comment  node-name,  next,  previous,  up
+@chapter Using Netperf to Measure Bidirectional Transfer
+
+There are two ways to use netperf to measure the perfomance of
+bidirectional transfer.  The first is to run concurrent netperf tests
+from the command line.  The second is to configure netperf with
+@code{--enable-burst} and use a single instance of the
+@ref{TCP_RR,TCP_RR} test.
+
+While neither method is more ``correct'' than the other, each is doing
+so in different ways, and that has possible implications.  For
+instance, using the concurrent netperf test mechanism means that
+multiple TCP connections and multiple processes are involved, whereas
+using the single instance of TCP_RR there is only one TCP connection
+and one process on each end.  They may behave differently, especially
+on an MP system.
+
+@menu
+* Bidirectional Transfer with Concurrent Tests::  
+* Bidirectional Transfer with TCP_RR::  
+@end menu
+
+@node  Bidirectional Transfer with Concurrent Tests, Bidirectional Transfer with TCP_RR, Using Netperf to Measure Bidirectional Transfer, Using Netperf to Measure Bidirectional Transfer
+@comment  node-name,  next,  previous,  up
+@section Bidirectional Transfer with Concurrent Tests
+
+If we had two hosts Fred and Ethel, we could simply run a netperf
+@ref{TCP_STREAM,TCP_STREAM} test on Fred pointing at Ethel, and a
+concurrent netperf TCP_STREAM test on Ethel pointing at Fred, but
+since there are no mechanisms to synchronize netperf tests and we
+would be starting tests from two different systems, there is a
+considerable risk of skew error.
+
+Far better would be to run simultaneous TCP_STREAM and
+@ref{TCP_MAERTS,TCP_MAERTS} tests from just @b{one} system, using the
+concepts and procedures outlined in @ref{Running Concurrent Netperf
+Tests,Running Concurrent Netperf Tests}. Here then is an example:
+
+@example
+for i in 1
+do
+ netperf -H 192.168.2.108 -t TCP_STREAM -B "outbound" -i 10 -P 0 -v 0 -- -s 256K -S 256K &
+ netperf -H 192.168.2.108 -t TCP_MAERTS -B "inbound"  -i 10 -P 0 -v 0 -- -s 256K -S 256K &
+done
+
+ 892.66 outbound
+ 891.34 inbound
+
+@end example
+
+We have used a @code{for} loop in the shell with just one iteration
+because that will be @b{much} easier to get both tests started at more or
+less the same time than doing it by hand.  The global @option{-P} and
+@option{-v} options are used because we aren't interested in anything
+other than the throughput, and the global @option{-B} option is used
+to tag each output so we know which was inbound and which outbound
+relative to the system on which we were running netperf.  Of course
+that sense is switched on the system running netserver :)  The use of
+the global @option{-i} option is explained in @ref{Running Concurrent
+Netperf Tests,Running Concurrent Netperf Tests}.
+
+@node  Bidirectional Transfer with TCP_RR,  , Bidirectional Transfer with Concurrent Tests, Using Netperf to Measure Bidirectional Transfer
+@comment  node-name,  next,  previous,  up
+@section Bidirectional Transfer with TCP_RR
+
+If one configures netperf with @code{--enable-burst} then one can use
+the test-specific @option{-b} option to increase the number of
+transactions in flight at one time.  If one also uses the -r option to
+make those transactions larger the test starts to look more and more
+like a bidirectional transfer than a request/response test.
+
+Now, the logic behing @code{--enable-burst} is very simple, and there
+are no calls to @code{poll()} or @code{select()} which means we want
+to make sure that the @code{send()} calls will never block, or we run
+the risk of deadlock with each side stuck trying to call @code{send()}
+and neither calling @code{recv()}.  
+
+Fortunately, this is easily accomplished by setting a ``large enough''
+socket buffer size with the test-specific @option{-s} and @option{-S}
+options.  Presently this must be performed by the user.  Future
+versions of netperf might attempt to do this automagically, but there
+are some issues to be worked-out. 
+
+Here then is an example of a bidirectional transfer test using
+@code{--enable-burst} and the @ref{TCP_RR,TCP_RR} test:
+
+@example
+netperf -t TCP_RR -H hpcpc108 -- -b 6 -r 32K -s 256K -S 256K
+TCP REQUEST/RESPONSE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to hpcpc108.cup.hp.com (16.89.84.108) port 0 AF_INET : first burst 6
+Local /Remote
+Socket Size   Request  Resp.   Elapsed  Trans.
+Send   Recv   Size     Size    Time     Rate         
+bytes  Bytes  bytes    bytes   secs.    per sec   
+
+524288 524288 32768    32768   10.01    3525.97   
+524288 524288
+
+@end example
+
+Now, at present netperf does not include a bit or byte rate in the
+output of an _RR test which means we must calculate it ourselves. Each
+transaction is the exchange of 32768 bytes of request and 32768 bytes
+of response, or 65536 bytes.  Multiply that by 8 and we arrive at
+524288 bits per transaction.  Multiply that by 3525.97 and we arrive
+at 1848623759 bits per second.  Since things were uniform, we can
+divide that by two and arrive at roughly 924311879 bits per second
+each way.  That corresponds to ``link-rate'' for a 1 Gigiabit Ethernet
+which happens to be the type of netpwrk used in the example.
+
+A future version of netperf may perform the calculation on behalf of
+the user, but it would likely not emit it unless the user specified a
+verbosity of 2 or more with the global @option{-v} option.
+
+@node Other Netperf Tests, Address Resolution, Using Netperf to Measure Bidirectional Transfer, Top
 @chapter Other Netperf Tests
 
 Apart from the typical performance tests, netperf contains some tests
@@ -2090,7 +2650,7 @@ is no native getaddrinfo call.  As of this writing, the replacement
 @code{getaddrinfo()} as been tested on HP-UX 11.0 and then presumed to
 run elsewhere.
 
-@node Enhancing Netperf, Index, Address Resolution, Top
+@node Enhancing Netperf, Netperf4, Address Resolution, Top
 @comment  node-name,  next,  previous,  up
 @chapter Enhancing Netperf
 
@@ -2123,11 +2683,26 @@ sending context @command{diff} results to
 point, it is a matter of pestering the Netperf Contributing Editor
 until he gets the changes incorporated :)
 
-One of these days, it is hoped that some sort of public version
-control system will be setup - perhaps on netperf.org - to make this
-whole process easier.
+@node  Netperf4, Index, Enhancing Netperf, Top
+@comment  node-name,  next,  previous,  up
+@chapter Netperf4
 
-@node Index,  , Enhancing Netperf, Top
+Netperf4 is the shorthand name given to version 4.X.X of netperf.
+This is really a separate benchmark more than a newer version of
+netperf, but it is a decendant of netperf so the netperf name is
+kept.  The facitious way to describe netperf4 is to say it is the
+egg-laying-wolly-milk-pig version of netperf :)  The more respectful
+way to describe it is to say it is the version of netperf with support
+for synchronized, multiple-thread, multiple-test, multiple-system,
+network-oriented benchmarking.
+
+Netperf4 is still undergoing rapid evolution. Those wishing to work
+with or on netperf4 are encouraged to join the
+@uref{http://www.netperf.org/cgi-bin/mailman/listinfo/netperf-dev,netperf-dev}
+mailing list and/or peruse the
+@uref{http://www.netperf.org/svn/netperf4/trunk,current sources}.
+
+@node Index,  , Netperf4, Top
 @unnumbered Index
 
 @printindex cp
