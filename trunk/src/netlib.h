@@ -509,8 +509,12 @@ extern  struct ring_elt *allocate_exs_buffer_ring();
 extern  struct sendfile_ring_elt *alloc_sendfile_buf_ring();
 #endif /* HAVE_SENDFILE */
 #ifdef WANT_DLPI
-extern  int     dl_connect(int fd, unsigned char *rem_addr, int rem_addr_len);
-extern  int     dl_bind(int fd, int sap, int mode, char *dlsap_ptr, int *dlsap_len);
+/* it seems that AIX in its finite wisdom has some bogus define in an
+   include file which defines "rem_addr" which then screws-up this extern
+   unless we change the names to protect the guilty. reported by Eric
+   Jones */
+extern int dl_connect(int fd, unsigned char *remote_addr, int remote_addr_len);
+extern int dl_bind(int fd, int sap, int mode, char *dlsap_ptr, int *dlsap_len);
 extern  int     dl_open(char devfile[], int ppa);
 #endif /* WANT_DLPI */
 extern  char    format_cpu_method(int method);

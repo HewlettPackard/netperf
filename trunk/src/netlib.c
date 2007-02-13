@@ -3467,7 +3467,7 @@ dl_bind(int fd, int sap, int mode, char *dlsap_ptr, int *dlsap_len)
 }
 
 int
-dl_connect(int fd, unsigned char *rem_addr, int rem_addr_len)
+dl_connect(int fd, unsigned char *remote_addr, int remote_addr_len)
 {
   dl_connect_req_t *connection_req = (dl_connect_req_t *)control_data;
   dl_connect_con_t *connection_con = (dl_connect_con_t *)control_data;
@@ -3486,19 +3486,19 @@ dl_connect(int fd, unsigned char *rem_addr, int rem_addr_len)
   data_message.buf = (char *)data_area;
 
   connection_req->dl_primitive = DL_CONNECT_REQ;
-  connection_req->dl_dest_addr_length = rem_addr_len;
+  connection_req->dl_dest_addr_length = remote_addr_len;
   connection_req->dl_dest_addr_offset = sizeof(dl_connect_req_t);
   connection_req->dl_qos_length = 0;
   connection_req->dl_qos_offset = 0;
-  bcopy (rem_addr, 
+  bcopy (remote_addr, 
          (unsigned char *)control_data + sizeof(dl_connect_req_t),
-         rem_addr_len);
+         remote_addr_len);
 
   /* well, I would call the put_control routine here, but the sequence */
   /* of connection stuff with DLPI is a bit screwey with all this */
   /* message passing - Toto, I don't think were in Berkeley anymore. */
 
-  control_message.len = sizeof(dl_connect_req_t) + rem_addr_len;
+  control_message.len = sizeof(dl_connect_req_t) + remote_addr_len;
   if ((error = putmsg(fd,&control_message,0,0)) !=0) {
     fprintf(where,"dl_connect: putmsg failure, errno = %d, error 0x%x \n",
             errno,error);
@@ -3537,10 +3537,10 @@ dl_connect(int fd, unsigned char *rem_addr, int rem_addr_len)
 }
 
 int
-dl_accept(fd, rem_addr, rem_addr_len)
+dl_accept(fd, remote_addr, remote_addr_len)
      int fd;
-     unsigned char *rem_addr;
-     int rem_addr_len;
+     unsigned char *remote_addr;
+     int remote_addr_len;
 {
   dl_connect_ind_t *connect_ind = (dl_connect_ind_t *)control_data;
   dl_connect_res_t *connect_res = (dl_connect_res_t *)control_data;
