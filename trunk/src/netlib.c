@@ -1206,6 +1206,8 @@ allocate_buffer_ring(int width, int buffer_size, int alignment, int offset)
   int do_fill;
 
   FILE *fill_source;
+  char default_fill[] = "netperf";
+  int  fill_cursor = 0;
 
   malloc_size = buffer_size + alignment + offset;
 
@@ -1269,6 +1271,20 @@ allocate_buffer_ring(int width, int buffer_size, int alignment, int offset)
 	bufptr += bytes_read;
         bytes_left -= bytes_read;
       }
+    }
+    else {
+      /* use the default fill to ID our data traffic on the
+	 network. it ain't exactly pretty, but it should work */
+      int j;
+      char *bufptr = temp_link->buffer_ptr;
+      for (j = 0; j < buffer_size; j++) {
+	bufptr[j] = default_fill[fill_cursor];
+	fill_cursor += 1;
+	if (fill_cursor >  strlen(default_fill)) {
+	  fill_cursor = 0;
+	}
+      }
+
     }
     temp_link->next = prev_link;
     prev_link = temp_link;
