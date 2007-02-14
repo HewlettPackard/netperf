@@ -10000,7 +10000,7 @@ recv_tcp_tran_rr()
  /* this routine implements the sending (netperf) side of the TCP_RR */
  /* test using POSIX-style non-blocking sockets. */
 
-int 
+void
 send_tcp_nbrr(char remote_host[])
 {
   
@@ -10231,7 +10231,7 @@ Send   Recv    Send   Recv\n\
       remote_cpu_usage  = tcp_rr_response->measure_cpu;
       remote_cpu_rate   = tcp_rr_response->cpu_rate;
       /* make sure that port numbers are in network order */
-      server.sin_port   = tcp_rr_response->data_port_number;
+      server.sin_port   = (unsigned short)tcp_rr_response->data_port_number;
       server.sin_port   = htons(server.sin_port);
     }
     else {
@@ -10254,7 +10254,7 @@ Send   Recv    Send   Recv\n\
     }
     
     /* now that we are connected, mark the socket as non-blocking */
-    if (!set_nonblock(send_socket) {
+    if (!set_nonblock(send_socket)) {
       perror("netperf: set_nonblock");
       exit(1);
     }
@@ -10344,7 +10344,7 @@ Send   Recv    Send   Recv\n\
 	    timed_out = 1;
 	    break;
 	  }
-#ifndef WIN32
+#ifndef WIN32  // But what does WinNT indicate in this situation...
 	  else if (errno == EAGAIN) {
 	    Set_errno(0);
 	    continue;
@@ -10631,7 +10631,7 @@ Send   Recv    Send   Recv\n\
 
  /* this routine implements the receive (netserver) side of a TCP_RR */
  /* test */
-int 
+void 
 recv_tcp_nbrr()
 {
   
@@ -10650,6 +10650,10 @@ recv_tcp_nbrr()
   int	request_bytes_remaining;
   int	timed_out = 0;
   float	elapsed_time;
+
+  struct addrinfo *local_res;
+  char local_name[BUFSIZ];
+  char port_buffer[PORTBUFSIZE];
   
   struct	tcp_rr_request_struct	*tcp_rr_request;
   struct	tcp_rr_response_struct	*tcp_rr_response;
@@ -10754,6 +10758,7 @@ recv_tcp_nbrr()
 
   local_res = complete_addrinfo(local_name,
 				local_name,
+				port_buffer,
 				nf_to_af(tcp_rr_request->ipfamily),
 				SOCK_STREAM,
 				IPPROTO_TCP,
@@ -10912,6 +10917,7 @@ recv_tcp_nbrr()
 	      timed_out = 1;
 	      break;
 		}
+#ifndef WIN32  // But what does WinNT indicate in this situation...
 	    else if (errno == EAGAIN) {
 	      Set_errno(0);
 	      if (times_up) {
@@ -10920,6 +10926,7 @@ recv_tcp_nbrr()
 		  }
 	      continue;
 		}
+#endif
 	    else {
 	      netperf_response.content.serv_errno = errno;
 	      send_response();

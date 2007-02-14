@@ -462,3 +462,10 @@ extern void sendfile_tcp_stream(char remotehost[]);
 #if !defined(HAVE_STRUCT_SOCKADDR_STORAGE) && !defined(sockaddr_storage)
 #define sockaddr_storage sockaddr_in
 #endif
+
+#ifdef DO_NBRR
+extern void send_tcp_nbrr(char remote_host[]);
+
+extern void recv_tcp_nbrr();
+#endif
+
