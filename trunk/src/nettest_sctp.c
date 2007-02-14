@@ -617,7 +617,7 @@ Size (bytes)\n\
 
     if (non_block) {
 	/* now that we are connected, mark the socket as non-blocking */
-	if (fcntl(send_socket, F_SETFL, O_NONBLOCK) == -1) {
+	if (!set_nonblock(send_socket)) {
 	  perror("netperf: fcntl");
 	  exit(1);
 	}
@@ -1281,7 +1281,7 @@ recv_sctp_stream()
   if (non_block) {
       fprintf(where, "setting socket as nonblocking\n");
       fflush(where);
-      if (fcntl(s_data, F_SETFL, O_NONBLOCK) == -1) {
+      if (!set_nonblock(s_data)) {
 	close(s_data);
 	exit(1);
       }
@@ -1759,7 +1759,7 @@ Size (bytes)\n\
 
 	if (non_block) {
 	    /* now that we are connected, mark the socket as non-blocking */
-	    if (fcntl(send_socket[j], F_SETFL, O_NONBLOCK) == -1) {
+	    if (!set_nonblock(send_socket[j])) {
 	      perror("netperf: fcntl");
 	      exit(1);
 	    }
@@ -2429,7 +2429,7 @@ recv_sctp_stream_1toMany()
   
   /* now that we are connected, mark the socket as non-blocking */
   if (non_block) {
-      if (fcntl(s_recv, F_SETFL, O_NONBLOCK) == -1) {
+      if (!set_nonblock(s_recv)) {
 	close(s_recv);
 	exit(1);
       }
@@ -2829,7 +2829,7 @@ Send   Recv    Send   Recv\n\
 
     /* set non-blocking if needed */
     if (non_block) {
-	if (fcntl(send_socket, F_SETFL, O_NONBLOCK) == -1) {
+       if (!set_nonblock(send_socket)) {
 	    close(send_socket);
 	    exit(1);
 	}
@@ -3450,8 +3450,8 @@ recv_sctp_rr()
 
   /* now that we are connected, mark the socket as non-blocking */
   if (non_block) {
-    if (fcntl(s_data, F_SETFL, O_NONBLOCK) == -1) {
-	perror("netperf: fcntl");
+    if (!set_nonblock(s_data)) {
+      perror("netperf: set_nonblock");
 	exit(1);
     }
   }
@@ -3888,7 +3888,7 @@ Send   Recv    Send   Recv\n\
       sctp_enable_events(send_socket[j], 0);
       
       if (non_block) {
-	if (fcntl(send_socket[j], F_SETFL, O_NONBLOCK) == -1) {
+        if (!set_nonblock(send_socket[j])) {
 	  close(send_socket[j]);
 	  exit(1);
 	}
@@ -4492,8 +4492,8 @@ recv_sctp_rr_1toMany()
 
   /* now that we are connected, mark the socket as non-blocking */
   if (non_block) {
-    if (fcntl(s_rcv, F_SETFL, O_NONBLOCK) == -1) {
-	perror("netperf: fcntl");
+    if (!set_nonblock(s_rcv)) {
+      perror("netperf: set_nonblock");
 	exit(1);
     }
   }
