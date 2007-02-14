@@ -687,10 +687,16 @@ get_num_cpus()
 }  
 
 #ifdef WIN32
+#ifdef __GNUC__
+  #define S64_SUFFIX(x) x##LL
+#else
+  #define S64_SUFFIX(x) x##i64
+#endif
+
 /*
  * Number of 100 nanosecond units from 1/1/1601 to 1/1/1970
  */
-#define EPOCH_BIAS  116444736000000000i64
+#define EPOCH_BIAS  S64_SUFFIX(116444736000000000)
 
 /*
  * Union to facilitate converting from FILETIME to unsigned __int64
@@ -708,9 +714,9 @@ gettimeofday( struct timeval *tv , struct timezone *not_used )
 
         GetSystemTimeAsFileTime( &(nt_time.ft_struct) );
 
-        UnixTime = ((nt_time.ft_scalar - EPOCH_BIAS) / 10i64);
-        tv->tv_sec = (long)(time_t)(UnixTime / 1000000i64);
-        tv->tv_usec = (unsigned long)(UnixTime % 1000000i64);
+        UnixTime = ((nt_time.ft_scalar - EPOCH_BIAS) / S64_SUFFIX(10));
+        tv->tv_sec = (long)(time_t)(UnixTime / S64_SUFFIX(1000000));
+        tv->tv_usec = (unsigned long)(UnixTime % S64_SUFFIX(1000000));
 }
 #endif /* WIN32 */
 
@@ -1280,7 +1286,9 @@ allocate_buffer_ring(int width, int buffer_size, int alignment, int offset)
       for (j = 0; j < buffer_size; j++) {
 	bufptr[j] = default_fill[fill_cursor];
 	fill_cursor += 1;
-	if (fill_cursor >  strlen(default_fill)) {
+	/* the Windows DDK compiler with an x86_64 target wants a cast
+	   here */
+	if (fill_cursor >  (int)strlen(default_fill)) {
 	  fill_cursor = 0;
 	}
       }
@@ -1978,6 +1986,21 @@ bind_to_specific_processor(int processor_affinity, int use_cpu_map)
 	    "Processor affinity not available for this platform!\n");
     fflush(where);
   }
+#endif
+}
+
+
+/*
+ * Sets a socket to non-blocking operation.
+ */
+int
+set_nonblock (SOCKET sock)
+{
+#ifdef WIN32
+  unsigned long flags = 1;
+  return (ioctlsocket(sock, FIONBIO, &flags) != SOCKET_ERROR);
+#else
+  return (fcntl(sock, F_SETFL, O_NONBLOCK) != -1);
 #endif
 }
 
@@ -2765,7 +2788,7 @@ get_id()
 	static char id_string[80];
 #ifdef WIN32
 char                    system_name[MAX_COMPUTERNAME_LENGTH+1] ;
-int                     name_len = MAX_COMPUTERNAME_LENGTH + 1 ;
+DWORD                   name_len = MAX_COMPUTERNAME_LENGTH + 1 ;
 #else
 struct  utsname         system_name;
 #endif /* WIN32 */
@@ -2773,7 +2796,7 @@ struct  utsname         system_name;
 #ifdef WIN32
  SYSTEM_INFO SystemInfo;
  GetSystemInfo( &SystemInfo ) ;
- if ( !GetComputerName(system_name , &(DWORD)name_len) )
+ if ( !GetComputerName(system_name , &name_len) )
    strcpy(system_name , "no_name") ;
 #else
  if (uname(&system_name) <0) {

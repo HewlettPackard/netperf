@@ -10069,7 +10069,10 @@ Send   Recv    Send   Recv\n\
   struct	tcp_rr_request_struct	*tcp_rr_request;
   struct	tcp_rr_response_struct	*tcp_rr_response;
   struct	tcp_rr_results_struct	*tcp_rr_result;
-  
+
+  struct addrinfo *remote_res;
+  struct addrinfo *local_res;
+
   tcp_rr_request = 
     (struct tcp_rr_request_struct *)netperf_request.content.test_specific_data;
   tcp_rr_response=
@@ -10251,8 +10254,8 @@ Send   Recv    Send   Recv\n\
     }
     
     /* now that we are connected, mark the socket as non-blocking */
-    if (fcntl(send_socket, F_SETFL, O_NONBLOCK) == -1) {
-      perror("netperf: fcntl");
+    if (!set_nonblock(send_socket) {
+      perror("netperf: set_nonblock");
       exit(1);
     }
 
@@ -10341,10 +10344,12 @@ Send   Recv    Send   Recv\n\
 	    timed_out = 1;
 	    break;
 	  }
+#ifndef WIN32
 	  else if (errno == EAGAIN) {
 	    Set_errno(0);
 	    continue;
 	  }
+#endif
 	  else {
 	    perror("send_tcp_nbrr: data recv error");
 	    exit(1);
@@ -10723,7 +10728,7 @@ recv_tcp_nbrr()
 	sizeof(myaddr_in));
   myaddr_in.sin_family      = AF_INET;
   myaddr_in.sin_addr.s_addr = INADDR_ANY;
-  myaddr_in.sin_port        = htons((unsigned_short)tcp_rr_request->port);
+  myaddr_in.sin_port        = htons((unsigned short)tcp_rr_request->port);
   
   /* Grab a socket to listen on, and then listen on it. */
   
@@ -10857,7 +10862,7 @@ recv_tcp_nbrr()
 #endif /* KLUDGE_SOCKET_OPTIONS */
     
   /* now that we are connected, mark the socket as non-blocking */
-  if (fcntl(s_data, F_SETFL, O_NONBLOCK) == -1) {
+  if (!set_nonblock(s_data)) {
     close(s_data);
     exit(1);
   }

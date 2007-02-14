@@ -2,6 +2,9 @@ These are the Release Notes leading to Revision 2.4.3 of netperf:
 
 Things changed in this release:
 
+*) Fixes for compiling under Windows with Mingw/gcc courtesy of Gisle
+   Vanem.
+
 *) A new global option - -N - has been added. When specified, this
    option will tell netperf to not bother to try to establish a
    control connection with a remote netserver.  Instead, netperf will
