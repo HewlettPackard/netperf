@@ -178,6 +178,9 @@
 #define         TCP_CC_RESPONSE            301
 #define         TCP_CC_RESULTS             302
 
+/* The DNS_RR test has been removed from netperf but we leave these
+   here for historical purposes.  Those wanting to do DNS_RR tests
+   should use netperf4 instead. */
 #define         DO_DNS_RR                  400
 #define         DNS_RR_RESPONSE            401
 #define         DNS_RR_RESULTS             402

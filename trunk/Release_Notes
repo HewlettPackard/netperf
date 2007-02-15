@@ -2,6 +2,10 @@ These are the Release Notes leading to Revision 2.4.3 of netperf:
 
 Things changed in this release:
 
+*) The nettest_dns.* files have been removed from the release and the
+   repository.  Those wishing to perform DNS server tests should
+   migrate to netperf4 which has better support for DNS test.
+
 *) Fixes for compiling under Windows with Mingw/gcc courtesy of Gisle
    Vanem.
 
@@ -34,10 +38,7 @@ Things changed in this release:
 
 *) The nettest_ipv6.* files are no longer included in the source
    tar/zip file. IPv6 functionality has been subsumed into the
-   nettest_bsd.* files for some time now.  Paranoia keeps the Netperf
-   Contributing Editor from removing it from the top of trunk of the
-   source repository until after he can do a bit more reading about
-   subversion :)
+   nettest_bsd.* files for some time now. 
 
 *) Use a higher resolution "time" source for HISTOGRAM support under
    Windows, courtesy of Spencer Frink. Prior to this it had no better

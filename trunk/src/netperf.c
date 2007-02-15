@@ -85,8 +85,11 @@ char	netperf_id[]="\
 #include "nettest_dlpi.h"
 #endif /* WANT_DLPI */
 
+/* The DNS tests have been removed from netperf2. Those wanting to do
+   DNS_RR tests should use netperf4 instead. */
+
 #ifdef DO_DNS
-#include "nettest_dns.h"
+#error DNS tests have been removed from netperf. Use netperf4 instead
 #endif /* DO_DNS */
 
 #ifdef WANT_SCTP

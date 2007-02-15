@@ -90,9 +90,11 @@ char	netserver_id[]="\
 #include <winsock2.h>
 #define netperf_socklen_t socklen_t
 /* we need to find some other way to decide to include ws2 */
-#ifdef DO_IPV6
+/* if you are trying to compile on Windows 2000 or NT 4 you will */
+/* probably have to define DONT_IPV6 */
+#ifndef DONT_IPV6
 #include <ws2tcpip.h>
-#endif  /* DO_IPV6 */
+#endif  /* DONT_IPV6 */
 #include <windows.h>
 #define sleep(x) Sleep((x)*1000)
 #else
@@ -124,10 +126,6 @@ char	netserver_id[]="\
 #ifdef WANT_DLPI
 #include "nettest_dlpi.h"
 #endif /* WANT_DLPI */
-
-#ifdef DO_DNS
-#include "nettest_dns.h"
-#endif /* DO_DNS */
 
 #ifdef WANT_SCTP
 #include "nettest_sctp.h"
@@ -337,12 +335,6 @@ process_requests()
       break;
 
 #endif /* WANT_XTI */
-
-#ifdef DO_DNS
-    case DO_DNS_RR:
-      recv_dns_rr();
-      break;
-#endif /* DO_DNS */
 
 #ifdef WANT_SCTP
     case DO_SCTP_STREAM:
