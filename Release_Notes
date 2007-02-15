@@ -2,6 +2,9 @@ These are the Release Notes leading to Revision 2.4.3 of netperf:
 
 Things changed in this release:
 
+*) The UDP_STREAM test includes --enable-demo support, courtesy of
+   patches from Scott Weitzenkamp.
+
 *) The nettest_dns.* files have been removed from the release and the
    repository.  Those wishing to perform DNS server tests should
    migrate to netperf4 which has better support for DNS test.

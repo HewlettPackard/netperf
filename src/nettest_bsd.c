@@ -5824,6 +5824,10 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
       remote_cpu_rate = udp_stream_response->cpu_rate;
     }
 
+#ifdef WANT_DEMO
+    DEMO_STREAM_SETUP(lss_size,rsr_size)
+#endif
+
     /* We "connect" up to the remote post to allow is to use the send */
     /* call instead of the sendto call. Presumeably, this is a little */
     /* simpler, and a little more efficient. I think that it also means */
@@ -5864,7 +5868,13 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
 #ifdef WANT_INTERVALS
     INTERVALS_INIT();
 #endif /* WANT_INTERVALS */
-    
+
+#ifdef WANT_DEMO
+    if (demo_mode) {
+      HIST_timestamp(demo_one_ptr);
+    }
+#endif
+
     /* Send datagrams like there was no tomorrow. at somepoint it might */
     /* be nice to set this up so that a quantity of bytes could be sent, */
     /* but we still need some sort of end of test trigger on the receive */
@@ -5932,6 +5942,10 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
 	HIST_add(time_hist,delta_micro(&time_one,&time_two));
       }
 #endif /* WANT_HISTOGRAM */
+
+#ifdef WANT_DEMO
+      DEMO_STREAM_INTERVAL(send_size)
+#endif
 
 #ifdef WANT_INTERVALS      
       INTERVALS_WAIT();
