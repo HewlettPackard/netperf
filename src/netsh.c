@@ -81,9 +81,6 @@ double atof(const char *);
 #include "nettest_sctp.h"
 #endif
 
-#ifdef DO_DNS
-#include "nettest_dns.h"
-#endif /* DO_DNS */
 
 /************************************************************************/
 /*									*/
@@ -910,13 +907,6 @@ scan_cmd_line(int argc, char *argv[])
       scan_sctp_args(argc, argv);
     }
 #endif
-
-#ifdef DO_DNS
-    else if (strcasecmp(test_name,"DNS_RR") == 0)
-      {
-	scan_dns_args(argc, argv);
-      }
-#endif /* DO_DNS */
 
 }
 

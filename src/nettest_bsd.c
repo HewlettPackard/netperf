@@ -108,10 +108,11 @@ char	nettest_id[]="\
 #include <process.h>
 #define netperf_socklen_t socklen_t
 #include <winsock2.h>
-/* is ifdef DO_IPV6 the right thing here?  netperf doesn't really use
-   that any more. should this just be an arbitrary include? raj
-   2005/07/28 */ 
-#ifdef DO_IPV6
+
+/* while it is unlikely that anyone running Windows 2000 or NT 4 is
+   going to be trying to compile this, if they are they will want to
+   define DONT_IPV6 in the sources file */
+#ifndef DONT_IPV6
 #include <ws2tcpip.h>
 #endif
 #include <windows.h>

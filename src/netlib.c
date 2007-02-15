@@ -105,8 +105,10 @@ char    netlib_id[]="\
 #define netperf_socklen_t socklen_t
 #include <windows.h>
 
-/* there should be another way to decide to include the ws2 file */
-#ifdef DO_IPV6
+/* the only time someone should need to define DONT_IPV6 in the
+   "sources" file is if they are trying to compile on Windows 2000 or
+   NT4 and I suspect this may not be their only problem :) */
+#ifndef DONT_IPV6
 #include <ws2tcpip.h>
 #endif
 

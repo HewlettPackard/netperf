@@ -34,7 +34,9 @@ char   netcpu_ntperf_id[]="\
 #include <assert.h>
 
 #include <winsock2.h>
-#ifdef DO_IPV6
+// If you are trying to compile on Windows 2000 or NT 4.0 you may
+// need to define DONT_IPV6 in the "sources" files.
+#ifndef DONT_IPV6
 #include <ws2tcpip.h>
 #endif
 
