@@ -1,5 +1,5 @@
 char   netcpu_sysctl_id[]="\
-@(#)netcpu_sysctl.c  Version 2.4.0";
+@(#)netcpu_sysctl.c  Version 2.4.3";
 
 #if HAVE_CONFIG_H
 # include <config.h>

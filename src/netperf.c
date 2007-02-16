@@ -1,6 +1,6 @@
 /*
  
-	   Copyright (C) 1993-2005 Hewlett-Packard Company
+	   Copyright (C) 1993-2007 Hewlett-Packard Company
                          ALL RIGHTS RESERVED.
  
   The enclosed software and documentation includes copyrighted works
@@ -42,7 +42,7 @@
  
 */
 char	netperf_id[]="\
-@(#)netperf.c (c) Copyright 1993-2004 Hewlett-Packard Company. Version 2.4.3";
+@(#)netperf.c (c) Copyright 1993-2007 Hewlett-Packard Company. Version 2.4.3";
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

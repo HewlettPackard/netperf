@@ -1,6 +1,6 @@
 /*
  
-	   Copyright (C) 1993-2005 Hewlett-Packard Company
+	   Copyright (C) 1993-2007 Hewlett-Packard Company
                          ALL RIGHTS RESERVED.
  
   The enclosed software and documentation includes copyrighted works
@@ -42,7 +42,7 @@
  
 */
 char	netserver_id[]="\
-@(#)netserver.c (c) Copyright 1993-2004 Hewlett-Packard Co. Version 2.4.0";
+@(#)netserver.c (c) Copyright 1993-2007 Hewlett-Packard Co. Version 2.4.3";
 
  /***********************************************************************/
  /*									*/

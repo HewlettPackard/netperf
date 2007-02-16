@@ -22,7 +22,7 @@
 
 #ifdef WANT_DLPI
 char	nettest_dlpi_id[]="\
-@(#)nettest_dlpi.c (c) Copyright 1993,1995,2004 Hewlett-Packard Co. Version 2.4.1";
+@(#)nettest_dlpi.c (c) Copyright 1993,1995,2004 Hewlett-Packard Co. Version 2.4.3";
 
 #include <sys/types.h>
 #include <fcntl.h>

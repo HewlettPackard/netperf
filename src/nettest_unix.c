@@ -10,7 +10,7 @@
 
 #ifdef WANT_UNIX
 char	nettest_unix_id[]="\
-@(#)nettest_unix.c (c) Copyright 1994-2004 Hewlett-Packard Co. Version 2.4.1";
+@(#)nettest_unix.c (c) Copyright 1994-2007 Hewlett-Packard Co. Version 2.4.3";
      
 /****************************************************************/
 /*								*/
