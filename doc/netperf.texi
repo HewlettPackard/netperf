@@ -49,7 +49,8 @@ found in the file @file{COPYING} of the basic netperf distribution.
 * Address Resolution::          
 * Enhancing Netperf::           
 * Netperf4::                    
-* Index::                       Index for this manual.
+* Concept Index::               
+* Option Index::                
 
 @detailmenu
  --- The Detailed Node Listing ---
@@ -131,7 +132,7 @@ Other Netperf Tests
 @node Introduction, Installing Netperf, Top, Top
 @chapter Introduction
 
-@cindex chapter, Introduction
+@cindex Introduction
 
 Netperf is a benchmark that can be use to measure various aspect of
 networking performance.  The primary foci are bulk (aka
@@ -272,7 +273,7 @@ netperf <global> -- <test-specific>
 @node Installing Netperf, The Design of Netperf, Introduction, Top
 @chapter Installing Netperf
 
-@cindex chapter, Installing Netperf
+@cindex Installation
 
 Netperf's primary form of distribution is source code.  This allows
 installation on systems other than those to which the authors have
@@ -317,9 +318,14 @@ For convenience and ease of remembering, a link to the download site
 is provided via the 
 @uref{http://www.netperf.org/, NetperfPage}
 
-Those wishing to be on the bleeding edge of netperf development can
-grab the top of trunk from the netperf subversion
-@uref{http://www.netperf.org/svn/netperf2/trunk,repository}.
+The bits corresponding to each discrete release of netperf are
+@uref{http://www.netperf.org/svn/netperf2/tags,tagged} for retrieval
+via subversion.  For example, there is a tag for the first version
+corresponding to this version of the manual - 
+@uref{http://www.netperf.org/svn/netperf2/tags/netperf-2.4.3,netperf
+2.4.3}.  Those wishing to be on the bleeding edge of netperf
+development can use subversion to grab the
+@uref{http://www.netperf.org/svn/netperf2/trunk,top of trunk}.
 
 There are likely other places around the Internet from which one can
 download netperf bits.  These may be simple mirrors of the main
@@ -358,12 +364,17 @@ dealing with where to install binaries and whatnot.
 @end example
 should list all of those and more.
 
+@vindex --enable-cpuutil, Configure
 If the netperf configure script does not know how to automagically
 detect which CPU utilization mechanism to use on your platform you may
 want to add a @code{--enable-cpuutil=mumble} option to the configure
 command.   If you have knowledge and/or experience to contribute to
 that area, feel free to contact @email{netperf-feedback@@netperf.org}.
 
+@vindex --enable-xti, Configure
+@vindex --enable-unix, Configure
+@vindex --enable-dlpi, Configure
+@vindex --enable-sctp, Configure
 Similarly, if you want tests using the XTI interface, Unix Domain
 Sockets, DLPI or SCTP it will be necessary to add one or more
 @code{--enable-[xti|unix|dlpi|sctp]=yes} options to the configure
@@ -377,6 +388,10 @@ these requirements will be found in @file{README.@var{platform}} files.
 Expertise and assistance in making that more automagical in the
 configure script would be most welcome.
 
+@cindex Limiting Bandwidth
+@cindex Bandwidth Limitation
+@vindex --enable-intervals, Configure
+@vindex --enable-histogram, Configure
 Other optional configure-time settings include
 @code{--enable-intervals=yes} to give netperf the ability to ``pace''
 its _STREAM tests and @code{--enable-histogram=yes} to have netperf
@@ -501,7 +516,7 @@ bytes  bytes   bytes    secs.    10^6bits/sec
 @node The Design of Netperf, Global Command-line Options, Installing Netperf, Top
 @chapter The Design of Netperf
 
-@cindex chapter, The Design of Netperf
+@cindex Design of Netperf
 
 Netperf is designed around a basic client-server model.  There are
 two executables - netperf and netserver.  Generally you will only
@@ -532,6 +547,7 @@ the results.
 * CPU Utilization::             
 @end menu
 
+@cindex CPU Utilization
 @node CPU Utilization,  , The Design of Netperf, The Design of Netperf
 @section CPU Utilization
 
@@ -738,6 +754,7 @@ sets just test-specific options.
 @section Global Options
 
 @table @code
+@vindex -a, Global
 @item -a <sizespec>
 This option allows you to alter the alignment of the buffers used in
 the sending and receiving calls on the local system.. Changing the
@@ -750,10 +767,12 @@ page-aligned buffers beginning on page boundaries, you could use
 2^10 (KB) respectively. A suffix of ``g,'' ``m'' or ``k'' will specify
 units of 10^9, 10^6 or 10^3 bytes respectively. [Default: 8 bytes]
 
+@vindex -A, Global
 @item -A <sizespec>
 This option is identical to the @option{-a} option with the difference
 being it affects alignments for the remote system.
 
+@vindex -b, Global
 @item -b <size>
 This option is only present when netperf has been configure with
 --enable-intervals=yes prior to compilation.  It sets the size of the
@@ -761,6 +780,12 @@ burst of send calls in a _STREAM test.  When used in conjunction with
 the @option{-w} option it can cause the rate at which data is sent to
 be ``paced.''
 
+@vindex -B, Global
+@item -B <string>
+This option will cause @option{<string>} to be appended to the brief
+(see -P) output of netperf.
+
+@vindex -c, Global
 @item -c [rate]
 This option will ask that CPU utilization and service demand be
 calculated for the local system.  For those CPU utilization mechanisms
@@ -770,11 +795,13 @@ For those CPU utilization mechanisms requiring no calibration, the
 optional rate parameter will be utterly and completely ignored.
 [Default: no CPU measurements]
 
+@vindex -C, Global
 @item -C [rate]
 This option requests CPU utilization and service demand calculations
 for the remote system.  It is otherwise identical to the @option{-c}
 option.
 
+@vindex -d, Global
 @item -d
 Each instance of this option will increase the quantity of debugging
 output displayed during a test.  If the debugging output level is set
@@ -783,6 +810,7 @@ Debugging information for the local system is printed to stdout.
 Debugging information for the remote system is sent by default to the
 file @file{/tmp/netperf.debug}. [Default: no debugging output]
 
+@vindex -D, Global
 @item -D [interval,units]
 This option is only available when netperf is configured with
 --enable-demo=yes.  When set, it will cause netperf to emit periodic
@@ -795,6 +823,7 @@ be done to take at least @var{interval} seconds. If omitted,
 @var{interval} defaults to one second and @var{units} to values
 specific to each test type.
 
+@vindex -f, Global
 @item -f G|M|K|g|m|k
 This option can be used to change the reporting units for _STREAM
 tests.  Arguments of ``G,'' ``M,'' or ``K'' will set the units to
@@ -802,6 +831,7 @@ tests.  Arguments of ``G,'' ``M,'' or ``K'' will set the units to
 KB).  Arguments of ``g,'' ``,m'' or ``k'' will set the units to 10^9,
 10^6 or 10^3 bits/s respectively.  [Default: 'm' or 10^6 bits/s]
 
+@vindex -F, Global
 @item -F <fillfile>
 This option specified the file from which send which buffers will be
 pre-filled .  While the buffers will contain data from the specified
@@ -815,10 +845,12 @@ While optional for most tests, this option is required for a test
 utilizing the sendfile() or related calls because sendfile tests need
 a name of a file to reference.
 
+@vindex -h, Global
 @item -h
 This option causes netperf to display its usage string and exit to the
 exclusion of all else.
 
+@vindex -H, Global
 @item -H <optionspec>
 This option will set the name of the remote system and or the address
 family used for the control connection.  For example:
@@ -858,6 +890,7 @@ last explicit global command-line option wins.
 [Default:  ``localhost'' for the remote name/IP address and ``0'' (eg
 AF_UNSPEC) for the remote address family.]
 
+@vindex -I, Global
 @item -I <optionspec>
 This option enables the calculation of confidence intervals and sets
 the confidence and width parameters with the first have of the
@@ -903,6 +936,7 @@ the real mean value of throughput it is only confident it was within
 (described below) and/or increasing the iteration length with the
 @option{-l} option might resolve the situation.
 
+@vindex -i, Global
 @item -i <sizespec>
 This option enables the calculation of confidence intervals and sets
 the minimum and maximum number of iterations to run in attempting to
@@ -921,8 +955,13 @@ to three.
 If netperf determines that the desired confidence intervals have not
 been met, it emits a noticeable warning.
 
+The total test time will be somewhere between the minimum and maximum
+number of iterations multiplied by the test length supplied by the
+@option{-l} option.
+
+@vindex -l, Global
 @item -l testlen
-This option controls the length of any one iteration of the requested
+This option controls the length of any @b{one} iteration of the requested
 test.  A positive value for @var{testlen} will run each iteration of
 the test for at least @var{testlen} seconds.  A negative value for
 @var{testlen} will run each iteration for the absolute value of
@@ -937,6 +976,12 @@ size(s) are significantly longer than the bandwidthXdelay product of
 the link(s) over which the data connection passes, or those tests
 where there may be non-trivial numbers of retransmissions.
 
+If confidence intervals are enabled via either @option{-I} or
+@option{-i} the total length of the netperf test will be somewhere
+between the minimum and maximum iteration count multiplied by
+@var{testlen}.
+
+@vindex -L, Global
 @item -L <optionspec>
 This option is identical to the @option{-H} option with the difference
 being it sets the _local_ hostname/IP and/or address family
@@ -949,6 +994,7 @@ things known as firewalls.
 [Default: 0.0.0.0 (eg INADDR_ANY) for IPv4 and ::0 for IPv6 for the
 local name.  AF_UNSPEC for the local address family.]
 
+@vindex -n, Global
 @item -n numcpus
 This option tells netperf how many CPUs it should ass-u-me are active
 on the system running netperf.  In particular, this is used for the
@@ -962,6 +1008,7 @@ running netserver.  When netperf/netserver cannot automagically
 determine the number of CPUs that can only be set for netserver via a
 netserver @option{-n} command-line option.
 
+@vindex -N, Global
 @item -N
 This option tells netperf to forego establishing a control
 connection. This makes it is possible to run some limited netperf
@@ -998,6 +1045,7 @@ option.
 
 Added in netperf 2.4.3.
 
+@vindex -o, Global
 @item -o <sizespec>
 The value(s) passed-in with this option will be used as an offset
 added to the alignment specified with the @option{-a} option.  For
@@ -1009,11 +1057,13 @@ will cause the buffers passed to the local send and receive calls to
 begin three bytes past an address aligned to 4096 bytes. [Default: 0
 bytes]
 
+@vindex -O, Global
 @item -O <sizespec>
 This option behaves just as the @option{-o} option but on the remote
 system and in conjunction with the @option{-A} option. [Default: 0
 bytes]
 
+@vindex -p, Global
 @item -p <optionspec>
 The first value of the optionspec passed-in with this option tells
 netperf the port number at which it should expect the remote netserver
@@ -1037,6 +1087,7 @@ In general, setting the local port number is only necessary when one
 is looking to run netperf through those evil, end-to-end breaking
 things known as firewalls.
 
+@vindex -P, Global
 @item -P 0|1
 A value of ``1'' for the @option{-P} option will enable display of
 the test banner.  A value of ``0'' will disable display of the test
@@ -1045,6 +1096,7 @@ running the same basic test type (eg TCP_STREAM) multiple times in
 succession where the test banners would then simply be redundant and
 unnecessarily clutter the output. [Default: 1 - display test banners]
 
+@vindex -t, Global
 @item -t testname
 This option is used to tell netperf which test you wish to run.  As of
 this writing, valid values for @var{testname} include:
@@ -1074,6 +1126,7 @@ options may be present on the command-line.  The last @option{-t}
 global command-line option will determine the test to be
 run. [Default: TCP_STREAM]
 
+@vindex -v, Global
 @item -v verbosity
 This option controls how verbose netperf will be in its output, and is
 often used in conjunction with the @option{-P} option. If the
@@ -1096,12 +1149,14 @@ recv call, or a histogram of the time spent in each send() call or for
 each transaction if netperf was configured with
 @option{--enable-histogram=yes}. [Default: 1 - normal verbosity]
 
+@vindex -w, Global
 @item -w time
 If netperf was configured with @option{--enable-intervals=yes} then
 this value will set the inter-burst time to time milliseconds, and the
 @option{-b} option will set the number of sends per burst.  The actual
 inter-burst time may vary depending on the system's timer resolution.
 
+@vindex -W, Global
 @item -W <sizespec>
 This option controls the number of buffers in the send (first or only
 value) and or receive (second or only value) buffer rings.  Unlike
@@ -1112,6 +1167,7 @@ socket buffer sizes (@option{-s} and/or @option{-S} options) divided
 by the send @option{-m} or receive @option{-M} buffer size
 respectively]
 
+@vindex -4, Global
 @item -4
 Specifying this option will set both the local and remote address
 families to AF_INET - that is use only IPv4 addresses on the control
@@ -1121,6 +1177,7 @@ explicitly specifying an address family wins.  Unless overridden by a
 test-specific option, this will be inherited for the data connection
 as well.
 
+@vindex -6, Global
 @item -6
 Specifying this option will set both local and and remote address
 families to AF_INET6 - that is use only IPv6 addresses on the control
@@ -1239,6 +1296,7 @@ using the BSD Sockets or the XTI interface those common options
 include:
 
 @table @code
+@vindex -h, Test-specific
 @item -h
 Display the test-suite-specific usage string and exit.  For a TCP_ or
 UDP_ test this will be the usage string from the source file
@@ -1254,6 +1312,7 @@ The test-specific @option{-H} will override those settings for the
 data (aka test) connection only.  Settings for the control connection
 are left unchanged.
 
+@vindex -L, Test-specific
 @item -L <optionspec>
 The test-specific @option{-L} option is identical to the test-specific
 @option{-H} option except it affects the local hostname|IP and address
@@ -1261,6 +1320,7 @@ family information.  As with its global command-line counterpart, this
 is generally only useful when measuring though those evil, end-to-end
 breaking things called firewalls.
 
+@vindex -m, Test-specific
 @item -m bytes
 Set the size of the buffer passed-in to the ``send'' calls of a
 _STREAM test.  Note that this may have only an indirect effect on the
@@ -1279,6 +1339,7 @@ will set the size to 32KB or 32768 bytes. [Default: the local send
 socket buffer size for the connection - either the system's default or
 the value set via the @option{-s} option.]
 
+@vindex -M, Test-specific
 @item -M bytes
 Set the size of the buffer passed-in to the ``recv'' calls of a
 _STREAM test.  This will be an upper bound on the number of bytes
@@ -1294,9 +1355,11 @@ will set the size to 32KB or 32768 bytes. [Default: the remote receive
 socket buffer size for the data connection - either the system's
 default or the value set via the @option{-S} option.]
 
+@vindex -P, Test-specific
 @item -P <optionspec>
 Set the local and/or remote port numbers for the data connection.
 
+@vindex -s, Test-specific
 @item -s <sizespec>
 This option sets the local send and receive socket buffer sizes for
 the control connection to the value(s) specified.  Often, this will
@@ -1320,6 +1383,7 @@ via a getsockopt() call, at least one stack is known to deliberately
 ignore history. [Default: 0 - use the system's default socket buffer
 sizes]
 
+@vindex -S Test-specific
 @item -S <sizespec>
 This option sets the remote send and/or receive socket buffer sizes
 for the control connection to the value(s) specified.  Often, this
@@ -1343,6 +1407,7 @@ via a getsockopt() call, at least one stack is known to deliberately
 ignore history. [Default: 0 - use the system's default socket buffer
 sizes]
 
+@vindex -4, Test-specific
 @item -4
 Set the local and remote address family for the data connection to
 AF_INET - ie use IPv4 addressing only.  Just as with their global
@@ -1350,6 +1415,7 @@ command-line counterparts the last of the @option{-4}, @option{-6},
 @option{-H} or @option{-L} option wins for their respective address
 families.
 
+@vindex -6, Test-specific
 @item -6
 This option is identical to its @option{-4} cousin, but requests IPv6
 addresses for the local and remote ends of the data connection.
@@ -1535,6 +1601,7 @@ we resolve that issue by selecting a larger file.
 A UDP_STREAM test is similar to a @ref{TCP_STREAM} test except UDP is
 used as the transport rather than TCP.
 
+@cindex Limiting Bandwidth
 A UDP_STREAM test has no end-to-end flow control - UDP provides none
 and neither does netperf.  However, if you wish, you can configure
 netperf with @code{--enable-intervals=yes} to enable the global
@@ -1822,6 +1889,7 @@ using the BSD Sockets or the XTI interface those common options
 include:
 
 @table @code
+@vindex -h, Test-specific
 @item -h
 Display the test-suite-specific usage string and exit.  For a TCP_ or
 UDP_ test this will be the usage string from the source file
@@ -1830,6 +1898,7 @@ from the source file @file{src/nettest_xti.c}.  For an SCTP test, this
 will be the usage string from the source file
 @file{src/nettest_sctp.c}.
 
+@vindex -H, Test-specific
 @item -H <optionspec>
 Normally, the remote hostname|IP and address family information is
 inherited from the settings for the control connection (eg global
@@ -1839,6 +1908,7 @@ data (aka test) connection only.  Settings for the control connection
 are left unchanged.  This might be used to cause the control and data
 connections to take different paths through the network.
 
+@vindex -L, Test-specific
 @item -L <optionspec>
 The test-specific @option{-L} option is identical to the test-specific
 @option{-H} option except it affects the local hostname|IP and address
@@ -1846,9 +1916,11 @@ family information.  As with its global command-line counterpart, this
 is generally only useful when measuring though those evil, end-to-end
 breaking things called firewalls.
 
+@vindex -P, Test-specific
 @item -P <optionspec>
 Set the local and/or remote port numbers for the data connection.
 
+@vindex -r, Test-specific
 @item -r <sizespec>
 This option sets the request (first value) and/or response (second
 value) sizes for an _RR test. By default the units are bytes, but a
@@ -1862,6 +1934,7 @@ respectively. For example:
 Will set the request size to 128 bytes and the response size to 16 KB
 or 16384 bytes. [Default: 1 - a single-byte request and response ]
 
+@vindex -s, Test-specific
 @item -s <sizespec>
 This option sets the local send and receive socket buffer sizes for
 the control connection to the value(s) specified.  Often, this will
@@ -1882,6 +1955,7 @@ has a direct effect on say the TCP window, today that may not hold
 true for all stacks. [Default: 0 - use the system's default socket
 buffer sizes]
 
+@vindex -S, Test-specific
 @item -S <sizespec>
 This option sets the remote send and/or receive socket buffer sizes
 for the control connection to the value(s) specified.  Often, this
@@ -1902,6 +1976,7 @@ has a direct effect on say the TCP window, today that may not hold
 true for all stacks. [Default: 0 - use the system's default socket
 buffer sizes]
 
+@vindex -4, Test-specific
 @item -4
 Set the local and remote address family for the data connection to
 AF_INET - ie use IPv4 addressing only.  Just as with their global
@@ -1909,6 +1984,7 @@ command-line counterparts the last of the @option{-4}, @option{-6},
 @option{-H} or @option{-L} option wins for their respective address
 families.
 
+@vindex -6 Test-specific
 @item -6
 This option is identical to its @option{-4} cousin, but requests IPv6
 addresses for the local and remote ends of the data connection.
@@ -1930,6 +2006,8 @@ addresses for the local and remote ends of the data connection.
 @end menu
 
 @node TCP_RR, TCP_CC, Options Common to TCP UDP and SCTP _RR tests, Options Common to TCP UDP and SCTP _RR tests
+@cindex Measuring Latency
+@cindex Latency, Request-Response
 @subsection TCP_RR
 
 A TCP_RR (TCP Request/Response) test is requested by passing a value
@@ -1980,6 +2058,8 @@ socket buffers were left at their defaults, and the test ran for all
 of 10 seconds.  The transaction per second rate was rather good :)
 
 @node TCP_CC, TCP_CRR, TCP_RR, Options Common to TCP UDP and SCTP _RR tests
+@cindex Connection Latency
+@cindex Latency, Connection Establishment
 @subsection TCP_CC
 
 A TCP_CC (TCP Connect/Close) test is requested by passing a value of
@@ -1989,6 +2069,8 @@ between one another in a synchronous (one at a time) manner.  While
 this is considered an _RR test, no request or response is exchanged
 over the connection.
 
+@cindex Port Reuse
+@cindex TIME_WAIT
 The issue of TIME_WAIT reuse is an important one for a TCP_CC test.
 Basically, TIME_WAIT reuse is when a pair of systems churn through
 connections fast enough that they wrap the 16-bit port number space in
@@ -2024,6 +2106,8 @@ a TCP_CC test is not symmetric in its loading of the two systems under
 test.
 
 @node TCP_CRR, UDP_RR, TCP_CC, Options Common to TCP UDP and SCTP _RR tests
+@cindex Latency, Connection Establishment
+@cindex Latency, Request-Response
 @subsection TCP_CRR
 
 The TCP Connect/Request/Response (TCP_CRR) test is requested by
@@ -2045,6 +2129,8 @@ and tear-down is not symmetric, a TCP_CRR test is not symmetric even
 when the request and response sizes are the same.
 
 @node UDP_RR, XTI_TCP_RR, TCP_CRR, Options Common to TCP UDP and SCTP _RR tests
+@cindex Latency, Request-Response
+@cindex Packet Loss
 @subsection UDP_RR
 
 A UDP Request/Response (UDP_RR) test is requested by passing a value
@@ -2087,6 +2173,7 @@ loading.  The @option{-T} option was used to make sure netperf and
 netserver ran on a given CPU and did not move around during the test.
 
 @node XTI_TCP_RR, XTI_TCP_CC, UDP_RR, Options Common to TCP UDP and SCTP _RR tests
+@cindex Latency, Request-Response
 @subsection XTI_TCP_RR
 
 An XTI_TCP_RR test is essentially the same as a @ref{TCP_RR} test only
@@ -2100,13 +2187,17 @@ specify the names of the local and/or remote XTI device file(s).
 
 @node XTI_TCP_CC, XTI_TCP_CRR, XTI_TCP_RR, Options Common to TCP UDP and SCTP _RR tests
 @comment  node-name,  next,  previous,  up
+@cindex Latency, Connection Establishment
 @subsection XTI_TCP_CC
 
 @node XTI_TCP_CRR, XTI_UDP_RR, XTI_TCP_CC, Options Common to TCP UDP and SCTP _RR tests
 @comment  node-name,  next,  previous,  up
+@cindex Latency, Connection Establishment
+@cindex Latency, Request-Response
 @subsection XTI_TCP_CRR
 
 @node XTI_UDP_RR, DLCL_RR, XTI_TCP_CRR, Options Common to TCP UDP and SCTP _RR tests
+@cindex Latency, Request-Response
 @subsection XTI_UDP_RR
 
 An XTI_UDP_RR test is essentially the same as a UDP_RR test only using
@@ -2121,18 +2212,23 @@ file(s).
 
 @node DLCL_RR, DLCO_RR, XTI_UDP_RR, Options Common to TCP UDP and SCTP _RR tests
 @comment  node-name,  next,  previous,  up
+@cindex Latency, Request-Response
 @subsection DLCL_RR
 
 @node DLCO_RR, SCTP_RR, DLCL_RR, Options Common to TCP UDP and SCTP _RR tests
 @comment  node-name,  next,  previous,  up
+@cindex Latency, Request-Response
 @subsection DLCO_RR
 
 @node SCTP_RR,  , DLCO_RR, Options Common to TCP UDP and SCTP _RR tests
 @comment  node-name,  next,  previous,  up
+@cindex Latency, Request-Response
 @subsection SCTP_RR
 
 @node Using Netperf to Measure Aggregate Performance, Using Netperf to Measure Bidirectional Transfer, Using Netperf to Measure Request/Response , Top
 @comment  node-name,  next,  previous,  up
+@cindex Aggregate Performance
+@vindex --enable-burst, Configure
 @chapter Using Netperf to Measure Aggregate Performance
 
 @ref{Netperf4,Netperf4} is the preferred benchmark to use when one
@@ -2683,7 +2779,7 @@ sending context @command{diff} results to
 point, it is a matter of pestering the Netperf Contributing Editor
 until he gets the changes incorporated :)
 
-@node  Netperf4, Index, Enhancing Netperf, Top
+@node  Netperf4, Concept Index, Enhancing Netperf, Top
 @comment  node-name,  next,  previous,  up
 @chapter Netperf4
 
@@ -2702,11 +2798,16 @@ with or on netperf4 are encouraged to join the
 mailing list and/or peruse the
 @uref{http://www.netperf.org/svn/netperf4/trunk,current sources}.
 
-@node Index,  , Netperf4, Top
-@unnumbered Index
+@node Concept Index, Option Index, Netperf4, Top
+@unnumbered Concept Index
 
 @printindex cp
 
+@node Option Index,  , Concept Index, Top
+@comment  node-name,  next,  previous,  up
+@unnumbered Option Index
+
+@printindex vr
 @bye                                      
 
 @c  LocalWords:  texinfo setfilename settitle titlepage vskip pt filll ifnottex
