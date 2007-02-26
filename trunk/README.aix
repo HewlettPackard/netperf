@@ -19,4 +19,6 @@ their source - "rem_addr" and "rem_size" A "cousin" of the Netperf
 Contributing Editor reports this interferes with --enable-dlpi
 compilation and that it was also a problem for MySQL compiltion.
 While we await IBM's APAR with bated breath, netperf has been kludged
-to workaround this bug in IBM's include files.
+to workaround this bug in IBM's include files.  It has been reported
+that a "PMR" 34940,212,848 has been submitted to IBM in relation to
+this bug in their header files.
