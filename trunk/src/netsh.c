@@ -1,5 +1,5 @@
 char	netsh_id[]="\
-@(#)netsh.c (c) Copyright 1993-2004 Hewlett-Packard Company. Version 2.4.3";
+@(#)netsh.c (c) Copyright 1993-2007 Hewlett-Packard Company. Version 2.4.3pre";
 
 
 /****************************************************************/
@@ -561,9 +561,15 @@ scan_cmd_line(int argc, char *argv[])
       if (arg2[0] ) {
 	iteration_min = convert(arg2);
       }
+      /* if the iteration_max is < iteration_min make iteration_max
+	 equal iteration_min */
+      if (iteration_max < iteration_min) iteration_max = iteration_min;
+      /* limit minimum to 3 iterations */
+      if (iteration_max < 3) iteration_max = 3;
+      if (iteration_min < 3) iteration_min = 3;
       /* limit maximum to 30 iterations */
-      if(iteration_max>30) iteration_max=30;
-      if(iteration_min>30) iteration_min=30;
+      if (iteration_max > 30) iteration_max = 30;
+      if (iteration_min > 30) iteration_min = 30;
       break;
     case 'I':
       /* set the confidence level (95 or 99) and width */
@@ -578,6 +584,13 @@ scan_cmd_line(int argc, char *argv[])
       if (arg2[0] ) {
 	interval = (double) convert(arg2)/100;
       }
+      /* make sure that iteration_min and iteration_max are at least
+	 at a reasonable default value.  if a -i option has previously
+	 been parsed, these will no longer be 1, so we can check
+	 against 1 */ 
+      if (iteration_min == 1) iteration_min = 3;
+      if (iteration_max == 1) iteration_max = 10;
+
       break;
     case 'k':
       /* local dirty and clean counts */

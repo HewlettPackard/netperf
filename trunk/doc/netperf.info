@@ -41,7 +41,8 @@ netperf benchmark.
 * Address Resolution::
 * Enhancing Netperf::
 * Netperf4::
-* Index::                       Index for this manual.
+* Concept Index::
+* Option Index::
 
  --- The Detailed Node Listing ---
 
@@ -288,8 +289,13 @@ subdirectory.
    For convenience and ease of remembering, a link to the download site
 is provided via the NetperfPage (http://www.netperf.org/)
 
-   Those wishing to be on the bleeding edge of netperf development can
-grab the top of trunk from the netperf subversion repository
+   The bits corresponding to each discrete release of netperf are
+tagged (http://www.netperf.org/svn/netperf2/tags) for retrieval via
+subversion.  For example, there is a tag for the first version
+corresponding to this version of the manual - netperf 2.4.3
+(http://www.netperf.org/svn/netperf2/tags/netperf-2.4.3).  Those
+wishing to be on the bleeding edge of netperf development can use
+subversion to grab the top of trunk
 (http://www.netperf.org/svn/netperf2/trunk).
 
    There are likely other places around the Internet from which one can
@@ -733,6 +739,10 @@ File: netperf.info,  Node: Global Options,  Prev: Command-line Options Syntax,  
      conjunction with the `-w' option it can cause the rate at which
      data is sent to be "paced."
 
+`-B <string>'
+     This option will cause `<string>' to be appended to the brief (see
+     -P) output of netperf.
+
 `-c [rate]'
      This option will ask that CPU utilization and service demand be
      calculated for the local system.  For those CPU utilization
@@ -885,6 +895,10 @@ File: netperf.info,  Node: Global Options,  Prev: Command-line Options Syntax,  
      If netperf determines that the desired confidence intervals have
      not been met, it emits a noticeable warning.
 
+     The total test time will be somewhere between the minimum and
+     maximum number of iterations multiplied by the test length
+     supplied by the `-l' option.
+
 `-l testlen'
      This option controls the length of any one iteration of the
      requested test.  A positive value for TESTLEN will run each
@@ -900,6 +914,10 @@ File: netperf.info,  Node: Global Options,  Prev: Command-line Options Syntax,  
      size(s) are significantly longer than the bandwidthXdelay product
      of the link(s) over which the data connection passes, or those
      tests where there may be non-trivial numbers of retransmissions.
+
+     If confidence intervals are enabled via either `-I' or `-i' the
+     total length of the netperf test will be somewhere between the
+     minimum and maximum iteration count multiplied by TESTLEN.
 
 `-L <optionspec>'
      This option is identical to the `-H' option with the difference
@@ -2622,7 +2640,7 @@ is a matter of pestering the Netperf Contributing Editor until he gets
 the changes incorporated :)
 
 
-File: netperf.info,  Node: Netperf4,  Next: Index,  Prev: Enhancing Netperf,  Up: Top
+File: netperf.info,  Node: Netperf4,  Next: Concept Index,  Prev: Enhancing Netperf,  Up: Top
 
 12 Netperf4
 ***********
@@ -2643,72 +2661,191 @@ list and/or peruse the current sources
 (http://www.netperf.org/svn/netperf4/trunk).
 
 
-File: netperf.info,  Node: Index,  Prev: Netperf4,  Up: Top
+File: netperf.info,  Node: Concept Index,  Next: Option Index,  Prev: Netperf4,  Up: Top
 
-Index
-*****
+Concept Index
+*************
 
  [index ]
 * Menu:
 
-* chapter, Installing Netperf:           Installing Netperf.    (line 6)
-* chapter, Introduction:                 Introduction.          (line 6)
-* chapter, The Design of Netperf:        The Design of Netperf. (line 6)
+* Aggregate Performance:                 Using Netperf to Measure Aggregate Performance.
+                                                               (line  3)
+* Bandwidth Limitation:                  Installing Netperf Bits.
+                                                               (line 41)
+* Connection Latency:                    TCP_CC.               (line  3)
+* CPU Utilization:                       The Design of Netperf.
+                                                               (line 35)
+* Design of Netperf:                     The Design of Netperf.
+                                                               (line  6)
+* Installation:                          Installing Netperf.   (line  6)
+* Introduction:                          Introduction.         (line  6)
+* Latency, Connection Establishment <1>: XTI_TCP_CRR.          (line  3)
+* Latency, Connection Establishment <2>: XTI_TCP_CC.           (line  3)
+* Latency, Connection Establishment <3>: TCP_CRR.              (line  3)
+* Latency, Connection Establishment:     TCP_CC.               (line  3)
+* Latency, Request-Response <1>:         SCTP_RR.              (line  3)
+* Latency, Request-Response <2>:         DLCO_RR.              (line  3)
+* Latency, Request-Response <3>:         DLCL_RR.              (line  3)
+* Latency, Request-Response <4>:         XTI_UDP_RR.           (line  3)
+* Latency, Request-Response <5>:         XTI_TCP_CRR.          (line  3)
+* Latency, Request-Response <6>:         XTI_TCP_RR.           (line  3)
+* Latency, Request-Response <7>:         UDP_RR.               (line  3)
+* Latency, Request-Response <8>:         TCP_CRR.              (line  3)
+* Latency, Request-Response:             TCP_RR.               (line  3)
+* Limiting Bandwidth <1>:                UDP_STREAM.           (line  9)
+* Limiting Bandwidth:                    Installing Netperf Bits.
+                                                               (line 41)
+* Measuring Latency:                     TCP_RR.               (line  3)
+* Packet Loss:                           UDP_RR.               (line  3)
+* Port Reuse:                            TCP_CC.               (line 13)
+* TIME_WAIT:                             TCP_CC.               (line 13)
+
+
+File: netperf.info,  Node: Option Index,  Prev: Concept Index,  Up: Top
+
+Option Index
+************
+
+ [index ]
+* Menu:
+
+* --enable-burst, Configure:             Using Netperf to Measure Aggregate Performance.
+                                                              (line   3)
+* --enable-cpuutil, Configure:           Installing Netperf Bits.
+                                                              (line  22)
+* --enable-dlpi, Configure:              Installing Netperf Bits.
+                                                              (line  28)
+* --enable-histogram, Configure:         Installing Netperf Bits.
+                                                              (line  41)
+* --enable-intervals, Configure:         Installing Netperf Bits.
+                                                              (line  41)
+* --enable-sctp, Configure:              Installing Netperf Bits.
+                                                              (line  28)
+* --enable-unix, Configure:              Installing Netperf Bits.
+                                                              (line  28)
+* --enable-xti, Configure:               Installing Netperf Bits.
+                                                              (line  28)
+* -4, Global:                            Global Options.      (line 379)
+* -4, Test-specific <1>:                 Options Common to TCP UDP and SCTP _RR tests.
+                                                              (line  84)
+* -4, Test-specific:                     Options common to TCP UDP and SCTP tests.
+                                                              (line 106)
+* -6 Test-specific:                      Options Common to TCP UDP and SCTP _RR tests.
+                                                              (line  90)
+* -6, Global:                            Global Options.      (line 388)
+* -6, Test-specific:                     Options common to TCP UDP and SCTP tests.
+                                                              (line 112)
+* -A, Global:                            Global Options.      (line  18)
+* -a, Global:                            Global Options.      (line   6)
+* -B, Global:                            Global Options.      (line  29)
+* -b, Global:                            Global Options.      (line  22)
+* -C, Global:                            Global Options.      (line  42)
+* -c, Global:                            Global Options.      (line  33)
+* -D, Global:                            Global Options.      (line  56)
+* -d, Global:                            Global Options.      (line  47)
+* -F, Global:                            Global Options.      (line  74)
+* -f, Global:                            Global Options.      (line  67)
+* -H, Global:                            Global Options.      (line  92)
+* -h, Global:                            Global Options.      (line  88)
+* -H, Test-specific:                     Options Common to TCP UDP and SCTP _RR tests.
+                                                              (line  17)
+* -h, Test-specific <1>:                 Options Common to TCP UDP and SCTP _RR tests.
+                                                              (line  10)
+* -h, Test-specific:                     Options common to TCP UDP and SCTP tests.
+                                                              (line  10)
+* -i, Global:                            Global Options.      (line 168)
+* -I, Global:                            Global Options.      (line 127)
+* -L, Global:                            Global Options.      (line 209)
+* -l, Global:                            Global Options.      (line 189)
+* -L, Test-specific <1>:                 Options Common to TCP UDP and SCTP _RR tests.
+                                                              (line  26)
+* -L, Test-specific:                     Options common to TCP UDP and SCTP tests.
+                                                              (line  25)
+* -M, Test-specific:                     Options common to TCP UDP and SCTP tests.
+                                                              (line  48)
+* -m, Test-specific:                     Options common to TCP UDP and SCTP tests.
+                                                              (line  32)
+* -N, Global:                            Global Options.      (line 234)
+* -n, Global:                            Global Options.      (line 221)
+* -O, Global:                            Global Options.      (line 279)
+* -o, Global:                            Global Options.      (line 270)
+* -P, Global:                            Global Options.      (line 303)
+* -p, Global:                            Global Options.      (line 283)
+* -P, Test-specific <1>:                 Options Common to TCP UDP and SCTP _RR tests.
+                                                              (line  33)
+* -P, Test-specific:                     Options common to TCP UDP and SCTP tests.
+                                                              (line  61)
+* -r, Test-specific:                     Options Common to TCP UDP and SCTP _RR tests.
+                                                              (line  36)
+* -S Test-specific:                      Options common to TCP UDP and SCTP tests.
+                                                              (line  85)
+* -S, Test-specific:                     Options Common to TCP UDP and SCTP _RR tests.
+                                                              (line  66)
+* -s, Test-specific <1>:                 Options Common to TCP UDP and SCTP _RR tests.
+                                                              (line  48)
+* -s, Test-specific:                     Options common to TCP UDP and SCTP tests.
+                                                              (line  64)
+* -t, Global:                            Global Options.      (line 312)
+* -v, Global:                            Global Options.      (line 341)
+* -W, Global:                            Global Options.      (line 370)
+* -w, Global:                            Global Options.      (line 363)
 
 
 
 Tag Table:
 Node: Top441
-Node: Introduction2722
-Node: Conventions5183
-Node: Installing Netperf6946
-Node: Getting Netperf Bits8500
-Node: Installing Netperf Bits10026
-Node: Verifying Installation16490
-Node: The Design of Netperf17194
-Node: CPU Utilization18776
-Node: Global Command-line Options27389
-Node: Command-line Options Syntax27928
-Node: Global Options29310
-Node: Using Netperf to Measure Bulk Data Transfer48123
-Node: Issues in Bulk Transfer48788
-Node: Options common to TCP UDP and SCTP tests52317
-Node: TCP_STREAM58305
-Node: TCP_MAERTS62073
-Node: TCP_SENDFILE63306
-Node: UDP_STREAM65622
-Node: XTI_TCP_STREAM69058
-Node: XTI_UDP_STREAM69703
-Node: SCTP_STREAM70348
-Node: DLCO_STREAM71048
-Node: DLCL_STREAM73021
-Node: STREAM_STREAM73895
-Node: DG_STREAM74741
-Node: Using Netperf to Measure Request/Response75410
-Node: Issues in Request/Response77331
-Node: Options Common to TCP UDP and SCTP _RR tests79337
-Node: TCP_RR84009
-Node: TCP_CC86353
-Node: TCP_CRR88550
-Node: UDP_RR89596
-Node: XTI_TCP_RR91617
-Node: XTI_TCP_CC92200
-Node: XTI_TCP_CRR92366
-Node: XTI_UDP_RR92534
-Node: DLCL_RR93111
-Node: DLCO_RR93264
-Node: SCTP_RR93416
-Node: Using Netperf to Measure Aggregate Performance93552
-Node: Running Concurrent Netperf Tests94387
-Node: Using --enable-burst98279
-Node: Using Netperf to Measure Bidirectional Transfer104464
-Node: Bidirectional Transfer with Concurrent Tests105537
-Node: Bidirectional Transfer with TCP_RR107403
-Node: Other Netperf Tests109937
-Node: CPU rate calibration110383
-Node: Address Resolution112724
-Node: Enhancing Netperf114700
-Node: Netperf4115937
-Node: Index116838
+Node: Introduction2702
+Node: Conventions5163
+Node: Installing Netperf6926
+Node: Getting Netperf Bits8480
+Node: Installing Netperf Bits10298
+Node: Verifying Installation16762
+Node: The Design of Netperf17466
+Node: CPU Utilization19048
+Node: Global Command-line Options27661
+Node: Command-line Options Syntax28200
+Node: Global Options29582
+Node: Using Netperf to Measure Bulk Data Transfer48878
+Node: Issues in Bulk Transfer49543
+Node: Options common to TCP UDP and SCTP tests53072
+Node: TCP_STREAM59060
+Node: TCP_MAERTS62828
+Node: TCP_SENDFILE64061
+Node: UDP_STREAM66377
+Node: XTI_TCP_STREAM69813
+Node: XTI_UDP_STREAM70458
+Node: SCTP_STREAM71103
+Node: DLCO_STREAM71803
+Node: DLCL_STREAM73776
+Node: STREAM_STREAM74650
+Node: DG_STREAM75496
+Node: Using Netperf to Measure Request/Response76165
+Node: Issues in Request/Response78086
+Node: Options Common to TCP UDP and SCTP _RR tests80092
+Node: TCP_RR84764
+Node: TCP_CC87108
+Node: TCP_CRR89305
+Node: UDP_RR90351
+Node: XTI_TCP_RR92372
+Node: XTI_TCP_CC92955
+Node: XTI_TCP_CRR93121
+Node: XTI_UDP_RR93289
+Node: DLCL_RR93866
+Node: DLCO_RR94019
+Node: SCTP_RR94171
+Node: Using Netperf to Measure Aggregate Performance94307
+Node: Running Concurrent Netperf Tests95142
+Node: Using --enable-burst99034
+Node: Using Netperf to Measure Bidirectional Transfer105219
+Node: Bidirectional Transfer with Concurrent Tests106292
+Node: Bidirectional Transfer with TCP_RR108158
+Node: Other Netperf Tests110692
+Node: CPU rate calibration111138
+Node: Address Resolution113479
+Node: Enhancing Netperf115455
+Node: Netperf4116692
+Node: Concept Index117601
+Node: Option Index119991
 
 End Tag Table
