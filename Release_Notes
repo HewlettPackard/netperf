@@ -1,3 +1,11 @@
+These are the Release Notes leading-up to Revision 2.4.4 of netperf:
+
+Things changed in this release:
+
+*) Setting -I without setting -i will now implicitly set the iteration
+   minimum aand maximums as if a -i 10,3 were set.  Also, some further
+   sanity checking on the bounds for each is made.
+
 These are the Release Notes for Revision 2.4.3 of netperf:
 
 Things changed in this release:
