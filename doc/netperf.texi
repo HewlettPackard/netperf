@@ -1362,7 +1362,7 @@ Set the local and/or remote port numbers for the data connection.
 @vindex -s, Test-specific
 @item -s <sizespec>
 This option sets the local send and receive socket buffer sizes for
-the control connection to the value(s) specified.  Often, this will
+the data connection to the value(s) specified.  Often, this will
 affect the advertised and/or effective TCP or other window, but on
 some platforms it may not. By default the units are bytes, but suffix
 of ``G,'' ``M,'' or ``K'' will specify the units to be 2^30 (GB), 2^20
@@ -1386,7 +1386,7 @@ sizes]
 @vindex -S Test-specific
 @item -S <sizespec>
 This option sets the remote send and/or receive socket buffer sizes
-for the control connection to the value(s) specified.  Often, this
+for the data connection to the value(s) specified.  Often, this
 will affect the advertised and/or effective TCP or other window, but
 on some platforms it may not. By default the units are bytes, but
 suffix of ``G,'' ``M,'' or ``K'' will specify the units to be 2^30
@@ -1937,7 +1937,7 @@ or 16384 bytes. [Default: 1 - a single-byte request and response ]
 @vindex -s, Test-specific
 @item -s <sizespec>
 This option sets the local send and receive socket buffer sizes for
-the control connection to the value(s) specified.  Often, this will
+the data connection to the value(s) specified.  Often, this will
 affect the advertised and/or effective TCP or other window, but on
 some platforms it may not. By default the units are bytes, but a
 suffix of ``G,'' ``M,'' or ``K'' will specify the units to be 2^30
@@ -1958,7 +1958,7 @@ buffer sizes]
 @vindex -S, Test-specific
 @item -S <sizespec>
 This option sets the remote send and/or receive socket buffer sizes
-for the control connection to the value(s) specified.  Often, this
+for the data connection to the value(s) specified.  Often, this
 will affect the advertised and/or effective TCP or other window, but
 on some platforms it may not. By default the units are bytes, but a
 suffix of ``G,'' ``M,'' or ``K'' will specify the units to be 2^30

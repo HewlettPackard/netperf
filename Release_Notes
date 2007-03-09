@@ -6,6 +6,10 @@ Things changed in this release:
    minimum aand maximums as if a -i 10,3 were set.  Also, some further
    sanity checking on the bounds for each is made.
 
+*) Fixed a typo in the manual (found by Emir Halepovic) so the
+   description for the -s and -S options properly speicifies they
+   affect the data connection.
+
 These are the Release Notes for Revision 2.4.3 of netperf:
 
 Things changed in this release:

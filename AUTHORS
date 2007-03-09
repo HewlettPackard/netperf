@@ -195,3 +195,6 @@ Fixes for Windows compilation under MingW/gcc.
 
 Scott Weitzenkamp
 Patches to enable demo mode in the UDP_STREAM test
+
+Emir Halepovic
+Feedback on the manual
