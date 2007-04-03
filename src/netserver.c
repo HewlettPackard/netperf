@@ -154,6 +154,32 @@ extern	int	optind, opterr;
 #define SERVER_ARGS "dL:n:p:v:46I:i:"
 #endif
 
+/* perhaps one day we will use this as part of only opening a debug
+   log file if debug is set, of course we have to be wary of the base
+   use of "where" and so probably always need "where" pointing
+   "somewhere" or other. */
+void
+open_debug_file() 
+{
+#ifndef WIN32
+#ifndef PATH_MAX
+#define PATH_MAX MAX_PATH
+#endif
+  char FileName[PATH_MAX];   /* for opening the debug log file */
+  strcpy(FileName, DEBUG_LOG_FILE);
+
+  if (where != NULL) fflush(where);
+
+  snprintf(&FileName[strlen(FileName)], sizeof(FileName) - strlen(FileName), "_%d", getpid());
+  if ((where = fopen(FileName, "w")) == NULL) {
+    perror("netserver: debug file");
+    exit(1);
+  }
+
+  chmod(FileName,0644);
+#endif
+
+}
  /* This routine implements the "main event loop" of the netperf	*/
  /* server code. Code above it will have set-up the control connection	*/
  /* so it can just merrily go about its business, which is to		*/
@@ -165,7 +191,9 @@ process_requests()
   
   float	temp_rate;
   
-  
+  if (debug)    open_debug_file();
+
+
   while (1) {
     recv_request();
 
@@ -176,6 +204,7 @@ process_requests()
       /*  dump_request already present in recv_request; redundant? */
       if (!debug) {
 	debug++;
+	open_debug_file();
 	dump_request();
       }
       send_response();
@@ -739,6 +768,10 @@ main(int argc, char *argv[])
   BOOL  child = FALSE;
 #endif
   char arg1[BUFSIZ], arg2[BUFSIZ];
+#ifndef PATH_MAX
+#define PATH_MAX MAX_PATH
+#endif
+  char FileName[PATH_MAX];   /* for opening the debug log file */
 
   struct sockaddr name;
   netperf_socklen_t namelen = sizeof(name);
@@ -854,16 +887,17 @@ main(int argc, char *argv[])
   /* +*+SAF Use DuplicateHandle to force inheritable attribute (or reset it)? */
 
 /*  unlink(DEBUG_LOG_FILE); */
+
+  strcpy(FileName, DEBUG_LOG_FILE);
+    
 #ifndef WIN32
-  if ((where = fopen(DEBUG_LOG_FILE, "w")) == NULL) {
+  snprintf(&FileName[strlen(FileName)], sizeof(FileName) - strlen(FileName), "_%d", getpid());
+  if ((where = fopen(FileName, "w")) == NULL) {
     perror("netserver: debug file");
     exit(1);
   }
 #else
   {
-    char FileName[MAX_PATH];
-    
-    strcpy(FileName, DEBUG_LOG_FILE);
     
     if (child) {
       snprintf(&FileName[strlen(FileName)], sizeof(FileName) - strlen(FileName), "_%x", getpid());
