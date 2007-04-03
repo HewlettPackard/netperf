@@ -2,6 +2,15 @@ These are the Release Notes leading-up to Revision 2.4.4 of netperf:
 
 Things changed in this release:
 
+*) In theory each distinct netserver child will have a debug log with
+   its pid appended to the name, somewhat like what appears to happen
+   under Windows.
+
+*) A new global, command-line option to netperf and netserver has been
+   added. The -V option will cause netperf/netserver to display its
+   version and exit.
+
+
 *) Setting -I without setting -i will now implicitly set the iteration
    minimum aand maximums as if a -i 10,3 were set.  Also, some further
    sanity checking on the bounds for each is made.

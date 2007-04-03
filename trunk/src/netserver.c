@@ -41,6 +41,9 @@
       MODIFICATION, OR DISTRIBUTION OF THE SOFTWARE OR DOCUMENTATION.
  
 */
+
+#include "netperf_version.h"
+
 char	netserver_id[]="\
 @(#)netserver.c (c) Copyright 1993-2007 Hewlett-Packard Co. Version 2.4.3";
 
@@ -149,9 +152,9 @@ extern	char	*optarg;
 extern	int	optind, opterr;
 
 #ifndef WIN32
-#define SERVER_ARGS "dL:n:p:v:46"
+#define SERVER_ARGS "dL:n:p:v:V46"
 #else
-#define SERVER_ARGS "dL:n:p:v:46I:i:"
+#define SERVER_ARGS "dL:n:p:v:V46I:i:"
 #endif
 
 /* perhaps one day we will use this as part of only opening a debug
@@ -866,6 +869,10 @@ main(int argc, char *argv[])
     case 'v':
       /* say how much to say */
       verbosity = atoi(optarg);
+      break;
+    case 'V':
+      printf("Netperf version %s\n",NETPERF_VERSION);
+      exit(0);
       break;
 #ifdef WIN32
 /*+*+SAF */
