@@ -1,3 +1,5 @@
+#include "netperf_version.h"
+
 char	netsh_id[]="\
 @(#)netsh.c (c) Copyright 1993-2007 Hewlett-Packard Company. Version 2.4.3pre";
 
@@ -91,7 +93,7 @@ double atof(const char *);
  /* Some of the args take optional parameters. Since we are using */
  /* getopt to parse the command line, we will tell getopt that they do */
  /* not take parms, and then look for them ourselves */
-#define GLOBAL_CMD_LINE_ARGS "A:a:b:B:CcdDf:F:H:hi:I:k:K:l:L:n:NO:o:P:p:t:T:v:W:w:46"
+#define GLOBAL_CMD_LINE_ARGS "A:a:b:B:CcdDf:F:H:hi:I:k:K:l:L:n:NO:o:P:p:t:T:v:VW:w:46"
 
 /************************************************************************/
 /*									*/
@@ -231,6 +233,7 @@ Options:\n\
     -4                Do IPv4\n\
     -6                Do IPv6\n\
     -v verbosity      Specify the verbosity level\n\
+    -V                Display version information and exit\n\
 \n";
 
 /* netperf_usage done as two concatenated strings to make the MS
@@ -267,7 +270,9 @@ Global options:\n\
     -t testname       Specify test to perform\n\
     -T lcpu,rcpu      Request netperf/netserver be bound to local/remote cpu\n\
     -v verbosity      Specify the verbosity level\n\
-    -W send,recv      Set the number of send,recv buffers\n";
+    -W send,recv      Set the number of send,recv buffers\n\
+    -v level          Set the verbosity level (default 1, min 0)\n\
+    -V                Display the netperf version and exit\n";
 
 char netperf_usage2[] = "\n\
 For those options taking two parms, at least one must be specified;\n\
@@ -764,6 +769,10 @@ scan_cmd_line(int argc, char *argv[])
       printf("This netperf was not compiled on an IPv6 capable system!\n");
       exit(-1);
 #endif
+      break;
+    case 'V':
+      printf("Netperf version %s\n",NETPERF_VERSION);
+      exit(0);
       break;
     };
   }

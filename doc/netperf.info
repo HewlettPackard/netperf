@@ -1265,7 +1265,7 @@ BSD Sockets or the XTI interface those common options include:
 
 `-s <sizespec>'
      This option sets the local send and receive socket buffer sizes for
-     the control connection to the value(s) specified.  Often, this will
+     the data connection to the value(s) specified.  Often, this will
      affect the advertised and/or effective TCP or other window, but on
      some platforms it may not. By default the units are bytes, but
      suffix of "G," "M," or "K" will specify the units to be 2^30 (GB),
@@ -1286,7 +1286,7 @@ BSD Sockets or the XTI interface those common options include:
 
 `-S <sizespec>'
      This option sets the remote send and/or receive socket buffer sizes
-     for the control connection to the value(s) specified.  Often, this
+     for the data connection to the value(s) specified.  Often, this
      will affect the advertised and/or effective TCP or other window,
      but on some platforms it may not. By default the units are bytes,
      but suffix of "G," "M," or "K" will specify the units to be 2^30
@@ -1836,7 +1836,7 @@ BSD Sockets or the XTI interface those common options include:
 
 `-s <sizespec>'
      This option sets the local send and receive socket buffer sizes for
-     the control connection to the value(s) specified.  Often, this will
+     the data connection to the value(s) specified.  Often, this will
      affect the advertised and/or effective TCP or other window, but on
      some platforms it may not. By default the units are bytes, but a
      suffix of "G," "M," or "K" will specify the units to be 2^30 (GB),
@@ -1854,7 +1854,7 @@ BSD Sockets or the XTI interface those common options include:
 
 `-S <sizespec>'
      This option sets the remote send and/or receive socket buffer sizes
-     for the control connection to the value(s) specified.  Often, this
+     for the data connection to the value(s) specified.  Often, this
      will affect the advertised and/or effective TCP or other window,
      but on some platforms it may not. By default the units are bytes,
      but a suffix of "G," "M," or "K" will specify the units to be 2^30
@@ -2809,43 +2809,43 @@ Node: Global Options29582
 Node: Using Netperf to Measure Bulk Data Transfer48878
 Node: Issues in Bulk Transfer49543
 Node: Options common to TCP UDP and SCTP tests53072
-Node: TCP_STREAM59060
-Node: TCP_MAERTS62828
-Node: TCP_SENDFILE64061
-Node: UDP_STREAM66377
-Node: XTI_TCP_STREAM69813
-Node: XTI_UDP_STREAM70458
-Node: SCTP_STREAM71103
-Node: DLCO_STREAM71803
-Node: DLCL_STREAM73776
-Node: STREAM_STREAM74650
-Node: DG_STREAM75496
-Node: Using Netperf to Measure Request/Response76165
-Node: Issues in Request/Response78086
-Node: Options Common to TCP UDP and SCTP _RR tests80092
-Node: TCP_RR84764
-Node: TCP_CC87108
-Node: TCP_CRR89305
-Node: UDP_RR90351
-Node: XTI_TCP_RR92372
-Node: XTI_TCP_CC92955
-Node: XTI_TCP_CRR93121
-Node: XTI_UDP_RR93289
-Node: DLCL_RR93866
-Node: DLCO_RR94019
-Node: SCTP_RR94171
-Node: Using Netperf to Measure Aggregate Performance94307
-Node: Running Concurrent Netperf Tests95142
-Node: Using --enable-burst99034
-Node: Using Netperf to Measure Bidirectional Transfer105219
-Node: Bidirectional Transfer with Concurrent Tests106292
-Node: Bidirectional Transfer with TCP_RR108158
-Node: Other Netperf Tests110692
-Node: CPU rate calibration111138
-Node: Address Resolution113479
-Node: Enhancing Netperf115455
-Node: Netperf4116692
-Node: Concept Index117601
-Node: Option Index119991
+Node: TCP_STREAM59054
+Node: TCP_MAERTS62822
+Node: TCP_SENDFILE64055
+Node: UDP_STREAM66371
+Node: XTI_TCP_STREAM69807
+Node: XTI_UDP_STREAM70452
+Node: SCTP_STREAM71097
+Node: DLCO_STREAM71797
+Node: DLCL_STREAM73770
+Node: STREAM_STREAM74644
+Node: DG_STREAM75490
+Node: Using Netperf to Measure Request/Response76159
+Node: Issues in Request/Response78080
+Node: Options Common to TCP UDP and SCTP _RR tests80086
+Node: TCP_RR84752
+Node: TCP_CC87096
+Node: TCP_CRR89293
+Node: UDP_RR90339
+Node: XTI_TCP_RR92360
+Node: XTI_TCP_CC92943
+Node: XTI_TCP_CRR93109
+Node: XTI_UDP_RR93277
+Node: DLCL_RR93854
+Node: DLCO_RR94007
+Node: SCTP_RR94159
+Node: Using Netperf to Measure Aggregate Performance94295
+Node: Running Concurrent Netperf Tests95130
+Node: Using --enable-burst99022
+Node: Using Netperf to Measure Bidirectional Transfer105207
+Node: Bidirectional Transfer with Concurrent Tests106280
+Node: Bidirectional Transfer with TCP_RR108146
+Node: Other Netperf Tests110680
+Node: CPU rate calibration111126
+Node: Address Resolution113467
+Node: Enhancing Netperf115443
+Node: Netperf4116680
+Node: Concept Index117589
+Node: Option Index119979
 
 End Tag Table
