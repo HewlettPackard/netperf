@@ -119,9 +119,6 @@ SDP Sockets Test Options:\n\
     -s send[,recv]    Set local socket send/recv buffer sizes\n\
     -S send[,recv]    Set remote socket send/recv buffer sizes\n\
     -V 		      Enable copy avoidance if supported\n\
-    -N number	      Specifies the number of messages to send (_STREAM tests)\n\
-    -B		      run the test in non-blocking mode\n\
-    -T number	      Number of associations to create (_MANY tests)\n\
     -4                Use AF_INET (eg IPv4) on both ends of the data conn\n\
     -6                Use AF_INET6 (eg IPv6) on both ends of the data conn\n\
 \n\
@@ -3359,7 +3356,7 @@ scan_sdp_args(argc, argv)
 
 {
 
-#define SOCKETS_ARGS "BDhH:I:L:m:M:P:r:s:S:VN:T:46"
+#define SOCKETS_ARGS "DhH:I:L:m:M:P:r:s:S:V46"
 
   extern char	*optarg;	  /* pointer to option string	*/
   
