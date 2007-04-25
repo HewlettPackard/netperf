@@ -390,6 +390,14 @@ process_requests()
     case DO_SDP_STREAM:
       recv_sdp_stream();
       break;
+
+    case DO_SDP_MAERTS:
+      recv_sdp_maerts();
+      break;
+
+    case DO_SDP_RR:
+      recv_sdp_rr();
+      break;
 #endif 
 
     default:
