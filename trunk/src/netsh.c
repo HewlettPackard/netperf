@@ -930,6 +930,14 @@ scan_cmd_line(int argc, char *argv[])
     }
 #endif
 
+#ifdef WANT_SDP
+    else if((strcasecmp(test_name,"SDP_STREAM") == 0) ||
+	    (strcasecmp(test_name,"SDP_MAERTS") == 0) ||
+	    (strcasecmp(test_name,"SDP_RR") == 0))
+      {
+	scan_sdp_args(argc, argv);
+      }
+#endif
 }
 
 
