@@ -79,7 +79,7 @@ char	nettest_sdp[]="\
 #endif /* WANT_HISTOGRAM */
 
 #ifdef WANT_FIRST_BURST
-int first_burst_size=0;
+extern int first_burst_size;
 #endif /* WANT_FIRST_BURST */
 
 
@@ -139,12 +139,27 @@ comma.\n";
  /* called outside of the timing loop */
 static
 void
-get_sdp_info(socket, mss)
-     int socket;
-     int *mss;
+get_sdp_info(int socket, int * mss)
 {
 
-  int sock_opt_len;
+#ifdef TCP_MAXSEG
+  netperf_socklen_t sock_opt_len;
+
+  sock_opt_len = sizeof(netperf_socklen_t);
+  if (getsockopt(socket,
+		 getprotobyname("tcp")->p_proto,	
+		 TCP_MAXSEG,
+		 (char *)mss,
+		 &sock_opt_len) == SOCKET_ERROR) {
+    fprintf(where,
+	    "netperf: get_sdp_info: getsockopt TCP_MAXSEG: errno %d\n",
+	    errno);
+    fflush(where);
+    *mss = -1;
+  }
+#else
+  *mss = -1;
+#endif /* TCP_MAXSEG */
 
 }
 
@@ -3356,7 +3371,7 @@ scan_sdp_args(argc, argv)
 
 {
 
-#define SOCKETS_ARGS "DhH:I:L:m:M:P:r:s:S:V46"
+#define SOCKETS_ARGS "b:DhH:I:L:m:M:P:r:s:S:V46"
 
   extern char	*optarg;	  /* pointer to option string	*/
   
