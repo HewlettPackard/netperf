@@ -471,6 +471,12 @@ inet_ptos(int protocol) {
   }
 }
 
+/* one of these days, this should not be required */
+#ifndef AF_INET_SDP
+#define AF_INET_SDP 27
+#define PF_INET_SDP AF_INET_SDP
+#endif 
+
 char *
 inet_ftos(int family) 
 {
@@ -481,6 +487,11 @@ inet_ftos(int family)
 #if defined(AF_INET6)
   case AF_INET6:
     return("AF_INET6");
+    break;
+#endif
+#if defined(AF_INET_SDP)
+  case AF_INET_SDP:
+    return("AF_INET_SDP");
     break;
 #endif
   default:

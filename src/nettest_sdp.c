@@ -283,6 +283,7 @@ Size (bytes)\n\
     /*set up the data socket                        */
     /* fake things out by changing local_res->ai_family to AF_INET_SDP */
     local_res->ai_family = AF_INET_SDP;
+    local_res->ai_protocol = 0;
     send_socket = create_data_socket(local_res);
     
     if (send_socket == INVALID_SOCKET){
@@ -979,6 +980,7 @@ Size (bytes)\n\
     /*set up the data socket                        */
     /* fake things out by changing local_res->ai_family to AF_INET_SDP */
     local_res->ai_family = AF_INET_SDP;
+    local_res->ai_protocol = 0;
     recv_socket = create_data_socket(local_res);
     
     if (recv_socket == INVALID_SOCKET){
@@ -1654,6 +1656,7 @@ recv_sdp_stream()
 
   /* fake things out by changing local_res->ai_family to AF_INET_SDP */
   local_res->ai_family = AF_INET_SDP;
+  local_res->ai_protocol = 0;
   s_listen = create_data_socket(local_res);
   
   if (s_listen == INVALID_SOCKET) {
@@ -1988,6 +1991,7 @@ recv_sdp_maerts()
 
   /* fake things out by changing local_res->ai_family to AF_INET_SDP */
   local_res->ai_family = AF_INET_SDP;
+  local_res->ai_protocol = 0;
   s_listen = create_data_socket(local_res);
   
   if (s_listen == INVALID_SOCKET) {
@@ -2420,6 +2424,7 @@ Send   Recv    Send   Recv\n\
     /*set up the data socket                        */
     /* fake things out by changing local_res->ai_family to AF_INET_SDP */
     local_res->ai_family = AF_INET_SDP;
+    local_res->ai_protocol = 0;
     send_socket = create_data_socket(local_res);
   
     if (send_socket == INVALID_SOCKET){
@@ -3091,6 +3096,7 @@ recv_sdp_rr()
 
   /* fake things out by changing local_res->ai_family to AF_INET_SDP */
   local_res->ai_family = AF_INET_SDP;
+  local_res->ai_protocol = 0;
   s_listen = create_data_socket(local_res);
   
   if (s_listen == INVALID_SOCKET) {
