@@ -85,6 +85,10 @@ char	netperf_id[]="\
 #include "nettest_dlpi.h"
 #endif /* WANT_DLPI */
 
+#ifdef WANT_SDP
+#include "nettest_sdp.h"
+#endif
+
 /* The DNS tests have been removed from netperf2. Those wanting to do
    DNS_RR tests should use netperf4 instead. */
 
@@ -241,9 +245,17 @@ main(int argc, char *argv[])
   
 #ifdef DO_DNS
   else if (strcasecmp(test_name,"DNS_RR") == 0) {
-    send_dns_rr(host_name);
+    fprintf(stderr,
+	  "DNS tests can now be found in netperf4.\n");
+    fflush(stderr);
+    exit(-1);
   }
 #endif /* DO_DNS */
+#ifdef WANT_SDP
+  else if (strcasecmp(test_name,"SDP_STREAM") == 0) {
+    send_sdp_stream(host_name);
+  }
+#endif /* WANT_SDP */
   else {
     printf("The test you requested is unknown to this netperf.\n");
     printf("Please verify that you have the correct test name, \n");

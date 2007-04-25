@@ -274,8 +274,6 @@ AC_ARG_ENABLE(xti,
 
 case "$enable_xti" in
      yes)
-		# probably need to be a bit more sophisticated here
-		AC_CHECK_LIB(xti,t_open)
 		use_xti=true
 		;;
      no)	
@@ -299,6 +297,42 @@ fi
 if $use_xti
 then
 	AC_DEFINE([WANT_XTI],,[Define to one to include XTI tests.])
+fi
+
+# see if we should be including the SDP tests
+
+AC_MSG_CHECKING(whether to include SDP tests)
+
+AC_ARG_ENABLE(sdp,
+	[AS_HELP_STRING([--enable-sdp],[include SDP socket tests])])
+
+case "$enable_sdp" in
+     yes)
+		# probably need to be a bit more sophisticated here
+		AC_CHECK_LIB(sdp,t_open)
+		use_sdp=true
+		;;
+     no)	
+		use_sdp=false
+		;;
+     '')
+		use_sdp=false
+		;;
+     *)
+		AC_MSG_ERROR([--enable-sdp takes yes or no])
+		;;
+esac
+
+if $use_sdp
+then
+	AC_MSG_RESULT(yes)
+else
+	AC_MSG_RESULT(no)
+fi
+
+if $use_sdp
+then
+	AC_DEFINE([WANT_SDP],,[Define to one to include SDP tests.])
 fi
 
 # see if we should be including the ICSC-EXS tests
