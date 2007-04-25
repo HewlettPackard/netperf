@@ -255,6 +255,12 @@ main(int argc, char *argv[])
   else if (strcasecmp(test_name,"SDP_STREAM") == 0) {
     send_sdp_stream(host_name);
   }
+  else if (strcasecmp(test_name,"SDP_MAERTS") == 0) {
+    send_sdp_maerts(host_name);
+  }
+  else if (strcasecmp(test_name,"SDP_RR") == 0) {
+    send_sdp_rr(host_name);
+  }
 #endif /* WANT_SDP */
   else {
     printf("The test you requested is unknown to this netperf.\n");
