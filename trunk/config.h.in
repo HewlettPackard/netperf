@@ -81,14 +81,14 @@
 /* Define to 1 if you have the `sctp' library (-lsctp). */
 #undef HAVE_LIBSCTP
 
+/* Define to 1 if you have the `sdp' library (-lsdp). */
+#undef HAVE_LIBSDP
+
 /* Define to 1 if you have the `sendfile' library (-lsendfile). */
 #undef HAVE_LIBSENDFILE
 
 /* Define to 1 if you have the `socket' library (-lsocket). */
 #undef HAVE_LIBSOCKET
-
-/* Define to 1 if you have the `xti' library (-lxti). */
-#undef HAVE_LIBXTI
 
 /* Define to 1 if you have the <limits.h> header file. */
 #undef HAVE_LIMITS_H
@@ -305,6 +305,9 @@
 
 /* Define to one to include SCTP tests. */
 #undef WANT_SCTP
+
+/* Define to one to include SDP tests. */
+#undef WANT_SDP
 
 /* Define to one to spin waiting on paced operation. WILL AFFEFCT CPU
    UTILIZATION */

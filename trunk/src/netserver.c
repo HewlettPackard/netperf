@@ -386,6 +386,12 @@ process_requests()
       break;
 #endif
 
+#ifdef WANT_SDP
+    case DO_SDP_STREAM:
+      recv_sdp_stream();
+      break;
+#endif 
+
     default:
       fprintf(where,"unknown test number %d\n",
 	      netperf_request.content.request_type);

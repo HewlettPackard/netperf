@@ -201,6 +201,26 @@
 #define         SCTP_RR_MANY_RESPONSE      531
 #define         SCTP_RR_MANY_RESULT        532
 
+#define         DO_SDP_STREAM              540
+#define         SDP_STREAM_RESPONSE        541
+#define         SDP_STREAM_RESULTS         542
+
+#define         DO_SDP_RR                  543
+#define         SDP_RR_RESPONSE            544
+#define         SDP_RR_RESULTS             545
+
+#define         DO_SDP_MAERTS              546
+#define         SDP_MAERTS_RESPONSE        547
+#define         SDP_MAERTS_RESULTS         548
+
+#define         DO_SDP_CRR                 549
+#define         SDP_CRR_RESPONSE           550
+#define         SDP_CRR_RESULTS            551
+
+#define         DO_SDP_CC                  552
+#define         SDP_CC_RESPONSE            553
+#define         SDP_CC_RESULTS             554
+
 #if HAVE_INTTYPES_H
 # include <inttypes.h>
 #else
