@@ -1,5 +1,7 @@
 #SUBDIRS = missing
 
+CLEANFILES = netperf_version.h
+
 bin_PROGRAMS = netperf netserver
 
 AM_CFLAGS = $(NETPERF_CFLAGS)
@@ -21,6 +23,3 @@ missing/getaddrinfo.o: $(srcdir)/missing/getaddrinfo.c
 	$(COMPILE) -o $@ -c $(srcdir)/missing/getaddrinfo.c
 missing/inet_ntop.o: $(srcdir)/missing/inet_ntop.c
 	$(COMPILE) -o $@ -c $(srcdir)/missing/inet_ntop.c
-
-netperf_version.h: netperf_version.h.in ../configure
-	sed -e 's|@VERSION\@|$(VERSION)|g' netperf_version.h.in > netperf_version.h

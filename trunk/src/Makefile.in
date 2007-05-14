@@ -128,6 +128,8 @@ target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
 
+CLEANFILES = netperf_version.h
+
 bin_PROGRAMS = netperf netserver
 
 AM_CFLAGS = $(NETPERF_CFLAGS)
@@ -148,7 +150,7 @@ subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h
-CONFIG_CLEAN_FILES =
+CONFIG_CLEAN_FILES = netperf_version.h
 bin_PROGRAMS = netperf$(EXEEXT) netserver$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS)
 
@@ -187,7 +189,7 @@ CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 DIST_SOURCES = $(netperf_SOURCES) $(netserver_SOURCES)
 DIST_COMMON = $(srcdir)/Makefile.in Makefile.am missing/getaddrinfo.c \
-	missing/inet_ntop.c
+	missing/inet_ntop.c netperf_version.h.in
 SOURCES = $(netperf_SOURCES) $(netserver_SOURCES)
 
 all: all-am
@@ -199,6 +201,8 @@ $(srcdir)/Makefile.in:  Makefile.am  $(top_srcdir)/configure.ac $(ACLOCAL_M4)
 	  $(AUTOMAKE) --gnu  src/Makefile
 Makefile:  $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe)
+netperf_version.h: $(top_builddir)/config.status netperf_version.h.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 install-binPROGRAMS: $(bin_PROGRAMS)
 	@$(NORMAL_INSTALL)
@@ -382,6 +386,7 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-rm -f $(CONFIG_CLEAN_FILES)
@@ -452,9 +457,6 @@ missing/getaddrinfo.o: $(srcdir)/missing/getaddrinfo.c
 	$(COMPILE) -o $@ -c $(srcdir)/missing/getaddrinfo.c
 missing/inet_ntop.o: $(srcdir)/missing/inet_ntop.c
 	$(COMPILE) -o $@ -c $(srcdir)/missing/inet_ntop.c
-
-netperf_version.h: netperf_version.h.in ../configure
-	sed -e 's|@VERSION\@|$(VERSION)|g' netperf_version.h.in > netperf_version.h
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

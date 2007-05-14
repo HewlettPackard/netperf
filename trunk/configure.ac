@@ -2,11 +2,11 @@
 # Process this file with autoconf to produce a configure script.
 
 FULL-PACKAGE-NAME=netperf
-VERSION=2.4.4pre
+VERSION=2.4.4pre2
 BUG-REPORT-ADDRESS=netperf-feedback@netperf.org
 
 AC_PREREQ(2.59)
-AC_INIT(netperf, 2.4.4pre)
+AC_INIT(netperf, 2.4.4pre2)
 # use the target version rather than host - one day we may want cross-compile
 AC_CANONICAL_TARGET
 AC_CONFIG_SRCDIR([src/hist.h])
@@ -638,6 +638,7 @@ AC_SUBST(LIBOJBS)
 
 # now spit it all out
 AC_CONFIG_FILES([Makefile
+                 src/netperf_version.h
                  src/Makefile
 		 doc/Makefile])
 
