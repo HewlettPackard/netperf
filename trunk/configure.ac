@@ -640,6 +640,7 @@ AC_SUBST(LIBOJBS)
 AC_CONFIG_FILES([Makefile
                  src/netperf_version.h
                  src/Makefile
-		 doc/Makefile])
+		 doc/Makefile
+                 netperf.spec])
 
 AC_OUTPUT
