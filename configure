@@ -9075,7 +9075,7 @@ echo "${ECHO_T}\"$enable_cpuutil\"" >&6; }
 
 
 # now spit it all out
-ac_config_files="$ac_config_files Makefile src/netperf_version.h src/Makefile doc/Makefile"
+ac_config_files="$ac_config_files Makefile src/netperf_version.h src/Makefile doc/Makefile netperf.spec"
 
 
 cat >confcache <<\_ACEOF
@@ -9660,6 +9660,7 @@ do
     "src/netperf_version.h") CONFIG_FILES="$CONFIG_FILES src/netperf_version.h" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
     "doc/Makefile") CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
+    "netperf.spec") CONFIG_FILES="$CONFIG_FILES netperf.spec" ;;
 
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
