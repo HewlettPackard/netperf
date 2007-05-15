@@ -200,4 +200,5 @@ Emir Halepovic
 Feedback on the manual
 
 Kouhei Sutou
-Generate netperf_version.h via configure rather than makefile
+Generate netperf_version.h and netperf.spec via configure rather than
+makefile, include limits to get PathMAX on FreeBSD.
