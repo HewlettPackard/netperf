@@ -78,6 +78,9 @@ char	netserver_id[]="\
 #if HAVE_STRINGS_H
 # include <strings.h>
 #endif
+#if HAVE_LIMITS_H
+# include <limits.h>
+#endif
 #include <sys/types.h>
 #include <stdio.h>
 #ifndef WIN32
