@@ -84,7 +84,7 @@ char	nettest_sctp[]="\
 #endif /* WANT_HISTOGRAM */
 
 #ifdef WANT_FIRST_BURST
-int first_burst_size=0;
+extern int first_burst_size;
 #endif /* WANT_FIRST_BURST */
 
 
@@ -3954,7 +3954,7 @@ Send   Recv    Send   Recv\n\
       for (j = 0; j < num_associations; j++) {
 	  for (i = 0; i < first_burst_size; i++) {
 	    if((len=sctp_sendmsg(send_socket[j],
-			 send_ring->buffer_ptr, send_size
+			 send_ring->buffer_ptr, send_size,
 			 remote_res->ai_addr,
 			 remote_res->ai_addrlen,
 			 0, 0, 0, 0, 0)) != req_size) {

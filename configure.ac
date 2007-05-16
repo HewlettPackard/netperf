@@ -387,7 +387,14 @@ case "$enable_sctp" in
 [[
 #include <sys/socket.h>
 ]])
-		AC_HAVE_LIBRARY(sctp,,use_sctp=false)
+		case "$host" in
+		*-*-freebsd7.*)
+			# FreeBSD 7.x SCTP support doesn't need -lsctp.
+			;;
+		*)
+			AC_HAVE_LIBRARY(sctp,,use_sctp=false)
+			;;
+		esac
 		;;
 	no)
 		use_sctp=false
@@ -637,7 +644,6 @@ esac
 	AC_MSG_RESULT("$enable_cpuutil")
 
 AC_SUBST(NETCPU_SOURCE)
-AC_SUBST(LIBOJBS)
 
 # now spit it all out
 AC_CONFIG_FILES([Makefile
