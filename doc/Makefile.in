@@ -14,6 +14,10 @@
 
 @SET_MAKE@
 
+# what is your philosophy - distribute pre-made .pdf et al in a make dist
+# or not?  choose your EXTRA_DIST line accordingly
+# EXTRA_DIST = netperf.man netserver.man netperf.txt netperf.html netperf.xml netperf_old.ps netperf.pdf netperf.ps netperf.texi examples
+
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
@@ -68,6 +72,8 @@ LIBOJBS = @LIBOJBS@
 LIBS = @LIBS@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
+NEED_LIBCOMPAT_FALSE = @NEED_LIBCOMPAT_FALSE@
+NEED_LIBCOMPAT_TRUE = @NEED_LIBCOMPAT_TRUE@
 NETCPU_SOURCE = @NETCPU_SOURCE@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
@@ -77,6 +83,7 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -126,10 +133,9 @@ target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
 
-# what is your philosophy - distribute pre-made .pdf et al in a make dist
-# or not?  choose your EXTRA_DIST line accordingly
-# EXTRA_DIST = netperf.man netserver.man netperf.txt netperf.html netperf.xml netperf_old.ps netperf.pdf netperf.ps netperf.texi examples
-EXTRA_DIST = netperf.man netserver.man netperf_old.ps netperf.texi examples
+SUBDIRS = examples
+
+EXTRA_DIST = netperf.man netserver.man netperf_old.ps netperf.texi 
 man1_MANS = netperf.man netserver.man
 info_TEXINFOS = netperf.texi
 CLEANFILES = netperf.txt netperf.xml netperf.html
@@ -148,8 +154,15 @@ TEXINFOS = netperf.texi
 
 NROFF = nroff
 MANS = $(man1_MANS)
+
+RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
+	ps-recursive install-info-recursive uninstall-info-recursive \
+	all-recursive install-data-recursive install-exec-recursive \
+	installdirs-recursive install-recursive uninstall-recursive \
+	check-recursive installcheck-recursive
 DIST_COMMON = $(srcdir)/Makefile.in Makefile.am texinfo.tex
-all: all-am
+DIST_SUBDIRS = $(SUBDIRS)
+all: all-recursive
 
 .SUFFIXES:
 .SUFFIXES: .dvi .info .pdf .ps .texi
@@ -275,12 +288,130 @@ uninstall-man1:
 	  echo " rm -f $(DESTDIR)$(man1dir)/$$inst"; \
 	  rm -f $(DESTDIR)$(man1dir)/$$inst; \
 	done
+
+# This directory's subdirectories are mostly independent; you can cd
+# into them and run `make' without going through this Makefile.
+# To change the values of `make' variables: instead of editing Makefiles,
+# (1) if the variable is set in `config.status', edit `config.status'
+#     (which will cause the Makefiles to be regenerated when you run `make');
+# (2) otherwise, pass the desired values on the `make' command line.
+$(RECURSIVE_TARGETS):
+	@set fnord $$MAKEFLAGS; amf=$$2; \
+	dot_seen=no; \
+	target=`echo $@ | sed s/-recursive//`; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    dot_seen=yes; \
+	    local_target="$$target-am"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	   || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; \
+	done; \
+	if test "$$dot_seen" = "no"; then \
+	  $(MAKE) $(AM_MAKEFLAGS) "$$target-am" || exit 1; \
+	fi; test -z "$$fail"
+
+mostlyclean-recursive clean-recursive distclean-recursive \
+maintainer-clean-recursive:
+	@set fnord $$MAKEFLAGS; amf=$$2; \
+	dot_seen=no; \
+	case "$@" in \
+	  distclean-* | maintainer-clean-*) list='$(DIST_SUBDIRS)' ;; \
+	  *) list='$(SUBDIRS)' ;; \
+	esac; \
+	rev=''; for subdir in $$list; do \
+	  if test "$$subdir" = "."; then :; else \
+	    rev="$$subdir $$rev"; \
+	  fi; \
+	done; \
+	rev="$$rev ."; \
+	target=`echo $@ | sed s/-recursive//`; \
+	for subdir in $$rev; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    local_target="$$target-am"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	   || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; \
+	done && test -z "$$fail"
+tags-recursive:
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  test "$$subdir" = . || (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) tags); \
+	done
+ctags-recursive:
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  test "$$subdir" = . || (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) ctags); \
+	done
+
+ETAGS = etags
+ETAGSFLAGS =
+
+CTAGS = ctags
+CTAGSFLAGS =
+
 tags: TAGS
-TAGS:
+
+ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
+	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
+	unique=`for i in $$list; do \
+	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
+	  done | \
+	  $(AWK) '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	mkid -fID $$unique
+
+TAGS: tags-recursive $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
+		$(TAGS_FILES) $(LISP)
+	tags=; \
+	here=`pwd`; \
+	if (etags --etags-include --version) >/dev/null 2>&1; then \
+	  include_option=--etags-include; \
+	else \
+	  include_option=--include; \
+	fi; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  if test "$$subdir" = .; then :; else \
+	    test -f $$subdir/TAGS && \
+	      tags="$$tags $$include_option=$$here/$$subdir/TAGS"; \
+	  fi; \
+	done; \
+	list='$(SOURCES) $(HEADERS)  $(LISP) $(TAGS_FILES)'; \
+	unique=`for i in $$list; do \
+	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
+	  done | \
+	  $(AWK) '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	test -z "$(ETAGS_ARGS)$$tags$$unique" \
+	  || $(ETAGS) $(ETAGSFLAGS) $(AM_ETAGSFLAGS) $(ETAGS_ARGS) \
+	     $$tags $$unique
 
 ctags: CTAGS
-CTAGS:
+CTAGS: ctags-recursive $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
+		$(TAGS_FILES) $(LISP)
+	tags=; \
+	here=`pwd`; \
+	list='$(SOURCES) $(HEADERS)  $(LISP) $(TAGS_FILES)'; \
+	unique=`for i in $$list; do \
+	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
+	  done | \
+	  $(AWK) '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	test -z "$(CTAGS_ARGS)$$tags$$unique" \
+	  || $(CTAGS) $(CTAGSFLAGS) $(AM_CTAGSFLAGS) $(CTAGS_ARGS) \
+	     $$tags $$unique
 
+GTAGS:
+	here=`$(am__cd) $(top_builddir) && pwd` \
+	  && cd $(top_srcdir) \
+	  && gtags -i $(GTAGS_ARGS) $$here
+
+distclean-tags:
+	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 
 top_distdir = ..
@@ -313,24 +444,38 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  if test "$$subdir" = .; then :; else \
+	    test -d $(distdir)/$$subdir \
+	    || mkdir $(distdir)/$$subdir \
+	    || exit 1; \
+	    (cd $$subdir && \
+	      $(MAKE) $(AM_MAKEFLAGS) \
+	        top_distdir="$(top_distdir)" \
+	        distdir=../$(distdir)/$$subdir \
+	        distdir) \
+	      || exit 1; \
+	  fi; \
+	done
 	$(MAKE) $(AM_MAKEFLAGS) \
 	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
 	  dist-info
 check-am: all-am
-check: check-am
+check: check-recursive
 all-am: Makefile $(INFO_DEPS) $(MANS)
-
-installdirs:
+installdirs: installdirs-recursive
+installdirs-am:
 	$(mkinstalldirs) $(DESTDIR)$(infodir) $(DESTDIR)$(man1dir)
-install: install-am
-install-exec: install-exec-am
-install-data: install-data-am
-uninstall: uninstall-am
+
+install: install-recursive
+install-exec: install-exec-recursive
+install-data: install-data-recursive
+uninstall: uninstall-recursive
 
 install-am: all-am
 	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
 
-installcheck: installcheck-am
+installcheck: installcheck-recursive
 install-strip:
 	$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
 	  install_sh_PROGRAM="$(INSTALL_STRIP_PROGRAM)" INSTALL_STRIP_FLAG=-s \
@@ -347,19 +492,19 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-clean: clean-am
+clean: clean-recursive
 
 clean-am: clean-generic mostlyclean-am
 
-distclean: distclean-am
+distclean: distclean-recursive
 	-rm -f Makefile
-distclean-am: clean-am distclean-generic
+distclean-am: clean-am distclean-generic distclean-tags
 
-dvi: dvi-am
+dvi: dvi-recursive
 
 dvi-am: $(DVIS)
 
-info: info-am
+info: info-recursive
 
 info-am: $(INFO_DEPS)
 
@@ -367,7 +512,7 @@ install-data-am: install-info-am install-man
 
 install-exec-am:
 
-install-info: install-info-am
+install-info: install-info-recursive
 
 install-info-am: $(INFO_DEPS)
 	@$(NORMAL_INSTALL)
@@ -399,36 +544,46 @@ install-man: install-man1
 
 installcheck-am:
 
-maintainer-clean: maintainer-clean-am
+maintainer-clean: maintainer-clean-recursive
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-aminfo \
 	maintainer-clean-generic
 
-mostlyclean: mostlyclean-am
+mostlyclean: mostlyclean-recursive
 
 mostlyclean-am: mostlyclean-aminfo mostlyclean-generic
 
-pdf: pdf-am
+pdf: pdf-recursive
 
 pdf-am: $(PDFS)
 
-ps: ps-am
+ps: ps-recursive
 
 ps-am: $(PSS)
 
 uninstall-am: uninstall-info-am uninstall-man
 
+uninstall-info: uninstall-info-recursive
+
 uninstall-man: uninstall-man1
 
-.PHONY: all all-am check check-am clean clean-generic dist-info \
-	distclean distclean-generic distdir dvi dvi-am info info-am \
-	install install-am install-data install-data-am install-exec \
-	install-exec-am install-info install-info-am install-man \
-	install-man1 install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-aminfo \
-	maintainer-clean-generic mostlyclean mostlyclean-aminfo \
-	mostlyclean-generic pdf pdf-am ps ps-am uninstall uninstall-am \
-	uninstall-info-am uninstall-man uninstall-man1
+.PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am check check-am clean \
+	clean-generic clean-recursive ctags ctags-recursive dist-info \
+	distclean distclean-generic distclean-recursive distclean-tags \
+	distdir dvi dvi-am dvi-recursive info info-am info-recursive \
+	install install-am install-data install-data-am \
+	install-data-recursive install-exec install-exec-am \
+	install-exec-recursive install-info install-info-am \
+	install-info-recursive install-man install-man1 \
+	install-recursive install-strip installcheck installcheck-am \
+	installdirs installdirs-am installdirs-recursive \
+	maintainer-clean maintainer-clean-aminfo \
+	maintainer-clean-generic maintainer-clean-recursive mostlyclean \
+	mostlyclean-aminfo mostlyclean-generic mostlyclean-recursive \
+	pdf pdf-am pdf-recursive ps ps-am ps-recursive tags \
+	tags-recursive uninstall uninstall-am uninstall-info-am \
+	uninstall-info-recursive uninstall-man uninstall-man1 \
+	uninstall-recursive
 
 
 netperf.html: $(info_TEXINFOS)

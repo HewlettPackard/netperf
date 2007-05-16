@@ -14,8 +14,6 @@
 
 @SET_MAKE@
 
-#SUBDIRS = missing
-
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
@@ -70,6 +68,8 @@ LIBOJBS = @LIBOJBS@
 LIBS = @LIBS@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
+NEED_LIBCOMPAT_FALSE = @NEED_LIBCOMPAT_FALSE@
+NEED_LIBCOMPAT_TRUE = @NEED_LIBCOMPAT_TRUE@
 NETCPU_SOURCE = @NETCPU_SOURCE@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
@@ -79,6 +79,7 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -127,6 +128,7 @@ target_alias = @target_alias@
 target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
+SUBDIRS = missing
 
 CLEANFILES = netperf_version.h
 
@@ -136,7 +138,7 @@ AM_CFLAGS = $(NETPERF_CFLAGS)
 
 USE_CPU_SOURCE = netcpu_@NETCPU_SOURCE@.c
 
-EXTRA_DIST = netcpu_none.c netcpu_looper.c netcpu_pstat.c netcpu_pstatnew.c netcpu_perfstat.c netcpu_procstat.c netcpu_kstat.c netcpu_kstat10.c netcpu_sysctl.c netcpu_ntperf.c netcpu_osx.c missing/* dirs NetPerfDir/* NetServerDir/* netperf_version.h.in
+EXTRA_DIST = netcpu_none.c netcpu_looper.c netcpu_pstat.c netcpu_pstatnew.c netcpu_perfstat.c netcpu_procstat.c netcpu_kstat.c netcpu_kstat10.c netcpu_sysctl.c netcpu_ntperf.c netcpu_osx.c dirs NetPerfDir/* NetServerDir/* netperf_version.h.in
 
 COMMON_SRC = hist.h netlib.c netlib.h netcpu.h netsh.c netsh.h nettest_bsd.c nettest_bsd.h nettest_dlpi.c nettest_dlpi.h nettest_unix.c nettest_unix.h nettest_xti.c nettest_xti.h nettest_sctp.c nettest_sctp.h netperf_version.h nettest_sdp.c nettest_sdp.h
 
@@ -144,8 +146,8 @@ netperf_SOURCES = netperf.c $(COMMON_SRC) $(USE_CPU_SOURCE)
 netserver_SOURCES = netserver.c $(COMMON_SRC) $(USE_CPU_SOURCE)
 
 # if there are any "missing" routines, the libobjs should cover it
-netperf_LDADD = @LIBOBJS@
-netserver_LDADD = @LIBOBJS@
+@NEED_LIBCOMPAT_TRUE@netperf_LDADD = missing/libcompat.a
+@NEED_LIBCOMPAT_TRUE@netserver_LDADD = missing/libcompat.a
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
@@ -161,20 +163,20 @@ am__objects_1 = netlib.$(OBJEXT) netsh.$(OBJEXT) nettest_bsd.$(OBJEXT) \
 am__objects_2 = netcpu_@NETCPU_SOURCE@.$(OBJEXT)
 am_netperf_OBJECTS = netperf.$(OBJEXT) $(am__objects_1) $(am__objects_2)
 netperf_OBJECTS = $(am_netperf_OBJECTS)
-netperf_DEPENDENCIES = @LIBOBJS@
+@NEED_LIBCOMPAT_TRUE@netperf_DEPENDENCIES = missing/libcompat.a
+@NEED_LIBCOMPAT_FALSE@netperf_DEPENDENCIES =
 netperf_LDFLAGS =
 am_netserver_OBJECTS = netserver.$(OBJEXT) $(am__objects_1) \
 	$(am__objects_2)
 netserver_OBJECTS = $(am_netserver_OBJECTS)
-netserver_DEPENDENCIES = @LIBOBJS@
+@NEED_LIBCOMPAT_TRUE@netserver_DEPENDENCIES = missing/libcompat.a
+@NEED_LIBCOMPAT_FALSE@netserver_DEPENDENCIES =
 netserver_LDFLAGS =
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
-@AMDEP_TRUE@DEP_FILES = $(DEPDIR)/missing/getaddrinfo.Po \
-@AMDEP_TRUE@	$(DEPDIR)/missing/inet_ntop.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/netcpu_@NETCPU_SOURCE@.Po \
+@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/netcpu_@NETCPU_SOURCE@.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/netlib.Po ./$(DEPDIR)/netperf.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/netserver.Po ./$(DEPDIR)/netsh.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/nettest_bsd.Po \
@@ -188,11 +190,17 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 DIST_SOURCES = $(netperf_SOURCES) $(netserver_SOURCES)
-DIST_COMMON = $(srcdir)/Makefile.in Makefile.am missing/getaddrinfo.c \
-	missing/inet_ntop.c netperf_version.h.in
+
+RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
+	ps-recursive install-info-recursive uninstall-info-recursive \
+	all-recursive install-data-recursive install-exec-recursive \
+	installdirs-recursive install-recursive uninstall-recursive \
+	check-recursive installcheck-recursive
+DIST_COMMON = $(srcdir)/Makefile.in Makefile.am netperf_version.h.in
+DIST_SUBDIRS = $(SUBDIRS)
 SOURCES = $(netperf_SOURCES) $(netserver_SOURCES)
 
-all: all-am
+all: all-recursive
 
 .SUFFIXES:
 .SUFFIXES: .c .o .obj
@@ -240,8 +248,6 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/missing/getaddrinfo.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/missing/inet_ntop.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/netcpu_@NETCPU_SOURCE@.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/netlib.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/netperf.Po@am__quote@
@@ -277,6 +283,65 @@ distclean-compile:
 @am__fastdepCC_FALSE@	$(COMPILE) -c `if test -f '$<'; then $(CYGPATH_W) '$<'; else $(CYGPATH_W) '$(srcdir)/$<'; fi`
 uninstall-info-am:
 
+# This directory's subdirectories are mostly independent; you can cd
+# into them and run `make' without going through this Makefile.
+# To change the values of `make' variables: instead of editing Makefiles,
+# (1) if the variable is set in `config.status', edit `config.status'
+#     (which will cause the Makefiles to be regenerated when you run `make');
+# (2) otherwise, pass the desired values on the `make' command line.
+$(RECURSIVE_TARGETS):
+	@set fnord $$MAKEFLAGS; amf=$$2; \
+	dot_seen=no; \
+	target=`echo $@ | sed s/-recursive//`; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    dot_seen=yes; \
+	    local_target="$$target-am"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	   || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; \
+	done; \
+	if test "$$dot_seen" = "no"; then \
+	  $(MAKE) $(AM_MAKEFLAGS) "$$target-am" || exit 1; \
+	fi; test -z "$$fail"
+
+mostlyclean-recursive clean-recursive distclean-recursive \
+maintainer-clean-recursive:
+	@set fnord $$MAKEFLAGS; amf=$$2; \
+	dot_seen=no; \
+	case "$@" in \
+	  distclean-* | maintainer-clean-*) list='$(DIST_SUBDIRS)' ;; \
+	  *) list='$(SUBDIRS)' ;; \
+	esac; \
+	rev=''; for subdir in $$list; do \
+	  if test "$$subdir" = "."; then :; else \
+	    rev="$$subdir $$rev"; \
+	  fi; \
+	done; \
+	rev="$$rev ."; \
+	target=`echo $@ | sed s/-recursive//`; \
+	for subdir in $$rev; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    local_target="$$target-am"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	   || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; \
+	done && test -z "$$fail"
+tags-recursive:
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  test "$$subdir" = . || (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) tags); \
+	done
+ctags-recursive:
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  test "$$subdir" = . || (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) ctags); \
+	done
+
 ETAGS = etags
 ETAGSFLAGS =
 
@@ -294,10 +359,21 @@ ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	       END { for (i in files) print i; }'`; \
 	mkid -fID $$unique
 
-TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
+TAGS: tags-recursive $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
 		$(TAGS_FILES) $(LISP)
 	tags=; \
 	here=`pwd`; \
+	if (etags --etags-include --version) >/dev/null 2>&1; then \
+	  include_option=--etags-include; \
+	else \
+	  include_option=--include; \
+	fi; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  if test "$$subdir" = .; then :; else \
+	    test -f $$subdir/TAGS && \
+	      tags="$$tags $$include_option=$$here/$$subdir/TAGS"; \
+	  fi; \
+	done; \
 	list='$(SOURCES) $(HEADERS)  $(LISP) $(TAGS_FILES)'; \
 	unique=`for i in $$list; do \
 	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
@@ -309,7 +385,7 @@ TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
 	     $$tags $$unique
 
 ctags: CTAGS
-CTAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
+CTAGS: ctags-recursive $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
 		$(TAGS_FILES) $(LISP)
 	tags=; \
 	here=`pwd`; \
@@ -336,7 +412,7 @@ top_distdir = ..
 distdir = $(top_distdir)/$(PACKAGE)-$(VERSION)
 
 distdir: $(DISTFILES)
-	$(mkinstalldirs) $(distdir)/NetPerfDir $(distdir)/NetServerDir $(distdir)/missing
+	$(mkinstalldirs) $(distdir)/NetPerfDir $(distdir)/NetServerDir
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -363,21 +439,35 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  if test "$$subdir" = .; then :; else \
+	    test -d $(distdir)/$$subdir \
+	    || mkdir $(distdir)/$$subdir \
+	    || exit 1; \
+	    (cd $$subdir && \
+	      $(MAKE) $(AM_MAKEFLAGS) \
+	        top_distdir="$(top_distdir)" \
+	        distdir=../$(distdir)/$$subdir \
+	        distdir) \
+	      || exit 1; \
+	  fi; \
+	done
 check-am: all-am
-check: check-am
+check: check-recursive
 all-am: Makefile $(PROGRAMS)
-
-installdirs:
+installdirs: installdirs-recursive
+installdirs-am:
 	$(mkinstalldirs) $(DESTDIR)$(bindir)
-install: install-am
-install-exec: install-exec-am
-install-data: install-data-am
-uninstall: uninstall-am
+
+install: install-recursive
+install-exec: install-exec-recursive
+install-data: install-data-recursive
+uninstall: uninstall-recursive
 
 install-am: all-am
 	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
 
-installcheck: installcheck-am
+installcheck: installcheck-recursive
 install-strip:
 	$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
 	  install_sh_PROGRAM="$(INSTALL_STRIP_PROGRAM)" INSTALL_STRIP_FLAG=-s \
@@ -394,21 +484,21 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-clean: clean-am
+clean: clean-recursive
 
 clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
 
-distclean: distclean-am
-	-rm -rf $(DEPDIR)/missing ./$(DEPDIR)
+distclean: distclean-recursive
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
 
-dvi: dvi-am
+dvi: dvi-recursive
 
 dvi-am:
 
-info: info-am
+info: info-recursive
 
 info-am:
 
@@ -416,47 +506,50 @@ install-data-am:
 
 install-exec-am: install-binPROGRAMS
 
-install-info: install-info-am
+install-info: install-info-recursive
 
 install-man:
 
 installcheck-am:
 
-maintainer-clean: maintainer-clean-am
-	-rm -rf $(DEPDIR)/missing ./$(DEPDIR)
+maintainer-clean: maintainer-clean-recursive
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
-mostlyclean: mostlyclean-am
+mostlyclean: mostlyclean-recursive
 
 mostlyclean-am: mostlyclean-compile mostlyclean-generic
 
-pdf: pdf-am
+pdf: pdf-recursive
 
 pdf-am:
 
-ps: ps-am
+ps: ps-recursive
 
 ps-am:
 
 uninstall-am: uninstall-binPROGRAMS uninstall-info-am
 
-.PHONY: CTAGS GTAGS all all-am check check-am clean clean-binPROGRAMS \
-	clean-generic ctags distclean distclean-compile \
-	distclean-generic distclean-tags distdir dvi dvi-am info \
-	info-am install install-am install-binPROGRAMS install-data \
-	install-data-am install-exec install-exec-am install-info \
-	install-info-am install-man install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic pdf pdf-am ps ps-am tags uninstall \
-	uninstall-am uninstall-binPROGRAMS uninstall-info-am
+uninstall-info: uninstall-info-recursive
 
+.PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am check check-am clean \
+	clean-binPROGRAMS clean-generic clean-recursive ctags \
+	ctags-recursive distclean distclean-compile distclean-generic \
+	distclean-recursive distclean-tags distdir dvi dvi-am \
+	dvi-recursive info info-am info-recursive install install-am \
+	install-binPROGRAMS install-data install-data-am \
+	install-data-recursive install-exec install-exec-am \
+	install-exec-recursive install-info install-info-am \
+	install-info-recursive install-man install-recursive \
+	install-strip installcheck installcheck-am installdirs \
+	installdirs-am installdirs-recursive maintainer-clean \
+	maintainer-clean-generic maintainer-clean-recursive mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-recursive \
+	pdf pdf-am pdf-recursive ps ps-am ps-recursive tags \
+	tags-recursive uninstall uninstall-am uninstall-binPROGRAMS \
+	uninstall-info-am uninstall-info-recursive uninstall-recursive
 
-missing/getaddrinfo.o: $(srcdir)/missing/getaddrinfo.c
-	$(COMPILE) -o $@ -c $(srcdir)/missing/getaddrinfo.c
-missing/inet_ntop.o: $(srcdir)/missing/inet_ntop.c
-	$(COMPILE) -o $@ -c $(srcdir)/missing/inet_ntop.c
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

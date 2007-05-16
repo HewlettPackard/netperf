@@ -21,6 +21,7 @@ touch src/netperf_version.h.in
 
 # Checks for programs.
 AC_PROG_CC
+AC_PROG_RANLIB
 
 AC_C_CONST
 
@@ -79,13 +80,15 @@ AC_CHECK_FUNCS([getnameinfo getaddrinfo inet_ntop])
 
 if test "$ac_cv_func_getaddrinfo$ac_cv_func_getnameinfo" != yesyes ; then
    AC_MSG_NOTICE([Requesting replacement getaddrinfo/getnameinfo])
-   AC_LIBOBJ(missing/getaddrinfo)
+   AC_LIBOBJ(getaddrinfo)
+   HAVE_MISSING=yes
 fi
 if test "$ac_cv_func_inet_ntop" != yes ; then
    AC_MSG_NOTICE([Requesting replacement inet_ntop])
-   AC_LIBOBJ(missing/inet_ntop)
+   AC_LIBOBJ(inet_ntop)
+   HAVE_MISSING=yes
 fi
-
+AM_CONDITIONAL(NEED_LIBCOMPAT, test "$HAVE_MISSING" = "yes")
 
 AC_CHECK_FUNCS(sendfile)
 
@@ -640,7 +643,10 @@ AC_SUBST(LIBOJBS)
 AC_CONFIG_FILES([Makefile
                  src/netperf_version.h
                  src/Makefile
+		 src/missing/Makefile
+		 src/missing/m4/Makefile
 		 doc/Makefile
+		 doc/examples/Makefile
                  netperf.spec])
 
 AC_OUTPUT
