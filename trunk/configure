@@ -705,7 +705,6 @@ LIBOBJS
 NEED_LIBCOMPAT_TRUE
 NEED_LIBCOMPAT_FALSE
 NETCPU_SOURCE
-LIBOJBS
 LTLIBOBJS'
 ac_subst_files=''
       ac_precious_vars='build_alias
@@ -8355,6 +8354,11 @@ fi
 
 done
 
+		case "$host" in
+		*-*-freebsd7.*)
+			# FreeBSD 7.x SCTP support doesn't need -lsctp.
+			;;
+		*)
 
 { echo "$as_me:$LINENO: checking for main in -lsctp" >&5
 echo $ECHO_N "checking for main in -lsctp... $ECHO_C" >&6; }
@@ -8423,6 +8427,8 @@ else
 fi
 ac_cv_lib_sctp=ac_cv_lib_sctp_main
 
+			;;
+		esac
 		;;
 	no)
 		use_sctp=false
@@ -9183,7 +9189,6 @@ echo "${ECHO_T}\"$enable_cpuutil\"" >&6; }
 
 
 
-
 # now spit it all out
 ac_config_files="$ac_config_files Makefile src/netperf_version.h src/Makefile src/missing/Makefile src/missing/m4/Makefile doc/Makefile doc/examples/Makefile netperf.spec"
 
@@ -9934,11 +9939,10 @@ LIBOBJS!$LIBOBJS$ac_delim
 NEED_LIBCOMPAT_TRUE!$NEED_LIBCOMPAT_TRUE$ac_delim
 NEED_LIBCOMPAT_FALSE!$NEED_LIBCOMPAT_FALSE$ac_delim
 NETCPU_SOURCE!$NETCPU_SOURCE$ac_delim
-LIBOJBS!$LIBOJBS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 93; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 92; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
