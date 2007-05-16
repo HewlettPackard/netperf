@@ -697,10 +697,13 @@ AMDEPBACKSLASH
 CCDEPMODE
 am__fastdepCC_TRUE
 am__fastdepCC_FALSE
+RANLIB
 CPP
 GREP
 EGREP
 LIBOBJS
+NEED_LIBCOMPAT_TRUE
+NEED_LIBCOMPAT_FALSE
 NETCPU_SOURCE
 LIBOJBS
 LTLIBOBJS'
@@ -3406,6 +3409,102 @@ else
   am__fastdepCC_FALSE=
 fi
 
+
+if test -n "$ac_tool_prefix"; then
+  # Extract the first word of "${ac_tool_prefix}ranlib", so it can be a program name with args.
+set dummy ${ac_tool_prefix}ranlib; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_prog_RANLIB+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  if test -n "$RANLIB"; then
+  ac_cv_prog_RANLIB="$RANLIB" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_RANLIB="${ac_tool_prefix}ranlib"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+fi
+fi
+RANLIB=$ac_cv_prog_RANLIB
+if test -n "$RANLIB"; then
+  { echo "$as_me:$LINENO: result: $RANLIB" >&5
+echo "${ECHO_T}$RANLIB" >&6; }
+else
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+
+fi
+if test -z "$ac_cv_prog_RANLIB"; then
+  ac_ct_RANLIB=$RANLIB
+  # Extract the first word of "ranlib", so it can be a program name with args.
+set dummy ranlib; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_prog_ac_ct_RANLIB+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  if test -n "$ac_ct_RANLIB"; then
+  ac_cv_prog_ac_ct_RANLIB="$ac_ct_RANLIB" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_ac_ct_RANLIB="ranlib"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+fi
+fi
+ac_ct_RANLIB=$ac_cv_prog_ac_ct_RANLIB
+if test -n "$ac_ct_RANLIB"; then
+  { echo "$as_me:$LINENO: result: $ac_ct_RANLIB" >&5
+echo "${ECHO_T}$ac_ct_RANLIB" >&6; }
+else
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+  if test "x$ac_ct_RANLIB" = x; then
+    RANLIB=":"
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ echo "$as_me:$LINENO: WARNING: In the future, Autoconf will not detect cross-tools
+whose name does not start with the host triplet.  If you think this
+configuration is useful to you, please write to autoconf@gnu.org." >&5
+echo "$as_me: WARNING: In the future, Autoconf will not detect cross-tools
+whose name does not start with the host triplet.  If you think this
+configuration is useful to you, please write to autoconf@gnu.org." >&2;}
+ac_tool_warned=yes ;;
+esac
+    RANLIB=$ac_ct_RANLIB
+  fi
+else
+  RANLIB="$ac_cv_prog_RANLIB"
+fi
 
 
 
@@ -7310,21 +7409,32 @@ if test "$ac_cv_func_getaddrinfo$ac_cv_func_getnameinfo" != yesyes ; then
    { echo "$as_me:$LINENO: Requesting replacement getaddrinfo/getnameinfo" >&5
 echo "$as_me: Requesting replacement getaddrinfo/getnameinfo" >&6;}
    case " $LIBOBJS " in
-  *" missing/getaddrinfo.$ac_objext "* ) ;;
-  *) LIBOBJS="$LIBOBJS missing/getaddrinfo.$ac_objext"
+  *" getaddrinfo.$ac_objext "* ) ;;
+  *) LIBOBJS="$LIBOBJS getaddrinfo.$ac_objext"
  ;;
 esac
 
+   HAVE_MISSING=yes
 fi
 if test "$ac_cv_func_inet_ntop" != yes ; then
    { echo "$as_me:$LINENO: Requesting replacement inet_ntop" >&5
 echo "$as_me: Requesting replacement inet_ntop" >&6;}
    case " $LIBOBJS " in
-  *" missing/inet_ntop.$ac_objext "* ) ;;
-  *) LIBOBJS="$LIBOBJS missing/inet_ntop.$ac_objext"
+  *" inet_ntop.$ac_objext "* ) ;;
+  *) LIBOBJS="$LIBOBJS inet_ntop.$ac_objext"
  ;;
 esac
 
+   HAVE_MISSING=yes
+fi
+
+
+if test "$HAVE_MISSING" = "yes"; then
+  NEED_LIBCOMPAT_TRUE=
+  NEED_LIBCOMPAT_FALSE='#'
+else
+  NEED_LIBCOMPAT_TRUE='#'
+  NEED_LIBCOMPAT_FALSE=
 fi
 
 
@@ -9075,7 +9185,7 @@ echo "${ECHO_T}\"$enable_cpuutil\"" >&6; }
 
 
 # now spit it all out
-ac_config_files="$ac_config_files Makefile src/netperf_version.h src/Makefile doc/Makefile netperf.spec"
+ac_config_files="$ac_config_files Makefile src/netperf_version.h src/Makefile src/missing/Makefile src/missing/m4/Makefile doc/Makefile doc/examples/Makefile netperf.spec"
 
 
 cat >confcache <<\_ACEOF
@@ -9185,6 +9295,13 @@ if test -z "${am__fastdepCC_TRUE}" && test -z "${am__fastdepCC_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"am__fastdepCC\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 echo "$as_me: error: conditional \"am__fastdepCC\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${NEED_LIBCOMPAT_TRUE}" && test -z "${NEED_LIBCOMPAT_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"NEED_LIBCOMPAT\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"NEED_LIBCOMPAT\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -9659,7 +9776,10 @@ do
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "src/netperf_version.h") CONFIG_FILES="$CONFIG_FILES src/netperf_version.h" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
+    "src/missing/Makefile") CONFIG_FILES="$CONFIG_FILES src/missing/Makefile" ;;
+    "src/missing/m4/Makefile") CONFIG_FILES="$CONFIG_FILES src/missing/m4/Makefile" ;;
     "doc/Makefile") CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
+    "doc/examples/Makefile") CONFIG_FILES="$CONFIG_FILES doc/examples/Makefile" ;;
     "netperf.spec") CONFIG_FILES="$CONFIG_FILES netperf.spec" ;;
 
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
@@ -9806,16 +9926,19 @@ AMDEPBACKSLASH!$AMDEPBACKSLASH$ac_delim
 CCDEPMODE!$CCDEPMODE$ac_delim
 am__fastdepCC_TRUE!$am__fastdepCC_TRUE$ac_delim
 am__fastdepCC_FALSE!$am__fastdepCC_FALSE$ac_delim
+RANLIB!$RANLIB$ac_delim
 CPP!$CPP$ac_delim
 GREP!$GREP$ac_delim
 EGREP!$EGREP$ac_delim
 LIBOBJS!$LIBOBJS$ac_delim
+NEED_LIBCOMPAT_TRUE!$NEED_LIBCOMPAT_TRUE$ac_delim
+NEED_LIBCOMPAT_FALSE!$NEED_LIBCOMPAT_FALSE$ac_delim
 NETCPU_SOURCE!$NETCPU_SOURCE$ac_delim
 LIBOJBS!$LIBOJBS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 90; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 93; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

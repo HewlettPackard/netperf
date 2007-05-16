@@ -68,6 +68,8 @@ LIBOJBS = @LIBOJBS@
 LIBS = @LIBS@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
+NEED_LIBCOMPAT_FALSE = @NEED_LIBCOMPAT_FALSE@
+NEED_LIBCOMPAT_TRUE = @NEED_LIBCOMPAT_TRUE@
 NETCPU_SOURCE = @NETCPU_SOURCE@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
@@ -77,6 +79,7 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -368,9 +371,6 @@ distdir: $(DISTFILES)
 	      || exit 1; \
 	  fi; \
 	done
-	$(MAKE) $(AM_MAKEFLAGS) \
-	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
-	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -548,10 +548,6 @@ uninstall-info: uninstall-info-recursive
 	ps-recursive tags tags-recursive uninstall uninstall-am \
 	uninstall-info-am uninstall-info-recursive uninstall-recursive
 
-dist-hook:
-	rm -rf `find $(distdir) -name .svn`
-	sed -e 's|@VERSION\@|$(VERSION)|g' $(PACKAGE).spec.in > $(PACKAGE).spec
-	cp $(PACKAGE).spec $(distdir)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
