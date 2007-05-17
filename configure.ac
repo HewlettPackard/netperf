@@ -395,6 +395,12 @@ case "$enable_sctp" in
 			AC_HAVE_LIBRARY(sctp,,use_sctp=false)
 			;;
 		esac
+		AC_CHECK_MEMBER(struct sctp_event_subscribe.sctp_adaptation_layer_event,
+				, , [#include <netinet/sctp.h>])
+		if test "$ac_cv_member_struct_sctp_event_subscribe_sctp_adaptation_layer_event" = "yes"; then
+			AC_DEFINE([HAVE_SCTP_ADAPTATION_LAYER_EVENT], 1,
+				  [Define to 1 if `struct sctp_event_subscribe' has a `sctp_adaptation_layer_event' member])
+		fi
 		;;
 	no)
 		use_sctp=false
