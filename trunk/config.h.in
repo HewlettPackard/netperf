@@ -129,6 +129,10 @@
 /* Define to 1 if you have the `sched_setaffinity' function. */
 #undef HAVE_SCHED_SETAFFINITY
 
+/* Define to 1 if `struct sctp_event_subscribe' has a
+   `sctp_adaptation_layer_event' member */
+#undef HAVE_SCTP_ADAPTATION_LAYER_EVENT
+
 /* Define to 1 if you have the `select' function. */
 #undef HAVE_SELECT
 

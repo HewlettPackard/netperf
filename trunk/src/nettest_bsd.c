@@ -594,7 +594,11 @@ complete_addrinfo(char *controlhost, char *data_address, char *port, int family,
        we were asking for IPPROTO_SCTP and if so, kludge, again... raj
        2008-10-13 */
 #ifdef WANT_SCTP
-    if (EAI_SOCKTYPE == error) {
+    if (EAI_SOCKTYPE == error
+#ifdef EAI_BADHINTS
+        || EAI_BADHINTS == error
+#endif
+        ) {
       /* we ass-u-me this is the Linux getaddrinfo bug, clear the
 	 hints.ai_protocol field, and set some state "remembering"
 	 that we did this so the code for the Solaris kludge can do

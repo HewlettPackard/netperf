@@ -196,7 +196,11 @@ sctp_enable_events(socket, ev_mask)
 	ev.sctp_partial_delivery_event = 1;
 
     if (ev_mask & SCTP_ADAPT_EV)
+#ifdef HAVE_SCTP_ADAPTATION_LAYER_EVENT
+	ev.sctp_adaptation_layer_event = 1;
+#else
 	ev.sctp_adaption_layer_event = 1;
+#endif
 
     if (setsockopt(socket,
 		   IPPROTO_SCTP,
