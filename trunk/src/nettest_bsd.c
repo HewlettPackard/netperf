@@ -363,7 +363,7 @@ static struct timeval *temp_demo_ptr = &demo_one;
 					  actual_interval/1000000.0), \
 		    format_units(), \
 		    actual_interval/1000000.0); \
-            fflush(where) \
+            fflush(where); \
 	    units_this_tick = 0.0; \
 	    /* now get a new starting timestamp.  we could be clever \
 	       and swap pointers - the math we do probably does not \
