@@ -2,6 +2,10 @@ These are the Release Notes leading-up to Revision 2.4.4 of netperf:
 
 Things changed in this release:
 
+*) Call fflush() on each interim result displayed in demo mode to make
+   things happier for folks redirecting same to a file.  From Dan
+   Yost.
+
 *) In theory each distinct netserver child will have a debug log with
    its pid appended to the name, somewhat like what appears to happen
    under Windows.
