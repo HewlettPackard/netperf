@@ -2,6 +2,10 @@ These are the Release Notes leading-up to Revision 2.4.4 of netperf:
 
 Things changed in this release:
 
+*) The default for the requested socket buffer size is changed from 0
+   to -1 to enable passing a value of 0 under Windows, which tells that
+   stack one wishes to enable copy-avoidance.
+
 *) Call fflush() on each interim result displayed in demo mode to make
    things happier for folks redirecting same to a file.  From Dan
    Yost.

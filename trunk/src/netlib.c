@@ -2424,7 +2424,13 @@ set_sock_buffer (SOCKET sd, enum sock_buffer which, int requested_size, int *eff
   int optname = (which == SEND_BUFFER) ? SO_SNDBUF : SO_RCVBUF;
   netperf_socklen_t sock_opt_len;
 
-  if (requested_size > 0) {
+  /* seems that under Windows, setting a value of zero is how one
+     tells the stack you wish to enable copy-avoidance. Knuth only
+     knows what it will do on other stacks, but it might be
+     interesting to find-out, so we won't bother #ifdef'ing the change
+     to allow asking for 0 bytes. Courtesy of SAF, 2007-05  raj
+     2007-05-31 */
+  if (requested_size >= 0) {
     if (setsockopt(sd, SOL_SOCKET, optname,
 		   (char *)&requested_size, sizeof(int)) < 0) {
       fprintf(where, "netperf: set_sock_buffer: %s option: errno %d\n",

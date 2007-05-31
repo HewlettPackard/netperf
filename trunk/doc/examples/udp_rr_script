@@ -41,12 +41,12 @@ TEST_TIME=60
 
 STATS_STUFF="-i 10,2 -I 99,10"
 
-# The socket sizes that we will be testing - 0 means use default
+# The socket sizes that we will be testing - -1 means use default
 # not much point in changing the socket buffer for a UDP request/
 # response test - unless you want to have requests/responses which 
 # are larger than the default
 
-SOCKET_SIZES="0"
+SOCKET_SIZES="-1"
 
 # The send sizes that we will be using
 
