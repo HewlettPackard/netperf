@@ -157,12 +157,12 @@ int first_burst_size=0;
  */
 
 int	
-  rss_size_req,		/* requested remote socket send buffer size */
-  rsr_size_req,		/* requested remote socket recv buffer size */
+  rss_size_req = -1,	/* requested remote socket send buffer size */
+  rsr_size_req = -1,	/* requested remote socket recv buffer size */
   rss_size,		/* remote socket send buffer size	*/
   rsr_size,		/* remote socket recv buffer size	*/
-  lss_size_req,		/* requested local socket send buffer size */
-  lsr_size_req,		/* requested local socket recv buffer size */
+  lss_size_req = -1,	/* requested local socket send buffer size */
+  lsr_size_req = -1,	/* requested local socket recv buffer size */
   lss_size,		/* local  socket send buffer size 	*/
   lsr_size,		/* local  socket recv buffer size 	*/
   req_size = 1,		/* request size                   	*/

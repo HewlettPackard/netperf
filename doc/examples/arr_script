@@ -1,3 +1,5 @@
+# this is retained mostly for historical purposes and may not be
+# up to date for contemporary netperf versions
 #
 # a script that can be used to measure aggregate netperf performance,
 # original author is Mike Traynor. Modifications to create the

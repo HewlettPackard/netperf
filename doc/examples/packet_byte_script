@@ -39,9 +39,9 @@ NETPERF_TIME=${NETPERF_TIME:=20}
 #      confidence level (99 or 95) and interval (percent)
 NETPERF_STATS=${NETPERF_STATS:="-i 10,3 -I 99,5"}
 
-# The socket sizes that we will be testing - using zero will let it 
+# The socket sizes that we will be testing - using -1 will let it 
 # be the system default.
-NETPERF_SKTS=${NETPERF_SKTS:="0"}
+NETPERF_SKTS=${NETPERF_SKTS:="-1"}
 
 # The request,response sizes that we will be using. The netperf
 # command parser will treat "1" the same as "1,1" - I use 1,1 to
