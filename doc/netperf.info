@@ -1849,8 +1849,10 @@ BSD Sockets or the XTI interface those common options include:
 
      While the historic expectation is that setting the socket buffer
      size has a direct effect on say the TCP window, today that may not
-     hold true for all stacks. [Default: 0 - use the system's default
-     socket buffer sizes]
+     hold true for all stacks.  When running under Windows a value of 0
+     may be used which will be an indication to the stack the user
+     wants to enable a form of copy avoidance. [Default: -1 - use the
+     system's default socket buffer sizes]
 
 `-S <sizespec>'
      This option sets the remote send and/or receive socket buffer sizes
@@ -1867,8 +1869,10 @@ BSD Sockets or the XTI interface those common options include:
 
      While the historic expectation is that setting the socket buffer
      size has a direct effect on say the TCP window, today that may not
-     hold true for all stacks. [Default: 0 - use the system's default
-     socket buffer sizes]
+     hold true for all stacks.  When running under Windows a value of 0
+     may be used which will be an indication to the stack the user
+     wants to enable a form of copy avoidance.  [Default: -1 - use the
+     system's default socket buffer sizes]
 
 `-4'
      Set the local and remote address family for the data connection to
@@ -2728,11 +2732,11 @@ Option Index
                                                               (line  28)
 * -4, Global:                            Global Options.      (line 379)
 * -4, Test-specific <1>:                 Options Common to TCP UDP and SCTP _RR tests.
-                                                              (line  84)
+                                                              (line  88)
 * -4, Test-specific:                     Options common to TCP UDP and SCTP tests.
                                                               (line 106)
 * -6 Test-specific:                      Options Common to TCP UDP and SCTP _RR tests.
-                                                              (line  90)
+                                                              (line  94)
 * -6, Global:                            Global Options.      (line 388)
 * -6, Test-specific:                     Options common to TCP UDP and SCTP tests.
                                                               (line 112)
@@ -2781,7 +2785,7 @@ Option Index
 * -S Test-specific:                      Options common to TCP UDP and SCTP tests.
                                                               (line  85)
 * -S, Test-specific:                     Options Common to TCP UDP and SCTP _RR tests.
-                                                              (line  66)
+                                                              (line  68)
 * -s, Test-specific <1>:                 Options Common to TCP UDP and SCTP _RR tests.
                                                               (line  48)
 * -s, Test-specific:                     Options common to TCP UDP and SCTP tests.
@@ -2823,29 +2827,29 @@ Node: DG_STREAM75490
 Node: Using Netperf to Measure Request/Response76159
 Node: Issues in Request/Response78080
 Node: Options Common to TCP UDP and SCTP _RR tests80086
-Node: TCP_RR84752
-Node: TCP_CC87096
-Node: TCP_CRR89293
-Node: UDP_RR90339
-Node: XTI_TCP_RR92360
-Node: XTI_TCP_CC92943
-Node: XTI_TCP_CRR93109
-Node: XTI_UDP_RR93277
-Node: DLCL_RR93854
-Node: DLCO_RR94007
-Node: SCTP_RR94159
-Node: Using Netperf to Measure Aggregate Performance94295
-Node: Running Concurrent Netperf Tests95130
-Node: Using --enable-burst99022
-Node: Using Netperf to Measure Bidirectional Transfer105207
-Node: Bidirectional Transfer with Concurrent Tests106280
-Node: Bidirectional Transfer with TCP_RR108146
-Node: Other Netperf Tests110680
-Node: CPU rate calibration111126
-Node: Address Resolution113467
-Node: Enhancing Netperf115443
-Node: Netperf4116680
-Node: Concept Index117589
-Node: Option Index119979
+Node: TCP_RR85065
+Node: TCP_CC87409
+Node: TCP_CRR89606
+Node: UDP_RR90652
+Node: XTI_TCP_RR92673
+Node: XTI_TCP_CC93256
+Node: XTI_TCP_CRR93422
+Node: XTI_UDP_RR93590
+Node: DLCL_RR94167
+Node: DLCO_RR94320
+Node: SCTP_RR94472
+Node: Using Netperf to Measure Aggregate Performance94608
+Node: Running Concurrent Netperf Tests95443
+Node: Using --enable-burst99335
+Node: Using Netperf to Measure Bidirectional Transfer105520
+Node: Bidirectional Transfer with Concurrent Tests106593
+Node: Bidirectional Transfer with TCP_RR108459
+Node: Other Netperf Tests110993
+Node: CPU rate calibration111439
+Node: Address Resolution113780
+Node: Enhancing Netperf115756
+Node: Netperf4116993
+Node: Concept Index117902
+Node: Option Index120292
 
 End Tag Table

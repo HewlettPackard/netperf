@@ -1952,8 +1952,10 @@ Will request the local send and receive socket buffer sizes to be
 
 While the historic expectation is that setting the socket buffer size
 has a direct effect on say the TCP window, today that may not hold
-true for all stacks. [Default: 0 - use the system's default socket
-buffer sizes]
+true for all stacks.  When running under Windows a value of 0 may be
+used which will be an indication to the stack the user wants to enable
+a form of copy avoidance. [Default: -1 - use the system's default
+socket buffer sizes]
 
 @vindex -S, Test-specific
 @item -S <sizespec>
@@ -1973,8 +1975,10 @@ Will request the local send and receive socket buffer sizes to be
 
 While the historic expectation is that setting the socket buffer size
 has a direct effect on say the TCP window, today that may not hold
-true for all stacks. [Default: 0 - use the system's default socket
-buffer sizes]
+true for all stacks.  When running under Windows a value of 0 may be
+used which will be an indication to the stack the user wants to enable
+a form of copy avoidance.  [Default: -1 - use the system's default
+socket buffer sizes]
 
 @vindex -4, Test-specific
 @item -4
