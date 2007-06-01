@@ -2105,8 +2105,10 @@ respectively. For example:
 
      <p>While the historic expectation is that setting the socket buffer size
 has a direct effect on say the TCP window, today that may not hold
-true for all stacks. [Default: 0 - use the system's default socket
-buffer sizes]
+true for all stacks.  When running under Windows a value of 0 may be
+used which will be an indication to the stack the user wants to enable
+a form of copy avoidance. [Default: -1 - use the system's default
+socket buffer sizes]
 
      <p><a name="index-g_t_002dS_002c-Test_002dspecific-58"></a><br><dt><code>-S &lt;sizespec&gt;</code><dd>This option sets the remote send and/or receive socket buffer sizes
 for the data connection to the value(s) specified.  Often, this
@@ -2123,8 +2125,10 @@ For example:
 
      <p>While the historic expectation is that setting the socket buffer size
 has a direct effect on say the TCP window, today that may not hold
-true for all stacks. [Default: 0 - use the system's default socket
-buffer sizes]
+true for all stacks.  When running under Windows a value of 0 may be
+used which will be an indication to the stack the user wants to enable
+a form of copy avoidance.  [Default: -1 - use the system's default
+socket buffer sizes]
 
      <p><a name="index-g_t_002d4_002c-Test_002dspecific-59"></a><br><dt><code>-4</code><dd>Set the local and remote address family for the data connection to
 AF_INET - ie use IPv4 addressing only.  Just as with their global
