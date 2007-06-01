@@ -1281,8 +1281,10 @@ BSD Sockets or the XTI interface those common options include:
      hold true for all stacks. Further, while the historic expectation
      is that the value specified in a setsockopt() call will be the
      value returned via a getsockopt() call, at least one stack is
-     known to deliberately ignore history. [Default: 0 - use the
-     system's default socket buffer sizes]
+     known to deliberately ignore history.  When running under Windows
+     a value of 0 may be used which will be an indication to the stack
+     the user wants to enable a form of copy avoidance. [Default: -1 -
+     use the system's default socket buffer sizes]
 
 `-S <sizespec>'
      This option sets the remote send and/or receive socket buffer sizes
@@ -1302,8 +1304,10 @@ BSD Sockets or the XTI interface those common options include:
      hold true for all stacks.  Further, while the historic expectation
      is that the value specified in a setsockopt() call will be the
      value returned via a getsockopt() call, at least one stack is
-     known to deliberately ignore history. [Default: 0 - use the
-     system's default socket buffer sizes]
+     known to deliberately ignore history.  When running under Windows
+     a value of 0 may be used which will be an indication to the stack
+     the user wants to enable a form of copy avoidance. [Default: -1 -
+     use the system's default socket buffer sizes]
 
 `-4'
      Set the local and remote address family for the data connection to
@@ -2734,12 +2738,12 @@ Option Index
 * -4, Test-specific <1>:                 Options Common to TCP UDP and SCTP _RR tests.
                                                               (line  88)
 * -4, Test-specific:                     Options common to TCP UDP and SCTP tests.
-                                                              (line 106)
+                                                              (line 110)
 * -6 Test-specific:                      Options Common to TCP UDP and SCTP _RR tests.
                                                               (line  94)
 * -6, Global:                            Global Options.      (line 388)
 * -6, Test-specific:                     Options common to TCP UDP and SCTP tests.
-                                                              (line 112)
+                                                              (line 116)
 * -A, Global:                            Global Options.      (line  18)
 * -a, Global:                            Global Options.      (line   6)
 * -B, Global:                            Global Options.      (line  29)
@@ -2783,7 +2787,7 @@ Option Index
 * -r, Test-specific:                     Options Common to TCP UDP and SCTP _RR tests.
                                                               (line  36)
 * -S Test-specific:                      Options common to TCP UDP and SCTP tests.
-                                                              (line  85)
+                                                              (line  87)
 * -S, Test-specific:                     Options Common to TCP UDP and SCTP _RR tests.
                                                               (line  68)
 * -s, Test-specific <1>:                 Options Common to TCP UDP and SCTP _RR tests.
@@ -2813,43 +2817,43 @@ Node: Global Options29582
 Node: Using Netperf to Measure Bulk Data Transfer48878
 Node: Issues in Bulk Transfer49543
 Node: Options common to TCP UDP and SCTP tests53072
-Node: TCP_STREAM59054
-Node: TCP_MAERTS62822
-Node: TCP_SENDFILE64055
-Node: UDP_STREAM66371
-Node: XTI_TCP_STREAM69807
-Node: XTI_UDP_STREAM70452
-Node: SCTP_STREAM71097
-Node: DLCO_STREAM71797
-Node: DLCL_STREAM73770
-Node: STREAM_STREAM74644
-Node: DG_STREAM75490
-Node: Using Netperf to Measure Request/Response76159
-Node: Issues in Request/Response78080
-Node: Options Common to TCP UDP and SCTP _RR tests80086
-Node: TCP_RR85065
-Node: TCP_CC87409
-Node: TCP_CRR89606
-Node: UDP_RR90652
-Node: XTI_TCP_RR92673
-Node: XTI_TCP_CC93256
-Node: XTI_TCP_CRR93422
-Node: XTI_UDP_RR93590
-Node: DLCL_RR94167
-Node: DLCO_RR94320
-Node: SCTP_RR94472
-Node: Using Netperf to Measure Aggregate Performance94608
-Node: Running Concurrent Netperf Tests95443
-Node: Using --enable-burst99335
-Node: Using Netperf to Measure Bidirectional Transfer105520
-Node: Bidirectional Transfer with Concurrent Tests106593
-Node: Bidirectional Transfer with TCP_RR108459
-Node: Other Netperf Tests110993
-Node: CPU rate calibration111439
-Node: Address Resolution113780
-Node: Enhancing Netperf115756
-Node: Netperf4116993
-Node: Concept Index117902
-Node: Option Index120292
+Node: TCP_STREAM59366
+Node: TCP_MAERTS63134
+Node: TCP_SENDFILE64367
+Node: UDP_STREAM66683
+Node: XTI_TCP_STREAM70119
+Node: XTI_UDP_STREAM70764
+Node: SCTP_STREAM71409
+Node: DLCO_STREAM72109
+Node: DLCL_STREAM74082
+Node: STREAM_STREAM74956
+Node: DG_STREAM75802
+Node: Using Netperf to Measure Request/Response76471
+Node: Issues in Request/Response78392
+Node: Options Common to TCP UDP and SCTP _RR tests80398
+Node: TCP_RR85377
+Node: TCP_CC87721
+Node: TCP_CRR89918
+Node: UDP_RR90964
+Node: XTI_TCP_RR92985
+Node: XTI_TCP_CC93568
+Node: XTI_TCP_CRR93734
+Node: XTI_UDP_RR93902
+Node: DLCL_RR94479
+Node: DLCO_RR94632
+Node: SCTP_RR94784
+Node: Using Netperf to Measure Aggregate Performance94920
+Node: Running Concurrent Netperf Tests95755
+Node: Using --enable-burst99647
+Node: Using Netperf to Measure Bidirectional Transfer105832
+Node: Bidirectional Transfer with Concurrent Tests106905
+Node: Bidirectional Transfer with TCP_RR108771
+Node: Other Netperf Tests111305
+Node: CPU rate calibration111751
+Node: Address Resolution114092
+Node: Enhancing Netperf116068
+Node: Netperf4117305
+Node: Concept Index118214
+Node: Option Index120604
 
 End Tag Table

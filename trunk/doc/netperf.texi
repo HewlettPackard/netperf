@@ -1380,8 +1380,10 @@ has a direct effect on say the TCP window, today that may not hold
 true for all stacks. Further, while the historic expectation is that
 the value specified in a setsockopt() call will be the value returned
 via a getsockopt() call, at least one stack is known to deliberately
-ignore history. [Default: 0 - use the system's default socket buffer
-sizes]
+ignore history.  When running under Windows a value of 0 may be used
+which will be an indication to the stack the user wants to enable a
+form of copy avoidance. [Default: -1 - use the system's default socket
+buffer sizes]
 
 @vindex -S Test-specific
 @item -S <sizespec>
@@ -1404,8 +1406,10 @@ has a direct effect on say the TCP window, today that may not hold
 true for all stacks.  Further, while the historic expectation is that
 the value specified in a setsockopt() call will be the value returned
 via a getsockopt() call, at least one stack is known to deliberately
-ignore history. [Default: 0 - use the system's default socket buffer
-sizes]
+ignore history.  When running under Windows a value of 0 may be used
+which will be an indication to the stack the user wants to enable a
+form of copy avoidance. [Default: -1 - use the system's default socket
+buffer sizes]
 
 @vindex -4, Test-specific
 @item -4
