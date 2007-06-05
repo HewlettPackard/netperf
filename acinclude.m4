@@ -66,7 +66,7 @@ AC_DEFUN([OLD_TYPE_SOCKLEN_T],
                   getpeername(0,0,&len);
                ],[
                   curl_cv_socklen_t_equiv="$t"
-                  break
+                  break 2
                ])
             done
          done

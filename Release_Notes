@@ -2,6 +2,8 @@ These are the Release Notes leading-up to Revision 2.4.4 of netperf:
 
 Things changed in this release:
 
+*) Replace "break" with "break 2" in acinclude.m4 for a socklen macro
+
 *) The default for the requested socket buffer size is changed from 0
    to -1 to enable passing a value of 0 under Windows, which tells that
    stack one wishes to enable copy-avoidance.
