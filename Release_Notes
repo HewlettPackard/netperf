@@ -2,6 +2,30 @@ These are the Release Notes leading-up to Revision 2.4.4 of netperf:
 
 Things changed in this release:
 
+*) One can now pass a value of 'x' to the global -f option to specify
+   the units as transactions per second.  This is the default for any
+   request/response test, which is determined by there being a "double
+   `r'" in the name - eg "RR," "rr," "Rr," or "rR."  At present only
+   the TCP_RR test actually looks for this to be set.
+
+*) One can request bits/bytes per second as the primary output of a
+   TCP_RR test by setting the global -f option to [kmgKMG] as with any
+   of the "STREAM" tests.  This converts the primary throughput metric
+   to a bitrate (byterate) following the verbosity rules for a STREAM
+   test.  Service demand remains usec/Transaction regardless of the
+   setting of the global -f option.
+
+   A verbosity level of 2 or more will cause the TCP_RR test to report
+   calculated average RTT latency, transaction rate, and inbound and
+   outbound transfer rates regardless of the primary units selected
+   with the global -f paramter.  If the primary output is transactions
+   per second, the reported inbound and outbound transfer rates will
+   be 10^6 bits per second, otherwise, they honor the setting of the
+   global -f option.
+
+   All of this is EXPERIMENTAL and subject to change without prior
+   notice in future versions of netperf.
+
 *) Replace "break" with "break 2" in acinclude.m4 for a socklen macro
 
 *) The default for the requested socket buffer size is changed from 0
@@ -21,11 +45,11 @@ Things changed in this release:
    version and exit.
 
 *) Setting -I without setting -i will now implicitly set the iteration
-   minimum aand maximums as if a -i 10,3 were set.  Also, some further
+   minimum and maximums as if a -i 10,3 were set.  Also, some further
    sanity checking on the bounds for each is made.
 
 *) Fixed a typo in the manual (found by Emir Halepovic) so the
-   description for the -s and -S options properly speicifies they
+   description for the -s and -S options properly specifies they
    affect the data connection.
 
 These are the Release Notes for Revision 2.4.3 of netperf:

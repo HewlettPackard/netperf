@@ -498,6 +498,8 @@ extern  int     inet_nton(int af, const void *src, char *dst, int cnt);
 extern  void    libmain();
 extern  double  calc_thruput(double units_received);
 extern  double  calc_thruput_interval(double units_received,double elapsed);
+extern  double  calc_thruput_omni(double units_received);
+extern  double  calc_thruput_interval_omni(double units_received,double elapsed);
 extern  float   calibrate_local_cpu(float local_cpu_rate);
 extern  float   calibrate_remote_cpu();
 extern  void    bind_to_specific_processor(int processor_affinity,int use_cpu_map);
@@ -513,9 +515,13 @@ extern int msec_sleep( int msecs );
 #endif  /* WIN32 */
 extern  float   calc_cpu_util(float elapsed_time);
 extern  float	calc_service_demand(double units_sent,
-			  float elapsed_time,
-			  float cpu_utilization,
-			  int num_cpus);
+				    float elapsed_time,
+				    float cpu_utilization,
+				    int num_cpus);
+extern  float	calc_service_demand_trans(double units_sent,
+					  float elapsed_time,
+					  float cpu_utilization,
+					  int num_cpus);
 #if defined(__hpux)
 extern  void    catcher(int, siginfo_t *,void *);
 #else

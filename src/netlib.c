@@ -244,7 +244,7 @@ union   netperf_response_struct netperf_response;
 
 FILE    *where;
 
-char    libfmt = 'm';
+char    libfmt = '?';
         
 #ifdef WANT_DLPI
 /* some stuff for DLPI control messages */
@@ -1659,47 +1659,57 @@ for (counter = 0; counter < ((sizeof(netperf_response)/4)-3); counter += 4) {
 fflush(where);
 }
 
- /***********************************************************************/
- /*                                                                     */
- /*     format_number()                                                 */
- /*                                                                     */
- /* return a pointer to a formatted string containing the value passed  */
- /* translated into the units specified. It assumes that the base units */
- /* are bytes. If the format calls for bits, it will use SI units (10^) */
- /* if the format calls for bytes, it will use CS units (2^)...         */
- /* This routine should look familiar to uses of the latest ttcp...     */
- /*                                                                     */
- /***********************************************************************/
+ /*
+
+      format_number()                                                 
+                                                                    
+  return a pointer to a formatted string containing the value passed
+  translated into the units specified. It assumes that the base units
+  are bytes. If the format calls for bits, it will use SI units (10^)
+  if the format calls for bytes, it will use CS units (2^)...  This
+  routine should look familiar to uses of the latest ttcp...
+
+  we would like to use "t" or "T" for transactions, but probably
+  should leave those for terabits and terabytes respectively, so for
+  transactions, we will use "x" which will, by default, do absolutely
+  nothing to the result.  why?  so we don't have to special case code
+  elsewhere such as in the TCP_RR-as-bidirectional test case.
+
+ */
+ 
 
 char *
 format_number(double number)
 {
-        static  char    fmtbuf[64];
+  static  char    fmtbuf[64];
         
-        switch (libfmt) {
-        case 'K':
-                snprintf(fmtbuf, sizeof(fmtbuf),  "%-7.2f" , number / 1024.0);
-                break;
-        case 'M':
-                snprintf(fmtbuf, sizeof(fmtbuf),  "%-7.2f", number / 1024.0 / 1024.0);
-                break;
-        case 'G':
-                snprintf(fmtbuf, sizeof(fmtbuf),  "%-7.2f", number / 1024.0 / 1024.0 / 1024.0);
-                break;
-        case 'k':
-                snprintf(fmtbuf, sizeof(fmtbuf),  "%-7.2f", number * 8 / 1000.0);
-                break;
-        case 'm':
-                snprintf(fmtbuf, sizeof(fmtbuf),  "%-7.2f", number * 8 / 1000.0 / 1000.0);
-                break;
-        case 'g':
-                snprintf(fmtbuf, sizeof(fmtbuf),  "%-7.2f", number * 8 / 1000.0 / 1000.0 / 1000.0);
-                break;
-                default:
-                snprintf(fmtbuf, sizeof(fmtbuf),  "%-7.2f", number / 1024.0);
-        }
+  switch (libfmt) {
+  case 'K':
+    snprintf(fmtbuf, sizeof(fmtbuf),  "%-7.2f" , number / 1024.0);
+    break;
+  case 'M':
+    snprintf(fmtbuf, sizeof(fmtbuf),  "%-7.2f", number / 1024.0 / 1024.0);
+    break;
+  case 'G':
+    snprintf(fmtbuf, sizeof(fmtbuf),  "%-7.2f", number / 1024.0 / 1024.0 / 1024.0);
+    break;
+  case 'k':
+    snprintf(fmtbuf, sizeof(fmtbuf),  "%-7.2f", number * 8 / 1000.0);
+    break;
+  case 'm':
+    snprintf(fmtbuf, sizeof(fmtbuf),  "%-7.2f", number * 8 / 1000.0 / 1000.0);
+    break;
+  case 'g':
+    snprintf(fmtbuf, sizeof(fmtbuf),  "%-7.2f", number * 8 / 1000.0 / 1000.0 / 1000.0);
+    break;
+  case 'x':
+    snprintf(fmtbuf, sizeof(fmtbuf),  "%-7.2f", number);
+    break;
+  default:
+    snprintf(fmtbuf, sizeof(fmtbuf),  "%-7.2f", number / 1024.0);
+  }
 
-        return fmtbuf;
+  return fmtbuf;
 }
 
 char
@@ -1781,6 +1791,9 @@ format_units()
     break;
   case 'g':
     strcpy(unitbuf, "10^9bits");
+    break;
+  case 'x':
+    strcpy(unitbuf, "Trans");
     break;
     
   default:
@@ -2962,6 +2975,7 @@ cpu_stop(int measure_cpu, float *elapsed)
   
 }
 
+
 double
 calc_thruput_interval(double units_received,double elapsed)
 
@@ -3004,6 +3018,60 @@ calc_thruput(double units_received)
   return(calc_thruput_interval(units_received,lib_elapsed));
 }
 
+/* these "_omni" versions are ones which understand 'x' as a unit,
+   meaning transactions/s.  we have a separate routine rather than
+   convert the existing routine so we don't have to go and change
+   _all_ the nettest_foo.c files at one time.  raj 2007-06-08 */
+
+double
+calc_thruput_interval_omni(double units_received,double elapsed)
+
+{
+  double        divisor;
+
+  /* We will calculate the thruput in libfmt units/second */
+  switch (libfmt) {
+  case 'K':
+    divisor = 1024.0;
+    break;
+  case 'M':
+    divisor = 1024.0 * 1024.0;
+    break;
+  case 'G':
+    divisor = 1024.0 * 1024.0 * 1024.0;
+    break;
+  case 'k':
+    divisor = 1000.0 / 8.0;
+    break;
+  case 'm':
+    divisor = 1000.0 * 1000.0 / 8.0;
+    break;
+  case 'g':
+    divisor = 1000.0 * 1000.0 * 1000.0 / 8.0;
+    break;
+  case 'x':
+    divisor = 1.0;
+    break;
+
+  default:
+    fprintf(where,
+	    "WARNING calc_throughput_internal_omni: unknown units %c\n",
+	    libfmt);
+    fflush(where);
+    divisor = 1024.0;
+  }
+  
+  return (units_received / divisor / elapsed);
+
+}
+
+double
+calc_thruput_omni(double units_received)
+
+{
+  return(calc_thruput_interval_omni(units_received,lib_elapsed));
+}
+
 
 
 
@@ -3014,14 +3082,15 @@ calc_cpu_util(float elapsed_time)
   return(calc_cpu_util_internal(elapsed_time));
 }
 
-float calc_service_demand(double units_sent,
-                          float elapsed_time,
-                          float cpu_utilization,
-                          int num_cpus)
+float 
+calc_service_demand_internal(double unit_divisor,
+			     double units_sent,
+			     float elapsed_time,
+			     float cpu_utilization,
+			     int num_cpus)
 
 {
 
-  double unit_divisor = (float)1024.0;
   double service_demand;
   double thruput;
 
@@ -3079,6 +3148,38 @@ float calc_service_demand(double units_sent,
     fflush(where);
   }
   return (float)service_demand;
+}
+
+float calc_service_demand(double units_sent,
+                          float elapsed_time,
+                          float cpu_utilization,
+                          int num_cpus)
+
+{
+
+  double unit_divisor = (double)1024.0;
+
+  return(calc_service_demand_internal(unit_divisor,
+				      units_sent,
+				      elapsed_time,
+				      cpu_utilization,
+				      num_cpus));
+}
+
+float calc_service_demand_trans(double units_sent,
+				float elapsed_time,
+				float cpu_utilization,
+				int num_cpus)
+
+{
+
+  double unit_divisor = (double)1.0;
+
+  return(calc_service_demand_internal(unit_divisor,
+				      units_sent,
+				      elapsed_time,
+				      cpu_utilization,
+				      num_cpus));
 }
 
 
