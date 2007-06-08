@@ -142,9 +142,10 @@ char	nettest_id[]="\
 #include "hist.h"
 #endif /* WANT_HISTOGRAM */
 
-#ifdef WANT_FIRST_BURST
+/* make first_burst_size unconditional so we can use it easily enough
+   when calculating transaction latency for the TCP_RR test. raj
+   2007-06-08 */
 int first_burst_size=0;
-#endif /* WANT_FIRST_BURST */
 
 #if defined(HAVE_SENDFILE) && (defined(__linux) || defined(__sun__))
 #include <sys/sendfile.h>
@@ -4903,7 +4904,13 @@ Local /Remote\n\
 Socket Size   Request  Resp.   Elapsed  Trans.\n\
 Send   Recv   Size     Size    Time     Rate         \n\
 bytes  Bytes  bytes    bytes   secs.    per sec   \n\n";
-  
+
+  char *tput_title_band = "\
+Local /Remote\n\
+Socket Size   Request  Resp.   Elapsed  \n\
+Send   Recv   Size     Size    Time     Throughput \n\
+bytes  Bytes  bytes    bytes   secs.    %s/sec   \n\n";
+
   char *tput_fmt_0 =
     "%7.2f %s\n";
   
@@ -4917,6 +4924,12 @@ Local /Remote\n\
 Socket Size   Request Resp.  Elapsed Trans.   CPU    CPU    S.dem   S.dem\n\
 Send   Recv   Size    Size   Time    Rate     local  remote local   remote\n\
 bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\n";
+
+  char *cpu_title_tput = "\
+Local /Remote\n\
+Socket Size   Request Resp.  Elapsed Tput     CPU    CPU    S.dem   S.dem\n\
+Send   Recv   Size    Size   Time    %-8.8s local  remote local   remote\n\
+bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\n";
   
   char *cpu_fmt_0 =
     "%6.3f %c %s\n";
@@ -4928,10 +4941,10 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 %-6d %-6d\n";
   
   char *ksink_fmt = "\
-Alignment      Offset\n\
-Local  Remote  Local  Remote\n\
-Send   Recv    Send   Recv\n\
-%5d  %5d   %5d  %5d\n";
+Alignment      Offset         RoundTrip  Trans    Throughput\n\
+Local  Remote  Local  Remote  Latency    Rate     %-8.8s/s\n\
+Send   Recv    Send   Recv    usec/Tran  per sec  Outbound   Inbound\n\
+%5d  %5d   %5d  %5d   %-6.3f   %-6.3f %-6.3f    %-6.3f\n";
   
   
   int			timed_out = 0;
@@ -5405,7 +5418,7 @@ Send   Recv    Send   Recv\n\
       }
     }
     
-    /* We now calculate what our throughput was for the test. */
+    /* We now calculate what our "throughput" was for the test. */
   
     bytes_xferd	= (req_size * nummessages) + (rsp_size * nummessages);
     thruput	= nummessages/elapsed_time;
@@ -5525,10 +5538,19 @@ Send   Recv    Send   Recv\n\
     case 1:
     case 2:
       if (print_headers) {
-	fprintf(where,
-		cpu_title,
-		local_cpu_method,
-		remote_cpu_method);
+	if ('x' == libfmt) {
+	  fprintf(where,
+		  cpu_title,
+		  local_cpu_method,
+		  remote_cpu_method);
+	}
+	else {
+	  fprintf(where,
+		  cpu_title_tput,
+		  format_units(),
+		  local_cpu_method,
+		  remote_cpu_method);
+	}	  
       }
 
       fprintf(where,
@@ -5538,7 +5560,9 @@ Send   Recv    Send   Recv\n\
 	      req_size,		/* how large were the requests */
 	      rsp_size,		/* guess */
 	      elapsed_time,		/* how long was the test */
-	      thruput,
+	      ('x' == libfmt) ? thruput : 
+	      calc_thruput_interval_omni(thruput * (req_size+rsp_size),
+					 1.0),
 	      local_cpu_utilization,	/* local cpu */
 	      remote_cpu_utilization,	/* remote cpu */
 	      local_service_demand,	/* local service demand */
@@ -5559,14 +5583,18 @@ Send   Recv    Send   Recv\n\
     case 0:
       fprintf(where,
 	      tput_fmt_0,
-	      thruput,
+	      ('x' == libfmt) ? thruput :
+	      calc_thruput_interval_omni(thruput * (req_size+rsp_size),
+					 1.0),
 	      ((print_headers) || 
 	       (result_brand == NULL)) ? "" : result_brand);
       break;
     case 1:
     case 2:
       if (print_headers) {
-	fprintf(where,tput_title,format_units());
+	fprintf(where,
+		('x' == libfmt) ? tput_title : tput_title_band,
+		format_units());
       }
 
       fprintf(where,
@@ -5576,7 +5604,17 @@ Send   Recv    Send   Recv\n\
 	      req_size,		/* how large were the requests */
 	      rsp_size,		/* how large were the responses */
 	      elapsed_time, 		/* how long did it take */
-	      thruput,
+	      /* are we trans or do we need to convert to bytes then
+		 bits? at this point, thruput is in our "confident"
+		 transactions per second. we can convert to a
+		 bidirectional bitrate by multiplying that by the sum
+		 of the req_size and rsp_size.  we pass that to
+		 calc_thruput_interval_omni with an elapsed time of
+		 1.0 s to get it converted to [kmg]bits/s or
+		 [KMG]Bytes/s */
+	      ('x' == libfmt) ?  thruput : 
+	      calc_thruput_interval_omni(thruput * (req_size+rsp_size),
+					 1.0),
 	      ((print_headers) || 
 	       (result_brand == NULL)) ? "" : result_brand);
       fprintf(where,
@@ -5601,13 +5639,35 @@ Send   Recv    Send   Recv\n\
     /* This information will include as much as we can find about */
     /* TCP statistics, the alignments of the sends and receives */
     /* and all that sort of rot... */
-    
+
+    /* normally, you might think that if we were messing about with
+       the value of libfmt we would need to put it back again, but
+       since this is basically the last thing we are going to do with
+       it, it does not matter.  so there :) raj 2007-06-08 */
+    /* if the user was asking for transactions, then we report
+       megabits per sedcond for the unidirectional throughput,
+       otherwise we use the desired units. */
+    if ('x' == libfmt) {
+      libfmt = 'm';
+    }
+
     fprintf(where,
 	    ksink_fmt,
+	    format_units(),
 	    local_send_align,
 	    remote_recv_offset,
 	    local_send_offset,
-	    remote_recv_offset);
+	    remote_recv_offset,
+	    /* if the user has enable burst mode, we have to remember
+	       to account for that in the number of transactions
+	       outstanding at any one time. otherwise we will
+	       underreport the latency of individual
+	       transactions. learned from saf by raj 2007-06-08  */
+	    (((double)1.0/thruput)*(double)1000000.0) * 
+	    (double) (1+first_burst_size),
+	    thruput,
+	    calc_thruput_interval_omni(thruput * (double)req_size,1.0),
+	    calc_thruput_interval_omni(thruput * (double)rsp_size,1.0));
 
 #ifdef WANT_HISTOGRAM
     fprintf(where,"\nHistogram of request/response times\n");
