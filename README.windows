@@ -12,14 +12,17 @@ B) open a Cmd windows (i.e., a DOS box) for the target environment
    (target OS version; free vs checked build; x86, AMD64, or IA64).
    This is picked from the "Start\Developer Kits" path.
 
-C) enter the netperf\src directory
+C) enter the src\NetPerfDir directory
 
 D) Edit sources to enable any desired optional features (eg
-   -DWANT_HISTOGRAM)
+   -DWANT_HISTOGRAM) or to remove features which your version of
+   Windows might not support (eg -DHAVE_STRUCT_SOCKADDR_STORAGE)
 
-E) while still in the netperf\src directory type "build /cD".
+E) while still in the src\NetperfDir directory type "build /cD".
 
-F) the target files will be in a directory like:
+F) Repeat steps C through E in src\NetServerDir
+
+G) the target files will be in a directory like:
    NetPerfDir\objchk_wnet_IA64\IA64, NetServerDir\objchk_wnet_IA64\IA64
    NetPerfDir\objfre_wnet_x86\i386, or NetPerfDir\objfre_wnet_AMD64\amd64
 
