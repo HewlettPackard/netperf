@@ -4215,7 +4215,7 @@ void
 recv_tcp_stream()
 {
   
-  struct sockaddr_in myaddr_in, peeraddr_in;
+  struct sockaddr_storage myaddr_in, peeraddr_in;
   SOCKET s_listen,s_data;
   netperf_socklen_t addrlen;
   int	len;
@@ -4389,7 +4389,8 @@ recv_tcp_stream()
   /* returned to the sender also implicitly telling the sender that the */
   /* socket buffer sizing has been done. */
   
-  tcp_stream_response->data_port_number = (int) ntohs(myaddr_in.sin_port);
+  tcp_stream_response->data_port_number = 
+    (int) ntohs(((struct sockaddr_in *)&myaddr_in)->sin_port);
   netperf_response.content.serv_errno   = 0;
   
   /* But wait, there's more. If the initiator wanted cpu measurements, */
@@ -4551,7 +4552,7 @@ void
 recv_tcp_maerts()
 {
   
-  struct sockaddr_in myaddr_in, peeraddr_in;
+  struct sockaddr_storage myaddr_in, peeraddr_in;
   struct addrinfo *local_res;
   char  local_name[BUFSIZ];
   char  port_buffer[PORTBUFSIZE];
@@ -4722,7 +4723,8 @@ recv_tcp_maerts()
   /* returned to the sender also implicitly telling the sender that the */
   /* socket buffer sizing has been done. */
   
-  tcp_maerts_response->data_port_number = (int) ntohs(myaddr_in.sin_port);
+  tcp_maerts_response->data_port_number = 
+    (int) ntohs(((struct sockaddr_in *)&myaddr_in)->sin_port);
   netperf_response.content.serv_errno   = 0;
   
   /* But wait, there's more. If the initiator wanted cpu measurements, */
@@ -6263,10 +6265,10 @@ recv_udp_stream()
   char local_name[BUFSIZ];
   char port_buffer[PORTBUFSIZE];
 
-  struct sockaddr_in myaddr_in;
+  struct sockaddr_storage myaddr_in;
   SOCKET	s_data;
   netperf_socklen_t 	addrlen;
-  struct sockaddr_in remote_addr;
+  struct sockaddr_storage remote_addr;
   netperf_socklen_t remote_addrlen;
 
   int	len = 0;
@@ -6393,7 +6395,8 @@ recv_udp_stream()
   /* returned to the sender also implicitly telling the sender that the */
   /* socket buffer sizing has been done. */
   
-  udp_stream_response->data_port_number = (int) ntohs(myaddr_in.sin_port);
+  udp_stream_response->data_port_number = 
+    (int) ntohs(((struct sockaddr_in *)&myaddr_in)->sin_port);
   netperf_response.content.serv_errno   = 0;
   
   /* But wait, there's more. If the initiator wanted cpu measurements, */
@@ -7215,7 +7218,7 @@ recv_udp_rr()
   char local_name[BUFSIZ];
   char port_buffer[PORTBUFSIZE];
 
-  struct sockaddr_in        myaddr_in;
+  struct sockaddr_storage        myaddr_in;
   struct sockaddr_storage    peeraddr; 
   SOCKET	s_data;
   netperf_socklen_t 	addrlen;
@@ -7352,11 +7355,14 @@ recv_udp_rr()
   /* returned to the sender also implicitly telling the sender that the */
   /* socket buffer sizing has been done. */
   
-  udp_rr_response->data_port_number = (int) ntohs(myaddr_in.sin_port);
+  udp_rr_response->data_port_number = 
+    (int) ntohs(((struct sockaddr_in *)&myaddr_in)->sin_port);
   netperf_response.content.serv_errno   = 0;
   
   if (debug) {
-    fprintf(where,"recv port number %d\n",myaddr_in.sin_port);
+    fprintf(where,
+	    "recv port number %d\n",
+	    ((struct sockaddr_in *)&myaddr_in)->sin_port);
     fflush(where);
   }
   
@@ -9101,16 +9107,16 @@ Send   Recv    Send   Recv\n\
   /* protocols and such, we are passed the name of the remote host and */
   /* must turn that into the test specific addressing information. */
   
-  myaddr = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
+  myaddr = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
   if (myaddr == NULL) {
-    printf("malloc(%d) failed!\n", sizeof(struct sockaddr_in));
+    printf("malloc(%d) failed!\n", sizeof(struct sockaddr_storage));
     exit(1);
   }
 
   bzero((char *)&server,
 	sizeof(server));
   bzero((char *)myaddr,
-	sizeof(struct sockaddr_in));
+	sizeof(struct sockaddr_storage));
   myaddr->sin_family = AF_INET;
 
   complete_addrinfos(&remote_res,
@@ -9348,7 +9354,7 @@ newport:
     /* we want to bind our socket to a particular port number. */
     if (bind(send_socket,
 	     (struct sockaddr *)myaddr,
-	     sizeof(struct sockaddr_in)) == SOCKET_ERROR) {
+	     sizeof(struct sockaddr_storage)) == SOCKET_ERROR) {
       /* if the bind failed, someone else must have that port number */
       /* - perhaps in the listen state. since we can't use it, skip to */
       /* the next port number. we may have to do this again later, but */
@@ -10003,7 +10009,7 @@ recv_tcp_tran_rr()
 			  tcp_tran_rr_request->response_size,
 			  MSG_EOF,
 			  (struct sockaddr *)&peeraddr_in,
-			  sizeof(struct sockaddr_in))) == SOCKET_ERROR) {
+			  sizeof(struct sockaddr_storage))) == SOCKET_ERROR) {
       if (SOCKET_EINTR(bytes_sent)) {
 	/* the test timer has popped */
 	timed_out = 1;

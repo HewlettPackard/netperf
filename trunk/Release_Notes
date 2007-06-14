@@ -2,6 +2,11 @@ These are the Release Notes leading-up to Revision 2.4.4 of netperf:
 
 Things changed in this release:
 
+*) Convert a number of struct sockaddr_in's to struct
+   sockaddr_storage's and add requisite casts to deal with some abort
+   problems on Windows and perhaps other platforms as well. Kudos to
+   Alexander Duyck.
+
 *) One can now pass a value of 'x' to the global -f option to specify
    the units as transactions per second.  This is the default for any
    request/response test, which is determined by there being a "double

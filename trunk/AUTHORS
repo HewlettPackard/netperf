@@ -206,3 +206,6 @@ makefile, include limits to get PathMAX on FreeBSD.
 Dan Yost
 Fix to fflush() each interim result in demo mode to make things
 happier for folks redirecting same to a file.
+
+Alexander Duyck
+Fixes to replace struct sockaddr_in with struct sockaddr_storage
