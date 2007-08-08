@@ -93,7 +93,7 @@ double atof(const char *);
  /* Some of the args take optional parameters. Since we are using */
  /* getopt to parse the command line, we will tell getopt that they do */
  /* not take parms, and then look for them ourselves */
-#define GLOBAL_CMD_LINE_ARGS "A:a:b:B:CcdDf:F:H:hi:I:k:K:l:L:n:NO:o:P:p:t:T:v:VW:w:46"
+#define GLOBAL_CMD_LINE_ARGS "A:a:b:B:CcdDf:F:H:hi:I:k:K:l:L:n:NO:o:P:p:rt:T:v:VW:w:46"
 
 /************************************************************************/
 /*									*/
@@ -205,6 +205,7 @@ int	rem_clean_count;
 int  confidence_level;
 int  iteration_min;
 int  iteration_max;
+int  result_confidence_only = 0;
 
 double interval;
 
@@ -267,6 +268,7 @@ Global options:\n\
     -N                Establish no control connection, do 'send' side only\n\
     -p port,lport*    Specify netserver port number and/or local port\n\
     -P 0|1            Don't/Do display test headers\n\
+    -r                Allow confidence to be hit on result only\n\
     -t testname       Specify test to perform\n\
     -T lcpu,rcpu      Request netperf/netserver be bound to local/remote cpu\n\
     -v verbosity      Specify the verbosity level\n\
@@ -651,6 +653,12 @@ scan_cmd_line(int argc, char *argv[])
       /* to print or not to print, that is */
       /* the header question */
       print_headers = convert(optarg);
+      break;
+    case 'r':
+      /* the user wishes that we declare confidence when hit on the
+	 result even if not yet reached on CPU utilization.  only
+	 meaningful if cpu util is enabled */
+      result_confidence_only = 1;
       break;
     case 't':
       /* set the test name */

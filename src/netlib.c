@@ -4029,8 +4029,15 @@ calculate_confidence(int confidence_iterations,
               (interval-rem_cpu_confid)*100.0);
      }
 
-     confidence = min(min(result_confid,loc_cpu_confid),rem_cpu_confid);
-
+     /* if the user has requested that we only wait for the result to
+	be confident rather than the result and CPU util(s) then do
+	so. raj 2007-08-08 */
+     if (!result_confidence_only) {
+       confidence = min(min(result_confid,loc_cpu_confid),rem_cpu_confid);
+     }
+     else {
+       confidence = result_confid;
+     }
   }
 }
 
