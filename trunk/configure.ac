@@ -606,7 +606,7 @@ case "$enable_cpuutil" in
 			enable_cpuutil="perfstat - auto"
 			NETCPU_SOURCE="perfstat"
 			;;
-		     *-*-solaris2.10)
+		     *-*-solaris2.1*)
 			use_cpuutil=true
 			AC_DEFINE([USE_KSTAT],,[Use Solaris's kstat interface to measure CPU util.])
 			AC_HAVE_LIBRARY(kstat)

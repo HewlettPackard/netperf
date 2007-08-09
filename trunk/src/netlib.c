@@ -1503,7 +1503,11 @@ allocate_exs_buffer_ring (int width, int buffer_size, int alignment, int offset,
    that the routine sendfile_tcp_stream() will use to get parameters
    to its calls to sendfile(). It will setup the ring to point at the
    file specified in the global -F option that is already used to
-   pre-fill buffers in the send() case. 08/2000 */
+   pre-fill buffers in the send() case. 08/2000
+
+   if there is no file specified in a global -F option, we will create
+   a tempoarary file and fill it with random data and use that
+   instead.  raj 2007-08-09 */
 
 struct sendfile_ring_elt *
 alloc_sendfile_buf_ring(int width,
@@ -1525,32 +1529,93 @@ alloc_sendfile_buf_ring(int width,
      fail the test. otherwise, go ahead and try to open the
      file. 08/2000 */
   if (strcmp(fill_file,"") == 0) {
-    perror("alloc_sendfile_buf_ring: fill_file must be specified for sendfile option");
-    exit(1);
+    /* use an temp file for the fill file */
+    char *temp_file;
+    int *temp_buffer;
+    
+    /* make sure we have at least an ints worth, even if the user is
+       using an insane buffer size for a sendfile test. we are
+       ass-u-me-ing that malloc will return something at least aligned
+       on an int boundary... */
+    temp_buffer = (int *) malloc(buffer_size + sizeof(int));
+    if (temp_buffer) {
+      /* ok, we have the buffer we are going to write, lets get a
+	 temporary filename */
+      temp_file = tmpnam(NULL);
+      if (NULL != temp_file) {
+	fildes = open(temp_file,O_RDWR | O_EXCL | O_CREAT,0600);
+	if (-1 != fildes) {
+	  int count;
+	  int *int_ptr;
+
+	  /* initialize the random number generator */
+	  srand(getpid());
+
+	  /* unlink the file so it goes poof when we
+	     exit. unless/until shown to be a problem we will
+	     blissfully ignore the return value. raj 2007-08-09 */
+	  unlink(temp_file);
+
+	  /* now fill-out the file with at least buffer_size * width bytes */
+	  for (count = 0; count < width; count++) {
+	    /* fill the buffer with random data.  it doesn't have to be
+	       really random, just "random enough" :) we do this here rather
+	       than up above because we want each write to the file to be
+	       different random data */
+	    int_ptr = temp_buffer;
+	    for (i = 0; i <= buffer_size/sizeof(int); i++) {
+	      *int_ptr = rand();
+	      int_ptr++;
+	    }
+	    if (write(fildes,temp_buffer,buffer_size+sizeof(int)) !=
+		buffer_size + sizeof(int)) {
+	      perror("allocate_sendfile_buf_ring: incomplete write");
+	      exit(-1);
+	    }
+	  }
+	}
+	else {
+	  perror("allocate_sendfile_buf_ring: could not open tempfile");
+	  exit(-1);
+	}
+      }
+      else {
+	perror("allocate_sendfile_buf_ring: could not allocate temp name");
+	exit(-1);
+      }
+    }
+    else {
+      perror("alloc_sendfile_buf_ring: could not allocate buffer for file");
+      exit(-1);
+    }
   }
   else {
+    /* the user pointed us at a file, so try it */
     fildes = open(fill_file , O_RDONLY);
     if (fildes == -1){
       perror("alloc_sendfile_buf_ring: Could not open requested file");
       exit(1);
     }
+    /* make sure there is enough file there to allow us to make a
+       complete ring. that way we do not need additional logic in the
+       ring setup to deal with wrap-around issues. we might want that
+       someday, but not just now. 08/2000 */
+    if (stat(fill_file,&statbuf) != 0) {
+      perror("alloc_sendfile_buf_ring: could not stat file");
+      exit(1);
+    }
+    if (statbuf.st_size < (width * buffer_size)) {
+      /* the file is too short */
+      fprintf(stderr,"alloc_sendfile_buf_ring: specified file too small.\n");
+      fprintf(stderr,"file must be larger than send_width * send_size\n");
+      fflush(stderr);
+      exit(1);
+    }
   }
   
-  /* make sure there is enough file there to allow us to make a
-     complete ring. that way we do not need additional logic in the
-     ring setup to deal with wrap-around issues. we might want that
-     someday, but not just now. 08/2000 */
-  if (stat(fill_file,&statbuf) != 0) {
-    perror("alloc_sendfile_buf_ring: could not stat file");
-    exit(1);
-  }
-  if (statbuf.st_size < (width * buffer_size)) {
-    /* the file is too short */
-    fprintf(stderr,"alloc_sendfile_buf_ring: specified file too small.\n");
-    fprintf(stderr,"file must be larger than send_width * send_size\n");
-    fflush(stderr);
-    exit(1);
-  }
+  /* so, at this point we know that fildes is a descriptor which
+     references a file of sufficient size for our nefarious
+     porpoises. raj 2007-08-09 */
 
   prev_link = NULL;
   for (i = 1; i <= width; i++) {
