@@ -9098,7 +9098,7 @@ ac_cv_lib_perfstat=ac_cv_lib_perfstat_main
 			enable_cpuutil="perfstat - auto"
 			NETCPU_SOURCE="perfstat"
 			;;
-		     *-*-solaris2.10)
+		     *-*-solaris2.1*)
 			use_cpuutil=true
 
 cat >>confdefs.h <<\_ACEOF
