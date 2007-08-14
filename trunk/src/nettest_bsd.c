@@ -1038,7 +1038,7 @@ create_data_socket(struct addrinfo *res)
 		 (const char *)&on,
 		 sizeof(on)) < 0) {
     fprintf(where,
-	    "netperf: create_data_socket: SO_REUSEADDR failled %d\n",
+	    "netperf: create_data_socket: SO_REUSEADDR failed %d\n",
 	    errno);
     fflush(where);
   }
@@ -7532,7 +7532,7 @@ recv_tcp_rr()
   char local_name[BUFSIZ];
   char port_buffer[PORTBUFSIZE];
 
-  struct	sockaddr_in        myaddr_in,
+  struct	sockaddr_storage        myaddr_in,
   peeraddr_in;
   SOCKET	s_listen,s_data;
   netperf_socklen_t 	addrlen;
@@ -7688,7 +7688,8 @@ recv_tcp_rr()
   /* returned to the sender also implicitly telling the sender that the */
   /* socket buffer sizing has been done. */
   
-  tcp_rr_response->data_port_number = (int) ntohs(myaddr_in.sin_port);
+  tcp_rr_response->data_port_number = 
+    (int) ntohs(((struct sockaddr_in *)&myaddr_in)->sin_port);
   netperf_response.content.serv_errno   = 0;
   
   /* But wait, there's more. If the initiator wanted cpu measurements, */
@@ -8616,7 +8617,7 @@ recv_tcp_conn_rr()
   char local_name[BUFSIZ];
   char port_buffer[PORTBUFSIZE];
 
-  struct	sockaddr_in        myaddr_in, peeraddr_in;
+  struct	sockaddr_storage        myaddr_in, peeraddr_in;
   SOCKET	s_listen,s_data;
   netperf_socklen_t 	addrlen;
   char	*recv_message_ptr;
@@ -8783,7 +8784,8 @@ recv_tcp_conn_rr()
   /* returned to the sender also implicitly telling the sender that the */
   /* socket buffer sizing has been done. */
   
-  tcp_conn_rr_response->data_port_number = (int) ntohs(myaddr_in.sin_port);
+  tcp_conn_rr_response->data_port_number = 
+    (int) ntohs(((struct sockaddr_in *)&myaddr_in)->sin_port);
   if (debug) {
     fprintf(where,"telling the remote to call me at %d\n",
 	    tcp_conn_rr_response->data_port_number);
@@ -10150,7 +10152,7 @@ Send   Recv    Send   Recv\n\
   double	thruput;
   
   struct	hostent	        *hp;
-  struct	sockaddr_in	server;
+  struct	sockaddr_storage	server;
   unsigned      int             addr;
   
   struct	tcp_rr_request_struct	*tcp_rr_request;
@@ -11699,7 +11701,7 @@ recv_tcp_cc()
   char local_name[BUFSIZ];
   char port_buffer[PORTBUFSIZE];
 
-  struct	sockaddr_in        myaddr_in,  peeraddr_in;
+  struct	sockaddr_storage        myaddr_in,  peeraddr_in;
   SOCKET	s_listen,s_data;
   netperf_socklen_t 	addrlen;
   char	*recv_message_ptr;
@@ -11780,17 +11782,6 @@ recv_tcp_cc()
     fprintf(where,"recv_tcp_cc: receive alignment and offset set...\n");
     fflush(where);
   }
-  
-  /* Let's clear-out our sockaddr for the sake of cleanlines. Then we */
-  /* can put in OUR values !-) At some point, we may want to nail this */
-  /* socket to a particular network-level address, but for now, */
-  /* INADDR_ANY should be just fine. */
-  
-  bzero((char *)&myaddr_in,
-	sizeof(myaddr_in));
-  myaddr_in.sin_family      = AF_INET;
-  myaddr_in.sin_addr.s_addr = INADDR_ANY;
-  myaddr_in.sin_port        = htons((unsigned short)tcp_cc_request->port);
   
   /* Grab a socket to listen on, and then listen on it. */
   
@@ -11873,7 +11864,8 @@ recv_tcp_cc()
   /* returned to the sender also implicitly telling the sender that the */
   /* socket buffer sizing has been done. */
   
-  tcp_cc_response->data_port_number = (int) ntohs(myaddr_in.sin_port);
+  tcp_cc_response->data_port_number = 
+    (int) ntohs(((struct sockaddr_in *)&myaddr_in)->sin_port);
   if (debug) {
     fprintf(where,"telling the remote to call me at %d\n",
 	    tcp_cc_response->data_port_number);
