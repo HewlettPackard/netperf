@@ -7,7 +7,7 @@ LINKLIBS= \
 	$(SDK_LIB_PATH)\ws2_32.lib \
 	$(SDK_LIB_PATH)\wsock32.lib
 
-USE_CRTDLL=1
+USE_MSVCRT=1
 UMTYPE=console
 
 INCLUDES=$(SDK_INC_PATH);.
