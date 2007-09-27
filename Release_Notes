@@ -1,7 +1,9 @@
 These are the Release Notes leading-up to Revision 2.4.4 of netperf:
 
-
 Things changed in this release:
+
+*) Fix a misplaced \n in a format string of send_tcp_maerts, courtesy
+   of Alexander Duyck.
 
 *) There is an experimental global -r option which will allow one to
    include CPU utilization measurements, but make the decision about
