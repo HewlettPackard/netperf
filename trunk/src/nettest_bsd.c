@@ -1953,7 +1953,7 @@ bytes  bytes   bytes    secs.    %s/sec  \n\n";
     "%7.2f %s\n";
   
   char *tput_fmt_1 =
-    "%6d %6d %6d    %-6.2f   %7.2f   \n %s";
+    "%6d %6d %6d    %-6.2f   %7.2f    %s \n";
   
   char *cpu_title = "\
 Recv   Send    Send                          Utilization       Service Demand\n\
