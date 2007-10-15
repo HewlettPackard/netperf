@@ -210,3 +210,6 @@ happier for folks redirecting same to a file.
 
 Alexander Duyck
 Fixes to replace struct sockaddr_in with struct sockaddr_storage
+
+Anonymous
+Support for sendfile() on OSX

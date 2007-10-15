@@ -2,6 +2,9 @@ These are the Release Notes leading-up to Revision 2.4.4 of netperf:
 
 Things changed in this release:
 
+*) A kind soul who wishes to remain anonymous provided a patch to
+   enable use of sendfile() on OSX.
+
 *) Fix a misplaced \n in a format string of send_tcp_maerts, courtesy
    of Alexander Duyck.
 
