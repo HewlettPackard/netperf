@@ -3495,6 +3495,9 @@ Size (bytes)\n\
 				 to the value in the send_ring! so, we
 				 have to use a scratch variable. */
 #endif /* __linux  || defined(__sun__) */
+#if defined (USE_OSX)
+   off_t    scratch_len;  /* Darwin 9.x need a value-result parameter  */
+#endif
 #if defined (__sun__)
    size_t  scratch_len;	/* the sun sendfilev() needs a place to 
 			   tell us how many bytes were written,
@@ -3855,6 +3858,15 @@ Size (bytes)\n\
 		      (off_t *)&len,
 		      send_ring->flags) != 0) ||
 	    (len != send_size))
+#elif defined(USE_OSX)
+    scratch_len = send_ring->length;
+    if ((sendfile(send_ring->fildes,
+              send_socket,
+              send_ring->offset,
+              (off_t *)&scratch_len,
+              NULL,
+              send_ring->flags) != 0) ||
+        (scratch_len != send_size))
 #else /* original sendile HP-UX */
 	  if ((len=sendfile(send_socket, 
 			    send_ring->fildes, 
