@@ -17,6 +17,6 @@ netserver_SOURCES = netserver.c $(COMMON_SRC) $(USE_CPU_SOURCE)
 
 # if there are any "missing" routines, the libobjs should cover it
 if NEED_LIBCOMPAT
-netperf_LDADD =missing/libcompat.a
+netperf_LDADD = missing/libcompat.a
 netserver_LDADD = missing/libcompat.a
 endif
