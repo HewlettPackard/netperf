@@ -255,9 +255,12 @@ process_requests()
       bcopy((char *)&temp_rate,
 	    (char *)netperf_response.content.test_specific_data,
 	    sizeof(temp_rate));
+      bcopy((char *)&lib_num_loc_cpus,
+	    (char *)netperf_response.content.test_specific_data + sizeof(temp_rate),
+	    sizeof(lib_num_loc_cpus));
       if (debug) {
 	fprintf(where,"netserver: sending CPU information:");
-	fprintf(where,"rate is %g\n",temp_rate);
+	fprintf(where,"rate is %g num cpu %d\n",temp_rate,lib_num_loc_cpus);
 	fflush(where);
       }
       
