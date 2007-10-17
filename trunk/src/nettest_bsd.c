@@ -7920,7 +7920,14 @@ loc_cpu_rate()
   fprintf(where,
 	  "%g",
 	  calibrate_local_cpu(0.0));
-  
+
+  if (verbosity > 1)
+    fprintf(where,
+	    "\nThere %s %d local %s\n",
+	    (lib_num_loc_cpus > 1) ? "are" : "is",
+	    lib_num_loc_cpus,
+	    (lib_num_loc_cpus > 1) ? "cpus" : "cpu");
+	    
   /* we need the cpu_start, cpu_stop in the looper case to kill the */
   /* child proceses raj 4/95 */
 
@@ -7942,6 +7949,13 @@ rem_cpu_rate()
 	  "%g",
 	  calibrate_remote_cpu());
   
+  if (verbosity > 1)
+    fprintf(where,
+	    "\nThere %s %d remote %s\n",
+	    (lib_num_rem_cpus > 1) ? "are" : "is",
+	    lib_num_rem_cpus,
+	    (lib_num_rem_cpus > 1) ? "cpus" : "cpu");
+
 }
 
 

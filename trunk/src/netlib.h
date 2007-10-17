@@ -441,6 +441,7 @@ extern  char    libfmt;
 
 extern  int     cpu_method;
 extern  int     lib_num_loc_cpus;
+extern  int     lib_num_rem_cpus;
 extern  SOCKET  server_sock;
 extern  int     times_up;
 extern  FILE    *where;

@@ -2,6 +2,11 @@ These are the Release Notes leading-up to Revision 2.4.4 of netperf:
 
 Things changed in this release:
 
+*) The LOC_CPU and REM_CPU tests will report their respective beliefs
+   as to the number of CPUs present when the verbosity is set to more
+   than one.  This can be used when trying to diagnose issues with CPU
+   utilization.
+
 *) A kind soul who wishes to remain anonymous provided a patch to
    enable use of sendfile() on OSX.
 

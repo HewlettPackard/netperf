@@ -194,7 +194,8 @@ SOCKET     win_kludge_socket2 = INVALID_SOCKET;
  /* "long" integer type. raj 4/95.  */
 
 int 
-  lib_num_loc_cpus;    /* the number of cpus in the system */
+  lib_num_loc_cpus,    /* the number of cpus in the system */
+  lib_num_rem_cpus;    /* how many we think are in the remote */
 
 #define PAGES_PER_CHILD 2
 
@@ -3309,6 +3310,9 @@ calibrate_remote_cpu()
     bcopy((char *)netperf_response.content.test_specific_data,
           (char *)&remrate,
           sizeof(remrate));
+    bcopy((char *)netperf_response.content.test_specific_data + sizeof(remrate),
+	  (char *)&lib_num_rem_cpus,
+	  sizeof(lib_num_rem_cpus));
 /*    remrate = (float) netperf_response.content.test_specific_data[0]; */
     return(remrate);
   }     
