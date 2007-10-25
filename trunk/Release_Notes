@@ -1,4 +1,12 @@
-These are the Release Notes leading-up to Revision 2.4.4 of netperf:
+These are the Release Notes leading-up to Revision 2.4.5 of netperf:
+
+Things changed in this release:
+
+*) The width of the confidence interval can be specified in fractions
+   of a percent for the confidence of a clean, close, comfortable
+   calculation. :)
+
+These are the Release Notes for Revision 2.4.4 of netperf:
 
 Things changed in this release:
 
