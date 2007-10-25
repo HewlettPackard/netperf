@@ -3427,10 +3427,10 @@ Size   Size    Size     Time     Throughput  \n\
 bytes  bytes   bytes    secs.    %s/sec  \n\n";
   
   char *tput_fmt_0 =
-    "%7.2f\n";
+    "%7.2f %s\n";
   
   char *tput_fmt_1 =
-    "%6d %6d %6d    %-6.2f   %7.2f   \n";
+    "%6d %6d %6d    %-6.2f   %7.2f   %s\n";
 
   char *cpu_title = "\
 Recv   Send    Send                          Utilization       Service Demand\n\
@@ -3439,9 +3439,9 @@ Size   Size    Size     Time     Throughput  local    remote   local   remote\n\
 bytes  bytes   bytes    secs.    %-8.8s/s  %% %c      %% %c      us/KB   us/KB\n\n";
 
   char *cpu_fmt_0 =
-    "%6.3f %c\n";
+    "%6.3f %c %s\n";
   char *cpu_fmt_1 =
-    "%6d %6d %6d    %-6.2f     %7.2f   %-6.2f   %-6.2f   %-6.3f  %-6.3f\n";
+    "%6d %6d %6d    %-6.2f     %7.2f   %-6.2f   %-6.2f   %-6.3f  %-6.3f %s\n";
 
   char *ksink_fmt = "\n\
 Alignment      Offset         %-8.8s %-8.8s    Sends   %-8.8s Recvs\n\
@@ -4104,14 +4104,18 @@ Size (bytes)\n\
 	fprintf(where,
 		cpu_fmt_0,
 		local_service_demand,
-		local_cpu_method);
+		local_cpu_method,
+		((print_headers) || 
+		 (result_brand == NULL)) ? "" : result_brand);
       }
 
       else {
 	fprintf(where,
 		cpu_fmt_0,
 		remote_service_demand,
-		remote_cpu_method);
+		remote_cpu_method,
+		((print_headers) || 
+		 (result_brand == NULL)) ? "" : result_brand);
       }
 
       break;
@@ -4136,7 +4140,9 @@ Size (bytes)\n\
 	      local_cpu_utilization,	/* local cpu */
 	      remote_cpu_utilization,	/* remote cpu */
 	      local_service_demand,	/* local service demand */
-	      remote_service_demand);	/* remote service demand */
+	      remote_service_demand,	/* remote service demand */
+	      ((print_headers) || 
+	       (result_brand == NULL)) ? "" : result_brand);
       break;
     }
 
@@ -4151,7 +4157,9 @@ Size (bytes)\n\
 
       fprintf(where,
 	      tput_fmt_0,
-	      thruput);
+	      thruput,
+	      ((print_headers) || 
+	       (result_brand == NULL)) ? "" : result_brand);
       break;
 
     case 1:
@@ -4167,7 +4175,9 @@ Size (bytes)\n\
 	      lss_size, 		/* local sendbuf size */
 	      send_size,		/* how large were the sends */
 	      elapsed_time, 		/* how long did it take */
-	      thruput);/* how fast did it go */
+	      thruput,                  /* how fast did it go */
+	      ((print_headers) || 
+	       (result_brand == NULL)) ? "" : result_brand);
       break;
     }
   }
