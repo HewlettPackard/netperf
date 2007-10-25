@@ -592,7 +592,6 @@ scan_cmd_line(int argc, char *argv[])
 	/* it doesn't make much sense to use convert() here so just
 	   use strtod() instead. raj 2007-10-24 */
 	interval = strtod(arg2,NULL)/100.0;
-	printf("interval is %g\n",interval);
       }
       /* make sure that iteration_min and iteration_max are at least
 	 at a reasonable default value.  if a -i option has previously
