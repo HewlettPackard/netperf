@@ -1184,7 +1184,7 @@ print_top_test_header(char test_name[], struct addrinfo *source, struct addrinfo
 
   if (iteration_max > 1) {
     fprintf(where,
-	    " : +/-%3.1f%% @ %2d%% conf. %s",
+	    " : +/-%.3f%% @ %2d%% conf. %s",
 	    interval/0.02,
 	    confidence_level,
 	    result_confidence_only ? " on result only" : "");
