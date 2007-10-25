@@ -4149,13 +4149,13 @@ display_confidence()
   fprintf(where,
           "!!! must be investigated before going further.\n");
   fprintf(where,
-          "!!! Confidence intervals: Throughput      : %4.1f%%\n",
+          "!!! Confidence intervals: Throughput      : %4.3f%%\n",
           100.0 * (interval - result_confid));
   fprintf(where,
-          "!!!                       Local CPU util  : %4.1f%%\n",
+          "!!!                       Local CPU util  : %4.3f%%\n",
           100.0 * (interval - loc_cpu_confid));
   fprintf(where,
-          "!!!                       Remote CPU util : %4.1f%%\n\n",
+          "!!!                       Remote CPU util : %4.3f%%\n\n",
           100.0 * (interval - rem_cpu_confid));
 }
 
