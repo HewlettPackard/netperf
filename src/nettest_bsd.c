@@ -1957,7 +1957,7 @@ bytes  bytes   bytes    secs.    %s/sec  \n\n";
   
   char *cpu_title = "\
 Recv   Send    Send                          Utilization       Service Demand\n\
-Socket Socket  Message  Elapsed              Send     Recv     Send    Recv\n\
+Socket Socket  Message  Elapsed              Recv     Send     Recv    Send\n\
 Size   Size    Size     Time     Throughput  local    remote   local   remote\n\
 bytes  bytes   bytes    secs.    %-8.8s/s  %% %c      %% %c      us/KB   us/KB\n\n";
   
