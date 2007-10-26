@@ -6,6 +6,10 @@ Things changed in this release:
    of a percent for the confidence of a clean, close, comfortable
    calculation. :)
 
+*) Honor the global -B option in a TCP_SENDFILE test.
+
+*) Correct the sense of Send/Recv in the banner of a TCP_MAERTS test.
+
 These are the Release Notes for Revision 2.4.4 of netperf:
 
 Things changed in this release:
