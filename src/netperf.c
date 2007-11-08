@@ -144,6 +144,9 @@ main(int argc, char *argv[])
   else if (strcasecmp(test_name,"TCP_MAERTS") == 0) {
     send_tcp_maerts(host_name);
   }
+  else if (strcasecmp(test_name,"TCP_MSS") == 0) {
+    send_tcp_mss(host_name);
+  }
 #ifdef HAVE_ICSC_EXS
   else if (strcasecmp(test_name,"EXS_TCP_STREAM") == 0) {
     send_exs_tcp_stream(host_name);
