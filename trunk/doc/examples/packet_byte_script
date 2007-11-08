@@ -22,7 +22,8 @@ if [ $# -eq 0 ]; then
 fi
 
 # where is netperf
-NETPERF_CMD=${NETPERF_CMD:=/opt/netperf/netperf}
+NETPERF_DIR=${NETPERF_DIR:=/opt/netperf2/bin}
+
 
 # at what port will netserver be waiting? If you decide to run
 # netserver at a differnet port than the default of 12865, then set
@@ -37,20 +38,26 @@ NETPERF_TIME=${NETPERF_TIME:=20}
 # How accurate we want the estimate of performance: 
 #      maximum and minimum test iterations (-i)
 #      confidence level (99 or 95) and interval (percent)
-NETPERF_STATS=${NETPERF_STATS:="-i 10,3 -I 99,5"}
+NETPERF_STATS=${NETPERF_STATS:="-i 30,3 -I 99,5"}
 
 # The socket sizes that we will be testing - using -1 will let it 
 # be the system default.
 NETPERF_SKTS=${NETPERF_SKTS:="-1"}
 
+# The CPU affinity to be applied
+NETPERF_AFFINITY=${NETPERF_AFFINITY:=""}
+
 # The request,response sizes that we will be using. The netperf
 # command parser will treat "1" the same as "1,1" - I use 1,1 to
 # remember that it is "request,response"
 NETPERF_REQS=${NETPERF_REQS:="1 16 32 64 128 256 512 1024 \
- 1460 1461 2920 2921 4380 4381"}
+ 1448 1449 2896 2897 4344 4345"}
 
 NETPERF_RESP=${NETPERF_RESP:="1 16 32 64 128 256 512 1024 \
- 1460 1461 2920 2921 4380 4381"}
+ 1448 1449 2896 2897 4344 4345"}
+
+# NETPERF_CMD is an amalgam of previous variables
+NETPERF_CMD="${NETPERF_DIR}/netperf ${NETPERF_AFFINITY}"
 
 # if there are two parms, parm one it the hostname and parm two will
 # be a CPU indicator. actually, anything as a second parm will cause
