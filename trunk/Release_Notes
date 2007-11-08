@@ -2,6 +2,19 @@ These are the Release Notes leading-up to Revision 2.4.5 of netperf:
 
 Things changed in this release:
 
+*) A TCP_MSS test has been added which will report the MSS for a data
+   connection setup as if the test were a TCP_STREAM test.  While the
+   remote (netserver) is tricked into thinking it is to accept a
+   TCP_STREAM test, no actual data will flow over the connection.
+   This means that if the MSS is one which might change over the life
+   of the connection, it will not be reflected in the test output.
+   Should this prove to be a problem a single send() can be arranged
+   along with the return of the shutdown();recv() handshake.
+
+   The idea is that this might be useful for netperf scripts wanting
+   to parameterize things based on the MSS - for example the
+   packet_byte_script.
+
 *) The width of the confidence interval can be specified in fractions
    of a percent for the confidence of a clean, close, comfortable
    calculation. :)

@@ -26,6 +26,7 @@ char	nettest_id[]="\
 /*      recv_tcp_conn_rr()                                      */
 /*      send_tcp_cc()           a connect/disconnect test with  */
 /*      recv_tcp_cc()           no RR                           */
+/*      send_tcp_mss()          just report the mss             */
 /*	send_udp_stream()	perform a udp stream test	*/
 /*	recv_udp_stream()					*/
 /*	send_udp_rr()		perform a udp request/response	*/
@@ -2637,6 +2638,197 @@ Size (bytes)\n\
 
 
 
+/* this routine implements the TCP_MSS test.  All it does is pretend
+   to be a TCP_STREAM test and report the TCP_MSS for the data
+   connection.  No actual data is transferred. raj 2007-11-07
+*/
+void 
+send_tcp_mss(char remote_host[])
+{
+  
+  char *mss_title = "\
+Maximum\n\
+Segment\n\
+Size (bytes)\n\n";
+
+  char *mss_fmt_0 =
+    "%d %s\n";
+
+  SOCKET send_socket;
+  int tcp_mss = -1;  /* possibly uninitialized on printf far below */
+
+  struct addrinfo *remote_res;
+  struct addrinfo *local_res;
+  
+  struct	tcp_stream_request_struct	*tcp_stream_request;
+  struct	tcp_stream_response_struct	*tcp_stream_response;
+  struct	tcp_stream_results_struct	*tcp_stream_result;
+  
+  tcp_stream_request  = 
+    (struct tcp_stream_request_struct *)netperf_request.content.test_specific_data;
+  tcp_stream_response =
+    (struct tcp_stream_response_struct *)netperf_response.content.test_specific_data;
+  tcp_stream_result   = 
+    (struct tcp_stream_results_struct *)netperf_response.content.test_specific_data;
+  
+  /* since we are now disconnected from the code that established the */
+  /* control socket, and since we want to be able to use different */
+  /* protocols and such, we are passed the name of the remote host and */
+  /* must turn that into the test specific addressing information. */
+  
+  /* complete_addrinfos will either succede or exit the process */
+  complete_addrinfos(&remote_res,
+		     &local_res,
+		     remote_host,
+		     SOCK_STREAM,
+		     IPPROTO_TCP,
+		     0);
+  
+  if ( print_headers ) {
+    print_top_test_header("TCP MSS TEST",local_res,remote_res);
+  }
+
+  /*set up the data socket                        */
+  send_socket = create_data_socket(local_res);
+    
+  if (send_socket == INVALID_SOCKET){
+    perror("netperf: send_tcp_stream: tcp stream data socket");
+    exit(1);
+  }
+  
+  if (debug) {
+    fprintf(where,"send_tcp_stream: send_socket obtained...\n");
+  }
+  
+    
+  if (!no_control) {
+    /* Tell the remote end to do a listen. The server alters the
+       socket paramters on the other side at this point, hence the
+       reason for all the values being passed in the setup
+       message. If the user did not specify any of the parameters,
+       they will be passed as 0, which will indicate to the remote
+       that no changes beyond the system's default should be
+       used. Alignment is the exception, it will default to 1, which
+       will be no alignment alterations. */
+    
+    netperf_request.content.request_type =	DO_TCP_STREAM;
+    tcp_stream_request->send_buf_size	=	rss_size_req;
+    tcp_stream_request->recv_buf_size	=	rsr_size_req;
+    tcp_stream_request->receive_size	=	recv_size;
+    tcp_stream_request->no_delay	=	rem_nodelay;
+    tcp_stream_request->recv_alignment	=	remote_recv_align;
+    tcp_stream_request->recv_offset	=	remote_recv_offset;
+    tcp_stream_request->measure_cpu	=	remote_cpu_usage;
+    tcp_stream_request->cpu_rate	=	remote_cpu_rate;
+    if (test_time) {
+      tcp_stream_request->test_length	=	test_time;
+    }
+    else {
+      tcp_stream_request->test_length	=	test_bytes;
+    }
+    tcp_stream_request->so_rcvavoid	=	rem_rcvavoid;
+    tcp_stream_request->so_sndavoid	=	rem_sndavoid;
+#ifdef DIRTY
+    tcp_stream_request->dirty_count     =       rem_dirty_count;
+    tcp_stream_request->clean_count     =       rem_clean_count;
+#endif /* DIRTY */
+    tcp_stream_request->port            =    atoi(remote_data_port);
+    tcp_stream_request->ipfamily = af_to_nf(remote_res->ai_family);
+    if (debug > 1) {
+      fprintf(where,
+	      "netperf: send_tcp_mss: requesting TCP stream test\n");
+    }
+      
+    send_request();
+      
+    /* The response from the remote will contain all of the relevant
+       socket parameters for this test type. We will put them back
+       into the variables here so they can be displayed if desired.
+       The remote will have calibrated CPU if necessary, and will
+       have done all the needed set-up we will have calibrated the
+       cpu locally before sending the request, and will grab the
+       counter value right after the connect returns. The remote
+       will grab the counter right after the accept call. This saves
+       the hassle of extra messages being sent for the TCP
+       tests.  */
+    
+    recv_response();
+    
+    if (!netperf_response.content.serv_errno) {
+      if (debug)
+	fprintf(where,"remote listen done.\n");
+      rsr_size	      =	tcp_stream_response->recv_buf_size;
+      rss_size	      =	tcp_stream_response->send_buf_size;
+      rem_nodelay     =	tcp_stream_response->no_delay;
+      remote_cpu_usage=	tcp_stream_response->measure_cpu;
+      remote_cpu_rate = tcp_stream_response->cpu_rate;
+      
+      /* we have to make sure that the server port number is in
+	 network order */
+      set_port_number(remote_res,
+		      (short)tcp_stream_response->data_port_number);
+      
+      rem_rcvavoid	= tcp_stream_response->so_rcvavoid;
+      rem_sndavoid	= tcp_stream_response->so_sndavoid;
+    }
+    else {
+      Set_errno(netperf_response.content.serv_errno);
+      fprintf(where,
+	      "netperf: remote error %d",
+	      netperf_response.content.serv_errno);
+      perror("");
+      fflush(where);
+      
+      exit(1);
+    }
+  }
+
+  /*Connect up to the remote port on the data socket  */
+  if (connect(send_socket, 
+	      remote_res->ai_addr,
+	      remote_res->ai_addrlen) == INVALID_SOCKET){
+    perror("netperf: send_tcp_mss: data socket connect failed");
+    exit(1);
+    }
+
+
+  /* find-out what the TCP maximum segment_size was (if possible) */
+  tcp_mss = -1;
+  get_tcp_info(send_socket,&tcp_mss);
+    
+  /* just go ahead and close the socket, the remote should figure it
+     out */
+  close(send_socket);
+
+  /* statistics? we don't need no stinking statistics */
+
+    
+    switch (verbosity) {
+    case 0:
+      fprintf(where,
+	      mss_fmt_0,
+	      tcp_mss,
+	      ((print_headers) || 
+	       (result_brand == NULL)) ? "" : result_brand);
+      break;
+    case 1:
+    case 2:
+      if (print_headers) {
+		fprintf(where,mss_title);
+      }
+      fprintf(where,
+	      mss_fmt_0,		/* the format string */
+	      tcp_mss,
+	      ((print_headers) || 
+	       (result_brand == NULL)) ? "" : result_brand);
+      break;
+    }
+
+  
+}
+
+
+
 #ifdef HAVE_ICSC_EXS
 
 #include <sys/exs.h>
@@ -4936,6 +5128,12 @@ Socket Size   Request  Resp.   Elapsed  \n\
 Send   Recv   Size     Size    Time     Throughput \n\
 bytes  Bytes  bytes    bytes   secs.    %s/sec   \n\n";
 
+  char *tput_title_latency = "\
+Local /Remote\n\
+Socket Size   Request  Resp.   Elapsed  \n\
+Send   Recv   Size     Size    Time     Latency \n\
+bytes  Bytes  bytes    bytes   secs.    usec/tran   \n\n";
+
   char *tput_fmt_0 =
     "%7.2f %s\n";
   
@@ -4955,6 +5153,12 @@ Local /Remote\n\
 Socket Size   Request Resp.  Elapsed Tput     CPU    CPU    S.dem   S.dem\n\
 Send   Recv   Size    Size   Time    %-8.8s local  remote local   remote\n\
 bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\n";
+
+  char *cpu_title_latency = "\
+Local /Remote\n\
+Socket Size   Request Resp.  Elapsed Latency  CPU    CPU    S.dem   S.dem\n\
+Send   Recv   Size    Size   Time    usecs    local  remote local   remote\n\
+bytes  bytes  bytes   bytes  secs.   per tran %% %c    %% %c    us/Tr   us/Tr\n\n";
   
   char *cpu_fmt_0 =
     "%6.3f %c %s\n";
