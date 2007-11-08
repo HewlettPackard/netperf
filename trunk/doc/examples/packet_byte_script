@@ -69,8 +69,6 @@ fi
 
 MSS=`$NETPERF_CMD -H $REM_HOST -t TCP_MSS -P 0 -v 0`
 
-echo "MSS is $MSS"
-
 # The request,response sizes that we will be using. The netperf
 # command parser will treat "1" the same as "1,1" - I use 1,1 to
 # remember that it is "request,response"
