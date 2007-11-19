@@ -96,6 +96,10 @@ char	nettest_id[]="\
 #include <malloc.h>
 #endif /* NOSTDLIBH */
 
+#ifdef WANT_SCTP
+#include <netinet/sctp.h>
+#endif
+
 #ifndef WIN32
 #if !defined(__VMS)
 #include <sys/ipc.h>
