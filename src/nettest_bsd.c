@@ -152,9 +152,9 @@ char	nettest_id[]="\
    2007-06-08 */
 int first_burst_size=0;
 
-#if defined(HAVE_SENDFILE) && (defined(__linux) || defined(__sun__))
+#if defined(HAVE_SENDFILE) && (defined(__linux) || defined(__sun))
 #include <sys/sendfile.h>
-#endif /* HAVE_SENDFILE && (__linux || __sun__) */
+#endif /* HAVE_SENDFILE && (__linux || __sun) */
 
 
 
@@ -3684,22 +3684,22 @@ Size (bytes)\n\
   struct  addrinfo *local_res;
   struct	sockaddr_in	server;
 
-#if defined(__linux) || defined(__sun__)
+#if defined(__linux) || defined(__sun)
   off_t     scratch_offset;   /* the linux sendfile() call will update
 				 the offset variable, which is
 				 something we do _not_ want to happen
 				 to the value in the send_ring! so, we
 				 have to use a scratch variable. */
-#endif /* __linux  || defined(__sun__) */
+#endif /* __linux  || defined(__sun) */
 #if defined (USE_OSX)
    off_t    scratch_len;  /* Darwin 9.x need a value-result parameter  */
 #endif
-#if defined (__sun__)
+#if defined (__sun)
    size_t  scratch_len;	/* the sun sendfilev() needs a place to 
 			   tell us how many bytes were written,
 			   even though it also returns the value */
    sendfilevec_t sv;
-#endif /* __sun__ */
+#endif /* __sun */
   
   struct	tcp_stream_request_struct	*tcp_stream_request;
   struct	tcp_stream_response_struct	*tcp_stream_response;
@@ -4035,7 +4035,7 @@ Size (bytes)\n\
 			send_ring->fildes, 
 			&scratch_offset,   /* modified after the call! */
 			send_ring->length)) != send_size)
-#elif defined (__sun__)
+#elif defined (__sun)
       /* We must call with SFV_NOWAIT and a large file size (>= 16MB) to
 	 get zero-copy, as well as compiling with  -D_LARGEFILE_SOURCE
 	  -D_FILE_OFFSET_BITS=64 */
