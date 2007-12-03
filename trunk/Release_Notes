@@ -2,6 +2,8 @@ These are the Release Notes leading-up to Revision 2.4.5 of netperf:
 
 Things changed in this release:
 
+*) Track the bouncing interfaces that are linux processor affinity
+
 *) Fixes for Solaris sendfilev usage.
 
 *) A TCP_MSS test has been added which will report the MSS for a data
