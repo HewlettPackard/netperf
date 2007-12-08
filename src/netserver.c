@@ -567,7 +567,11 @@ set_up_server(char hostname[], char port[], int af)
   fflush (stdin);
   fflush (stdout);
   fflush (stderr);
+#if defined(HAVE_FORK)
   switch (fork())
+#else
+  switch (vfork())
+#endif
     {
     case -1:  	
       perror("netperf server error");
@@ -711,8 +715,11 @@ set_up_server(char hostname[], char port[], int af)
 		}
 #else
       signal(SIGCLD, SIG_IGN);
-	  
+#if defined(HAVE_FORK)
 	  switch (fork())
+#else
+	  switch (vfork())
+#endif
 	    {
 	    case -1:
 	      /* something went wrong */

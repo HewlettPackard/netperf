@@ -213,3 +213,6 @@ Fixes to replace struct sockaddr_in with struct sockaddr_storage
 
 Anonymous
 Support for sendfile() on OSX
+
+Matt Waddel
+Fix to use vfork() instead of fork() on platforms without fork()
