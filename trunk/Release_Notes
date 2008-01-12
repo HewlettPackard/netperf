@@ -2,6 +2,13 @@ These are the Release Notes leading-up to Revision 2.4.5 of netperf:
 
 Things changed in this release:
 
+*) The UDP_RR test now understands the global -f option to change
+   output units.  It also understands the -B option to tag
+   results. Courtesy of Alexander Duyck.
+
+*) A fix has been added for hanging UDP_RR tests under
+   Windows. Courtesy of Alexander Duyck.
+
 *) Use vfork() on those platforms without fork(), courtesy of Matt
    Waddel
 

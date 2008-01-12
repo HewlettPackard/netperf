@@ -267,6 +267,40 @@ then
 	AC_DEFINE([WANT_DLPI],,[Define to one to include DLPI tests.])
 fi
 
+# see if we should be including the OMNI tests
+
+AC_MSG_CHECKING(whether to include OMNI tests)
+
+AC_ARG_ENABLE(omni,
+	[AS_HELP_STRING([--enable-omni],[include OMNI (link-layer) tests])])
+
+case "$enable_omni" in
+     yes)
+		use_omni=true
+		;;
+     no)	
+		use_omni=false
+		;;
+     '')
+		use_omni=false
+		;;
+     *)
+		AC_MSG_ERROR([--enable-omni takes yes or no])
+		;;
+esac
+
+if $use_omni
+then
+	AC_MSG_RESULT(yes)
+else
+	AC_MSG_RESULT(no)
+fi
+
+if $use_omni
+then
+	AC_DEFINE([WANT_OMNI],,[Define to one to include OMNI tests.])
+fi
+
 
 # see if we should be including the XTI tests
 

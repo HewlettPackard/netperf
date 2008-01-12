@@ -210,6 +210,8 @@ happier for folks redirecting same to a file.
 
 Alexander Duyck
 Fixes to replace struct sockaddr_in with struct sockaddr_storage
+Fixes to UDP_RR to preclude hangs on Windows
+Fizes to UDP_RR to honour -f and -B options
 
 Anonymous
 Support for sendfile() on OSX
