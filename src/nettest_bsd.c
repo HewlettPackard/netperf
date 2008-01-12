@@ -816,6 +816,30 @@ get_port_number(struct addrinfo *res)
   }
 }
 
+static void
+extract_inet_address_and_port(struct addrinfo *res, void *addr, int len, int *port)
+{
+ switch(res->ai_family) {
+  case AF_INET: {
+    struct sockaddr_in *foo = (struct sockaddr_in *)res->ai_addr;
+    *port = foo->sin_port;
+    memcpy(addr,&(foo->sin_addr),min(len,sizeof(foo->sin_addr)));
+    break;
+  }
+#if defined(AF_INET6)
+  case AF_INET6: {
+    struct sockaddr_in6 *foo = (struct sockaddr_in6 *)res->ai_addr;
+    *port = foo->sin6_port;
+    memcpy(addr,&(foo->sin6_addr),min(len,sizeof(foo->sin6_addr)));
+    break;
+  }
+#endif
+  default:
+    *port = 0xDEADBEEF;
+    strncpy(addr,"UNKN FAMILY",len);
+  }
+}
+
 /* this routine will set the port number of the sockaddr in the
    addrinfo to the specified value, based on the address family */
 void
@@ -1958,7 +1982,7 @@ bytes  bytes   bytes    secs.    %s/sec  \n\n";
     "%7.2f %s\n";
   
   char *tput_fmt_1 =
-    "%6d %6d %6d    %-6.2f   %7.2f    %s \n";
+    "%6d %6d %6d    %-6.2f   %7.2f   %s\n";
   
   char *cpu_title = "\
 Recv   Send    Send                          Utilization       Service Demand\n\
@@ -6822,12 +6846,19 @@ Local /Remote\n\
 Socket Size   Request  Resp.   Elapsed  Trans.\n\
 Send   Recv   Size     Size    Time     Rate         \n\
 bytes  Bytes  bytes    bytes   secs.    per sec   \n\n";
+
+  char *tput_title_band = "\
+Local /Remote\n\
+Socket Size   Request  Resp.   Elapsed  \n\
+Send   Recv   Size     Size    Time     Throughput \n\
+bytes  Bytes  bytes    bytes   secs.    %s/sec   \n\n";
   
   char *tput_fmt_0 =
-    "%7.2f\n";
+    "%7.2f %s\n";
   
   char *tput_fmt_1_line_1 = "\
-%-6d %-6d %-6d   %-6d  %-6.2f   %7.2f   \n";
+%-6d %-6d %-6d   %-6d  %-6.2f   %7.2f   %s\n";
+
   char *tput_fmt_1_line_2 = "\
 %-6d %-6d\n";
   
@@ -6836,12 +6867,18 @@ Local /Remote\n\
 Socket Size   Request Resp.  Elapsed Trans.   CPU    CPU    S.dem   S.dem\n\
 Send   Recv   Size    Size   Time    Rate     local  remote local   remote\n\
 bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\n";
+
+  char *cpu_title_tput = "\
+Local /Remote\n\
+Socket Size   Request Resp.  Elapsed Tput     CPU    CPU    S.dem   S.dem\n\
+Send   Recv   Size    Size   Time    %-8.8s local  remote local   remote\n\
+bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\n";
   
   char *cpu_fmt_0 =
-    "%6.3f %c\n";
+    "%6.3f %c %s\n";
   
   char *cpu_fmt_1_line_1 = "\
-%-6d %-6d %-6d  %-6d %-6.2f  %-6.2f   %-6.2f %-6.2f %-6.3f  %-6.3f\n";
+%-6d %-6d %-6d  %-6d %-6.2f  %-6.2f   %-6.2f %-6.2f %-6.3f  %-6.3f %s\n";
   
   char *cpu_fmt_1_line_2 = "\
 %-6d %-6d\n";
@@ -7067,7 +7104,14 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
     
     /* Set-up the test end conditions. For a request/response test, they */
     /* can be either time or transaction based. */
-    
+
+#ifdef WIN32
+	/* The test timer can fire during recv operations on the socket,
+	   so to make the start_timer below work we have to move
+       it to close send_socket while we are blocked on recv. */
+	win_kludge_socket = send_socket;
+#endif /* WIN32 */   
+
     if (test_time) {
       /* The user wanted to end the test after a period of time. */
       times_up = 0;
@@ -7344,22 +7388,37 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 	fprintf(where,
 		cpu_fmt_0,
 		local_service_demand,
-		local_cpu_method);
+		local_cpu_method,
+                ((print_headers) ||
+                 (result_brand == NULL)) ? "" : result_brand);
+
       }
       else {
 	fprintf(where,
 		cpu_fmt_0,
 		remote_service_demand,
-		remote_cpu_method);
+		remote_cpu_method,
+                ((print_headers) ||
+                 (result_brand == NULL)) ? "" : result_brand);
+
       }
       break;
     case 1:
     case 2:
       if (print_headers) {
-	fprintf(where,
-		cpu_title,
-		local_cpu_method,
-		remote_cpu_method);
+        if ('x' == libfmt) {
+          fprintf(where,
+                  cpu_title,
+                  local_cpu_method,
+                  remote_cpu_method);
+        }
+        else {
+          fprintf(where,
+                  cpu_title_tput,
+                  format_units(),
+                  local_cpu_method,
+                  remote_cpu_method);
+        }
       }
     
       fprintf(where,
@@ -7369,11 +7428,15 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 	      req_size,		/* how large were the requests */
 	      rsp_size,		/* guess */
 	      elapsed_time,		/* how long was the test */
-	      nummessages/elapsed_time,
+	      ('x' == libfmt) ? thruput : 
+	      calc_thruput_interval_omni(thruput * (req_size+rsp_size),
+									 1.0),
 	      local_cpu_utilization,	/* local cpu */
 	      remote_cpu_utilization,	/* remote cpu */
 	      local_service_demand,	/* local service demand */
-	      remote_service_demand);	/* remote service demand */
+	      remote_service_demand,	/* remote service demand */
+	      ((print_headers) || 
+	       (result_brand == NULL)) ? "" : result_brand);
       fprintf(where,
 	      cpu_fmt_1_line_2,
 	      rss_size,
@@ -7387,12 +7450,18 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
     case 0:
       fprintf(where,
 	      tput_fmt_0,
-	      nummessages/elapsed_time);
+	      ('x' == libfmt) ? thruput :
+	      calc_thruput_interval_omni(thruput * (req_size+rsp_size),
+					 1.0),
+	      ((print_headers) || 
+	       (result_brand == NULL)) ? "" : result_brand);
       break;
     case 1:
     case 2:
       if (print_headers) {
-	fprintf(where,tput_title,format_units());
+	fprintf(where,
+		('x' == libfmt) ? tput_title : tput_title_band,
+		format_units());
       }
     
       fprintf(where,
@@ -7402,7 +7471,11 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 	      req_size,		/* how large were the requests */
 	      rsp_size,		/* how large were the responses */
 	      elapsed_time, 		/* how long did it take */
-	      nummessages/elapsed_time);
+	      ('x' == libfmt) ?  thruput : 
+	      calc_thruput_interval_omni(thruput * (req_size+rsp_size),
+					 1.0),
+	      ((print_headers) || 
+	       (result_brand == NULL)) ? "" : result_brand);
       fprintf(where,
 	      tput_fmt_1_line_2,
 	      rss_size, 		/* remote recvbuf size */

@@ -15,6 +15,87 @@
 #define NF_INET   4
 #define NF_INET6  6
 
+#ifdef WANT_OMNI
+struct  omni_request_struct {
+  int32_t    send_buf_size;         /* SO_SNDBUF */
+  uint32_t   send_size;             /* bytes per send() call */
+  uint32_t   send_alignment;        /* alignment of send buffer */
+  uint32_t   send_offset;           /* offset from send alignment */
+  uint32_t   request_size;          /* size of a request */
+
+  int32_t    recv_buf_size;         /* SO_RCVBUF */
+  uint32_t   receive_size;          /* size of buffers in recv */
+  uint32_t   recv_alignment;        /* alignment of recv buffer */
+  uint32_t   recv_offset;           /* offset from recv alignment */
+  uint32_t   response_size;         /* size of a response */
+
+  uint32_t   no_delay;              /* do we set mumble_NODELAY? */
+  uint32_t   use_sendfile;          /* use sendfile rather than send? */
+  uint32_t   connect_test;          /* does the test include connect? */
+
+  uint32_t   measure_cpu;    /* do we measure CPU? */
+  float      cpu_rate;       /* do we know how fast the cpu is already? */
+
+  int32_t    test_length;    /* how long is the test? */
+
+  uint32_t   so_rcvavoid;    /* avoid copies on recv? */
+  uint32_t   so_sndavoid;    /* avoid copies on send? */
+  uint32_t   send_dirty_count; /* bytes to dirty before calling send */
+  uint32_t   recv_dirty_count; /* bytes to dirty before calling recv */
+  uint32_t   recv_clean_count; /* bytes to access before calling recv */
+
+  uint32_t   checksum_off;  /* should checksums be disabled? */
+  uint32_t   data_port;     /* what port number should netserver use? */
+  uint32_t   ipfamily;      /* address family of the data connection */
+  uint32_t   socket_type;   /* dgram? stream? other? */
+  uint32_t   protocol;      /* the protocol of the data connection */
+  uint32_t   direction;     /* which way flows the data? */
+  uint32_t   netperf_port;  /* when netserver needs netperf's data port */
+  uint32_t   ipaddr[4];     /* when netserver needs netperf's data IP */
+};
+
+struct  omni_response_struct {
+  int32_t    recv_buf_size;
+  uint32_t   receive_size;
+
+  int32_t    send_buf_size;
+  uint32_t   send_size;
+
+  uint32_t   no_delay;
+  uint32_t   use_sendfile;
+
+  uint32_t   measure_cpu;
+  float      cpu_rate;
+
+  uint32_t   test_length;
+
+  uint32_t   so_rcvavoid;
+  uint32_t   so_sndavoid;
+
+  uint32_t   data_port;     /* connect to this port number */
+};
+
+struct omni_results_struct {
+  double     bytes_received;
+  uint32_t   recv_calls;
+  int32_t    recv_buf_size; /* SO_RCVBUF at end of test */
+
+  double     bytes_sent;
+  uint32_t   send_calls;
+  int32_t    send_buf_size; /* SO_SNDBUF at end of test */
+
+  uint32_t   trans_received; 
+
+  float      elapsed_time;  /* length of test in seconds */
+
+  float      cpu_util;
+  float      serv_dem;
+  uint32_t   cpu_method;    /* how was CPU util measured? */
+  uint32_t   num_cpus;      /* number of CPUs in remote */
+};
+
+#endif /* WANT_OMNI */
+
 struct	tcp_stream_request_struct {
   int	send_buf_size;
   int	recv_buf_size;	/* how big does the client want it - the */
@@ -64,6 +145,8 @@ struct tcp_stream_results_struct {
   float	         serv_dem;	/* -1 if not measured */
   int            cpu_method;    /* how was cpu util measured? */
   int            num_cpus;      /* how many CPUs had the remote? */
+  int            recv_buf_size; /* how large was it at the end? */
+  int            send_buf_size; /* how large was it at the end? */
 };
 
 struct	tcp_maerts_request_struct {

@@ -158,6 +158,10 @@
 #define         TCP_MAERTS_RESPONSE         95
 #define         TCP_MAERTS_RESULTS          96
 
+#define         DO_OMNI                     97
+#define         OMNI_RESPONSE               98
+#define         OMNI_RESULTS                99
+
 #define         DO_LWPSTR_STREAM           100
 #define         LWPSTR_STREAM_RESPONSE     110
 #define         LWPSTR_STREAM_RESULTS      120
@@ -349,7 +353,8 @@ extern void PrintWin32Error(FILE *stream, LPSTR text);
 		(((return_value) == SOCKET_ERROR) && \
 	     ((errno == EINTR) || \
 	      (errno == WSAECONNABORTED) || \
-	      (errno == WSAECONNRESET) ))
+	      (errno == WSAECONNRESET) || \
+	      (errno == ENOTSOCK) ))
 #define SOCKET_EADDRINUSE(return_value) \
 		(((return_value) == SOCKET_ERROR) && \
 	     ((errno == WSAEADDRINUSE) ))
