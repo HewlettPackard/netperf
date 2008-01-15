@@ -117,12 +117,15 @@ char nettest_omni_id[]="\
 #define NETPERF_XMIT 0x2
 #define NETPERF_RECV 0x4
 
+#define NETPERF_IS_RR(x) (((x & NETPERF_XMIT) && (x & NETPERF_RECV)) || \
+			  (!((x & NETPERF_XMIT) || (x & NETPERF_RECV)))
+
 /* a boatload of globals while I settle things out */
 int socket_type;
 int protocol;
 int direction;
-int remote_send_size;
-int remote_recv_size;
+int remote_send_size = -1;
+int remote_recv_size = -1;
 int remote_use_sendfile;
 int connect_test;
 int remote_send_dirty_count;
@@ -142,17 +145,16 @@ uint64_t	trans_completed;
 uint64_t	units_remaining;
 uint64_t	bytes_sent;
 uint64_t      bytes_received;
-uint64_t      send_calls;
-uint64_t      receive_calls;
+uint64_t      local_send_calls;
+uint64_t      local_receive_calls;
 uint64_t      remote_bytes_sent;
 uint64_t      remote_bytes_received;
 uint64_t      remote_send_calls;
 uint64_t      remote_receive_calls;
 
-/* make first_burst_size unconditional so we can use it easily enough
-   when calculating transaction latency for the TCP_RR test. raj
-   2007-06-08 */
-int first_burst_size=0;
+int sd_kb = 1;  /* is the service demand per KB or per tran? */
+
+extern int first_burst_size;
 
 #if defined(HAVE_SENDFILE) && (defined(__linux) || defined(__sun))
 #include <sys/sendfile.h>
@@ -171,17 +173,64 @@ static int client_port_max = 65535;
 int
   loc_nodelay,		/* don't/do use NODELAY	locally		*/
   rem_nodelay,		/* don't/do use NODELAY remotely	*/
-#ifdef TCP_CORK
-  loc_tcpcork=0,        /* don't/do use TCP_CORK locally        */
-  rem_tcpcork=0,        /* don't/do use TCP_CORK remotely       */
-#endif /* TCP_CORK */
   loc_sndavoid,		/* avoid send copies locally		*/
   loc_rcvavoid,		/* avoid recv copies locally		*/
   rem_sndavoid,		/* avoid send copies remotely		*/
-  rem_rcvavoid, 	/* avoid recv_copies remotely		*/
-  local_connected = 0,  /* local socket type, connected/non-connected */
-  remote_connected = 0; /* remote socket type, connected/non-connected */
+  rem_rcvavoid; 	/* avoid recv_copies remotely		*/
 
+extern int
+  loc_tcpcork,
+  rem_tcpcork,
+  local_connected,
+  remote_connected;
+
+static unsigned short
+get_port_number(struct addrinfo *res) 
+{
+ switch(res->ai_family) {
+  case AF_INET: {
+    struct sockaddr_in *foo = (struct sockaddr_in *)res->ai_addr;
+    return(ntohs(foo->sin_port));
+    break;
+  }
+#if defined(AF_INET6)
+  case AF_INET6: {
+    struct sockaddr_in6 *foo = (struct sockaddr_in6 *)res->ai_addr;
+    return(ntohs(foo->sin6_port));
+    break;
+  }
+#endif
+  default:
+    fprintf(where,
+	    "Unexpected Address Family of %u\n",res->ai_family);
+    fflush(where);
+    exit(-1);
+  }
+}
+
+static void
+extract_inet_address_and_port(struct addrinfo *res, void *addr, int len, int *port)
+{
+ switch(res->ai_family) {
+  case AF_INET: {
+    struct sockaddr_in *foo = (struct sockaddr_in *)res->ai_addr;
+    *port = foo->sin_port;
+    memcpy(addr,&(foo->sin_addr),min(len,sizeof(foo->sin_addr)));
+    break;
+  }
+#if defined(AF_INET6)
+  case AF_INET6: {
+    struct sockaddr_in6 *foo = (struct sockaddr_in6 *)res->ai_addr;
+    *port = foo->sin6_port;
+    memcpy(addr,&(foo->sin6_addr),min(len,sizeof(foo->sin6_addr)));
+    break;
+  }
+#endif
+  default:
+    *port = 0xDEADBEEF;
+    strncpy(addr,"UNKN FAMILY",len);
+  }
+}
 
 void
 pick_next_port_number(struct addrinfo *local_res, struct addrinfo *remote_res) {
@@ -276,7 +325,7 @@ connect_data_socket(SOCKET send_socket, struct addrinfo *remote_res)
 }
 
 int
-send_data(SOCKET data_socket, struct ring_elt *send_ring, uint32_t bytes_to_send, uint32_t bytes_per_send, struct sockaddr *destination, int destlen) {
+send_data(SOCKET data_socket, struct ring_elt *send_ring, uint32_t bytes_to_send, struct sockaddr *destination, int destlen) {
 
   int len;
 
@@ -337,7 +386,19 @@ recv_data(SOCKET data_socket, struct ring_elt *recv_ring, uint32_t bytes_to_recv
   my_recvs = 0;
   bytes_left = bytes_to_recv;
   temp_message_ptr  = recv_ring->buffer_ptr;
-  
+
+  if (debug) {
+    fprintf(where,
+	    "recv_data sock %d, elt %p, bytes %d source %p srclen %d, flags %x num_recv %p\n",
+	    data_socket,
+	    recv_ring,
+	    bytes_to_recv,
+	    source,
+	    (source != NULL) ? *sourcelen : -1,
+	    flags,
+	    num_receives);
+    fflush(where);
+  }
   do {
     if (source) {
       /* call recvfrom it does look a little silly here inside the do
@@ -401,6 +462,26 @@ recv_data(SOCKET data_socket, struct ring_elt *recv_ring, uint32_t bytes_to_recv
 
 
 int
+close_data_socket(SOCKET data_socket)
+{
+
+  int ret;
+
+  ret = close(data_socket);
+
+  if (SOCKET_EINTR(ret)) {
+    /* end of test */
+    return -1;
+  }
+  else if (ret == 0) {
+    return ret;
+  }
+  else
+    return -3;
+    
+}
+
+int
 disconnect_data_socket(SOCKET data_socket, int initiate, int do_close) 
 {
 
@@ -447,42 +528,6 @@ void
 send_omni(char remote_host[])
 {
   
-  char *tput_title = "\
-Local /Remote\n\
-Socket Size   Request  Resp.   Elapsed  Trans.\n\
-Send   Recv   Size     Size    Time     Rate         \n\
-bytes  Bytes  bytes    bytes   secs.    per sec   \n\n";
-  
-  char *tput_fmt_0 =
-    "%7.2f\n";
-  
-  char *tput_fmt_1_line_1 = "\
-%-6d %-6d %-6d   %-6d  %-6.2f   %7.2f   \n";
-  char *tput_fmt_1_line_2 = "\
-%-6d %-6d\n";
-  
-  char *cpu_title = "\
-Local /Remote\n\
-Socket Size   Request Resp.  Elapsed Trans.   CPU    CPU    S.dem   S.dem\n\
-Send   Recv   Size    Size   Time    Rate     local  remote local   remote\n\
-bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      us/Tr   us/Tr\n\n";
-  
-  char *cpu_fmt_0 =
-    "%6.3f\n";
-  
-  char *cpu_fmt_1_line_1 = "\
-%-6d %-6d %-6d  %-6d %-6.2f  %-6.2f   %-6.2f %-6.2f %-6.3f  %-6.3f\n";
-  
-  char *cpu_fmt_1_line_2 = "\
-%-6d %-6d\n";
-  
-  char *ksink_fmt = "\n\
-Alignment      Offset\n\
-Local  Remote  Local  Remote\n\
-Send   Recv    Send   Recv\n\
-%5d  %5d   %5d  %5d\n";
-  
-  
   int			timed_out = 0;
   float			elapsed_time;
   
@@ -500,7 +545,9 @@ Send   Recv    Send   Recv\n\
   int           need_socket;
 
   double	bytes_xferd;
-  
+
+  int   temp_recvs;
+
   float	        local_cpu_utilization;
   float	        local_service_demand;
   float	        remote_cpu_utilization;
@@ -543,13 +590,26 @@ Send   Recv    Send   Recv\n\
   if ( print_headers ) {
     print_top_test_header("OMNI TEST",local_res,remote_res);
   }
-  
+
+  printf("omni: direction %x\n",direction);
+
   /* initialize a few counters */
   
   bytes_xferd	= 0.0;
   times_up 	= 0;
   need_socket   = 1;
+
+  if (connection_test) 
+    pick_next_port_number(local_res,remote_res);
+
+  data_socket = create_data_socket(local_res);
   
+  if (data_socket == INVALID_SOCKET) {
+    perror("netperf: send_omni: unable to create data socket");
+    exit(1);
+  }
+  need_socket = 0;
+
   /* we need to consider if this is a request/response test, if we are
      receiving, if we are sending, etc, when setting-up our recv and
      send buffer rings.  raj 2008-01-07 */
@@ -560,6 +620,14 @@ Send   Recv    Send   Recv\n\
     }
     else {
       /* stream test */
+      if (send_size == 0) {
+	if (lss_size > 0) {
+	  send_size = lss_size;
+	}
+	else {
+	  send_size = 4096;
+	}
+      }
       if (send_width == 0) 
 	send_width = (lss_size/send_size) + 1;
       if (send_width == 1) send_width++;
@@ -574,6 +642,7 @@ Send   Recv    Send   Recv\n\
 	      "send_omni: %d entry send_ring obtained...\n",
 	      send_width);
     }
+    bytes_to_send = send_size;
   }
 
   if (direction & NETPERF_RECV) {
@@ -582,6 +651,14 @@ Send   Recv    Send   Recv\n\
     }
     else {
       /* stream test */
+      if (recv_size == 0) {
+	if (lsr_size > 0) {
+	  recv_size = lsr_size;
+	}
+	else {
+	  recv_size = 4096;
+	}
+      }
       if (recv_width == 0) {
 	recv_width = (lsr_size/recv_size) + 1;
 	if (recv_width == 1) recv_width++;
@@ -589,7 +666,7 @@ Send   Recv    Send   Recv\n\
     }
 
     recv_ring = allocate_buffer_ring(recv_width,
-				     (rsp_size > 0) ? rsp_size : send_size,
+				     (rsp_size > 0) ? rsp_size : recv_size,
 				     local_recv_align,
 				     local_recv_offset);
     if (debug) {
@@ -629,12 +706,14 @@ Send   Recv    Send   Recv\n\
     omni_request->send_size              = remote_send_size;
     omni_request->send_alignment	 = remote_send_align;
     omni_request->send_offset	         = remote_send_offset;
+    omni_request->send_width             = 1; /* FIX THIS */
     omni_request->request_size	         = req_size;
 
     omni_request->recv_buf_size	         = rsr_size_req;
     omni_request->receive_size           = remote_recv_size;
     omni_request->recv_alignment	 = remote_recv_align;
     omni_request->recv_offset	         = remote_recv_offset;
+    omni_request->recv_width             = 1; /* FIX THIS */
     omni_request->response_size	         = rsp_size;
 
     omni_request->no_delay	         = rem_nodelay;
@@ -658,7 +737,7 @@ Send   Recv    Send   Recv\n\
     omni_request->checksum_off           = remote_checksum_off;
     omni_request->data_port              = atoi(remote_data_port);
     omni_request->ipfamily               = af_to_nf(remote_res->ai_family);
-    omni_request->socket_type            = socket_type;
+    omni_request->socket_type            = hst_to_nst(socket_type);
     omni_request->protocol               = protocol;
 
     omni_request->direction              = 0;
@@ -729,6 +808,11 @@ Send   Recv    Send   Recv\n\
 #ifdef WANT_DEMO
   DEMO_RR_SETUP(100);
 #endif
+
+  /* if we are not a connectionless protocol, we need to connect. at
+     some point even if we are a connectionless protocol, we may still
+     want to "connect" for convenience raj 2008-01-14 */
+  need_to_connect = (protocol != IPPROTO_UDP);
 
   /* Set-up the test end conditions. For tests over a
      "reliable/connection-oriented" transport (eg TCP, SCTP, etc) this
@@ -842,7 +926,6 @@ again:
       ret = send_data(data_socket,
 		      send_ring,
 		      bytes_to_send,
-		      bytes_per_send,
 		      (connected) ? NULL : remote_res->ai_addr,
 		      /* if the destination above is NULL, this is ignored */
 		      remote_res->ai_addrlen);
@@ -858,6 +941,7 @@ again:
 	}
 	bytes_sent += ret;
 	send_ring = send_ring->next;
+	local_send_calls++;
       }
       else if (ret == -2) {
 	/* what to do here -2 means a non-fatal error - probably
@@ -893,10 +977,12 @@ again:
       ret = recv_data(data_socket,
 		      recv_ring,
 		      bytes_to_recv,
-		      bytes_per_recv,
 		      (connected) ? NULL : (struct sockaddr *)&remote_addr,
 		      /* if remote_addr NULL this is ignored */
-		      &remote_addr_len);
+		      &remote_addr_len,
+		      /* if XMIT also set this is RR so waitall */
+		      (direction & NETPERF_XMIT) ? NETPERF_WAITALL: 0,
+		      &temp_recvs);
       if (ret > 0) {
 	/* if this is a recv-only test controlled by byte count we
 	   decrement the units_remaining by the bytes received */
@@ -904,6 +990,7 @@ again:
 	  units_remaining -= ret;
 	}
 	bytes_received += ret;
+	local_receive_calls += temp_recvs;
       }
       else if (ret == 0) {
 	/* is this the end of a test, just a zero-byte recv, or
@@ -916,6 +1003,7 @@ again:
 	  times_up = 1;
 	  break;
 	}
+	local_receive_calls += temp_recvs;
       }
       else if (ret == -1) {
 	/* test timed-out */
@@ -1026,9 +1114,18 @@ again:
   }
 
   /* so, what was the end result? */
-  
-  bytes_xferd	= bytes_sent + bytes_received;
-  thruput	= calc_thruput(bytes_xferd);
+
+  /* why?  because some stacks want to be clever and autotune their
+     socket buffer sizes, which means that if we accept the defaults,
+     the size we get from getsockopt() at the beginning of a
+     connection may not be what we would get at the end of the
+     connection... */
+  rsr_size_end = omni_result->recv_buf_size;
+  rss_size_end = omni_result->send_buf_size;
+
+  /* to we need to pull something from omni_results here? */
+  bytes_xferd  = bytes_sent + bytes_received;
+  thruput      = calc_thruput(bytes_xferd);
   
   if (local_cpu_usage || remote_cpu_usage) {
     /* We must now do a little math for service demand and cpu */
@@ -1045,13 +1142,17 @@ again:
 	fflush(where);
       }
       local_cpu_utilization = calc_cpu_util(0.0);
-      /* since calc_service demand is doing ms/Kunit we will */
-      /* multiply the number of transaction by 1024 to get */
-      /* "good" numbers */
-      local_service_demand  = calc_service_demand((double) nummessages*1024,
-						  0.0,
-						  0.0,
-						  0);
+
+      /* we need to decide what to feed the service demand beast,
+	 which will, ultimately, depend on what sort of test it is and
+	 whether or not the user asked for something specific - as in
+	 per KB even on a TCP_RR test if it is being (ab)used as a
+	 bidirectional bulk-transfer test. raj 2008-01-14 */
+      local_service_demand  = 
+	calc_service_demand((sd_kb) ? bytes_xferd : (double)trans_completed * 1024,
+			    0.0,
+			    0.0,
+			    0);
     }
     else {
       local_cpu_utilization	= (float) -1.0;
@@ -1070,7 +1171,8 @@ again:
       /* since calc_service demand is doing ms/Kunit we will */
       /* multiply the number of transaction by 1024 to get */
       /* "good" numbers */
-      remote_service_demand = calc_service_demand((double) nummessages*1024,
+      remote_service_demand = calc_service_demand((sd_kb) ? bytes_xferd : 
+(double) trans_completed * 1024,
 						  0.0,
 						  remote_cpu_utilization,
 						  omni_result->num_cpus);
@@ -1080,106 +1182,17 @@ again:
       remote_service_demand  = (float) -1.0;
     }
     
-    /* We are now ready to print all the information. If the user */
-    /* has specified zero-level verbosity, we will just print the */
-    /* local service demand, or the remote service demand. If the */
-    /* user has requested verbosity level 1, he will get the basic */
-    /* "streamperf" numbers. If the user has specified a verbosity */
-    /* of greater than 1, we will display a veritable plethora of */
-    /* background information from outside of this block as it it */
-    /* not cpu_measurement specific...  */
-    
-    switch (verbosity) {
-    case 0:
-      if (local_cpu_usage) {
-	fprintf(where,
-		cpu_fmt_0,
-		local_service_demand);
-      }
-      else {
-	fprintf(where,
-		cpu_fmt_0,
-		remote_service_demand);
-      }
-      break;
-    case 1:
-    case 2:
+    /* at some point we may want to actually display some results :) */
 
-      if (print_headers) {
-	fprintf(where,
-		cpu_title,
-		local_cpu_method,
-		remote_cpu_method);
-      }
-      
-      fprintf(where,
-	      cpu_fmt_1_line_1,		/* the format string */
-	      lss_size,		/* local sendbuf size */
-	      lsr_size,
-	      req_size,		/* how large were the requests */
-	      rsp_size,		/* guess */
-	      elapsed_time,		/* how long was the test */
-	      nummessages/elapsed_time,
-	      local_cpu_utilization,	/* local cpu */
-	      remote_cpu_utilization,	/* remote cpu */
-	      local_service_demand,	/* local service demand */
-	      remote_service_demand);	/* remote service demand */
-      fprintf(where,
-	      cpu_fmt_1_line_2,
-	      rss_size,
-	      rsr_size);
-      break;
-    }
+
   }
   else {
     /* The tester did not wish to measure service demand. */
-    switch (verbosity) {
-    case 0:
-      fprintf(where,
-	      tput_fmt_0,
-	      nummessages/elapsed_time);
-      break;
-    case 1:
-    case 2:
-      if (print_headers) {
-	fprintf(where,tput_title,format_units());
-      }
 
-      fprintf(where,
-	      tput_fmt_1_line_1,	/* the format string */
-	      lss_size,
-	      lsr_size,
-	      req_size,		/* how large were the requests */
-	      rsp_size,		/* how large were the responses */
-	      elapsed_time, 		/* how long did it take */
-	      nummessages/elapsed_time);
-      fprintf(where,
-	      tput_fmt_1_line_2,
-	      rss_size, 		/* remote recvbuf size */
-	      rsr_size);
-      
-      break;
-    }
   }
   
-  /* it would be a good thing to include information about some of the */
-  /* other parameters that may have been set for this test, but at the */
-  /* moment, I do not wish to figure-out all the  formatting, so I will */
-  /* just put this comment here to help remind me that it is something */
-  /* that should be done at a later time. */
-  
+  /* likely as not we are going to do something slightly different here */
   if (verbosity > 1) {
-    /* The user wanted to know it all, so we will give it to him. */
-    /* This information will include as much as we can find about */
-    /* TCP statistics, the alignments of the sends and receives */
-    /* and all that sort of rot... */
-    
-    fprintf(where,
-	    ksink_fmt,
-	    local_send_align,
-	    remote_recv_offset,
-	    local_send_offset,
-	    remote_recv_offset);
 
 #ifdef WANT_HISTOGRAM
     fprintf(where,"\nHistogram of request/response times\n");
@@ -1217,6 +1230,7 @@ recv_omni()
   int   need_to_accept;
   int   connected;
   int   ret;
+  int   temp_recvs;
   float	elapsed_time;
   
   struct	omni_request_struct	*omni_request;
@@ -1251,38 +1265,6 @@ recv_omni()
     fflush(where);
   }
 
-  /* We now alter the message_ptr variables to be at the desired */
-  /* alignments with the desired offsets. */
-  
-  if (debug) {
-    fprintf(where,
-	    "recv_omni: requested recv alignment of %d offset %d\n",
-	    omni_request->recv_alignment,
-	    omni_request->recv_offset);
-    fprintf(where,
-	    "recv_omni: requested send alignment of %d offset %d\n",
-	    omni_request->send_alignment,
-	    omni_request->send_offset);
-    fflush(where);
-  }
-
-  if (omni_request->direction & NETPERF_XMIT) {
-    send_ring = allocate_buffer_ring(send_width,
-				     (omni_request->response_size) ? 
-omni_request->response_size : omni_request->send_size,
-				     omni_request->send_alignment,
-				     omni_request->send_offset);
-				     
-  }
-
-  if (omni_request->direction & NETPERF_RECV) {
-    recv_ring = allocate_buffer_ring(send_width,
-				     (omni_request->request_size) ? omni_request->request_size : omni_request->receive_size,
-				     omni_request->recv_alignment,
-				     omni_request->recv_offset);
-				     
-  }
-
   /* Grab a socket to listen on, and then listen on it. */
   
   if (debug) {
@@ -1309,7 +1291,7 @@ omni_request->response_size : omni_request->send_size,
 				local_name,
 				port_buffer,
 				nf_to_af(omni_request->ipfamily),
-				omni_request->socket_type,
+				nst_to_hst(omni_request->socket_type),
 				omni_request->protocol,
 				0);
 
@@ -1325,6 +1307,65 @@ omni_request->response_size : omni_request->send_size,
     exit(1);
   }
 
+  /* We now alter the message_ptr variables to be at the desired */
+  /* alignments with the desired offsets. */
+  
+  if (debug) {
+    fprintf(where,
+	    "recv_omni: requested recv alignment of %d offset %d\n",
+	    omni_request->recv_alignment,
+	    omni_request->recv_offset);
+    fprintf(where,
+	    "recv_omni: requested send alignment of %d offset %d\n",
+	    omni_request->send_alignment,
+	    omni_request->send_offset);
+    fflush(where);
+  }
+
+  fprintf(where,"omni direction %x\n",omni_request->direction);
+  fflush(where);
+
+  if (omni_request->direction & NETPERF_XMIT) {
+    fprintf(where,"about to allocate a buffer ring send_width %d rsp %d send %d\n",omni_request->send_width, omni_request->response_size,omni_request->send_size);
+    fflush(where);
+    send_ring = allocate_buffer_ring(omni_request->send_width,
+				     (omni_request->response_size) ? 
+omni_request->response_size : omni_request->send_size,
+				     omni_request->send_alignment,
+				     omni_request->send_offset);
+				     
+  }
+    fprintf(where,"request recv_width %d req %d recv %d lsr_size %d\n",omni_request->recv_width, omni_request->request_size,omni_request->receive_size,lsr_size);
+    fflush(where);
+
+  if (omni_request->direction & NETPERF_RECV) {
+    if (omni_request->receive_size == -1) {
+      if (lsr_size > 0) {
+	bytes_to_recv = lsr_size;
+      }
+      else {
+	bytes_to_recv = 4096;
+      }
+    }
+    else {
+      bytes_to_recv = omni_request->receive_size;
+    }
+    if (omni_request->recv_width == 0) {
+      recv_width = (lsr_size/bytes_to_recv) + 1;
+      if (recv_width == 1) recv_width++;
+    }
+    else 
+      recv_width = omni_request->recv_width;
+	
+    fprintf(where,"about to allocate a buffer ring recv_width %d size %d\n",recv_width, bytes_to_recv);
+    fflush(where);
+    recv_ring = allocate_buffer_ring(recv_width,
+				     bytes_to_recv,
+				     omni_request->recv_alignment,
+				     omni_request->recv_offset);
+				     
+  }
+
 #ifdef WIN32
   /* The test timer can fire during operations on the listening socket,
      so to make the start_timer below work we have to move
@@ -1332,12 +1373,15 @@ omni_request->response_size : omni_request->send_size,
   win_kludge_socket2 = s_listen;
 #endif
 
-  /* if this is an actual connection test, then we need to call
-     listen() on the socket.  since we don't expect to have multple
-     connections outstanding on the endpoint, we can get-by with an
-     otherwise tiny backlog. raj 2008-01-11 */
-
-  if (omni_request->connect_test) {
+  fprintf(where,"protocol %d\n",omni_request->protocol);
+  fflush(where);
+  need_to_accept = (omni_request->protocol != IPPROTO_UDP);
+  
+  /* we need to hang a listen for everything that needs at least one
+     accept */
+  if (need_to_accept) {
+    fprintf(where,"listening\n");
+    fflush(where);
     if (listen(s_listen, 5) == SOCKET_ERROR) {
       netperf_response.content.serv_errno = errno;
       close(s_listen);
@@ -1395,8 +1439,6 @@ omni_request->response_size : omni_request->send_size,
       calibrate_local_cpu(omni_request->cpu_rate);
   }
   
-
-  
   /* before we send the response back to the initiator, pull some of */
   /* the socket parms from the globals */
   omni_response->send_buf_size = lss_size;
@@ -1432,6 +1474,8 @@ omni_request->response_size : omni_request->send_size,
   while ((!times_up) || (units_remaining > 0)) {
 
     if (need_to_accept) {
+      fprintf(where,"accepting\n");
+      fflush(where);
       /* accept a connection from the remote */
 #ifdef WIN32
       /* The test timer will probably fire during this accept, 
@@ -1440,8 +1484,8 @@ omni_request->response_size : omni_request->send_size,
       win_kludge_socket = s_listen;
 #endif
       if ((data_socket=accept(s_listen,
-			 (struct sockaddr *)&peeraddr_in,
-			 &addrlen)) == INVALID_SOCKET) {
+			      (struct sockaddr *)&peeraddr_in,
+			      &addrlen)) == INVALID_SOCKET) {
 	if (errno == EINTR) {
 	  /* the timer popped */
 	  timed_out = 1;
@@ -1472,6 +1516,9 @@ omni_request->response_size : omni_request->send_size,
   
     }
 
+    fprintf(where,"one  direction %x\n",omni_request->direction);
+    fflush(where);
+
     if (need_to_connect) {
       /* initially this will only be used for UDP tests as a TCP or
 	 other connection-oriented test will always have us making an
@@ -1492,11 +1539,17 @@ omni_request->response_size : omni_request->send_size,
        a request/response test will be all messed-up :) and that then
        is why there are two routines to rule them all rather than just
        one :) */
-    if (direction & NETPERF_RECV) {
+    if (omni_request->direction & NETPERF_RECV) {
+      fprintf(where,"receiving %d bytes\n",bytes_to_recv);
+      fflush(where);
       ret = recv_data(data_socket,
 		      recv_ring,
 		      bytes_to_recv,
-		      bytes_per_recv);
+		      (connected) ? NULL : (struct sockaddr *)&peeraddr_in,
+		      &addrlen,
+		      /* if XMIT also, then this is RR test so waitall */
+		      (direction & NETPERF_XMIT) ? NETPERF_WAITALL: 0,
+		      &temp_recvs);
       if (ret > 0) {
 	/* if this is a recv-only test controlled by byte count we
 	   decrement the units_remaining by the bytes received */
@@ -1504,6 +1557,7 @@ omni_request->response_size : omni_request->send_size,
 	  units_remaining -= ret;
 	}
 	bytes_received += ret;
+	local_receive_calls += temp_recvs;
       }
       else if (ret == 0) {
 	/* is this the end of a test, just a zero-byte recv, or
@@ -1516,6 +1570,7 @@ omni_request->response_size : omni_request->send_size,
 	  times_up = 1;
 	  break;
 	}
+	local_receive_calls += temp_recvs;
       }
       else if (ret == -1) {
 	/* test timed-out */
@@ -1533,11 +1588,12 @@ omni_request->response_size : omni_request->send_size,
 
     /* if we should try to send something, then by all means, let us
        try to send something. */
-    if (direction & NETPERF_XMIT) {
+    if (omni_request->direction & NETPERF_XMIT) {
       ret = send_data(data_socket,
 		      send_ring,
 		      bytes_to_send,
-		      bytes_per_send);
+		      (connected) ? NULL : (struct sockaddr *)&peeraddr_in,
+		      addrlen);
 
       /* the order of these if's will seem a triffle strange, but they
 	 are my best guess as to order of probabilty and/or importance
@@ -1622,6 +1678,10 @@ omni_request->response_size : omni_request->send_size,
     elapsed_time -= PAD_TIME;
   }
 
+  if (connected) {
+    close_data_socket(data_socket);
+  }
+
   /* send the results to the sender  */
   
   omni_results->bytes_received	= bytes_received;
@@ -1682,6 +1742,24 @@ scan_omni_args(int argc, char *argv[])
   strncpy(local_data_port,"0",sizeof(local_data_port));
   strncpy(remote_data_port,"0",sizeof(remote_data_port));
 
+  /* default to a STREAM socket type. i wonder if this should be part
+     of send_omni or here... */
+  socket_type = nst_to_hst(NST_STREAM);
+
+  /* default to TCP. i wonder if this should be here or in
+     send_omni? */
+#ifdef IPPROTO_TCP
+  protocol = IPPROTO_TCP;
+#endif
+
+  /* default to direction being NETPERF_XMIT */
+  direction = NETPERF_XMIT;
+
+  /* default is to be a stream test, so req_size and rsp_size should
+     be < 0)  */
+
+  req_size = rsp_size = -1;
+     
   /* Go through all the command line arguments and break them */
   /* out. For those options that take two parms, specifying only */
   /* the first will set both to that value. Specifying only the */
@@ -1899,15 +1977,13 @@ scan_omni_args(int argc, char *argv[])
 #endif
 #endif
 
-  /* we do not want to make remote_data_address non-NULL because if
-     the user has not specified a remote adata address, we want to
-     take it from the hostname in the -H global option. raj
-     2005-02-08 */
-
   /* so, if there is to be no control connection, we want to have some
      different settings for a few things */
 
   if (no_control) {
+
+    fprintf(where,"I don't know about no control connection tests yet\n");
+    exit(1);
 
     if (strcmp(remote_data_port,"0") == 0) {
       /* we need to select either the discard port, echo port or

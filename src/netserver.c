@@ -406,6 +406,12 @@ process_requests()
       break;
 #endif 
 
+#ifdef WANT_OMNI
+    case DO_OMNI:
+      recv_omni();
+      break;
+#endif
+
     default:
       fprintf(where,"unknown test number %d\n",
 	      netperf_request.content.request_type);

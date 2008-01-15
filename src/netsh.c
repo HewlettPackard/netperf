@@ -382,6 +382,66 @@ parse_address_family(char family_string[])
   return(AF_UNSPEC);
 }
 
+int
+parse_socket_type(char socket_string[]) {
+
+  char temp[10];
+
+  strncpy(temp,socket_string,10);
+
+  if (debug) {
+    fprintf(where,
+	    "Attempting to parse socket type from %s derived from %s\n",
+	    temp,
+	    socket_string);
+  }
+
+#ifdef SOCK_STREAM
+  if (strstr(temp,"stream"))
+    return SOCK_STREAM;
+#endif
+#ifdef SOCK_DGRAM
+  if (strstr(temp,"dgram"))
+    return SOCK_DGRAM;
+#endif
+  return NST_UNKN;
+
+}
+
+int
+parse_protocol(char protocol_string[]) 
+{
+  char temp[10];
+  int temp_protocol;
+
+  strncpy(temp,protocol_string,10);
+
+  if (debug) {
+    fprintf(where,
+	    "Attempting to parse protocol from %s derived from %s\n",
+	    temp,
+	    protocol_string);
+  }
+  
+#ifdef IPPROTO_TCP
+  if (strstr(temp,"tcp"))
+    return IPPROTO_TCP;
+#endif
+#ifdef IPPROTO_UDP
+  if (strstr(temp,"udp"))
+    return IPPROTO_UDP;
+#endif
+#ifdef IPPROTO_SCTP
+  if (strstr(temp,"sctp"))
+    return IPPROTO_SCTP;
+#endif
+#ifdef IPPROTO_SDP
+  if (strstr(temp,"sdp"))
+    return IPPROTO_SDP;
+#endif
+  return IPPROTO_IP;
+}
+
 
 void
 set_defaults()
@@ -949,7 +1009,13 @@ scan_cmd_line(int argc, char *argv[])
 	scan_sdp_args(argc, argv);
       }
 #endif
-    
+
+#ifdef WANT_OMNI
+    else if ((strcasecmp(test_name,"OMNI") == 0)) {
+      scan_omni_args(argc, argv);
+    }
+#endif
+
     /* what is our default value for the output units?  if the test
        name contains "RR" or "rr" or "Rr" or "rR" then the default is
        'x' for transactions. otherwise it is 'm' for megabits
