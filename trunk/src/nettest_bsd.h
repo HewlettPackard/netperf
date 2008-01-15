@@ -15,19 +15,29 @@
 #define NF_INET   4
 #define NF_INET6  6
 
+/* it would also seem that the socket type defines differ from
+   platform to platform, which means we need to define our own values
+   to pass between netperf and netserver so they can be translated to
+   the local versions.  NST == Netperf Socket Type raj 2008-01-14 */
+#define NST_UNKN   -1
+#define NST_STREAM 1
+#define NST_DGRAM  2
+
 #ifdef WANT_OMNI
 struct  omni_request_struct {
   int32_t    send_buf_size;         /* SO_SNDBUF */
   uint32_t   send_size;             /* bytes per send() call */
   uint32_t   send_alignment;        /* alignment of send buffer */
   uint32_t   send_offset;           /* offset from send alignment */
-  uint32_t   request_size;          /* size of a request */
+  uint32_t   send_width;            /* number of send buffers to use */
+  int32_t   request_size;          /* size of a request */
 
   int32_t    recv_buf_size;         /* SO_RCVBUF */
   uint32_t   receive_size;          /* size of buffers in recv */
   uint32_t   recv_alignment;        /* alignment of recv buffer */
   uint32_t   recv_offset;           /* offset from recv alignment */
-  uint32_t   response_size;         /* size of a response */
+  uint32_t   recv_width;            /* number of recv buffers to use */
+  int32_t   response_size;         /* size of a response */
 
   uint32_t   no_delay;              /* do we set mumble_NODELAY? */
   uint32_t   use_sendfile;          /* use sendfile rather than send? */
@@ -470,24 +480,29 @@ struct tcp_cc_results_struct {
   int           num_cpus;      /* how many CPUs had the remote? */
 };
 
-extern int   rss_size_req,     /* requested remote socket send buffer size */
-	     rsr_size_req,     /* requested remote socket recv buffer size */
-	     rss_size,         /* remote socket send buffer size       */
-	     rsr_size,         /* remote socket recv buffer size       */
-	     lss_size_req,     /* requested local socket send buffer size */
-	     lsr_size_req,     /* requested local socket recv buffer size */
-	     lss_size,         /* local  socket send buffer size       */
-	     lsr_size,         /* local  socket recv buffer size       */
-	     req_size,         /* request size                         */
-	     rsp_size,         /* response size                        */
-	     send_size,        /* how big are individual sends         */
-	     recv_size,        /* how big are individual receives      */
-	     loc_nodelay,          /* don't/do use NODELAY locally         */
-	     rem_nodelay,          /* don't/do use NODELAY remotely        */
-	     loc_sndavoid,         /* avoid send copies locally            */
-	     loc_rcvavoid,         /* avoid recv copies locally            */
-	     rem_sndavoid,         /* avoid send copies remotely           */
-	     rem_rcvavoid;         /* avoid recv_copies remotely           */
+extern int
+  rss_size_req,     /* requested remote socket send buffer size */
+  rsr_size_req,     /* requested remote socket recv buffer size */
+  rss_size,         /* remote socket send buffer size       */
+  rsr_size,         /* remote socket recv buffer size       */
+  rsr_size_end,
+  rss_size_end,
+  lss_size_req,     /* requested local socket send buffer size */
+  lsr_size_req,     /* requested local socket recv buffer size */
+  lss_size,         /* local  socket send buffer size       */
+  lsr_size,         /* local  socket recv buffer size       */
+  lss_size_end,
+  lsr_size_end,
+  req_size,         /* request size                         */
+  rsp_size,         /* response size                        */
+  send_size,        /* how big are individual sends         */
+  recv_size,        /* how big are individual receives      */
+  loc_nodelay,          /* don't/do use NODELAY locally         */
+  rem_nodelay,          /* don't/do use NODELAY remotely        */
+  loc_sndavoid,         /* avoid send copies locally            */
+  loc_rcvavoid,         /* avoid recv copies locally            */
+  rem_sndavoid,         /* avoid send copies remotely           */
+  rem_rcvavoid;         /* avoid recv_copies remotely           */
 
 
 extern void scan_sockets_args(int argc, char *argv[]);
@@ -506,6 +521,8 @@ extern void complete_addrinfos(struct addrinfo **remote,
 			       int flags);
 extern int af_to_nf(int af);
 extern int nf_to_af(int nf);
+extern int nst_to_hst(int nst);
+extern int hst_to_nst(int hst);
 extern void print_top_test_header(char test_name[], 
 				  struct addrinfo *source, 
 				  struct addrinfo *destination);

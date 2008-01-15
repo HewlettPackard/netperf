@@ -44,6 +44,8 @@ extern char     local_test_port[PORTBUFSIZE];
 extern int      address_family;
 extern int      local_address_family;
 extern int      parse_address_family(char family_string[]);
+extern int      parse_socket_type(char socket_string[]);
+extern int      parse_protocol(char protocol_string[]);
 extern void     set_defaults();
 extern void     scan_cmd_line(int argc, char *argv[]);
 extern void     dump_globals();

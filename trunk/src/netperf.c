@@ -265,6 +265,11 @@ main(int argc, char *argv[])
     send_sdp_rr(host_name);
   }
 #endif /* WANT_SDP */
+#ifdef WANT_OMNI
+  else if (strcasecmp(test_name,"OMNI") == 0) {
+    send_omni(host_name);
+  }
+#endif
   else {
     printf("The test you requested is unknown to this netperf.\n");
     printf("Please verify that you have the correct test name, \n");
