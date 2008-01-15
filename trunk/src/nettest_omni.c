@@ -333,6 +333,17 @@ send_data(SOCKET data_socket, struct ring_elt *send_ring, uint32_t bytes_to_send
      we use send.  we ass-u-me blocking operations always, so no need
      to check for eagain or the like. */
 
+  if (debug) {
+    fprintf(where,
+	    "send_data sock %d ring %p bytes %d dest %p len %d\n",
+	    data_socket,
+	    send_ring,
+	    bytes_to_send,
+	    destination,
+	    destlen);
+    fflush(where);
+  }
+
   if (destination) {
     len = sendto(data_socket,
 		 send_ring->buffer_ptr,
@@ -422,6 +433,9 @@ recv_data(SOCKET data_socket, struct ring_elt *recv_ring, uint32_t bytes_to_recv
 			 bytes_left,
 			 0);
     }
+    fprintf(where,"recv_data bytes_recvd %d bytes_left %d\n",
+	    bytes_recvd,bytes_left);
+    fflush(where);
     if (bytes_recvd > 0) {
       bytes_left -= bytes_recvd;
       temp_message_ptr += bytes_recvd;
@@ -488,6 +502,13 @@ disconnect_data_socket(SOCKET data_socket, int initiate, int do_close)
   char buffer[4];
   int bytes_recvd;
 
+  fprintf(where,
+	  "disconnect_d_s sock %d init %d do_close %d\n",
+	  data_socket,
+	  initiate,
+	  do_close);
+  fflush(where);
+
   if (initiate)
     shutdown(data_socket, SHUT_WR);
 
@@ -545,6 +566,7 @@ send_omni(char remote_host[])
   int           need_socket;
 
   double	bytes_xferd;
+  double        remote_bytes_xferd;
 
   int   temp_recvs;
 
@@ -596,6 +618,7 @@ send_omni(char remote_host[])
   /* initialize a few counters */
   
   bytes_xferd	= 0.0;
+  remote_bytes_xferd = 0.0;
   times_up 	= 0;
   need_socket   = 1;
 
@@ -617,6 +640,7 @@ send_omni(char remote_host[])
     if (req_size > 0) {
       /* request/response test */
       if (send_width == 0) send_width = 1;
+      bytes_to_send = req_size;
     }
     else {
       /* stream test */
@@ -631,10 +655,11 @@ send_omni(char remote_host[])
       if (send_width == 0) 
 	send_width = (lss_size/send_size) + 1;
       if (send_width == 1) send_width++;
+      bytes_to_send = send_size;
     }
 
     send_ring = allocate_buffer_ring(send_width,
-				     (req_size > 0) ? req_size : send_size,
+				     bytes_to_send,
 				     local_send_align,
 				     local_send_offset);
     if (debug) {
@@ -642,12 +667,12 @@ send_omni(char remote_host[])
 	      "send_omni: %d entry send_ring obtained...\n",
 	      send_width);
     }
-    bytes_to_send = send_size;
   }
 
   if (direction & NETPERF_RECV) {
     if (rsp_size > 0) {
       if (recv_width == 0) recv_width = 1;
+      bytes_to_recv = rsp_size;
     }
     else {
       /* stream test */
@@ -663,10 +688,11 @@ send_omni(char remote_host[])
 	recv_width = (lsr_size/recv_size) + 1;
 	if (recv_width == 1) recv_width++;
       }
+      bytes_to_recv = recv_size;
     }
 
     recv_ring = allocate_buffer_ring(recv_width,
-				     (rsp_size > 0) ? rsp_size : recv_size,
+				     bytes_to_recv,
 				     local_recv_align,
 				     local_recv_offset);
     if (debug) {
@@ -1030,7 +1056,7 @@ again:
 	   around the loop */
 	need_connection = 1;
 	connected = 0;
-	need_socket;
+	need_socket = 1;
 	pick_next_port_number(local_res,remote_res);
       }
       else if (ret == -1) {
@@ -1074,6 +1100,9 @@ again:
   /* so, if we have/had a data connection, we will want to close it
      now, and this will be independent of whether there is a control
      connection. */
+  fprintf(where,"test over connected %d\n",connected);;
+  fflush(where);
+
   if (connected) {
     /* before we do close the connection, we may want to retrieve some
        of the socket parameters - Linux, thanks to its autotuning, can
@@ -1082,8 +1111,11 @@ again:
     /* FILL THIS IN; */
     /* CHECK PARMRS HERE; */
     ret = disconnect_data_socket(data_socket,
-				 (no_control) ? 1 : 0,
+				 1,
 				 1);
+    connected = 0;
+    need_socket = 1;
+
   }
   
   /* this call will always give us the elapsed time for the test, and
@@ -1126,7 +1158,15 @@ again:
   /* to we need to pull something from omni_results here? */
   bytes_xferd  = bytes_sent + bytes_received;
   thruput      = calc_thruput(bytes_xferd);
+  remote_bytes_xferd = omni_result->bytes_received +
+    omni_result->bytes_sent;
   
+  printf("bytes xfered %g  remote %g trans %d elapsed %g\n",
+	 bytes_xferd,
+	 remote_bytes_xferd,
+	 omni_result->trans_received,
+	 elapsed_time);
+
   if (local_cpu_usage || remote_cpu_usage) {
     /* We must now do a little math for service demand and cpu */
     /* utilization for the system(s) */
@@ -1322,41 +1362,65 @@ recv_omni()
     fflush(where);
   }
 
-  fprintf(where,"omni direction %x\n",omni_request->direction);
+  fprintf(where,"recv_omni direction %x\n",omni_request->direction);
   fflush(where);
 
   if (omni_request->direction & NETPERF_XMIT) {
     fprintf(where,"about to allocate a buffer ring send_width %d rsp %d send %d\n",omni_request->send_width, omni_request->response_size,omni_request->send_size);
     fflush(where);
-    send_ring = allocate_buffer_ring(omni_request->send_width,
-				     (omni_request->response_size) ? 
-omni_request->response_size : omni_request->send_size,
+    if (omni_request->response_size > 0) {
+      /* request/response_test */
+      bytes_to_send = omni_request->response_size;
+      if (omni_request->send_width == 0) send_width = 1;
+      else send_width = omni_request->send_width;
+    }
+    else {
+      if (omni_request->send_size == -1) {
+	if (lss_size > 0) bytes_to_send = lss_size;
+	else bytes_to_send = 4096;
+      }
+      else bytes_to_send = omni_request->send_size;
+      /* set the send_width */
+      if (omni_request->send_width == 0) {
+	send_width = (lss_size/bytes_to_send) + 1;
+	if (send_width == 1) send_width++;
+      }
+      else
+	send_width = omni_request->send_width;
+    }
+    fprintf(where,"about to allocate a buffer ring send_width %d size %d\n",send_width, bytes_to_send);
+    fflush(where);
+    send_ring = allocate_buffer_ring(send_width,
+				     bytes_to_send,
 				     omni_request->send_alignment,
 				     omni_request->send_offset);
 				     
   }
-    fprintf(where,"request recv_width %d req %d recv %d lsr_size %d\n",omni_request->recv_width, omni_request->request_size,omni_request->receive_size,lsr_size);
-    fflush(where);
 
   if (omni_request->direction & NETPERF_RECV) {
-    if (omni_request->receive_size == -1) {
-      if (lsr_size > 0) {
-	bytes_to_recv = lsr_size;
-      }
-      else {
-	bytes_to_recv = 4096;
-      }
+    if (omni_request->request_size > 0) {
+      /* request/response test */
+      bytes_to_recv = omni_request->request_size;
+      if (omni_request->recv_width == 0) recv_width = 1;
+      else recv_width = omni_request->recv_width;
     }
     else {
-      bytes_to_recv = omni_request->receive_size;
+      if (omni_request->receive_size == -1) {
+	if (lsr_size > 0) bytes_to_recv = lsr_size;
+	else  bytes_to_recv = 4096;
+      }
+      else {
+	bytes_to_recv = omni_request->receive_size;
+      }
+      /* set the recv_width */
+      if (omni_request->recv_width == 0) {
+	recv_width = (lsr_size/bytes_to_recv) + 1;
+	if (recv_width == 1) recv_width++;
+      }
+      else 
+	recv_width = omni_request->recv_width;
     }
-    if (omni_request->recv_width == 0) {
-      recv_width = (lsr_size/bytes_to_recv) + 1;
-      if (recv_width == 1) recv_width++;
-    }
-    else 
-      recv_width = omni_request->recv_width;
-	
+
     fprintf(where,"about to allocate a buffer ring recv_width %d size %d\n",recv_width, bytes_to_recv);
     fflush(where);
     recv_ring = allocate_buffer_ring(recv_width,
@@ -1488,7 +1552,7 @@ omni_request->response_size : omni_request->send_size,
 			      &addrlen)) == INVALID_SOCKET) {
 	if (errno == EINTR) {
 	  /* the timer popped */
-	  timed_out = 1;
+	  times_up = 1;
 	  break;
 	}
 	fprintf(where,"recv_omni: accept: errno = %d\n",errno);
@@ -1539,7 +1603,8 @@ omni_request->response_size : omni_request->send_size,
        a request/response test will be all messed-up :) and that then
        is why there are two routines to rule them all rather than just
        one :) */
-    if (omni_request->direction & NETPERF_RECV) {
+    if ((omni_request->direction & NETPERF_RECV) &&
+	!times_up) {
       fprintf(where,"receiving %d bytes\n",bytes_to_recv);
       fflush(where);
       ret = recv_data(data_socket,
@@ -1564,6 +1629,9 @@ omni_request->response_size : omni_request->send_size,
 	   something else? that is an exceedingly good question and
 	   one for which I don't presently have a good answer, but
 	   that won't stop me from guessing :) raj 2008-01-09 */
+	fprintf(where,"read zero conn_test %d null_message_ok %d\n",
+		connection_test,null_message_ok);
+	fflush(where);
 	if (!((connection_test) || (null_message_ok))) {
 	  /* if it is neither a connection_test nor null_message_ok it
 	     must be the end of the test */
@@ -1574,6 +1642,8 @@ omni_request->response_size : omni_request->send_size,
       }
       else if (ret == -1) {
 	/* test timed-out */
+	fprintf(where,"YO! TIMESUP!\n");
+	fflush(where);
 	times_up = 1;
 	break;
       }
@@ -1588,7 +1658,8 @@ omni_request->response_size : omni_request->send_size,
 
     /* if we should try to send something, then by all means, let us
        try to send something. */
-    if (omni_request->direction & NETPERF_XMIT) {
+    if ((omni_request->direction & NETPERF_XMIT) &&
+	!times_up) {
       ret = send_data(data_socket,
 		      send_ring,
 		      bytes_to_send,
@@ -1841,11 +1912,11 @@ scan_omni_args(int argc, char *argv[])
       break_args_explicit(optarg,arg1,arg2);
       if (arg1[0]) {
 	send_size = convert(arg1);
-	direction != NETPERF_XMIT;
+	direction |= NETPERF_XMIT;
       }
       if (arg2[0]) {
 	remote_send_size = convert(arg2);
-	direction != NETPERF_RECV;
+	direction |= NETPERF_RECV;
       }
       break;
     case 'M':
@@ -1855,11 +1926,11 @@ scan_omni_args(int argc, char *argv[])
       break_args_explicit(optarg,arg1,arg2);
       if (arg1[0]) {
 	remote_recv_size = convert(arg1);
-	direction != NETPERF_XMIT;
+	direction |= NETPERF_XMIT;
       }
       if (arg2[0]) {
 	recv_size = convert(arg2);
-	direction != NETPERF_RECV;
+	direction |= NETPERF_RECV;
       }
       break;
     case 'n':
@@ -1892,8 +1963,11 @@ scan_omni_args(int argc, char *argv[])
     case 'r':
       /* set the request/response sizes. setting request/response
 	 sizes implicitly sets direction to XMIT and RECV */ 
-      direction != NETPERF_XMIT;
-      direction != NETPERF_RECV;
+      printf("direction %d\n",direction);
+      direction |= NETPERF_XMIT;
+      printf("direction %d\n",direction);
+      direction |= NETPERF_RECV;
+      printf("direction %d\n",direction);
       break_args(optarg,arg1,arg2);
       if (arg1[0])
 	req_size = convert(arg1);
