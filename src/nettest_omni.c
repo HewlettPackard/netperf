@@ -333,7 +333,7 @@ send_data(SOCKET data_socket, struct ring_elt *send_ring, uint32_t bytes_to_send
      we use send.  we ass-u-me blocking operations always, so no need
      to check for eagain or the like. */
 
-  if (debug) {
+  if (debug > 2) {
     fprintf(where,
 	    "send_data sock %d ring %p bytes %d dest %p len %d\n",
 	    data_socket,
@@ -1857,7 +1857,7 @@ scan_omni_args(int argc, char *argv[])
 
 {
 
-#define OMNI_ARGS "b:cCDnNhH:L:m:M:p:P:r:s:S:t:T:Vw:W:46"
+#define OMNI_ARGS "b:cCd:DnNhH:L:m:M:p:P:r:s:S:t:T:Vw:W:46"
 
   extern char	*optarg;	  /* pointer to option string	*/
   
@@ -1890,7 +1890,8 @@ scan_omni_args(int argc, char *argv[])
   protocol = IPPROTO_TCP;
 #endif
 
-  /* default to direction being NETPERF_XMIT */
+  /* default to direction being NETPERF_XMIT. I wonder if I should be
+     setting this here, or checking after argument scanning... */
   direction = NETPERF_XMIT;
 
   /* default is to be a stream test, so req_size and rsp_size should
@@ -1945,6 +1946,10 @@ scan_omni_args(int argc, char *argv[])
       printf("WARNING: TCP_CORK not available on this platform!\n");
 #endif /* TCP_CORK */
       break;
+    case 'd':
+      /* arbitrarily set the direction variable */
+      direction = strtol(optarg,NULL,0);
+      break;
     case 'D':
       /* set the TCP nodelay flag */
       loc_nodelay = 1;
@@ -1975,7 +1980,8 @@ scan_omni_args(int argc, char *argv[])
     case 'm':
       /* set the send size. if we set the local send size it will add
 	 XMIT to direction.  if we set the remote send size it will
-	 add RECV to the direction */
+	 add RECV to the direction.  likely as not this will need some
+	 additional throught */
       break_args_explicit(optarg,arg1,arg2);
       if (arg1[0]) {
 	send_size = convert(arg1);
