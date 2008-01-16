@@ -2502,6 +2502,34 @@ fprintf(where,"debug: %d\n",debug);
 
 
 void
+get_sock_buffer (SOCKET sd, enum sock_buffer which, int *effective_sizep)
+{
+#ifdef SO_SNDBUF
+  int optname = (which == SEND_BUFFER) ? SO_SNDBUF : SO_RCVBUF;
+  netperf_socklen_t sock_opt_len;
+
+  sock_opt_len = sizeof(*effective_sizep);
+  if (getsockopt(sd, SOL_SOCKET, optname, (char *)effective_sizep,
+		 &sock_opt_len) < 0) {
+    fprintf(where, "netperf: get_sock_buffer: getsockopt %s: errno %d\n",
+	    (which == SEND_BUFFER) ? "SO_SNDBUF" : "SO_RCVBUF", errno);
+    fflush(where);
+    *effective_sizep = -1;
+  }
+
+  if (debug) {
+    fprintf(where, "netperf: get_sock_buffer: "
+	    "%s socket size determined to be %d\n",
+	    (which == SEND_BUFFER) ? "send" : "receive", *effective_sizep);
+    fflush(where);
+  }
+
+#else
+  *effective_sizep = -1;
+#endif
+}
+
+void
 set_sock_buffer (SOCKET sd, enum sock_buffer which, int requested_size, int *effective_sizep)
 {
 #ifdef SO_SNDBUF
@@ -2531,25 +2559,13 @@ set_sock_buffer (SOCKET sd, enum sock_buffer which, int requested_size, int *eff
     }
   }
 
-  /* Now, we will find-out what the size actually became, and report */
-  /* that back to the user. If the call fails, we will just report a -1 */
-  /* back to the initiator for the recv buffer size. */
+  /* the getsockopt() call that used to be here has been hoisted into
+     its own routine to be used on those platforms where the socket
+     buffer sizes might change from the beginning to the end of the
+     run. raj 2008-01-15 */
 
-  sock_opt_len = sizeof(netperf_socklen_t);
-  if (getsockopt(sd, SOL_SOCKET, optname, (char *)effective_sizep,
-		 &sock_opt_len) < 0) {
-    fprintf(where, "netperf: set_sock_buffer: getsockopt %s: errno %d\n",
-	    (which == SEND_BUFFER) ? "SO_SNDBUF" : "SO_RCVBUF", errno);
-    fflush(where);
-    *effective_sizep = -1;
-  }
+  get_sock_buffer(sd, which, effective_sizep);
 
-  if (debug) {
-    fprintf(where, "netperf: set_sock_buffer: "
-	    "%s socket size determined to be %d\n",
-	    (which == SEND_BUFFER) ? "send" : "receive", *effective_sizep);
-    fflush(where);
-  }
 #else /* SO_SNDBUF */
   *effective_size = -1;
 #endif /* SO_SNDBUF */
