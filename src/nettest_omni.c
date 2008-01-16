@@ -1048,6 +1048,19 @@ again:
     /* if this is a connection test, we want to do some stuff about
        connection close here in the test loop. raj 2008-01-08 */
     if (connection_test) {
+
+#ifdef __linux
+      /* so, "Linux" with autotuning likes to alter the socket buffer
+	 sizes over the life of the connection, but only does so when
+	 one takes the defaults at time of socket creation.  if we
+	 took those defaults, we should inquire as to what the values
+	 ultimately became. raj 2008-01-15 */
+      if (lsr_size_req < 0)
+	get_sock_buffer(data_socket, RECV_BUFFER, &lsr_size_end);
+      if (lss_size_req < 0)
+	get_sock_buffer(data_socket, SEND_BUFFER, &lss_size_end);
+#endif
+
       ret = disconnect_data_socket(data_socket,
 				   (no_control) ? 1 : 0,
 				   1);
@@ -1104,11 +1117,18 @@ again:
   fflush(where);
 
   if (connected) {
-    /* before we do close the connection, we may want to retrieve some
-       of the socket parameters - Linux, thanks to its autotuning, can
-       have the final socket buffer sizes different from the initial
-       socket buffer sizes.  isn't that nice.  raj 2008-01-08 */
-    /* FILL THIS IN; */
+
+#ifdef __linux
+    /* so, "Linux" with autotuning likes to alter the socket buffer
+       sizes over the life of the connection, but only does so when
+       one takes the defaults at time of socket creation.  if we took
+       those defaults, we should inquire as to what the values
+       ultimately became. raj 2008-01-15 */
+    if (lsr_size_req < 0)
+      get_sock_buffer(data_socket, RECV_BUFFER, &lsr_size_end);
+    if (lss_size_req < 0)
+      get_sock_buffer(data_socket, SEND_BUFFER, &lss_size_end);
+#endif
     /* CHECK PARMRS HERE; */
     ret = disconnect_data_socket(data_socket,
 				 1,
@@ -1166,6 +1186,24 @@ again:
 	 remote_bytes_xferd,
 	 omni_result->trans_received,
 	 elapsed_time);
+
+  printf("lss_size_req %d lsr_size_req %d rss_size_req %d rsr_size_req %d\n",
+	 lss_size_req,
+	 lsr_size_req,
+	 rss_size_req,
+	 rsr_size_req);
+
+  printf("lss_size %d lsr_size %d rss_size %d rsr_size %d\n",
+	 lss_size,
+	 lsr_size,
+	 rss_size,
+	 rsr_size);
+
+  printf("lss_size_end %d lsr_size_end %d rss_size_end %d rsr_size_end %d\n",
+	 lss_size_end,
+	 lsr_size_end,
+	 rss_size_end,
+	 rsr_size_end);
 
   if (local_cpu_usage || remote_cpu_usage) {
     /* We must now do a little math for service demand and cpu */
@@ -1579,6 +1617,10 @@ recv_omni()
 #endif /* KLUDGE_SOCKET_OPTIONS */
   
     }
+    else {
+      /* I wonder if duping would be better here? */
+      data_socket = s_listen;
+    }
 
     fprintf(where,"one  direction %x\n",omni_request->direction);
     fflush(where);
@@ -1710,6 +1752,17 @@ recv_omni()
     }
 
     if (connection_test) {
+#ifdef __linux
+      /* so, "Linux" with autotuning likes to alter the socket buffer
+	 sizes over the life of the connection, but only does so when
+	 one takes the defaults at time of socket creation.  if we
+	 took those defaults, we should inquire as to what the values
+	 ultimately became. raj 2008-01-15 */
+      if (lsr_size_req < 0)
+	get_sock_buffer(data_socket, RECV_BUFFER, &lsr_size_end);
+      if (lss_size_req < 0)
+	get_sock_buffer(data_socket, SEND_BUFFER, &lss_size_end);
+#endif
       ret = close_data_socket(data_socket);
       if (ret < 0) {
 	perror("netperf: send_omni: disconnect_data_socket failed");
@@ -1750,15 +1803,29 @@ recv_omni()
   }
 
   if (connected) {
+#ifdef __linux
+    /* so, "Linux" with autotuning likes to alter the socket buffer
+       sizes over the life of the connection, but only does so when
+       one takes the defaults at time of socket creation.  if we took
+       those defaults, we should inquire as to what the values
+       ultimately became. raj 2008-01-15 */
+    if (lsr_size_req < 0)
+      get_sock_buffer(data_socket, RECV_BUFFER, &lsr_size_end);
+    if (lss_size_req < 0)
+      get_sock_buffer(data_socket, SEND_BUFFER, &lss_size_end);
+#endif
     close_data_socket(data_socket);
   }
 
   /* send the results to the sender  */
   
   omni_results->bytes_received	= bytes_received;
+  omni_results->recv_buf_size   = lsr_size_end;
   omni_results->bytes_sent      = bytes_sent;
+  omni_results->send_buf_size   = lss_size_end;
   omni_results->trans_received	= trans_completed;
   omni_results->elapsed_time	= elapsed_time;
+
   if (omni_request->measure_cpu) {
     omni_results->cpu_util	= calc_cpu_util(elapsed_time);
   }

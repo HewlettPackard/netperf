@@ -489,6 +489,9 @@ extern  void	retrieve_confident_values(float *elapsed_time,
 			  float *local_service_demand,
 			  float *remote_service_demand);
 extern  void    display_confidence();
+extern  void    get_sock_buffer(SOCKET sd,
+				enum sock_buffer which,
+				int *effective_sizep);
 extern  void    set_sock_buffer(SOCKET sd,
 				enum sock_buffer which,
 				int requested_size,
