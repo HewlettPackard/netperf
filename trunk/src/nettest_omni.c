@@ -127,7 +127,6 @@ int direction;
 int remote_send_size = -1;
 int remote_recv_size = -1;
 int remote_use_sendfile;
-int connect_test;
 int remote_send_dirty_count;
 int remote_recv_dirty_count;
 int remote_recv_clean_count;
@@ -333,7 +332,7 @@ send_data(SOCKET data_socket, struct ring_elt *send_ring, uint32_t bytes_to_send
      we use send.  we ass-u-me blocking operations always, so no need
      to check for eagain or the like. */
 
-  if (debug > 2) {
+  if (debug > 1) {
     fprintf(where,
 	    "send_data sock %d ring %p bytes %d dest %p len %d\n",
 	    data_socket,
@@ -359,7 +358,9 @@ send_data(SOCKET data_socket, struct ring_elt *send_ring, uint32_t bytes_to_send
 	       0);
   }
   if(len != bytes_to_send) {
-    if (SOCKET_EINTR(len))
+    /* don't forget that some platforms may do a partial send upon
+       receipt of the interrupt and not return an EINTR... */
+    if (SOCKET_EINTR(len) || (len >= 0))
       {
 	/* we hit the end of a  timed test. */
 	return -1;
@@ -398,7 +399,7 @@ recv_data(SOCKET data_socket, struct ring_elt *recv_ring, uint32_t bytes_to_recv
   bytes_left = bytes_to_recv;
   temp_message_ptr  = recv_ring->buffer_ptr;
 
-  if (debug) {
+  if (debug > 1) {
     fprintf(where,
 	    "recv_data sock %d, elt %p, bytes %d source %p srclen %d, flags %x num_recv %p\n",
 	    data_socket,
@@ -433,9 +434,6 @@ recv_data(SOCKET data_socket, struct ring_elt *recv_ring, uint32_t bytes_to_recv
 			 bytes_left,
 			 0);
     }
-    fprintf(where,"recv_data bytes_recvd %d bytes_left %d\n",
-	    bytes_recvd,bytes_left);
-    fflush(where);
     if (bytes_recvd > 0) {
       bytes_left -= bytes_recvd;
       temp_message_ptr += bytes_recvd;
@@ -502,12 +500,14 @@ disconnect_data_socket(SOCKET data_socket, int initiate, int do_close)
   char buffer[4];
   int bytes_recvd;
 
-  fprintf(where,
-	  "disconnect_d_s sock %d init %d do_close %d\n",
-	  data_socket,
-	  initiate,
-	  do_close);
-  fflush(where);
+  if (debug) {
+    fprintf(where,
+	    "disconnect_d_s sock %d init %d do_close %d\n",
+	    data_socket,
+	    initiate,
+	    do_close);
+    fflush(where);
+  }
 
   if (initiate)
     shutdown(data_socket, SHUT_WR);
@@ -519,21 +519,21 @@ disconnect_data_socket(SOCKET data_socket, int initiate, int do_close)
 		     1,
 		     0);
   
-    if (bytes_recvd != 0) {
+  if (bytes_recvd != 0) {
     /* connection close, call close. we assume that the requisite */
     /* number of bytes have been received */
     if (SOCKET_EINTR(bytes_recvd))
       {
 	/* We hit the end of a timed test. */
-	return 0;
+	return -1;
       }
-    return -1;
-    }
-    
-    if (do_close) 
-      close(data_socket);
-
-    return 1;
+    return -3;
+  }
+  
+  if (do_close) 
+    close(data_socket);
+  
+  return 0;
 }
 
  /* this code is intended to be "the two routines to run them all" for
@@ -612,8 +612,6 @@ send_omni(char remote_host[])
   if ( print_headers ) {
     print_top_test_header("OMNI TEST",local_res,remote_res);
   }
-
-  printf("omni: direction %x\n",direction);
 
   /* initialize a few counters */
   
@@ -744,7 +742,7 @@ send_omni(char remote_host[])
 
     omni_request->no_delay	         = rem_nodelay;
     omni_request->use_sendfile           = remote_use_sendfile;
-    omni_request->connect_test           = connect_test;
+    omni_request->connect_test           = connection_test;
 
     omni_request->measure_cpu	         = remote_cpu_usage;
     omni_request->cpu_rate	         = remote_cpu_rate;
@@ -928,8 +926,12 @@ again:
       else if ((ret == -2) && connection_test) {
 	/* transient error  on a connection test means go around and
 	   try again with another local port number */
+	fprintf(where,"transient! transient! torpedo in the water!\n");
+	fflush(where);
 	close(data_socket);
+	connected = 0;  /* probably redundant but what the heck... */
 	need_socket = 1;
+	need_to_connect = 1;
 	/* this will stuff the next local port number within bounds
 	   into our local res, and then when the goto has us
 	   allocating a new socket it will do the right thing with the
@@ -955,7 +957,6 @@ again:
 		      (connected) ? NULL : remote_res->ai_addr,
 		      /* if the destination above is NULL, this is ignored */
 		      remote_res->ai_addrlen);
-      
       /* the order of these if's will seem a triffle strange, but they
 	 are my best guess as to order of probabilty and/or importance
 	 to the overhead raj 2008-01-09*/
@@ -1067,7 +1068,7 @@ again:
       if (ret == 0) {
 	/* we will need a new connection to be established next time
 	   around the loop */
-	need_connection = 1;
+	need_to_connect = 1;
 	connected = 0;
 	need_socket = 1;
 	pick_next_port_number(local_res,remote_res);
@@ -1113,8 +1114,6 @@ again:
   /* so, if we have/had a data connection, we will want to close it
      now, and this will be independent of whether there is a control
      connection. */
-  fprintf(where,"test over connected %d\n",connected);;
-  fflush(where);
 
   if (connected) {
 
@@ -1359,7 +1358,9 @@ recv_omni()
   loc_nodelay = omni_request->no_delay;
   loc_rcvavoid = omni_request->so_rcvavoid;
   loc_sndavoid = omni_request->so_sndavoid;
-  
+
+  connection_test = omni_request->connect_test;
+
   set_hostname_and_port(local_name,
 			port_buffer,
 			nf_to_af(omni_request->ipfamily),
@@ -1400,12 +1401,7 @@ recv_omni()
     fflush(where);
   }
 
-  fprintf(where,"recv_omni direction %x\n",omni_request->direction);
-  fflush(where);
-
   if (omni_request->direction & NETPERF_XMIT) {
-    fprintf(where,"about to allocate a buffer ring send_width %d rsp %d send %d\n",omni_request->send_width, omni_request->response_size,omni_request->send_size);
-    fflush(where);
     if (omni_request->response_size > 0) {
       /* request/response_test */
       bytes_to_send = omni_request->response_size;
@@ -1426,8 +1422,6 @@ recv_omni()
       else
 	send_width = omni_request->send_width;
     }
-    fprintf(where,"about to allocate a buffer ring send_width %d size %d\n",send_width, bytes_to_send);
-    fflush(where);
     send_ring = allocate_buffer_ring(send_width,
 				     bytes_to_send,
 				     omni_request->send_alignment,
@@ -1458,9 +1452,6 @@ recv_omni()
       else 
 	recv_width = omni_request->recv_width;
     }
-
-    fprintf(where,"about to allocate a buffer ring recv_width %d size %d\n",recv_width, bytes_to_recv);
-    fflush(where);
     recv_ring = allocate_buffer_ring(recv_width,
 				     bytes_to_recv,
 				     omni_request->recv_alignment,
@@ -1475,15 +1466,11 @@ recv_omni()
   win_kludge_socket2 = s_listen;
 #endif
 
-  fprintf(where,"protocol %d\n",omni_request->protocol);
-  fflush(where);
   need_to_accept = (omni_request->protocol != IPPROTO_UDP);
   
   /* we need to hang a listen for everything that needs at least one
      accept */
   if (need_to_accept) {
-    fprintf(where,"listening\n");
-    fflush(where);
     if (listen(s_listen, 5) == SOCKET_ERROR) {
       netperf_response.content.serv_errno = errno;
       close(s_listen);
@@ -1576,8 +1563,6 @@ recv_omni()
   while ((!times_up) || (units_remaining > 0)) {
 
     if (need_to_accept) {
-      fprintf(where,"accepting\n");
-      fflush(where);
       /* accept a connection from the remote */
 #ifdef WIN32
       /* The test timer will probably fire during this accept, 
@@ -1619,11 +1604,8 @@ recv_omni()
     }
     else {
       /* I wonder if duping would be better here? */
-      data_socket = s_listen;
+      if (omni_request->protocol == IPPROTO_UDP) data_socket = s_listen;
     }
-
-    fprintf(where,"one  direction %x\n",omni_request->direction);
-    fflush(where);
 
     if (need_to_connect) {
       /* initially this will only be used for UDP tests as a TCP or
@@ -1647,8 +1629,6 @@ recv_omni()
        one :) */
     if ((omni_request->direction & NETPERF_RECV) &&
 	!times_up) {
-      fprintf(where,"receiving %d bytes\n",bytes_to_recv);
-      fflush(where);
       ret = recv_data(data_socket,
 		      recv_ring,
 		      bytes_to_recv,
@@ -1764,16 +1744,17 @@ recv_omni()
 	get_sock_buffer(data_socket, SEND_BUFFER, &lss_size_end);
 #endif
       ret = close_data_socket(data_socket);
-      if (ret < 0) {
-	perror("netperf: send_omni: disconnect_data_socket failed");
-	exit(1);
-      }
-      else if (ret == 0) {
+      if (ret == -1) {
 	times_up = 1;
 	break;
       }
+      else if (ret < 0) {
+	perror("netperf: recv_omni: close_data_socket failed");
+	fflush(where);
+	exit(1);
+      }
       /* we will need a new connection to be established */
-      need_connection = 1;
+      need_to_accept = 1;
       connected = 0;
     }
 
@@ -2036,11 +2017,8 @@ scan_omni_args(int argc, char *argv[])
     case 'r':
       /* set the request/response sizes. setting request/response
 	 sizes implicitly sets direction to XMIT and RECV */ 
-      printf("direction %d\n",direction);
       direction |= NETPERF_XMIT;
-      printf("direction %d\n",direction);
       direction |= NETPERF_RECV;
-      printf("direction %d\n",direction);
       break_args(optarg,arg1,arg2);
       if (arg1[0])
 	req_size = convert(arg1);
