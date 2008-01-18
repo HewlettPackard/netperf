@@ -118,7 +118,13 @@ char nettest_omni_id[]="\
 #define NETPERF_RECV 0x4
 
 #define NETPERF_IS_RR(x) (((x & NETPERF_XMIT) && (x & NETPERF_RECV)) || \
-			  (!((x & NETPERF_XMIT) || (x & NETPERF_RECV)))
+			  (!((x & NETPERF_XMIT) || (x & NETPERF_RECV))))
+
+#define NETPERF_RECV_ONLY(x) ((x & NETPERF_RECV) && !(x & NETPERF_XMIT))
+
+#define NETPERF_XMIT_ONLY(x) ((x & NETPERF_XMIT) && !(x & NETPERF_RECV))
+
+#define NETPERF_CC(x) (!(x & NETPERF_XMIT) && !(x & NETPERF_RECV))
 
 /* a boatload of globals while I settle things out */
 int socket_type;
@@ -554,13 +560,15 @@ send_omni(char remote_host[])
   
   int len;
   int ret;
-  int connected;
+  int connected = 0;
 
   struct ring_elt *send_ring;
   struct ring_elt *recv_ring;
 
   struct sockaddr_storage remote_addr;
+  struct sockaddr_storage my_addr;
   int                     remote_addr_len = sizeof(remote_addr);
+  int                     my_addr_len = sizeof(my_addr);
 
   SOCKET	data_socket;
   int           need_socket;
@@ -774,13 +782,12 @@ send_omni(char remote_host[])
 
     /* some tests may require knowledge of our local addressing. such
        tests will for the time being require that the user specify a
-       local IP/name and port number, so we can extract them from the
-       local_res addrinfo. we "know" that the ipaddr "array" has
-       enough space for a full ipv6 address */
-    extract_inet_address_and_port(local_res,
-				  omni_request->ipaddr,
-				  sizeof(omni_request->ipaddr),
-				  &(omni_request->netperf_port));
+       local IP/name so we can extract them from the data_socket. */
+    getsockname(data_socket, (struct sockaddr *)&my_addr, &my_addr_len);
+    ret = get_sockaddr_family_addr_port(&my_addr,
+					nf_to_af(omni_request->ipfamily),
+					omni_request->ipaddr,
+					&(omni_request->netperf_port));
     
     if (debug > 1) {
       fprintf(where,"netperf: send_omni: requesting OMNI test\n");
@@ -1099,7 +1106,7 @@ again:
        style test will have no xmit or recv :) so, we check for either
        both XMIT and RECV set, or neither XMIT nor RECV set */
     if (((direction & NETPERF_XMIT) && (direction & NETPERF_RECV)) ||
-	!((direction & NETPERF_XMIT) || (direction & NETPERF_RECV))) {
+	  !((direction & NETPERF_XMIT) || (direction & NETPERF_RECV))) { 
       trans_completed++;
       if (units_remaining) {
 	units_remaining--;
@@ -1603,8 +1610,17 @@ recv_omni()
   
     }
     else {
-      /* I wonder if duping would be better here? */
-      if (omni_request->protocol == IPPROTO_UDP) data_socket = s_listen;
+      /* I wonder if duping would be better here? we also need to set
+	 peeraddr_in so we can send to netperf if this isn't a
+	 request/response test or if we are going to connect() the
+	 socket */
+      if (omni_request->protocol == IPPROTO_UDP) {
+	data_socket = s_listen;
+	set_sockaddr_family_addr_port(&peeraddr_in,
+				      nf_to_af(omni_request->ipfamily),
+				      omni_request->ipaddr,
+				      omni_request->netperf_port);
+      }
     }
 
     if (need_to_connect) {
@@ -1762,8 +1778,7 @@ recv_omni()
     /* was this a "transaction" test? don't for get that a TCP_CC
        style test will have no xmit or recv :) so, we check for either
        both XMIT and RECV set, or neither XMIT nor RECV set */
-    if (((direction & NETPERF_XMIT) && (direction & NETPERF_RECV)) ||
-	!((direction & NETPERF_XMIT) || (direction & NETPERF_RECV))) {
+    if (NETPERF_IS_RR(omni_request->direction)) {
       trans_completed++;
       if (units_remaining) {
 	units_remaining--;

@@ -912,6 +912,93 @@ set_port_number(struct addrinfo *res, unsigned short port)
   }
 }
 
+/* stuff the address family, port number and address into a
+   sockaddr. for now, we will go ahead and zero-out the sockaddr
+   first */
+void
+set_sockaddr_family_addr_port(struct sockaddr_storage *sockaddr, int family, void *addr, int port) {
+  
+  memset(sockaddr,0,sizeof(struct sockaddr_storage));
+
+  switch (family) {
+  case AF_INET: {
+    struct sockaddr_in *foo = (struct sockaddr_in *)sockaddr;
+    foo->sin_port = htons(port);
+    foo->sin_family = family;
+    memcpy(&(foo->sin_addr),addr,sizeof(foo->sin_addr));
+    *(int *)addr = htonl(*(int *)addr);
+    break;
+  }
+#if defined(AF_INET6)
+  case AF_INET6: {
+    struct sockaddr_in6 *foo = (struct sockaddr_in6 *)sockaddr;
+    int *bar;
+    int i;
+    foo->sin6_port = htons(port);
+    foo->sin6_family = family;
+    memcpy(&(foo->sin6_addr),addr,sizeof(foo->sin6_addr));
+    /* how to put this into "host" order? */
+    for (i = sizeof(foo->sin6_addr)/sizeof(int), bar=addr; i > 0; i--) {
+      bar[i] = htonl(bar[i]);
+    }
+    break;
+  }
+#endif
+  default:
+    fprintf(where,
+	    "Unexpected Address Family of %u\n",family);
+    fflush(where);
+    exit(-1);
+  }
+}
+
+/* pull the port and address out of the sockaddr in host format */
+int
+get_sockaddr_family_addr_port(struct sockaddr_storage *sockaddr, int family, void *addr, int *port)
+{
+  struct sockaddr_in *sin = (struct sockaddr_in *)sockaddr;
+
+  int ret = 0;
+  if (sin->sin_family != family) {
+    fprintf(where,
+	    "get_sockaddr_family_addr_port family mismatch %d vs %d\n",
+	    sin->sin_family,
+	    family);
+    fflush(where);
+    return -1;
+  }
+
+  switch(family) {
+  case  AF_INET: {
+    *port = ntohs(sin->sin_port);
+    memcpy(addr,&(sin->sin_addr),sizeof(sin->sin_addr));
+    if (*(int *)addr == INADDR_ANY) ret = 1;
+    *(int *)addr = ntohl(*(int *)addr);
+    break;
+  }
+#ifdef AF_INET6
+  case AF_INET6: {
+    int *foo;
+    int i;
+    ret = 0;
+    struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)sockaddr;
+    *port = ntohs(sin6->sin6_port);
+    memcpy(addr,&(sin6->sin6_addr), sizeof(sin6->sin6_addr));
+    /* how to put this into "host" order? */
+    for (i = sizeof(sin6->sin6_addr)/sizeof(int), foo=addr; i > 0; i--) {
+      if (foo[i] != 0) ret = 1;
+      foo[i] = ntohl(foo[i]);
+    }
+  }
+#endif
+  default:
+    fprintf(where,
+	    "Unexpected Address Family of %u\n",family);
+    fflush(where);
+    exit(-1);
+  }
+  return ret;
+}
 
 
  /* This routine will create a data (listen) socket with the
