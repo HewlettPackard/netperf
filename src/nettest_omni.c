@@ -132,6 +132,8 @@ int protocol;
 int direction;
 int remote_send_size = -1;
 int remote_recv_size = -1;
+int remote_send_size_req = -1;
+int remote_recv_size_req = -1;
 int remote_use_sendfile;
 int remote_send_dirty_count;
 int remote_recv_dirty_count;
@@ -164,6 +166,8 @@ extern int first_burst_size;
 #if defined(HAVE_SENDFILE) && (defined(__linux) || defined(__sun))
 #include <sys/sendfile.h>
 #endif /* HAVE_SENDFILE && (__linux || __sun) */
+
+static int confidence_iteration;
 
 static  char  local_cpu_method;
 static  char  remote_cpu_method;
@@ -623,91 +627,10 @@ send_omni(char remote_host[])
 
   /* initialize a few counters */
   
-  bytes_xferd	= 0.0;
-  remote_bytes_xferd = 0.0;
-  times_up 	= 0;
   need_socket   = 1;
 
   if (connection_test) 
     pick_next_port_number(local_res,remote_res);
-
-  data_socket = create_data_socket(local_res);
-  
-  if (data_socket == INVALID_SOCKET) {
-    perror("netperf: send_omni: unable to create data socket");
-    exit(1);
-  }
-  need_socket = 0;
-
-  /* we need to consider if this is a request/response test, if we are
-     receiving, if we are sending, etc, when setting-up our recv and
-     send buffer rings.  raj 2008-01-07 */
-  if (direction & NETPERF_XMIT) {
-    if (req_size > 0) {
-      /* request/response test */
-      if (send_width == 0) send_width = 1;
-      bytes_to_send = req_size;
-    }
-    else {
-      /* stream test */
-      if (send_size == 0) {
-	if (lss_size > 0) {
-	  send_size = lss_size;
-	}
-	else {
-	  send_size = 4096;
-	}
-      }
-      if (send_width == 0) 
-	send_width = (lss_size/send_size) + 1;
-      if (send_width == 1) send_width++;
-      bytes_to_send = send_size;
-    }
-
-    send_ring = allocate_buffer_ring(send_width,
-				     bytes_to_send,
-				     local_send_align,
-				     local_send_offset);
-    if (debug) {
-      fprintf(where,
-	      "send_omni: %d entry send_ring obtained...\n",
-	      send_width);
-    }
-  }
-
-  if (direction & NETPERF_RECV) {
-    if (rsp_size > 0) {
-      if (recv_width == 0) recv_width = 1;
-      bytes_to_recv = rsp_size;
-    }
-    else {
-      /* stream test */
-      if (recv_size == 0) {
-	if (lsr_size > 0) {
-	  recv_size = lsr_size;
-	}
-	else {
-	  recv_size = 4096;
-	}
-      }
-      if (recv_width == 0) {
-	recv_width = (lsr_size/recv_size) + 1;
-	if (recv_width == 1) recv_width++;
-      }
-      bytes_to_recv = recv_size;
-    }
-
-    recv_ring = allocate_buffer_ring(recv_width,
-				     bytes_to_recv,
-				     local_recv_align,
-				     local_recv_offset);
-    if (debug) {
-      fprintf(where,
-	      "send_omni: %d entry recv_ring obtained...\n",
-	      recv_width);
-    }
-  }
-
 
   
   /* If the user has requested cpu utilization measurements, we must */
@@ -721,558 +644,670 @@ send_omni(char remote_host[])
     local_cpu_rate = calibrate_local_cpu(local_cpu_rate);
   }
 
-  if (!no_control) {
-  
-    /* Tell the remote end to do a listen or otherwise prepare for
-       what is to come. The server alters the socket paramters on the
-       other side at this point, hence the reason for all the values
-       being passed in the setup message. If the user did not specify
-       any of the parameters, they will be passed as values which will
-       indicate to the remote that no changes beyond the system's
-       default should be used. Alignment is the exception, it will
-       default to 8, which will probably be no alignment
-       alterations. */
-  
-    netperf_request.content.request_type = DO_OMNI;
-    omni_request->send_buf_size	         = rss_size_req;
-    omni_request->send_size              = remote_send_size;
-    omni_request->send_alignment	 = remote_send_align;
-    omni_request->send_offset	         = remote_send_offset;
-    omni_request->send_width             = 1; /* FIX THIS */
-    omni_request->request_size	         = req_size;
+  confidence_iteration = 1;
+  init_stat();
 
-    omni_request->recv_buf_size	         = rsr_size_req;
-    omni_request->receive_size           = remote_recv_size;
-    omni_request->recv_alignment	 = remote_recv_align;
-    omni_request->recv_offset	         = remote_recv_offset;
-    omni_request->recv_width             = 1; /* FIX THIS */
-    omni_request->response_size	         = rsp_size;
+  send_ring = NULL;
+  recv_ring = NULL;
 
-    omni_request->no_delay	         = rem_nodelay;
-    omni_request->use_sendfile           = remote_use_sendfile;
-    omni_request->connect_test           = connection_test;
+  /* you will keep running the test until you get it right! :) */
+  while (((confidence < 0) && (confidence_iteration < iteration_max)) ||
+	 (confidence_iteration <= iteration_min)) {
 
-    omni_request->measure_cpu	         = remote_cpu_usage;
-    omni_request->cpu_rate	         = remote_cpu_rate;
-    if (test_time) {
-      omni_request->test_length	         = test_time;
-    }
-    else {
-      omni_request->test_length	         = test_trans * -1;
-    }
-    omni_request->so_rcvavoid	         = rem_rcvavoid;
-    omni_request->so_sndavoid	         = rem_sndavoid;
-    omni_request->send_dirty_count       = remote_send_dirty_count;
-    omni_request->recv_dirty_count       = remote_recv_dirty_count;
-    omni_request->recv_clean_count       = remote_recv_clean_count;
+    bytes_xferd	= 0.0;
+    remote_bytes_xferd = 0.0;
+    times_up 	= 0;
+    bytes_sent = 0;
+    bytes_received = 0;
 
-    omni_request->checksum_off           = remote_checksum_off;
-    omni_request->data_port              = atoi(remote_data_port);
-    omni_request->ipfamily               = af_to_nf(remote_res->ai_family);
-    omni_request->socket_type            = hst_to_nst(socket_type);
-    omni_request->protocol               = protocol;
-
-    omni_request->direction              = 0;
-    /* yes, the sense here is correct - if we are transmitting, they
-       receive, if we are receiving, they are transmitting... */
-    if (direction & NETPERF_XMIT)
-      omni_request->direction |= NETPERF_RECV;
-    if (direction & NETPERF_RECV)
-      omni_request->direction |= NETPERF_XMIT;
-
-    /* some tests may require knowledge of our local addressing. such
-       tests will for the time being require that the user specify a
-       local IP/name so we can extract them from the data_socket. */
-    getsockname(data_socket, (struct sockaddr *)&my_addr, &my_addr_len);
-    ret = get_sockaddr_family_addr_port(&my_addr,
-					nf_to_af(omni_request->ipfamily),
-					omni_request->ipaddr,
-					&(omni_request->netperf_port));
+    data_socket = create_data_socket(local_res);
     
-    if (debug > 1) {
-      fprintf(where,"netperf: send_omni: requesting OMNI test\n");
-    }
-    
-    send_request();
-    
-    /* The response from the remote will contain all of the relevant
-       socket parameters for this test type. We will put them back
-       into the variables here so they can be displayed if desired.
-       The remote will have calibrated CPU if necessary, and will have
-       done all the needed set-up we will have calibrated the cpu
-       locally before sending the request, and will grab the counter
-       value right after the connect returns. The remote will grab the
-       counter right after the accept call. This saves the hassle of
-       extra messages being sent for the TCP tests.  */
-  
-    recv_response();
-  
-    if (!netperf_response.content.serv_errno) {
-      rsr_size	       = omni_response->recv_buf_size;
-      remote_recv_size = omni_response->receive_size;
-      rss_size	       = omni_response->send_buf_size;
-      remote_send_size = omni_response->send_size;
-      rem_nodelay      = omni_response->no_delay;
-      remote_use_sendfile = omni_response->use_sendfile;
-      remote_cpu_usage = omni_response->measure_cpu;
-      remote_cpu_rate  = omni_response->cpu_rate;
-      /* make sure that port numbers are in network order */
-      set_port_number(remote_res,
-		      (unsigned short)omni_response->data_port);
-      
-      if (debug) {
-	fprintf(where,"remote listen done.\n");
-	fprintf(where,"remote port is %u\n",get_port_number(remote_res));
-	fflush(where);
-      }
-    }
-    else {
-      Set_errno(netperf_response.content.serv_errno);
-      fprintf(where,
-	      "netperf: remote error %d",
-	      netperf_response.content.serv_errno);
-      perror("");
-      fflush(where);
+    if (data_socket == INVALID_SOCKET) {
+      perror("netperf: send_omni: unable to create data socket");
       exit(1);
     }
-  }
-#ifdef WANT_DEMO
-  DEMO_RR_SETUP(100);
-#endif
+    need_socket = 0;
 
-  /* if we are not a connectionless protocol, we need to connect. at
-     some point even if we are a connectionless protocol, we may still
-     want to "connect" for convenience raj 2008-01-14 */
-  need_to_connect = (protocol != IPPROTO_UDP);
-
-  /* Set-up the test end conditions. For tests over a
-     "reliable/connection-oriented" transport (eg TCP, SCTP, etc) this
-     can be either time or byte/transaction count based.  for
-     unreliable transport or connection tests it can only be time
-     based.  having said that, we rely entirely on other code to
-     enforce this before we even get here. raj 2008-01-08 */
-  
-  if (test_time) {
-    /* The user wanted to end the test after a period of time. */
-    times_up = 0;
-    units_remaining = 0;
-    start_timer(test_time);
-  }
-  else {
-    /* The tester wanted to send a number of bytes or exchange a
-       number of transactions. */
-    if ((direction & NETPERF_XMIT) && (direction & NETPERF_RECV))
-      units_remaining = test_trans;
-    else
-      units_remaining = test_bytes;
-    times_up = 1;
-  }
-
-  /* grab the current time, and if necessary any starting information
-     for the gathering of CPU utilization at this end. */
-  cpu_start(local_cpu_usage);
-
-#ifdef WANT_DEMO
-  if (demo_mode) {
-    HIST_timestamp(demo_one_ptr);
-  }
-#endif
-  
-  /* the "OR" here allows us to control test length by either
-     byte/transaction count or by timer.  when the test is
-     byte/transaction count based the time test will always evaluate
-     false. when the test is controlled by time, the byte/transaction
-     count will always evaluate to false.  when the test is finished
-     the whole expression will go false and we will stop sending
-     data. at least that is the plan :)  raj 2008-01-08 */
+    /* we need to consider if this is a request/response test, if we
+       are receiving, if we are sending, etc, when setting-up our recv
+       and send buffer rings. we should only need to do this once, and
+       that would be when the relevant _ring variable is NULL. raj
+       2008-01-18 */
+    if ((direction & NETPERF_XMIT) && (NULL == send_ring)) {
+      if (req_size > 0) {
+	/* request/response test */
+	if (send_width == 0) send_width = 1;
+	bytes_to_send = req_size;
+      }
+      else {
+	/* stream test */
+	if (send_size == 0) {
+	  if (lss_size > 0) {
+	    send_size = lss_size;
+	  }
+	  else {
+	    send_size = 4096;
+	  }
+	}
+	if (send_width == 0) 
+	  send_width = (lss_size/send_size) + 1;
+	if (send_width == 1) send_width++;
+	bytes_to_send = send_size;
+      }
       
-  while ((!times_up) || (units_remaining > 0)) {
-
-#ifdef WANT_HISTOGRAM
-    /* only pull the timestamp if we are actually going to use the
-       results of the work.  we put the call here so it can work for
-       any sort of test - connection, request/response, or stream.
-       no, it isn't "perfect" for all of them - for some it will
-       include a few more "if's" than a purpose-written routine, but
-       it _should_ be the case that the time spent up here is epsilon
-       compared to time spent elsewhere in the stack so it should not
-       be a big deal.  famous last words of raj 2008-01-08 */
-    if (verbosity > 1) {
-      HIST_timestamp(&time_one);
+      send_ring = allocate_buffer_ring(send_width,
+				       bytes_to_send,
+				       local_send_align,
+				       local_send_offset);
+      if (debug) {
+	fprintf(where,
+		"send_omni: %d entry send_ring obtained...\n",
+		send_width);
+      }
     }
+    
+    if ((direction & NETPERF_RECV) && (NULL == recv_ring)) {
+      if (rsp_size > 0) {
+	if (recv_width == 0) recv_width = 1;
+	bytes_to_recv = rsp_size;
+      }
+      else {
+	/* stream test */
+	if (recv_size == 0) {
+	  if (lsr_size > 0) {
+	    recv_size = lsr_size;
+	  }
+	  else {
+	    recv_size = 4096;
+	  }
+	}
+	if (recv_width == 0) {
+	  recv_width = (lsr_size/recv_size) + 1;
+	  if (recv_width == 1) recv_width++;
+	}
+	bytes_to_recv = recv_size;
+      }
+      
+      recv_ring = allocate_buffer_ring(recv_width,
+				       bytes_to_recv,
+				       local_recv_align,
+				       local_recv_offset);
+      if (debug) {
+	fprintf(where,
+		"send_omni: %d entry recv_ring obtained...\n",
+		recv_width);
+      }
+    }
+    
+    if (!no_control) { /* foo */
+  
+      /* Tell the remote end to do a listen or otherwise prepare for
+	 what is to come. The server alters the socket paramters on the
+	 other side at this point, hence the reason for all the values
+	 being passed in the setup message. If the user did not specify
+	 any of the parameters, they will be passed as values which will
+	 indicate to the remote that no changes beyond the system's
+	 default should be used. Alignment is the exception, it will
+	 default to 8, which will probably be no alignment
+	 alterations. */
+      
+      netperf_request.content.request_type = DO_OMNI;
+      omni_request->send_buf_size	   = rss_size_req;
+      omni_request->send_size              = remote_send_size_req;
+      omni_request->send_alignment	   = remote_send_align;
+      omni_request->send_offset	           = remote_send_offset;
+      omni_request->send_width             = 1; /* FIX THIS */
+      omni_request->request_size	   = req_size;
+      
+      omni_request->recv_buf_size	   = rsr_size_req;
+      omni_request->receive_size           = remote_recv_size_req;
+      omni_request->recv_alignment	   = remote_recv_align;
+      omni_request->recv_offset	           = remote_recv_offset;
+      omni_request->recv_width             = 1; /* FIX THIS */
+      omni_request->response_size	   = rsp_size;
+      
+      omni_request->no_delay	           = rem_nodelay;
+      omni_request->use_sendfile           = remote_use_sendfile;
+      omni_request->connect_test           = connection_test;
+      
+      omni_request->measure_cpu	           = remote_cpu_usage;
+      omni_request->cpu_rate	           = remote_cpu_rate;
+      if (test_time)
+	omni_request->test_length	   = test_time;
+      else
+	omni_request->test_length	   = test_trans * -1;
+      omni_request->so_rcvavoid	           = rem_rcvavoid;
+      omni_request->so_sndavoid	           = rem_sndavoid;
+      omni_request->send_dirty_count       = remote_send_dirty_count;
+      omni_request->recv_dirty_count       = remote_recv_dirty_count;
+      omni_request->recv_clean_count       = remote_recv_clean_count;
+      
+      omni_request->checksum_off           = remote_checksum_off;
+      omni_request->data_port              = atoi(remote_data_port);
+      omni_request->ipfamily               = af_to_nf(remote_res->ai_family);
+      omni_request->socket_type            = hst_to_nst(socket_type);
+      omni_request->protocol               = protocol;
+      
+      omni_request->direction              = 0;
+      /* yes, the sense here is correct - if we are transmitting, they
+	 receive, if we are receiving, they are transmitting... */
+      if (direction & NETPERF_XMIT)
+	omni_request->direction |= NETPERF_RECV;
+      if (direction & NETPERF_RECV)
+	omni_request->direction |= NETPERF_XMIT;
+    
+      /* some tests may require knowledge of our local addressing. such
+	 tests will for the time being require that the user specify a
+	 local IP/name so we can extract them from the data_socket. */
+      getsockname(data_socket, (struct sockaddr *)&my_addr, &my_addr_len);
+      ret = get_sockaddr_family_addr_port(&my_addr,
+					  nf_to_af(omni_request->ipfamily),
+					  omni_request->ipaddr,
+					  &(omni_request->netperf_port));
+      
+      if (debug > 1) {
+	fprintf(where,"netperf: send_omni: requesting OMNI test\n");
+      }
+    
+
+      send_request();
+
+    
+      /* the response from the remote should contain all the relevant
+	 socket and other parameters we need to know for this test.
+	 so, we can shove them back into the relevant variables here
+	 and be on our way.  it would seem that this is as good a
+	 place as any to put the "while" loop for confidence intervals
+	 and have a send_request at the bottom that just tells the
+	 remote to do again, and have them sit waiting for that
+	 message, or control connection shutdown after each iteration.
+	 raj 2008-01-18 */
+
+      recv_response();
+  
+      if (!netperf_response.content.serv_errno) {
+	rsr_size	 = omni_response->recv_buf_size;
+	remote_recv_size = omni_response->receive_size;
+	rss_size	 = omni_response->send_buf_size;
+	remote_send_size = omni_response->send_size;
+	rem_nodelay      = omni_response->no_delay;
+	remote_use_sendfile = omni_response->use_sendfile;
+	remote_cpu_usage = omni_response->measure_cpu;
+	remote_cpu_rate  = omni_response->cpu_rate;
+	/* make sure that port numbers are in network order because
+	   recv_response will have put everything into host order */
+	set_port_number(remote_res,
+			(unsigned short)omni_response->data_port);
+	
+	if (debug) {
+	  fprintf(where,"remote listen done.\n");
+	  fprintf(where,"remote port is %u\n",get_port_number(remote_res));
+	  fflush(where);
+	}
+      }
+      else {
+	Set_errno(netperf_response.content.serv_errno);
+	fprintf(where,
+		"netperf: remote error %d",
+		netperf_response.content.serv_errno);
+	perror("");
+	fflush(where);
+	exit(1);
+      }
+    
+    }
+	  
+#ifdef WANT_DEMO
+    DEMO_RR_SETUP(100);
+#endif
+
+    /* if we are not a connectionless protocol, we need to connect. at
+       some point even if we are a connectionless protocol, we may
+       still want to "connect" for convenience raj 2008-01-14 */
+    need_to_connect = (protocol != IPPROTO_UDP);
+      
+    /* Set-up the test end conditions. For tests over a
+       "reliable/connection-oriented" transport (eg TCP, SCTP, etc) this
+       can be either time or byte/transaction count based.  for
+       unreliable transport or connection tests it can only be time
+       based.  having said that, we rely entirely on other code to
+       enforce this before we even get here. raj 2008-01-08 */
+    
+    if (test_time) {
+      /* The user wanted to end the test after a period of time.  if
+	 we are a recv-only test, we need to protect ourself against
+	 the remote going poof, but we want to make sure we don't
+	 give-up before they finish, so we will add a PAD_TIME to the
+	 timer.  if we are RR or XMIT, there should be no need for
+	 padding */
+      times_up = 0;
+      units_remaining = 0;
+      if ((!no_control) && (NETPERF_RECV_ONLY(direction)))
+	start_timer(test_time + PAD_TIME);
+      else
+	start_timer(test_time);
+    }
+    else {
+      /* The tester wanted to send a number of bytes or exchange a
+	 number of transactions. */
+      if (NETPERF_IS_RR(direction))
+	units_remaining = test_trans;
+      else
+	units_remaining = test_bytes;
+      times_up = 1;
+    }
+    
+    /* grab the current time, and if necessary any starting information
+       for the gathering of CPU utilization at this end. */
+    cpu_start(local_cpu_usage);
+    
+#ifdef WANT_DEMO
+    if (demo_mode) {
+      HIST_timestamp(demo_one_ptr);
+    }
+#endif
+    
+    /* the "OR" here allows us to control test length by either
+       byte/transaction count or by timer.  when the test is
+       byte/transaction count based the time test will always evaluate
+       false. when the test is controlled by time, the byte/transaction
+       count will always evaluate to false.  when the test is finished
+       the whole expression will go false and we will stop sending
+       data. at least that is the plan :)  raj 2008-01-08 */
+    
+    while ((!times_up) || (units_remaining > 0)) {
+      
+#ifdef WANT_HISTOGRAM
+      /* only pull the timestamp if we are actually going to use the
+	 results of the work.  we put the call here so it can work for
+	 any sort of test - connection, request/response, or stream.
+	 no, it isn't "perfect" for all of them - for some it will
+	 include a few more "if's" than a purpose-written routine, but
+	 it _should_ be the case that the time spent up here is
+	 epsilon compared to time spent elsewhere in the stack so it
+	 should not be a big deal.  famous last words of raj
+	 2008-01-08 */
+      if (verbosity > 1) {
+	HIST_timestamp(&time_one);
+      }
 #endif /* WANT_HISTOGRAM */
 
-again:
+    again:
 
-    if (need_socket) {
-      if (connection_test) 
-	pick_next_port_number(local_res,remote_res);
+      if (need_socket) {
+	if (connection_test) 
+	  pick_next_port_number(local_res,remote_res);
 
-      data_socket = create_data_socket(local_res);
+	data_socket = create_data_socket(local_res);
   
-      if (data_socket == INVALID_SOCKET) {
-	perror("netperf: send_omni: unable to create data socket");
-	exit(1);
-      }
-      need_socket = 0;
-    }
-
-    /* only connect if and when we need to */
-    if (need_to_connect) {
-      /* assign to data_socket since connect_data_socket returns
-	 SOCKET and not int thanks to Windows. */
-      ret = connect_data_socket(data_socket,remote_res);
-      if (ret == 0) {
-	connected = 1;
-	need_to_connect = 0;
-      }
-      else if (ret == -1) {
-	times_up = 1;
-	break;
-      }
-      else if ((ret == -2) && connection_test) {
-	/* transient error  on a connection test means go around and
-	   try again with another local port number */
-	fprintf(where,"transient! transient! torpedo in the water!\n");
-	fflush(where);
-	close(data_socket);
-	connected = 0;  /* probably redundant but what the heck... */
-	need_socket = 1;
-	need_to_connect = 1;
-	/* this will stuff the next local port number within bounds
-	   into our local res, and then when the goto has us
-	   allocating a new socket it will do the right thing with the
-	   bind() call */
-	pick_next_port_number(local_res,remote_res);
-	goto again;
-      }
-      else {
-	/* either this was a hard failure (-3) or a soft failure on
-	   something other than a connection test */
-	perror("netperf: send_omni: connect_data_socket failed");
-	exit(1);
-      }
-    }
-
-
-    /* if we should try to send something, then by all means, let us
-       try to send something. */
-    if (direction & NETPERF_XMIT) {
-      ret = send_data(data_socket,
-		      send_ring,
-		      bytes_to_send,
-		      (connected) ? NULL : remote_res->ai_addr,
-		      /* if the destination above is NULL, this is ignored */
-		      remote_res->ai_addrlen);
-      /* the order of these if's will seem a triffle strange, but they
-	 are my best guess as to order of probabilty and/or importance
-	 to the overhead raj 2008-01-09*/
-      if (ret == bytes_to_send) {
-	/* if this is a send-only test controlled by byte count we
-	   decrement units_remaining by the bytes sent */
-	if (!(direction & NETPERF_RECV) && (units_remaining > 0)) {
-	  units_remaining -= ret;
+	if (data_socket == INVALID_SOCKET) {
+	  perror("netperf: send_omni: unable to create data socket");
+	  exit(1);
 	}
-	bytes_sent += ret;
-	send_ring = send_ring->next;
-	local_send_calls++;
-      }
-      else if (ret == -2) {
-	/* what to do here -2 means a non-fatal error - probably
-	   ENOBUFS and so our send didn't happen.  in the old code for
-	   UDP_STREAM we would just continue in the while loop.  it
-	   isn't clear that is what to do here, so we will simply
-	   increment the failed_sends stat and fall-through. If this
-	   is a UDP_STREAM style of test, the net effect should be the
-	   same. if this is a UDP_RR with a really-big burst count, I
-	   don't think we were checking for ENOBUFS there anyway and
-	   so would have failed.  Here we can just let things
-	   slide. */
-	failed_sends++;
-      }
-      else if (ret == 0) {
-	/* was this a zero-byte send? if it was, then ostensibly we
-	   would hit the ret == bytes_to_send case which means we'd
-	   never get here as we are using blocking semantics */
-      }
-      else if (ret == -1) {
-	times_up = 1;
-	break;
-      }
-      else {
-	perror("netperf: send_omni: send_data failed");
-	exit(1);
+	need_socket = 0;
       }
 
-    }
-
-
-    if (direction & NETPERF_RECV) {
-      ret = recv_data(data_socket,
-		      recv_ring,
-		      bytes_to_recv,
-		      (connected) ? NULL : (struct sockaddr *)&remote_addr,
-		      /* if remote_addr NULL this is ignored */
-		      &remote_addr_len,
-		      /* if XMIT also set this is RR so waitall */
-		      (direction & NETPERF_XMIT) ? NETPERF_WAITALL: 0,
-		      &temp_recvs);
-      if (ret > 0) {
-	/* if this is a recv-only test controlled by byte count we
-	   decrement the units_remaining by the bytes received */
-	if (!(direction & NETPERF_XMIT) && (units_remaining > 0)) {
-	  units_remaining -= ret;
+      /* only connect if and when we need to */
+      if (need_to_connect) {
+	/* assign to data_socket since connect_data_socket returns
+	   SOCKET and not int thanks to Windows. */
+	ret = connect_data_socket(data_socket,remote_res);
+	if (ret == 0) {
+	  connected = 1;
+	  need_to_connect = 0;
 	}
-	bytes_received += ret;
-	local_receive_calls += temp_recvs;
-      }
-      else if (ret == 0) {
-	/* is this the end of a test, just a zero-byte recv, or
-	   something else? that is an exceedingly good question and
-	   one for which I don't presently have a good answer, but
-	   that won't stop me from guessing :) raj 2008-01-09 */
-	if (!((connection_test) || (null_message_ok))) {
-	  /* if it is neither a connection_test nor null_message_ok it
-	     must be the end of the test */
+	else if (ret == -1) {
 	  times_up = 1;
 	  break;
 	}
-	local_receive_calls += temp_recvs;
+	else if ((ret == -2) && connection_test) {
+	  /* transient error  on a connection test means go around and
+	     try again with another local port number */
+	  fprintf(where,"transient! transient! torpedo in the water!\n");
+	  fflush(where);
+	  close(data_socket);
+	  connected = 0;  /* probably redundant but what the heck... */
+	  need_socket = 1;
+	  need_to_connect = 1;
+	  /* this will stuff the next local port number within bounds
+	     into our local res, and then when the goto has us
+	     allocating a new socket it will do the right thing with the
+	     bind() call */
+	  pick_next_port_number(local_res,remote_res);
+	  goto again;
+	}
+	else {
+	  /* either this was a hard failure (-3) or a soft failure on
+	     something other than a connection test */
+	  perror("netperf: send_omni: connect_data_socket failed");
+	  exit(1);
+	}
       }
-      else if (ret == -1) {
-	/* test timed-out */
-	times_up = 1;
-	break;
+
+
+      /* if we should try to send something, then by all means, let us
+	 try to send something. */
+      if (direction & NETPERF_XMIT) {
+	ret = send_data(data_socket,
+			send_ring,
+			bytes_to_send,
+			(connected) ? NULL : remote_res->ai_addr,
+			/* if the destination above is NULL, this is ignored */
+			remote_res->ai_addrlen);
+	/* the order of these if's will seem a triffle strange, but they
+	   are my best guess as to order of probabilty and/or importance
+	   to the overhead raj 2008-01-09*/
+	if (ret == bytes_to_send) {
+	  /* if this is a send-only test controlled by byte count we
+	     decrement units_remaining by the bytes sent */
+	  if (!(direction & NETPERF_RECV) && (units_remaining > 0)) {
+	    units_remaining -= ret;
+	  }
+	  bytes_sent += ret;
+	  send_ring = send_ring->next;
+	  local_send_calls++;
+	}
+	else if (ret == -2) {
+	  /* what to do here -2 means a non-fatal error - probably
+	     ENOBUFS and so our send didn't happen.  in the old code for
+	     UDP_STREAM we would just continue in the while loop.  it
+	     isn't clear that is what to do here, so we will simply
+	     increment the failed_sends stat and fall-through. If this
+	     is a UDP_STREAM style of test, the net effect should be the
+	     same. if this is a UDP_RR with a really-big burst count, I
+	     don't think we were checking for ENOBUFS there anyway and
+	     so would have failed.  Here we can just let things
+	     slide. */
+	  failed_sends++;
+	}
+	else if (ret == 0) {
+	  /* was this a zero-byte send? if it was, then ostensibly we
+	     would hit the ret == bytes_to_send case which means we'd
+	     never get here as we are using blocking semantics */
+	}
+	else if (ret == -1) {
+	  times_up = 1;
+	  break;
+	}
+	else {
+	  perror("netperf: send_omni: send_data failed");
+	  exit(1);
+	}
+
       }
-      else {
-	/* presently at least, -2 and -3 are equally bad on recv */
-	perror("netperf: send_omni: recv_data failed");
-	exit(1);
+
+
+      if (direction & NETPERF_RECV) {
+	ret = recv_data(data_socket,
+			recv_ring,
+			bytes_to_recv,
+			(connected) ? NULL : (struct sockaddr *)&remote_addr,
+			/* if remote_addr NULL this is ignored */
+			&remote_addr_len,
+			/* if XMIT also set this is RR so waitall */
+			(direction & NETPERF_XMIT) ? NETPERF_WAITALL: 0,
+			&temp_recvs);
+	if (ret > 0) {
+	  /* if this is a recv-only test controlled by byte count we
+	     decrement the units_remaining by the bytes received */
+	  if (!(direction & NETPERF_XMIT) && (units_remaining > 0)) {
+	    units_remaining -= ret;
+	  }
+	  bytes_received += ret;
+	  local_receive_calls += temp_recvs;
+	}
+	else if (ret == 0) {
+	  /* is this the end of a test, just a zero-byte recv, or
+	     something else? that is an exceedingly good question and
+	     one for which I don't presently have a good answer, but
+	     that won't stop me from guessing :) raj 2008-01-09 */
+	  if (!((connection_test) || (null_message_ok))) {
+	    /* if it is neither a connection_test nor null_message_ok it
+	       must be the end of the test */
+	    times_up = 1;
+	    break;
+	  }
+	  local_receive_calls += temp_recvs;
+	}
+	else if (ret == -1) {
+	  /* test timed-out */
+	  times_up = 1;
+	  break;
+	}
+	else {
+	  /* presently at least, -2 and -3 are equally bad on recv */
+	  perror("netperf: send_omni: recv_data failed");
+	  exit(1);
+	}
+	recv_ring = recv_ring->next;
       }
-      recv_ring = recv_ring->next;
+
+
+      /* if this is a connection test, we want to do some stuff about
+	 connection close here in the test loop. raj 2008-01-08 */
+      if (connection_test) {
+
+#ifdef __linux
+	/* so, "Linux" with autotuning likes to alter the socket buffer
+	   sizes over the life of the connection, but only does so when
+	   one takes the defaults at time of socket creation.  if we
+	   took those defaults, we should inquire as to what the values
+	   ultimately became. raj 2008-01-15 */
+	if (lsr_size_req < 0)
+	  get_sock_buffer(data_socket, RECV_BUFFER, &lsr_size_end);
+	if (lss_size_req < 0)
+	  get_sock_buffer(data_socket, SEND_BUFFER, &lss_size_end);
+#endif
+
+	ret = disconnect_data_socket(data_socket,
+				     (no_control) ? 1 : 0,
+				     1);
+	if (ret == 0) {
+	  /* we will need a new connection to be established next time
+	     around the loop */
+	  need_to_connect = 1;
+	  connected = 0;
+	  need_socket = 1;
+	  pick_next_port_number(local_res,remote_res);
+	}
+	else if (ret == -1) {
+	  times_up = 1;
+	  break;
+	}
+	else {
+	  perror("netperf: send_omni: disconnect_data_socket failed");
+	  exit(1);
+	}
+      }
+
+
+#ifdef WANT_HISTOGRAM
+      if (verbosity > 1) {
+	HIST_timestamp(&time_two);
+	HIST_add(time_hist,delta_micro(&time_one,&time_two));
+      }
+#endif /* WANT_HISTOGRAM */
+    
+#ifdef WANT_DEMO
+      DEMO_RR_INTERVAL(1);
+#endif
+
+      /* was this a "transaction" test? don't forget that a "TCP_CC"
+	 style test will have no xmit or recv :) so, we check for either
+	 both XMIT and RECV set, or neither XMIT nor RECV set. at some
+	 point we need to change this to NETPERF_IS_RR(direction) */
+      if (NETPERF_IS_RR(direction)) {
+	trans_completed++;
+	if (units_remaining) {
+	  units_remaining--;
+	}
+      }
+    
+    
     }
 
+    /* we are now, ostensibly, at the end of this iteration */
 
-    /* if this is a connection test, we want to do some stuff about
-       connection close here in the test loop. raj 2008-01-08 */
-    if (connection_test) {
+    /* so, if we have/had a data connection, we will want to close it
+       now, and this will be independent of whether there is a control
+       connection. */
+
+    if (connected) {
 
 #ifdef __linux
       /* so, "Linux" with autotuning likes to alter the socket buffer
 	 sizes over the life of the connection, but only does so when
-	 one takes the defaults at time of socket creation.  if we
-	 took those defaults, we should inquire as to what the values
+	 one takes the defaults at time of socket creation.  if we took
+	 those defaults, we should inquire as to what the values
 	 ultimately became. raj 2008-01-15 */
       if (lsr_size_req < 0)
 	get_sock_buffer(data_socket, RECV_BUFFER, &lsr_size_end);
       if (lss_size_req < 0)
 	get_sock_buffer(data_socket, SEND_BUFFER, &lss_size_end);
 #endif
-
+      /* CHECK PARMRS HERE; */
       ret = disconnect_data_socket(data_socket,
-				   (no_control) ? 1 : 0,
+				   1,
 				   1);
-      if (ret == 0) {
-	/* we will need a new connection to be established next time
-	   around the loop */
-	need_to_connect = 1;
-	connected = 0;
-	need_socket = 1;
-	pick_next_port_number(local_res,remote_res);
-      }
-      else if (ret == -1) {
-	times_up = 1;
-	break;
+      connected = 0;
+      need_socket = 1;
+
+    }
+  
+    /* this call will always give us the elapsed time for the test, and
+       will also store-away the necessaries for cpu utilization */
+
+    cpu_stop(local_cpu_usage,&elapsed_time);
+  
+    if (!no_control) {
+      /* Get the statistics from the remote end. The remote will have
+	 calculated service demand and all those interesting things. If
+	 it wasn't supposed to care, it will return obvious values. */
+  
+      recv_response();
+      if (!netperf_response.content.serv_errno) {
+	if (debug)
+	  fprintf(where,"remote results obtained\n");
       }
       else {
-	perror("netperf: send_omni: disconnect_data_socket failed");
+	Set_errno(netperf_response.content.serv_errno);
+	fprintf(where,
+		"netperf: remote error %d",
+		netperf_response.content.serv_errno);
+	perror("");
+	fflush(where);
+      
 	exit(1);
       }
     }
 
+    /* so, what was the end result? */
 
-#ifdef WANT_HISTOGRAM
-    if (verbosity > 1) {
-      HIST_timestamp(&time_two);
-      HIST_add(time_hist,delta_micro(&time_one,&time_two));
-    }
-#endif /* WANT_HISTOGRAM */
-    
-#ifdef WANT_DEMO
-    DEMO_RR_INTERVAL(1);
-#endif
+    /* why?  because some stacks want to be clever and autotune their
+       socket buffer sizes, which means that if we accept the defaults,
+       the size we get from getsockopt() at the beginning of a
+       connection may not be what we would get at the end of the
+       connection... */
+    rsr_size_end = omni_result->recv_buf_size;
+    rss_size_end = omni_result->send_buf_size;
 
-    /* was this a "transaction" test? don't for get that a TCP_CC
-       style test will have no xmit or recv :) so, we check for either
-       both XMIT and RECV set, or neither XMIT nor RECV set */
-    if (((direction & NETPERF_XMIT) && (direction & NETPERF_RECV)) ||
-	  !((direction & NETPERF_XMIT) || (direction & NETPERF_RECV))) { 
-      trans_completed++;
-      if (units_remaining) {
-	units_remaining--;
+    /* to we need to pull something from omni_results here? */
+    bytes_xferd  = bytes_sent + bytes_received;
+    thruput      = calc_thruput(bytes_xferd);
+    remote_bytes_xferd = omni_result->bytes_received +
+      omni_result->bytes_sent;
+  
+    printf("bytes xfered %g  remote %g trans %d elapsed %g\n",
+	   bytes_xferd,
+	   remote_bytes_xferd,
+	   omni_result->trans_received,
+	   elapsed_time);
+
+    printf("lss_size_req %d lsr_size_req %d rss_size_req %d rsr_size_req %d\n",
+	   lss_size_req,
+	   lsr_size_req,
+	   rss_size_req,
+	   rsr_size_req);
+
+    printf("lss_size %d lsr_size %d rss_size %d rsr_size %d\n",
+	   lss_size,
+	   lsr_size,
+	   rss_size,
+	   rsr_size);
+
+    printf("lss_size_end %d lsr_size_end %d rss_size_end %d rsr_size_end %d\n",
+	   lss_size_end,
+	   lsr_size_end,
+	   rss_size_end,
+	   rsr_size_end);
+
+	   
+    if (local_cpu_usage || remote_cpu_usage) {
+      /* We must now do a little math for service demand and cpu */
+      /* utilization for the system(s) */
+      /* Of course, some of the information might be bogus because */
+      /* there was no idle counter in the kernel(s). We need to make */
+      /* a note of this for the user's benefit...*/
+      if (local_cpu_usage) {
+	if (local_cpu_rate == 0.0) {
+	  fprintf(where,
+		  "WARNING WARNING WARNING  WARNING WARNING WARNING  WARNING!\n");
+	  fprintf(where,
+		  "Local CPU usage numbers based on process information only!\n");
+	  fflush(where);
+	}
+	local_cpu_utilization = calc_cpu_util(0.0);
+
+	/* we need to decide what to feed the service demand beast,
+	   which will, ultimately, depend on what sort of test it is and
+	   whether or not the user asked for something specific - as in
+	   per KB even on a TCP_RR test if it is being (ab)used as a
+	   bidirectional bulk-transfer test. raj 2008-01-14 */
+	local_service_demand  = 
+	  calc_service_demand((sd_kb) ? bytes_xferd : (double)trans_completed * 1024,
+			      0.0,
+			      0.0,
+			      0);
       }
-    }
+      else {
+	local_cpu_utilization	= (float) -1.0;
+	local_service_demand	= (float) -1.0;
+      }
     
+      if (remote_cpu_usage) {
+	if (remote_cpu_rate == 0.0) {
+	  fprintf(where,
+		  "DANGER  DANGER  DANGER    DANGER  DANGER  DANGER    DANGER!\n");
+	  fprintf(where,
+		  "Remote CPU usage numbers based on process information only!\n");
+	  fflush(where);
+	}
+	remote_cpu_utilization = omni_result->cpu_util;
+	/* since calc_service demand is doing ms/Kunit we will */
+	/* multiply the number of transaction by 1024 to get */
+	/* "good" numbers */
+	remote_service_demand = calc_service_demand((sd_kb) ? bytes_xferd : 
+						    (double) trans_completed * 1024,
+						    0.0,
+						    remote_cpu_utilization,
+						    omni_result->num_cpus);
+      }
+      else {
+	remote_cpu_utilization = (float) -1.0;
+	remote_service_demand  = (float) -1.0;
+      }
     
-  }
+      /* at some point we may want to actually display some results :) */
 
-  /* we are now, ostensibly, at the end of this iteration */
 
-  /* so, if we have/had a data connection, we will want to close it
-     now, and this will be independent of whether there is a control
-     connection. */
-
-  if (connected) {
-
-#ifdef __linux
-    /* so, "Linux" with autotuning likes to alter the socket buffer
-       sizes over the life of the connection, but only does so when
-       one takes the defaults at time of socket creation.  if we took
-       those defaults, we should inquire as to what the values
-       ultimately became. raj 2008-01-15 */
-    if (lsr_size_req < 0)
-      get_sock_buffer(data_socket, RECV_BUFFER, &lsr_size_end);
-    if (lss_size_req < 0)
-      get_sock_buffer(data_socket, SEND_BUFFER, &lss_size_end);
-#endif
-    /* CHECK PARMRS HERE; */
-    ret = disconnect_data_socket(data_socket,
-				 1,
-				 1);
-    connected = 0;
-    need_socket = 1;
-
-  }
-  
-  /* this call will always give us the elapsed time for the test, and
-     will also store-away the necessaries for cpu utilization */
-
-  cpu_stop(local_cpu_usage,&elapsed_time);
-  
-  if (!no_control) {
-    /* Get the statistics from the remote end. The remote will have
-       calculated service demand and all those interesting things. If
-       it wasn't supposed to care, it will return obvious values. */
-  
-    recv_response();
-    if (!netperf_response.content.serv_errno) {
-      if (debug)
-	fprintf(where,"remote results obtained\n");
     }
     else {
-      Set_errno(netperf_response.content.serv_errno);
-      fprintf(where,
-	      "netperf: remote error %d",
-	      netperf_response.content.serv_errno);
-      perror("");
-      fflush(where);
-      
-      exit(1);
+      /* The tester did not wish to measure service demand. */
+
     }
-  }
 
-  /* so, what was the end result? */
-
-  /* why?  because some stacks want to be clever and autotune their
-     socket buffer sizes, which means that if we accept the defaults,
-     the size we get from getsockopt() at the beginning of a
-     connection may not be what we would get at the end of the
-     connection... */
-  rsr_size_end = omni_result->recv_buf_size;
-  rss_size_end = omni_result->send_buf_size;
-
-  /* to we need to pull something from omni_results here? */
-  bytes_xferd  = bytes_sent + bytes_received;
-  thruput      = calc_thruput(bytes_xferd);
-  remote_bytes_xferd = omni_result->bytes_received +
-    omni_result->bytes_sent;
-  
-  printf("bytes xfered %g  remote %g trans %d elapsed %g\n",
-	 bytes_xferd,
-	 remote_bytes_xferd,
-	 omni_result->trans_received,
-	 elapsed_time);
-
-  printf("lss_size_req %d lsr_size_req %d rss_size_req %d rsr_size_req %d\n",
-	 lss_size_req,
-	 lsr_size_req,
-	 rss_size_req,
-	 rsr_size_req);
-
-  printf("lss_size %d lsr_size %d rss_size %d rsr_size %d\n",
-	 lss_size,
-	 lsr_size,
-	 rss_size,
-	 rsr_size);
-
-  printf("lss_size_end %d lsr_size_end %d rss_size_end %d rsr_size_end %d\n",
-	 lss_size_end,
-	 lsr_size_end,
-	 rss_size_end,
-	 rsr_size_end);
-
-  if (local_cpu_usage || remote_cpu_usage) {
-    /* We must now do a little math for service demand and cpu */
-    /* utilization for the system(s) */
-    /* Of course, some of the information might be bogus because */
-    /* there was no idle counter in the kernel(s). We need to make */
-    /* a note of this for the user's benefit...*/
-    if (local_cpu_usage) {
-      if (local_cpu_rate == 0.0) {
-	fprintf(where,
-		"WARNING WARNING WARNING  WARNING WARNING WARNING  WARNING!\n");
-	fprintf(where,
-		"Local CPU usage numbers based on process information only!\n");
-	fflush(where);
-      }
-      local_cpu_utilization = calc_cpu_util(0.0);
-
-      /* we need to decide what to feed the service demand beast,
-	 which will, ultimately, depend on what sort of test it is and
-	 whether or not the user asked for something specific - as in
-	 per KB even on a TCP_RR test if it is being (ab)used as a
-	 bidirectional bulk-transfer test. raj 2008-01-14 */
-      local_service_demand  = 
-	calc_service_demand((sd_kb) ? bytes_xferd : (double)trans_completed * 1024,
-			    0.0,
-			    0.0,
-			    0);
-    }
-    else {
-      local_cpu_utilization	= (float) -1.0;
-      local_service_demand	= (float) -1.0;
-    }
-    
-    if (remote_cpu_usage) {
-      if (remote_cpu_rate == 0.0) {
-	fprintf(where,
-		"DANGER  DANGER  DANGER    DANGER  DANGER  DANGER    DANGER!\n");
-	fprintf(where,
-		"Remote CPU usage numbers based on process information only!\n");
-	fflush(where);
-      }
-      remote_cpu_utilization = omni_result->cpu_util;
-      /* since calc_service demand is doing ms/Kunit we will */
-      /* multiply the number of transaction by 1024 to get */
-      /* "good" numbers */
-      remote_service_demand = calc_service_demand((sd_kb) ? bytes_xferd : 
-(double) trans_completed * 1024,
-						  0.0,
-						  remote_cpu_utilization,
-						  omni_result->num_cpus);
-    }
-    else {
-      remote_cpu_utilization = (float) -1.0;
-      remote_service_demand  = (float) -1.0;
-    }
-    
-    /* at some point we may want to actually display some results :) */
-
-
-  }
-  else {
-    /* The tester did not wish to measure service demand. */
-
+    /* this this is the end of the confidence while loop? */
+    confidence_iteration++;
   }
   
   /* likely as not we are going to do something slightly different here */
@@ -1421,6 +1456,7 @@ recv_omni()
 	else bytes_to_send = 4096;
       }
       else bytes_to_send = omni_request->send_size;
+      omni_response->send_size = bytes_to_send;
       /* set the send_width */
       if (omni_request->send_width == 0) {
 	send_width = (lss_size/bytes_to_send) + 1;
@@ -1451,6 +1487,7 @@ recv_omni()
       else {
 	bytes_to_recv = omni_request->receive_size;
       }
+      omni_response->receive_size = bytes_to_recv;
       /* set the recv_width */
       if (omni_request->recv_width == 0) {
 	recv_width = (lsr_size/bytes_to_recv) + 1;
@@ -1552,13 +1589,21 @@ recv_omni()
   
   cpu_start(omni_request->measure_cpu);
   
-  /* The loop will exit when the sender does a shutdown, which will */
-  /* return a length of zero   */
-  
+  /* if the test is timed, set a timer of suitable length.  if the
+     test is by byte/transaction count, we don't need a timer - or
+     rather we rely on the netperf to only ask us to do transaction
+     counts over "reliable" protocols.  perhaps at some point we
+     should add a check herebouts to verify that... */
+
   if (omni_request->test_length > 0) {
     times_up = 0;
     units_remaining = 0;
-    start_timer(omni_request->test_length + PAD_TIME);
+    /* if we are the sender and only sending, then we don't need/want
+       the padding */ 
+    if (NETPERF_XMIT_ONLY(omni_request->direction))
+      start_timer(omni_request->test_length);
+    else
+      start_timer(omni_request->test_length + PAD_TIME);
   }
   else {
     times_up = 1;
@@ -1566,6 +1611,8 @@ recv_omni()
   }
   
   trans_completed = 0;
+  bytes_sent = 0;
+  bytes_received = 0;
 
   while ((!times_up) || (units_remaining > 0)) {
 
@@ -1984,7 +2031,7 @@ scan_omni_args(int argc, char *argv[])
 	direction |= NETPERF_XMIT;
       }
       if (arg2[0]) {
-	remote_send_size = convert(arg2);
+	remote_send_size_req = convert(arg2);
 	direction |= NETPERF_RECV;
       }
       break;
@@ -1994,7 +2041,7 @@ scan_omni_args(int argc, char *argv[])
 	 will add XMIT to direction  */
       break_args_explicit(optarg,arg1,arg2);
       if (arg1[0]) {
-	remote_recv_size = convert(arg1);
+	remote_recv_size_req = convert(arg1);
 	direction |= NETPERF_XMIT;
       }
       if (arg2[0]) {
