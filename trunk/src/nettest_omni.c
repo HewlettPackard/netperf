@@ -147,7 +147,7 @@ int bytes_per_send;
 int failed_sends;
 int bytes_to_recv;
 int bytes_per_recv;
-int null_message_ok;
+int null_message_ok = 0;
 uint64_t	trans_completed;
 uint64_t	units_remaining;
 uint64_t	bytes_sent;
@@ -484,11 +484,33 @@ recv_data(SOCKET data_socket, struct ring_elt *recv_ring, uint32_t bytes_to_recv
 
 
 int
-close_data_socket(SOCKET data_socket)
+close_data_socket(SOCKET data_socket, struct sockaddr *peer, int peerlen)
 {
 
   int ret;
+  char buffer[4];
 
+  if (protocol == IPPROTO_UDP) {
+    int i;
+    for (i = 0; i < 3; i++) {
+      if (peer) 
+	ret = sendto(data_socket,
+		     buffer,
+		     0,
+		     0,
+		     peer,
+		     peerlen);
+      else
+	ret = send(data_socket,
+		   buffer,
+		   0,
+		   0);
+      if (SOCKET_EINTR(ret)) {
+	close(data_socket);
+	return -1;
+      }
+    }
+  }
   ret = close(data_socket);
 
   if (SOCKET_EINTR(ret)) {
@@ -504,7 +526,7 @@ close_data_socket(SOCKET data_socket)
 }
 
 int
-disconnect_data_socket(SOCKET data_socket, int initiate, int do_close) 
+disconnect_data_socket(SOCKET data_socket, int initiate, int do_close, struct sockaddr *peer, int peerlen) 
 {
 
   char buffer[4];
@@ -512,32 +534,64 @@ disconnect_data_socket(SOCKET data_socket, int initiate, int do_close)
 
   if (debug) {
     fprintf(where,
-	    "disconnect_d_s sock %d init %d do_close %d\n",
+	    "disconnect_d_s sock %d init %d do_close %d protocol\n",
 	    data_socket,
 	    initiate,
-	    do_close);
+	    do_close,
+	    protocol);
     fflush(where);
   }
 
-  if (initiate)
-    shutdown(data_socket, SHUT_WR);
+  /* at some point we'll need to abstract this a little.  for now, if
+     the protocol is UDP, we try to send some number of zero-length
+     datagrams to allow the remote to get out of its loop without
+     having to wait for the padded timer to expire. if it isn't UDP,
+     we assume a reliable connection and can do the usual graceful
+     shutdown thing */
 
-  /* we are expecting to get either a return of zero indicating
-     connection close, or an error.  */
-  bytes_recvd = recv(data_socket,
-		     buffer,
-		     1,
-		     0);
-  
-  if (bytes_recvd != 0) {
-    /* connection close, call close. we assume that the requisite */
-    /* number of bytes have been received */
-    if (SOCKET_EINTR(bytes_recvd))
-      {
-	/* We hit the end of a timed test. */
+  if (protocol != IPPROTO_UDP) {
+    if (initiate)
+      shutdown(data_socket, SHUT_WR);
+    
+    /* we are expecting to get either a return of zero indicating
+       connection close, or an error.  */
+    bytes_recvd = recv(data_socket,
+		       buffer,
+		       1,
+		       0);
+    
+    if (bytes_recvd != 0) {
+      /* connection close, call close. we assume that the requisite */
+      /* number of bytes have been received */
+      if (SOCKET_EINTR(bytes_recvd))
+	{
+	  /* We hit the end of a timed test. */
+	  return -1;
+	}
+      return -3;
+    }
+  }
+  else {
+    int i;
+    for (i = 0; i < 3; i++) {
+      if (peer) 
+	bytes_recvd = sendto(data_socket,
+			     buffer,
+			     0,
+			     0,
+			     peer,
+			     peerlen);
+      else
+	bytes_recvd = send(data_socket,
+			   buffer,
+			   0,
+			   0);
+      /* we only really care if the timer expired on us */
+      if (SOCKET_EINTR(bytes_recvd)) {
+	if (do_close) close(data_socket);
 	return -1;
       }
-    return -3;
+    }
   }
   
   if (do_close) 
@@ -1101,7 +1155,9 @@ send_omni(char remote_host[])
 
 	ret = disconnect_data_socket(data_socket,
 				     (no_control) ? 1 : 0,
-				     1);
+				     1,
+				     NULL,
+				     0);
 	if (ret == 0) {
 	  /* we will need a new connection to be established next time
 	     around the loop */
@@ -1132,10 +1188,7 @@ send_omni(char remote_host[])
       DEMO_RR_INTERVAL(1);
 #endif
 
-      /* was this a "transaction" test? don't forget that a "TCP_CC"
-	 style test will have no xmit or recv :) so, we check for either
-	 both XMIT and RECV set, or neither XMIT nor RECV set. at some
-	 point we need to change this to NETPERF_IS_RR(direction) */
+      /* was this a "transaction" test? */ 
       if (NETPERF_IS_RR(direction)) {
 	trans_completed++;
 	if (units_remaining) {
@@ -1168,10 +1221,21 @@ send_omni(char remote_host[])
       /* CHECK PARMRS HERE; */
       ret = disconnect_data_socket(data_socket,
 				   1,
-				   1);
+				   1,
+				   NULL,
+				   0);
       connected = 0;
       need_socket = 1;
 
+    }
+    else {
+      /* this is the UDP case at present */
+      ret = disconnect_data_socket(data_socket,
+				   1,
+				   1,
+				   remote_res->ai_addr,
+				   remote_res->ai_addrlen);
+      need_socket = 1;
     }
   
     /* this call will always give us the elapsed time for the test, and
@@ -1806,7 +1870,7 @@ recv_omni()
       if (lss_size_req < 0)
 	get_sock_buffer(data_socket, SEND_BUFFER, &lss_size_end);
 #endif
-      ret = close_data_socket(data_socket);
+      ret = close_data_socket(data_socket,NULL,0);
       if (ret == -1) {
 	times_up = 1;
 	break;
@@ -1857,8 +1921,10 @@ recv_omni()
     if (lss_size_req < 0)
       get_sock_buffer(data_socket, SEND_BUFFER, &lss_size_end);
 #endif
-    close_data_socket(data_socket);
+    close_data_socket(data_socket,NULL,0);
   }
+  else
+    close_data_socket(data_socket,(struct sockaddr *)&peeraddr_in,addrlen);
 
   /* send the results to the sender  */
   
