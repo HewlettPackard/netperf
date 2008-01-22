@@ -613,12 +613,13 @@ void
 send_omni(char remote_host[])
 {
   
-  int			timed_out = 0;
   float			elapsed_time;
   
   int len;
   int ret;
   int connected = 0;
+  int timed_out = 0;
+  int pad_time = 0;
 
   struct ring_elt *send_ring;
   struct ring_elt *recv_ring;
@@ -937,9 +938,8 @@ send_omni(char remote_host[])
       times_up = 0;
       units_remaining = 0;
       if ((!no_control) && (NETPERF_RECV_ONLY(direction)))
-	start_timer(test_time + PAD_TIME);
-      else
-	start_timer(test_time);
+	pad_time = PAD_TIME;
+      start_timer(test_time + pad_time);
     }
     else {
       /* The tester wanted to send a number of bytes or exchange a
@@ -1012,6 +1012,7 @@ send_omni(char remote_host[])
 	}
 	else if (ret == -1) {
 	  times_up = 1;
+	  timed_out = 1;
 	  break;
 	}
 	else if ((ret == -2) && connection_test) {
@@ -1078,9 +1079,12 @@ send_omni(char remote_host[])
 	  /* was this a zero-byte send? if it was, then ostensibly we
 	     would hit the ret == bytes_to_send case which means we'd
 	     never get here as we are using blocking semantics */
+	  fprintf(where,"HOW DID I GET HERE?\n");
+	  fflush(where);
 	}
 	else if (ret == -1) {
 	  times_up = 1;
+	  timed_out = 1;
 	  break;
 	}
 	else {
@@ -1118,7 +1122,7 @@ send_omni(char remote_host[])
 	  if (!((connection_test) || (null_message_ok))) {
 	    /* if it is neither a connection_test nor null_message_ok it
 	       must be the end of the test */
-	    times_up = 1;
+	    times_up = 1; /* ostensibly the signal handler did this */
 	    break;
 	  }
 	  local_receive_calls += temp_recvs;
@@ -1126,6 +1130,7 @@ send_omni(char remote_host[])
 	else if (ret == -1) {
 	  /* test timed-out */
 	  times_up = 1;
+	  timed_out = 1;
 	  break;
 	}
 	else {
@@ -1168,6 +1173,7 @@ send_omni(char remote_host[])
 	}
 	else if (ret == -1) {
 	  times_up = 1;
+	  timed_out = 1;
 	  break;
 	}
 	else {
@@ -1218,7 +1224,7 @@ send_omni(char remote_host[])
       if (lss_size_req < 0)
 	get_sock_buffer(data_socket, SEND_BUFFER, &lss_size_end);
 #endif
-      /* CHECK PARMRS HERE; */
+      /* CHECK PARMS HERE; */
       ret = disconnect_data_socket(data_socket,
 				   1,
 				   1,
@@ -1242,7 +1248,20 @@ send_omni(char remote_host[])
        will also store-away the necessaries for cpu utilization */
 
     cpu_stop(local_cpu_usage,&elapsed_time);
-  
+
+    /* if we timed-out, and had padded the timer, we need to subtract
+       the pad_time from the elapsed time on the assumption that we
+       were essentially idle for pad_time and just waiting for a timer
+       to expire on something like a UDP test.  if we have not padded
+       the timer, pad_time will be zero */
+    if (timed_out) {
+      if (debug) {
+	fprintf(where,"Adjusting elapsed_time by %d seconds\n",pad_time);
+	fflush(where);
+      }
+      elapsed_time -= (float)pad_time;
+    }
+
     if (!no_control) {
       /* Get the statistics from the remote end. The remote will have
 	 calculated service demand and all those interesting things. If
@@ -1306,73 +1325,83 @@ send_omni(char remote_host[])
 	   rsr_size_end);
 
 	   
-    if (local_cpu_usage || remote_cpu_usage) {
-      /* We must now do a little math for service demand and cpu */
-      /* utilization for the system(s) */
-      /* Of course, some of the information might be bogus because */
-      /* there was no idle counter in the kernel(s). We need to make */
-      /* a note of this for the user's benefit...*/
-      if (local_cpu_usage) {
-	if (local_cpu_rate == 0.0) {
-	  fprintf(where,
-		  "WARNING WARNING WARNING  WARNING WARNING WARNING  WARNING!\n");
-	  fprintf(where,
-		  "Local CPU usage numbers based on process information only!\n");
-	  fflush(where);
-	}
-	local_cpu_utilization = calc_cpu_util(0.0);
-
-	/* we need to decide what to feed the service demand beast,
-	   which will, ultimately, depend on what sort of test it is and
-	   whether or not the user asked for something specific - as in
-	   per KB even on a TCP_RR test if it is being (ab)used as a
-	   bidirectional bulk-transfer test. raj 2008-01-14 */
-	local_service_demand  = 
-	  calc_service_demand((sd_kb) ? bytes_xferd : (double)trans_completed * 1024,
-			      0.0,
-			      0.0,
-			      0);
+    /* ok, time to possibly calculate cpu util and/or service demand */
+    if (local_cpu_usage) {
+      if (local_cpu_rate == 0.0) {
+	fprintf(where,
+		"WARNING WARNING WARNING  WARNING WARNING WARNING  WARNING!\n");
+	fprintf(where,
+		"Local CPU usage numbers based on process information only!\n");
+	fflush(where);
       }
-      else {
-	local_cpu_utilization	= (float) -1.0;
-	local_service_demand	= (float) -1.0;
-      }
-    
-      if (remote_cpu_usage) {
-	if (remote_cpu_rate == 0.0) {
-	  fprintf(where,
-		  "DANGER  DANGER  DANGER    DANGER  DANGER  DANGER    DANGER!\n");
-	  fprintf(where,
-		  "Remote CPU usage numbers based on process information only!\n");
-	  fflush(where);
-	}
-	remote_cpu_utilization = omni_result->cpu_util;
-	/* since calc_service demand is doing ms/Kunit we will */
-	/* multiply the number of transaction by 1024 to get */
-	/* "good" numbers */
-	remote_service_demand = calc_service_demand((sd_kb) ? bytes_xferd : 
-						    (double) trans_completed * 1024,
-						    0.0,
-						    remote_cpu_utilization,
-						    omni_result->num_cpus);
-      }
-      else {
-	remote_cpu_utilization = (float) -1.0;
-	remote_service_demand  = (float) -1.0;
-      }
-    
-      /* at some point we may want to actually display some results :) */
-
-
+      local_cpu_utilization = calc_cpu_util(elapsed_time);
+      
+      /* we need to decide what to feed the service demand beast,
+	 which will, ultimately, depend on what sort of test it is and
+	 whether or not the user asked for something specific - as in
+	 per KB even on a TCP_RR test if it is being (ab)used as a
+	 bidirectional bulk-transfer test. raj 2008-01-14 */
+      local_service_demand  = 
+	calc_service_demand((sd_kb) ? bytes_xferd : (double)trans_completed * 1024,
+			    0.0,
+			    0.0,
+			    0);
     }
     else {
-      /* The tester did not wish to measure service demand. */
-
+      local_cpu_utilization	= (float) -1.0;
+      local_service_demand	= (float) -1.0;
     }
+    
+    if (remote_cpu_usage) {
+      if (remote_cpu_rate == 0.0) {
+	fprintf(where,
+		"DANGER  DANGER  DANGER    DANGER  DANGER  DANGER    DANGER!\n");
+	fprintf(where,
+		"Remote CPU usage numbers based on process information only!\n");
+	fflush(where);
+      }
+      remote_cpu_utilization = omni_result->cpu_util;
+      /* since calc_service demand is doing ms/Kunit we will */
+      /* multiply the number of transaction by 1024 to get */
+      /* "good" numbers */
+      remote_service_demand = calc_service_demand((sd_kb) ? bytes_xferd : 
+						  (double) trans_completed * 1024,
+						  0.0,
+						  remote_cpu_utilization,
+						  omni_result->num_cpus);
+    }
+    else {
+      remote_cpu_utilization = (float) -1.0;
+      remote_service_demand  = (float) -1.0;
+    }
+    
+    /* time to calculate our confidence */
+    calculate_confidence(confidence_iteration,
+			 elapsed_time,
+			 thruput,
+			 local_cpu_utilization,
+			 remote_cpu_utilization,
+			 local_service_demand,
+			 remote_service_demand);
 
     /* this this is the end of the confidence while loop? */
     confidence_iteration++;
   }
+
+  /* at some point we may want to actually display some results :) */
+
+  retrieve_confident_values(&elapsed_time,
+			    &thruput,
+			    &local_cpu_utilization,
+			    &remote_cpu_utilization,
+			    &local_service_demand,
+			    &remote_service_demand);
+
+  fprintf(where,
+	  "Confidence was %g after %d iterations\n",
+	  confidence,
+	  --confidence_iteration);
+  fflush(where);
   
   /* likely as not we are going to do something slightly different here */
   if (verbosity > 1) {
@@ -1409,6 +1438,7 @@ recv_omni()
   struct ring_elt *recv_ring;
 
   int	timed_out = 0;
+  int   pad_time = 0;
   int   need_to_connect;
   int   need_to_accept;
   int   connected;
@@ -1663,11 +1693,10 @@ recv_omni()
     times_up = 0;
     units_remaining = 0;
     /* if we are the sender and only sending, then we don't need/want
-       the padding */ 
-    if (NETPERF_XMIT_ONLY(omni_request->direction))
-      start_timer(omni_request->test_length);
-    else
-      start_timer(omni_request->test_length + PAD_TIME);
+       the padding, otherwise, we need the padding */ 
+    if (!(NETPERF_XMIT_ONLY(omni_request->direction)))
+      pad_time = PAD_TIME;
+    start_timer(omni_request->test_length + pad_time);
   }
   else {
     times_up = 1;
@@ -1693,7 +1722,8 @@ recv_omni()
 			      &addrlen)) == INVALID_SOCKET) {
 	if (errno == EINTR) {
 	  /* the timer popped */
-	  times_up = 1;
+	  times_up = 1; /* ostensibly the signal hander dealt with this?*/
+	  timed_out = 1;
 	  break;
 	}
 	fprintf(where,"recv_omni: accept: errno = %d\n",errno);
@@ -1794,6 +1824,7 @@ recv_omni()
 	fprintf(where,"YO! TIMESUP!\n");
 	fflush(where);
 	times_up = 1;
+	timed_out = 1;
 	break;
       }
       else {
@@ -1847,6 +1878,7 @@ recv_omni()
       }
       else if (ret == -1) {
 	times_up = 1;
+	timed_out = 1;
 	break;
       }
       else {
@@ -1873,6 +1905,7 @@ recv_omni()
       ret = close_data_socket(data_socket,NULL,0);
       if (ret == -1) {
 	times_up = 1;
+	timed_out = 1;
 	break;
       }
       else if (ret < 0) {
@@ -1903,10 +1936,15 @@ recv_omni()
   cpu_stop(omni_request->measure_cpu,&elapsed_time);
   
   if (timed_out) {
-    /* we ended the test by time, which was at least PAD_TIME seconds
-       longer than we wanted to run. so, we want to subtract PAD_TIME
-       from the elapsed_time. */
-    elapsed_time -= PAD_TIME;
+    /* we ended the test by time, which may have been PAD_TIME seconds
+       longer than we wanted to run. so, we want to subtract pad_time
+       from the elapsed_time. if we didn't pad the timer pad_time will
+       be 0 so we can just subtract it anyway :) */
+    if (debug) {
+      fprintf(where,"Adjusting elapsed time by %d seconds\n",pad_time);
+      fflush(where);
+    }
+    elapsed_time -= pad_time;
   }
 
   if (connected) {
