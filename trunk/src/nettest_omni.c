@@ -148,9 +148,9 @@ int failed_sends;
 int bytes_to_recv;
 int bytes_per_recv;
 int null_message_ok = 0;
-uint64_t	trans_completed;
-uint64_t	units_remaining;
-uint64_t	bytes_sent;
+uint64_t      trans_completed;
+uint64_t      units_remaining;
+uint64_t      bytes_sent;
 uint64_t      bytes_received;
 uint64_t      local_send_calls;
 uint64_t      local_receive_calls;
@@ -158,6 +158,13 @@ uint64_t      remote_bytes_sent;
 uint64_t      remote_bytes_received;
 uint64_t      remote_send_calls;
 uint64_t      remote_receive_calls;
+  double      bytes_xferd;
+  double      remote_bytes_xferd;
+  float       elapsed_time;
+  float	      local_cpu_utilization;
+  float	      local_service_demand;
+  float	      remote_cpu_utilization;
+  float	      remote_service_demand;
 
 int sd_kb = 1;  /* is the service demand per KB or per tran? */
 
@@ -192,6 +199,24 @@ extern int
   rem_tcpcork,
   local_connected,
   remote_connected;
+
+enum netperf_output_name {
+  LSS_SIZE,
+  LSR_SIZE,
+  NETPERF_OUTPUT_MAX
+};
+
+typedef struct netperf_output_elt {
+  int output_name;  /* belt and suspenders */
+  int max_line_len; /* length of the longest of the "lines" */
+  int tot_line_len; /* total length of all lines, including spaces */
+  char *line1;
+  char *line2;
+  char *line3;
+  char *line4;
+  char *format;         /* format to apply to value */
+  void *display_value;  /* where to find the value */
+} neperf_output_elt_t;
 
 static unsigned short
 get_port_number(struct addrinfo *res) 
@@ -293,6 +318,70 @@ pick_next_port_number(struct addrinfo *local_res, struct addrinfo *remote_res) {
   set_port_number(local_res, (unsigned short)myport);
 }
 
+void
+print_omni_csv()
+{
+
+}
+
+void
+print_omni_human()
+{
+
+  /* this is mostly just place holding while other things are worked-out */
+  printf("socket type %d protocol %d direction %d\n",
+	 socket_type,
+	 protocol,
+	 direction);
+
+  printf("bytes xfered %g  remote %g trans %lld elapsed %g\n",
+	 bytes_xferd,
+	 remote_bytes_xferd,
+	 trans_completed,
+	 elapsed_time);
+  
+  printf("lss_size_req %d lsr_size_req %d rss_size_req %d rsr_size_req %d\n",
+	 lss_size_req,
+	 lsr_size_req,
+	   rss_size_req,
+	 rsr_size_req);
+  
+  printf("lss_size %d lsr_size %d rss_size %d rsr_size %d\n",
+	 lss_size,
+	 lsr_size,
+	 rss_size,
+	 rsr_size);
+  
+  printf("lss_size_end %d lsr_size_end %d rss_size_end %d rsr_size_end %d\n",
+	 lss_size_end,
+	 lsr_size_end,
+	 rss_size_end,
+	 rsr_size_end);
+  
+  printf("loc_cpu %3.2f rem_cpu %3.2f\n",
+	 local_cpu_utilization,
+	 remote_cpu_utilization);
+
+  if (iteration_max > 1) {
+    printf("result_confid %4.3f loc_cpu_confid %4.3f rem_cpu_confid %4.3f\n",
+	   get_result_confid(),
+	   get_loc_cpu_confid(),
+	   get_rem_cpu_confid());
+  }
+  else {
+    printf("result_confid %4.3f loc_cpu_confid %4.3f rem_cpu_confid %4.3f\n",
+	   -1.0,
+	   -1.0,
+	   -1.0);
+  }
+	   
+}
+
+void
+print_omni()
+{
+
+}
 /* for the next few routines (connect, accept, send, recv,
    disconnect/close) we will use a return of -1 to mean times up, -2
    to mean a transient error (eg ENOBUFS on a UDP send call) and -3 to
@@ -613,7 +702,6 @@ void
 send_omni(char remote_host[])
 {
   
-  float			elapsed_time;
   
   int len;
   int ret;
@@ -632,15 +720,8 @@ send_omni(char remote_host[])
   SOCKET	data_socket;
   int           need_socket;
 
-  double	bytes_xferd;
-  double        remote_bytes_xferd;
-
   int   temp_recvs;
 
-  float	        local_cpu_utilization;
-  float	        local_service_demand;
-  float	        remote_cpu_utilization;
-  float	        remote_service_demand;
   double	thruput;
   
   struct addrinfo *local_res;
@@ -1300,31 +1381,6 @@ send_omni(char remote_host[])
     remote_bytes_xferd = omni_result->bytes_received +
       omni_result->bytes_sent;
   
-    printf("bytes xfered %g  remote %g trans %d elapsed %g\n",
-	   bytes_xferd,
-	   remote_bytes_xferd,
-	   omni_result->trans_received,
-	   elapsed_time);
-
-    printf("lss_size_req %d lsr_size_req %d rss_size_req %d rsr_size_req %d\n",
-	   lss_size_req,
-	   lsr_size_req,
-	   rss_size_req,
-	   rsr_size_req);
-
-    printf("lss_size %d lsr_size %d rss_size %d rsr_size %d\n",
-	   lss_size,
-	   lsr_size,
-	   rss_size,
-	   rsr_size);
-
-    printf("lss_size_end %d lsr_size_end %d rss_size_end %d rsr_size_end %d\n",
-	   lss_size_end,
-	   lsr_size_end,
-	   rss_size_end,
-	   rsr_size_end);
-
-	   
     /* ok, time to possibly calculate cpu util and/or service demand */
     if (local_cpu_usage) {
       if (local_cpu_rate == 0.0) {
@@ -1397,6 +1453,8 @@ send_omni(char remote_host[])
 			    &local_service_demand,
 			    &remote_service_demand);
 
+  print_omni_human();
+
   fprintf(where,
 	  "Confidence was %g after %d iterations\n",
 	  confidence,
@@ -1444,7 +1502,6 @@ recv_omni()
   int   connected;
   int   ret;
   int   temp_recvs;
-  float	elapsed_time;
   
   struct	omni_request_struct	*omni_request;
   struct	omni_response_struct	*omni_response;
@@ -1974,7 +2031,7 @@ recv_omni()
   omni_results->elapsed_time	= elapsed_time;
 
   if (omni_request->measure_cpu) {
-    omni_results->cpu_util	= calc_cpu_util(elapsed_time);
+
   }
   
   if (debug) {

@@ -4150,6 +4150,24 @@ retrieve_confident_values(float *elapsed_time,
   *remote_service_demand   = (float)measured_mean_remote_service_demand;
 }
 
+float
+get_result_confid()
+{
+  return 100.0 * (interval - result_confid);
+}
+
+float
+get_loc_cpu_confid()
+{
+  return 100.0 * (interval - loc_cpu_confid);
+}
+
+float
+get_rem_cpu_confid()
+{
+  return 100.0 * (interval - rem_cpu_confid);
+}
+
  /* display_confidence() is called when we could not achieve the */
  /* desirec confidence in the results. it will print the achieved */
  /* confidence to "where" raj 11/94 */

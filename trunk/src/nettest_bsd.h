@@ -30,14 +30,14 @@ struct  omni_request_struct {
   uint32_t   send_alignment;        /* alignment of send buffer */
   uint32_t   send_offset;           /* offset from send alignment */
   uint32_t   send_width;            /* number of send buffers to use */
-  int32_t   request_size;          /* size of a request */
+  int32_t    request_size;          /* size of a request */
 
   int32_t    recv_buf_size;         /* SO_RCVBUF */
   uint32_t   receive_size;          /* size of buffers in recv */
   uint32_t   recv_alignment;        /* alignment of recv buffer */
   uint32_t   recv_offset;           /* offset from recv alignment */
   uint32_t   recv_width;            /* number of recv buffers to use */
-  int32_t   response_size;         /* size of a response */
+  int32_t    response_size;         /* size of a response */
 
   uint32_t   no_delay;              /* do we set mumble_NODELAY? */
   uint32_t   use_sendfile;          /* use sendfile rather than send? */
@@ -93,7 +93,7 @@ struct omni_results_struct {
   double     bytes_sent;
   uint32_t   send_calls;
   int32_t    send_buf_size; /* SO_SNDBUF at end of test */
-
+  uint32_t   failed_sends;
   uint32_t   trans_received; 
 
   float      elapsed_time;  /* length of test in seconds */
