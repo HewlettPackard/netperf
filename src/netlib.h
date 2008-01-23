@@ -488,6 +488,9 @@ extern  void	retrieve_confident_values(float *elapsed_time,
 			  float *remote_cpu_utilization,
 			  float *local_service_demand,
 			  float *remote_service_demand);
+extern  float   get_result_confid();
+extern  float   get_loc_cpu_confid();
+extern  float   get_rem_cpu_confid();
 extern  void    display_confidence();
 extern  void    get_sock_buffer(SOCKET sd,
 				enum sock_buffer which,
