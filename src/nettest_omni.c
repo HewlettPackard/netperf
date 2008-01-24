@@ -757,7 +757,7 @@ print_omni_init() {
   netperf_output_source[LSS_SIZE_REQ].line2 = "Send Socket";
   netperf_output_source[LSS_SIZE_REQ].line3 = "Size";
   netperf_output_source[LSS_SIZE_REQ].line4 = "Requested";
-  netperf_output_source[LSS_SIZE_REQ].format = "%d";
+  netperf_output_source[LSS_SIZE_REQ].format = "%8d";
   netperf_output_source[LSS_SIZE_REQ].display_value = &lss_size_req;
   netperf_output_source[LSS_SIZE_REQ].max_line_len = 
     NETPERF_LINE_MAX(LSS_SIZE_REQ);
@@ -769,7 +769,7 @@ print_omni_init() {
   netperf_output_source[LSS_SIZE].line2 = "Send Socket";
   netperf_output_source[LSS_SIZE].line3 = "Size";
   netperf_output_source[LSS_SIZE].line4 = "Initial";
-  netperf_output_source[LSS_SIZE].format = "%d";
+  netperf_output_source[LSS_SIZE].format = "%8d";
   netperf_output_source[LSS_SIZE].display_value = &lss_size;
   netperf_output_source[LSS_SIZE].max_line_len = 
     NETPERF_LINE_MAX(LSS_SIZE);
@@ -781,7 +781,7 @@ print_omni_init() {
   netperf_output_source[LSS_SIZE_END].line2 = "Send Socket";
   netperf_output_source[LSS_SIZE_END].line3 = "Size";
   netperf_output_source[LSS_SIZE_END].line4 = "Final";
-  netperf_output_source[LSS_SIZE_END].format = "%d";
+  netperf_output_source[LSS_SIZE_END].format = "%8d";
   netperf_output_source[LSS_SIZE_END].display_value = &lss_size_end;
   netperf_output_source[LSS_SIZE_END].max_line_len = 
     NETPERF_LINE_MAX(LSS_SIZE_END);
@@ -1373,7 +1373,72 @@ print_omni_init() {
     for (i = OUTPUT_NONE; i < NETPERF_OUTPUT_MAX; i++)
       output_human_list[j][i] = OUTPUT_END;
 
-  output_human_list[0][0] = OUTPUT_NONE;
+  output_human_list[0][0] = LSS_SIZE_REQ;
+  output_human_list[0][1] = LSS_SIZE;
+  output_human_list[0][2] = LSS_SIZE_END;
+}
+
+/* why? because one cannot simply pass a pointer to snprintf :) for
+   our nefarious porpoises, we only expect to handle single-value
+   format statements, not a full-blown format */
+int 
+my_long_long_snprintf(char *buffer, size_t size, const char *format, void *value)
+{
+  const char *fmt = format;
+  while (*fmt)
+    switch (*fmt++) {
+    case 'd':
+    case 'i':
+      return snprintf(buffer, size, format, *(long long *)value);
+    case 'u':
+    case 'o':
+    case 'x':
+    case 'X':
+      return snprintf(buffer, size, format, *(unsigned long long *)value);
+    }
+  return -1;
+}
+
+int
+my_long_snprintf(char *buffer, size_t size, const char *format, void *value)
+{
+  const char *fmt = format;
+  while (*fmt)
+    switch (*fmt++) {
+    case 'd':
+    case 'i':
+      return snprintf(buffer, size, format, *(long *)value);
+    case 'u':
+    case 'o':
+    case 'x':
+    case 'X':
+      return snprintf(buffer, size, format, *(unsigned long *)value);
+    case 'l':
+      return my_long_long_snprintf(buffer, size, format, value);
+    }
+  return -1;
+}
+
+int
+my_snprintf(char *buffer, size_t size, const char *format, void *value)
+{
+  const char *fmt = format;
+  while (*fmt)
+    switch (*fmt++) {
+    case 's':
+      return snprintf(buffer, size, format, (char *)value);
+    case 'd':
+    case 'i':
+      return snprintf(buffer, size, format, *(int *)value);
+    case 'u':
+    case 'o':
+    case 'x':
+    case 'X':
+      return snprintf(buffer, size, format, *(unsigned int *)value);
+    case 'l':
+      return my_long_snprintf(buffer, size, format, value);
+    }
+  return -1;
 }
 
 void
@@ -1393,11 +1458,15 @@ print_omni_human()
   char *hdr3;
   char *hdr4;
   char *val1;
+  char tmpval[1024];  /* excessive, but we may have the command line */
+  int  vallen;
 
   /* decisions, decisions... walk the list twice to only need to
      allocate the charcter buffers once, or walk it once and possibly
      reallocate them as I go... oh, lets walk it twice just for fun to
-     start. */
+     start. since only now do we know that the values are around to be
+     printed, we should try the snprintf for the value and see how
+     much space it wants and update max_line_len accordingly */
   buflen_max = 0;
   for (i = 0; i < NETPERF_MAX_BLOCKS; i++) {
     buflen = 0;
@@ -1405,23 +1474,34 @@ print_omni_human()
 	 ((j < NETPERF_OUTPUT_MAX) && 
 	  (output_human_list[i][j] != OUTPUT_END));
 	 j++) {
+      if ((netperf_output_source[output_human_list[i][j]].format != NULL) &&
+	  (netperf_output_source[output_human_list[i][j]].display_value != NULL))
+	vallen = my_snprintf(tmpval,
+			     1024,
+			     netperf_output_source[output_human_list[i][j]].format,
+			     (netperf_output_source[output_human_list[i][j]].display_value));
+      else
+	vallen = 0;
+
+      if (vallen > 
+	  netperf_output_source[output_human_list[i][j]].max_line_len)
+	netperf_output_source[output_human_list[i][j]].max_line_len = vallen;
+      
       buflen += 
 	netperf_output_source[output_human_list[i][j]].max_line_len + 1;
     }
-    printf("i %d j %d buflen %d\n",i,j,buflen);
+
     if (buflen > buflen_max) 
       buflen_max = buflen;
   }
-  printf("buflen_max %d\n",buflen_max);
-  
-  hdr1 = malloc(buflen_max);
-  hdr2 = malloc(buflen_max);
-  hdr3 = malloc(buflen_max);
-  hdr4 = malloc(buflen_max);
-  /* strictly speaking this is not correct - the val line could be
-     longer and we will have to do something about that */
-  val1 = malloc(buflen_max);
 
+  /* more belts and suspenders */
+  hdr1 = malloc(buflen_max+1);
+  hdr2 = malloc(buflen_max+1);
+  hdr3 = malloc(buflen_max+1);
+  hdr4 = malloc(buflen_max+1);
+  val1 = malloc(buflen_max+1);
+  
   if ((hdr1 == NULL) ||
       (hdr2 == NULL) ||
       (hdr3 == NULL) ||
@@ -1431,6 +1511,72 @@ print_omni_human()
     fflush(where);
     exit(-1);
   }
+
+  memset(hdr1,' ',buflen_max+1);
+  memset(hdr2,' ',buflen_max+1);
+  memset(hdr3,' ',buflen_max+1);
+  memset(hdr4,' ',buflen_max+1);
+  memset(val1,' ',buflen_max+1);
+
+  /* ostensibly, we now "know" that we have enough space in all our
+     strings, and we have spaces where we want them etc */
+  for (i = 0; i < NETPERF_MAX_BLOCKS; i++) {
+    char *h1 = hdr1;
+    char *h2 = hdr2;
+    char *h3 = hdr3;
+    char *h4 = hdr4;
+    char *v1 = val1;
+    for (j = 0; 
+	 ((j < NETPERF_OUTPUT_MAX) && 
+	  (output_human_list[i][j] != OUTPUT_END));
+	 j++) {
+      memcpy(h1,
+	     netperf_output_source[output_human_list[i][j]].line1,
+	     strlen(netperf_output_source[output_human_list[i][j]].line1));
+      memcpy(h2,
+	     netperf_output_source[output_human_list[i][j]].line2,
+	     strlen(netperf_output_source[output_human_list[i][j]].line2));
+      memcpy(h3,
+	     netperf_output_source[output_human_list[i][j]].line3,
+	     strlen(netperf_output_source[output_human_list[i][j]].line3));
+      memcpy(h4,
+	     netperf_output_source[output_human_list[i][j]].line4,
+	     strlen(netperf_output_source[output_human_list[i][j]].line4));
+      if ((netperf_output_source[output_human_list[i][j]].format != NULL) &&
+	  (netperf_output_source[output_human_list[i][j]].display_value != NULL)) {
+	int len;
+	len = my_snprintf(v1,
+			  netperf_output_source[output_human_list[i][j]].max_line_len,
+			  netperf_output_source[output_human_list[i][j]].format,
+			  netperf_output_source[output_human_list[i][j]].display_value);
+	/* nuke the trailing \n" from the string routine.  */
+	*(v1 + len) = ' ';
+      }
+      /* now move to the next starting column */
+      h1 += netperf_output_source[output_human_list[i][j]].max_line_len + 1;
+      h2 += netperf_output_source[output_human_list[i][j]].max_line_len + 1;
+      h3 += netperf_output_source[output_human_list[i][j]].max_line_len + 1;
+      h4 += netperf_output_source[output_human_list[i][j]].max_line_len + 1;
+      v1 += netperf_output_source[output_human_list[i][j]].max_line_len + 1;
+    }
+    /* ok, _now_ null terminate each line.  do we have an OBOB here? */
+    *h1 = 0;
+    *h2 = 0;
+    *h3 = 0;
+    *h4 = 0;
+    *v1 = 0;
+    /* and now spit it out, but only if it is going to have something
+       in it. we don't want a bunch of blank lines or nulls... at some
+     point we might want to work backwards collapsine whitespace from
+     the right but for now, we won't bother */
+    if (output_human_list[i][0] != OUTPUT_END) {
+      printf("%s\n",hdr1);
+      printf("%s\n",hdr2);
+      printf("%s\n",hdr3);
+      printf("%s\n",hdr4);
+      printf("%s\n",val1);
+    }
+  };
 
   /* ok, now the fun part - fill-in the blanks */
   /* this is mostly just place holding while other things are worked-out */
@@ -1486,11 +1632,11 @@ void
 print_omni()
 {
 
-  printf("calling print_omni_init\n");
   print_omni_init();
-  printf("calling dump_netperf_output_source\n");
-  dump_netperf_output_source(where);
-  
+
+  if (debug > 2) 
+    dump_netperf_output_source(where);
+
 }
 /* for the next few routines (connect, accept, send, recv,
    disconnect/close) we will use a return of -1 to mean times up, -2
@@ -2563,7 +2709,6 @@ send_omni(char remote_host[])
 			    &local_service_demand,
 			    &remote_service_demand);
 
-  printf("calling print_omni\n");
   print_omni();
   print_omni_human();
 
