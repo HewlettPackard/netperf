@@ -1367,7 +1367,10 @@ print_omni_init() {
   for (i = OUTPUT_NONE; i < NETPERF_OUTPUT_MAX; i++)
     output_csv_list[i] = OUTPUT_END;
 
-  output_csv_list[0] = OUTPUT_NONE;
+  output_csv_list[0] = LSS_SIZE_REQ;
+  output_csv_list[1] = LSS_SIZE;
+  output_csv_list[2] = LSS_SIZE_END;
+  
 
   for (j = 0; j < NETPERF_MAX_BLOCKS; j++)
     for (i = OUTPUT_NONE; i < NETPERF_OUTPUT_MAX; i++)
@@ -1444,6 +1447,100 @@ my_snprintf(char *buffer, size_t size, const char *format, void *value)
 void
 print_omni_csv()
 {
+
+  int j,buflen,vallen;
+
+  char *hdr1;
+  char *val1;
+  char tmpval[1024];
+
+  buflen = 0;
+  for (j = 0; 
+       ((j < NETPERF_OUTPUT_MAX) && 
+	(output_csv_list[j] != OUTPUT_END));
+       j++) {
+    if ((netperf_output_source[output_csv_list[j]].format != NULL) &&
+	(netperf_output_source[output_csv_list[j]].display_value != NULL))
+      vallen = my_snprintf(tmpval,
+			   1024,
+			   netperf_output_source[output_csv_list[j]].format,
+			   (netperf_output_source[output_csv_list[j]].display_value));
+    else
+      vallen = 0;
+    
+    if (vallen > 
+	netperf_output_source[output_csv_list[j]].tot_line_len)
+      netperf_output_source[output_csv_list[j]].tot_line_len = vallen;
+    
+    buflen += 
+      netperf_output_source[output_csv_list[j]].tot_line_len + 1;
+  }
+  
+  hdr1 = malloc(buflen + 1);
+  val1 = malloc(buflen + 1);
+
+  if ((hdr1 == NULL) ||
+      (val1 == NULL)) {
+    fprintf(where,"unable to allocate output buffers\n");
+    fflush(where);
+    exit(-1);
+  }
+
+  memset(hdr1,' ',buflen + 1);
+  memset(val1,' ',buflen + 1);
+
+  /* ostensibly, we now "know" that we have enough space in all our
+     strings, and we have spaces where we want them etc */
+  char *h1 = hdr1;
+  char *v1 = val1;
+  for (j = 0; 
+       ((j < NETPERF_OUTPUT_MAX) && 
+	(output_csv_list[j] != OUTPUT_END));
+       j++) {
+    int len;
+    len = sprintf(h1,
+		  "%s %s %s %s",
+		  netperf_output_source[output_csv_list[j]].line1,
+		  netperf_output_source[output_csv_list[j]].line2,
+		  netperf_output_source[output_csv_list[j]].line3,
+		  netperf_output_source[output_csv_list[j]].line4);
+    
+    *(h1 + len) = ',';
+    /* now move to the next starting column. for csv we aren't worried
+       about alignment between the header and the value lines */
+    h1 += len + 1;
+		  
+    if ((netperf_output_source[output_csv_list[j]].format != NULL) &&
+	(netperf_output_source[output_csv_list[j]].display_value != NULL)) {
+      int len;
+      /* tot_line_len is bogus here, but should be "OK" ? */
+      len = my_snprintf(v1,
+			netperf_output_source[output_csv_list[j]].tot_line_len,
+			netperf_output_source[output_csv_list[j]].format,
+			netperf_output_source[output_csv_list[j]].display_value);
+      /* nuke the trailing \n" from the string routine.  */
+      *(v1 + len) = ',';
+      v1 += len + 1;
+    }
+    else {
+      /* we need a ',' even if there is no value */
+      *v1 = ',';
+      v1 += 2;
+    }
+  }
+
+  /* ok, _now_ null terminate each line by nuking the last comma.  do
+     we have an OBOB here? */
+  *(h1-1) = 0;
+  *(v1-1) = 0;
+  /* and now spit it out, but only if it is going to have something
+     in it. we don't want a bunch of blank lines or nulls... at some
+     point we might want to work backwards collapsine whitespace from
+     the right but for now, we won't bother */
+  if (output_csv_list[0] != OUTPUT_END) {
+    printf("%s\n",hdr1);
+    printf("%s\n",val1);
+  }
 
 }
 
@@ -1577,55 +1674,6 @@ print_omni_human()
       printf("%s\n",val1);
     }
   };
-
-  /* ok, now the fun part - fill-in the blanks */
-  /* this is mostly just place holding while other things are worked-out */
-  printf("socket type %d protocol %d direction %d\n",
-	 socket_type,
-	 protocol,
-	 direction);
-
-  printf("bytes xfered %g  remote %g trans %lld elapsed %g\n",
-	 bytes_xferd,
-	 remote_bytes_xferd,
-	 trans_completed,
-	 elapsed_time);
-  
-  printf("lss_size_req %d lsr_size_req %d rss_size_req %d rsr_size_req %d\n",
-	 lss_size_req,
-	 lsr_size_req,
-	   rss_size_req,
-	 rsr_size_req);
-  
-  printf("lss_size %d lsr_size %d rss_size %d rsr_size %d\n",
-	 lss_size,
-	 lsr_size,
-	 rss_size,
-	 rsr_size);
-  
-  printf("lss_size_end %d lsr_size_end %d rss_size_end %d rsr_size_end %d\n",
-	 lss_size_end,
-	 lsr_size_end,
-	 rss_size_end,
-	 rsr_size_end);
-  
-  printf("loc_cpu %3.2f rem_cpu %3.2f\n",
-	 local_cpu_utilization,
-	 remote_cpu_utilization);
-
-  if (iteration_max > 1) {
-    printf("result_confid %4.3f loc_cpu_confid %4.3f rem_cpu_confid %4.3f\n",
-	   get_result_confid(),
-	   get_loc_cpu_confid(),
-	   get_rem_cpu_confid());
-  }
-  else {
-    printf("result_confid %4.3f loc_cpu_confid %4.3f rem_cpu_confid %4.3f\n",
-	   -1.0,
-	   -1.0,
-	   -1.0);
-  }
-	   
 }
 
 void
@@ -2711,6 +2759,7 @@ send_omni(char remote_host[])
 
   print_omni();
   print_omni_human();
+  print_omni_csv();
 
   fprintf(where,
 	  "Confidence was %g after %d iterations\n",
