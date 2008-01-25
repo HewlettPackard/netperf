@@ -618,7 +618,7 @@ print_omni_init() {
     strlen(netperf_output_source[x].line1) +\
     strlen(netperf_output_source[x].line2) +\
     strlen(netperf_output_source[x].line3) +\
-    strlen(netperf_output_source[x].line4)
+    strlen(netperf_output_source[x].line4) + 4
 
   netperf_output_source[OUTPUT_NONE].output_name = OUTPUT_NONE;
   netperf_output_source[OUTPUT_NONE].line1 = "This Space";
@@ -1473,9 +1473,9 @@ print_omni_csv()
       netperf_output_source[output_csv_list[j]].tot_line_len = vallen;
     
     buflen += 
-      netperf_output_source[output_csv_list[j]].tot_line_len + 1;
+      netperf_output_source[output_csv_list[j]].tot_line_len;
   }
-  
+
   hdr1 = malloc(buflen + 1);
   val1 = malloc(buflen + 1);
 
@@ -1539,8 +1539,10 @@ print_omni_csv()
     printf("%s\n",hdr1);
     printf("%s\n",val1);
   }
+
   if (hdr1 != NULL) free(hdr1);
   if (val1 != NULL) free(val1);
+
 }
 
 void
