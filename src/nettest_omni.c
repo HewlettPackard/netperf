@@ -218,6 +218,7 @@ enum netperf_output_name {
   THROUGHPUT,
   THROUGHPUT_UNITS,
   RT_LATENCY,
+  BURST_SIZE,
   LSS_SIZE_REQ,
   LSS_SIZE,
   LSS_SIZE_END,
@@ -431,6 +432,8 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "THROUGHPUT_UNITS";
   case RT_LATENCY:
     return "RT_LATENCY";
+  case BURST_SIZE:
+    return "BURST_SIZE";
   case   LSS_SIZE_REQ:
     return "LSS_SIZE_REQ";
   case   LSS_SIZE:
@@ -751,6 +754,17 @@ print_omni_init() {
     NETPERF_LINE_MAX(RT_LATENCY);
   netperf_output_source[RT_LATENCY].tot_line_len = 
     NETPERF_LINE_TOT(RT_LATENCY);
+
+  netperf_output_source[BURST_SIZE].output_name = BURST_SIZE;
+  netperf_output_source[BURST_SIZE].line1 = "Initial";
+  netperf_output_source[BURST_SIZE].line2 = "Burst";
+  netperf_output_source[BURST_SIZE].line3 = "Requests";
+  netperf_output_source[BURST_SIZE].format = "%d";
+  netperf_output_source[BURST_SIZE].display_value = &first_burst_size;
+  netperf_output_source[BURST_SIZE].max_line_len = 
+    NETPERF_LINE_MAX(BURST_SIZE);
+  netperf_output_source[BURST_SIZE].tot_line_len = 
+    NETPERF_LINE_TOT(BURST_SIZE);
 
   netperf_output_source[LSS_SIZE_REQ].output_name = LSS_SIZE_REQ;
   netperf_output_source[LSS_SIZE_REQ].line1 = "Local";
@@ -1370,6 +1384,7 @@ print_omni_init() {
   output_csv_list[0] = LSS_SIZE_REQ;
   output_csv_list[1] = LSS_SIZE;
   output_csv_list[2] = LSS_SIZE_END;
+  output_csv_list[3] = BURST_SIZE;
   
 
   for (j = 0; j < NETPERF_MAX_BLOCKS; j++)
