@@ -221,7 +221,7 @@ SOCKET  netlib_control = INVALID_SOCKET;
 SOCKET  server_sock = INVALID_SOCKET;
 
 /* global variables to hold the value for processor affinity */
-int     local_proc_affinity,remote_proc_affinity = -1;
+int     local_proc_affinity = -1,remote_proc_affinity = -1;
 
 /* these are to allow netperf to be run easily through those evil,
    end-to-end breaking things known as firewalls */
