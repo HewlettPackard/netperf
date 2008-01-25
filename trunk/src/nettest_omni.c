@@ -213,8 +213,10 @@ enum netperf_output_name {
   ELAPSED_TIME,
   SOURCE_PORT,
   SOURCE_ADDR,
+  SOURCE_FAMILY,
   DEST_PORT,
   DEST_ADDR,
+  DEST_FAMILY,
   THROUGHPUT,
   THROUGHPUT_UNITS,
   RT_LATENCY,
@@ -422,10 +424,14 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "SOURCE_PORT";
   case   SOURCE_ADDR:
     return "SOURCE_ADDR";
+  case SOURCE_FAMILY:
+    return "SOURCE_FAMILY";
   case   DEST_PORT:
     return "DEST_PORT";
   case   DEST_ADDR:
     return "DEST_ADDR";
+  case DEST_FAMILY:
+    return "DEST_FAMILY";
   case THROUGHPUT:
     return "THROUGHPUT";
   case THROUGHPUT_UNITS:
@@ -638,8 +644,8 @@ print_omni_init() {
   netperf_output_source[COMMAND_LINE].output_name = COMMAND_LINE;
   netperf_output_source[COMMAND_LINE].line1 = "Command";
   netperf_output_source[COMMAND_LINE].line2 = "Line";
-  netperf_output_source[COMMAND_LINE].format = "%s";
-  netperf_output_source[COMMAND_LINE].display_value = NULL;
+  netperf_output_source[COMMAND_LINE].format = "\"%s\"";
+  netperf_output_source[COMMAND_LINE].display_value = command_line;
   netperf_output_source[COMMAND_LINE].max_line_len = 
     NETPERF_LINE_MAX(COMMAND_LINE);
   netperf_output_source[COMMAND_LINE].tot_line_len = 
@@ -705,6 +711,16 @@ print_omni_init() {
   netperf_output_source[SOURCE_ADDR].tot_line_len = 
     NETPERF_LINE_TOT(SOURCE_ADDR);
 
+  netperf_output_source[SOURCE_FAMILY].output_name = SOURCE_FAMILY;
+  netperf_output_source[SOURCE_FAMILY].line1 = "Source";
+  netperf_output_source[SOURCE_FAMILY].line2 = "Family";
+  netperf_output_source[SOURCE_FAMILY].format = "%d";
+  netperf_output_source[SOURCE_FAMILY].display_value = &local_data_family;
+  netperf_output_source[SOURCE_FAMILY].max_line_len = 
+    NETPERF_LINE_MAX(SOURCE_FAMILY);
+  netperf_output_source[SOURCE_FAMILY].tot_line_len = 
+    NETPERF_LINE_TOT(SOURCE_FAMILY);
+
   netperf_output_source[DEST_PORT].output_name = DEST_PORT;
   netperf_output_source[DEST_PORT].line1 = "Destination";
   netperf_output_source[DEST_PORT].line2 = "Port";
@@ -724,6 +740,16 @@ print_omni_init() {
     NETPERF_LINE_MAX(DEST_ADDR);
   netperf_output_source[DEST_ADDR].tot_line_len = 
     NETPERF_LINE_TOT(DEST_ADDR);
+
+  netperf_output_source[DEST_FAMILY].output_name = DEST_FAMILY;
+  netperf_output_source[DEST_FAMILY].line1 = "Destination";
+  netperf_output_source[DEST_FAMILY].line2 = "Family";
+  netperf_output_source[DEST_FAMILY].format = "%d";
+  netperf_output_source[DEST_FAMILY].display_value = &remote_data_family;
+  netperf_output_source[DEST_FAMILY].max_line_len = 
+    NETPERF_LINE_MAX(DEST_FAMILY);
+  netperf_output_source[DEST_FAMILY].tot_line_len = 
+    NETPERF_LINE_TOT(DEST_FAMILY);
 
   netperf_output_source[THROUGHPUT].output_name = THROUGHPUT;
   netperf_output_source[THROUGHPUT].line1 = "Throughput";
@@ -1000,7 +1026,7 @@ print_omni_init() {
   netperf_output_source[LOCAL_CPU_BIND].line3 = "Bind";
   netperf_output_source[LOCAL_CPU_BIND].line4 = "";
   netperf_output_source[LOCAL_CPU_BIND].format = "%4d";
-  netperf_output_source[LOCAL_CPU_BIND].display_value = NULL;
+  netperf_output_source[LOCAL_CPU_BIND].display_value = &local_proc_affinity;
   netperf_output_source[LOCAL_CPU_BIND].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_CPU_BIND);
   netperf_output_source[LOCAL_CPU_BIND].tot_line_len = 
@@ -1300,7 +1326,7 @@ print_omni_init() {
   netperf_output_source[REMOTE_CPU_BIND].line3 = "Bind";
   netperf_output_source[REMOTE_CPU_BIND].line4 = "";
   netperf_output_source[REMOTE_CPU_BIND].format = "%4d";
-  netperf_output_source[REMOTE_CPU_BIND].display_value = NULL;
+  netperf_output_source[REMOTE_CPU_BIND].display_value = &remote_proc_affinity;
   netperf_output_source[REMOTE_CPU_BIND].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_CPU_BIND);
   netperf_output_source[REMOTE_CPU_BIND].tot_line_len = 
@@ -1381,10 +1407,10 @@ print_omni_init() {
   for (i = OUTPUT_NONE; i < NETPERF_OUTPUT_MAX; i++)
     output_csv_list[i] = OUTPUT_END;
 
-  output_csv_list[0] = LSS_SIZE_REQ;
-  output_csv_list[1] = LSS_SIZE;
-  output_csv_list[2] = LSS_SIZE_END;
-  output_csv_list[3] = BURST_SIZE;
+  output_csv_list[0] = LSS_SIZE_END;
+  output_csv_list[1] = SOURCE_ADDR;
+  output_csv_list[2] = COMMAND_LINE;
+  output_csv_list[3] = LSS_SIZE_END;
   
 
   for (j = 0; j < NETPERF_MAX_BLOCKS; j++)
@@ -1393,7 +1419,9 @@ print_omni_init() {
 
   output_human_list[0][0] = LSS_SIZE_REQ;
   output_human_list[0][1] = LSS_SIZE;
-  output_human_list[0][2] = LSS_SIZE_END;
+  output_human_list[0][2] = COMMAND_LINE;
+  output_human_list[0][3] = LSS_SIZE_END;
+
 }
 
 /* why? because one cannot simply pass a pointer to snprintf :) for
@@ -1441,6 +1469,7 @@ int
 my_snprintf(char *buffer, size_t size, const char *format, void *value)
 {
   const char *fmt = format;
+
   while (*fmt)
     switch (*fmt++) {
     case 's':
@@ -1479,10 +1508,10 @@ print_omni_csv()
       vallen = my_snprintf(tmpval,
 			   1024,
 			   netperf_output_source[output_csv_list[j]].format,
-			   (netperf_output_source[output_csv_list[j]].display_value));
+			   (netperf_output_source[output_csv_list[j]].display_value)) + 1;
     else
       vallen = 0;
-    
+
     if (vallen > 
 	netperf_output_source[output_csv_list[j]].tot_line_len)
       netperf_output_source[output_csv_list[j]].tot_line_len = vallen;
@@ -1533,6 +1562,7 @@ print_omni_csv()
 			netperf_output_source[output_csv_list[j]].tot_line_len,
 			netperf_output_source[output_csv_list[j]].format,
 			netperf_output_source[output_csv_list[j]].display_value);
+
       /* nuke the trailing \n" from the string routine.  */
       *(v1 + len) = ',';
       v1 += len + 1;
@@ -1592,7 +1622,7 @@ print_omni_human()
 	vallen = my_snprintf(tmpval,
 			     1024,
 			     netperf_output_source[output_human_list[i][j]].format,
-			     (netperf_output_source[output_human_list[i][j]].display_value));
+			     (netperf_output_source[output_human_list[i][j]].display_value)) + 1; /* need to count the \n */
       else
 	vallen = 0;
 
@@ -2081,6 +2111,12 @@ send_omni(char remote_host[])
 		     socket_type,
 		     protocol,
 		     0);
+  printf("local_data_address is at %p\n",local_data_address);
+  if (local_data_address)
+    printf("local_data_address is %s\n",local_data_address);
+  printf("remote_data_address is at %p\n", remote_data_address);
+  if (remote_data_address)
+    printf("remote_data_address is %s\n");
 
   if ( print_headers ) {
     print_top_test_header("OMNI TEST",local_res,remote_res);
@@ -3492,7 +3528,7 @@ scan_omni_args(int argc, char *argv[])
 	/* make sure we leave room for the NULL termination boys and
 	   girls. raj 2005-02-82 */ 
 	remote_data_address = malloc(strlen(arg1)+1);
-	strncpy(remote_data_address,arg1,strlen(arg1));
+	strcpy(remote_data_address,arg1);
       }
       if (arg2[0])
 	remote_data_family = parse_address_family(arg2);
@@ -3503,7 +3539,7 @@ scan_omni_args(int argc, char *argv[])
 	/* make sure we leave room for the NULL termination boys and
 	   girls. raj 2005-02-82 */ 
 	local_data_address = malloc(strlen(arg1)+1);
-	strncpy(local_data_address,arg1,strlen(arg1));
+	strcpy(local_data_address,arg1);
       }
       if (arg2[0])
 	local_data_family = parse_address_family(arg2);

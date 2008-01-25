@@ -115,6 +115,7 @@ extern int sys_nerr;
 
 /* some names and such                                                  */
 char	*program;		/* program invocation name		*/
+char    *command_line;          /* a copy of the entire command line    */
 char	username[BUFSIZ];	/* login name of user			*/
 char	cmd_file[BUFSIZ];	/* name of the commands file		*/
 
@@ -525,7 +526,10 @@ scan_cmd_line(int argc, char *argv[])
 {
   extern int	optind;           /* index of first unused arg 	*/
   extern char	*optarg;	  /* pointer to option string	*/
-  
+
+  int           cmnd_len;
+  char          *p;
+
   int		c;
   
   char	arg1[BUFSIZ],  /* argument holders		*/
@@ -537,7 +541,35 @@ scan_cmd_line(int argc, char *argv[])
     exit(1);
   }
   strcpy(program, argv[0]);
-  
+
+  /* brute force, but effective */
+  command_line = NULL;
+  cmnd_len = 0;
+  for (c = 0; c < argc; c++) {
+    cmnd_len += strlen(argv[c]);
+  }
+  cmnd_len += argc;  /* forget thee not the spaces */
+  command_line = malloc(cmnd_len+1);
+
+  if (command_line == NULL) {
+    printf("malloc(%d) failed!\n",cmnd_len);
+    exit(-1);
+  }
+  p = command_line;
+  for (c = 0; c < argc; c++) {
+    memcpy(p,argv[c],strlen(argv[c]));
+    p += strlen(argv[c]);
+    *p = ' ';
+    p += 1;
+  }
+  *--p = 0;
+#if 0
+  for (c = 0; c < cmnd_len; c++)
+    printf("command_line[%d] is |%c| 0x%x\n",c,command_line[c],command_line[c]);
+#endif
+
+  printf("strlen(command_line) %d cmnd_len %d\n",strlen(command_line),cmnd_len);
+
   /* Go through all the command line arguments and break them */
   /* out. For those options that take two parms, specifying only */
   /* the first will set both to that value. Specifying only the */
