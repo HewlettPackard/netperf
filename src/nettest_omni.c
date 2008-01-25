@@ -1201,7 +1201,7 @@ print_omni_init() {
   netperf_output_source[REMOTE_BYTES_RECVD].line2 = "Bytes";
   netperf_output_source[REMOTE_BYTES_RECVD].line3 = "Received";
   netperf_output_source[REMOTE_BYTES_RECVD].line4 = "";
-  netperf_output_source[REMOTE_BYTES_RECVD].format = "%d";
+  netperf_output_source[REMOTE_BYTES_RECVD].format = "%lld";
   netperf_output_source[REMOTE_BYTES_RECVD].display_value = &remote_bytes_received;
   netperf_output_source[REMOTE_BYTES_RECVD].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_BYTES_RECVD);
@@ -1213,7 +1213,7 @@ print_omni_init() {
   netperf_output_source[REMOTE_BYTES_SENT].line2 = "Bytes";
   netperf_output_source[REMOTE_BYTES_SENT].line3 = "Sent";
   netperf_output_source[REMOTE_BYTES_SENT].line4 = "";
-  netperf_output_source[REMOTE_BYTES_SENT].format = "%d";
+  netperf_output_source[REMOTE_BYTES_SENT].format = "%lld";
   netperf_output_source[REMOTE_BYTES_SENT].display_value = &remote_bytes_sent;
   netperf_output_source[REMOTE_BYTES_SENT].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_BYTES_SENT);
@@ -1225,7 +1225,7 @@ print_omni_init() {
   netperf_output_source[REMOTE_BYTES_XFERD].line2 = "Bytes";
   netperf_output_source[REMOTE_BYTES_XFERD].line3 = "Xferred";
   netperf_output_source[REMOTE_BYTES_XFERD].line4 = "";
-  netperf_output_source[REMOTE_BYTES_XFERD].format = "%d";
+  netperf_output_source[REMOTE_BYTES_XFERD].format = "%f";
   netperf_output_source[REMOTE_BYTES_XFERD].display_value = &remote_bytes_xferd;
   netperf_output_source[REMOTE_BYTES_XFERD].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_BYTES_XFERD);
@@ -1450,8 +1450,8 @@ print_omni_csv()
 
   int j,buflen,vallen;
 
-  char *hdr1;
-  char *val1;
+  char *hdr1 = NULL;
+  char *val1 = NULL;
   char tmpval[1024];
 
   buflen = 0;
@@ -1534,14 +1534,13 @@ print_omni_csv()
   *(h1-1) = 0;
   *(v1-1) = 0;
   /* and now spit it out, but only if it is going to have something
-     in it. we don't want a bunch of blank lines or nulls... at some
-     point we might want to work backwards collapsine whitespace from
-     the right but for now, we won't bother */
+     in it. we don't want a bunch of blank lines or nulls...  */
   if (output_csv_list[0] != OUTPUT_END) {
     printf("%s\n",hdr1);
     printf("%s\n",val1);
   }
-
+  if (hdr1 != NULL) free(hdr1);
+  if (val1 != NULL) free(val1);
 }
 
 void
@@ -1550,11 +1549,11 @@ print_omni_human()
   
   int i,j,buflen,buflen_max;
 
-  char *hdr1;
-  char *hdr2;
-  char *hdr3;
-  char *hdr4;
-  char *val1;
+  char *hdr1 = NULL;
+  char *hdr2 = NULL;
+  char *hdr3 = NULL;
+  char *hdr4 = NULL;
+  char *val1 = NULL;
   char tmpval[1024];  /* excessive, but we may have the command line */
   int  vallen;
 
@@ -1674,6 +1673,11 @@ print_omni_human()
       printf("%s\n",val1);
     }
   };
+  if (hdr1 != NULL) free(hdr1);
+  if (hdr2 != NULL) free(hdr2);
+  if (hdr3 != NULL) free(hdr3);
+  if (hdr4 != NULL) free(hdr4);
+  if (val1 != NULL) free(val1);
 }
 
 void
