@@ -113,6 +113,24 @@ char nettest_omni_id[]="\
 #include "hist.h"
 #endif /* WANT_HISTOGRAM */
 
+#ifdef WANT_HISTOGRAM
+#ifdef HAVE_GETHRTIME
+static hrtime_t time_one;
+static hrtime_t time_two;
+#elif HAVE_GET_HRT
+#include "hrt.h"
+static hrt_t time_one;
+static hrt_t time_two;
+#elif defined(WIN32)
+static LARGE_INTEGER time_one;
+static LARGE_INTEGER time_two;
+#else
+static struct timeval time_one;
+static struct timeval time_two;
+#endif /* HAVE_GETHRTIME */
+static HIST time_hist;
+#endif /* WANT_HISTOGRAM */
+
 #define NETPERF_WAITALL 0x1
 #define NETPERF_XMIT 0x2
 #define NETPERF_RECV 0x4
@@ -148,6 +166,7 @@ int failed_sends;
 int bytes_to_recv;
 int bytes_per_recv;
 int null_message_ok = 0;
+int csv = 0;
 uint64_t      trans_completed;
 uint64_t      units_remaining;
 uint64_t      bytes_sent;
@@ -1755,6 +1774,11 @@ print_omni()
   if (debug > 2) 
     dump_netperf_output_source(where);
 
+  if (csv) 
+    print_omni_csv();
+  else
+    print_omni_human();
+
 }
 /* for the next few routines (connect, accept, send, recv,
    disconnect/close) we will use a return of -1 to mean times up, -2
@@ -2828,20 +2852,30 @@ send_omni(char remote_host[])
 			    &remote_service_demand);
 
   print_omni();
-  print_omni_human();
-  print_omni_csv();
 
-  fprintf(where,
-	  "Confidence was %g after %d iterations\n",
-	  confidence,
-	  --confidence_iteration);
-  fflush(where);
-  
   /* likely as not we are going to do something slightly different here */
   if (verbosity > 1) {
 
 #ifdef WANT_HISTOGRAM
-    fprintf(where,"\nHistogram of request/response times\n");
+    fprintf(where,"\nHistogram of ");
+    if (NETPERF_RECV_ONLY(direction)) 
+      fprintf(where,"recv");
+    if (NETPERF_XMIT_ONLY(direction))
+      fprintf(where,"send");
+    if (NETPERF_IS_RR(direction)) {
+      if (connection_test) {
+	if (NETPERF_CC(direction)) {
+	  fprintf(where,"connect/close");
+	}
+	else {
+	  fprintf(where,"connect/request/response/close");
+	}
+      }
+      else {
+	fprintf(where,"request/response");
+      }
+    }
+    fprintf(where," times\n");
     fflush(where);
     HIST_report(time_hist);
 #endif /* WANT_HISTOGRAM */
@@ -3437,7 +3471,7 @@ scan_omni_args(int argc, char *argv[])
 
 {
 
-#define OMNI_ARGS "b:cCd:DnNhH:L:m:M:p:P:r:s:S:t:T:Vw:W:46"
+#define OMNI_ARGS "b:cCd:DnNhH:L:m:M:oOp:P:r:s:S:t:T:Vw:W:46"
 
   extern char	*optarg;	  /* pointer to option string	*/
   
@@ -3593,6 +3627,12 @@ scan_omni_args(int argc, char *argv[])
     case 'N':
       /* set the remote socket type */
       remote_connected = 1;
+      break;
+    case 'o':
+      csv = 1;
+      break;
+    case 'O':
+      csv = 0;
       break;
     case 'p':
       /* set the min and max port numbers for the TCP_CRR and TCP_TRR */
