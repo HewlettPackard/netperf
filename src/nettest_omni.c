@@ -1426,10 +1426,7 @@ print_omni_init() {
   for (i = OUTPUT_NONE; i < NETPERF_OUTPUT_MAX; i++)
     output_csv_list[i] = OUTPUT_END;
 
-  output_csv_list[0] = LSS_SIZE_END;
-  output_csv_list[1] = SOURCE_ADDR;
-  output_csv_list[2] = COMMAND_LINE;
-  output_csv_list[3] = LSS_SIZE_END;
+  output_csv_list[0] = BURST_SIZE;
   
 
   for (j = 0; j < NETPERF_MAX_BLOCKS; j++)
@@ -2129,6 +2126,31 @@ send_omni(char remote_host[])
   struct	omni_response_struct	*omni_response;
   struct	omni_results_struct	*omni_result;
   
+#ifdef WANT_FIRST_BURST
+#define REQUEST_CWND_INITIAL 2
+  /* "in the beginning..." the WANT_FIRST_BURST stuff was like both
+     Unix and the state of New Jersey - both were simple an unspoiled.
+     then it was realized that some stacks are quite picky about
+     initial congestion windows and a non-trivial initial burst of
+     requests would not be individual segments even with TCP_NODELAY
+     set. so, we have to start tracking a poor-man's congestion window
+     up here in window space because we want to try to make something
+     happen that frankly, we cannot guarantee with the specification
+     of TCP.  ain't that grand?-)  raj 2006-01-30 */
+  int requests_outstanding = 0;
+  int request_cwnd = REQUEST_CWND_INITIAL;  /* we ass-u-me that having
+					       three requests
+					       outstanding at the
+					       beginning of the test
+					       is ok with TCP stacks
+					       of interest. the first
+					       two will come from our
+					       first_burst loop, and
+					       the third from our
+					       regularly scheduled
+					       send */
+#endif
+
   omni_request = 
     (struct omni_request_struct *)netperf_request.content.test_specific_data;
   omni_response = 
@@ -2193,6 +2215,14 @@ send_omni(char remote_host[])
     times_up 	= 0;
     bytes_sent = 0;
     bytes_received = 0;
+#ifdef WANT_FIRST_BURST
+    /* we have to remember to reset the number of transactions
+       outstanding and the "congestion window for each new
+       iteration. raj 2006-01-31 */
+    requests_outstanding = 0;
+    request_cwnd = REQUEST_CWND_INITIAL;
+#endif
+
 
     data_socket = create_data_socket(local_res);
     
@@ -2518,6 +2548,46 @@ send_omni(char remote_host[])
 	}
       }
 
+#ifdef WANT_FIRST_BURST
+      /* we can inject no more than request_cwnd, which will grow with
+	 time, and no more than first_burst_size.  we don't use <= to
+	 account for the "regularly scheduled" send call.  of course
+	 that makes it more a "max_outstanding_ than a
+	 "first_burst_size" but for now we won't fix the names. also,
+	 I suspect the extra check against < first_burst_size is
+	 redundant since later I expect to make sure that request_cwnd
+	 can never get larger than first_burst_size, but just at the
+	 moment I'm feeling like a belt and suspenders kind of
+	 programmer. raj 2006-01-30 */
+      /* we only want to inject the burst if this is a full-on
+	 request/response test. otherwise it doesn't make any sense
+	 anyway. raj 2008-01-25 */
+      while ((first_burst_size > 0) &&
+	     (requests_outstanding < request_cwnd) &&
+	     (requests_outstanding < first_burst_size) &&
+	     (NETPERF_IS_RR(direction)) &&
+	     (!NETPERF_CC(direction))) {
+	if (debug) {
+	  fprintf(where,
+		  "injecting, req_outstanding %d req_cwnd %d burst %d\n",
+		  requests_outstanding,
+		  request_cwnd,
+		  first_burst_size);
+	}
+	if ((ret = send_data(data_socket,
+			     send_ring,
+			     bytes_to_send,
+			     (connected) ? NULL : remote_res->ai_addr,
+			     remote_res->ai_addrlen)) != bytes_to_send) {
+	  /* in theory, we should never hit the end of the test in the
+	     first burst */
+	  perror("send_omni: initial burst data send error");
+	  exit(-1);
+	}
+	requests_outstanding += 1;
+      }
+
+#endif /* WANT_FIRST_BURST */
 
       /* if we should try to send something, then by all means, let us
 	 try to send something. */
@@ -2573,6 +2643,13 @@ send_omni(char remote_host[])
 
       }
 
+#ifdef WANT_FIRST_BURST
+      /* it isn't clear we need to check the directions here.  the
+	 increment should be cheaper than the conditional, and it
+	 shouldn't hurt the other directions because they'll never
+	 look at them. famous last words of raj 2008-01-25 */
+      requests_outstanding += 1;
+#endif
 
       if (direction & NETPERF_RECV) {
 	ret = recv_data(data_socket,
@@ -2618,8 +2695,26 @@ send_omni(char remote_host[])
 	  exit(1);
 	}
 	recv_ring = recv_ring->next;
-      }
 
+#ifdef WANT_FIRST_BURST
+	/* so, since we've gotten a response back, update the
+	   bookkeeping accordingly.  there is one less request
+	   outstanding and we can put one more out there than before. */
+	requests_outstanding -= 1;
+	if ((request_cwnd < first_burst_size) &&
+	    (NETPERF_IS_RR(direction))) {
+	  request_cwnd += 1;
+	  if (debug) {
+	    fprintf(where,
+		    "incr req_cwnd to %d first_burst %d reqs_outstndng %d\n",
+		    request_cwnd,
+		    first_burst_size,
+		    requests_outstanding);
+	  }
+	}
+#endif
+
+      }
 
       /* if this is a connection test, we want to do some stuff about
 	 connection close here in the test loop. raj 2008-01-08 */
