@@ -563,12 +563,6 @@ scan_cmd_line(int argc, char *argv[])
     p += 1;
   }
   *--p = 0;
-#if 0
-  for (c = 0; c < cmnd_len; c++)
-    printf("command_line[%d] is |%c| 0x%x\n",c,command_line[c],command_line[c]);
-#endif
-
-  printf("strlen(command_line) %d cmnd_len %d\n",strlen(command_line),cmnd_len);
 
   /* Go through all the command line arguments and break them */
   /* out. For those options that take two parms, specifying only */

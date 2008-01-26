@@ -822,6 +822,16 @@ complete_addrinfos(struct addrinfo **remote,struct addrinfo **local, char remote
 			     protocol,
 			     flags|AI_PASSIVE);
 
+  /* OK, at this point, if remote_data_address is NULL, we know that
+     we used the value of remote_host (the control connection) for the
+     remote, which means we can/should set remote_data_address to
+     remote_host so the "omni" output routines can use that global
+     variable. at least i think I can get away with that :) I'm sure
+     that at some point I'll find-out that I need to allocate
+     something for it rather than mess with the pointers, but that can
+     wait.  famous last words of raj 2008-01-25 */
+  if (remote_data_address == NULL)
+    remote_data_address = remote_host;
 }
 
 void

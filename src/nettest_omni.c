@@ -1419,8 +1419,8 @@ print_omni_init() {
 
   output_human_list[0][0] = LSS_SIZE_REQ;
   output_human_list[0][1] = LSS_SIZE;
-  output_human_list[0][2] = COMMAND_LINE;
-  output_human_list[0][3] = LSS_SIZE_END;
+  output_human_list[0][2] = LSS_SIZE_END;
+  output_human_list[1][0] = COMMAND_LINE;
 
 }
 
@@ -1520,17 +1520,17 @@ print_omni_csv()
       netperf_output_source[output_csv_list[j]].tot_line_len;
   }
 
-  hdr1 = malloc(buflen + 1);
+  if (print_headers) hdr1 = malloc(buflen + 1);
   val1 = malloc(buflen + 1);
 
-  if ((hdr1 == NULL) ||
+  if (((hdr1 == NULL) && (print_headers)) ||
       (val1 == NULL)) {
     fprintf(where,"unable to allocate output buffers\n");
     fflush(where);
     exit(-1);
   }
 
-  memset(hdr1,' ',buflen + 1);
+  if (print_headers) memset(hdr1,' ',buflen + 1);
   memset(val1,' ',buflen + 1);
 
   /* ostensibly, we now "know" that we have enough space in all our
@@ -1542,18 +1542,19 @@ print_omni_csv()
 	(output_csv_list[j] != OUTPUT_END));
        j++) {
     int len;
-    len = sprintf(h1,
-		  "%s %s %s %s",
-		  netperf_output_source[output_csv_list[j]].line1,
-		  netperf_output_source[output_csv_list[j]].line2,
-		  netperf_output_source[output_csv_list[j]].line3,
-		  netperf_output_source[output_csv_list[j]].line4);
-    
-    *(h1 + len) = ',';
-    /* now move to the next starting column. for csv we aren't worried
-       about alignment between the header and the value lines */
-    h1 += len + 1;
-		  
+    if (print_headers) {
+      len = sprintf(h1,
+		    "%s %s %s %s",
+		    netperf_output_source[output_csv_list[j]].line1,
+		    netperf_output_source[output_csv_list[j]].line2,
+		    netperf_output_source[output_csv_list[j]].line3,
+		    netperf_output_source[output_csv_list[j]].line4);
+      
+      *(h1 + len) = ',';
+      /* now move to the next starting column. for csv we aren't worried
+	 about alignment between the header and the value lines */
+      h1 += len + 1;
+    }
     if ((netperf_output_source[output_csv_list[j]].format != NULL) &&
 	(netperf_output_source[output_csv_list[j]].display_value != NULL)) {
       int len;
@@ -1576,12 +1577,12 @@ print_omni_csv()
 
   /* ok, _now_ null terminate each line by nuking the last comma.  do
      we have an OBOB here? */
-  *(h1-1) = 0;
+  if (print_headers) *(h1-1) = 0;
   *(v1-1) = 0;
   /* and now spit it out, but only if it is going to have something
      in it. we don't want a bunch of blank lines or nulls...  */
   if (output_csv_list[0] != OUTPUT_END) {
-    printf("%s\n",hdr1);
+    if (print_headers) printf("%s\n",hdr1);
     printf("%s\n",val1);
   }
 
@@ -1639,27 +1640,25 @@ print_omni_human()
   }
 
   /* more belts and suspenders */
-  hdr1 = malloc(buflen_max+1);
-  hdr2 = malloc(buflen_max+1);
-  hdr3 = malloc(buflen_max+1);
-  hdr4 = malloc(buflen_max+1);
+  if (print_headers) {
+    hdr1 = malloc(buflen_max+1);
+    hdr2 = malloc(buflen_max+1);
+    hdr3 = malloc(buflen_max+1);
+    hdr4 = malloc(buflen_max+1);
+  }
   val1 = malloc(buflen_max+1);
   
-  if ((hdr1 == NULL) ||
-      (hdr2 == NULL) ||
-      (hdr3 == NULL) ||
-      (hdr4 == NULL) ||
+  /* we could probably be more succinct here but perhaps the compiler
+     can figure that out for us :) */
+  if (((hdr1 == NULL) && (print_headers)) ||
+      ((hdr2 == NULL) && (print_headers)) ||
+      ((hdr3 == NULL) && (print_headers)) ||
+      ((hdr4 == NULL) && (print_headers)) ||
       (val1 == NULL)) {
     fprintf(where,"Unable to allocate output buffers\n");
     fflush(where);
     exit(-1);
   }
-
-  memset(hdr1,' ',buflen_max+1);
-  memset(hdr2,' ',buflen_max+1);
-  memset(hdr3,' ',buflen_max+1);
-  memset(hdr4,' ',buflen_max+1);
-  memset(val1,' ',buflen_max+1);
 
   /* ostensibly, we now "know" that we have enough space in all our
      strings, and we have spaces where we want them etc */
@@ -1669,22 +1668,35 @@ print_omni_human()
     char *h3 = hdr3;
     char *h4 = hdr4;
     char *v1 = val1;
+
+    /* we want to blank things out each time since we skip around a lot */
+    if (print_headers) {
+      memset(hdr1,' ',buflen_max+1);
+      memset(hdr2,' ',buflen_max+1);
+      memset(hdr3,' ',buflen_max+1);
+      memset(hdr4,' ',buflen_max+1);
+    }
+    memset(val1,' ',buflen_max+1);
+
+
     for (j = 0; 
 	 ((j < NETPERF_OUTPUT_MAX) && 
 	  (output_human_list[i][j] != OUTPUT_END));
 	 j++) {
-      memcpy(h1,
-	     netperf_output_source[output_human_list[i][j]].line1,
-	     strlen(netperf_output_source[output_human_list[i][j]].line1));
-      memcpy(h2,
-	     netperf_output_source[output_human_list[i][j]].line2,
-	     strlen(netperf_output_source[output_human_list[i][j]].line2));
-      memcpy(h3,
-	     netperf_output_source[output_human_list[i][j]].line3,
-	     strlen(netperf_output_source[output_human_list[i][j]].line3));
-      memcpy(h4,
-	     netperf_output_source[output_human_list[i][j]].line4,
-	     strlen(netperf_output_source[output_human_list[i][j]].line4));
+      if (print_headers) {
+	memcpy(h1,
+	       netperf_output_source[output_human_list[i][j]].line1,
+	       strlen(netperf_output_source[output_human_list[i][j]].line1));
+	memcpy(h2,
+	       netperf_output_source[output_human_list[i][j]].line2,
+	       strlen(netperf_output_source[output_human_list[i][j]].line2));
+	memcpy(h3,
+	       netperf_output_source[output_human_list[i][j]].line3,
+	       strlen(netperf_output_source[output_human_list[i][j]].line3));
+	memcpy(h4,
+	       netperf_output_source[output_human_list[i][j]].line4,
+	       strlen(netperf_output_source[output_human_list[i][j]].line4));
+      }
       if ((netperf_output_source[output_human_list[i][j]].format != NULL) &&
 	  (netperf_output_source[output_human_list[i][j]].display_value != NULL)) {
 	int len;
@@ -1696,27 +1708,34 @@ print_omni_human()
 	*(v1 + len) = ' ';
       }
       /* now move to the next starting column */
-      h1 += netperf_output_source[output_human_list[i][j]].max_line_len + 1;
-      h2 += netperf_output_source[output_human_list[i][j]].max_line_len + 1;
-      h3 += netperf_output_source[output_human_list[i][j]].max_line_len + 1;
-      h4 += netperf_output_source[output_human_list[i][j]].max_line_len + 1;
+      if (print_headers) {
+	h1 += netperf_output_source[output_human_list[i][j]].max_line_len + 1;
+	h2 += netperf_output_source[output_human_list[i][j]].max_line_len + 1;
+	h3 += netperf_output_source[output_human_list[i][j]].max_line_len + 1;
+	h4 += netperf_output_source[output_human_list[i][j]].max_line_len + 1;
+      }
       v1 += netperf_output_source[output_human_list[i][j]].max_line_len + 1;
     }
     /* ok, _now_ null terminate each line.  do we have an OBOB here? */
-    *h1 = 0;
-    *h2 = 0;
-    *h3 = 0;
-    *h4 = 0;
+    if (print_headers) {
+      *h1 = 0;
+      *h2 = 0;
+      *h3 = 0;
+      *h4 = 0;
+    }
     *v1 = 0;
     /* and now spit it out, but only if it is going to have something
        in it. we don't want a bunch of blank lines or nulls... at some
      point we might want to work backwards collapsine whitespace from
      the right but for now, we won't bother */
     if (output_human_list[i][0] != OUTPUT_END) {
-      printf("%s\n",hdr1);
-      printf("%s\n",hdr2);
-      printf("%s\n",hdr3);
-      printf("%s\n",hdr4);
+      if (i > 0) printf("\n"); /* we want a blank line between blocks ? */
+      if (print_headers) {
+	printf("%s\n",hdr1);
+	printf("%s\n",hdr2);
+	printf("%s\n",hdr3);
+	printf("%s\n",hdr4);
+      }
       printf("%s\n",val1);
     }
   };
@@ -2111,12 +2130,6 @@ send_omni(char remote_host[])
 		     socket_type,
 		     protocol,
 		     0);
-  printf("local_data_address is at %p\n",local_data_address);
-  if (local_data_address)
-    printf("local_data_address is %s\n",local_data_address);
-  printf("remote_data_address is at %p\n", remote_data_address);
-  if (remote_data_address)
-    printf("remote_data_address is %s\n");
 
   if ( print_headers ) {
     print_top_test_header("OMNI TEST",local_res,remote_res);
