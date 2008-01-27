@@ -351,47 +351,11 @@ static struct timeval *temp_demo_ptr = &demo_one;
       } \
     }
 
-#define DEMO_STREAM_INTERVAL(units) \
-      if (demo_mode) { \
-	double actual_interval; \
-	units_this_tick += units; \
-	if (units_this_tick >= demo_units) { \
-	  /* time to possibly update demo_units and maybe output an \
-	     interim result */ \
-	  HIST_timestamp(demo_two_ptr); \
-	  actual_interval = delta_micro(demo_one_ptr,demo_two_ptr); \
-	  /* we always want to fine-tune demo_units here whether we \
-	     emit an interim result or not.  if we are short, this \
-	     will lengthen demo_units.  if we are long, this will \
-	     shorten it */ \
-	  demo_units = demo_units * (demo_interval / actual_interval); \
-	  if (actual_interval >= demo_interval) { \
-	    /* time to emit an interim result */ \
-	    fprintf(where, \
-		    "Interim result: %7.2f %s/s over %.2f seconds\n", \
-		    calc_thruput_interval(units_this_tick, \
-					  actual_interval/1000000.0), \
-		    format_units(), \
-		    actual_interval/1000000.0); \
-            fflush(where); \
-	    units_this_tick = 0.0; \
-	    /* now get a new starting timestamp.  we could be clever \
-	       and swap pointers - the math we do probably does not \
-	       take all that long, but for now this will suffice */ \
-	    temp_demo_ptr = demo_one_ptr; \
-	    demo_one_ptr = demo_two_ptr; \
-	    demo_two_ptr = temp_demo_ptr; \
-	  } \
-	} \
-      }
+/* now that calc_thruput_interval knows about transactions as a format
+   we can merge DEMO_STREAM_INTERVAL and DEMO_RR_INTERVAL since the
+   are the same */
 
-#define DEMO_RR_SETUP(a) \
-    if ((demo_mode) && (demo_units == 0)) { \
-      /* take whatever we are given */ \
-	demo_units = a; \
-    }
-
-#define DEMO_RR_INTERVAL(units) \
+#define DEMO_INTERVAL(units) \
       if (demo_mode) { \
 	double actual_interval; \
 	units_this_tick += units; \
@@ -409,8 +373,9 @@ static struct timeval *temp_demo_ptr = &demo_one;
 	    /* time to emit an interim result */ \
 	    fprintf(where, \
 		    "Interim result: %.2f %s/s over %.2f seconds\n", \
-                    units_this_tick / (actual_interval/1000000.0), \
-		    "Trans", \
+		    calc_thruput_interval(units_this_tick, \
+					  actual_interval/1000000.0), \
+		    format_units(), \
 		    actual_interval/1000000.0); \
 	    units_this_tick = 0.0; \
 	    /* now get a new starting timestamp.  we could be clever \
@@ -422,6 +387,17 @@ static struct timeval *temp_demo_ptr = &demo_one;
 	  } \
 	} \
       }
+
+#define DEMO_STREAM_INTERVAL(units) DEMO_INTERVAL(units)
+
+#define DEMO_RR_SETUP(a) \
+    if ((demo_mode) && (demo_units == 0)) { \
+      /* take whatever we are given */ \
+	demo_units = a; \
+    }
+
+#define DEMO_RR_INTERVAL(units) DEMO_INTERVAL(units)
+
 #endif 
 
 char sockets_usage[] = "\n\

@@ -131,6 +131,87 @@ static struct timeval time_two;
 static HIST time_hist;
 #endif /* WANT_HISTOGRAM */
 
+#ifdef WANT_DEMO
+#ifdef HAVE_GETHRTIME
+static hrtime_t demo_one;
+static hrtime_t demo_two;
+static hrtime_t *demo_one_ptr = &demo_one;
+static hrtime_t *demo_two_ptr = &demo_two;
+static hrtime_t *temp_demo_ptr = &demo_one;
+#elif defined(WIN32)
+static LARGE_INTEGER demo_one;
+static LARGE_INTEGER demo_two;
+static LARGE_INTEGER *demo_one_ptr = &demo_one;
+static LARGE_INTEGER *demo_two_ptr = &demo_two;
+static LARGE_INTEGER *temp_demo_ptr = &demo_one;
+#else
+static struct timeval demo_one;
+static struct timeval demo_two;
+static struct timeval *demo_one_ptr = &demo_one;
+static struct timeval *demo_two_ptr = &demo_two;
+static struct timeval *temp_demo_ptr = &demo_one;
+#endif 
+
+/* for a _STREAM test, "a" should be lss_size and "b" should be
+   rsr_size. for a _MAERTS test, "a" should be lsr_size and "b" should
+   be rss_size. raj 2005-04-06 */
+#define DEMO_STREAM_SETUP(a,b) \
+    if ((demo_mode) && (demo_units == 0)) { \
+      /* take our default value of demo_units to be the larger of \
+	 twice the remote's SO_RCVBUF or twice our SO_SNDBUF */ \
+      if (a > b) { \
+	demo_units = 2*a; \
+      } \
+      else { \
+	demo_units = 2*b; \
+      } \
+    }
+
+#define DEMO_INTERVAL(units) \
+      if (demo_mode) { \
+	double actual_interval; \
+	units_this_tick += units; \
+	if (units_this_tick >= demo_units) { \
+	  /* time to possibly update demo_units and maybe output an \
+	     interim result */ \
+	  HIST_timestamp(demo_two_ptr); \
+	  actual_interval = delta_micro(demo_one_ptr,demo_two_ptr); \
+	  /* we always want to fine-tune demo_units here whether we \
+	     emit an interim result or not.  if we are short, this \
+	     will lengthen demo_units.  if we are long, this will \
+	     shorten it */ \
+	  demo_units = demo_units * (demo_interval / actual_interval); \
+	  if (actual_interval >= demo_interval) { \
+	    /* time to emit an interim result */ \
+	    fprintf(where, \
+		    "Interim result: %7.2f %s/s over %.2f seconds\n", \
+		    calc_thruput_interval(units_this_tick, \
+					  actual_interval/1000000.0), \
+		    format_units(), \
+		    actual_interval/1000000.0); \
+	    units_this_tick = 0.0; \
+	    /* now get a new starting timestamp.  we could be clever \
+	       and swap pointers - the math we do probably does not \
+	       take all that long, but for now this will suffice */ \
+	    temp_demo_ptr = demo_one_ptr; \
+	    demo_one_ptr = demo_two_ptr; \
+	    demo_two_ptr = temp_demo_ptr; \
+	  } \
+	} \
+      }
+
+#define DEMO_STREAM_INTERVAL(units) DEMO_INTERVAL(units)
+
+#define DEMO_RR_SETUP(a) \
+    if ((demo_mode) && (demo_units == 0)) { \
+      /* take whatever we are given */ \
+	demo_units = a; \
+    }
+
+#define DEMO_RR_INTERVAL(units) DEMO_INTERVAL(units)
+
+#endif 
+
 #define NETPERF_WAITALL 0x1
 #define NETPERF_XMIT 0x2
 #define NETPERF_RECV 0x4
@@ -1771,6 +1852,8 @@ print_omni()
   if (debug > 2) 
     dump_netperf_output_source(where);
 
+  printf("csv is %d\n",csv);
+
   if (csv) 
     print_omni_csv();
   else
@@ -2099,7 +2182,7 @@ send_omni(char remote_host[])
   
   
   int len;
-  int ret;
+  int ret,rret;
   int connected = 0;
   int timed_out = 0;
   int pad_time = 0;
@@ -2420,7 +2503,10 @@ send_omni(char remote_host[])
       }
     
     }
-	  
+
+    /* at some point we will have to be more clever about this, but
+       for now we won't */
+
 #ifdef WANT_DEMO
     DEMO_RR_SETUP(100);
 #endif
@@ -2652,7 +2738,7 @@ send_omni(char remote_host[])
 #endif
 
       if (direction & NETPERF_RECV) {
-	ret = recv_data(data_socket,
+	rret = recv_data(data_socket,
 			recv_ring,
 			bytes_to_recv,
 			(connected) ? NULL : (struct sockaddr *)&remote_addr,
@@ -2661,16 +2747,16 @@ send_omni(char remote_host[])
 			/* if XMIT also set this is RR so waitall */
 			(direction & NETPERF_XMIT) ? NETPERF_WAITALL: 0,
 			&temp_recvs);
-	if (ret > 0) {
+	if (rret > 0) {
 	  /* if this is a recv-only test controlled by byte count we
 	     decrement the units_remaining by the bytes received */
 	  if (!(direction & NETPERF_XMIT) && (units_remaining > 0)) {
-	    units_remaining -= ret;
+	    units_remaining -= rret;
 	  }
-	  bytes_received += ret;
+	  bytes_received += rret;
 	  local_receive_calls += temp_recvs;
 	}
-	else if (ret == 0) {
+	else if (rret == 0) {
 	  /* is this the end of a test, just a zero-byte recv, or
 	     something else? that is an exceedingly good question and
 	     one for which I don't presently have a good answer, but
@@ -2683,7 +2769,7 @@ send_omni(char remote_host[])
 	  }
 	  local_receive_calls += temp_recvs;
 	}
-	else if (ret == -1) {
+	else if (rret == -1) {
 	  /* test timed-out */
 	  times_up = 1;
 	  timed_out = 1;
@@ -2765,7 +2851,15 @@ send_omni(char remote_host[])
 #endif /* WANT_HISTOGRAM */
     
 #ifdef WANT_DEMO
-      DEMO_RR_INTERVAL(1);
+      if (NETPERF_IS_RR(direction)) {
+	DEMO_INTERVAL(1);
+      }
+      else if (NETPERF_XMIT_ONLY(direction)) {
+	DEMO_INTERVAL(bytes_to_send);
+      }
+      else {
+	DEMO_INTERVAL(rret);
+      }
 #endif
 
       /* was this a "transaction" test? */ 
