@@ -3089,6 +3089,9 @@ calc_thruput_interval(double units_received,double elapsed)
   case 'g':
     divisor = 1000.0 * 1000.0 * 1000.0 / 8.0;
     break;
+  case 'x':
+    divisor = 1.0;
+    break;
     
   default:
     divisor = 1024.0;
