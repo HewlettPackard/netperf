@@ -2463,12 +2463,7 @@ send_omni(char remote_host[])
       /* the response from the remote should contain all the relevant
 	 socket and other parameters we need to know for this test.
 	 so, we can shove them back into the relevant variables here
-	 and be on our way.  it would seem that this is as good a
-	 place as any to put the "while" loop for confidence intervals
-	 and have a send_request at the bottom that just tells the
-	 remote to do again, and have them sit waiting for that
-	 message, or control connection shutdown after each iteration.
-	 raj 2008-01-18 */
+	 and be on our way. */
 
       recv_response();
   
@@ -2504,10 +2499,10 @@ send_omni(char remote_host[])
     
     }
 
+#ifdef WANT_DEMO
     /* at some point we will have to be more clever about this, but
        for now we won't */
 
-#ifdef WANT_DEMO
     DEMO_RR_SETUP(100);
 #endif
 
@@ -2964,9 +2959,23 @@ send_omni(char remote_host[])
 
     /* to we need to pull something from omni_results here? */
     bytes_xferd  = bytes_sent + bytes_received;
-    thruput      = calc_thruput(bytes_xferd);
     remote_bytes_xferd = omni_result->bytes_received +
       omni_result->bytes_sent;
+
+    /* if the output format is 'x' we know the test was
+       request/response.  if the libfmt is something else, it could be
+       xmit, recv or bidirectional. if we were the receiver then we
+       can use our byte totals even if it is
+       UDP/unreliable. otherwise, we use the remote totals - they
+       should be the same if the protocol is reliable, and if it is
+       unreliable then we want what was actually received */
+    if ('x' == libfmt)
+      /* it was a request/response test */
+      thruput = calc_thruput(trans_completed);
+    else if (NETPERF_RECV_ONLY(direction))
+      thruput      = calc_thruput(bytes_xferd);
+    else 
+      thruput = calc_thruput(remote_bytes_xferd);
   
     /* ok, time to possibly calculate cpu util and/or service demand */
     if (local_cpu_usage) {
@@ -3929,6 +3938,25 @@ scan_omni_args(int argc, char *argv[])
   }
 #endif
 #endif
+
+  /* ok, time to sanity check the output units */
+  if ('?' == libfmt) {
+    /* if this is a RR test then set it to 'x' for transactions */
+    if (NETPERF_IS_RR(direction)) {
+      libfmt = 'x';
+    }
+    else {
+      libfmt = 'm';
+    }
+  }
+  else if ('x' == libfmt) {
+    /* now, a format of 'x' makes no sense for anything other than
+       an RR test. if someone has been silly enough to try to set
+       that, we will reset it silently to default - namely 'm' */
+    if (!NETPERF_IS_RR(direction)) {
+      libfmt = 'm';
+    }
+  }
 
   /* so, if there is to be no control connection, we want to have some
      different settings for a few things */
