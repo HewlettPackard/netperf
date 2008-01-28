@@ -1044,31 +1044,34 @@ scan_cmd_line(int argc, char *argv[])
 
     /* what is our default value for the output units?  if the test
        name contains "RR" or "rr" or "Rr" or "rR" then the default is
-       'x' for transactions. otherwise it is 'm' for megabits
-       (10^6) */
+       'x' for transactions. otherwise it is 'm' for megabits (10^6)
+       however...  if this is an "omni" test then we want to defer
+       this decision to scan_omni_args */
 
-    if ('?' == libfmt) {
-      /* we use a series of strstr's here because not everyone has
-	 strcasestr and I don't feel like up or downshifting text */
-      if ((strstr(test_name,"RR")) ||
-	  (strstr(test_name,"rr")) ||
-	  (strstr(test_name,"Rr")) ||
-	  (strstr(test_name,"rR"))) {
-	libfmt = 'x';
+    if (strcasecmp(test_name,"omni")) {
+      if ('?' == libfmt) {
+	/* we use a series of strstr's here because not everyone has
+	   strcasestr and I don't feel like up or downshifting text */
+	if ((strstr(test_name,"RR")) ||
+	    (strstr(test_name,"rr")) ||
+	    (strstr(test_name,"Rr")) ||
+	    (strstr(test_name,"rR"))) {
+	  libfmt = 'x';
+	}
+	else {
+	  libfmt = 'm';
+	}
       }
-      else {
-	libfmt = 'm';
-      }
-    }
-    else if ('x' == libfmt) {
-      /* now, a format of 'x' makes no sense for anything other than
-	 an RR test. if someone has been silly enough to try to set
-	 that, we will reset it silently to default - namely 'm' */
-      if ((strstr(test_name,"RR") == NULL) &&
-	  (strstr(test_name,"rr") == NULL) &&
-	  (strstr(test_name,"Rr") == NULL) &&
-	  (strstr(test_name,"rR") == NULL)) {
-	libfmt = 'm';
+      else if ('x' == libfmt) {
+	/* now, a format of 'x' makes no sense for anything other than
+	   an RR test. if someone has been silly enough to try to set
+	   that, we will reset it silently to default - namely 'm' */
+	if ((strstr(test_name,"RR") == NULL) &&
+	    (strstr(test_name,"rr") == NULL) &&
+	    (strstr(test_name,"Rr") == NULL) &&
+	    (strstr(test_name,"rR") == NULL)) {
+	  libfmt = 'm';
+	}
       }
     }
 }
