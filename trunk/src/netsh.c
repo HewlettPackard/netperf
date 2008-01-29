@@ -194,12 +194,10 @@ double demo_units = 0.0;          /* what is our current best guess as
 double units_this_tick;
 #endif
 
-#ifdef DIRTY
 int	loc_dirty_count;
 int	loc_clean_count;
 int	rem_dirty_count;
 int	rem_clean_count;
-#endif /* DIRTY */
 
  /* some of the vairables for confidence intervals... */
 
@@ -493,6 +491,11 @@ set_defaults()
   loc_clean_count = 0;
   rem_dirty_count = 0;
   rem_clean_count = 0;
+#else
+  loc_dirty_count = -1;
+  loc_clean_count = -1;
+  rem_dirty_count = -1;
+  rem_clean_count = -1;
 #endif /* DIRTY */
 
  /* some of the vairables for confidence intervals... */

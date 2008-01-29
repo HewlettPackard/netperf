@@ -149,8 +149,14 @@ char	nettest_id[]="\
 
 /* make first_burst_size unconditional so we can use it easily enough
    when calculating transaction latency for the TCP_RR test. raj
-   2007-06-08 */
+   2007-06-08 however, change its default value so one can tell in
+   "omni" output whether or not WANT_BURST was enabled. raj
+   2008-01-28 */
+#if defined(WANT_FIRST_BURST)
 int first_burst_size=0;
+#else
+int first_burst_size=-1;
+#endif
 
 #if defined(HAVE_SENDFILE) && (defined(__linux) || defined(__sun))
 #include <sys/sendfile.h>
@@ -197,6 +203,9 @@ int
 #ifdef TCP_CORK
   loc_tcpcork=0,        /* don't/do use TCP_CORK locally        */
   rem_tcpcork=0,        /* don't/do use TCP_CORK remotely       */
+#else
+  loc_tcpcork=-1,
+  rem_tcpcork=-1,
 #endif /* TCP_CORK */
   loc_sndavoid,		/* avoid send copies locally		*/
   loc_rcvavoid,		/* avoid recv copies locally		*/
@@ -520,6 +529,53 @@ hst_to_nst(int hst) {
     return NST_UNKN;
   }
 }
+char *
+hst_to_str(int hst) {
+
+  switch(hst) {
+#ifdef SOCK_STREAM
+  case SOCK_STREAM:
+    return "Stream";
+    break;
+#endif
+#ifdef SOCK_DGRAM
+  case SOCK_DGRAM:
+    return "Datagram";
+    break;
+#endif
+  default:
+    return "Unknown";
+  }
+}
+
+char *
+protocol_to_str(int protocol) {
+  switch(protocol) {
+#ifdef IPPROTO_TCP
+  case IPPROTO_TCP:
+    return "TCP";
+#endif
+#ifdef IPPROTO_UDP
+  case IPPROTO_UDP:
+    return "UDP";
+#endif
+#ifdef IPPROTO_SCTP
+  case IPPROTO_SCTP:
+    return "SCTP";
+#endif
+#ifdef IPPROTO_DCCP
+  case IPPROTO_DCCP:
+    return "DCCP";
+#endif
+#ifdef IPPROTO_SDP
+  case IPPROTO_SDP:
+    return "SDP";
+#endif
+  default:
+    return "Unknown Protocol";
+  }
+}
+
 
  /* This routine is intended to retrieve interesting aspects of tcp */
  /* for the data connection. at first, it attempts to retrieve the */
@@ -1157,7 +1213,7 @@ create_data_socket(struct addrinfo *res)
 
 #if defined(TCP_CORK)
     
-    if (loc_tcpcork != 0) {
+    if (loc_tcpcork > 0) {
       /* the user wishes for us to set TCP_CORK on the socket */
       int one = 1;
       if (setsockopt(temp_socket,
@@ -3922,7 +3978,7 @@ Size (bytes)\n\
     
 #if defined(TCP_CORK)
     /* should this even be here?!? */
-    if (loc_tcpcork != 0) {
+    if (loc_tcpcork > 0) {
       /* the user wishes for us to set TCP_CORK on the socket */
       int one = 1;
       if (setsockopt(send_socket,
@@ -6040,7 +6096,7 @@ Send   Recv    Send   Recv    usec/Tran  per sec  Outbound   Inbound\n\
 	       underreport the latency of individual
 	       transactions. learned from saf by raj 2007-06-08  */
 	    (((double)1.0/thruput)*(double)1000000.0) * 
-	    (double) (1+first_burst_size),
+	    (double) (1 + ((first_burst_size > 0) ? first_burst_size : 0)),
 	    thruput,
 	    calc_thruput_interval_omni(thruput * (double)req_size,1.0),
 	    calc_thruput_interval_omni(thruput * (double)rsp_size,1.0));
