@@ -327,6 +327,7 @@ extern int
 enum netperf_output_name {
   OUTPUT_NONE,
   COMMAND_LINE,
+  RESULT_BRAND,
   SOCKET_TYPE,
   PROTOCOL,
   DIRECTION,
@@ -366,10 +367,12 @@ enum netperf_output_name {
   LOCAL_CPU_BIND,
   LOCAL_SD,
   LOCAL_CPU_METHOD,
+  LOCAL_CPU_COUNT,
   REMOTE_CPU_UTIL,
   REMOTE_CPU_BIND,
   REMOTE_SD,
   REMOTE_CPU_METHOD,
+  REMOTE_CPU_COUNT,
   SD_UNITS,
   LOCAL_NODELAY,
   LOCAL_CORK,
@@ -541,6 +544,8 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "OUTPUT_NONE";
   case   COMMAND_LINE:
     return "COMMAND_LINE";
+  case RESULT_BRAND:
+    return "RESULT_BRAND";
   case   SOCKET_TYPE:
     return "SOCKET_TYPE";
   case   DIRECTION:
@@ -621,6 +626,8 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "SD_UNITS";
   case   LOCAL_CPU_METHOD:
     return "LOCAL_CPU_METHOD";
+  case LOCAL_CPU_COUNT:
+    return "LOCAL_CPU_COUNT";
   case   LOCAL_NODELAY:
     return "LOCAL_NODELAY";
   case   LOCAL_CORK:
@@ -669,6 +676,8 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "REMOTE_SD";
   case   REMOTE_CPU_METHOD:
     return "REMOTE_CPU_METHOD";
+  case REMOTE_CPU_COUNT:
+    return "REMOTE_CPU_COUNT";
   case   REMOTE_NODELAY:
     return "REMOTE_NODELAY";
   case   REMOTE_CORK:
@@ -783,6 +792,16 @@ print_omni_init() {
     NETPERF_LINE_MAX(COMMAND_LINE);
   netperf_output_source[COMMAND_LINE].tot_line_len = 
     NETPERF_LINE_TOT(COMMAND_LINE);
+
+  netperf_output_source[RESULT_BRAND].output_name = RESULT_BRAND;
+  netperf_output_source[RESULT_BRAND].line1 = "Result";
+  netperf_output_source[RESULT_BRAND].line2 = "Tag";
+  netperf_output_source[RESULT_BRAND].format = "\"%s\"";
+  netperf_output_source[RESULT_BRAND].display_value = result_brand;
+  netperf_output_source[RESULT_BRAND].max_line_len = 
+    NETPERF_LINE_MAX(RESULT_BRAND);
+  netperf_output_source[RESULT_BRAND].tot_line_len = 
+    NETPERF_LINE_TOT(RESULT_BRAND);
 
   netperf_output_source[SOCKET_TYPE].output_name = SOCKET_TYPE;
   netperf_output_source[SOCKET_TYPE].line1 = "Socket";
@@ -1235,6 +1254,17 @@ print_omni_init() {
   netperf_output_source[LOCAL_CPU_METHOD].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_CPU_METHOD);
 
+  netperf_output_source[LOCAL_CPU_COUNT].output_name = LOCAL_CPU_COUNT;
+  netperf_output_source[LOCAL_CPU_COUNT].line1 = "Local";
+  netperf_output_source[LOCAL_CPU_COUNT].line2 = "CPU";
+  netperf_output_source[LOCAL_CPU_COUNT].line3 = "Count";
+  netperf_output_source[LOCAL_CPU_COUNT].format = "%d";
+  netperf_output_source[LOCAL_CPU_COUNT].display_value = &lib_num_loc_cpus;
+  netperf_output_source[LOCAL_CPU_COUNT].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_CPU_COUNT);
+  netperf_output_source[LOCAL_CPU_COUNT].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_CPU_COUNT);
+
   netperf_output_source[LOCAL_NODELAY].output_name = LOCAL_NODELAY;
   netperf_output_source[LOCAL_NODELAY].line1 = "Local";
   netperf_output_source[LOCAL_NODELAY].line2 = "NODELAY";
@@ -1523,6 +1553,17 @@ print_omni_init() {
   netperf_output_source[REMOTE_CPU_METHOD].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_CPU_METHOD);
 
+  netperf_output_source[REMOTE_CPU_COUNT].output_name = REMOTE_CPU_COUNT;
+  netperf_output_source[REMOTE_CPU_COUNT].line1 = "Remote";
+  netperf_output_source[REMOTE_CPU_COUNT].line2 = "CPU";
+  netperf_output_source[REMOTE_CPU_COUNT].line3 = "Count";
+  netperf_output_source[REMOTE_CPU_COUNT].format = "%d";
+  netperf_output_source[REMOTE_CPU_COUNT].display_value = &lib_num_rem_cpus;
+  netperf_output_source[REMOTE_CPU_COUNT].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_CPU_COUNT);
+  netperf_output_source[REMOTE_CPU_COUNT].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_CPU_COUNT);
+
   netperf_output_source[REMOTE_NODELAY].output_name = REMOTE_NODELAY;
   netperf_output_source[REMOTE_NODELAY].line1 = "Remote";
   netperf_output_source[REMOTE_NODELAY].line2 = "NODELAY";
@@ -1586,10 +1627,12 @@ print_omni_init() {
   output_csv_list[i++] = LOCAL_CPU_UTIL;
   output_csv_list[i++] = LOCAL_SD;
   output_csv_list[i++] = LOCAL_CPU_BIND;
+  output_csv_list[i++] = LOCAL_CPU_COUNT;
   output_csv_list[i++] = REMOTE_CPU_UTIL;
   output_csv_list[i++] = REMOTE_SD;
   output_csv_list[i++] = SD_UNITS;
   output_csv_list[i++] = REMOTE_CPU_BIND;
+  output_csv_list[i++] = REMOTE_CPU_COUNT;
   output_csv_list[i++] = RT_LATENCY;
   output_csv_list[i++] = BURST_SIZE;
   output_csv_list[i++] = TRANSPORT_MSS;
@@ -1615,6 +1658,7 @@ print_omni_init() {
   output_csv_list[i++] = REMOTE_RECV_CLEAN_COUNT;
   output_csv_list[i++] = REMOTE_NODELAY;
   output_csv_list[i++] = REMOTE_CORK;
+  output_csv_list[i++] = RESULT_BRAND;
   output_csv_list[i++] = COMMAND_LINE;
 
   for (j = 0; j < NETPERF_MAX_BLOCKS; j++)
@@ -3061,6 +3105,7 @@ send_omni(char remote_host[])
 	   the size we get from getsockopt() at the beginning of a
 	   connection may not be what we would get at the end of the
 	   connection... */
+	lib_num_rem_cpus = omni_result->num_cpus;
 	rsr_size_end = omni_result->recv_buf_size;
 	rss_size_end = omni_result->send_buf_size;
 	remote_bytes_sent = omni_result->bytes_sent;
