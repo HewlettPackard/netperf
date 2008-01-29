@@ -523,6 +523,8 @@ extern int af_to_nf(int af);
 extern int nf_to_af(int nf);
 extern int nst_to_hst(int nst);
 extern int hst_to_nst(int hst);
+extern char *hst_to_str(int hst);
+extern char *protocol_to_str(int protocol);
 extern void print_top_test_header(char test_name[], 
 				  struct addrinfo *source, 
 				  struct addrinfo *destination);

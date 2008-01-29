@@ -234,9 +234,15 @@ int remote_recv_size = -1;
 int remote_send_size_req = -1;
 int remote_recv_size_req = -1;
 int remote_use_sendfile;
+#if 0
 int remote_send_dirty_count;
 int remote_recv_dirty_count;
 int remote_recv_clean_count;
+#endif
+extern int loc_dirty_count;
+extern int loc_clean_count;
+extern int rem_dirty_count;
+extern int rem_clean_count;
 int remote_checksum_off;
 int connection_test;
 int need_to_connect;
@@ -260,13 +266,27 @@ uint64_t      remote_send_calls;
 uint64_t      remote_receive_calls;
   double      bytes_xferd;
   double      remote_bytes_xferd;
+  double      remote_bytes_per_recv;
+  double      remote_bytes_per_send;
   float       elapsed_time;
-  float	      local_cpu_utilization;
+  float       local_cpu_utilization;
   float	      local_service_demand;
-  float	      remote_cpu_utilization;
+  float       remote_cpu_utilization;
   float	      remote_service_demand;
+  double	thruput;
+/* kludges for omni output */
+double      elapsed_time_double;
+double      local_cpu_utilization_double;
+double      local_service_demand_double;
+double      remote_cpu_utilization_double;
+double      remote_service_demand_double;
+double      rtt_latency = -1.0;
+int32_t    transport_mss = -1;
+
+int printing_initialized = 0;
 
 int sd_kb = 1;  /* is the service demand per KB or per tran? */
+char *sd_kb_str;
 
 char *socket_type_str;
 char *protocol_str;
@@ -321,6 +341,9 @@ enum netperf_output_name {
   THROUGHPUT_UNITS,
   RT_LATENCY,
   BURST_SIZE,
+  TRANSPORT_MSS,
+  REQUEST_SIZE,
+  RESPONSE_SIZE,
   LSS_SIZE_REQ,
   LSS_SIZE,
   LSS_SIZE_END,
@@ -342,8 +365,12 @@ enum netperf_output_name {
   LOCAL_CPU_UTIL,
   LOCAL_CPU_BIND,
   LOCAL_SD,
-  LOCAL_SD_UNITS,
   LOCAL_CPU_METHOD,
+  REMOTE_CPU_UTIL,
+  REMOTE_CPU_BIND,
+  REMOTE_SD,
+  REMOTE_CPU_METHOD,
+  SD_UNITS,
   LOCAL_NODELAY,
   LOCAL_CORK,
   RSS_SIZE_REQ,
@@ -364,11 +391,6 @@ enum netperf_output_name {
   REMOTE_SEND_DIRTY_COUNT,
   REMOTE_RECV_DIRTY_COUNT,
   REMOTE_RECV_CLEAN_COUNT,
-  REMOTE_CPU_UTIL,
-  REMOTE_CPU_BIND,
-  REMOTE_SD,
-  REMOTE_SD_UNITS,
-  REMOTE_CPU_METHOD,
   REMOTE_NODELAY,
   REMOTE_CORK,
   OUTPUT_END,
@@ -403,6 +425,13 @@ enum netperf_output_name output_csv_list[NETPERF_OUTPUT_MAX];
 
 #define NETPERF_MAX_BLOCKS 3
 enum netperf_output_name output_human_list[NETPERF_MAX_BLOCKS][NETPERF_OUTPUT_MAX];
+
+char *direction_to_str(int direction) {
+  if (NETPERF_RECV_ONLY(direction)) return "Receive";
+  if (NETPERF_XMIT_ONLY(direction)) return "Send";
+  if (NETPERF_CC(direction)) return "Connection";
+  else return "Send|Recv";
+}
 
 static unsigned short
 get_port_number(struct addrinfo *res) 
@@ -540,6 +569,12 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "RT_LATENCY";
   case BURST_SIZE:
     return "BURST_SIZE";
+  case TRANSPORT_MSS:
+    return "TRANSPORT_MSS";
+  case REQUEST_SIZE:
+    return "REQUEST_SIZE";
+  case RESPONSE_SIZE:
+    return "RESPONSE_SIZE";
   case   LSS_SIZE_REQ:
     return "LSS_SIZE_REQ";
   case   LSS_SIZE:
@@ -582,8 +617,8 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "LOCAL_CPU_BIND";
   case   LOCAL_SD:
     return "LOCAL_SD";
-  case   LOCAL_SD_UNITS:
-    return "LOCAL_SD_UNITS";
+  case   SD_UNITS:
+    return "SD_UNITS";
   case   LOCAL_CPU_METHOD:
     return "LOCAL_CPU_METHOD";
   case   LOCAL_NODELAY:
@@ -632,8 +667,6 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "REMOTE_CPU_BIND";
   case   REMOTE_SD:
     return "REMOTE_SD";
-  case   REMOTE_SD_UNITS:
-    return "REMOTE_SD_UNITS";
   case   REMOTE_CPU_METHOD:
     return "REMOTE_CPU_METHOD";
   case   REMOTE_NODELAY:
@@ -643,7 +676,7 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
   case OUTPUT_END:
     return "OUTPUT_END";
   default:
-    return "Unknown";
+    return "!UNKNOWN OUTPUT SELECTOR!";
   }
 }
 
@@ -701,6 +734,10 @@ print_omni_init() {
 
   int i,j;
 
+  if (printing_initialized) return;
+
+  printing_initialized = 1;
+
   /* belts and suspenders everyone... */
   for (i = OUTPUT_NONE; i < NETPERF_OUTPUT_MAX; i++) {
     netperf_output_source[i].output_name = i;
@@ -730,12 +767,8 @@ print_omni_init() {
     strlen(netperf_output_source[x].line4) + 4
 
   netperf_output_source[OUTPUT_NONE].output_name = OUTPUT_NONE;
-  netperf_output_source[OUTPUT_NONE].line1 = "This Space";
-  netperf_output_source[OUTPUT_NONE].line2 = "Intentionally";
-  netperf_output_source[OUTPUT_NONE].line3 = "Left Blank";
-  netperf_output_source[OUTPUT_NONE].line4 = ":)";
   netperf_output_source[OUTPUT_NONE].format = "%s";
-  netperf_output_source[OUTPUT_NONE].display_value = NULL;
+  netperf_output_source[OUTPUT_NONE].display_value = &" ";
   netperf_output_source[OUTPUT_NONE].max_line_len = 
     NETPERF_LINE_MAX(OUTPUT_NONE);
   netperf_output_source[OUTPUT_NONE].tot_line_len = 
@@ -785,7 +818,7 @@ print_omni_init() {
   netperf_output_source[ELAPSED_TIME].line2 = "Time";
   netperf_output_source[ELAPSED_TIME].line3 = "(sec)";
   netperf_output_source[ELAPSED_TIME].format = "%f";
-  netperf_output_source[ELAPSED_TIME].display_value = &elapsed_time;
+  netperf_output_source[ELAPSED_TIME].display_value = &elapsed_time_double;
   netperf_output_source[ELAPSED_TIME].max_line_len = 
     NETPERF_LINE_MAX(ELAPSED_TIME);
   netperf_output_source[ELAPSED_TIME].tot_line_len = 
@@ -854,8 +887,8 @@ print_omni_init() {
   netperf_output_source[THROUGHPUT].output_name = THROUGHPUT;
   netperf_output_source[THROUGHPUT].line1 = "Throughput";
   netperf_output_source[THROUGHPUT].line2 = "";
-  netperf_output_source[THROUGHPUT].format = "%f";
-  netperf_output_source[THROUGHPUT].display_value = NULL;
+  netperf_output_source[THROUGHPUT].format = "%.2f";
+  netperf_output_source[THROUGHPUT].display_value = &thruput;
   netperf_output_source[THROUGHPUT].max_line_len = 
     NETPERF_LINE_MAX(THROUGHPUT);
   netperf_output_source[THROUGHPUT].tot_line_len = 
@@ -864,22 +897,57 @@ print_omni_init() {
   netperf_output_source[THROUGHPUT_UNITS].output_name = THROUGHPUT_UNITS;
   netperf_output_source[THROUGHPUT_UNITS].line1 = "Throughput";
   netperf_output_source[THROUGHPUT_UNITS].line2 = "Units";
-  netperf_output_source[THROUGHPUT_UNITS].format = "%s";
-  netperf_output_source[THROUGHPUT_UNITS].display_value = NULL;
+  netperf_output_source[THROUGHPUT_UNITS].format = "%s/s";
+  netperf_output_source[THROUGHPUT_UNITS].display_value = format_units();
   netperf_output_source[THROUGHPUT_UNITS].max_line_len = 
     NETPERF_LINE_MAX(THROUGHPUT_UNITS);
   netperf_output_source[THROUGHPUT_UNITS].tot_line_len = 
     NETPERF_LINE_TOT(THROUGHPUT_UNITS);
 
   netperf_output_source[RT_LATENCY].output_name = RT_LATENCY;
-  netperf_output_source[RT_LATENCY].line1 = "Throughput";
-  netperf_output_source[RT_LATENCY].line2 = "Units";
-  netperf_output_source[RT_LATENCY].format = "%s";
-  netperf_output_source[RT_LATENCY].display_value = NULL;
+  netperf_output_source[RT_LATENCY].line1 = "Round";
+  netperf_output_source[RT_LATENCY].line2 = "Trip";
+  netperf_output_source[RT_LATENCY].line3 = "Latency";
+  netperf_output_source[RT_LATENCY].line4 = "usec/tran";
+  netperf_output_source[RT_LATENCY].format = "%.3f";
+  netperf_output_source[RT_LATENCY].display_value = &rtt_latency;
   netperf_output_source[RT_LATENCY].max_line_len = 
     NETPERF_LINE_MAX(RT_LATENCY);
   netperf_output_source[RT_LATENCY].tot_line_len = 
     NETPERF_LINE_TOT(RT_LATENCY);
+
+  netperf_output_source[TRANSPORT_MSS].output_name = TRANSPORT_MSS;
+  netperf_output_source[TRANSPORT_MSS].line1 = "Transport";
+  netperf_output_source[TRANSPORT_MSS].line2 = "MSS";
+  netperf_output_source[TRANSPORT_MSS].line3 = "bytes";
+  netperf_output_source[TRANSPORT_MSS].format = "%d";
+  netperf_output_source[TRANSPORT_MSS].display_value = &transport_mss;
+  netperf_output_source[TRANSPORT_MSS].max_line_len = 
+    NETPERF_LINE_MAX(TRANSPORT_MSS);
+  netperf_output_source[TRANSPORT_MSS].tot_line_len = 
+    NETPERF_LINE_TOT(TRANSPORT_MSS);
+
+  netperf_output_source[REQUEST_SIZE].output_name = REQUEST_SIZE;
+  netperf_output_source[REQUEST_SIZE].line1 = "Request";
+  netperf_output_source[REQUEST_SIZE].line2 = "Size";
+  netperf_output_source[REQUEST_SIZE].line3 = "Bytes";
+  netperf_output_source[REQUEST_SIZE].format = "%d";
+  netperf_output_source[REQUEST_SIZE].display_value = &req_size;
+  netperf_output_source[REQUEST_SIZE].max_line_len = 
+    NETPERF_LINE_MAX(REQUEST_SIZE);
+  netperf_output_source[REQUEST_SIZE].tot_line_len = 
+    NETPERF_LINE_TOT(REQUEST_SIZE);
+
+  netperf_output_source[RESPONSE_SIZE].output_name = RESPONSE_SIZE;
+  netperf_output_source[RESPONSE_SIZE].line1 = "Response";
+  netperf_output_source[RESPONSE_SIZE].line2 = "Size";
+  netperf_output_source[RESPONSE_SIZE].line3 = "Bytes";
+  netperf_output_source[RESPONSE_SIZE].format = "%d";
+  netperf_output_source[RESPONSE_SIZE].display_value = &rsp_size;
+  netperf_output_source[RESPONSE_SIZE].max_line_len = 
+    NETPERF_LINE_MAX(RESPONSE_SIZE);
+  netperf_output_source[RESPONSE_SIZE].tot_line_len = 
+    NETPERF_LINE_TOT(RESPONSE_SIZE);
 
   netperf_output_source[BURST_SIZE].output_name = BURST_SIZE;
   netperf_output_source[BURST_SIZE].line1 = "Initial";
@@ -982,7 +1050,7 @@ print_omni_init() {
   netperf_output_source[LOCAL_RECV_SIZE].line3 = "Size";
   netperf_output_source[LOCAL_RECV_SIZE].line4 = "";
   netperf_output_source[LOCAL_RECV_SIZE].format = "%d";
-  netperf_output_source[LOCAL_RECV_SIZE].display_value = NULL;
+  netperf_output_source[LOCAL_RECV_SIZE].display_value = &recv_size;
   netperf_output_source[LOCAL_RECV_SIZE].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_RECV_SIZE);
   netperf_output_source[LOCAL_RECV_SIZE].tot_line_len = 
@@ -1065,7 +1133,7 @@ print_omni_init() {
   netperf_output_source[LOCAL_BYTES_XFERD].line2 = "Bytes";
   netperf_output_source[LOCAL_BYTES_XFERD].line3 = "Xferred";
   netperf_output_source[LOCAL_BYTES_XFERD].line4 = "";
-  netperf_output_source[LOCAL_BYTES_XFERD].format = "%f";
+  netperf_output_source[LOCAL_BYTES_XFERD].format = "%.0f";
   netperf_output_source[LOCAL_BYTES_XFERD].display_value = &bytes_xferd;
   netperf_output_source[LOCAL_BYTES_XFERD].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_BYTES_XFERD);
@@ -1077,8 +1145,8 @@ print_omni_init() {
   netperf_output_source[LOCAL_SEND_DIRTY_COUNT].line2 = "Send";
   netperf_output_source[LOCAL_SEND_DIRTY_COUNT].line3 = "Dirty";
   netperf_output_source[LOCAL_SEND_DIRTY_COUNT].line4 = "Count";
-  netperf_output_source[LOCAL_SEND_DIRTY_COUNT].format = "%s";
-  netperf_output_source[LOCAL_SEND_DIRTY_COUNT].display_value = NULL;
+  netperf_output_source[LOCAL_SEND_DIRTY_COUNT].format = "%d";
+  netperf_output_source[LOCAL_SEND_DIRTY_COUNT].display_value = &loc_dirty_count;
   netperf_output_source[LOCAL_SEND_DIRTY_COUNT].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_SEND_DIRTY_COUNT);
   netperf_output_source[LOCAL_SEND_DIRTY_COUNT].tot_line_len = 
@@ -1089,8 +1157,8 @@ print_omni_init() {
   netperf_output_source[LOCAL_RECV_DIRTY_COUNT].line2 = "Recv";
   netperf_output_source[LOCAL_RECV_DIRTY_COUNT].line3 = "Dirty";
   netperf_output_source[LOCAL_RECV_DIRTY_COUNT].line4 = "Count";
-  netperf_output_source[LOCAL_RECV_DIRTY_COUNT].format = "%s";
-  netperf_output_source[LOCAL_RECV_DIRTY_COUNT].display_value = NULL;
+  netperf_output_source[LOCAL_RECV_DIRTY_COUNT].format = "%d";
+  netperf_output_source[LOCAL_RECV_DIRTY_COUNT].display_value = &loc_dirty_count;
   netperf_output_source[LOCAL_RECV_DIRTY_COUNT].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_RECV_DIRTY_COUNT);
   netperf_output_source[LOCAL_RECV_DIRTY_COUNT].tot_line_len = 
@@ -1101,8 +1169,8 @@ print_omni_init() {
   netperf_output_source[LOCAL_RECV_CLEAN_COUNT].line2 = "Recv";
   netperf_output_source[LOCAL_RECV_CLEAN_COUNT].line3 = "Clean";
   netperf_output_source[LOCAL_RECV_CLEAN_COUNT].line4 = "Count";
-  netperf_output_source[LOCAL_RECV_CLEAN_COUNT].format = "%s";
-  netperf_output_source[LOCAL_RECV_CLEAN_COUNT].display_value = NULL;
+  netperf_output_source[LOCAL_RECV_CLEAN_COUNT].format = "%d";
+  netperf_output_source[LOCAL_RECV_CLEAN_COUNT].display_value = &loc_clean_count;
   netperf_output_source[LOCAL_RECV_CLEAN_COUNT].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_RECV_CLEAN_COUNT);
   netperf_output_source[LOCAL_RECV_CLEAN_COUNT].tot_line_len = 
@@ -1114,7 +1182,7 @@ print_omni_init() {
   netperf_output_source[LOCAL_CPU_UTIL].line3 = "Util";
   netperf_output_source[LOCAL_CPU_UTIL].line4 = "%";
   netperf_output_source[LOCAL_CPU_UTIL].format = "%f";
-  netperf_output_source[LOCAL_CPU_UTIL].display_value = &local_cpu_utilization;
+  netperf_output_source[LOCAL_CPU_UTIL].display_value = &local_cpu_utilization_double;
   netperf_output_source[LOCAL_CPU_UTIL].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_CPU_UTIL);
   netperf_output_source[LOCAL_CPU_UTIL].tot_line_len = 
@@ -1138,31 +1206,30 @@ print_omni_init() {
   netperf_output_source[LOCAL_SD].line3 = "Demand";
   netperf_output_source[LOCAL_SD].line4 = "";
   netperf_output_source[LOCAL_SD].format = "%f";
-  netperf_output_source[LOCAL_SD].display_value = &local_service_demand;
+  netperf_output_source[LOCAL_SD].display_value = &local_service_demand_double;
   netperf_output_source[LOCAL_SD].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_SD);
   netperf_output_source[LOCAL_SD].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_SD);
 
-  netperf_output_source[LOCAL_SD_UNITS].output_name = LOCAL_SD_UNITS;
-  netperf_output_source[LOCAL_SD_UNITS].line1 = "Local";
-  netperf_output_source[LOCAL_SD_UNITS].line2 = "Service";
-  netperf_output_source[LOCAL_SD_UNITS].line3 = "Demand";
-  netperf_output_source[LOCAL_SD_UNITS].line4 = "Units";
-  netperf_output_source[LOCAL_SD_UNITS].format = "%s";
-  netperf_output_source[LOCAL_SD_UNITS].display_value = NULL;
-  netperf_output_source[LOCAL_SD_UNITS].max_line_len = 
-    NETPERF_LINE_MAX(LOCAL_SD_UNITS);
-  netperf_output_source[LOCAL_SD_UNITS].tot_line_len = 
-    NETPERF_LINE_TOT(LOCAL_SD_UNITS);
+  netperf_output_source[SD_UNITS].output_name = SD_UNITS;
+  netperf_output_source[SD_UNITS].line1 = "Service";
+  netperf_output_source[SD_UNITS].line2 = "Demand";
+  netperf_output_source[SD_UNITS].line3 = "Units";
+  netperf_output_source[SD_UNITS].format = "%s";
+  netperf_output_source[SD_UNITS].display_value = sd_kb_str;
+  netperf_output_source[SD_UNITS].max_line_len = 
+    NETPERF_LINE_MAX(SD_UNITS);
+  netperf_output_source[SD_UNITS].tot_line_len = 
+    NETPERF_LINE_TOT(SD_UNITS);
 
   netperf_output_source[LOCAL_CPU_METHOD].output_name = LOCAL_CPU_METHOD;
   netperf_output_source[LOCAL_CPU_METHOD].line1 = "Local";
   netperf_output_source[LOCAL_CPU_METHOD].line2 = "CPU";
   netperf_output_source[LOCAL_CPU_METHOD].line3 = "Util";
   netperf_output_source[LOCAL_CPU_METHOD].line4 = "Method";
-  netperf_output_source[LOCAL_CPU_METHOD].format = "%s";
-  netperf_output_source[LOCAL_CPU_METHOD].display_value = NULL;
+  netperf_output_source[LOCAL_CPU_METHOD].format = "%c";
+  netperf_output_source[LOCAL_CPU_METHOD].display_value = &local_cpu_method;
   netperf_output_source[LOCAL_CPU_METHOD].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_CPU_METHOD);
   netperf_output_source[LOCAL_CPU_METHOD].tot_line_len = 
@@ -1173,8 +1240,8 @@ print_omni_init() {
   netperf_output_source[LOCAL_NODELAY].line2 = "NODELAY";
   netperf_output_source[LOCAL_NODELAY].line3 = "";
   netperf_output_source[LOCAL_NODELAY].line4 = "";
-  netperf_output_source[LOCAL_NODELAY].format = "%s";
-  netperf_output_source[LOCAL_NODELAY].display_value = NULL;
+  netperf_output_source[LOCAL_NODELAY].format = "%d";
+  netperf_output_source[LOCAL_NODELAY].display_value = &loc_nodelay;
   netperf_output_source[LOCAL_NODELAY].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_NODELAY);
   netperf_output_source[LOCAL_NODELAY].tot_line_len = 
@@ -1185,8 +1252,8 @@ print_omni_init() {
   netperf_output_source[LOCAL_CORK].line2 = "Cork";
   netperf_output_source[LOCAL_CORK].line3 = "";
   netperf_output_source[LOCAL_CORK].line4 = "";
-  netperf_output_source[LOCAL_CORK].format = "%s";
-  netperf_output_source[LOCAL_CORK].display_value = NULL;
+  netperf_output_source[LOCAL_CORK].format = "%d";
+  netperf_output_source[LOCAL_CORK].display_value = &loc_tcpcork;
   netperf_output_source[LOCAL_CORK].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_CORK);
   netperf_output_source[LOCAL_CORK].tot_line_len = 
@@ -1317,8 +1384,8 @@ print_omni_init() {
   netperf_output_source[REMOTE_BYTES_PER_RECV].line2 = "Bytes";
   netperf_output_source[REMOTE_BYTES_PER_RECV].line3 = "Per";
   netperf_output_source[REMOTE_BYTES_PER_RECV].line4 = "Recv";
-  netperf_output_source[REMOTE_BYTES_PER_RECV].format = "%s";
-  netperf_output_source[REMOTE_BYTES_PER_RECV].display_value = NULL;
+  netperf_output_source[REMOTE_BYTES_PER_RECV].format = "%f";
+  netperf_output_source[REMOTE_BYTES_PER_RECV].display_value = &remote_bytes_per_recv;
   netperf_output_source[REMOTE_BYTES_PER_RECV].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_BYTES_PER_RECV);
   netperf_output_source[REMOTE_BYTES_PER_RECV].tot_line_len = 
@@ -1329,8 +1396,8 @@ print_omni_init() {
   netperf_output_source[REMOTE_BYTES_PER_SEND].line2 = "Bytes";
   netperf_output_source[REMOTE_BYTES_PER_SEND].line3 = "Per";
   netperf_output_source[REMOTE_BYTES_PER_SEND].line4 = "Send";
-  netperf_output_source[REMOTE_BYTES_PER_SEND].format = "%s";
-  netperf_output_source[REMOTE_BYTES_PER_SEND].display_value = NULL;
+  netperf_output_source[REMOTE_BYTES_PER_SEND].format = "%f";
+  netperf_output_source[REMOTE_BYTES_PER_SEND].display_value = &remote_bytes_per_send;
   netperf_output_source[REMOTE_BYTES_PER_SEND].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_BYTES_PER_SEND);
   netperf_output_source[REMOTE_BYTES_PER_SEND].tot_line_len = 
@@ -1365,7 +1432,7 @@ print_omni_init() {
   netperf_output_source[REMOTE_BYTES_XFERD].line2 = "Bytes";
   netperf_output_source[REMOTE_BYTES_XFERD].line3 = "Xferred";
   netperf_output_source[REMOTE_BYTES_XFERD].line4 = "";
-  netperf_output_source[REMOTE_BYTES_XFERD].format = "%f";
+  netperf_output_source[REMOTE_BYTES_XFERD].format = "%.0f";
   netperf_output_source[REMOTE_BYTES_XFERD].display_value = &remote_bytes_xferd;
   netperf_output_source[REMOTE_BYTES_XFERD].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_BYTES_XFERD);
@@ -1378,7 +1445,7 @@ print_omni_init() {
   netperf_output_source[REMOTE_SEND_DIRTY_COUNT].line3 = "Dirty";
   netperf_output_source[REMOTE_SEND_DIRTY_COUNT].line4 = "Count";
   netperf_output_source[REMOTE_SEND_DIRTY_COUNT].format = "%d";
-  netperf_output_source[REMOTE_SEND_DIRTY_COUNT].display_value = &remote_send_dirty_count;
+  netperf_output_source[REMOTE_SEND_DIRTY_COUNT].display_value = &rem_dirty_count;
   netperf_output_source[REMOTE_SEND_DIRTY_COUNT].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_SEND_DIRTY_COUNT);
   netperf_output_source[REMOTE_SEND_DIRTY_COUNT].tot_line_len = 
@@ -1390,7 +1457,7 @@ print_omni_init() {
   netperf_output_source[REMOTE_RECV_DIRTY_COUNT].line3 = "Dirty";
   netperf_output_source[REMOTE_RECV_DIRTY_COUNT].line4 = "Count";
   netperf_output_source[REMOTE_RECV_DIRTY_COUNT].format = "%d";
-  netperf_output_source[REMOTE_RECV_DIRTY_COUNT].display_value = &remote_recv_dirty_count;
+  netperf_output_source[REMOTE_RECV_DIRTY_COUNT].display_value = &rem_dirty_count;
   netperf_output_source[REMOTE_RECV_DIRTY_COUNT].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_RECV_DIRTY_COUNT);
   netperf_output_source[REMOTE_RECV_DIRTY_COUNT].tot_line_len = 
@@ -1402,7 +1469,7 @@ print_omni_init() {
   netperf_output_source[REMOTE_RECV_CLEAN_COUNT].line3 = "Clean";
   netperf_output_source[REMOTE_RECV_CLEAN_COUNT].line4 = "Count";
   netperf_output_source[REMOTE_RECV_CLEAN_COUNT].format = "%d";
-  netperf_output_source[REMOTE_RECV_CLEAN_COUNT].display_value = &remote_recv_clean_count;
+  netperf_output_source[REMOTE_RECV_CLEAN_COUNT].display_value = &rem_clean_count;
   netperf_output_source[REMOTE_RECV_CLEAN_COUNT].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_RECV_CLEAN_COUNT);
   netperf_output_source[REMOTE_RECV_CLEAN_COUNT].tot_line_len = 
@@ -1414,7 +1481,7 @@ print_omni_init() {
   netperf_output_source[REMOTE_CPU_UTIL].line3 = "Util";
   netperf_output_source[REMOTE_CPU_UTIL].line4 = "%";
   netperf_output_source[REMOTE_CPU_UTIL].format = "%f";
-  netperf_output_source[REMOTE_CPU_UTIL].display_value = &remote_cpu_utilization;
+  netperf_output_source[REMOTE_CPU_UTIL].display_value = &remote_cpu_utilization_double;
   netperf_output_source[REMOTE_CPU_UTIL].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_CPU_UTIL);
   netperf_output_source[REMOTE_CPU_UTIL].tot_line_len = 
@@ -1438,31 +1505,19 @@ print_omni_init() {
   netperf_output_source[REMOTE_SD].line3 = "Demand";
   netperf_output_source[REMOTE_SD].line4 = "";
   netperf_output_source[REMOTE_SD].format = "%f";
-  netperf_output_source[REMOTE_SD].display_value = &remote_service_demand;
+  netperf_output_source[REMOTE_SD].display_value = &remote_service_demand_double;
   netperf_output_source[REMOTE_SD].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_SD);
   netperf_output_source[REMOTE_SD].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_SD);
-
-  netperf_output_source[REMOTE_SD_UNITS].output_name = REMOTE_SD_UNITS;
-  netperf_output_source[REMOTE_SD_UNITS].line1 = "Remote";
-  netperf_output_source[REMOTE_SD_UNITS].line2 = "Service";
-  netperf_output_source[REMOTE_SD_UNITS].line3 = "Demand";
-  netperf_output_source[REMOTE_SD_UNITS].line4 = "Units";
-  netperf_output_source[REMOTE_SD_UNITS].format = "%s";
-  netperf_output_source[REMOTE_SD_UNITS].display_value = NULL;
-  netperf_output_source[REMOTE_SD_UNITS].max_line_len = 
-    NETPERF_LINE_MAX(REMOTE_SD_UNITS);
-  netperf_output_source[REMOTE_SD_UNITS].tot_line_len = 
-    NETPERF_LINE_TOT(REMOTE_SD_UNITS);
 
   netperf_output_source[REMOTE_CPU_METHOD].output_name = REMOTE_CPU_METHOD;
   netperf_output_source[REMOTE_CPU_METHOD].line1 = "Remote";
   netperf_output_source[REMOTE_CPU_METHOD].line2 = "CPU";
   netperf_output_source[REMOTE_CPU_METHOD].line3 = "Util";
   netperf_output_source[REMOTE_CPU_METHOD].line4 = "Method";
-  netperf_output_source[REMOTE_CPU_METHOD].format = "%s";
-  netperf_output_source[REMOTE_CPU_METHOD].display_value = NULL;
+  netperf_output_source[REMOTE_CPU_METHOD].format = "%c";
+  netperf_output_source[REMOTE_CPU_METHOD].display_value = &remote_cpu_method;
   netperf_output_source[REMOTE_CPU_METHOD].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_CPU_METHOD);
   netperf_output_source[REMOTE_CPU_METHOD].tot_line_len = 
@@ -1473,8 +1528,8 @@ print_omni_init() {
   netperf_output_source[REMOTE_NODELAY].line2 = "NODELAY";
   netperf_output_source[REMOTE_NODELAY].line3 = "";
   netperf_output_source[REMOTE_NODELAY].line4 = "";
-  netperf_output_source[REMOTE_NODELAY].format = "%s";
-  netperf_output_source[REMOTE_NODELAY].display_value = NULL;
+  netperf_output_source[REMOTE_NODELAY].format = "%d";
+  netperf_output_source[REMOTE_NODELAY].display_value = &rem_nodelay;
   netperf_output_source[REMOTE_NODELAY].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_NODELAY);
   netperf_output_source[REMOTE_NODELAY].tot_line_len = 
@@ -1485,8 +1540,8 @@ print_omni_init() {
   netperf_output_source[REMOTE_CORK].line2 = "Cork";
   netperf_output_source[REMOTE_CORK].line3 = "";
   netperf_output_source[REMOTE_CORK].line4 = "";
-  netperf_output_source[REMOTE_CORK].format = "%s";
-  netperf_output_source[REMOTE_CORK].display_value = NULL;
+  netperf_output_source[REMOTE_CORK].format = "%d";
+  netperf_output_source[REMOTE_CORK].display_value = &rem_tcpcork;
   netperf_output_source[REMOTE_CORK].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_CORK);
   netperf_output_source[REMOTE_CORK].tot_line_len = 
@@ -1507,8 +1562,60 @@ print_omni_init() {
   for (i = OUTPUT_NONE; i < NETPERF_OUTPUT_MAX; i++)
     output_csv_list[i] = OUTPUT_END;
 
-  output_csv_list[0] = BURST_SIZE;
-  
+  /* the default for csv is the kitchen-sink.  ultimately it will be
+     possible to override by providing one's own list in a file */
+
+  i = 0;
+  output_csv_list[i++] = SOCKET_TYPE;
+  output_csv_list[i++] = PROTOCOL;
+  output_csv_list[i++] = DIRECTION;
+  output_csv_list[i++] = LSS_SIZE_REQ;
+  output_csv_list[i++] = LSS_SIZE;
+  output_csv_list[i++] = LSS_SIZE_END;
+  output_csv_list[i++] = RSS_SIZE_REQ;
+  output_csv_list[i++] = RSS_SIZE;
+  output_csv_list[i++] = RSS_SIZE_END;
+  output_csv_list[i++] = LOCAL_SEND_SIZE;
+  output_csv_list[i++] = LOCAL_RECV_SIZE;
+  output_csv_list[i++] = REQUEST_SIZE;
+  output_csv_list[i++] = REMOTE_SEND_SIZE;
+  output_csv_list[i++] = REMOTE_RECV_SIZE;
+  output_csv_list[i++] = RESPONSE_SIZE;
+  output_csv_list[i++] = THROUGHPUT;
+  output_csv_list[i++] = THROUGHPUT_UNITS;
+  output_csv_list[i++] = LOCAL_CPU_UTIL;
+  output_csv_list[i++] = LOCAL_SD;
+  output_csv_list[i++] = LOCAL_CPU_BIND;
+  output_csv_list[i++] = REMOTE_CPU_UTIL;
+  output_csv_list[i++] = REMOTE_SD;
+  output_csv_list[i++] = SD_UNITS;
+  output_csv_list[i++] = REMOTE_CPU_BIND;
+  output_csv_list[i++] = RT_LATENCY;
+  output_csv_list[i++] = BURST_SIZE;
+  output_csv_list[i++] = TRANSPORT_MSS;
+  output_csv_list[i++] = LOCAL_BYTES_SENT;
+  output_csv_list[i++] = LOCAL_SEND_CALLS;
+  output_csv_list[i++] = LOCAL_BYTES_PER_SEND;
+  output_csv_list[i++] = LOCAL_BYTES_RECVD;
+  output_csv_list[i++] = LOCAL_RECV_CALLS;
+  output_csv_list[i++] = LOCAL_BYTES_PER_RECV;
+  output_csv_list[i++] = LOCAL_SEND_DIRTY_COUNT;
+  output_csv_list[i++] = LOCAL_RECV_DIRTY_COUNT;
+  output_csv_list[i++] = LOCAL_RECV_CLEAN_COUNT;
+  output_csv_list[i++] = LOCAL_NODELAY;
+  output_csv_list[i++] = LOCAL_CORK;
+  output_csv_list[i++] = REMOTE_BYTES_SENT;
+  output_csv_list[i++] = REMOTE_SEND_CALLS;
+  output_csv_list[i++] = REMOTE_BYTES_PER_SEND;
+  output_csv_list[i++] = REMOTE_BYTES_RECVD;
+  output_csv_list[i++] = REMOTE_RECV_CALLS;
+  output_csv_list[i++] = REMOTE_BYTES_PER_RECV;
+  output_csv_list[i++] = REMOTE_SEND_DIRTY_COUNT;
+  output_csv_list[i++] = REMOTE_RECV_DIRTY_COUNT;
+  output_csv_list[i++] = REMOTE_RECV_CLEAN_COUNT;
+  output_csv_list[i++] = REMOTE_NODELAY;
+  output_csv_list[i++] = REMOTE_CORK;
+  output_csv_list[i++] = COMMAND_LINE;
 
   for (j = 0; j < NETPERF_MAX_BLOCKS; j++)
     for (i = OUTPUT_NONE; i < NETPERF_OUTPUT_MAX; i++)
@@ -1569,6 +1676,14 @@ my_snprintf(char *buffer, size_t size, const char *format, void *value)
 
   while (*fmt)
     switch (*fmt++) {
+    case 'c':
+      return snprintf(buffer, size, format, *(int *)value);
+    case 'f':
+    case 'e':
+    case 'E':
+    case 'g':
+    case 'G':
+      return snprintf(buffer, size, format, *(double *)value);
     case 's':
       return snprintf(buffer, size, format, (char *)value);
     case 'd':
@@ -1601,11 +1716,20 @@ print_omni_csv()
 	(output_csv_list[j] != OUTPUT_END));
        j++) {
     if ((netperf_output_source[output_csv_list[j]].format != NULL) &&
-	(netperf_output_source[output_csv_list[j]].display_value != NULL))
-      vallen = my_snprintf(tmpval,
-			   1024,
-			   netperf_output_source[output_csv_list[j]].format,
-			   (netperf_output_source[output_csv_list[j]].display_value)) + 1;
+	(netperf_output_source[output_csv_list[j]].display_value != NULL)) {
+      vallen = 
+	my_snprintf(tmpval,
+		    1024,
+		    netperf_output_source[output_csv_list[j]].format,
+		    (netperf_output_source[output_csv_list[j]].display_value));
+      if (vallen == -1) {
+	fprintf(where,"my_snprintf failed on %s with format %s\n",
+		netperf_output_enum_to_str(j),
+		netperf_output_source[output_csv_list[j]].format);
+	fflush(where);
+      }
+      vallen += 1;
+    }
     else
       vallen = 0;
 
@@ -1851,8 +1975,6 @@ print_omni()
 
   if (debug > 2) 
     dump_netperf_output_source(where);
-
-  printf("csv is %d\n",csv);
 
   if (csv) 
     print_omni_csv();
@@ -2200,7 +2322,6 @@ send_omni(char remote_host[])
 
   int   temp_recvs;
 
-  double	thruput;
   
   struct addrinfo *local_res;
   struct addrinfo *remote_res;
@@ -2425,9 +2546,9 @@ send_omni(char remote_host[])
 	omni_request->test_length	   = test_trans * -1;
       omni_request->so_rcvavoid	           = rem_rcvavoid;
       omni_request->so_sndavoid	           = rem_sndavoid;
-      omni_request->send_dirty_count       = remote_send_dirty_count;
-      omni_request->recv_dirty_count       = remote_recv_dirty_count;
-      omni_request->recv_clean_count       = remote_recv_clean_count;
+      omni_request->send_dirty_count       = rem_dirty_count;
+      omni_request->recv_dirty_count       = rem_dirty_count;
+      omni_request->recv_clean_count       = rem_clean_count;
       
       omni_request->checksum_off           = remote_checksum_off;
       omni_request->data_port              = atoi(remote_data_port);
@@ -2647,7 +2768,7 @@ send_omni(char remote_host[])
 	     (requests_outstanding < request_cwnd) &&
 	     (requests_outstanding < first_burst_size) &&
 	     (NETPERF_IS_RR(direction)) &&
-	     (!NETPERF_CC(direction))) {
+	     (!connection_test)) {
 	if (debug) {
 	  fprintf(where,
 		  "injecting, req_outstanding %d req_cwnd %d burst %d\n",
@@ -2934,6 +3055,9 @@ send_omni(char remote_host[])
       if (!netperf_response.content.serv_errno) {
 	if (debug)
 	  fprintf(where,"remote results obtained\n");
+	local_cpu_method = format_cpu_method(cpu_method);
+	remote_cpu_method = format_cpu_method(omni_result->cpu_method);
+
       }
       else {
 	Set_errno(netperf_response.content.serv_errno);
@@ -2976,7 +3100,26 @@ send_omni(char remote_host[])
       thruput      = calc_thruput(bytes_xferd);
     else 
       thruput = calc_thruput(remote_bytes_xferd);
-  
+
+    if (NETPERF_IS_RR(direction)) {
+      if (!connection_test) {
+      /* calculate the round trip latency, using the transaction rate
+	 whether or not the user was asking for thruput to be in 'x'
+	 units please... however... a connection_test only ever has
+	 one transaction in flight at one time */
+      printf("trans %lld elapsed %f first_burst_size %d\n",
+	     trans_completed,
+	     elapsed_time,
+	     first_burst_size);
+      rtt_latency = 
+	(((double)1.0/(trans_completed/elapsed_time)) * (double)1000000.0) * 
+	(double) (1 + ((first_burst_size > 0) ? first_burst_size : 0));
+      }
+      else 
+	rtt_latency = 
+	  ((double)1.0/(trans_completed/elapsed_time)) * (double)1000000.0;
+    }
+
     /* ok, time to possibly calculate cpu util and/or service demand */
     if (local_cpu_usage) {
       if (local_cpu_rate == 0.0) {
@@ -3049,7 +3192,35 @@ send_omni(char remote_host[])
 			    &local_service_demand,
 			    &remote_service_demand);
 
+  /* a kludge for omni printing because I don't know how to tell that
+     something is a float vs a double in my_snprintf() given what it
+     is passed and I'm not ready to force all the netlib.c stuff to
+     use doubles rather than floats. help there would be
+     appreciated. raj 2008-01-28 */
+  elapsed_time_double = (double) elapsed_time;
+  local_cpu_utilization_double = (double)local_cpu_utilization;
+  local_service_demand_double = (double)local_service_demand;
+  remote_cpu_utilization_double = (double)remote_cpu_utilization;
+  remote_service_demand_double = (double)remote_service_demand;
+
+  if (sd_kb) sd_kb_str = "usec/KB";
+  else sd_kb_str = "usec/tran";
+
   print_omni();
+
+#if defined(DEBUG_OMNI_OUTPUT)  
+ {
+   /* just something quick to sanity check the output selectors. this
+      should be gone for "production" :) */
+   int i;
+   print_omni_init();
+   output_csv_list[1] = OUTPUT_END;
+   for (i = OUTPUT_NONE; i < NETPERF_OUTPUT_MAX; i++) {
+     output_csv_list[0] = i;
+     print_omni_csv();
+   }
+ }
+#endif
 
   /* likely as not we are going to do something slightly different here */
   if (verbosity > 1) {
@@ -3695,6 +3866,7 @@ scan_omni_args(int argc, char *argv[])
   /* default to a STREAM socket type. i wonder if this should be part
      of send_omni or here... */
   socket_type = nst_to_hst(NST_STREAM);
+  socket_type_str = hst_to_str(socket_type);
 
   /* default to TCP. i wonder if this should be here or in
      send_omni? */
@@ -3881,6 +4053,7 @@ scan_omni_args(int argc, char *argv[])
     case 't':
       /* set the socket type */
       socket_type = parse_socket_type(optarg);
+      socket_type_str = hst_to_str(socket_type);
       break;
     case 'T':
       /* set the protocol - aka "Transport" */
@@ -3918,6 +4091,8 @@ scan_omni_args(int argc, char *argv[])
     };
   }
 
+  protocol_str = protocol_to_str(protocol);
+  direction_str = direction_to_str(direction);
   /* some other sanity checks we need to make would include stuff when
      the user has set -m and -M such that both XMIT and RECV are set
      and has not set -r. initially we will not allow that.  at some
