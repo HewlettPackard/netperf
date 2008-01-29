@@ -248,10 +248,10 @@ int connection_test;
 int need_to_connect;
 int need_connection;
 int bytes_to_send;
-int bytes_per_send;
+double bytes_per_send;
 int failed_sends;
 int bytes_to_recv;
-int bytes_per_recv;
+double bytes_per_recv;
 int null_message_ok = 0;
 int csv = 0;
 uint64_t      trans_completed;
@@ -1121,7 +1121,7 @@ print_omni_init() {
   netperf_output_source[LOCAL_BYTES_SENT].line2 = "Bytes";
   netperf_output_source[LOCAL_BYTES_SENT].line3 = "Sent";
   netperf_output_source[LOCAL_BYTES_SENT].line4 = "";
-  netperf_output_source[LOCAL_BYTES_SENT].format = "%d";
+  netperf_output_source[LOCAL_BYTES_SENT].format = "%lld";
   netperf_output_source[LOCAL_BYTES_SENT].display_value = &bytes_sent;
   netperf_output_source[LOCAL_BYTES_SENT].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_BYTES_SENT);
@@ -1181,7 +1181,7 @@ print_omni_init() {
   netperf_output_source[LOCAL_CPU_UTIL].line2 = "CPU";
   netperf_output_source[LOCAL_CPU_UTIL].line3 = "Util";
   netperf_output_source[LOCAL_CPU_UTIL].line4 = "%";
-  netperf_output_source[LOCAL_CPU_UTIL].format = "%f";
+  netperf_output_source[LOCAL_CPU_UTIL].format = "%.2f";
   netperf_output_source[LOCAL_CPU_UTIL].display_value = &local_cpu_utilization_double;
   netperf_output_source[LOCAL_CPU_UTIL].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_CPU_UTIL);
@@ -1205,7 +1205,7 @@ print_omni_init() {
   netperf_output_source[LOCAL_SD].line2 = "Service";
   netperf_output_source[LOCAL_SD].line3 = "Demand";
   netperf_output_source[LOCAL_SD].line4 = "";
-  netperf_output_source[LOCAL_SD].format = "%f";
+  netperf_output_source[LOCAL_SD].format = "%.2f";
   netperf_output_source[LOCAL_SD].display_value = &local_service_demand_double;
   netperf_output_source[LOCAL_SD].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_SD);
@@ -1372,7 +1372,7 @@ print_omni_init() {
   netperf_output_source[REMOTE_RECV_CALLS].line2 = "Recv";
   netperf_output_source[REMOTE_RECV_CALLS].line3 = "Calls";
   netperf_output_source[REMOTE_RECV_CALLS].line4 = "";
-  netperf_output_source[REMOTE_RECV_CALLS].format = "%d";
+  netperf_output_source[REMOTE_RECV_CALLS].format = "%lld";
   netperf_output_source[REMOTE_RECV_CALLS].display_value = &remote_receive_calls;
   netperf_output_source[REMOTE_RECV_CALLS].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_RECV_CALLS);
@@ -1480,7 +1480,7 @@ print_omni_init() {
   netperf_output_source[REMOTE_CPU_UTIL].line2 = "CPU";
   netperf_output_source[REMOTE_CPU_UTIL].line3 = "Util";
   netperf_output_source[REMOTE_CPU_UTIL].line4 = "%";
-  netperf_output_source[REMOTE_CPU_UTIL].format = "%f";
+  netperf_output_source[REMOTE_CPU_UTIL].format = "%.2f";
   netperf_output_source[REMOTE_CPU_UTIL].display_value = &remote_cpu_utilization_double;
   netperf_output_source[REMOTE_CPU_UTIL].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_CPU_UTIL);
@@ -1504,7 +1504,7 @@ print_omni_init() {
   netperf_output_source[REMOTE_SD].line2 = "Service";
   netperf_output_source[REMOTE_SD].line3 = "Demand";
   netperf_output_source[REMOTE_SD].line4 = "";
-  netperf_output_source[REMOTE_SD].format = "%f";
+  netperf_output_source[REMOTE_SD].format = "%.2f";
   netperf_output_source[REMOTE_SD].display_value = &remote_service_demand_double;
   netperf_output_source[REMOTE_SD].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_SD);
@@ -3055,9 +3055,30 @@ send_omni(char remote_host[])
       if (!netperf_response.content.serv_errno) {
 	if (debug)
 	  fprintf(where,"remote results obtained\n");
-	local_cpu_method = format_cpu_method(cpu_method);
 	remote_cpu_method = format_cpu_method(omni_result->cpu_method);
-
+	/* why?  because some stacks want to be clever and autotune their
+	   socket buffer sizes, which means that if we accept the defaults,
+	   the size we get from getsockopt() at the beginning of a
+	   connection may not be what we would get at the end of the
+	   connection... */
+	rsr_size_end = omni_result->recv_buf_size;
+	rss_size_end = omni_result->send_buf_size;
+	remote_bytes_sent = omni_result->bytes_sent;
+	remote_send_calls = omni_result->send_calls;
+	remote_bytes_received = omni_result->bytes_received;
+	remote_receive_calls = omni_result->recv_calls;
+	remote_bytes_xferd = omni_result->bytes_received +
+	  omni_result->bytes_sent;
+	if (omni_result->recv_calls > 0)
+	  remote_bytes_per_recv = (double) omni_result->bytes_received /
+	    (double) omni_result->recv_calls;
+	else
+	  remote_bytes_per_recv = 0.0;
+	if (omni_result->send_calls > 0)
+	  remote_bytes_per_send = (double) omni_result->bytes_received /
+	    (double) omni_result->send_calls;
+	else
+	  remote_bytes_per_send = 0.0;
       }
       else {
 	Set_errno(netperf_response.content.serv_errno);
@@ -3072,19 +3093,18 @@ send_omni(char remote_host[])
     }
 
     /* so, what was the end result? */
+    local_cpu_method = format_cpu_method(cpu_method);
 
-    /* why?  because some stacks want to be clever and autotune their
-       socket buffer sizes, which means that if we accept the defaults,
-       the size we get from getsockopt() at the beginning of a
-       connection may not be what we would get at the end of the
-       connection... */
-    rsr_size_end = omni_result->recv_buf_size;
-    rss_size_end = omni_result->send_buf_size;
+    if (local_send_calls > 0) 
+      bytes_per_send = (double) bytes_sent / (double) local_send_calls;
+    else bytes_per_send = 0.0;
 
-    /* to we need to pull something from omni_results here? */
+    if (local_receive_calls > 0)
+      bytes_per_recv = (double) bytes_received / (double) local_receive_calls;
+    else
+      bytes_per_recv = 0.0;
+    
     bytes_xferd  = bytes_sent + bytes_received;
-    remote_bytes_xferd = omni_result->bytes_received +
-      omni_result->bytes_sent;
 
     /* if the output format is 'x' we know the test was
        request/response.  if the libfmt is something else, it could be
@@ -3156,6 +3176,8 @@ send_omni(char remote_host[])
 	fflush(where);
       }
       remote_cpu_utilization = omni_result->cpu_util;
+      printf("rem_cpu %f\n",remote_cpu_utilization);
+
       /* since calc_service demand is doing ms/Kunit we will */
       /* multiply the number of transaction by 1024 to get */
       /* "good" numbers */
@@ -3693,6 +3715,7 @@ recv_omni()
 	}
 	bytes_sent += ret;
 	send_ring = send_ring->next;
+	local_send_calls++;
       }
       else if (ret == -2) {
 	/* what to do here -2 means a non-fatal error - probably
@@ -3802,15 +3825,18 @@ recv_omni()
 
   /* send the results to the sender  */
   
+  omni_results->send_calls      = local_send_calls;
   omni_results->bytes_received	= bytes_received;
   omni_results->recv_buf_size   = lsr_size_end;
+  omni_results->recv_calls      = local_receive_calls;
   omni_results->bytes_sent      = bytes_sent;
   omni_results->send_buf_size   = lss_size_end;
   omni_results->trans_received	= trans_completed;
   omni_results->elapsed_time	= elapsed_time;
-
+  omni_results->cpu_method      = cpu_method;
+  omni_results->num_cpus        = lib_num_loc_cpus;
   if (omni_request->measure_cpu) {
-
+    omni_results->cpu_util = calc_cpu_util(elapsed_time);
   }
   
   if (debug) {
