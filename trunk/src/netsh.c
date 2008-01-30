@@ -498,12 +498,13 @@ set_defaults()
   rem_clean_count = -1;
 #endif /* DIRTY */
 
- /* some of the vairables for confidence intervals... */
+ /* some of the vairables for confidence intervals... defaults will be
+    set as apropriate in the parsing of the command line  */
 
-  confidence_level = 99;
+  confidence_level = 0;
   iteration_min = 1;
   iteration_max = 1;
-  interval = 0.05; /* five percent? */
+  interval = 0.0;
 
   no_control = 0;
   strcpy(fill_file,"");
@@ -666,6 +667,8 @@ scan_cmd_line(int argc, char *argv[])
       /* limit maximum to 30 iterations */
       if (iteration_max > 30) iteration_max = 30;
       if (iteration_min > 30) iteration_min = 30;
+      if (confidence_level == 0) confidence_level = 99;
+      if (interval == 0.0) interval = 0.05; /* five percent */
       break;
     case 'I':
       /* set the confidence level (95 or 99) and width */
@@ -688,7 +691,9 @@ scan_cmd_line(int argc, char *argv[])
 	 against 1 */ 
       if (iteration_min == 1) iteration_min = 3;
       if (iteration_max == 1) iteration_max = 10;
-
+      /* make sure that the interval is set if it isn't at its default
+	 value */
+      if (interval == 0.0) interval = 0.05; /* five percent */
       break;
     case 'k':
       /* local dirty and clean counts */

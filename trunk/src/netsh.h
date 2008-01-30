@@ -104,6 +104,7 @@ extern int  iteration_min;
 extern int  iteration_max;
 extern int  result_confidence_only;
 extern double interval;
+extern double interval_pct;
 
 extern int cpu_binding_requested;
 

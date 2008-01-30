@@ -488,9 +488,9 @@ extern  void	retrieve_confident_values(float *elapsed_time,
 			  float *remote_cpu_utilization,
 			  float *local_service_demand,
 			  float *remote_service_demand);
-extern  float   get_result_confid();
-extern  float   get_loc_cpu_confid();
-extern  float   get_rem_cpu_confid();
+extern  double  get_result_confid();
+extern  double  get_loc_cpu_confid();
+extern  double  get_rem_cpu_confid();
 extern  void    display_confidence();
 extern  void    get_sock_buffer(SOCKET sd,
 				enum sock_buffer which,
@@ -569,7 +569,9 @@ extern void start_itimer(unsigned int interval_len_msec);
 #endif
  /* these are all for the confidence interval stuff */
 extern double confidence;
-
+extern double result_confid;
+extern double loc_cpu_confid;
+extern double rem_cpu_confid;
 #endif
 
 #ifdef WIN32
