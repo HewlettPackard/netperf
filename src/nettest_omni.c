@@ -226,6 +226,11 @@ static struct timeval *temp_demo_ptr = &demo_one;
 #define NETPERF_CC(x) (!(x & NETPERF_XMIT) && !(x & NETPERF_RECV))
 
 /* a boatload of globals while I settle things out */
+double result_confid_pct = -1.0;
+double loc_cpu_confid_pct = -1.0;
+double rem_cpu_confid_pct = -1.0;
+double interval_pct = -1.0;
+
 int socket_type;
 int protocol;
 int direction;
@@ -254,12 +259,12 @@ int bytes_to_recv;
 double bytes_per_recv;
 int null_message_ok = 0;
 int csv = 0;
-uint64_t      trans_completed;
+uint64_t      trans_completed = 0;
 uint64_t      units_remaining;
-uint64_t      bytes_sent;
-uint64_t      bytes_received;
-uint64_t      local_send_calls;
-uint64_t      local_receive_calls;
+uint64_t      bytes_sent = 0;
+uint64_t      bytes_received = 0;
+uint64_t      local_send_calls = 0;
+uint64_t      local_receive_calls = 0;
 uint64_t      remote_bytes_sent;
 uint64_t      remote_bytes_received;
 uint64_t      remote_send_calls;
@@ -340,6 +345,12 @@ enum netperf_output_name {
   DEST_FAMILY,
   THROUGHPUT,
   THROUGHPUT_UNITS,
+  CONFIDENCE_LEVEL,
+  CONFIDENCE_INTERVAL,
+  CONFIDENCE_ITERATION,
+  THROUGHPUT_CONFID,
+  LOCAL_CPU_CONFID,
+  REMOTE_CPU_CONFID,
   RT_LATENCY,
   BURST_SIZE,
   TRANSPORT_MSS,
@@ -570,6 +581,18 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "THROUGHPUT";
   case THROUGHPUT_UNITS:
     return "THROUGHPUT_UNITS";
+  case CONFIDENCE_LEVEL:
+    return "CONFIDENCE_LEVEL";
+  case CONFIDENCE_INTERVAL:
+    return "CONFIDENCE_INTERVAL";
+  case CONFIDENCE_ITERATION:
+    return "CONFIDENCE_ITERATION";
+  case THROUGHPUT_CONFID:
+    return "THROUGHPUT_CONFID";
+  case LOCAL_CPU_CONFID:
+    return "LOCAL_CPU_CONFID";
+  case REMOTE_CPU_CONFID:
+    return "REMOTE_CPU_CONFID";
   case RT_LATENCY:
     return "RT_LATENCY";
   case BURST_SIZE:
@@ -922,6 +945,74 @@ print_omni_init() {
     NETPERF_LINE_MAX(THROUGHPUT_UNITS);
   netperf_output_source[THROUGHPUT_UNITS].tot_line_len = 
     NETPERF_LINE_TOT(THROUGHPUT_UNITS);
+
+  netperf_output_source[CONFIDENCE_LEVEL].output_name = CONFIDENCE_LEVEL;
+  netperf_output_source[CONFIDENCE_LEVEL].line1 = "Confidence";
+  netperf_output_source[CONFIDENCE_LEVEL].line2 = "Level";
+  netperf_output_source[CONFIDENCE_LEVEL].line3 = "Percent";
+  netperf_output_source[CONFIDENCE_LEVEL].format = "%d";
+  netperf_output_source[CONFIDENCE_LEVEL].display_value = &confidence_level;
+  netperf_output_source[CONFIDENCE_LEVEL].max_line_len = 
+    NETPERF_LINE_MAX(CONFIDENCE_LEVEL);
+  netperf_output_source[CONFIDENCE_LEVEL].tot_line_len = 
+    NETPERF_LINE_TOT(CONFIDENCE_LEVEL);
+
+  netperf_output_source[CONFIDENCE_INTERVAL].output_name = CONFIDENCE_INTERVAL;
+  netperf_output_source[CONFIDENCE_INTERVAL].line1 = "Confidence";
+  netperf_output_source[CONFIDENCE_INTERVAL].line2 = "Width";
+  netperf_output_source[CONFIDENCE_INTERVAL].line3 = "Target";
+  netperf_output_source[CONFIDENCE_INTERVAL].format = "%f";
+  netperf_output_source[CONFIDENCE_INTERVAL].display_value = &interval_pct;
+  netperf_output_source[CONFIDENCE_INTERVAL].max_line_len = 
+    NETPERF_LINE_MAX(CONFIDENCE_INTERVAL);
+  netperf_output_source[CONFIDENCE_INTERVAL].tot_line_len = 
+    NETPERF_LINE_TOT(CONFIDENCE_INTERVAL);
+
+  netperf_output_source[CONFIDENCE_ITERATION].output_name = CONFIDENCE_ITERATION;
+  netperf_output_source[CONFIDENCE_ITERATION].line1 = "Confidence";
+  netperf_output_source[CONFIDENCE_ITERATION].line2 = "Iterations";
+  netperf_output_source[CONFIDENCE_ITERATION].line3 = "Run";
+  netperf_output_source[CONFIDENCE_ITERATION].format = "%d";
+  netperf_output_source[CONFIDENCE_ITERATION].display_value = &confidence_iteration;
+  netperf_output_source[CONFIDENCE_ITERATION].max_line_len = 
+    NETPERF_LINE_MAX(CONFIDENCE_ITERATION);
+  netperf_output_source[CONFIDENCE_ITERATION].tot_line_len = 
+    NETPERF_LINE_TOT(CONFIDENCE_ITERATION);
+
+  netperf_output_source[THROUGHPUT_CONFID].output_name = THROUGHPUT_CONFID;
+  netperf_output_source[THROUGHPUT_CONFID].line1 = "Throughput";
+  netperf_output_source[THROUGHPUT_CONFID].line2 = "Confidence";
+  netperf_output_source[THROUGHPUT_CONFID].line3 = "Width (%)";
+  netperf_output_source[THROUGHPUT_CONFID].format = "%f";
+  netperf_output_source[THROUGHPUT_CONFID].display_value = &result_confid_pct;
+  netperf_output_source[THROUGHPUT_CONFID].max_line_len = 
+    NETPERF_LINE_MAX(THROUGHPUT_CONFID);
+  netperf_output_source[THROUGHPUT_CONFID].tot_line_len = 
+    NETPERF_LINE_TOT(THROUGHPUT_CONFID);
+
+  netperf_output_source[LOCAL_CPU_CONFID].output_name = LOCAL_CPU_CONFID;
+  netperf_output_source[LOCAL_CPU_CONFID].line1 = "Local";
+  netperf_output_source[LOCAL_CPU_CONFID].line2 = "CPU";
+  netperf_output_source[LOCAL_CPU_CONFID].line3 = "Confidence";
+  netperf_output_source[LOCAL_CPU_CONFID].line4 = "Width (%)";
+  netperf_output_source[LOCAL_CPU_CONFID].format = "%f";
+  netperf_output_source[LOCAL_CPU_CONFID].display_value = &loc_cpu_confid_pct;
+  netperf_output_source[LOCAL_CPU_CONFID].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_CPU_CONFID);
+  netperf_output_source[LOCAL_CPU_CONFID].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_CPU_CONFID);
+
+  netperf_output_source[REMOTE_CPU_CONFID].output_name = REMOTE_CPU_CONFID;
+  netperf_output_source[REMOTE_CPU_CONFID].line1 = "Remote";
+  netperf_output_source[REMOTE_CPU_CONFID].line2 = "CPU";
+  netperf_output_source[REMOTE_CPU_CONFID].line3 = "Confidence";
+  netperf_output_source[REMOTE_CPU_CONFID].line4 = "Width (%)";
+  netperf_output_source[REMOTE_CPU_CONFID].format = "%f";
+  netperf_output_source[REMOTE_CPU_CONFID].display_value = &rem_cpu_confid_pct;
+  netperf_output_source[REMOTE_CPU_CONFID].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_CPU_CONFID);
+  netperf_output_source[REMOTE_CPU_CONFID].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_CPU_CONFID);
 
   netperf_output_source[RT_LATENCY].output_name = RT_LATENCY;
   netperf_output_source[RT_LATENCY].line1 = "Round";
@@ -1633,6 +1724,12 @@ print_omni_init() {
   output_csv_list[i++] = SD_UNITS;
   output_csv_list[i++] = REMOTE_CPU_BIND;
   output_csv_list[i++] = REMOTE_CPU_COUNT;
+  output_csv_list[i++] = CONFIDENCE_LEVEL;
+  output_csv_list[i++] = CONFIDENCE_INTERVAL;
+  output_csv_list[i++] = THROUGHPUT_CONFID;
+  output_csv_list[i++] = LOCAL_CPU_CONFID;
+  output_csv_list[i++] = REMOTE_CPU_CONFID;
+  output_csv_list[i++] = CONFIDENCE_ITERATION;
   output_csv_list[i++] = RT_LATENCY;
   output_csv_list[i++] = BURST_SIZE;
   output_csv_list[i++] = TRANSPORT_MSS;
@@ -2458,6 +2555,7 @@ send_omni(char remote_host[])
   while (((confidence < 0) && (confidence_iteration < iteration_max)) ||
 	 (confidence_iteration <= iteration_min)) {
 
+    trans_completed = 0;
     bytes_xferd	= 0.0;
     remote_bytes_xferd = 0.0;
     times_up 	= 0;
@@ -3172,10 +3270,6 @@ send_omni(char remote_host[])
 	 whether or not the user was asking for thruput to be in 'x'
 	 units please... however... a connection_test only ever has
 	 one transaction in flight at one time */
-      printf("trans %lld elapsed %f first_burst_size %d\n",
-	     trans_completed,
-	     elapsed_time,
-	     first_burst_size);
       rtt_latency = 
 	(((double)1.0/(trans_completed/elapsed_time)) * (double)1000000.0) * 
 	(double) (1 + ((first_burst_size > 0) ? first_burst_size : 0));
@@ -3211,7 +3305,7 @@ send_omni(char remote_host[])
       local_cpu_utilization	= (float) -1.0;
       local_service_demand	= (float) -1.0;
     }
-    
+
     if (remote_cpu_usage) {
       if (remote_cpu_rate == 0.0) {
 	fprintf(where,
@@ -3221,7 +3315,6 @@ send_omni(char remote_host[])
 	fflush(where);
       }
       remote_cpu_utilization = omni_result->cpu_util;
-      printf("rem_cpu %f\n",remote_cpu_utilization);
 
       /* since calc_service demand is doing ms/Kunit we will */
       /* multiply the number of transaction by 1024 to get */
@@ -3250,6 +3343,11 @@ send_omni(char remote_host[])
     confidence_iteration++;
   }
 
+  /* we end with confidence_iteration one larger than the number of
+     iterations.  if we weren't doing confidence intervals this will
+     still be reported as one */
+  confidence_iteration--;
+
   /* at some point we may want to actually display some results :) */
 
   retrieve_confident_values(&elapsed_time,
@@ -3272,6 +3370,13 @@ send_omni(char remote_host[])
 
   if (sd_kb) sd_kb_str = "usec/KB";
   else sd_kb_str = "usec/tran";
+  
+  if (iteration_max > 1) {
+    result_confid_pct = get_result_confid();
+    loc_cpu_confid_pct = get_loc_cpu_confid();
+    rem_cpu_confid_pct = get_rem_cpu_confid();
+    interval_pct = interval * 100.0;
+  }
 
   print_omni();
 
@@ -3563,6 +3668,7 @@ recv_omni()
   /* the initiator. */
   
   omni_response->cpu_rate = (float)0.0; 	/* assume no cpu */
+  omni_response->measure_cpu = 0;
   if (omni_request->measure_cpu) {
     omni_response->measure_cpu = 1;
     omni_response->cpu_rate = 
