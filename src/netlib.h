@@ -530,10 +530,11 @@ extern  float	calc_service_demand(double units_sent,
 				    float elapsed_time,
 				    float cpu_utilization,
 				    int num_cpus);
-extern  float	calc_service_demand_trans(double units_sent,
-					  float elapsed_time,
-					  float cpu_utilization,
-					  int num_cpus);
+/* this one determines the unit divisor based on libfmt */
+extern  float	calc_service_demand_fmt(double units_sent,
+					float elapsed_time,
+					float cpu_utilization,
+					int num_cpus);
 #if defined(__hpux)
 extern  void    catcher(int, siginfo_t *,void *);
 #else

@@ -3256,14 +3256,17 @@ float calc_service_demand(double units_sent,
 				      num_cpus));
 }
 
-float calc_service_demand_trans(double units_sent,
-				float elapsed_time,
-				float cpu_utilization,
-				int num_cpus)
+/* use the value of libfmt to determine the unit_divisor */
+float calc_service_demand_fmt(double units_sent,
+			      float elapsed_time,
+			      float cpu_utilization,
+			      int num_cpus)
 
 {
+  double unit_divisor;
 
-  double unit_divisor = (double)1.0;
+  if ('x' == libfmt) unit_divisor = 1.0;
+  else unit_divisor = 1024.0;
 
   return(calc_service_demand_internal(unit_divisor,
 				      units_sent,

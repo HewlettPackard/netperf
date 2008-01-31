@@ -297,8 +297,8 @@ int32_t    transport_mss = -1;
 
 int printing_initialized = 0;
 
-int sd_kb = 1;  /* is the service demand per KB or per tran? */
-char *sd_kb_str;
+char *sd_str;
+char *thruput_format_str;
 
 char *socket_type_str;
 char *protocol_str;
@@ -1280,7 +1280,7 @@ print_omni_init() {
   netperf_output_source[THROUGHPUT_UNITS].line[0] = "Throughput";
   netperf_output_source[THROUGHPUT_UNITS].line[1] = "Units";
   netperf_output_source[THROUGHPUT_UNITS].format = "%s/s";
-  netperf_output_source[THROUGHPUT_UNITS].display_value = format_units();
+  netperf_output_source[THROUGHPUT_UNITS].display_value = thruput_format_str;
   netperf_output_source[THROUGHPUT_UNITS].max_line_len = 
     NETPERF_LINE_MAX(THROUGHPUT_UNITS);
   netperf_output_source[THROUGHPUT_UNITS].tot_line_len = 
@@ -1667,7 +1667,7 @@ print_omni_init() {
   netperf_output_source[SD_UNITS].line[1] = "Demand";
   netperf_output_source[SD_UNITS].line[2] = "Units";
   netperf_output_source[SD_UNITS].format = "%s";
-  netperf_output_source[SD_UNITS].display_value = sd_kb_str;
+  netperf_output_source[SD_UNITS].display_value = sd_str;
   netperf_output_source[SD_UNITS].max_line_len = 
     NETPERF_LINE_MAX(SD_UNITS);
   netperf_output_source[SD_UNITS].tot_line_len = 
@@ -3564,10 +3564,10 @@ send_omni(char remote_host[])
 	 per KB even on a TCP_RR test if it is being (ab)used as a
 	 bidirectional bulk-transfer test. raj 2008-01-14 */
       local_service_demand  = 
-	calc_service_demand((sd_kb) ? bytes_xferd : (double)trans_completed * 1024,
-			    0.0,
-			    0.0,
-			    0);
+	calc_service_demand_fmt(('x' == libfmt) ? (double)trans_completed: bytes_xferd,
+				0.0,
+				0.0,
+				0);
     }
     else {
       local_cpu_utilization	= (float) -1.0;
@@ -3587,11 +3587,11 @@ send_omni(char remote_host[])
       /* since calc_service demand is doing ms/Kunit we will */
       /* multiply the number of transaction by 1024 to get */
       /* "good" numbers */
-      remote_service_demand = calc_service_demand((sd_kb) ? bytes_xferd : 
-						  (double) trans_completed * 1024,
-						  0.0,
-						  remote_cpu_utilization,
-						  omni_result->num_cpus);
+      remote_service_demand = 
+	calc_service_demand_fmt(('x' == libfmt) ? (double) trans_completed: bytes_xferd,
+				0.0,
+				remote_cpu_utilization,
+				omni_result->num_cpus);
     }
     else {
       remote_cpu_utilization = (float) -1.0;
@@ -3636,8 +3636,8 @@ send_omni(char remote_host[])
   remote_cpu_utilization_double = (double)remote_cpu_utilization;
   remote_service_demand_double = (double)remote_service_demand;
 
-  if (sd_kb) sd_kb_str = "usec/KB";
-  else sd_kb_str = "usec/tran";
+  if ('x' == libfmt) sd_str = "usec/Tran";
+  else sd_str = "usec/KB";
   
   if (iteration_max > 1) {
     result_confid_pct = get_result_confid();
@@ -4616,6 +4616,9 @@ scan_omni_args(int argc, char *argv[])
       libfmt = 'm';
     }
   }
+
+  /* this needs to be strdup :) */
+  thruput_format_str = strdup(format_units());
 
   /* so, if there is to be no control connection, we want to have some
      different settings for a few things */
