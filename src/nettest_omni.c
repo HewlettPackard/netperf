@@ -234,7 +234,6 @@ double loc_cpu_confid_pct = -1.0;
 double rem_cpu_confid_pct = -1.0;
 double interval_pct = -1.0;
 
-int socket_type;
 int protocol;
 int direction;
 int remote_send_size = -1;
@@ -272,16 +271,21 @@ uint64_t      remote_bytes_sent;
 uint64_t      remote_bytes_received;
 uint64_t      remote_send_calls;
 uint64_t      remote_receive_calls;
-  double      bytes_xferd;
-  double      remote_bytes_xferd;
-  double      remote_bytes_per_recv;
-  double      remote_bytes_per_send;
-  float       elapsed_time;
-  float       local_cpu_utilization;
-  float	      local_service_demand;
-  float       remote_cpu_utilization;
-  float	      remote_service_demand;
-  double	thruput;
+double        bytes_xferd;
+double        remote_bytes_xferd;
+double        remote_bytes_per_recv;
+double        remote_bytes_per_send;
+float         elapsed_time;
+float         local_cpu_utilization;
+float	      local_service_demand;
+float         remote_cpu_utilization;
+float	      remote_service_demand;
+double	      thruput;
+double        local_send_thruput;
+double        local_recv_thruput;
+double        remote_send_thruput;
+double        remote_recv_thruput;
+
 /* kludges for omni output */
 double      elapsed_time_double;
 double      local_cpu_utilization_double;
@@ -347,6 +351,10 @@ enum netperf_output_name {
   DEST_ADDR,
   DEST_FAMILY,
   THROUGHPUT,
+  LOCAL_SEND_THROUGHPUT,
+  LOCAL_RECV_THROUGHPUT,
+  REMOTE_SEND_THROUGHPUT,
+  REMOTE_RECV_THROUGHPUT,
   THROUGHPUT_UNITS,
   CONFIDENCE_LEVEL,
   CONFIDENCE_INTERVAL,
@@ -579,6 +587,14 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "DEST_FAMILY";
   case THROUGHPUT:
     return "THROUGHPUT";
+  case LOCAL_SEND_THROUGHPUT:
+    return "LOCAL_SEND_THROUGHPUT";
+  case LOCAL_RECV_THROUGHPUT:
+    return "LOCAL_RECV_THROUGHPUT";
+  case REMOTE_SEND_THROUGHPUT:
+    return "REMOTE_SEND_THROUGHPUT";
+  case REMOTE_RECV_THROUGHPUT:
+    return "REMOTE_RECV_THROUGHPUT";
   case THROUGHPUT_UNITS:
     return "THROUGHPUT_UNITS";
   case CONFIDENCE_LEVEL:
@@ -977,6 +993,10 @@ set_output_csv_list_default() {
   output_csv_list[i++] = REMOTE_RECV_SIZE;
   output_csv_list[i++] = RESPONSE_SIZE;
   output_csv_list[i++] = THROUGHPUT;
+  output_csv_list[i++] = LOCAL_SEND_THROUGHPUT;
+  output_csv_list[i++] = LOCAL_RECV_THROUGHPUT;
+  output_csv_list[i++] = REMOTE_SEND_THROUGHPUT;
+  output_csv_list[i++] = REMOTE_RECV_THROUGHPUT;
   output_csv_list[i++] = THROUGHPUT_UNITS;
   output_csv_list[i++] = LOCAL_CPU_UTIL;
   output_csv_list[i++] = REMOTE_CPU_UTIL;
@@ -1211,6 +1231,50 @@ print_omni_init() {
     NETPERF_LINE_MAX(THROUGHPUT);
   netperf_output_source[THROUGHPUT].tot_line_len = 
     NETPERF_LINE_TOT(THROUGHPUT);
+
+  netperf_output_source[LOCAL_SEND_THROUGHPUT].output_name = LOCAL_SEND_THROUGHPUT;
+  netperf_output_source[LOCAL_SEND_THROUGHPUT].line[0] = "Local";
+  netperf_output_source[LOCAL_SEND_THROUGHPUT].line[1] = "Send";
+  netperf_output_source[LOCAL_SEND_THROUGHPUT].line[2] = "Throughput";
+  netperf_output_source[LOCAL_SEND_THROUGHPUT].format = "%.2f";
+  netperf_output_source[LOCAL_SEND_THROUGHPUT].display_value = &local_send_thruput;
+  netperf_output_source[LOCAL_SEND_THROUGHPUT].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_SEND_THROUGHPUT);
+  netperf_output_source[LOCAL_SEND_THROUGHPUT].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_SEND_THROUGHPUT);
+
+  netperf_output_source[LOCAL_RECV_THROUGHPUT].output_name = LOCAL_RECV_THROUGHPUT;
+  netperf_output_source[LOCAL_RECV_THROUGHPUT].line[0] = "Local";
+  netperf_output_source[LOCAL_RECV_THROUGHPUT].line[1] = "Recv";
+  netperf_output_source[LOCAL_RECV_THROUGHPUT].line[2] = "Throughput";
+  netperf_output_source[LOCAL_RECV_THROUGHPUT].format = "%.2f";
+  netperf_output_source[LOCAL_RECV_THROUGHPUT].display_value = &local_recv_thruput;
+  netperf_output_source[LOCAL_RECV_THROUGHPUT].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_RECV_THROUGHPUT);
+  netperf_output_source[LOCAL_RECV_THROUGHPUT].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_RECV_THROUGHPUT);
+
+  netperf_output_source[REMOTE_SEND_THROUGHPUT].output_name = REMOTE_SEND_THROUGHPUT;
+  netperf_output_source[REMOTE_SEND_THROUGHPUT].line[0] = "Remote";
+  netperf_output_source[REMOTE_SEND_THROUGHPUT].line[1] = "Send";
+  netperf_output_source[REMOTE_SEND_THROUGHPUT].line[2] = "Throughput";
+  netperf_output_source[REMOTE_SEND_THROUGHPUT].format = "%.2f";
+  netperf_output_source[REMOTE_SEND_THROUGHPUT].display_value = &remote_send_thruput;
+  netperf_output_source[REMOTE_SEND_THROUGHPUT].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_SEND_THROUGHPUT);
+  netperf_output_source[REMOTE_SEND_THROUGHPUT].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_SEND_THROUGHPUT);
+
+  netperf_output_source[REMOTE_RECV_THROUGHPUT].output_name = REMOTE_RECV_THROUGHPUT;
+  netperf_output_source[REMOTE_RECV_THROUGHPUT].line[0] = "Remote";
+  netperf_output_source[REMOTE_RECV_THROUGHPUT].line[1] = "Recv";
+  netperf_output_source[REMOTE_RECV_THROUGHPUT].line[2] = "Throughput";
+  netperf_output_source[REMOTE_RECV_THROUGHPUT].format = "%.2f";
+  netperf_output_source[REMOTE_RECV_THROUGHPUT].display_value = &remote_recv_thruput;
+  netperf_output_source[REMOTE_RECV_THROUGHPUT].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_RECV_THROUGHPUT);
+  netperf_output_source[REMOTE_RECV_THROUGHPUT].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_RECV_THROUGHPUT);
 
   netperf_output_source[THROUGHPUT_UNITS].output_name = THROUGHPUT_UNITS;
   netperf_output_source[THROUGHPUT_UNITS].line[0] = "Throughput";
@@ -2667,7 +2731,6 @@ send_omni(char remote_host[])
   int           need_socket;
 
   int   temp_recvs;
-
   
   struct addrinfo *local_res;
   struct addrinfo *remote_res;
@@ -3583,6 +3646,15 @@ send_omni(char remote_host[])
     interval_pct = interval * 100.0;
   }
 
+  /* at some point we need to average these during a confidence
+     interval run, and when we do do that, we need to make sure we
+     restore the value of libfmt correctly */
+  if ('x' == libfmt) libfmt = 'm';
+  local_send_thruput = calc_thruput(bytes_sent);
+  local_recv_thruput = calc_thruput(bytes_received);
+  remote_send_thruput = calc_thruput(remote_bytes_sent);
+  remote_recv_thruput = calc_thruput(remote_bytes_received);
+
   print_omni();
 
 #if defined(DEBUG_OMNI_OUTPUT)  
@@ -4465,7 +4537,6 @@ scan_omni_args(int argc, char *argv[])
     case 't':
       /* set the socket type */
       socket_type = parse_socket_type(optarg);
-      socket_type_str = hst_to_str(socket_type);
       break;
     case 'T':
       /* set the protocol - aka "Transport" */
@@ -4503,6 +4574,7 @@ scan_omni_args(int argc, char *argv[])
     };
   }
 
+  socket_type_str = hst_to_str(socket_type);
   protocol_str = protocol_to_str(protocol);
   direction_str = direction_to_str(direction);
   /* some other sanity checks we need to make would include stuff when

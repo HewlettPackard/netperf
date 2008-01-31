@@ -147,6 +147,7 @@ char	nettest_id[]="\
 #include "hist.h"
 #endif /* WANT_HISTOGRAM */
 
+
 /* make first_burst_size unconditional so we can use it easily enough
    when calculating transaction latency for the TCP_RR test. raj
    2007-06-08 however, change its default value so one can tell in
@@ -169,6 +170,7 @@ int first_burst_size=-1;
  */
 
 int	
+  socket_type,          /* used initially by the "omni" tests */
   rss_size_req = -1,	/* requested remote socket send buffer size */
   rsr_size_req = -1,	/* requested remote socket recv buffer size */
   rss_size,		/* initial remote socket send buffer size */
@@ -6077,7 +6079,7 @@ Send   Recv    Send   Recv    usec/Tran  per sec  Outbound   Inbound\n\
        since this is basically the last thing we are going to do with
        it, it does not matter.  so there :) raj 2007-06-08 */
     /* if the user was asking for transactions, then we report
-       megabits per sedcond for the unidirectional throughput,
+       megabits per second for the unidirectional throughput,
        otherwise we use the desired units. */
     if ('x' == libfmt) {
       libfmt = 'm';

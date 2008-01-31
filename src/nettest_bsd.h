@@ -481,6 +481,7 @@ struct tcp_cc_results_struct {
 };
 
 extern int
+  socket_type,      /* initially used by the "omni" tests */
   rss_size_req,     /* requested remote socket send buffer size */
   rsr_size_req,     /* requested remote socket recv buffer size */
   rss_size,         /* remote socket send buffer size       */
