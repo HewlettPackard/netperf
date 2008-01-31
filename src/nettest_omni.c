@@ -437,7 +437,7 @@ enum netperf_output_name output_csv_list[NETPERF_OUTPUT_MAX];
    NETPERF_MAX_BLOCKS of output (groups of lines) each out to
    NETPERF_OUTPUT_MAX entries. that should more than cover it */
 
-#define NETPERF_MAX_BLOCKS 3
+#define NETPERF_MAX_BLOCKS 4
 enum netperf_output_name output_human_list[NETPERF_MAX_BLOCKS][NETPERF_OUTPUT_MAX];
 
 char *direction_to_str(int direction) {
