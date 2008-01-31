@@ -423,20 +423,28 @@ parse_protocol(char protocol_string[])
   }
   
 #ifdef IPPROTO_TCP
-  if (strstr(temp,"tcp"))
+  if (strstr(temp,"tcp")){
+    socket_type = SOCK_STREAM;
     return IPPROTO_TCP;
+  }
 #endif
 #ifdef IPPROTO_UDP
-  if (strstr(temp,"udp"))
+  if (strstr(temp,"udp")) {
+    socket_type = SOCK_DGRAM;
     return IPPROTO_UDP;
+  }
 #endif
 #ifdef IPPROTO_SCTP
-  if (strstr(temp,"sctp"))
+  if (strstr(temp,"sctp")) {
+    /* it can be more than one socket type */
     return IPPROTO_SCTP;
+  }
 #endif
 #ifdef IPPROTO_SDP
-  if (strstr(temp,"sdp"))
+  if (strstr(temp,"sdp")) {
+    socket_type = SOCK_STREAM;
     return IPPROTO_SDP;
+  }
 #endif
   return IPPROTO_IP;
 }
