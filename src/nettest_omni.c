@@ -226,6 +226,9 @@ static struct timeval *temp_demo_ptr = &demo_one;
 #define NETPERF_CC(x) (!(x & NETPERF_XMIT) && !(x & NETPERF_RECV))
 
 /* a boatload of globals while I settle things out */
+char *csv_selection_file = NULL;
+char *human_selection_file = NULL;
+
 double result_confid_pct = -1.0;
 double loc_cpu_confid_pct = -1.0;
 double rem_cpu_confid_pct = -1.0;
@@ -757,6 +760,295 @@ dump_netperf_output_source(FILE *where)
   fflush(where);
 }
 
+#define MY_MAX(a,b) (a > b) ? a : b
+
+#define NETPERF_LINE_MAX(x) \
+    MY_MAX(MY_MAX(MY_MAX(strlen(netperf_output_source[x].line[0]),\
+		         strlen(netperf_output_source[x].line[1])),\
+	          strlen(netperf_output_source[x].line[2])),\
+	   strlen(netperf_output_source[x].line[3]))
+
+#define NETPERF_LINE_TOT(x) \
+    strlen(netperf_output_source[x].line[0]) +\
+    strlen(netperf_output_source[x].line[1]) +\
+    strlen(netperf_output_source[x].line[2]) +\
+    strlen(netperf_output_source[x].line[3]) + 4
+
+enum netperf_output_name
+match_string_to_output(char *candidate)
+{
+  char *h1,*temp;
+  enum netperf_output_name name;
+  int k,len;
+
+  /* at some point we may need/want to worry about leading and
+     trailing spaces, but for now we will leave that onus on the
+     user. */
+
+  for (name = OUTPUT_NONE; name < NETPERF_OUTPUT_MAX; name++) {
+    /* try for a match based on the nmemonic/enum */
+    if (!strcasecmp(candidate,netperf_output_enum_to_str(name)))
+      return name;
+    
+    /* try for a match on the actual header text */
+    temp = malloc(NETPERF_LINE_TOT(name));
+    h1 = temp;
+    if (h1 != NULL) {
+      for (k = 0; ((k < 4) &&
+		   (NULL != netperf_output_source[name].line[k]) &&
+		   (strcmp("",netperf_output_source[name].line[k]))); k++) {
+	len = sprintf(h1,
+		      "%s",
+		      netperf_output_source[name].line[k]);
+	*(h1 + len) = ' ';
+	/* now move to the next starting column. for csv we aren't worried
+	   about alignment between the header and the value lines */
+	h1 += len + 1;
+      }
+      /* this time we want null termination please */
+      *(h1 - 1) = 0;
+      if (!strcasecmp(candidate,temp)) {
+	free(temp);
+	return name;
+      }
+      else 
+	free(temp);
+    }
+  }
+  /* if we get here it means there was no match */
+  return OUTPUT_NONE;
+}
+
+void
+parse_output_csv_selection_file(char *selection_file) {
+  FILE *selections;
+  char name[81]; /* best be more than enough */
+  int namepos;
+  int c;
+  int j;
+  enum netperf_output_name match;
+  int line,column;
+
+  selections = fopen(selection_file,"r");
+  if (!selections) {
+    perror("Could Not Open output selection file");
+    exit(-1);
+  }
+  
+  /* should this really be necessary? */
+  rewind(selections);
+
+  line = 0;
+  column = 1;
+  namepos = 0;
+  name[0] = 0;
+  name[80] = 0;
+  j = 0;
+  while (((c = fgetc(selections)) != EOF)  && (line < 1)) {
+    if (namepos == 80) {
+      /* too long */
+      
+      fprintf(where,
+	      "Output selection starting column %d on line %d is too long\n",
+	      line + 1,
+	      column);
+      fflush(where);
+      exit(-1);
+    }
+    if (c == ',') {
+      /* time to check for a match, but only if we won't overflow the
+	 current row of the array  */
+      if (j == NETPERF_OUTPUT_MAX) {
+	fprintf(where,"Too many output selectors on line %d\n",line);
+	fflush(where);
+	exit(-1);
+      }
+      name[namepos] = 0;
+      output_csv_list[j++] = match_string_to_output(name);
+      namepos = 0;
+    }
+    else if (c == '\n') {
+      /* move to the next line after checking for a match */
+      name[namepos] = 0;
+      output_csv_list[j++] = match_string_to_output(name);
+      line++;
+      namepos = 0;
+      j = 0;
+    }
+    else if (isprint(c)) {
+      name[namepos++] = c;
+    }
+    column++;
+  }
+
+  /* ok, do we need/want to do anything here? at present we will
+     silently ignore the rest of the file if we exit the loop on line
+     count */
+  if ((c == EOF) && (namepos > 0)) {
+    name[namepos] = 0;
+    output_csv_list[j] =   match_string_to_output(name);
+  }
+}
+void
+parse_output_human_selection_file(char *selection_file) {
+  FILE *selections;
+  char name[81]; /* best be more than enough */
+  int namepos;
+  char c;
+  int j;
+  enum netperf_output_name match;
+  int line,column;
+
+  selections = fopen(selection_file,"r");
+  if (!selections) {
+    perror("Could Not Open output selection file");
+    exit(-1);
+  }
+  
+  line = 0;
+  column = 1;
+  namepos = 0;
+  name[0] = 0;
+  name[80] = 0;
+  j = 0;
+  while (((c = fgetc(selections)) != EOF) && (line < 4)) {
+    if (namepos == 80) {
+      /* too long */
+      
+      fprintf(where,
+	      "Output selection starting column %d on line %d is too long\n",
+	      line + 1,
+	      column);
+      fflush(where);
+      exit(-1);
+    }
+    if (c == ',') {
+      /* time to check for a match, but only if we won't overflow the
+	 current row of the array  */
+      if (j == NETPERF_OUTPUT_MAX) {
+	fprintf(where,"Too many output selectors on line %d\n",line);
+	fflush(where);
+	exit(-1);
+      }
+      name[namepos] = 0;
+      output_human_list[line][j++] = match_string_to_output(name);
+      namepos = 0;
+    }
+    else if (c == '\n') {
+      /* move to the next line after checking for a match */
+      name[namepos] = 0;
+      output_human_list[line++][j++] = match_string_to_output(name);
+      namepos = 0;
+      j = 0;
+    }
+    else if (isprint(c)) {
+      name[namepos++] = c;
+    }
+    column++;
+  }
+
+  /* ok, do we need/want to do anything here? at present we will
+     silently ignore the rest of the file if we exit the loop on line
+     count */
+  if ((c == EOF) && (namepos > 0)) {
+    name[namepos] = 0;
+    output_human_list[line][j] =   match_string_to_output(name);
+  }
+
+}
+
+void
+set_output_csv_list_default() {
+
+  int  i = 0;
+  output_csv_list[i++] = SOCKET_TYPE;
+  output_csv_list[i++] = PROTOCOL;
+  output_csv_list[i++] = DIRECTION;
+  output_csv_list[i++] = LSS_SIZE_REQ;
+  output_csv_list[i++] = LSS_SIZE;
+  output_csv_list[i++] = LSS_SIZE_END;
+  output_csv_list[i++] = RSS_SIZE_REQ;
+  output_csv_list[i++] = RSS_SIZE;
+  output_csv_list[i++] = RSS_SIZE_END;
+  output_csv_list[i++] = LOCAL_SEND_SIZE;
+  output_csv_list[i++] = LOCAL_RECV_SIZE;
+  output_csv_list[i++] = REQUEST_SIZE;
+  output_csv_list[i++] = REMOTE_SEND_SIZE;
+  output_csv_list[i++] = REMOTE_RECV_SIZE;
+  output_csv_list[i++] = RESPONSE_SIZE;
+  output_csv_list[i++] = THROUGHPUT;
+  output_csv_list[i++] = THROUGHPUT_UNITS;
+  output_csv_list[i++] = LOCAL_CPU_UTIL;
+  output_csv_list[i++] = LOCAL_SD;
+  output_csv_list[i++] = LOCAL_CPU_BIND;
+  output_csv_list[i++] = LOCAL_CPU_COUNT;
+  output_csv_list[i++] = REMOTE_CPU_UTIL;
+  output_csv_list[i++] = REMOTE_SD;
+  output_csv_list[i++] = SD_UNITS;
+  output_csv_list[i++] = REMOTE_CPU_BIND;
+  output_csv_list[i++] = REMOTE_CPU_COUNT;
+  output_csv_list[i++] = CONFIDENCE_LEVEL;
+  output_csv_list[i++] = CONFIDENCE_INTERVAL;
+  output_csv_list[i++] = THROUGHPUT_CONFID;
+  output_csv_list[i++] = LOCAL_CPU_CONFID;
+  output_csv_list[i++] = REMOTE_CPU_CONFID;
+  output_csv_list[i++] = CONFIDENCE_ITERATION;
+  output_csv_list[i++] = RT_LATENCY;
+  output_csv_list[i++] = BURST_SIZE;
+  output_csv_list[i++] = TRANSPORT_MSS;
+  output_csv_list[i++] = LOCAL_BYTES_SENT;
+  output_csv_list[i++] = LOCAL_SEND_CALLS;
+  output_csv_list[i++] = LOCAL_BYTES_PER_SEND;
+  output_csv_list[i++] = LOCAL_BYTES_RECVD;
+  output_csv_list[i++] = LOCAL_RECV_CALLS;
+  output_csv_list[i++] = LOCAL_BYTES_PER_RECV;
+  output_csv_list[i++] = LOCAL_SEND_DIRTY_COUNT;
+  output_csv_list[i++] = LOCAL_RECV_DIRTY_COUNT;
+  output_csv_list[i++] = LOCAL_RECV_CLEAN_COUNT;
+  output_csv_list[i++] = LOCAL_NODELAY;
+  output_csv_list[i++] = LOCAL_CORK;
+  output_csv_list[i++] = REMOTE_BYTES_SENT;
+  output_csv_list[i++] = REMOTE_SEND_CALLS;
+  output_csv_list[i++] = REMOTE_BYTES_PER_SEND;
+  output_csv_list[i++] = REMOTE_BYTES_RECVD;
+  output_csv_list[i++] = REMOTE_RECV_CALLS;
+  output_csv_list[i++] = REMOTE_BYTES_PER_RECV;
+  output_csv_list[i++] = REMOTE_SEND_DIRTY_COUNT;
+  output_csv_list[i++] = REMOTE_RECV_DIRTY_COUNT;
+  output_csv_list[i++] = REMOTE_RECV_CLEAN_COUNT;
+  output_csv_list[i++] = REMOTE_NODELAY;
+  output_csv_list[i++] = REMOTE_CORK;
+  output_csv_list[i++] = RESULT_BRAND;
+  output_csv_list[i++] = COMMAND_LINE;
+
+}
+
+void
+set_output_human_list_default() {
+
+  int i, j;  /* line, column */
+
+  /* Line One */
+  i = 0;
+  j = 0;
+  output_human_list[i][j++] = LSS_SIZE_REQ;
+  output_human_list[i][j++] = LSS_SIZE;
+  output_human_list[i][j++] = LSS_SIZE_END;
+
+  /* Line Two */
+  i = 1;
+  j = 0;
+  output_human_list[i][j++] = COMMAND_LINE;
+
+  /* Line Three */
+  i = 2;
+  j = 0;
+
+  /* Line Four */
+  i = 3;
+  j = 0;
+
+}
 /* lots of boring, repetitive code */
 void 
 print_omni_init() {
@@ -780,20 +1072,6 @@ print_omni_init() {
     netperf_output_source[i].format = "";
     netperf_output_source[i].display_value = NULL;
   }
-
-#define MY_MAX(a,b) (a > b) ? a : b
-
-#define NETPERF_LINE_MAX(x) \
-    MY_MAX(MY_MAX(MY_MAX(strlen(netperf_output_source[x].line[0]),\
-		         strlen(netperf_output_source[x].line[1])),\
-	          strlen(netperf_output_source[x].line[2])),\
-	   strlen(netperf_output_source[x].line[3]))
-
-#define NETPERF_LINE_TOT(x) \
-    strlen(netperf_output_source[x].line[0]) +\
-    strlen(netperf_output_source[x].line[1]) +\
-    strlen(netperf_output_source[x].line[2]) +\
-    strlen(netperf_output_source[x].line[3]) + 4
 
   netperf_output_source[OUTPUT_NONE].output_name = OUTPUT_NONE;
   netperf_output_source[OUTPUT_NONE].format = "%s";
@@ -1688,81 +1966,32 @@ print_omni_init() {
   netperf_output_source[OUTPUT_END].tot_line_len = 
     NETPERF_LINE_TOT(OUTPUT_END);
 
+  /* belts and suspenders */
   for (i = OUTPUT_NONE; i < NETPERF_OUTPUT_MAX; i++)
     output_csv_list[i] = OUTPUT_END;
-
-  /* the default for csv is the kitchen-sink.  ultimately it will be
-     possible to override by providing one's own list in a file */
-
-  i = 0;
-  output_csv_list[i++] = SOCKET_TYPE;
-  output_csv_list[i++] = PROTOCOL;
-  output_csv_list[i++] = DIRECTION;
-  output_csv_list[i++] = LSS_SIZE_REQ;
-  output_csv_list[i++] = LSS_SIZE;
-  output_csv_list[i++] = LSS_SIZE_END;
-  output_csv_list[i++] = RSS_SIZE_REQ;
-  output_csv_list[i++] = RSS_SIZE;
-  output_csv_list[i++] = RSS_SIZE_END;
-  output_csv_list[i++] = LOCAL_SEND_SIZE;
-  output_csv_list[i++] = LOCAL_RECV_SIZE;
-  output_csv_list[i++] = REQUEST_SIZE;
-  output_csv_list[i++] = REMOTE_SEND_SIZE;
-  output_csv_list[i++] = REMOTE_RECV_SIZE;
-  output_csv_list[i++] = RESPONSE_SIZE;
-  output_csv_list[i++] = THROUGHPUT;
-  output_csv_list[i++] = THROUGHPUT_UNITS;
-  output_csv_list[i++] = LOCAL_CPU_UTIL;
-  output_csv_list[i++] = LOCAL_SD;
-  output_csv_list[i++] = LOCAL_CPU_BIND;
-  output_csv_list[i++] = LOCAL_CPU_COUNT;
-  output_csv_list[i++] = REMOTE_CPU_UTIL;
-  output_csv_list[i++] = REMOTE_SD;
-  output_csv_list[i++] = SD_UNITS;
-  output_csv_list[i++] = REMOTE_CPU_BIND;
-  output_csv_list[i++] = REMOTE_CPU_COUNT;
-  output_csv_list[i++] = CONFIDENCE_LEVEL;
-  output_csv_list[i++] = CONFIDENCE_INTERVAL;
-  output_csv_list[i++] = THROUGHPUT_CONFID;
-  output_csv_list[i++] = LOCAL_CPU_CONFID;
-  output_csv_list[i++] = REMOTE_CPU_CONFID;
-  output_csv_list[i++] = CONFIDENCE_ITERATION;
-  output_csv_list[i++] = RT_LATENCY;
-  output_csv_list[i++] = BURST_SIZE;
-  output_csv_list[i++] = TRANSPORT_MSS;
-  output_csv_list[i++] = LOCAL_BYTES_SENT;
-  output_csv_list[i++] = LOCAL_SEND_CALLS;
-  output_csv_list[i++] = LOCAL_BYTES_PER_SEND;
-  output_csv_list[i++] = LOCAL_BYTES_RECVD;
-  output_csv_list[i++] = LOCAL_RECV_CALLS;
-  output_csv_list[i++] = LOCAL_BYTES_PER_RECV;
-  output_csv_list[i++] = LOCAL_SEND_DIRTY_COUNT;
-  output_csv_list[i++] = LOCAL_RECV_DIRTY_COUNT;
-  output_csv_list[i++] = LOCAL_RECV_CLEAN_COUNT;
-  output_csv_list[i++] = LOCAL_NODELAY;
-  output_csv_list[i++] = LOCAL_CORK;
-  output_csv_list[i++] = REMOTE_BYTES_SENT;
-  output_csv_list[i++] = REMOTE_SEND_CALLS;
-  output_csv_list[i++] = REMOTE_BYTES_PER_SEND;
-  output_csv_list[i++] = REMOTE_BYTES_RECVD;
-  output_csv_list[i++] = REMOTE_RECV_CALLS;
-  output_csv_list[i++] = REMOTE_BYTES_PER_RECV;
-  output_csv_list[i++] = REMOTE_SEND_DIRTY_COUNT;
-  output_csv_list[i++] = REMOTE_RECV_DIRTY_COUNT;
-  output_csv_list[i++] = REMOTE_RECV_CLEAN_COUNT;
-  output_csv_list[i++] = REMOTE_NODELAY;
-  output_csv_list[i++] = REMOTE_CORK;
-  output_csv_list[i++] = RESULT_BRAND;
-  output_csv_list[i++] = COMMAND_LINE;
 
   for (j = 0; j < NETPERF_MAX_BLOCKS; j++)
     for (i = OUTPUT_NONE; i < NETPERF_OUTPUT_MAX; i++)
       output_human_list[j][i] = OUTPUT_END;
 
-  output_human_list[0][0] = LSS_SIZE_REQ;
-  output_human_list[0][1] = LSS_SIZE;
-  output_human_list[0][2] = LSS_SIZE_END;
-  output_human_list[1][0] = COMMAND_LINE;
+
+  /* the default for csv is the kitchen-sink.  ultimately it will be
+     possible to override by providing one's own list in a file */
+
+  if (csv) {
+    if (csv_selection_file) 
+      /* name of file, list to fill, number of rows/lines */
+      parse_output_csv_selection_file(csv_selection_file);
+    else
+      set_output_csv_list_default(output_csv_list);
+  }
+  else {
+    if (human_selection_file)
+      parse_output_human_selection_file(human_selection_file);
+    else
+      set_output_human_list_default(output_human_list);
+  }
+      
 
 }
 
@@ -1866,7 +2095,7 @@ print_omni_csv()
 		netperf_output_source[output_csv_list[j]].format);
 	fflush(where);
       }
-      vallen += 1;
+      vallen += 1; /* forget not the terminator */
     }
     else
       vallen = 0;
@@ -1901,22 +2130,25 @@ print_omni_csv()
 	(output_csv_list[j] != OUTPUT_END));
        j++) {
     int len;
+    len = 0; 
     if (print_headers) {
-      len = sprintf(h1,
-		    "%s %s %s %s",
-		    netperf_output_source[output_csv_list[j]].line[0],
-		    netperf_output_source[output_csv_list[j]].line[1],
-		    netperf_output_source[output_csv_list[j]].line[2],
-		    netperf_output_source[output_csv_list[j]].line[3]);
-      
-      *(h1 + len) = ',';
-      /* now move to the next starting column. for csv we aren't worried
-	 about alignment between the header and the value lines */
-      h1 += len + 1;
+      for (k = 0; ((k < 4) && 
+		   (NULL != 
+		    netperf_output_source[output_csv_list[j]].line[k]) &&
+		   (strcmp("",netperf_output_source[output_csv_list[j]].line[k]))); k++) {
+
+	len = sprintf(h1,
+		      "%s",
+		      netperf_output_source[output_csv_list[j]].line[k]);
+	*(h1 + len) = ' ';
+	/* now move to the next starting column. for csv we aren't worried
+	   about alignment between the header and the value lines */
+	h1 += len + 1;
+      }
+      *(h1 - 1) = ',';
     }
     if ((netperf_output_source[output_csv_list[j]].format != NULL) &&
 	(netperf_output_source[output_csv_list[j]].display_value != NULL)) {
-      int len;
       /* tot_line_len is bogus here, but should be "OK" ? */
       len = my_snprintf(v1,
 			netperf_output_source[output_csv_list[j]].tot_line_len,
@@ -4149,9 +4381,39 @@ scan_omni_args(int argc, char *argv[])
       break;
     case 'o':
       csv = 1;
+      /* obliterate any previous file name */
+      if (human_selection_file) {
+	free(human_selection_file);
+	human_selection_file = NULL;
+      }
+      if (csv_selection_file) {
+	free(csv_selection_file);
+	csv_selection_file = NULL;
+      }
+      if (argv[optind] && ((unsigned char)argv[optind][0] != '-')) {
+	/* we assume that what follows is the name of a file with the
+	   list of desired output values. */
+	csv_selection_file = strdup(argv[optind]);
+	optind++;
+      }
       break;
     case 'O':
       csv = 0;
+      /* obliterate any previous file name */
+      if (human_selection_file) {
+	free(human_selection_file);
+	human_selection_file = NULL;
+      }
+      if (csv_selection_file) {
+	free(csv_selection_file);
+	csv_selection_file = NULL;
+      }
+      if (argv[optind] && ((unsigned char)argv[optind][0] != '-')) {
+	/* we assume that what follows is the name of a file with the
+	   list of desired output values */
+	human_selection_file = strdup(argv[optind]);
+	optind++;
+      }
       break;
     case 'p':
       /* set the min and max port numbers for the TCP_CRR and TCP_TRR */
