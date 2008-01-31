@@ -760,7 +760,7 @@ dump_netperf_output_source(FILE *where)
   fflush(where);
 }
 
-#define MY_MAX(a,b) (a > b) ? a : b
+#define MY_MAX(a,b) ((a > b) ? a : b)
 
 #define NETPERF_LINE_MAX(x) \
     MY_MAX(MY_MAX(MY_MAX(strlen(netperf_output_source[x].line[0]),\
@@ -979,13 +979,13 @@ set_output_csv_list_default() {
   output_csv_list[i++] = THROUGHPUT;
   output_csv_list[i++] = THROUGHPUT_UNITS;
   output_csv_list[i++] = LOCAL_CPU_UTIL;
-  output_csv_list[i++] = LOCAL_SD;
-  output_csv_list[i++] = LOCAL_CPU_BIND;
-  output_csv_list[i++] = LOCAL_CPU_COUNT;
   output_csv_list[i++] = REMOTE_CPU_UTIL;
+  output_csv_list[i++] = LOCAL_SD;
   output_csv_list[i++] = REMOTE_SD;
   output_csv_list[i++] = SD_UNITS;
+  output_csv_list[i++] = LOCAL_CPU_BIND;
   output_csv_list[i++] = REMOTE_CPU_BIND;
+  output_csv_list[i++] = LOCAL_CPU_COUNT;
   output_csv_list[i++] = REMOTE_CPU_COUNT;
   output_csv_list[i++] = CONFIDENCE_LEVEL;
   output_csv_list[i++] = CONFIDENCE_INTERVAL;
@@ -1074,6 +1074,7 @@ print_omni_init() {
   }
 
   netperf_output_source[OUTPUT_NONE].output_name = OUTPUT_NONE;
+  netperf_output_source[OUTPUT_NONE].line[0] = " ";
   netperf_output_source[OUTPUT_NONE].format = "%s";
   netperf_output_source[OUTPUT_NONE].display_value = &" ";
   netperf_output_source[OUTPUT_NONE].max_line_len = 
@@ -1134,7 +1135,7 @@ print_omni_init() {
   netperf_output_source[ELAPSED_TIME].line[0] = "Elapsed";
   netperf_output_source[ELAPSED_TIME].line[1] = "Time";
   netperf_output_source[ELAPSED_TIME].line[2] = "(sec)";
-  netperf_output_source[ELAPSED_TIME].format = "%f";
+  netperf_output_source[ELAPSED_TIME].format = "%.2f";
   netperf_output_source[ELAPSED_TIME].display_value = &elapsed_time_double;
   netperf_output_source[ELAPSED_TIME].max_line_len = 
     NETPERF_LINE_MAX(ELAPSED_TIME);
@@ -1258,7 +1259,7 @@ print_omni_init() {
   netperf_output_source[THROUGHPUT_CONFID].line[0] = "Throughput";
   netperf_output_source[THROUGHPUT_CONFID].line[1] = "Confidence";
   netperf_output_source[THROUGHPUT_CONFID].line[2] = "Width (%)";
-  netperf_output_source[THROUGHPUT_CONFID].format = "%f";
+  netperf_output_source[THROUGHPUT_CONFID].format = "%.3f";
   netperf_output_source[THROUGHPUT_CONFID].display_value = &result_confid_pct;
   netperf_output_source[THROUGHPUT_CONFID].max_line_len = 
     NETPERF_LINE_MAX(THROUGHPUT_CONFID);
@@ -1270,7 +1271,7 @@ print_omni_init() {
   netperf_output_source[LOCAL_CPU_CONFID].line[1] = "CPU";
   netperf_output_source[LOCAL_CPU_CONFID].line[2] = "Confidence";
   netperf_output_source[LOCAL_CPU_CONFID].line[3] = "Width (%)";
-  netperf_output_source[LOCAL_CPU_CONFID].format = "%f";
+  netperf_output_source[LOCAL_CPU_CONFID].format = "%.3f";
   netperf_output_source[LOCAL_CPU_CONFID].display_value = &loc_cpu_confid_pct;
   netperf_output_source[LOCAL_CPU_CONFID].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_CPU_CONFID);
@@ -1282,7 +1283,7 @@ print_omni_init() {
   netperf_output_source[REMOTE_CPU_CONFID].line[1] = "CPU";
   netperf_output_source[REMOTE_CPU_CONFID].line[2] = "Confidence";
   netperf_output_source[REMOTE_CPU_CONFID].line[3] = "Width (%)";
-  netperf_output_source[REMOTE_CPU_CONFID].format = "%f";
+  netperf_output_source[REMOTE_CPU_CONFID].format = "%.3f";
   netperf_output_source[REMOTE_CPU_CONFID].display_value = &rem_cpu_confid_pct;
   netperf_output_source[REMOTE_CPU_CONFID].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_CPU_CONFID);
@@ -1350,7 +1351,7 @@ print_omni_init() {
   netperf_output_source[LSS_SIZE_REQ].line[1] = "Send Socket";
   netperf_output_source[LSS_SIZE_REQ].line[2] = "Size";
   netperf_output_source[LSS_SIZE_REQ].line[3] = "Requested";
-  netperf_output_source[LSS_SIZE_REQ].format = "%8d";
+  netperf_output_source[LSS_SIZE_REQ].format = "%d";
   netperf_output_source[LSS_SIZE_REQ].display_value = &lss_size_req;
   netperf_output_source[LSS_SIZE_REQ].max_line_len = 
     NETPERF_LINE_MAX(LSS_SIZE_REQ);
@@ -1362,7 +1363,7 @@ print_omni_init() {
   netperf_output_source[LSS_SIZE].line[1] = "Send Socket";
   netperf_output_source[LSS_SIZE].line[2] = "Size";
   netperf_output_source[LSS_SIZE].line[3] = "Initial";
-  netperf_output_source[LSS_SIZE].format = "%8d";
+  netperf_output_source[LSS_SIZE].format = "%d";
   netperf_output_source[LSS_SIZE].display_value = &lss_size;
   netperf_output_source[LSS_SIZE].max_line_len = 
     NETPERF_LINE_MAX(LSS_SIZE);
@@ -1374,7 +1375,7 @@ print_omni_init() {
   netperf_output_source[LSS_SIZE_END].line[1] = "Send Socket";
   netperf_output_source[LSS_SIZE_END].line[2] = "Size";
   netperf_output_source[LSS_SIZE_END].line[3] = "Final";
-  netperf_output_source[LSS_SIZE_END].format = "%8d";
+  netperf_output_source[LSS_SIZE_END].format = "%d";
   netperf_output_source[LSS_SIZE_END].display_value = &lss_size_end;
   netperf_output_source[LSS_SIZE_END].max_line_len = 
     NETPERF_LINE_MAX(LSS_SIZE_END);
@@ -1470,7 +1471,7 @@ print_omni_init() {
   netperf_output_source[LOCAL_BYTES_PER_RECV].line[1] = "Bytes";
   netperf_output_source[LOCAL_BYTES_PER_RECV].line[2] = "Per";
   netperf_output_source[LOCAL_BYTES_PER_RECV].line[3] = "Recv";
-  netperf_output_source[LOCAL_BYTES_PER_RECV].format = "%f";
+  netperf_output_source[LOCAL_BYTES_PER_RECV].format = "%.2f";
   netperf_output_source[LOCAL_BYTES_PER_RECV].display_value = &bytes_per_recv;
   netperf_output_source[LOCAL_BYTES_PER_RECV].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_BYTES_PER_RECV);
@@ -1482,7 +1483,7 @@ print_omni_init() {
   netperf_output_source[LOCAL_BYTES_PER_SEND].line[1] = "Bytes";
   netperf_output_source[LOCAL_BYTES_PER_SEND].line[2] = "Per";
   netperf_output_source[LOCAL_BYTES_PER_SEND].line[3] = "Send";
-  netperf_output_source[LOCAL_BYTES_PER_SEND].format = "%f";
+  netperf_output_source[LOCAL_BYTES_PER_SEND].format = "%.2f";
   netperf_output_source[LOCAL_BYTES_PER_SEND].display_value = &bytes_per_send;
   netperf_output_source[LOCAL_BYTES_PER_SEND].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_BYTES_PER_SEND);
@@ -1494,7 +1495,7 @@ print_omni_init() {
   netperf_output_source[LOCAL_BYTES_RECVD].line[1] = "Bytes";
   netperf_output_source[LOCAL_BYTES_RECVD].line[2] = "Received";
   netperf_output_source[LOCAL_BYTES_RECVD].line[3] = "";
-  netperf_output_source[LOCAL_BYTES_RECVD].format = "%d";
+  netperf_output_source[LOCAL_BYTES_RECVD].format = "%lld";
   netperf_output_source[LOCAL_BYTES_RECVD].display_value = &bytes_received;
   netperf_output_source[LOCAL_BYTES_RECVD].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_BYTES_RECVD);
@@ -1578,7 +1579,7 @@ print_omni_init() {
   netperf_output_source[LOCAL_CPU_BIND].line[1] = "CPU";
   netperf_output_source[LOCAL_CPU_BIND].line[2] = "Bind";
   netperf_output_source[LOCAL_CPU_BIND].line[3] = "";
-  netperf_output_source[LOCAL_CPU_BIND].format = "%4d";
+  netperf_output_source[LOCAL_CPU_BIND].format = "%d";
   netperf_output_source[LOCAL_CPU_BIND].display_value = &local_proc_affinity;
   netperf_output_source[LOCAL_CPU_BIND].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_CPU_BIND);
@@ -1590,7 +1591,7 @@ print_omni_init() {
   netperf_output_source[LOCAL_SD].line[1] = "Service";
   netperf_output_source[LOCAL_SD].line[2] = "Demand";
   netperf_output_source[LOCAL_SD].line[3] = "";
-  netperf_output_source[LOCAL_SD].format = "%.2f";
+  netperf_output_source[LOCAL_SD].format = "%.3f";
   netperf_output_source[LOCAL_SD].display_value = &local_service_demand_double;
   netperf_output_source[LOCAL_SD].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_SD);
@@ -1756,7 +1757,7 @@ print_omni_init() {
   netperf_output_source[REMOTE_SEND_CALLS].line[1] = "Send";
   netperf_output_source[REMOTE_SEND_CALLS].line[2] = "Calls";
   netperf_output_source[REMOTE_SEND_CALLS].line[3] = "";
-  netperf_output_source[REMOTE_SEND_CALLS].format = "%d";
+  netperf_output_source[REMOTE_SEND_CALLS].format = "%lld";
   netperf_output_source[REMOTE_SEND_CALLS].display_value = &remote_send_calls;
   netperf_output_source[REMOTE_SEND_CALLS].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_SEND_CALLS);
@@ -1780,7 +1781,7 @@ print_omni_init() {
   netperf_output_source[REMOTE_BYTES_PER_RECV].line[1] = "Bytes";
   netperf_output_source[REMOTE_BYTES_PER_RECV].line[2] = "Per";
   netperf_output_source[REMOTE_BYTES_PER_RECV].line[3] = "Recv";
-  netperf_output_source[REMOTE_BYTES_PER_RECV].format = "%f";
+  netperf_output_source[REMOTE_BYTES_PER_RECV].format = "%.2f";
   netperf_output_source[REMOTE_BYTES_PER_RECV].display_value = &remote_bytes_per_recv;
   netperf_output_source[REMOTE_BYTES_PER_RECV].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_BYTES_PER_RECV);
@@ -1792,7 +1793,7 @@ print_omni_init() {
   netperf_output_source[REMOTE_BYTES_PER_SEND].line[1] = "Bytes";
   netperf_output_source[REMOTE_BYTES_PER_SEND].line[2] = "Per";
   netperf_output_source[REMOTE_BYTES_PER_SEND].line[3] = "Send";
-  netperf_output_source[REMOTE_BYTES_PER_SEND].format = "%f";
+  netperf_output_source[REMOTE_BYTES_PER_SEND].format = "%.2f";
   netperf_output_source[REMOTE_BYTES_PER_SEND].display_value = &remote_bytes_per_send;
   netperf_output_source[REMOTE_BYTES_PER_SEND].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_BYTES_PER_SEND);
@@ -1888,7 +1889,7 @@ print_omni_init() {
   netperf_output_source[REMOTE_CPU_BIND].line[1] = "CPU";
   netperf_output_source[REMOTE_CPU_BIND].line[2] = "Bind";
   netperf_output_source[REMOTE_CPU_BIND].line[3] = "";
-  netperf_output_source[REMOTE_CPU_BIND].format = "%4d";
+  netperf_output_source[REMOTE_CPU_BIND].format = "%d";
   netperf_output_source[REMOTE_CPU_BIND].display_value = &remote_proc_affinity;
   netperf_output_source[REMOTE_CPU_BIND].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_CPU_BIND);
@@ -1900,7 +1901,7 @@ print_omni_init() {
   netperf_output_source[REMOTE_SD].line[1] = "Service";
   netperf_output_source[REMOTE_SD].line[2] = "Demand";
   netperf_output_source[REMOTE_SD].line[3] = "";
-  netperf_output_source[REMOTE_SD].format = "%.2f";
+  netperf_output_source[REMOTE_SD].format = "%.3f";
   netperf_output_source[REMOTE_SD].display_value = &remote_service_demand_double;
   netperf_output_source[REMOTE_SD].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_SD);
