@@ -292,6 +292,7 @@ double      local_cpu_utilization_double;
 double      local_service_demand_double;
 double      remote_cpu_utilization_double;
 double      remote_service_demand_double;
+double      transaction_rate = 1.0;
 double      rtt_latency = -1.0;
 int32_t    transport_mss = -1;
 
@@ -362,6 +363,7 @@ enum netperf_output_name {
   THROUGHPUT_CONFID,
   LOCAL_CPU_CONFID,
   REMOTE_CPU_CONFID,
+  TRANSACTION_RATE,
   RT_LATENCY,
   BURST_SIZE,
   TRANSPORT_MSS,
@@ -611,6 +613,8 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "REMOTE_CPU_CONFID";
   case RT_LATENCY:
     return "RT_LATENCY";
+  case TRANSACTION_RATE:
+    return "TRANSACTION_RATE";
   case BURST_SIZE:
     return "BURST_SIZE";
   case TRANSPORT_MSS:
@@ -1014,6 +1018,7 @@ set_output_csv_list_default() {
   output_csv_list[i++] = REMOTE_CPU_CONFID;
   output_csv_list[i++] = CONFIDENCE_ITERATION;
   output_csv_list[i++] = RT_LATENCY;
+  output_csv_list[i++] = TRANSACTION_RATE;
   output_csv_list[i++] = BURST_SIZE;
   output_csv_list[i++] = TRANSPORT_MSS;
   output_csv_list[i++] = LOCAL_BYTES_SENT;
@@ -1365,6 +1370,17 @@ print_omni_init() {
     NETPERF_LINE_MAX(RT_LATENCY);
   netperf_output_source[RT_LATENCY].tot_line_len = 
     NETPERF_LINE_TOT(RT_LATENCY);
+
+  netperf_output_source[TRANSACTION_RATE].output_name = TRANSACTION_RATE;
+  netperf_output_source[TRANSACTION_RATE].line[0] = "Transaction";
+  netperf_output_source[TRANSACTION_RATE].line[1] = "Rate";
+  netperf_output_source[TRANSACTION_RATE].line[2] = "Tran/s";
+  netperf_output_source[TRANSACTION_RATE].format = "%.3f";
+  netperf_output_source[TRANSACTION_RATE].display_value = &transaction_rate;
+  netperf_output_source[TRANSACTION_RATE].max_line_len = 
+    NETPERF_LINE_MAX(TRANSACTION_RATE);
+  netperf_output_source[TRANSACTION_RATE].tot_line_len = 
+    NETPERF_LINE_TOT(TRANSACTION_RATE);
 
   netperf_output_source[TRANSPORT_MSS].output_name = TRANSPORT_MSS;
   netperf_output_source[TRANSPORT_MSS].line[0] = "Transport";
@@ -3342,6 +3358,9 @@ send_omni(char remote_host[])
 	  get_sock_buffer(data_socket, RECV_BUFFER, &lsr_size_end);
 	if (lss_size_req < 0)
 	  get_sock_buffer(data_socket, SEND_BUFFER, &lss_size_end);
+#else
+	lsr_size_end = lsr_size;
+	lss_size_end = lss_size;
 #endif
 
 	ret = disconnect_data_socket(data_socket,
@@ -3417,6 +3436,9 @@ send_omni(char remote_host[])
 	get_sock_buffer(data_socket, RECV_BUFFER, &lsr_size_end);
       if (lss_size_req < 0)
 	get_sock_buffer(data_socket, SEND_BUFFER, &lss_size_end);
+#else
+      lsr_size_end = lsr_size;
+      lss_size_end = lss_size;
 #endif
       /* CHECK PARMS HERE; */
       ret = disconnect_data_socket(data_socket,
@@ -3533,6 +3555,7 @@ send_omni(char remote_host[])
       thruput = calc_thruput(remote_bytes_xferd);
 
     if (NETPERF_IS_RR(direction)) {
+      char tmpfmt;
       if (!connection_test) {
       /* calculate the round trip latency, using the transaction rate
 	 whether or not the user was asking for thruput to be in 'x'
@@ -3545,6 +3568,10 @@ send_omni(char remote_host[])
       else 
 	rtt_latency = 
 	  ((double)1.0/(trans_completed/elapsed_time)) * (double)1000000.0;
+      tmpfmt = libfmt;
+      libfmt = 'x';
+      transaction_rate = calc_thruput(trans_completed);
+      libfmt = tmpfmt;
     }
 
     /* ok, time to possibly calculate cpu util and/or service demand */
@@ -4188,6 +4215,9 @@ recv_omni()
 	get_sock_buffer(data_socket, RECV_BUFFER, &lsr_size_end);
       if (lss_size_req < 0)
 	get_sock_buffer(data_socket, SEND_BUFFER, &lss_size_end);
+#else
+      lsr_size_end = lsr_size;
+      lss_size_end = lss_size;
 #endif
       ret = close_data_socket(data_socket,NULL,0);
       if (ret == -1) {
@@ -4245,6 +4275,9 @@ recv_omni()
       get_sock_buffer(data_socket, RECV_BUFFER, &lsr_size_end);
     if (lss_size_req < 0)
       get_sock_buffer(data_socket, SEND_BUFFER, &lss_size_end);
+#else
+    lss_size_end = lss_size;
+    lsr_size_end = lsr_size;
 #endif
     close_data_socket(data_socket,NULL,0);
   }
