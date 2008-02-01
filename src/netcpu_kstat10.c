@@ -528,21 +528,20 @@ calc_cpu_util_internal(float elapsed_time)
     /* and finally, what is our CPU utilization? */
     lib_local_per_cpu_util[i] = 100.0 - (((float)fraction_idle / 
 					  (float)CALC_ACCURACY) * 100.0);
+    lib_local_per_cpu_util[i] *= correction_factor;
     if (debug) {
       fprintf(where,
-	      "lib_local_per_cpu_util[%d] %g\n",
+	      "lib_local_per_cpu_util[%d] %g cf %f\n",
 	      i,
-	      lib_local_per_cpu_util[i]);
+	      lib_local_per_cpu_util[i],
+	      correction_factor);
     }
     lib_local_cpu_util += lib_local_per_cpu_util[i];
   }
   /* we want the average across all n processors */
   lib_local_cpu_util /= (float)lib_num_loc_cpus;
-  
-  lib_local_cpu_util *= correction_factor;
+
   return lib_local_cpu_util;
-
-
 }
 
 void

@@ -197,6 +197,13 @@ int
   lib_num_loc_cpus,    /* the number of cpus in the system */
   lib_num_rem_cpus;    /* how many we think are in the remote */
 
+int
+  lib_local_peak_cpu_id, /* the CPU number of the most utilized CPU */
+  lib_remote_peak_cpu_id;
+double
+  lib_local_peak_cpu_util, /* its utilization */
+  lib_remote_peak_cpu_util;
+
 #define PAGES_PER_CHILD 2
 
 int     lib_use_idle;
@@ -1111,8 +1118,13 @@ netlib_init()
   response_array = (int *)(&netperf_response);
 
   for (i = 0; i < MAXCPUS; i++) {
-    lib_local_per_cpu_util[i] = 0.0;
+    lib_local_per_cpu_util[i] = -1.0;
   }
+
+  lib_local_peak_cpu_id = -1;
+  lib_local_peak_cpu_util = -1.0;
+  lib_remote_peak_cpu_id = -1;
+  lib_remote_peak_cpu_util = -1.0;
 
   /* on those systems where we know that CPU numbers may not start at
      zero and be contiguous, we provide a way to map from a
@@ -3169,7 +3181,19 @@ calc_thruput_omni(double units_received)
 float 
 calc_cpu_util(float elapsed_time)
 {
-  return(calc_cpu_util_internal(elapsed_time));
+  float temp_util;
+  int i;
+  temp_util = calc_cpu_util_internal(elapsed_time);
+
+  /* now, what was the most utilized CPU and its util? */
+  for (i = 0; i < MAXCPUS; i++) {
+    if (lib_local_per_cpu_util[i] > lib_local_peak_cpu_util) {
+      lib_local_peak_cpu_util = lib_local_per_cpu_util[i];
+      lib_local_peak_cpu_id = i; /* probably need to check the map */
+    }
+  }
+
+  return temp_util;
 }
 
 float 
