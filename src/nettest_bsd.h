@@ -67,9 +67,11 @@ struct  omni_request_struct {
 struct  omni_response_struct {
   int32_t    recv_buf_size;
   uint32_t   receive_size;
+  int32_t    recv_width;
 
   int32_t    send_buf_size;
   uint32_t   send_size;
+  int32_t    send_width;
 
   uint32_t   no_delay;
   uint32_t   use_sendfile;

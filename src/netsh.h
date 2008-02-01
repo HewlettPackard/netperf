@@ -77,7 +77,9 @@ extern int
   local_send_offset,
   local_recv_offset,
   remote_send_offset,
-  remote_recv_offset;
+  remote_recv_offset,
+  remote_send_width,
+  remote_recv_width;
 
 #if defined(WANT_INTERVALS) || defined(WANT_DEMO)
 extern	int          interval_usecs;
