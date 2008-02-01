@@ -3584,13 +3584,7 @@ send_omni(char remote_host[])
 
     /* ok, time to possibly calculate cpu util and/or service demand */
     if (local_cpu_usage) {
-      if (local_cpu_rate == 0.0) {
-	fprintf(where,
-		"WARNING WARNING WARNING  WARNING WARNING WARNING  WARNING!\n");
-	fprintf(where,
-		"Local CPU usage numbers based on process information only!\n");
-	fflush(where);
-      }
+
       local_cpu_utilization = calc_cpu_util(elapsed_time);
       
       /* we need to decide what to feed the service demand beast,
@@ -3610,13 +3604,7 @@ send_omni(char remote_host[])
     }
 
     if (remote_cpu_usage) {
-      if (remote_cpu_rate == 0.0) {
-	fprintf(where,
-		"DANGER  DANGER  DANGER    DANGER  DANGER  DANGER    DANGER!\n");
-	fprintf(where,
-		"Remote CPU usage numbers based on process information only!\n");
-	fflush(where);
-      }
+
       remote_cpu_utilization = omni_result->cpu_util;
 
       /* since calc_service demand is doing ms/Kunit we will */
