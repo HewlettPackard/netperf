@@ -233,21 +233,22 @@ calc_cpu_util_internal(float elapsed_time)
 	      MAXLONG)/ lib_elapsed;
     lib_local_per_cpu_util[i] = (lib_local_maxrate - actual_rate) /
       lib_local_maxrate * 100;
+    lib_local_per_cpu_util[i] *= correction_factor;
     if (debug) {
       fprintf(where,
-              "calc_cpu_util: actual_rate on processor %d is %f start %llx end %llx util %f\n",
+              "calc_cpu_util: actual_rate on processor %d is %f start %llx end %llx util %f cf %f\n",
               i,
               actual_rate,
               lib_start_count[i],
               lib_end_count[i],
-	      lib_local_per_cpu_util[i]);
+	      lib_local_per_cpu_util[i],
+	      correction_factor);
     }
     lib_local_cpu_util += lib_local_per_cpu_util[i];
   }
   /* we want the average across all n processors */
   lib_local_cpu_util /= (float)lib_num_loc_cpus;
   
-  lib_local_cpu_util *= correction_factor;
   return lib_local_cpu_util;
 }
 

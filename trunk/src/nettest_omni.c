@@ -392,11 +392,15 @@ enum netperf_output_name {
   LOCAL_SD,
   LOCAL_CPU_METHOD,
   LOCAL_CPU_COUNT,
+  LOCAL_CPU_PEAK_UTIL,
+  LOCAL_CPU_PEAK_ID,
   REMOTE_CPU_UTIL,
   REMOTE_CPU_BIND,
   REMOTE_SD,
   REMOTE_CPU_METHOD,
   REMOTE_CPU_COUNT,
+  REMOTE_CPU_PEAK_UTIL,
+  REMOTE_CPU_PEAK_ID,
   SD_UNITS,
   LOCAL_NODELAY,
   LOCAL_CORK,
@@ -671,6 +675,10 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "LOCAL_CPU_METHOD";
   case LOCAL_CPU_COUNT:
     return "LOCAL_CPU_COUNT";
+  case   LOCAL_CPU_PEAK_UTIL:
+    return "LOCAL_CPU_PEAK_UTIL";
+  case LOCAL_CPU_PEAK_ID:
+    return "LOCAL_CPU_PEAK_ID";
   case   LOCAL_NODELAY:
     return "LOCAL_NODELAY";
   case   LOCAL_CORK:
@@ -721,6 +729,10 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "REMOTE_CPU_METHOD";
   case REMOTE_CPU_COUNT:
     return "REMOTE_CPU_COUNT";
+  case REMOTE_CPU_PEAK_UTIL:
+    return "REMOTE_CPU_PEAK_UTIL";
+  case REMOTE_CPU_PEAK_ID:
+    return "REMOTE_CPU_PEAK_ID";
   case   REMOTE_NODELAY:
     return "REMOTE_NODELAY";
   case   REMOTE_CORK:
@@ -1011,6 +1023,10 @@ set_output_csv_list_default() {
   output_csv_list[i++] = REMOTE_CPU_BIND;
   output_csv_list[i++] = LOCAL_CPU_COUNT;
   output_csv_list[i++] = REMOTE_CPU_COUNT;
+  output_csv_list[i++] = LOCAL_CPU_PEAK_UTIL;
+  output_csv_list[i++] = LOCAL_CPU_PEAK_ID;
+  output_csv_list[i++] = REMOTE_CPU_PEAK_UTIL;
+  output_csv_list[i++] = REMOTE_CPU_PEAK_ID;
   output_csv_list[i++] = CONFIDENCE_LEVEL;
   output_csv_list[i++] = CONFIDENCE_INTERVAL;
   output_csv_list[i++] = THROUGHPUT_CONFID;
@@ -1654,6 +1670,30 @@ print_omni_init() {
   netperf_output_source[LOCAL_CPU_UTIL].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_CPU_UTIL);
 
+  netperf_output_source[LOCAL_CPU_PEAK_UTIL].output_name = LOCAL_CPU_PEAK_UTIL;
+  netperf_output_source[LOCAL_CPU_PEAK_UTIL].line[0] = "Local";
+  netperf_output_source[LOCAL_CPU_PEAK_UTIL].line[1] = "Peak";
+  netperf_output_source[LOCAL_CPU_PEAK_UTIL].line[2] = "Per CPU";
+  netperf_output_source[LOCAL_CPU_PEAK_UTIL].line[3] = "Util %";
+  netperf_output_source[LOCAL_CPU_PEAK_UTIL].format = "%.2f";
+  netperf_output_source[LOCAL_CPU_PEAK_UTIL].display_value = &lib_local_peak_cpu_util;
+  netperf_output_source[LOCAL_CPU_PEAK_UTIL].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_CPU_PEAK_UTIL);
+  netperf_output_source[LOCAL_CPU_PEAK_UTIL].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_CPU_PEAK_UTIL);
+
+  netperf_output_source[LOCAL_CPU_PEAK_ID].output_name = LOCAL_CPU_PEAK_ID;
+  netperf_output_source[LOCAL_CPU_PEAK_ID].line[0] = "Local";
+  netperf_output_source[LOCAL_CPU_PEAK_ID].line[1] = "Peak";
+  netperf_output_source[LOCAL_CPU_PEAK_ID].line[2] = "Per CPU";
+  netperf_output_source[LOCAL_CPU_PEAK_ID].line[3] = "ID";
+  netperf_output_source[LOCAL_CPU_PEAK_ID].format = "%d";
+  netperf_output_source[LOCAL_CPU_PEAK_ID].display_value = &lib_local_peak_cpu_id;
+  netperf_output_source[LOCAL_CPU_PEAK_ID].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_CPU_PEAK_ID);
+  netperf_output_source[LOCAL_CPU_PEAK_ID].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_CPU_PEAK_ID);
+
   netperf_output_source[LOCAL_CPU_BIND].output_name = LOCAL_CPU_BIND;
   netperf_output_source[LOCAL_CPU_BIND].line[0] = "Local";
   netperf_output_source[LOCAL_CPU_BIND].line[1] = "CPU";
@@ -1963,6 +2003,30 @@ print_omni_init() {
     NETPERF_LINE_MAX(REMOTE_CPU_UTIL);
   netperf_output_source[REMOTE_CPU_UTIL].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_CPU_UTIL);
+
+  netperf_output_source[REMOTE_CPU_PEAK_UTIL].output_name = REMOTE_CPU_PEAK_UTIL;
+  netperf_output_source[REMOTE_CPU_PEAK_UTIL].line[0] = "Remote";
+  netperf_output_source[REMOTE_CPU_PEAK_UTIL].line[1] = "Peak";
+  netperf_output_source[REMOTE_CPU_PEAK_UTIL].line[2] = "Per CPU";
+  netperf_output_source[REMOTE_CPU_PEAK_UTIL].line[3] = "Util %";
+  netperf_output_source[REMOTE_CPU_PEAK_UTIL].format = "%.2f";
+  netperf_output_source[REMOTE_CPU_PEAK_UTIL].display_value = &lib_remote_peak_cpu_util;
+  netperf_output_source[REMOTE_CPU_PEAK_UTIL].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_CPU_PEAK_UTIL);
+  netperf_output_source[REMOTE_CPU_PEAK_UTIL].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_CPU_PEAK_UTIL);
+
+  netperf_output_source[REMOTE_CPU_PEAK_ID].output_name = REMOTE_CPU_PEAK_ID;
+  netperf_output_source[REMOTE_CPU_PEAK_ID].line[0] = "Remote";
+  netperf_output_source[REMOTE_CPU_PEAK_ID].line[1] = "Peak";
+  netperf_output_source[REMOTE_CPU_PEAK_ID].line[2] = "Per CPU";
+  netperf_output_source[REMOTE_CPU_PEAK_ID].line[3] = "ID";
+  netperf_output_source[REMOTE_CPU_PEAK_ID].format = "%d";
+  netperf_output_source[REMOTE_CPU_PEAK_ID].display_value = &lib_remote_peak_cpu_id;
+  netperf_output_source[REMOTE_CPU_PEAK_ID].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_CPU_PEAK_ID);
+  netperf_output_source[REMOTE_CPU_PEAK_ID].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_CPU_PEAK_ID);
 
   netperf_output_source[REMOTE_CPU_BIND].output_name = REMOTE_CPU_BIND;
   netperf_output_source[REMOTE_CPU_BIND].line[0] = "Remote";
@@ -3502,6 +3566,8 @@ send_omni(char remote_host[])
 	   connection may not be what we would get at the end of the
 	   connection... */
 	lib_num_rem_cpus = omni_result->num_cpus;
+	lib_remote_peak_cpu_util = (double)omni_result->peak_cpu_util;
+	lib_remote_peak_cpu_id = omni_result->peak_cpu_id;
 	rsr_size_end = omni_result->recv_buf_size;
 	rss_size_end = omni_result->send_buf_size;
 	remote_bytes_sent = omni_result->bytes_sent;
@@ -3586,7 +3652,7 @@ send_omni(char remote_host[])
     if (local_cpu_usage) {
 
       local_cpu_utilization = calc_cpu_util(elapsed_time);
-      
+
       /* we need to decide what to feed the service demand beast,
 	 which will, ultimately, depend on what sort of test it is and
 	 whether or not the user asked for something specific - as in
@@ -4304,6 +4370,8 @@ recv_omni()
   if (omni_request->measure_cpu) {
     omni_results->cpu_util = calc_cpu_util(elapsed_time);
   }
+  omni_results->peak_cpu_util   = (float)lib_local_peak_cpu_util;
+  omni_results->peak_cpu_id     = lib_local_peak_cpu_id;
   
   if (debug) {
     fprintf(where,

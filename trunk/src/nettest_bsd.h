@@ -102,6 +102,9 @@ struct omni_results_struct {
   float      serv_dem;
   uint32_t   cpu_method;    /* how was CPU util measured? */
   uint32_t   num_cpus;      /* number of CPUs in remote */
+
+  int32_t    peak_cpu_id;   /* ID of the most utilized CPU */
+  float      peak_cpu_util; /* its individual utilization */
 };
 
 #endif /* WANT_OMNI */

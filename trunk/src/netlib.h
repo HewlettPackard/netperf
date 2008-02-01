@@ -441,6 +441,10 @@ extern  union netperf_response_struct netperf_response;
 extern  float    lib_local_cpu_util;
 extern  float    lib_elapsed;
 extern  float    lib_local_maxrate;
+extern  double   lib_local_peak_cpu_util;
+extern  int      lib_local_peak_cpu_id;
+extern  double   lib_remote_peak_cpu_util;
+extern  int      lib_remote_peak_cpu_id;
 
 extern  char    libfmt;
 

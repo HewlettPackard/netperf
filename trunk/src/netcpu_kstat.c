@@ -390,15 +390,13 @@ calc_cpu_util_internal(float elapsed_time)
     }
     lib_local_per_cpu_util[i] = (lib_local_maxrate - actual_rate) /
       lib_local_maxrate * 100;
+    lib_local_per_cpu_util[i] *= correction_factor;
     lib_local_cpu_util += lib_local_per_cpu_util[i];
   }
   /* we want the average across all n processors */
   lib_local_cpu_util /= (float)lib_num_loc_cpus;
   
-  lib_local_cpu_util *= correction_factor;
   return lib_local_cpu_util;
-
-
 }
 
 void

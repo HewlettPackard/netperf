@@ -264,14 +264,16 @@ calc_cpu_util_internal(float elapsed_time)
     actual_rate = (float) diff / lib_elapsed;
     lib_local_per_cpu_util[i] = (lib_local_maxrate - actual_rate) /
       lib_local_maxrate * 100;
+    lib_local_per_cpu_util[i] *= correction_factor;
     lib_local_cpu_util += lib_local_per_cpu_util[i];
     if (debug) {
       fprintf(where,
-	      "calc_cpu_util: actual_rate on cpu %d is %g max_rate %g cpu %6.2f\n",
+	      "calc_cpu_util: actual_rate on cpu %d is %g max_rate %g cpu %6.2f cf %f\n",
 	      i,
 	      actual_rate,
 	      lib_local_maxrate,
-	      lib_local_per_cpu_util[i]);
+	      lib_local_per_cpu_util[i],
+	      correction_factor);
     }
   }
   
@@ -281,13 +283,6 @@ calc_cpu_util_internal(float elapsed_time)
   if (debug) {
     fprintf(where,
 	    "calc_cpu_util: average across CPUs is %g\n",lib_local_cpu_util);
-  }
-
-  lib_local_cpu_util *= correction_factor;
-
-  if (debug) {
-    fprintf(where,
-	    "calc_cpu_util: returning %g\n",lib_local_cpu_util);
   }
 
   return lib_local_cpu_util;
