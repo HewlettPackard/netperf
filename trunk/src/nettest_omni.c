@@ -3816,6 +3816,7 @@ recv_omni()
   loc_sndavoid = omni_request->so_sndavoid;
 
   connection_test = omni_request->connect_test;
+  direction       = omni_request->direction;
 
   set_hostname_and_port(local_name,
 			port_buffer,
