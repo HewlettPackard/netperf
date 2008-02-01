@@ -384,6 +384,12 @@ enum netperf_output_name {
   LOCAL_BYTES_SENT,
   LOCAL_BYTES_RECVD,
   LOCAL_BYTES_XFERD,
+  LOCAL_SEND_OFFSET,
+  LOCAL_RECV_OFFSET,
+  LOCAL_SEND_ALIGN,
+  LOCAL_RECV_ALIGN,
+  LOCAL_SEND_WIDTH,
+  LOCAL_RECV_WIDTH,
   LOCAL_SEND_DIRTY_COUNT,
   LOCAL_RECV_DIRTY_COUNT,
   LOCAL_RECV_CLEAN_COUNT,
@@ -419,6 +425,12 @@ enum netperf_output_name {
   REMOTE_BYTES_SENT,
   REMOTE_BYTES_RECVD,
   REMOTE_BYTES_XFERD,
+  REMOTE_SEND_OFFSET,
+  REMOTE_RECV_OFFSET,
+  REMOTE_SEND_ALIGN,
+  REMOTE_RECV_ALIGN,
+  REMOTE_SEND_WIDTH,
+  REMOTE_RECV_WIDTH,
   REMOTE_SEND_DIRTY_COUNT,
   REMOTE_RECV_DIRTY_COUNT,
   REMOTE_RECV_CLEAN_COUNT,
@@ -657,6 +669,16 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "LOCAL_BYTES_RECVD";
   case   LOCAL_BYTES_XFERD:
     return "LOCAL_BYTES_XFERD";
+  case LOCAL_SEND_OFFSET:
+    return "LOCAL_SEND_OFFSET";
+  case LOCAL_RECV_OFFSET:
+    return "LOCAL_RECV_OFFSET";
+  case LOCAL_RECV_ALIGN:
+    return "LOCAL_RECV_ALIGN";
+  case LOCAL_SEND_WIDTH:
+    return "LOCAL_SEND_WIDTH";
+  case LOCAL_RECV_WIDTH:
+    return "LOCAL_RECV_WIDTH";
   case   LOCAL_SEND_DIRTY_COUNT:
     return "LOCAL_SEND_DIRTY_COUNT";
   case   LOCAL_RECV_DIRTY_COUNT:
@@ -713,6 +735,16 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "REMOTE_BYTES_RECVD";
   case   REMOTE_BYTES_XFERD:
     return "REMOTE_BYTES_XFERD";
+  case REMOTE_SEND_OFFSET:
+    return "REMOTE_SEND_OFFSET";
+  case REMOTE_RECV_OFFSET:
+    return "REMOTE_RECV_OFFSET";
+  case REMOTE_RECV_ALIGN:
+    return "REMOTE_RECV_ALIGN";
+  case REMOTE_SEND_WIDTH:
+    return "REMOTE_SEND_WIDTH";
+  case REMOTE_RECV_WIDTH:
+    return "REMOTE_RECV_WIDTH";
   case   REMOTE_SEND_DIRTY_COUNT:
     return "REMOTE_SEND_DIRTY_COUNT";
   case   REMOTE_RECV_DIRTY_COUNT:
@@ -1043,6 +1075,12 @@ set_output_csv_list_default() {
   output_csv_list[i++] = LOCAL_BYTES_RECVD;
   output_csv_list[i++] = LOCAL_RECV_CALLS;
   output_csv_list[i++] = LOCAL_BYTES_PER_RECV;
+  output_csv_list[i++] = LOCAL_SEND_OFFSET;
+  output_csv_list[i++] = LOCAL_RECV_OFFSET;
+  output_csv_list[i++] = LOCAL_SEND_ALIGN;
+  output_csv_list[i++] = LOCAL_RECV_ALIGN;
+  output_csv_list[i++] = LOCAL_SEND_WIDTH;
+  output_csv_list[i++] = LOCAL_RECV_WIDTH;
   output_csv_list[i++] = LOCAL_SEND_DIRTY_COUNT;
   output_csv_list[i++] = LOCAL_RECV_DIRTY_COUNT;
   output_csv_list[i++] = LOCAL_RECV_CLEAN_COUNT;
@@ -1054,6 +1092,12 @@ set_output_csv_list_default() {
   output_csv_list[i++] = REMOTE_BYTES_RECVD;
   output_csv_list[i++] = REMOTE_RECV_CALLS;
   output_csv_list[i++] = REMOTE_BYTES_PER_RECV;
+  output_csv_list[i++] = REMOTE_SEND_OFFSET;
+  output_csv_list[i++] = REMOTE_RECV_OFFSET;
+  output_csv_list[i++] = REMOTE_SEND_ALIGN;
+  output_csv_list[i++] = REMOTE_RECV_ALIGN;
+  output_csv_list[i++] = REMOTE_SEND_WIDTH;
+  output_csv_list[i++] = REMOTE_RECV_WIDTH;
   output_csv_list[i++] = REMOTE_SEND_DIRTY_COUNT;
   output_csv_list[i++] = REMOTE_RECV_DIRTY_COUNT;
   output_csv_list[i++] = REMOTE_RECV_CLEAN_COUNT;
@@ -1622,6 +1666,72 @@ print_omni_init() {
   netperf_output_source[LOCAL_BYTES_XFERD].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_BYTES_XFERD);
 
+  netperf_output_source[LOCAL_SEND_WIDTH].output_name = LOCAL_SEND_WIDTH;
+  netperf_output_source[LOCAL_SEND_WIDTH].line[0] = "Local";
+  netperf_output_source[LOCAL_SEND_WIDTH].line[1] = "Send";
+  netperf_output_source[LOCAL_SEND_WIDTH].line[2] = "Width";
+  netperf_output_source[LOCAL_SEND_WIDTH].format = "%d";
+  netperf_output_source[LOCAL_SEND_WIDTH].display_value = &send_width;
+  netperf_output_source[LOCAL_SEND_WIDTH].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_SEND_WIDTH);
+  netperf_output_source[LOCAL_SEND_WIDTH].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_SEND_WIDTH);
+
+  netperf_output_source[LOCAL_RECV_WIDTH].output_name = LOCAL_RECV_WIDTH;
+  netperf_output_source[LOCAL_RECV_WIDTH].line[0] = "Local";
+  netperf_output_source[LOCAL_RECV_WIDTH].line[1] = "Recv";
+  netperf_output_source[LOCAL_RECV_WIDTH].line[2] = "Width";
+  netperf_output_source[LOCAL_RECV_WIDTH].format = "%d";
+  netperf_output_source[LOCAL_RECV_WIDTH].display_value = &recv_width;
+  netperf_output_source[LOCAL_RECV_WIDTH].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_RECV_WIDTH);
+  netperf_output_source[LOCAL_RECV_WIDTH].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_RECV_WIDTH);
+
+  netperf_output_source[LOCAL_SEND_OFFSET].output_name = LOCAL_SEND_OFFSET;
+  netperf_output_source[LOCAL_SEND_OFFSET].line[0] = "Local";
+  netperf_output_source[LOCAL_SEND_OFFSET].line[1] = "Send";
+  netperf_output_source[LOCAL_SEND_OFFSET].line[2] = "Offset";
+  netperf_output_source[LOCAL_SEND_OFFSET].format = "%d";
+  netperf_output_source[LOCAL_SEND_OFFSET].display_value = &local_send_offset;
+  netperf_output_source[LOCAL_SEND_OFFSET].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_SEND_OFFSET);
+  netperf_output_source[LOCAL_SEND_OFFSET].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_SEND_OFFSET);
+
+  netperf_output_source[LOCAL_RECV_OFFSET].output_name = LOCAL_RECV_OFFSET;
+  netperf_output_source[LOCAL_RECV_OFFSET].line[0] = "Local";
+  netperf_output_source[LOCAL_RECV_OFFSET].line[1] = "Recv";
+  netperf_output_source[LOCAL_RECV_OFFSET].line[2] = "Offset";
+  netperf_output_source[LOCAL_RECV_OFFSET].format = "%d";
+  netperf_output_source[LOCAL_RECV_OFFSET].display_value = &local_recv_offset;
+  netperf_output_source[LOCAL_RECV_OFFSET].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_RECV_OFFSET);
+  netperf_output_source[LOCAL_RECV_OFFSET].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_RECV_OFFSET);
+
+  netperf_output_source[LOCAL_RECV_ALIGN].output_name = LOCAL_RECV_ALIGN;
+  netperf_output_source[LOCAL_RECV_ALIGN].line[0] = "Local";
+  netperf_output_source[LOCAL_RECV_ALIGN].line[1] = "Recv";
+  netperf_output_source[LOCAL_RECV_ALIGN].line[2] = "Alignment";
+  netperf_output_source[LOCAL_RECV_ALIGN].format = "%d";
+  netperf_output_source[LOCAL_RECV_ALIGN].display_value = &local_recv_align;
+  netperf_output_source[LOCAL_RECV_ALIGN].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_RECV_ALIGN);
+  netperf_output_source[LOCAL_RECV_ALIGN].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_RECV_ALIGN);
+
+  netperf_output_source[LOCAL_SEND_ALIGN].output_name = LOCAL_SEND_ALIGN;
+  netperf_output_source[LOCAL_SEND_ALIGN].line[0] = "Local";
+  netperf_output_source[LOCAL_SEND_ALIGN].line[1] = "Send";
+  netperf_output_source[LOCAL_SEND_ALIGN].line[2] = "Alignment";
+  netperf_output_source[LOCAL_SEND_ALIGN].format = "%d";
+  netperf_output_source[LOCAL_SEND_ALIGN].display_value = &local_send_align;
+  netperf_output_source[LOCAL_SEND_ALIGN].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_SEND_ALIGN);
+  netperf_output_source[LOCAL_SEND_ALIGN].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_SEND_ALIGN);
+
   netperf_output_source[LOCAL_SEND_DIRTY_COUNT].output_name = LOCAL_SEND_DIRTY_COUNT;
   netperf_output_source[LOCAL_SEND_DIRTY_COUNT].line[0] = "Local";
   netperf_output_source[LOCAL_SEND_DIRTY_COUNT].line[1] = "Send";
@@ -1955,6 +2065,72 @@ print_omni_init() {
     NETPERF_LINE_MAX(REMOTE_BYTES_XFERD);
   netperf_output_source[REMOTE_BYTES_XFERD].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_BYTES_XFERD);
+
+  netperf_output_source[REMOTE_SEND_WIDTH].output_name = REMOTE_SEND_WIDTH;
+  netperf_output_source[REMOTE_SEND_WIDTH].line[0] = "Remote";
+  netperf_output_source[REMOTE_SEND_WIDTH].line[1] = "Send";
+  netperf_output_source[REMOTE_SEND_WIDTH].line[2] = "Width";
+  netperf_output_source[REMOTE_SEND_WIDTH].format = "%d";
+  netperf_output_source[REMOTE_SEND_WIDTH].display_value = &remote_send_width;
+  netperf_output_source[REMOTE_SEND_WIDTH].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_SEND_WIDTH);
+  netperf_output_source[REMOTE_SEND_WIDTH].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_SEND_WIDTH);
+
+  netperf_output_source[REMOTE_RECV_WIDTH].output_name = REMOTE_RECV_WIDTH;
+  netperf_output_source[REMOTE_RECV_WIDTH].line[0] = "Remote";
+  netperf_output_source[REMOTE_RECV_WIDTH].line[1] = "Recv";
+  netperf_output_source[REMOTE_RECV_WIDTH].line[2] = "Width";
+  netperf_output_source[REMOTE_RECV_WIDTH].format = "%d";
+  netperf_output_source[REMOTE_RECV_WIDTH].display_value = &remote_recv_width;
+  netperf_output_source[REMOTE_RECV_WIDTH].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_RECV_WIDTH);
+  netperf_output_source[REMOTE_RECV_WIDTH].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_RECV_WIDTH);
+
+  netperf_output_source[REMOTE_SEND_OFFSET].output_name = REMOTE_SEND_OFFSET;
+  netperf_output_source[REMOTE_SEND_OFFSET].line[0] = "Remote";
+  netperf_output_source[REMOTE_SEND_OFFSET].line[1] = "Send";
+  netperf_output_source[REMOTE_SEND_OFFSET].line[2] = "Offset";
+  netperf_output_source[REMOTE_SEND_OFFSET].format = "%d";
+  netperf_output_source[REMOTE_SEND_OFFSET].display_value = &remote_send_offset;
+  netperf_output_source[REMOTE_SEND_OFFSET].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_SEND_OFFSET);
+  netperf_output_source[REMOTE_SEND_OFFSET].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_SEND_OFFSET);
+
+  netperf_output_source[REMOTE_RECV_OFFSET].output_name = REMOTE_RECV_OFFSET;
+  netperf_output_source[REMOTE_RECV_OFFSET].line[0] = "Remote";
+  netperf_output_source[REMOTE_RECV_OFFSET].line[1] = "Recv";
+  netperf_output_source[REMOTE_RECV_OFFSET].line[2] = "Offset";
+  netperf_output_source[REMOTE_RECV_OFFSET].format = "%d";
+  netperf_output_source[REMOTE_RECV_OFFSET].display_value = &remote_recv_offset;
+  netperf_output_source[REMOTE_RECV_OFFSET].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_RECV_OFFSET);
+  netperf_output_source[REMOTE_RECV_OFFSET].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_RECV_OFFSET);
+
+  netperf_output_source[REMOTE_RECV_ALIGN].output_name = REMOTE_RECV_ALIGN;
+  netperf_output_source[REMOTE_RECV_ALIGN].line[0] = "Remote";
+  netperf_output_source[REMOTE_RECV_ALIGN].line[1] = "Recv";
+  netperf_output_source[REMOTE_RECV_ALIGN].line[2] = "Alignment";
+  netperf_output_source[REMOTE_RECV_ALIGN].format = "%d";
+  netperf_output_source[REMOTE_RECV_ALIGN].display_value = &remote_recv_align;
+  netperf_output_source[REMOTE_RECV_ALIGN].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_RECV_ALIGN);
+  netperf_output_source[REMOTE_RECV_ALIGN].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_RECV_ALIGN);
+
+  netperf_output_source[REMOTE_SEND_ALIGN].output_name = REMOTE_SEND_ALIGN;
+  netperf_output_source[REMOTE_SEND_ALIGN].line[0] = "Remote";
+  netperf_output_source[REMOTE_SEND_ALIGN].line[1] = "Send";
+  netperf_output_source[REMOTE_SEND_ALIGN].line[2] = "Alignment";
+  netperf_output_source[REMOTE_SEND_ALIGN].format = "%d";
+  netperf_output_source[REMOTE_SEND_ALIGN].display_value = &remote_send_align;
+  netperf_output_source[REMOTE_SEND_ALIGN].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_SEND_ALIGN);
+  netperf_output_source[REMOTE_SEND_ALIGN].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_SEND_ALIGN);
 
   netperf_output_source[REMOTE_SEND_DIRTY_COUNT].output_name = REMOTE_SEND_DIRTY_COUNT;
   netperf_output_source[REMOTE_SEND_DIRTY_COUNT].line[0] = "Remote";
@@ -3087,6 +3263,8 @@ send_omni(char remote_host[])
 	remote_use_sendfile = omni_response->use_sendfile;
 	remote_cpu_usage = omni_response->measure_cpu;
 	remote_cpu_rate  = omni_response->cpu_rate;
+	remote_send_width = omni_response->send_width;
+	remote_recv_width = omni_response->recv_width;
 	/* make sure that port numbers are in network order because
 	   recv_response will have put everything into host order */
 	set_port_number(remote_res,
@@ -3940,6 +4118,7 @@ recv_omni()
 				     omni_request->send_offset);
 				     
   }
+  omni_response->send_width = send_width;
 
   if (omni_request->direction & NETPERF_RECV) {
     if (omni_request->request_size > 0) {
@@ -3971,6 +4150,7 @@ recv_omni()
 				     omni_request->recv_offset);
 				     
   }
+  omni_response->recv_width = recv_width;
 
 #ifdef WIN32
   /* The test timer can fire during operations on the listening socket,

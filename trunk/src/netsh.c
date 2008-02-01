@@ -173,7 +173,9 @@ int
   remote_recv_align,	/* alignment for remote receives	*/
   remote_send_align,	/* alignment for remote sends		*/
   remote_send_offset = 0,
-  remote_recv_offset = 0;
+  remote_recv_offset = 0,
+  remote_send_width = 0,
+  remote_recv_width = 0;
 
 #if defined(WANT_INTERVALS) || defined(WANT_DEMO)
 int
