@@ -3708,6 +3708,8 @@ send_omni(char remote_host[])
 				   remote_res->ai_addr,
 				   remote_res->ai_addrlen);
       need_socket = 1;
+      lsr_size_end = lsr_size;
+      lss_size_end = lss_size;
     }
   
     /* this call will always give us the elapsed time for the test, and
@@ -4532,8 +4534,11 @@ recv_omni()
 #endif
     close_data_socket(data_socket,NULL,0);
   }
-  else
+  else {
     close_data_socket(data_socket,(struct sockaddr *)&peeraddr_in,addrlen);
+    lsr_size_end = lsr_size;
+    lss_size_end = lss_size;
+  }
 
   /* send the results to the sender  */
   
