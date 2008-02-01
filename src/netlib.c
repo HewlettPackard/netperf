@@ -3189,7 +3189,7 @@ calc_cpu_util(float elapsed_time)
   for (i = 0; i < MAXCPUS; i++) {
     if (lib_local_per_cpu_util[i] > lib_local_peak_cpu_util) {
       lib_local_peak_cpu_util = lib_local_per_cpu_util[i];
-      lib_local_peak_cpu_id = i; /* probably need to check the map */
+      lib_local_peak_cpu_id = lib_cpu_map[i];
     }
   }
 
