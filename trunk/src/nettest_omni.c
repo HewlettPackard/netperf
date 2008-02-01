@@ -3356,8 +3356,12 @@ send_omni(char remote_host[])
 	   ultimately became. raj 2008-01-15 */
 	if (lsr_size_req < 0)
 	  get_sock_buffer(data_socket, RECV_BUFFER, &lsr_size_end);
+	else
+	  lsr_size_end = lsr_size;
 	if (lss_size_req < 0)
 	  get_sock_buffer(data_socket, SEND_BUFFER, &lss_size_end);
+	else
+	  lss_size_end = lss_size;
 #else
 	lsr_size_end = lsr_size;
 	lss_size_end = lss_size;
@@ -3434,8 +3438,12 @@ send_omni(char remote_host[])
 	 ultimately became. raj 2008-01-15 */
       if (lsr_size_req < 0)
 	get_sock_buffer(data_socket, RECV_BUFFER, &lsr_size_end);
+      else
+	lsr_size_end = lsr_size;
       if (lss_size_req < 0)
 	get_sock_buffer(data_socket, SEND_BUFFER, &lss_size_end);
+      else
+	lss_size_end = lss_size;
 #else
       lsr_size_end = lsr_size;
       lss_size_end = lss_size;
@@ -4213,8 +4221,12 @@ recv_omni()
 	 ultimately became. raj 2008-01-15 */
       if (lsr_size_req < 0)
 	get_sock_buffer(data_socket, RECV_BUFFER, &lsr_size_end);
+      else
+	lsr_size_end = lsr_size;
       if (lss_size_req < 0)
 	get_sock_buffer(data_socket, SEND_BUFFER, &lss_size_end);
+      else
+	lss_size_end = lss_size;
 #else
       lsr_size_end = lsr_size;
       lss_size_end = lss_size;
@@ -4273,11 +4285,15 @@ recv_omni()
        ultimately became. raj 2008-01-15 */
     if (lsr_size_req < 0)
       get_sock_buffer(data_socket, RECV_BUFFER, &lsr_size_end);
+    else
+      lsr_size_end = lsr_size;
     if (lss_size_req < 0)
       get_sock_buffer(data_socket, SEND_BUFFER, &lss_size_end);
+    else
+      lss_size_end = lss_size;
 #else
-    lss_size_end = lss_size;
     lsr_size_end = lsr_size;
+    lss_size_end = lss_size;
 #endif
     close_data_socket(data_socket,NULL,0);
   }
