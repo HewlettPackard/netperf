@@ -34,6 +34,7 @@ char	netsh_id[]="\
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <netdb.h>
 #else
 #include <time.h>
@@ -450,7 +451,7 @@ parse_protocol(char protocol_string[])
 #endif
 #ifdef IPPROTO_DCCP
   if (!strcasecmp(temp,"dccp")) {
-    socket_type = SOCK_DGRAM;
+    socket_type = SOCK_DCCP;
     return IPPROTO_DCCP;
   }
 #endif
