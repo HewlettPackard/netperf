@@ -1295,7 +1295,9 @@ create_data_socket(struct addrinfo *res)
 
   if (setsockopt(temp_socket,
 #ifdef IPPROTO_DCCP
-		 /* it is REALLY SILLY THAT THIS SHOULD BE NEEDED!! */
+		 /* it is REALLY SILLY THAT THIS SHOULD BE NEEDED!! I
+		    should be able to use SOL_SOCKET for this just
+		    like TCP and SCTP */
 		 (res->ai_protocol == IPPROTO_DCCP) ? SOL_DCCP : SOL_SOCKET,
 #else
 		 SOL_SOCKET,
