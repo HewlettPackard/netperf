@@ -508,6 +508,11 @@ nst_to_hst(int nst) {
     return SOCK_DGRAM;
     break;
 #endif
+#ifdef SOCK_DCCP
+  case NST_DCCP:
+    return SOCK_DCCP;
+    break;
+#endif
   default:
     return -1;
   }
@@ -527,6 +532,11 @@ hst_to_nst(int hst) {
     return NST_DGRAM;
     break;
 #endif
+#ifdef SOCK_DCCP
+  case SOCK_DCCP:
+    return NST_DCCP;
+    break;
+#endif
   default:
     return NST_UNKN;
   }
@@ -543,6 +553,11 @@ hst_to_str(int hst) {
 #ifdef SOCK_DGRAM
   case SOCK_DGRAM:
     return "Datagram";
+    break;
+#endif
+#ifdef SOCK_DCCP
+  case SOCK_DCCP:
+    return "DCCP";
     break;
 #endif
   default:

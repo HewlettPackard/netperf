@@ -22,6 +22,7 @@
 #define NST_UNKN   -1
 #define NST_STREAM 1
 #define NST_DGRAM  2
+#define NST_DCCP   3
 
 #ifdef WANT_OMNI
 struct  omni_request_struct {
@@ -585,3 +586,22 @@ extern void send_tcp_nbrr(char remote_host[]);
 extern void recv_tcp_nbrr();
 #endif
 
+#ifdef WANT_DCCP
+
+#ifndef SOCK_DCCP
+#warning This platform has no SOCK_DCCP define, using 6
+#define SOCK_DCCP 6
+#endif
+
+#ifndef IPPROTO_DCCP
+#warning This platform has no IPPROTO_DCCP define, using 33
+#define IPPROTO_DCCP 33  /* defined by the IANA */
+#endif
+
+#ifndef SOL_DCCP
+#warning This platform has no SOL_DCCP define, using 269
+#warning No, I've no idea why they don't just use IPPROTO_DCCP...
+#define SOL_DCCP 269
+#endif
+
+#endif
