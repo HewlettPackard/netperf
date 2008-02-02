@@ -1278,11 +1278,11 @@ create_data_socket(struct addrinfo *res)
 		     TCP_CORK,
 		     (char *)&one,
 		     sizeof(one)) == SOCKET_ERROR) {
-	perror("netperf: sendfile_tcp_stream: tcp_cork");
+	perror("netperf: create_data_socket: tcp_cork");
 	exit(1);
       }
       if (debug) {
-	fprintf(where,"sendfile_tcp_stream: tcp_cork...\n");
+	fprintf(where,"create_data_socket: tcp_cork...\n");
       }
     }
     
@@ -1294,7 +1294,12 @@ create_data_socket(struct addrinfo *res)
      (INADDR_ANY etc). raj 2004-07-20 */
 
   if (setsockopt(temp_socket,
+#ifdef IPPROTO_DCCP
+		 /* it is REALLY SILLY THAT THIS SHOULD BE NEEDED!! */
+		 (res->ai_protocol == IPPROTO_DCCP) ? SOL_DCCP : SOL_SOCKET,
+#else
 		 SOL_SOCKET,
+#endif
 		 SO_REUSEADDR,
 		 (const char *)&on,
 		 sizeof(on)) < 0) {

@@ -450,6 +450,10 @@ inet_ttos(int type)
   case SOCK_STREAM:
     return("SOCK_STREAM");
     break;
+#ifdef SOCK_DCCP
+  case SOCK_DCCP:
+    return "SOCK_DCCP";
+#endif
   default:
     return("SOCK_UNKNOWN");
   }
