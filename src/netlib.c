@@ -473,6 +473,11 @@ inet_ptos(int protocol) {
     return("IPPROTO_SCTP");
     break;
 #endif
+#if defined(IPPROTO_DCCP)
+  case IPPROTO_DCCP:
+    return "IPPROTO_DCCP";
+    break;
+#endif
   default:
     snprintf(unknown,sizeof(unknown),"IPPROTO_UNKNOWN(%d)",protocol);
     return(unknown);

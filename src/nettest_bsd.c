@@ -641,6 +641,9 @@ complete_addrinfo(char *controlhost, char *data_address, char *port, int family,
 #define CHANGED_SOCK_TYPE  0x1
 #define CHANGED_PROTOCOL   0x2
 #define CHANGED_SCTP       0x4
+#define CHANGED_DCCP       0x8
+#define CHANGED_DCCP_SOCK  0x10
+
   int    change_info = 0;
   static int change_warning_displayed = 0;
 
@@ -694,8 +697,11 @@ complete_addrinfo(char *controlhost, char *data_address, char *port, int family,
        SOCK_STREAM and IPPROTO_SCTP it barfs with a -7
        EAI_SOCKTYPE. so, we check if the error was EAI_SOCKTYPE and if
        we were asking for IPPROTO_SCTP and if so, kludge, again... raj
-       2008-10-13 */
-#ifdef WANT_SCTP
+       200?-10-13 and of course, requiring the kludge for SCTP, it is
+       no surprise that linux needs a kludge for DCCP...actually not
+       only does it need the ai_protocol kludge, it needs an
+       ai_socktype kludge too... sigh raj 2008-02-01 */
+#if defined(WANT_SCTP) || defined (WANT_DCCP)
     if (EAI_SOCKTYPE == error
 #ifdef EAI_BADHINTS
         || EAI_BADHINTS == error
@@ -706,10 +712,34 @@ complete_addrinfo(char *controlhost, char *data_address, char *port, int family,
 	 that we did this so the code for the Solaris kludge can do
 	 the fix-up for us.  also flip error over to EAI_AGAIN and
 	 make sure we don't "count" this time around the loop. */
-      hints.ai_protocol = 0;
+#if defined(WANT_DCCP)
+      /* only tweak on this one the second time around, after we've
+	 kludged the ai_protocol field */
+      if ((hints.ai_socktype == SOCK_DCCP) &&
+	  (hints.ai_protocol == 0)) {
+	change_info |= CHANGED_DCCP_SOCK;
+	hints.ai_socktype = 0;
+	/* we need to give it some sort of IPPROTO or it gets unhappy,
+	   so for now, pick one from deep within the colon and use
+	   IPPROTO_TCP */
+	hints.ai_protocol = IPPROTO_TCP;
+      }
+
+      if (hints.ai_protocol == IPPROTO_DCCP) {
+	change_info |= CHANGED_DCCP;
+	hints.ai_protocol = 0;
+      }
+
+#endif
+#if defined(WANT_SCTP)
+      if (hints.ai_protocol == IPPROTO_SCTP) {
+	change_info |= CHANGED_SCTP;
+	hints.ai_protocol = 0;
+      }
+#endif
+
       error = EAI_AGAIN;
       count -= 1;
-      change_info |= CHANGED_SCTP;
     }
 #endif
   } while ((error == EAI_AGAIN) && (count <= 5));
@@ -801,6 +831,16 @@ complete_addrinfo(char *controlhost, char *data_address, char *port, int family,
     change_warning_displayed |= CHANGED_SCTP;
     fprintf(where,
 	    "WARNING! getaddrinfo on this platform does not accept IPPROTO_SCTP!\n");
+    fprintf(where,
+	    "Please contact your vendor for a fix to this bug in getaddrinfo().\n");
+    fflush(where);
+  }
+
+  if ((change_info & CHANGED_DCCP) &&
+      !(change_warning_displayed & CHANGED_DCCP)) {
+    change_warning_displayed |= CHANGED_DCCP;
+    fprintf(where,
+	    "WARNING! getaddrinfo on this platform does not accept IPPROTO_DCCP!\n");
     fprintf(where,
 	    "Please contact your vendor for a fix to this bug in getaddrinfo().\n");
     fflush(where);
