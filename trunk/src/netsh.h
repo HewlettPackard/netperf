@@ -33,6 +33,26 @@
 #define 	MAXLONG  	4294967295UL
 #endif /* MAXLONG */
 
+#ifdef WANT_DCCP
+
+#ifndef SOCK_DCCP
+#warning This platform has no SOCK_DCCP define, using 6
+#define SOCK_DCCP 6
+#endif
+
+#ifndef IPPROTO_DCCP
+#warning This platform has no IPPROTO_DCCP define, using 33
+#define IPPROTO_DCCP 33  /* defined by the IANA */
+#endif
+
+#ifndef SOL_DCCP
+#warning This platform has no SOL_DCCP define, using 269
+#warning No, I've no idea why they don't just use IPPROTO_DCCP...
+#define SOL_DCCP 269
+#endif
+
+#endif
+
 #ifndef NETSH
 extern char		*program; /* program invocation name		*/
 extern char             *command_line;  /* how we were invoked          */
