@@ -89,11 +89,13 @@ struct  omni_response_struct {
 };
 
 struct omni_results_struct {
-  double     bytes_received;
+  uint32_t   bytes_received_hi;  /* why? because we cannot easily send */
+  uint32_t   bytes_received_lo;  /* uint64_t or doubles between endianess */
   uint32_t   recv_calls;
   int32_t    recv_buf_size; /* SO_RCVBUF at end of test */
 
-  double     bytes_sent;
+  uint32_t   bytes_sent_hi;
+  uint32_t   bytes_sent_lo;
   uint32_t   send_calls;
   int32_t    send_buf_size; /* SO_SNDBUF at end of test */
   uint32_t   failed_sends;

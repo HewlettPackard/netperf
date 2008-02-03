@@ -3750,19 +3750,20 @@ send_omni(char remote_host[])
 	lib_remote_peak_cpu_id = omni_result->peak_cpu_id;
 	rsr_size_end = omni_result->recv_buf_size;
 	rss_size_end = omni_result->send_buf_size;
-	remote_bytes_sent = omni_result->bytes_sent;
+	remote_bytes_sent = (uint64_t)omni_result->bytes_sent_hi << 32;
+	remote_bytes_sent += omni_result->bytes_sent_lo;
 	remote_send_calls = omni_result->send_calls;
-	remote_bytes_received = omni_result->bytes_received;
+	remote_bytes_received = (uint64_t)omni_result->bytes_received_hi << 32;
+	remote_bytes_received += omni_result->bytes_received_lo;
 	remote_receive_calls = omni_result->recv_calls;
-	remote_bytes_xferd = omni_result->bytes_received +
-	  omni_result->bytes_sent;
+	remote_bytes_xferd = remote_bytes_received + remote_bytes_sent;
 	if (omni_result->recv_calls > 0)
-	  remote_bytes_per_recv = (double) omni_result->bytes_received /
+	  remote_bytes_per_recv = (double) remote_bytes_received /
 	    (double) omni_result->recv_calls;
 	else
 	  remote_bytes_per_recv = 0.0;
 	if (omni_result->send_calls > 0)
-	  remote_bytes_per_send = (double) omni_result->bytes_received /
+	  remote_bytes_per_send = (double) remote_bytes_sent /
 	    (double) omni_result->send_calls;
 	else
 	  remote_bytes_per_send = 0.0;
@@ -4543,10 +4544,12 @@ recv_omni()
   /* send the results to the sender  */
   
   omni_results->send_calls      = local_send_calls;
-  omni_results->bytes_received	= bytes_received;
+  omni_results->bytes_received_lo = bytes_received & 0x00000000FFFFFFFFULL;
+  omni_results->bytes_received_hi = (bytes_received & 0xFFFFFFFF00000000ULL) >> 32;
   omni_results->recv_buf_size   = lsr_size_end;
   omni_results->recv_calls      = local_receive_calls;
-  omni_results->bytes_sent      = bytes_sent;
+  omni_results->bytes_sent_lo   = bytes_sent & 0x00000000FFFFFFFFULL;
+  omni_results->bytes_sent_hi   = (bytes_sent & 0xFFFFFFFF00000000ULL) >> 32;
   omni_results->send_buf_size   = lss_size_end;
   omni_results->trans_received	= trans_completed;
   omni_results->elapsed_time	= elapsed_time;
