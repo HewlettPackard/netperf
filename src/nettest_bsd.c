@@ -701,7 +701,7 @@ complete_addrinfo(char *controlhost, char *data_address, char *port, int family,
        no surprise that linux needs a kludge for DCCP...actually not
        only does it need the ai_protocol kludge, it needs an
        ai_socktype kludge too... sigh raj 2008-02-01 */
-#if defined(WANT_SCTP) || defined (WANT_DCCP)
+#if defined(IPPROTO_SCTP) || defined (IPPROTO_DCCP)
     if (EAI_SOCKTYPE == error
 #ifdef EAI_BADHINTS
         || EAI_BADHINTS == error
@@ -712,7 +712,7 @@ complete_addrinfo(char *controlhost, char *data_address, char *port, int family,
 	 that we did this so the code for the Solaris kludge can do
 	 the fix-up for us.  also flip error over to EAI_AGAIN and
 	 make sure we don't "count" this time around the loop. */
-#if defined(WANT_DCCP)
+#if defined(IPPROTO_DCCP)
       /* only tweak on this one the second time around, after we've
 	 kludged the ai_protocol field */
       if ((hints.ai_socktype == SOCK_DCCP) &&
@@ -731,7 +731,7 @@ complete_addrinfo(char *controlhost, char *data_address, char *port, int family,
       }
 
 #endif
-#if defined(WANT_SCTP)
+#if defined(IPPROTO_SCTP)
       if (hints.ai_protocol == IPPROTO_SCTP) {
 	change_info |= CHANGED_SCTP;
 	hints.ai_protocol = 0;
@@ -1237,8 +1237,10 @@ create_data_socket(struct addrinfo *res)
        only time we would have called getaddrinfo with a hints asking
        for SCTP, but just in case there is an SCTP implementation out
        there _without_ SCTP_NODELAY... raj 2005-03-15 */ 
-
-#if defined(WANT_SCTP) && defined(SCTP_NODELAY)
+    /* change this to IPPROTO_SCTP rather than WANT_SCTP to better fit
+       with the modus operendi (sp) of the new "omni" tests. raj
+       2008-02-04 */
+#if defined(IPPROTO_SCTP) && defined(SCTP_NODELAY)
     if (IPPROTO_SCTP == res->ai_protocol) {
       option = SCTP_NODELAY;
     }
