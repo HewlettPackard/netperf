@@ -267,12 +267,46 @@ then
 	AC_DEFINE([WANT_DLPI],,[Define to one to include DLPI tests.])
 fi
 
+# see if we should be including the DCCP tests
+
+AC_MSG_CHECKING(whether to include DCCP tests)
+
+AC_ARG_ENABLE(dccp,
+	[AS_HELP_STRING([--enable-dccp],[include DCCP tests])])
+
+case "$enable_dccp" in
+     yes)
+		use_dccp=true
+		;;
+     no)	
+		use_dccp=false
+		;;
+     '')
+		use_dccp=false
+		;;
+     *)
+		AC_MSG_ERROR([--enable-dccp takes yes or no])
+		;;
+esac
+
+if $use_dccp
+then
+	AC_MSG_RESULT(yes)
+else
+	AC_MSG_RESULT(no)
+fi
+
+if $use_dccp
+then
+	AC_DEFINE([WANT_DCCP],,[Define to one to include DCCP tests.])
+fi
+
 # see if we should be including the OMNI tests
 
 AC_MSG_CHECKING(whether to include OMNI tests)
 
 AC_ARG_ENABLE(omni,
-	[AS_HELP_STRING([--enable-omni],[include OMNI (link-layer) tests])])
+	[AS_HELP_STRING([--enable-omni],[include OMNI tests])])
 
 case "$enable_omni" in
      yes)
