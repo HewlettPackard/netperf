@@ -3078,7 +3078,7 @@ send_omni(char remote_host[])
   recv_ring = NULL;
 
   /* you will keep running the test until you get it right! :) */
-  while (((confidence < 0) && (confidence_iteration < iteration_max)) ||
+  while (((confidence < 0) && (confidence_iteration <= iteration_max)) ||
 	 (confidence_iteration <= iteration_min)) {
 
     trans_completed = 0;
@@ -3087,6 +3087,9 @@ send_omni(char remote_host[])
     times_up 	= 0;
     bytes_sent = 0;
     bytes_received = 0;
+    local_send_calls = 0;
+    local_receive_calls = 0;
+
 #ifdef WANT_FIRST_BURST
     /* we have to remember to reset the number of transactions
        outstanding and the "congestion window for each new
@@ -3456,6 +3459,7 @@ send_omni(char remote_host[])
 	  perror("send_omni: initial burst data send error");
 	  exit(-1);
 	}
+	local_send_calls += 1;
 	requests_outstanding += 1;
       }
 
@@ -4236,7 +4240,10 @@ recv_omni()
   omni_response->so_sndavoid = loc_sndavoid;
 
   send_response();
-  
+
+  local_send_calls = 0;
+  local_receive_calls = 0;
+
   addrlen = sizeof(peeraddr_in);
   
   /* Now it's time to start receiving data on the connection. We will */
