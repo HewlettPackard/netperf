@@ -1305,7 +1305,8 @@ Optional Features:
                           results.
   --enable-unixdomain     include Unix Domain socket tests
   --enable-dlpi           include DLPI (link-layer) tests
-  --enable-omni           include OMNI (link-layer) tests
+  --enable-dccp           include DCCP tests
+  --enable-omni           include OMNI tests
   --enable-xti            include XTI socket tests
   --enable-sdp            include SDP socket tests
   --enable-exs            include ICSC async sockets tests
@@ -7861,6 +7862,52 @@ then
 
 cat >>confdefs.h <<\_ACEOF
 #define WANT_DLPI
+_ACEOF
+
+fi
+
+# see if we should be including the DCCP tests
+
+{ echo "$as_me:$LINENO: checking whether to include DCCP tests" >&5
+echo $ECHO_N "checking whether to include DCCP tests... $ECHO_C" >&6; }
+
+# Check whether --enable-dccp was given.
+if test "${enable_dccp+set}" = set; then
+  enableval=$enable_dccp;
+fi
+
+
+case "$enable_dccp" in
+     yes)
+		use_dccp=true
+		;;
+     no)
+		use_dccp=false
+		;;
+     '')
+		use_dccp=false
+		;;
+     *)
+		{ { echo "$as_me:$LINENO: error: --enable-dccp takes yes or no" >&5
+echo "$as_me: error: --enable-dccp takes yes or no" >&2;}
+   { (exit 1); exit 1; }; }
+		;;
+esac
+
+if $use_dccp
+then
+	{ echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6; }
+else
+	{ echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+if $use_dccp
+then
+
+cat >>confdefs.h <<\_ACEOF
+#define WANT_DCCP
 _ACEOF
 
 fi
