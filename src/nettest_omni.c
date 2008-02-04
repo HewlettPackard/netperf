@@ -908,7 +908,10 @@ parse_output_csv_selection_file(char *selection_file) {
   name[0] = 0;
   name[80] = 0;
   j = 0;
-  while (((c = fgetc(selections)) != EOF)  && (line < 1)) {
+  /* let's allow the csv to turn the four lines of a human readable
+     output file to be used to create a single line csv output file by
+     not worrying about the line count. raj 2008--02-04 */
+  while ((c = fgetc(selections)) != EOF) {
     if (namepos == 80) {
       /* too long */
       
@@ -937,7 +940,6 @@ parse_output_csv_selection_file(char *selection_file) {
       output_csv_list[j++] = match_string_to_output(name);
       line++;
       namepos = 0;
-      j = 0;
     }
     else if (isprint(c)) {
       name[namepos++] = c;
