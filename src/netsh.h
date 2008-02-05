@@ -36,19 +36,22 @@
 #ifdef WANT_DCCP
 
 #ifndef SOCK_DCCP
-#warning This platform has no SOCK_DCCP define, using 6
+#define DCCP_WARNING
 #define SOCK_DCCP 6
 #endif
 
 #ifndef IPPROTO_DCCP
-#warning This platform has no IPPROTO_DCCP define, using 33
+#define DCCP_WARNING
 #define IPPROTO_DCCP 33  /* defined by the IANA */
 #endif
 
 #ifndef SOL_DCCP
-#warning This platform has no SOL_DCCP define, using 269
-#warning No, I've no idea why they don't just use IPPROTO_DCCP...
+#define DCCP_WARNING
 #define SOL_DCCP 269
+#endif
+
+#ifdef DCCP_WARNING
+#warning This platform is missing one of sock_dccp ipproto_dccp or sol_dccp
 #endif
 
 #endif
