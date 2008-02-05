@@ -3727,13 +3727,17 @@ send_omni(char remote_host[])
        the pad_time from the elapsed time on the assumption that we
        were essentially idle for pad_time and just waiting for a timer
        to expire on something like a UDP test.  if we have not padded
-       the timer, pad_time will be zero */
+       the timer, pad_time will be zero.  if we have not timed out
+       then we want to make sure we stop the timer. */
     if (timed_out) {
       if (debug) {
 	fprintf(where,"Adjusting elapsed_time by %d seconds\n",pad_time);
 	fflush(where);
       }
       elapsed_time -= (float)pad_time;
+    }
+    else {
+      stop_timer();
     }
 
     if (!no_control) {
@@ -4631,9 +4635,10 @@ scan_omni_args(int argc, char *argv[])
   protocol = IPPROTO_TCP;
 #endif
 
-  /* default to direction being NETPERF_XMIT. I wonder if I should be
-     setting this here, or checking after argument scanning... */
-  direction = NETPERF_XMIT;
+  /* we will check to see if this needs to remain 0 or set to
+     something else when we get finished scanning all the argument
+     values */
+  direction = 0;
 
   /* default is to be a stream test, so req_size and rsp_size should
      be < 0)  */
@@ -4879,6 +4884,9 @@ scan_omni_args(int argc, char *argv[])
 
   socket_type_str = hst_to_str(socket_type);
   protocol_str = protocol_to_str(protocol);
+  /* ok, if we have gone through all that, and direction is still
+     zero, let us see if it needs to be set to something else. */
+  if ((0 == direction) && (!connection_test)) direction = NETPERF_XMIT;
   direction_str = direction_to_str(direction);
   /* some other sanity checks we need to make would include stuff when
      the user has set -m and -M such that both XMIT and RECV are set
