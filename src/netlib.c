@@ -2124,33 +2124,45 @@ set_nonblock (SOCKET sock)
 
 
 
- /***********************************************************************/
- /*                                                                     */
- /*     send_request()                                                  */
- /*                                                                     */
- /* send a netperf request on the control socket to the remote half of  */
- /* the connection. to get us closer to intervendor interoperability,   */
- /* we will call htonl on each of the int that compose the message to   */
- /* be sent. the server-half of the connection will call the ntohl      */
- /* routine to undo any changes that may have been made...              */
- /*                                                                     */
- /***********************************************************************/
+/* send a request, only converting the first n ints-worth of the
+   test-specific data via htonl() before sending on the
+   connection. the first two ints, which are before the test-specific
+   portion are always converted. raj 2008-02-05 */
 
 void
-send_request()
+send_request_n(int n)
 {
-  int   counter=0;
+
+  int   counter,count;
+
+  if (n < 0) count = sizeof(netperf_request)/4;
+  else count = 2 + n;
+
+  /* silently truncate if the caller called for more than we have */
+  if (count > sizeof(netperf_request)/4) {
+    if (debug > 1) {
+      fprintf(where,
+	      "WARNING, htonl conversion count of %d was larger than netperf_request\n",
+	      count - 2);
+      fflush(where);
+    }
+    count = sizeof(netperf_request)/4;
+  }
   
   /* display the contents of the request if the debug level is high */
   /* enough. otherwise, just send the darned thing ;-) */
   
   if (debug > 1) {
-    fprintf(where,"entered send_request...contents before htonl:\n");
+    fprintf(where,
+	    "entered send_request_n...contents before %d htonls:\n",
+	    count);
     dump_request();
   }
 
-  /* pass the processor affinity request value to netserver */
-  /* this is a kludge and I know it.  sgb 8/11/04           */
+  /* pass the processor affinity request value to netserver this is a
+  kludge and I know it.  sgb 8/11/04. we keep this here to deal with
+  there being two paths to this place - direct and via
+  send_request()  */
 
   netperf_request.content.dummy = remote_proc_affinity;
 
@@ -2161,12 +2173,13 @@ send_request()
   /* control messages for this benchmark is not of any real */
   /* concern. */ 
   
-  for (counter=0;counter < sizeof(netperf_request)/4; counter++) {
+  for (counter = 0;counter < count; counter++) {
     request_array[counter] = htonl(request_array[counter]);
   }
   
   if (debug > 1) {
-    fprintf(where,"send_request...contents after htonl:\n");
+    fprintf(where,"send_request_n...contents after %d htonls:\n",
+	    count);
     dump_request();
 
     fprintf(where,
@@ -2186,6 +2199,102 @@ send_request()
   }
 }
 
+ /***********************************************************************/
+ /*                                                                     */
+ /*     send_request()                                                  */
+ /*                                                                     */
+ /* send a netperf request on the control socket to the remote half of  */
+ /* the connection. to get us closer to intervendor interoperability,   */
+ /* we will call htonl on each of the int that compose the message to   */
+ /* be sent. the server-half of the connection will call the ntohl      */
+ /* routine to undo any changes that may have been made...              */
+ /*                                                                     */
+ /***********************************************************************/
+
+void
+send_request()
+{
+  
+  /* pass the processor affinity request value to netserver */
+  /* this is a kludge and I know it.  sgb 8/11/04           */
+
+  netperf_request.content.dummy = remote_proc_affinity;
+
+  /* call send_request_n telling it to convert everything */
+
+  send_request_n(-1);
+
+}
+
+/* send a response, only converting the first n ints-worth of the
+   test-specific data via htonl() before sending on the
+   connection. the first two ints, which are before the test-specific
+   portion are always converted. raj 2008-02-05 */
+
+void
+send_response_n(int n)
+{
+  int   counter, count;
+  int	bytes_sent;
+
+  if (n < 0) count = sizeof(netperf_request)/4;
+  else count = 2 + n;
+
+  /* silently truncate if the caller called for more than we have */
+  if (count > sizeof(netperf_request)/4) {
+    if (debug > 1) {
+      fprintf(where,
+	      "WARNING, htonl conversion count of %d was larger than netperf_request\n",
+	      count - 2);
+      fflush(where);
+    }
+    count = sizeof(netperf_request)/4;
+  }
+
+  /* display the contents of the request if the debug level is high */
+  /* enough. otherwise, just send the darned thing ;-) */
+
+  if (debug > 1) {
+    fprintf(where,
+            "send_response_n: contents of %u ints before %d htonl,\n",
+            sizeof(netperf_response)/4,
+	    count);
+    dump_response();
+  }
+
+  /* put the entire response_array into network order. We do this */
+  /* arbitrarily rather than trying to figure-out just how much of the */
+  /* request array contains real information. this should be simpler, */
+  /* and at any rate, the performance of sending control messages for */
+  /* this benchmark is not of any real concern. */
+  
+  for (counter = 0; counter < count; counter++) {
+    response_array[counter] = htonl(response_array[counter]);
+  }
+  
+  if (debug > 1) {
+    fprintf(where,
+            "send_response_n: contents after htonl\n");
+    dump_response();
+    fprintf(where,
+            "about to send %u bytes from %p\n",
+            sizeof(netperf_response),
+            &netperf_response);
+    fflush(where);
+  }
+
+  /*KC*/
+  if ((bytes_sent = send(server_sock,
+			 (char *)&netperf_response,
+			 sizeof(netperf_response),
+			 0)) != sizeof(netperf_response)) {
+    perror("send_response_n: send call failure");
+    fprintf(where, "BytesSent: %d\n", bytes_sent);
+    exit(1);
+  }
+  
+}
+
 /***********************************************************************/
  /*                                                                     */
  /*     send_response()                                                 */
@@ -2201,49 +2310,108 @@ send_request()
 void
 send_response()
 {
-  int   counter=0;
-  int	bytes_sent;
 
-  /* display the contents of the request if the debug level is high */
-  /* enough. otherwise, just send the darned thing ;-) */
+  send_response_n(-1);
 
-  if (debug > 1) {
-    fprintf(where,
-            "send_response: contents of %u ints before htonl\n",
-            sizeof(netperf_response)/4);
-    dump_response();
+}
+
+/* receive a request, only converting the first n ints-worth of the
+   test-specific data via htonl() before sending on the
+   connection. the first two ints, which are before the test-specific
+   portion are always converted. raj 2008-02-05 */
+
+void
+recv_request_n(int n)
+{
+int     tot_bytes_recvd,
+        bytes_recvd, 
+        bytes_left;
+char    *buf = (char *)&netperf_request;
+int     buflen = sizeof(netperf_request);
+int     counter,count;
+
+  if (n < 0) count = sizeof(netperf_request)/4;
+  else count = 2 + n;
+
+  /* silently truncate if the caller called for more than we have */
+  if (count > sizeof(netperf_request)/4) {
+    if (debug > 1) {
+      fprintf(where,
+	      "WARNING, htonl conversion count of %d was larger than netperf_request\n",
+	      count - 2);
+      fflush(where);
+    }
+    count = sizeof(netperf_request)/4;
   }
 
-  /* put the entire response_array into network order. We do this */
-  /* arbitrarily rather than trying to figure-out just how much of the */
-  /* request array contains real information. this should be simpler, */
-  /* and at any rate, the performance of sending control messages for */
-  /* this benchmark is not of any real concern. */
-  
-  for (counter=0;counter < sizeof(netperf_response)/4; counter++) {
-    response_array[counter] = htonl(response_array[counter]);
+  tot_bytes_recvd = 0;    
+  bytes_recvd = 0;     /* nt_lint; bytes_recvd uninitialized if buflen == 0 */
+  bytes_left      = buflen;
+  while ((tot_bytes_recvd != buflen) &&
+	 ((bytes_recvd = recv(server_sock, buf, bytes_left,0)) > 0 )) {
+    tot_bytes_recvd += bytes_recvd;
+    buf             += bytes_recvd;
+    bytes_left      -= bytes_recvd;
   }
   
-  if (debug > 1) {
+  /* put the request into host order */
+  
+  for (counter = 0; counter < count; counter++) {
+    request_array[counter] = ntohl(request_array[counter]);
+  }
+
+  if (debug) {
     fprintf(where,
-            "send_response: contents after htonl\n");
-    dump_response();
-    fprintf(where,
-            "about to send %u bytes from %p\n",
-            sizeof(netperf_response),
-            &netperf_response);
+	    "recv_request: received %d bytes of request.\n",
+	    tot_bytes_recvd);
     fflush(where);
   }
 
-  /*KC*/
-  if ((bytes_sent = send(server_sock,
-           (char *)&netperf_response,
-           sizeof(netperf_response),
-           0)) != sizeof(netperf_response)) {
-    perror("send_response: send call failure");
-	fprintf(where, "BytesSent: %d\n", bytes_sent);
+  if (bytes_recvd == SOCKET_ERROR) {
+    Print_errno(where,
+		"recv_request: error on recv");
+    fflush(where);
     exit(1);
   }
+  
+  if (bytes_recvd == 0) {
+    /* the remote has shutdown the control connection, we should shut
+       it  down as well and exit */
+    if (debug) {
+      fprintf(where,
+	      "recv_request: remote requested shutdown of control\n");
+      fflush(where);
+    }
+    
+    if (netlib_control != INVALID_SOCKET) {
+      shutdown_control();
+    }
+    exit(0);
+  }
+
+  if (tot_bytes_recvd < buflen) {
+    if (debug > 1)
+      dump_request();
+    
+    fprintf(where,
+	    "recv_request: partial request received of %d bytes\n",
+	    tot_bytes_recvd);
+    fflush(where);
+    exit(1);
+  }
+
+  if (debug > 1) {
+    dump_request();
+  } 
+
+  /* get the processor affinity request value from netperf */
+  /* this is a kludge and I know it.  sgb 8/11/04          */
+  
+  local_proc_affinity = netperf_request.content.dummy;
+  
+  if (local_proc_affinity != -1) {
+    bind_to_specific_processor(local_proc_affinity,0);
+  } 
   
 }
 
@@ -2262,83 +2430,117 @@ send_response()
 void
 recv_request()
 {
-int     tot_bytes_recvd,
-        bytes_recvd, 
-        bytes_left;
-char    *buf = (char *)&netperf_request;
-int     buflen = sizeof(netperf_request);
-int     counter;
 
-tot_bytes_recvd = 0;    
- bytes_recvd = 0;     /* nt_lint; bytes_recvd uninitialized if buflen == 0 */
-bytes_left      = buflen;
-while ((tot_bytes_recvd != buflen) &&
-       ((bytes_recvd = recv(server_sock, buf, bytes_left,0)) > 0 )) {
-  tot_bytes_recvd += bytes_recvd;
-  buf             += bytes_recvd;
-  bytes_left      -= bytes_recvd;
+  recv_request_n(-1);
+
 }
 
-/* put the request into host order */
+void
+recv_response_timed_n(int addl_time, int n)
+{
+  int     tot_bytes_recvd,
+          bytes_recvd = 0, 
+          bytes_left;
+  char    *buf = (char *)&netperf_response;
+  int     buflen = sizeof(netperf_response);
+  int     counter,count;
+  
+  /* stuff for select, use fd_set for better compliance */
+  fd_set  readfds;
+  struct  timeval timeout;
+  
+  tot_bytes_recvd = 0;    
+  bytes_left      = buflen;
+  
+  if (n < 0) count = sizeof(netperf_request)/4;
+  else count = 2 + n;
 
-for (counter = 0; counter < sizeof(netperf_request)/sizeof(int); counter++) {
-  request_array[counter] = ntohl(request_array[counter]);
-}
+  /* silently truncate if the caller called for more than we have */
+  if (count > sizeof(netperf_request)/4) {
+    if (debug > 1) {
+      fprintf(where,
+	      "WARNING, htonl conversion count of %d was larger than netperf_response\n",
+	      count - 2);
+      fflush(where);
+    }
+    count = sizeof(netperf_request)/4;
+  }
 
-if (debug) {
-  fprintf(where,
-          "recv_request: received %d bytes of request.\n",
-          tot_bytes_recvd);
-  fflush(where);
-}
+  /* zero out the response structure */
+  
+  /* BUG FIX SJB 2/4/93 - should be < not <= */
+  for (counter = 0; 
+       counter < sizeof(netperf_response)/sizeof(int);
+       counter++) {
+    response_array[counter] = 0;
+  }
+  
+  /* we only select once. it is assumed that if the response is split */
+  /* (which should not be happening, that we will receive the whole */
+  /* thing and not have a problem ;-) */
+  
+  FD_ZERO(&readfds);
+  FD_SET(netlib_control,&readfds);
+  timeout.tv_sec  = 120 + addl_time;  /* wait at least two minutes
+					 before punting - the
+					 USE_LOOPER CPU stuff may
+					 cause remote's to have a bit
+					 longer time of it than 60
+					 seconds would allow.
+					 triggered by fix from Jeff
+					 Dwork. */
+  timeout.tv_usec = 0;
+  
+  /* select had better return one, or there was either a problem or a */
+  /* timeout... */
 
-if (bytes_recvd == SOCKET_ERROR) {
-  Print_errno(where,
-          "recv_request: error on recv");
-  fflush(where);
-  exit(1);
-}
-
-if (bytes_recvd == 0) {
-  /* the remote has shutdown the control connection, we should shut it */
-  /* down as well and exit */
-
-  if (debug) {
+  if ((counter = select(FD_SETSIZE,
+			&readfds,
+			0,
+			0,
+			&timeout)) != 1) {
     fprintf(where,
-            "recv_request: remote requested shutdown of control\n");
+	    "netperf: receive_response: no response received. errno %d counter %d\n",
+	    errno,
+	    counter);
+    exit(1);
+  }
+  
+  while ((tot_bytes_recvd != buflen) &&
+	 ((bytes_recvd = recv(netlib_control, buf, bytes_left,0)) > 0 )) {
+    tot_bytes_recvd += bytes_recvd;
+    buf             += bytes_recvd;
+    bytes_left      -= bytes_recvd;
+  }
+  
+  if (debug) {
+    fprintf(where,"recv_response: received a %d byte response\n",
+	    tot_bytes_recvd);
     fflush(where);
   }
-
-  if (netlib_control != INVALID_SOCKET) {
-        shutdown_control();
+  
+  /* put the desired quantity of the response into host order */
+  
+  for (counter = 0; counter < count; counter++) {
+    response_array[counter] = ntohl(response_array[counter]);
   }
-  exit(0);
-}
-
-if (tot_bytes_recvd < buflen) {
-  if (debug > 1)
-    dump_request();
-
-  fprintf(where,
-          "recv_request: partial request received of %d bytes\n",
-          tot_bytes_recvd);
-  fflush(where);
-  exit(1);
-}
-
- if (debug > 1) {
-   dump_request();
- } 
-
-  /* get the processor affinity request value from netperf */
-  /* this is a kludge and I know it.  sgb 8/11/04          */
-
-  local_proc_affinity = netperf_request.content.dummy;
-
-  if (local_proc_affinity != -1) {
-    bind_to_specific_processor(local_proc_affinity,0);
-  } 
-
+  
+  if (bytes_recvd == SOCKET_ERROR) {
+    perror("recv_response");
+    exit(1);
+  }
+  if (tot_bytes_recvd < buflen) {
+    fprintf(stderr,
+	    "recv_response: partial response received: %d bytes\n",
+	    tot_bytes_recvd);
+    fflush(stderr);
+    if (debug > 1)
+      dump_response();
+    exit(1);
+  }
+  if (debug > 1) {
+    dump_response();
+  }
 }
 
  /*
@@ -2373,98 +2575,23 @@ if (tot_bytes_recvd < buflen) {
 void
 recv_response_timed(int addl_time)
 {
-int     tot_bytes_recvd,
-        bytes_recvd = 0, 
-        bytes_left;
-char    *buf = (char *)&netperf_response;
-int     buflen = sizeof(netperf_response);
-int     counter;
 
- /* stuff for select, use fd_set for better compliance */
-fd_set  readfds;
-struct  timeval timeout;
+  /* -1 => convert all the test-specific data via ntohl */
+  recv_response_timed_n(addl_time,-1);
 
-tot_bytes_recvd = 0;    
-bytes_left      = buflen;
-
-/* zero out the response structure */
-
-/* BUG FIX SJB 2/4/93 - should be < not <= */
-for (counter = 0; counter < sizeof(netperf_response)/sizeof(int); counter++) {
-        response_array[counter] = 0;
-}
-
- /* we only select once. it is assumed that if the response is split */
- /* (which should not be happening, that we will receive the whole */
- /* thing and not have a problem ;-) */
-
-FD_ZERO(&readfds);
-FD_SET(netlib_control,&readfds);
-timeout.tv_sec  = 120 + addl_time;  /* wait at least two minutes
-                                      before punting - the USE_LOOPER
-                                      CPU stuff may cause remote's to
-                                      have a bit longer time of it
-                                      than 60 seconds would allow.
-                                      triggered by fix from Jeff
-                                      Dwork. */
-timeout.tv_usec = 0;
-
- /* select had better return one, or there was either a problem or a */
- /* timeout... */
-
-if ((counter = select(FD_SETSIZE,
-                      &readfds,
-                      0,
-                      0,
-                      &timeout)) != 1) {
-  fprintf(where,
-          "netperf: receive_response: no response received. errno %d counter %d\n",
-          errno,
-          counter);
-  exit(1);
-}
-
-while ((tot_bytes_recvd != buflen) &&
-       ((bytes_recvd = recv(netlib_control, buf, bytes_left,0)) > 0 )) {
-  tot_bytes_recvd += bytes_recvd;
-  buf             += bytes_recvd;
-  bytes_left      -= bytes_recvd;
-}
-
-if (debug) {
-  fprintf(where,"recv_response: received a %d byte response\n",
-          tot_bytes_recvd);
-  fflush(where);
-}
-
-/* put the response into host order */
-
-for (counter = 0; counter < sizeof(netperf_response)/sizeof(int); counter++) {
-  response_array[counter] = ntohl(response_array[counter]);
-}
-
-if (bytes_recvd == SOCKET_ERROR) {
-        perror("recv_response");
-        exit(1);
-}
-if (tot_bytes_recvd < buflen) {
-  fprintf(stderr,
-          "recv_response: partial response received: %d bytes\n",
-          tot_bytes_recvd);
-  fflush(stderr);
-  if (debug > 1)
-    dump_response();
-  exit(1);
-}
-if (debug > 1) {
-  dump_response();
-}
 }
 
 void
 recv_response() 
 {
-  recv_response_timed(0);
+  /* 0 => no additional time, -1 => convert all test-specific data */
+  recv_response_timed_n(0,-1);
+}
+
+void
+recv_response_n(int n)
+{
+  recv_response_timed_n(0,n);
 }
 
 
