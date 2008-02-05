@@ -472,6 +472,10 @@ extern  void    send_request();
 extern  void    recv_response();
 extern  void    send_response();
 extern  void    recv_request();
+extern  void    send_request_n(int n);  /* convert only the first N ints */
+extern  void    recv_response_n(int n); /* of the test-specific data via */
+extern  void    send_response_n(int n); /* htonl/ntonl as required */
+extern  void    recv_request_n(int n);
 extern  void    dump_request();
 extern  void    dump_addrinfo(FILE *dumploc, struct addrinfo *info,
 			      char *host, char *port, int family);
