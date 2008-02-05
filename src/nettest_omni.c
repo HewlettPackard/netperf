@@ -4103,6 +4103,8 @@ recv_omni()
     fflush(where);
   }
 
+  omni_response->send_size = omni_request->send_size;
+  omni_response->send_width = omni_request->send_width;
   if (omni_request->direction & NETPERF_XMIT) {
     if (omni_request->response_size > 0) {
       /* request/response_test */
@@ -4116,7 +4118,6 @@ recv_omni()
 	else bytes_to_send = 4096;
       }
       else bytes_to_send = omni_request->send_size;
-      omni_response->send_size = bytes_to_send;
       /* set the send_width */
       if (omni_request->send_width == 0) {
 	send_width = (lss_size/bytes_to_send) + 1;
@@ -4130,9 +4131,12 @@ recv_omni()
 				     omni_request->send_alignment,
 				     omni_request->send_offset);
 				     
+    omni_response->send_width = send_width;
+    omni_response->send_size = bytes_to_send;
   }
-  omni_response->send_width = send_width;
 
+  omni_response->receive_size = omni_request->receive_size;
+  omni_response->recv_width = omni_response->recv_width;
   if (omni_request->direction & NETPERF_RECV) {
     if (omni_request->request_size > 0) {
       /* request/response test */
@@ -4148,7 +4152,6 @@ recv_omni()
       else {
 	bytes_to_recv = omni_request->receive_size;
       }
-      omni_response->receive_size = bytes_to_recv;
       /* set the recv_width */
       if (omni_request->recv_width == 0) {
 	recv_width = (lsr_size/bytes_to_recv) + 1;
@@ -4162,8 +4165,9 @@ recv_omni()
 				     omni_request->recv_alignment,
 				     omni_request->recv_offset);
 				     
+    omni_response->receive_size = bytes_to_recv;
+    omni_response->recv_width = recv_width;
   }
-  omni_response->recv_width = recv_width;
 
 #ifdef WIN32
   /* The test timer can fire during operations on the listening socket,
