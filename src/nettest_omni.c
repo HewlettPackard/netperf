@@ -2755,7 +2755,7 @@ send_data(SOCKET data_socket, struct ring_elt *send_ring, uint32_t bytes_to_send
 int
 recv_data(SOCKET data_socket, struct ring_elt *recv_ring, uint32_t bytes_to_recv, struct sockaddr *source, int *sourcelen, uint32_t flags, uint32_t *num_receives) {
 
-  void * temp_message_ptr;
+  char *temp_message_ptr;
   int bytes_left;
   int bytes_recvd;
   int my_recvs;
