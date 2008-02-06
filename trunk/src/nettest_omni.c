@@ -675,6 +675,8 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "LOCAL_RECV_OFFSET";
   case LOCAL_RECV_ALIGN:
     return "LOCAL_RECV_ALIGN";
+  case LOCAL_SEND_ALIGN:
+    return "LOCAL_SEND_ALIGN";
   case LOCAL_SEND_WIDTH:
     return "LOCAL_SEND_WIDTH";
   case LOCAL_RECV_WIDTH:
@@ -741,6 +743,8 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "REMOTE_RECV_OFFSET";
   case REMOTE_RECV_ALIGN:
     return "REMOTE_RECV_ALIGN";
+  case REMOTE_SEND_ALIGN:
+    return "REMOTE_SEND_ALIGN";
   case REMOTE_SEND_WIDTH:
     return "REMOTE_SEND_WIDTH";
   case REMOTE_RECV_WIDTH:
