@@ -292,6 +292,9 @@
 /* Version number of package */
 #undef VERSION
 
+/* Define to one to include DCCP tests. */
+#undef WANT_DCCP
+
 /* Define to one to enable demo support. May affect results. */
 #undef WANT_DEMO
 
