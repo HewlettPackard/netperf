@@ -1047,6 +1047,7 @@ set_output_csv_list_default() {
   output_csv_list[i++] = REMOTE_RECV_SIZE;
   output_csv_list[i++] = RESPONSE_SIZE;
   output_csv_list[i++] = THROUGHPUT;
+  output_csv_list[i++] = ELAPSED_TIME;
   output_csv_list[i++] = LOCAL_SEND_THROUGHPUT;
   output_csv_list[i++] = LOCAL_RECV_THROUGHPUT;
   output_csv_list[i++] = REMOTE_SEND_THROUGHPUT;
