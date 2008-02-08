@@ -225,6 +225,9 @@
 #define         SDP_CC_RESPONSE            553
 #define         SDP_CC_RESULTS             554
 
+#define         DO_SYSINFO                 600
+#define         SYSINFO_RESPONSE           601
+
 #if HAVE_INTTYPES_H
 # include <inttypes.h>
 #else
@@ -432,6 +435,11 @@ extern char remote_data_port[10];
 extern char *local_data_address;
 extern char *remote_data_address;
 
+extern char *local_sysname, *remote_sysname;
+extern char *local_release, *remote_release;
+extern char *local_version, *remote_version;
+extern char *local_machine, *remote_machine;
+
 extern int local_data_family;
 extern int remote_data_family;
 
@@ -508,6 +516,8 @@ extern  void    set_sock_buffer(SOCKET sd,
 				int requested_size,
 				int *effective_sizep);
 extern  char   *format_units();
+
+extern  void    get_remote_system_info();
 
 extern  char    *inet_ftos(int family);
 extern  char    *inet_ttos(int type);

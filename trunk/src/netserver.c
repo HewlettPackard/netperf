@@ -248,7 +248,53 @@ process_requests()
 #endif /* !WIN32 !MPE !__VMS */
       }
       break;
-      
+
+    case DO_SYSINFO:
+      {
+	char *delims[4];
+	int i;
+	delims[0] = strdup("|");
+	delims[1] = strdup(",");
+	delims[2] = strdup("_");
+	delims[3] = strdup(";");
+	
+	netperf_response.content.response_type = SYSINFO_RESPONSE;
+	for (i = 0; i < 4; i++) {
+	  if ((!strstr(local_sysname,delims[i])) &&
+	      (!strstr(local_release,delims[i])) &&
+	      (!strstr(local_machine,delims[i])) &&
+	      (!strstr(local_version,delims[i]))) {
+	    snprintf((char *)netperf_response.content.test_specific_data,
+		     sizeof(netperf_response) - 7,
+		     "%c%s%c%s%c%s%c%s",
+		     delims[i][0],
+		     local_sysname,
+		     delims[i][0],
+		     local_release,
+		     delims[i][0],
+		     local_machine,
+		     delims[i][0],
+		     local_version);
+	    break;
+	  }
+	}
+	if (i == 4) {
+	  /* none of the delimiters were unique, use the last one */
+	  snprintf((char *)netperf_response.content.test_specific_data,
+		   sizeof(netperf_response) - 7,
+		   "%c%s%c%s%c%s%c%s",
+		   delims[i][0],
+		   "NoDelimUnique",
+		   delims[i][0],
+		   "NoDelimUnique",
+		   delims[i][0],
+		   "NoDelimUnique",
+		   delims[i][0],
+		   "NoDelimUnique");
+	}
+	send_response_n(0);
+	break;
+      }
     case CPU_CALIBRATE:
       netperf_response.content.response_type = CPU_CALIBRATE;
       temp_rate = calibrate_local_cpu(0.0);

@@ -238,6 +238,11 @@ char remote_data_port[10];
 char *local_data_address=NULL;
 char *remote_data_address=NULL;
 
+char *local_sysname, *remote_sysname;
+char *local_release, *remote_release;
+char *local_version, *remote_version;
+char *local_machine, *remote_machine;
+
 int local_data_family=AF_UNSPEC;
 int remote_data_family=AF_UNSPEC;
 
@@ -1107,6 +1112,32 @@ netlib_init_cpu_map() {
 #endif
 }
 
+void
+get_local_system_info()
+{
+#ifndef WIN32
+  struct utsname buf;
+  if (uname(&buf) == 0) {
+    local_sysname = strdup(buf.sysname);
+    local_release = strdup(buf.release);
+    local_version = strdup(buf.version);
+    local_machine = strdup(buf.machine);
+  }
+  else {
+    local_sysname = strdup("UnknownSystem");
+    local_release = strdup("UnknownRelease");
+    local_version = strdup("UnknownVersion");
+    local_machine = strdup("UnknownMachine");
+  }
+#else
+  local_sysname = strdup("Windows");
+  local_release = strdup("UnknownRelease");
+  local_version = strdup("UnknownVersion");
+  local_machine = strdup("UnknownMachine");
+
+#endif
+}
+
 
 /****************************************************************/
 /*                                                              */
@@ -1134,6 +1165,9 @@ netlib_init()
   lib_local_peak_cpu_util = -1.0;
   lib_remote_peak_cpu_id = -1;
   lib_remote_peak_cpu_util = -1.0;
+
+  /* retrieve the local system information */
+  get_local_system_info();
 
   /* on those systems where we know that CPU numbers may not start at
      zero and be contiguous, we provide a way to map from a
@@ -2594,6 +2628,48 @@ recv_response_n(int n)
   recv_response_timed_n(0,n);
 }
 
+void 
+get_remote_system_info()
+{
+  int ret;
+  char delim[2];
+  char *token;
+
+  netperf_request.content.request_type = DO_SYSINFO;
+  send_request();
+  recv_response_n(0);
+  if (!netperf_response.content.serv_errno) {
+    delim[1] = '\0';
+    delim[0] = *(char *)netperf_response.content.test_specific_data;
+#if 0
+    token = (char *)netperf_response.content.test_specific_data +
+      (sizeof(netperf_response) - 7); /* OBOB? */
+    *token = 0;
+#endif
+    printf("sizeof %d start %p token %p delim %s\n",
+	   sizeof(netperf_response), &netperf_response,token,delim);
+    token = strtok((char *)netperf_response.content.test_specific_data,delim);
+    if (token) remote_sysname = strdup(token);
+    else remote_sysname = strdup("UnknownRemoteSysname");
+    token = strtok(NULL,delim);
+    if (token) remote_release = strdup(token);
+    else remote_release = strdup("UnknownRemoteRelease");
+    token = strtok(NULL,delim);
+    if (token) remote_machine = strdup(token);
+    else remote_machine = strdup("UnknownRemoteMachine");
+    token = strtok(NULL,delim);
+    if (token) remote_version = strdup(token);
+    else remote_version = strdup("UnknownRemoteVersion");
+  }
+  else {
+    remote_sysname = strdup("UnknownRemoteSysname");
+    remote_release = strdup("UnknownRemoteRelease");
+    remote_machine = strdup("UnknownRemoteMachine");
+    remote_version = strdup("UnknownRemoteVersion");
+  }
+    
+}
+
 
 
 #if defined(USE_PSTAT) || defined (USE_SYSCTL)
@@ -3504,6 +3580,8 @@ calibrate_remote_cpu()
     return(remrate);
   }     
 }
+
+
 
 #ifndef WIN32
 /* WIN32 requires that at least one of the file sets to select be non-null. */

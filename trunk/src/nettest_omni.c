@@ -436,6 +436,14 @@ enum netperf_output_name {
   REMOTE_RECV_CLEAN_COUNT,
   REMOTE_NODELAY,
   REMOTE_CORK,
+  LOCAL_SYSNAME,
+  LOCAL_RELEASE,
+  LOCAL_VERSION,
+  LOCAL_MACHINE,
+  REMOTE_SYSNAME,
+  REMOTE_RELEASE,
+  REMOTE_VERSION,
+  REMOTE_MACHINE,
   OUTPUT_END,
   NETPERF_OUTPUT_MAX
 };
@@ -773,6 +781,22 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "REMOTE_NODELAY";
   case   REMOTE_CORK:
     return "REMOTE_CORK";
+  case REMOTE_SYSNAME:
+    return "REMOTE_SYSNAME";
+  case REMOTE_MACHINE:
+    return "REMOTE_MACHINE";
+  case REMOTE_VERSION:
+    return "REMOTE_VERSION";
+  case REMOTE_RELEASE:
+    return "REMOTE_RELEASE";
+  case LOCAL_SYSNAME:
+    return "LOCAL_SYSNAME";
+  case LOCAL_MACHINE:
+    return "LOCAL_MACHINE";
+  case LOCAL_VERSION:
+    return "LOCAL_VERSION";
+  case LOCAL_RELEASE:
+    return "LOCAL_RELEASE";
   case OUTPUT_END:
     return "OUTPUT_END";
   default:
@@ -1110,6 +1134,14 @@ set_output_csv_list_default() {
   output_csv_list[i++] = REMOTE_RECV_CLEAN_COUNT;
   output_csv_list[i++] = REMOTE_NODELAY;
   output_csv_list[i++] = REMOTE_CORK;
+  output_csv_list[i++] = LOCAL_SYSNAME;
+  output_csv_list[i++] = LOCAL_RELEASE;
+  output_csv_list[i++] = LOCAL_VERSION;
+  output_csv_list[i++] = LOCAL_MACHINE;
+  output_csv_list[i++] = REMOTE_SYSNAME;
+  output_csv_list[i++] = REMOTE_RELEASE;
+  output_csv_list[i++] = REMOTE_VERSION;
+  output_csv_list[i++] = REMOTE_MACHINE;
   output_csv_list[i++] = RESULT_BRAND;
   output_csv_list[i++] = COMMAND_LINE;
 
@@ -2282,6 +2314,102 @@ print_omni_init() {
   netperf_output_source[REMOTE_CORK].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_CORK);
 
+  netperf_output_source[REMOTE_MACHINE].output_name = REMOTE_MACHINE;
+  netperf_output_source[REMOTE_MACHINE].line[0] = "Remote";
+  netperf_output_source[REMOTE_MACHINE].line[1] = "Machine";
+  netperf_output_source[REMOTE_MACHINE].line[2] = "";
+  netperf_output_source[REMOTE_MACHINE].line[3] = "";
+  netperf_output_source[REMOTE_MACHINE].format = "%s";
+  netperf_output_source[REMOTE_MACHINE].display_value = remote_machine;
+  netperf_output_source[REMOTE_MACHINE].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_MACHINE);
+  netperf_output_source[REMOTE_MACHINE].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_MACHINE);
+
+  netperf_output_source[REMOTE_VERSION].output_name = REMOTE_VERSION;
+  netperf_output_source[REMOTE_VERSION].line[0] = "Remote";
+  netperf_output_source[REMOTE_VERSION].line[1] = "Version";
+  netperf_output_source[REMOTE_VERSION].line[2] = "";
+  netperf_output_source[REMOTE_VERSION].line[3] = "";
+  netperf_output_source[REMOTE_VERSION].format = "%s";
+  netperf_output_source[REMOTE_VERSION].display_value = remote_version;
+  netperf_output_source[REMOTE_VERSION].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_VERSION);
+  netperf_output_source[REMOTE_VERSION].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_VERSION);
+
+  netperf_output_source[REMOTE_RELEASE].output_name = REMOTE_RELEASE;
+  netperf_output_source[REMOTE_RELEASE].line[0] = "Remote";
+  netperf_output_source[REMOTE_RELEASE].line[1] = "Release";
+  netperf_output_source[REMOTE_RELEASE].line[2] = "";
+  netperf_output_source[REMOTE_RELEASE].line[3] = "";
+  netperf_output_source[REMOTE_RELEASE].format = "%s";
+  netperf_output_source[REMOTE_RELEASE].display_value = remote_release;
+  netperf_output_source[REMOTE_RELEASE].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_RELEASE);
+  netperf_output_source[REMOTE_RELEASE].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_RELEASE);
+
+  netperf_output_source[REMOTE_SYSNAME].output_name = REMOTE_SYSNAME;
+  netperf_output_source[REMOTE_SYSNAME].line[0] = "Remote";
+  netperf_output_source[REMOTE_SYSNAME].line[1] = "Sysname";
+  netperf_output_source[REMOTE_SYSNAME].line[2] = "";
+  netperf_output_source[REMOTE_SYSNAME].line[3] = "";
+  netperf_output_source[REMOTE_SYSNAME].format = "%s";
+  netperf_output_source[REMOTE_SYSNAME].display_value = remote_sysname;
+  netperf_output_source[REMOTE_SYSNAME].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_SYSNAME);
+  netperf_output_source[REMOTE_SYSNAME].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_SYSNAME);
+
+  netperf_output_source[LOCAL_MACHINE].output_name = LOCAL_MACHINE;
+  netperf_output_source[LOCAL_MACHINE].line[0] = "Local";
+  netperf_output_source[LOCAL_MACHINE].line[1] = "Machine";
+  netperf_output_source[LOCAL_MACHINE].line[2] = "";
+  netperf_output_source[LOCAL_MACHINE].line[3] = "";
+  netperf_output_source[LOCAL_MACHINE].format = "%s";
+  netperf_output_source[LOCAL_MACHINE].display_value = local_machine;
+  netperf_output_source[LOCAL_MACHINE].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_MACHINE);
+  netperf_output_source[LOCAL_MACHINE].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_MACHINE);
+
+  netperf_output_source[LOCAL_VERSION].output_name = LOCAL_VERSION;
+  netperf_output_source[LOCAL_VERSION].line[0] = "Local";
+  netperf_output_source[LOCAL_VERSION].line[1] = "Version";
+  netperf_output_source[LOCAL_VERSION].line[2] = "";
+  netperf_output_source[LOCAL_VERSION].line[3] = "";
+  netperf_output_source[LOCAL_VERSION].format = "%s";
+  netperf_output_source[LOCAL_VERSION].display_value = local_version;
+  netperf_output_source[LOCAL_VERSION].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_VERSION);
+  netperf_output_source[LOCAL_VERSION].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_VERSION);
+
+  netperf_output_source[LOCAL_RELEASE].output_name = LOCAL_RELEASE;
+  netperf_output_source[LOCAL_RELEASE].line[0] = "Local";
+  netperf_output_source[LOCAL_RELEASE].line[1] = "Release";
+  netperf_output_source[LOCAL_RELEASE].line[2] = "";
+  netperf_output_source[LOCAL_RELEASE].line[3] = "";
+  netperf_output_source[LOCAL_RELEASE].format = "%s";
+  netperf_output_source[LOCAL_RELEASE].display_value = local_release;
+  netperf_output_source[LOCAL_RELEASE].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_RELEASE);
+  netperf_output_source[LOCAL_RELEASE].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_RELEASE);
+
+  netperf_output_source[LOCAL_SYSNAME].output_name = LOCAL_SYSNAME;
+  netperf_output_source[LOCAL_SYSNAME].line[0] = "Local";
+  netperf_output_source[LOCAL_SYSNAME].line[1] = "Sysname";
+  netperf_output_source[LOCAL_SYSNAME].line[2] = "";
+  netperf_output_source[LOCAL_SYSNAME].line[3] = "";
+  netperf_output_source[LOCAL_SYSNAME].format = "%s";
+  netperf_output_source[LOCAL_SYSNAME].display_value = local_sysname;
+  netperf_output_source[LOCAL_SYSNAME].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_SYSNAME);
+  netperf_output_source[LOCAL_SYSNAME].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_SYSNAME);
+
   netperf_output_source[OUTPUT_END].output_name = OUTPUT_END;
   netperf_output_source[OUTPUT_END].line[0] = "This";
   netperf_output_source[OUTPUT_END].line[1] = "Is";
@@ -3034,6 +3162,11 @@ send_omni(char remote_host[])
   omni_result =
     (struct omni_results_struct *)netperf_response.content.test_specific_data;
   
+
+  /* before we start doing things with our own requests and responses
+     lets go ahead and find-out about the remote system. at some point
+     we probably need to put this somewhere else... */
+  get_remote_system_info();
   
 #ifdef WANT_HISTOGRAM
   if (verbosity > 1) {
@@ -4287,6 +4420,7 @@ recv_omni()
   trans_completed = 0;
   bytes_sent = 0;
   bytes_received = 0;
+  connected = 0;
 
   while ((!times_up) || (units_remaining > 0)) {
 
