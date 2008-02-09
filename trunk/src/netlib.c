@@ -119,6 +119,10 @@ char    netlib_id[]="\
 
 #endif /* WIN32 */
 
+#ifdef HAVE_UNAME
+#include <sys/utsname.h>
+#endif
+
 #ifdef _AIX
 #include <sys/select.h>
 #include <sys/sched.h>
@@ -1115,7 +1119,7 @@ netlib_init_cpu_map() {
 void
 get_local_system_info()
 {
-#ifndef WIN32
+#ifdef HAVE_UNAME
   struct utsname buf;
   if (uname(&buf) == 0) {
     local_sysname = strdup(buf.sysname);
@@ -1130,7 +1134,11 @@ get_local_system_info()
     local_machine = strdup("UnknownMachine");
   }
 #else
+#ifdef WIN32
   local_sysname = strdup("Windows");
+#else
+  local_sysname = strdup("UnknownSystem");
+#endif
   local_release = strdup("UnknownRelease");
   local_version = strdup("UnknownVersion");
   local_machine = strdup("UnknownMachine");

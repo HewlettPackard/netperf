@@ -92,6 +92,8 @@ AM_CONDITIONAL(NEED_LIBCOMPAT, test "$HAVE_MISSING" = "yes")
 
 AC_CHECK_FUNCS(sendfile)
 
+AC_CHECK_FUNCS(uname)
+
 # check for the various CPU binding calls
 AC_CHECK_FUNCS(mpctl processor_bind sched_setaffinity bind_to_cpu_id bindprocessor)
 
