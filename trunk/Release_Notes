@@ -2,6 +2,30 @@ These are the Release Notes leading-up to Revision 2.4.5 of netperf:
 
 Things changed in this release:
 
+*) The "omni" suite has been added on an experimental basis.  If it
+   works-out then many of the tests in src/nettest_bsd.c,
+   src/nettest_sdp.c, and src/nettest_sctp.c will be "migrated" to use
+   the "omni infrastructure" (aka two routines to measure them
+   all...).  Apart from reduced socket code, the omni suite has
+   user-configurable output in either "human readable" or CSV format.
+   By default, a VERY large quantity of data is output when asking for
+   csv format (test-specific -o option).  The omni suite is not yet
+   documented (there are some as-yet undiagnosed problems with
+   doc/netperf.texi in emacs texinfo mode and updating nodes and links
+   and such - any help there would be appreciated) but there is a
+   small text file in doc/ describing the names (most) of the
+   available output's.  For the most up-to-date list consult
+   src/nettest_omni.c and the enum netperf_output_name.  
+
+*) Coming along for the ride are some new platform specific files to
+   determine the probable egress interface for each end of a test, as
+   well as driver information for that interface.  There is also
+   reporting of "uname" like information for both local and remote
+   system, and eventually perhaps something about the vendor's model
+   name for the systems as well as the processor types.  The end goal
+   is to make it easy to get most if not all what one would want in a
+   database of netperf results.
+
 *) The UDP_RR test now understands the global -f option to change
    output units.  It also understands the -B option to tag
    results. Courtesy of Alexander Duyck.

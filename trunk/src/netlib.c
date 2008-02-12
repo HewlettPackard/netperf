@@ -2654,8 +2654,7 @@ get_remote_system_info()
       (sizeof(netperf_response) - 7); /* OBOB? */
     *token = 0;
 #endif
-    printf("sizeof %d start %p token %p delim %s\n",
-	   sizeof(netperf_response), &netperf_response,token,delim);
+
     token = strtok((char *)netperf_response.content.test_specific_data,delim);
     if (token) remote_sysname = strdup(token);
     else remote_sysname = strdup("UnknownRemoteSysname");
