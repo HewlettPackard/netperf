@@ -110,7 +110,12 @@ struct omni_results_struct {
 
   int32_t    peak_cpu_id;   /* ID of the most utilized CPU */
   float      peak_cpu_util; /* its individual utilization */
+  /* this is the 18th 32-bit word and we have 248 bytes available */
   char       ifname[16];    /* the probable egress interface */
+  char       driver[32];    /* size based on linux/ethtool.h */
+  char       version[32];
+  char       firmware[32];  
+  char       bus[32];
 };
 
 #endif /* WANT_OMNI */

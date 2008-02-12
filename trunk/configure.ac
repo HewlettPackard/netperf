@@ -713,7 +713,7 @@ case "$enable_cpuutil" in
 		use_cpuutil=false
 		;;
 	*)
-		AC_MSG_ERROR(--enable-cpuutil takes kstat, kstat10, looper, osx, perfstat, procstat, pstat, pstatnew, sysctl or none])
+		AC_MSG_ERROR([--enable-cpuutil takes kstat, kstat10, looper, osx, perfstat, procstat, pstat, pstatnew, sysctl or none])
 		;;
 esac
 
@@ -721,7 +721,7 @@ esac
 
 AC_SUBST(NETCPU_SOURCE)
 
-# time to see about route lookup utilization measurements
+# time to see about route lookup mechanisms
 
 AC_MSG_CHECKING([which route lookup type to use])
 
@@ -740,8 +740,6 @@ case "$enable_rtlookup" in
 		AC_DEFINE([USE_RTNETLINK],,[Use Linux's rtnetlink interface to dettermine egress interface.])
 		;;
 	'')
-# ia64-hp-hpux11.23
-# i386-pc-solaris2.10
 # guess it automagically in a nice big case statement
 		case $target in
 		     *-*-linux*)
@@ -779,13 +777,55 @@ case "$enable_rtlookup" in
 		use_rtlookup=false
 		;;
 	*)
-		AC_MSG_ERROR(--enable-rtlookup takes rtmget, rtnetlink or none])
+		AC_MSG_ERROR([--enable-rtlookup takes rtmget, rtnetlink or none])
 		;;
 esac
 
 	AC_MSG_RESULT("$enable_rtlookup")
 
 AC_SUBST(NETRTLKUP_SOURCE)
+
+# time to see about route lookup mechanisms
+
+AC_MSG_CHECKING([which driver info lookup type to use])
+
+AC_ARG_ENABLE(drvlookup,
+	[AS_HELP_STRING([--enable-drvlookup],[include code to find the probable egress interface using specified mechanism])])
+
+NETDRVLKUP_SOURCE="$enable_drvlookup"
+case "$enable_drvlookup" in
+	ethtool)
+		use_drvlookup=true
+		AC_DEFINE([USE_ETHTOOL],,[Use Ethtool IOCTLs on a socket to get egress interface.])
+		;;
+
+	'')
+# guess it automagically in a nice big case statement
+		case $target in
+		     *-*-linux*)
+			use_drvlookup=true
+			AC_DEFINE([USE_ETHTOOL],,[Use Linux's ethtool interface to determine driver information.])
+			enable_drvlookup="ethtool - auto"
+			NETDRVLKUP_SOURCE="ethtool"
+			;;
+		     *)
+			use_drvlookup=false
+			NETDRVLKUP_SOURCE="none"
+			enable_drvlookup="none. Consider teaching configure about your platform."
+			;;
+		esac
+		;;
+	none)
+		use_drvlookup=false
+		;;
+	*)
+		AC_MSG_ERROR([--enable-drvlookup takes ethtool or none])
+		;;
+esac
+
+	AC_MSG_RESULT("$enable_drvlookup")
+
+AC_SUBST(NETDRVLKUP_SOURCE)
 
 # now spit it all out
 AC_CONFIG_FILES([Makefile

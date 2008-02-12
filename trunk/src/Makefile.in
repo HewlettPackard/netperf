@@ -70,6 +70,7 @@ MAKEINFO = @MAKEINFO@
 NEED_LIBCOMPAT_FALSE = @NEED_LIBCOMPAT_FALSE@
 NEED_LIBCOMPAT_TRUE = @NEED_LIBCOMPAT_TRUE@
 NETCPU_SOURCE = @NETCPU_SOURCE@
+NETDRVLKUP_SOURCE = @NETDRVLKUP_SOURCE@
 NETRTLKUP_SOURCE = @NETRTLKUP_SOURCE@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
@@ -138,13 +139,14 @@ AM_CFLAGS = $(NETPERF_CFLAGS)
 
 USE_CPU_SOURCE = netcpu_@NETCPU_SOURCE@.c
 USE_RT_SOURCE = netrt_@NETRTLKUP_SOURCE@.c
+USE_DRV_SOURCE = netdrv_@NETDRVLKUP_SOURCE@.c
 
-EXTRA_DIST = netcpu_none.c netcpu_looper.c netcpu_pstat.c netcpu_pstatnew.c netcpu_perfstat.c netcpu_procstat.c netcpu_kstat.c netcpu_kstat10.c netcpu_sysctl.c netcpu_ntperf.c netcpu_osx.c dirs NetPerfDir/* NetServerDir/* netperf_version.h.in netrt_rtnetlink.c
+EXTRA_DIST = netcpu_none.c netcpu_looper.c netcpu_pstat.c netcpu_pstatnew.c netcpu_perfstat.c netcpu_procstat.c netcpu_kstat.c netcpu_kstat10.c netcpu_sysctl.c netcpu_ntperf.c netcpu_osx.c dirs NetPerfDir/* NetServerDir/* netperf_version.h.in netrt_rtnetlink.c netrt_none.c netrt_rtmget.c netdrv_ethtool.c netdrv_none.c
 
 COMMON_SRC = hist.h netlib.c netlib.h netcpu.h netsh.c netsh.h nettest_bsd.c nettest_bsd.h nettest_dlpi.c nettest_dlpi.h nettest_unix.c nettest_unix.h nettest_xti.c nettest_xti.h nettest_sctp.c nettest_sctp.h netperf_version.h nettest_sdp.c nettest_sdp.h nettest_omni.c
 
-netperf_SOURCES = netperf.c $(COMMON_SRC) $(USE_CPU_SOURCE) $(USE_RT_SOURCE)
-netserver_SOURCES = netserver.c $(COMMON_SRC) $(USE_CPU_SOURCE) $(USE_RT_SOURCE)
+netperf_SOURCES = netperf.c $(COMMON_SRC) $(USE_CPU_SOURCE) $(USE_RT_SOURCE) $(USE_DRV_SOURCE)
+netserver_SOURCES = netserver.c $(COMMON_SRC) $(USE_CPU_SOURCE) $(USE_RT_SOURCE) $(USE_DRV_SOURCE)
 
 # if there are any "missing" routines, the libobjs should cover it
 @NEED_LIBCOMPAT_TRUE@netperf_LDADD = missing/libcompat.a
@@ -163,14 +165,15 @@ am__objects_1 = netlib.$(OBJEXT) netsh.$(OBJEXT) nettest_bsd.$(OBJEXT) \
 	nettest_sdp.$(OBJEXT) nettest_omni.$(OBJEXT)
 am__objects_2 = netcpu_@NETCPU_SOURCE@.$(OBJEXT)
 am__objects_3 = netrt_@NETRTLKUP_SOURCE@.$(OBJEXT)
+am__objects_4 = netdrv_@NETDRVLKUP_SOURCE@.$(OBJEXT)
 am_netperf_OBJECTS = netperf.$(OBJEXT) $(am__objects_1) $(am__objects_2) \
-	$(am__objects_3)
+	$(am__objects_3) $(am__objects_4)
 netperf_OBJECTS = $(am_netperf_OBJECTS)
 @NEED_LIBCOMPAT_TRUE@netperf_DEPENDENCIES = missing/libcompat.a
 @NEED_LIBCOMPAT_FALSE@netperf_DEPENDENCIES =
 netperf_LDFLAGS =
 am_netserver_OBJECTS = netserver.$(OBJEXT) $(am__objects_1) \
-	$(am__objects_2) $(am__objects_3)
+	$(am__objects_2) $(am__objects_3) $(am__objects_4)
 netserver_OBJECTS = $(am_netserver_OBJECTS)
 @NEED_LIBCOMPAT_TRUE@netserver_DEPENDENCIES = missing/libcompat.a
 @NEED_LIBCOMPAT_FALSE@netserver_DEPENDENCIES =
@@ -180,6 +183,7 @@ DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/netcpu_@NETCPU_SOURCE@.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/netdrv_@NETDRVLKUP_SOURCE@.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/netlib.Po ./$(DEPDIR)/netperf.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/netrt_@NETRTLKUP_SOURCE@.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/netserver.Po ./$(DEPDIR)/netsh.Po \
@@ -254,6 +258,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/netcpu_@NETCPU_SOURCE@.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/netdrv_@NETDRVLKUP_SOURCE@.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/netlib.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/netperf.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/netrt_@NETRTLKUP_SOURCE@.Po@am__quote@

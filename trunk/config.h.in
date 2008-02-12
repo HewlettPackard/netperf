@@ -268,6 +268,9 @@
 /* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
 #undef TIME_WITH_SYS_TIME
 
+/* Use Linux's ethtool interface to determine driver information. */
+#undef USE_ETHTOOL
+
 /* Use Solaris's kstat interface to measure CPU util. */
 #undef USE_KSTAT
 

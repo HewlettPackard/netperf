@@ -297,6 +297,14 @@ double      rtt_latency = -1.0;
 int32_t     transport_mss = -1;
 char        *local_interface_name=NULL;
 char        *remote_interface_name=NULL;
+char        local_driver_name[32]="";
+char        local_driver_version[32]="";
+char        local_driver_firmware[32]="";
+char        local_driver_bus[32]="";
+char        remote_driver_name[32]="";
+char        remote_driver_version[32]="";
+char        remote_driver_firmware[32]="";
+char        remote_driver_bus[32]="";
 
 int printing_initialized = 0;
 
@@ -448,6 +456,14 @@ enum netperf_output_name {
   REMOTE_MACHINE,
   LOCAL_INTERFACE_NAME,
   REMOTE_INTERFACE_NAME,
+  LOCAL_DRIVER_NAME,
+  LOCAL_DRIVER_VERSION,
+  LOCAL_DRIVER_FIRMWARE,
+  LOCAL_DRIVER_BUS,
+  REMOTE_DRIVER_NAME,
+  REMOTE_DRIVER_VERSION,
+  REMOTE_DRIVER_FIRMWARE,
+  REMOTE_DRIVER_BUS,
   OUTPUT_END,
   NETPERF_OUTPUT_MAX
 };
@@ -789,6 +805,22 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "LOCAL_INTERFACE_NAME";
   case REMOTE_INTERFACE_NAME:
     return "REMOTE_INTERFACE_NAME";
+  case REMOTE_DRIVER_NAME:
+    return "REMOTE_DRIVER_NAME";
+  case REMOTE_DRIVER_VERSION:
+    return "REMOTE_DRIVER_VERSION";
+  case REMOTE_DRIVER_FIRMWARE:
+    return "REMOTE_DRIVER_FIRMWARE";
+  case REMOTE_DRIVER_BUS:
+    return "REMOTE_DRIVER_BUS";
+  case LOCAL_DRIVER_NAME:
+    return "LOCAL_DRIVER_NAME";
+  case LOCAL_DRIVER_VERSION:
+    return "LOCAL_DRIVER_VERSION";
+  case LOCAL_DRIVER_FIRMWARE:
+    return "LOCAL_DRIVER_FIRMWARE";
+  case LOCAL_DRIVER_BUS:
+    return "LOCAL_DRIVER_BUS";
   case REMOTE_SYSNAME:
     return "REMOTE_SYSNAME";
   case REMOTE_MACHINE:
@@ -1152,6 +1184,14 @@ set_output_csv_list_default() {
   output_csv_list[i++] = REMOTE_MACHINE;
   output_csv_list[i++] = LOCAL_INTERFACE_NAME;
   output_csv_list[i++] = REMOTE_INTERFACE_NAME;
+  output_csv_list[i++] = LOCAL_DRIVER_NAME;
+  output_csv_list[i++] = LOCAL_DRIVER_VERSION;
+  output_csv_list[i++] = LOCAL_DRIVER_FIRMWARE;
+  output_csv_list[i++] = LOCAL_DRIVER_BUS;
+  output_csv_list[i++] = REMOTE_DRIVER_NAME;
+  output_csv_list[i++] = REMOTE_DRIVER_VERSION;
+  output_csv_list[i++] = REMOTE_DRIVER_FIRMWARE;
+  output_csv_list[i++] = REMOTE_DRIVER_BUS;
   output_csv_list[i++] = RESULT_BRAND;
   output_csv_list[i++] = COMMAND_LINE;
 
@@ -2324,10 +2364,106 @@ print_omni_init() {
   netperf_output_source[REMOTE_CORK].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_CORK);
 
+  netperf_output_source[LOCAL_DRIVER_NAME].output_name = LOCAL_DRIVER_NAME;
+  netperf_output_source[LOCAL_DRIVER_NAME].line[0] = "Local";
+  netperf_output_source[LOCAL_DRIVER_NAME].line[1] = "Driver";
+  netperf_output_source[LOCAL_DRIVER_NAME].line[2] = "Name";
+  netperf_output_source[LOCAL_DRIVER_NAME].line[3] = "";
+  netperf_output_source[LOCAL_DRIVER_NAME].format = "%s";
+  netperf_output_source[LOCAL_DRIVER_NAME].display_value = local_driver_name;
+  netperf_output_source[LOCAL_DRIVER_NAME].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_DRIVER_NAME);
+  netperf_output_source[LOCAL_DRIVER_NAME].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_DRIVER_NAME);
+
+  netperf_output_source[LOCAL_DRIVER_VERSION].output_name = LOCAL_DRIVER_VERSION;
+  netperf_output_source[LOCAL_DRIVER_VERSION].line[0] = "Local";
+  netperf_output_source[LOCAL_DRIVER_VERSION].line[1] = "Driver";
+  netperf_output_source[LOCAL_DRIVER_VERSION].line[2] = "Version";
+  netperf_output_source[LOCAL_DRIVER_VERSION].line[3] = "";
+  netperf_output_source[LOCAL_DRIVER_VERSION].format = "%s";
+  netperf_output_source[LOCAL_DRIVER_VERSION].display_value = local_driver_version;
+  netperf_output_source[LOCAL_DRIVER_VERSION].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_DRIVER_VERSION);
+  netperf_output_source[LOCAL_DRIVER_VERSION].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_DRIVER_VERSION);
+
+  netperf_output_source[LOCAL_DRIVER_FIRMWARE].output_name = LOCAL_DRIVER_FIRMWARE;
+  netperf_output_source[LOCAL_DRIVER_FIRMWARE].line[0] = "Local";
+  netperf_output_source[LOCAL_DRIVER_FIRMWARE].line[1] = "Driver";
+  netperf_output_source[LOCAL_DRIVER_FIRMWARE].line[2] = "Firmware";
+  netperf_output_source[LOCAL_DRIVER_FIRMWARE].line[3] = "";
+  netperf_output_source[LOCAL_DRIVER_FIRMWARE].format = "%s";
+  netperf_output_source[LOCAL_DRIVER_FIRMWARE].display_value = local_driver_firmware;
+  netperf_output_source[LOCAL_DRIVER_FIRMWARE].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_DRIVER_FIRMWARE);
+  netperf_output_source[LOCAL_DRIVER_FIRMWARE].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_DRIVER_FIRMWARE);
+
+  netperf_output_source[LOCAL_DRIVER_BUS].output_name = LOCAL_DRIVER_BUS;
+  netperf_output_source[LOCAL_DRIVER_BUS].line[0] = "Local";
+  netperf_output_source[LOCAL_DRIVER_BUS].line[1] = "Driver";
+  netperf_output_source[LOCAL_DRIVER_BUS].line[2] = "Bus";
+  netperf_output_source[LOCAL_DRIVER_BUS].line[3] = "";
+  netperf_output_source[LOCAL_DRIVER_BUS].format = "%s";
+  netperf_output_source[LOCAL_DRIVER_BUS].display_value = local_driver_bus;
+  netperf_output_source[LOCAL_DRIVER_BUS].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_DRIVER_BUS);
+  netperf_output_source[LOCAL_DRIVER_BUS].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_DRIVER_BUS);
+
+  netperf_output_source[REMOTE_DRIVER_NAME].output_name = REMOTE_DRIVER_NAME;
+  netperf_output_source[REMOTE_DRIVER_NAME].line[0] = "Remote";
+  netperf_output_source[REMOTE_DRIVER_NAME].line[1] = "Driver";
+  netperf_output_source[REMOTE_DRIVER_NAME].line[2] = "Name";
+  netperf_output_source[REMOTE_DRIVER_NAME].line[3] = "";
+  netperf_output_source[REMOTE_DRIVER_NAME].format = "%s";
+  netperf_output_source[REMOTE_DRIVER_NAME].display_value = remote_driver_name;
+  netperf_output_source[REMOTE_DRIVER_NAME].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_DRIVER_NAME);
+  netperf_output_source[REMOTE_DRIVER_NAME].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_DRIVER_NAME);
+
+  netperf_output_source[REMOTE_DRIVER_VERSION].output_name = REMOTE_DRIVER_VERSION;
+  netperf_output_source[REMOTE_DRIVER_VERSION].line[0] = "Remote";
+  netperf_output_source[REMOTE_DRIVER_VERSION].line[1] = "Driver";
+  netperf_output_source[REMOTE_DRIVER_VERSION].line[2] = "Version";
+  netperf_output_source[REMOTE_DRIVER_VERSION].line[3] = "";
+  netperf_output_source[REMOTE_DRIVER_VERSION].format = "%s";
+  netperf_output_source[REMOTE_DRIVER_VERSION].display_value = remote_driver_version;
+  netperf_output_source[REMOTE_DRIVER_VERSION].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_DRIVER_VERSION);
+  netperf_output_source[REMOTE_DRIVER_VERSION].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_DRIVER_VERSION);
+
+  netperf_output_source[REMOTE_DRIVER_FIRMWARE].output_name = REMOTE_DRIVER_FIRMWARE;
+  netperf_output_source[REMOTE_DRIVER_FIRMWARE].line[0] = "Remote";
+  netperf_output_source[REMOTE_DRIVER_FIRMWARE].line[1] = "Driver";
+  netperf_output_source[REMOTE_DRIVER_FIRMWARE].line[2] = "Firmware";
+  netperf_output_source[REMOTE_DRIVER_FIRMWARE].line[3] = "";
+  netperf_output_source[REMOTE_DRIVER_FIRMWARE].format = "%s";
+  netperf_output_source[REMOTE_DRIVER_FIRMWARE].display_value = remote_driver_firmware;
+  netperf_output_source[REMOTE_DRIVER_FIRMWARE].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_DRIVER_FIRMWARE);
+  netperf_output_source[REMOTE_DRIVER_FIRMWARE].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_DRIVER_FIRMWARE);
+
+  netperf_output_source[REMOTE_DRIVER_BUS].output_name = REMOTE_DRIVER_BUS;
+  netperf_output_source[REMOTE_DRIVER_BUS].line[0] = "Remote";
+  netperf_output_source[REMOTE_DRIVER_BUS].line[1] = "Driver";
+  netperf_output_source[REMOTE_DRIVER_BUS].line[2] = "Bus";
+  netperf_output_source[REMOTE_DRIVER_BUS].line[3] = "";
+  netperf_output_source[REMOTE_DRIVER_BUS].format = "%s";
+  netperf_output_source[REMOTE_DRIVER_BUS].display_value = remote_driver_bus;
+  netperf_output_source[REMOTE_DRIVER_BUS].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_DRIVER_BUS);
+  netperf_output_source[REMOTE_DRIVER_BUS].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_DRIVER_BUS);
+
   netperf_output_source[LOCAL_INTERFACE_NAME].output_name = LOCAL_INTERFACE_NAME;
   netperf_output_source[LOCAL_INTERFACE_NAME].line[0] = "Local";
   netperf_output_source[LOCAL_INTERFACE_NAME].line[1] = "Interface";
-  netperf_output_source[LOCAL_INTERFACE_NAME].line[2] = "NAME";
+  netperf_output_source[LOCAL_INTERFACE_NAME].line[2] = "Name";
   netperf_output_source[LOCAL_INTERFACE_NAME].line[3] = "";
   netperf_output_source[LOCAL_INTERFACE_NAME].format = "%s";
   netperf_output_source[LOCAL_INTERFACE_NAME].display_value = local_interface_name;
@@ -2339,7 +2475,7 @@ print_omni_init() {
   netperf_output_source[REMOTE_INTERFACE_NAME].output_name = REMOTE_INTERFACE_NAME;
   netperf_output_source[REMOTE_INTERFACE_NAME].line[0] = "Remote";
   netperf_output_source[REMOTE_INTERFACE_NAME].line[1] = "Interface";
-  netperf_output_source[REMOTE_INTERFACE_NAME].line[2] = "NAME";
+  netperf_output_source[REMOTE_INTERFACE_NAME].line[2] = "Name";
   netperf_output_source[REMOTE_INTERFACE_NAME].line[3] = "";
   netperf_output_source[REMOTE_INTERFACE_NAME].format = "%s";
   netperf_output_source[REMOTE_INTERFACE_NAME].display_value = remote_interface_name;
@@ -3890,14 +4026,15 @@ send_omni(char remote_host[])
       lss_size_end = lss_size;
     }
 
-    local_interface_name = 
-      find_egress_interface(local_res->ai_addr,remote_res->ai_addr);
-
-  
     /* this call will always give us the elapsed time for the test, and
        will also store-away the necessaries for cpu utilization */
 
     cpu_stop(local_cpu_usage,&elapsed_time);
+
+    local_interface_name = 
+      find_egress_interface(local_res->ai_addr,remote_res->ai_addr);
+
+    find_driver_info(local_interface_name,local_driver_name,local_driver_version,local_driver_firmware,local_driver_bus,32);
 
     /* if we timed-out, and had padded the timer, we need to subtract
        the pad_time from the elapsed time on the assumption that we
@@ -3955,6 +4092,14 @@ send_omni(char remote_host[])
 	  remote_bytes_per_send = 0.0;
 	omni_result->ifname[15] = 0; /* belt and suspenders */
 	remote_interface_name = strdup(omni_result->ifname);
+	strncpy(remote_driver_name,omni_result->driver,32);
+	strncpy(remote_driver_version,omni_result->version,32);
+	strncpy(remote_driver_firmware,omni_result->firmware,32);
+	strncpy(remote_driver_bus,omni_result->bus,32);
+	remote_driver_name[31] = 0;
+	remote_driver_version[31] = 0;
+	remote_driver_firmware[31] = 0;
+	remote_driver_bus[31] = 0;
       }
       else {
 	Set_errno(netperf_response.content.serv_errno);
@@ -4761,6 +4906,12 @@ recv_omni()
     find_egress_interface(local_res->ai_addr,(struct sockaddr *)&peeraddr_in);
   strncpy(omni_results->ifname,local_interface_name,16);
   omni_results->ifname[15] = 0;
+  find_driver_info(local_interface_name,
+		   omni_results->driver,
+		   omni_results->version,
+		   omni_results->firmware,
+		   omni_results->bus,
+		   32);
   if (debug) {
     fprintf(where,
 	    "recv_omni: test complete, sending results.\n");
