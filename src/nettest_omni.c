@@ -4,7 +4,7 @@
 
 #ifdef WANT_OMNI
 char nettest_omni_id[]="\
-@(#)nettest_dlpi.c (c) Copyright 2008 Hewlett-Packard Co. Version 2.5.0pre";
+@(#)nettest_omni.c (c) Copyright 2008 Hewlett-Packard Co. Version 2.5.0pre";
 
 #include <stdio.h>
 #if HAVE_SYS_TYPES_H
@@ -294,7 +294,9 @@ double      remote_cpu_utilization_double;
 double      remote_service_demand_double;
 double      transaction_rate = 1.0;
 double      rtt_latency = -1.0;
-int32_t    transport_mss = -1;
+int32_t     transport_mss = -1;
+char        *local_interface_name=NULL;
+char        *remote_interface_name=NULL;
 
 int printing_initialized = 0;
 
@@ -444,6 +446,8 @@ enum netperf_output_name {
   REMOTE_RELEASE,
   REMOTE_VERSION,
   REMOTE_MACHINE,
+  LOCAL_INTERFACE_NAME,
+  REMOTE_INTERFACE_NAME,
   OUTPUT_END,
   NETPERF_OUTPUT_MAX
 };
@@ -781,6 +785,10 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "REMOTE_NODELAY";
   case   REMOTE_CORK:
     return "REMOTE_CORK";
+  case LOCAL_INTERFACE_NAME:
+    return "LOCAL_INTERFACE_NAME";
+  case REMOTE_INTERFACE_NAME:
+    return "REMOTE_INTERFACE_NAME";
   case REMOTE_SYSNAME:
     return "REMOTE_SYSNAME";
   case REMOTE_MACHINE:
@@ -1142,6 +1150,8 @@ set_output_csv_list_default() {
   output_csv_list[i++] = REMOTE_RELEASE;
   output_csv_list[i++] = REMOTE_VERSION;
   output_csv_list[i++] = REMOTE_MACHINE;
+  output_csv_list[i++] = LOCAL_INTERFACE_NAME;
+  output_csv_list[i++] = REMOTE_INTERFACE_NAME;
   output_csv_list[i++] = RESULT_BRAND;
   output_csv_list[i++] = COMMAND_LINE;
 
@@ -2313,6 +2323,30 @@ print_omni_init() {
     NETPERF_LINE_MAX(REMOTE_CORK);
   netperf_output_source[REMOTE_CORK].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_CORK);
+
+  netperf_output_source[LOCAL_INTERFACE_NAME].output_name = LOCAL_INTERFACE_NAME;
+  netperf_output_source[LOCAL_INTERFACE_NAME].line[0] = "Local";
+  netperf_output_source[LOCAL_INTERFACE_NAME].line[1] = "Interface";
+  netperf_output_source[LOCAL_INTERFACE_NAME].line[2] = "NAME";
+  netperf_output_source[LOCAL_INTERFACE_NAME].line[3] = "";
+  netperf_output_source[LOCAL_INTERFACE_NAME].format = "%s";
+  netperf_output_source[LOCAL_INTERFACE_NAME].display_value = local_interface_name;
+  netperf_output_source[LOCAL_INTERFACE_NAME].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_INTERFACE_NAME);
+  netperf_output_source[LOCAL_INTERFACE_NAME].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_INTERFACE_NAME);
+
+  netperf_output_source[REMOTE_INTERFACE_NAME].output_name = REMOTE_INTERFACE_NAME;
+  netperf_output_source[REMOTE_INTERFACE_NAME].line[0] = "Remote";
+  netperf_output_source[REMOTE_INTERFACE_NAME].line[1] = "Interface";
+  netperf_output_source[REMOTE_INTERFACE_NAME].line[2] = "NAME";
+  netperf_output_source[REMOTE_INTERFACE_NAME].line[3] = "";
+  netperf_output_source[REMOTE_INTERFACE_NAME].format = "%s";
+  netperf_output_source[REMOTE_INTERFACE_NAME].display_value = remote_interface_name;
+  netperf_output_source[REMOTE_INTERFACE_NAME].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_INTERFACE_NAME);
+  netperf_output_source[REMOTE_INTERFACE_NAME].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_INTERFACE_NAME);
 
   netperf_output_source[REMOTE_MACHINE].output_name = REMOTE_MACHINE;
   netperf_output_source[REMOTE_MACHINE].line[0] = "Remote";
@@ -3855,6 +3889,10 @@ send_omni(char remote_host[])
       lsr_size_end = lsr_size;
       lss_size_end = lss_size;
     }
+
+    local_interface_name = 
+      find_egress_interface(local_res->ai_addr,remote_res->ai_addr);
+
   
     /* this call will always give us the elapsed time for the test, and
        will also store-away the necessaries for cpu utilization */
@@ -3883,7 +3921,7 @@ send_omni(char remote_host[])
 	 calculated service demand and all those interesting things. If
 	 it wasn't supposed to care, it will return obvious values. */
   
-      recv_response();
+      recv_response_n(17);
       if (!netperf_response.content.serv_errno) {
 	if (debug)
 	  fprintf(where,"remote results obtained\n");
@@ -3915,6 +3953,8 @@ send_omni(char remote_host[])
 	    (double) omni_result->send_calls;
 	else
 	  remote_bytes_per_send = 0.0;
+	omni_result->ifname[15] = 0; /* belt and suspenders */
+	remote_interface_name = strdup(omni_result->ifname);
       }
       else {
 	Set_errno(netperf_response.content.serv_errno);
@@ -4391,7 +4431,8 @@ recv_omni()
   local_receive_calls = 0;
 
   addrlen = sizeof(peeraddr_in);
-  
+  memset(&peeraddr_in,0,sizeof(peeraddr_in));
+
   /* Now it's time to start receiving data on the connection. We will */
   /* first grab the apropriate counters and then start grabbing. */
   
@@ -4716,14 +4757,17 @@ recv_omni()
   }
   omni_results->peak_cpu_util   = (float)lib_local_peak_cpu_util;
   omni_results->peak_cpu_id     = lib_local_peak_cpu_id;
-  
+  local_interface_name = 
+    find_egress_interface(local_res->ai_addr,(struct sockaddr *)&peeraddr_in);
+  strncpy(omni_results->ifname,local_interface_name,16);
+  omni_results->ifname[15] = 0;
   if (debug) {
     fprintf(where,
 	    "recv_omni: test complete, sending results.\n");
     fflush(where);
   }
   
-  send_response();
+  send_response_n(17);
 
   /* when we implement this, it will look a little strange, but we do
      it to avoid certain overheads when running aggregates and using
