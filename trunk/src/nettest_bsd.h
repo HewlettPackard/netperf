@@ -110,6 +110,7 @@ struct omni_results_struct {
 
   int32_t    peak_cpu_id;   /* ID of the most utilized CPU */
   float      peak_cpu_util; /* its individual utilization */
+  char       ifname[16];    /* the probable egress interface */
 };
 
 #endif /* WANT_OMNI */

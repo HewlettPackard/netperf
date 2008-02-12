@@ -534,6 +534,7 @@ extern  float   calibrate_local_cpu(float local_cpu_rate);
 extern  float   calibrate_remote_cpu();
 extern  void    bind_to_specific_processor(int processor_affinity,int use_cpu_map);
 extern int      set_nonblock (SOCKET sock);
+extern char     *find_egress_interface(struct sockaddr *source, struct sockaddr *dest);
 
 #ifndef WIN32
 

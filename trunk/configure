@@ -705,6 +705,7 @@ LIBOBJS
 NEED_LIBCOMPAT_TRUE
 NEED_LIBCOMPAT_FALSE
 NETCPU_SOURCE
+NETRTLKUP_SOURCE
 LTLIBOBJS'
 ac_subst_files=''
       ac_precious_vars='build_alias
@@ -1319,6 +1320,8 @@ Optional Features:
                           may affect result
   --enable-cpuutil        include code to measure CPU utilization using
                           specified mechanism
+  --enable-rtlookup       include code to find the probable egress interface
+                          using specified mechanism
 
 Some influential environment variables:
   CC          C compiler command
@@ -9472,12 +9475,109 @@ _ACEOF
 	*)
 		{ { echo "$as_me:$LINENO: error: --enable-cpuutil takes kstat" >&5
 echo "$as_me: error: --enable-cpuutil takes kstat" >&2;}
-   { (exit pstat); exit pstat; }; }
+   { (exit kstat10); exit kstat10; }; }
 		;;
 esac
 
 	{ echo "$as_me:$LINENO: result: \"$enable_cpuutil\"" >&5
 echo "${ECHO_T}\"$enable_cpuutil\"" >&6; }
+
+
+
+# time to see about route lookup utilization measurements
+
+{ echo "$as_me:$LINENO: checking which route lookup type to use" >&5
+echo $ECHO_N "checking which route lookup type to use... $ECHO_C" >&6; }
+
+# Check whether --enable-rtlookup was given.
+if test "${enable_rtlookup+set}" = set; then
+  enableval=$enable_rtlookup;
+fi
+
+
+NETRTLKUP_SOURCE="$enable_rtlookup"
+case "$enable_rtlookup" in
+	rtmget)
+		use_rtlookup=true
+
+cat >>confdefs.h <<\_ACEOF
+#define USE_RTMGET
+_ACEOF
+
+		;;
+
+	rtnetlink)
+		use_rtlookup=true
+
+cat >>confdefs.h <<\_ACEOF
+#define USE_RTNETLINK
+_ACEOF
+
+		;;
+	'')
+# ia64-hp-hpux11.23
+# i386-pc-solaris2.10
+# guess it automagically in a nice big case statement
+		case $target in
+		     *-*-linux*)
+			use_rtlookup=true
+
+cat >>confdefs.h <<\_ACEOF
+#define USE_RTNETLINK
+_ACEOF
+
+			enable_rtlookup="rtnetlink - auto"
+			NETRTLKUP_SOURCE="rtnetlink"
+			;;
+		     *-*-hpux11.31)
+			use_rtlookup=true
+
+cat >>confdefs.h <<\_ACEOF
+#define USE_RTMGET
+_ACEOF
+
+			enable_rtlookup="rtmget - auto"
+			NETRTLKUP_SOURCE="rtmget"
+			;;
+                     *-*-freebsd4.* | *-*-freebsd5.* | *-*-freebsd6.* | *-*-freebsd7.* )
+			use_rtlookup=true
+
+cat >>confdefs.h <<\_ACEOF
+#define USE_RTMGET
+_ACEOF
+
+			enable_rtlookup="rtmget - auto"
+			NETRTLKUP_SOURCE="rtmget"
+			;;
+		    *-*-darwin*)
+			use_rtlookup=true
+
+cat >>confdefs.h <<\_ACEOF
+#define USE_RTMGET
+_ACEOF
+
+			enable_rtlookup="rtmget - auto"
+			NETRTLKUP_SOURCE="rtmget"
+			;;
+		     *)
+			use_rtlookup=false
+			NETRTLKUP_SOURCE="none"
+			enable_rtlookup="none. Consider teaching configure about your platform."
+			;;
+		esac
+		;;
+	none)
+		use_rtlookup=false
+		;;
+	*)
+		{ { echo "$as_me:$LINENO: error: --enable-rtlookup takes rtmget" >&5
+echo "$as_me: error: --enable-rtlookup takes rtmget" >&2;}
+   { (exit rtnetlink or none]); exit rtnetlink or none]; }; }
+		;;
+esac
+
+	{ echo "$as_me:$LINENO: result: \"$enable_rtlookup\"" >&5
+echo "${ECHO_T}\"$enable_rtlookup\"" >&6; }
 
 
 
@@ -10231,10 +10331,11 @@ LIBOBJS!$LIBOBJS$ac_delim
 NEED_LIBCOMPAT_TRUE!$NEED_LIBCOMPAT_TRUE$ac_delim
 NEED_LIBCOMPAT_FALSE!$NEED_LIBCOMPAT_FALSE$ac_delim
 NETCPU_SOURCE!$NETCPU_SOURCE$ac_delim
+NETRTLKUP_SOURCE!$NETRTLKUP_SOURCE$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 92; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 93; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

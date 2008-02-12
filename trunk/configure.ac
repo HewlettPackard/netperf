@@ -713,13 +713,79 @@ case "$enable_cpuutil" in
 		use_cpuutil=false
 		;;
 	*)
-		AC_MSG_ERROR(--enable-cpuutil takes kstat, pstat, looper, procstat or none])
+		AC_MSG_ERROR(--enable-cpuutil takes kstat, kstat10, looper, osx, perfstat, procstat, pstat, pstatnew, sysctl or none])
 		;;
 esac
 
 	AC_MSG_RESULT("$enable_cpuutil")
 
 AC_SUBST(NETCPU_SOURCE)
+
+# time to see about route lookup utilization measurements
+
+AC_MSG_CHECKING([which route lookup type to use])
+
+AC_ARG_ENABLE(rtlookup,
+	[AS_HELP_STRING([--enable-rtlookup],[include code to find the probable egress interface using specified mechanism])])
+
+NETRTLKUP_SOURCE="$enable_rtlookup"
+case "$enable_rtlookup" in
+	rtmget)
+		use_rtlookup=true
+		AC_DEFINE([USE_RTMGET],,[Use RTM_GET on a routing socket to get egress interface.])
+		;;
+
+	rtnetlink)
+		use_rtlookup=true
+		AC_DEFINE([USE_RTNETLINK],,[Use Linux's rtnetlink interface to dettermine egress interface.])
+		;;
+	'')
+# ia64-hp-hpux11.23
+# i386-pc-solaris2.10
+# guess it automagically in a nice big case statement
+		case $target in
+		     *-*-linux*)
+			use_rtlookup=true
+			AC_DEFINE([USE_RTNETLINK],,[Use Linux's rtnetlink interface to determine egress interface.])
+			enable_rtlookup="rtnetlink - auto"
+			NETRTLKUP_SOURCE="rtnetlink"
+			;;
+		     *-*-hpux11.31)
+			use_rtlookup=true
+			AC_DEFINE([USE_RTMGET],,[Use routing sockets to determine egress interface.])
+			enable_rtlookup="rtmget - auto"
+			NETRTLKUP_SOURCE="rtmget"
+			;;
+                     *-*-freebsd4.* | *-*-freebsd5.* | *-*-freebsd6.* | *-*-freebsd7.* )
+			use_rtlookup=true
+			AC_DEFINE([USE_RTMGET],,[Use routing socket interface to determine egress interface.])
+			enable_rtlookup="rtmget - auto"
+			NETRTLKUP_SOURCE="rtmget"
+			;;
+		    *-*-darwin*)
+			use_rtlookup=true
+			AC_DEFINE([USE_RTMGET],,[Use routing socket interface to determine egress interface.])
+			enable_rtlookup="rtmget - auto"
+			NETRTLKUP_SOURCE="rtmget"
+			;;
+		     *)
+			use_rtlookup=false
+			NETRTLKUP_SOURCE="none"
+			enable_rtlookup="none. Consider teaching configure about your platform."
+			;;
+		esac
+		;;
+	none)
+		use_rtlookup=false
+		;;
+	*)
+		AC_MSG_ERROR(--enable-rtlookup takes rtmget, rtnetlink or none])
+		;;
+esac
+
+	AC_MSG_RESULT("$enable_rtlookup")
+
+AC_SUBST(NETRTLKUP_SOURCE)
 
 # now spit it all out
 AC_CONFIG_FILES([Makefile
