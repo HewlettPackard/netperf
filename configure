@@ -706,6 +706,7 @@ NEED_LIBCOMPAT_TRUE
 NEED_LIBCOMPAT_FALSE
 NETCPU_SOURCE
 NETRTLKUP_SOURCE
+NETDRVLKUP_SOURCE
 LTLIBOBJS'
 ac_subst_files=''
       ac_precious_vars='build_alias
@@ -1321,6 +1322,8 @@ Optional Features:
   --enable-cpuutil        include code to measure CPU utilization using
                           specified mechanism
   --enable-rtlookup       include code to find the probable egress interface
+                          using specified mechanism
+  --enable-drvlookup      include code to find the probable egress interface
                           using specified mechanism
 
 Some influential environment variables:
@@ -9473,9 +9476,9 @@ _ACEOF
 		use_cpuutil=false
 		;;
 	*)
-		{ { echo "$as_me:$LINENO: error: --enable-cpuutil takes kstat" >&5
-echo "$as_me: error: --enable-cpuutil takes kstat" >&2;}
-   { (exit kstat10); exit kstat10; }; }
+		{ { echo "$as_me:$LINENO: error: --enable-cpuutil takes kstat, kstat10, looper, osx, perfstat, procstat, pstat, pstatnew, sysctl or none" >&5
+echo "$as_me: error: --enable-cpuutil takes kstat, kstat10, looper, osx, perfstat, procstat, pstat, pstatnew, sysctl or none" >&2;}
+   { (exit 1); exit 1; }; }
 		;;
 esac
 
@@ -9484,7 +9487,7 @@ echo "${ECHO_T}\"$enable_cpuutil\"" >&6; }
 
 
 
-# time to see about route lookup utilization measurements
+# time to see about route lookup mechanisms
 
 { echo "$as_me:$LINENO: checking which route lookup type to use" >&5
 echo $ECHO_N "checking which route lookup type to use... $ECHO_C" >&6; }
@@ -9515,8 +9518,6 @@ _ACEOF
 
 		;;
 	'')
-# ia64-hp-hpux11.23
-# i386-pc-solaris2.10
 # guess it automagically in a nice big case statement
 		case $target in
 		     *-*-linux*)
@@ -9570,14 +9571,71 @@ _ACEOF
 		use_rtlookup=false
 		;;
 	*)
-		{ { echo "$as_me:$LINENO: error: --enable-rtlookup takes rtmget" >&5
-echo "$as_me: error: --enable-rtlookup takes rtmget" >&2;}
-   { (exit rtnetlink or none]); exit rtnetlink or none]; }; }
+		{ { echo "$as_me:$LINENO: error: --enable-rtlookup takes rtmget, rtnetlink or none" >&5
+echo "$as_me: error: --enable-rtlookup takes rtmget, rtnetlink or none" >&2;}
+   { (exit 1); exit 1; }; }
 		;;
 esac
 
 	{ echo "$as_me:$LINENO: result: \"$enable_rtlookup\"" >&5
 echo "${ECHO_T}\"$enable_rtlookup\"" >&6; }
+
+
+
+# time to see about route lookup mechanisms
+
+{ echo "$as_me:$LINENO: checking which driver info lookup type to use" >&5
+echo $ECHO_N "checking which driver info lookup type to use... $ECHO_C" >&6; }
+
+# Check whether --enable-drvlookup was given.
+if test "${enable_drvlookup+set}" = set; then
+  enableval=$enable_drvlookup;
+fi
+
+
+NETDRVLKUP_SOURCE="$enable_drvlookup"
+case "$enable_drvlookup" in
+	ethtool)
+		use_drvlookup=true
+
+cat >>confdefs.h <<\_ACEOF
+#define USE_ETHTOOL
+_ACEOF
+
+		;;
+
+	'')
+# guess it automagically in a nice big case statement
+		case $target in
+		     *-*-linux*)
+			use_drvlookup=true
+
+cat >>confdefs.h <<\_ACEOF
+#define USE_ETHTOOL
+_ACEOF
+
+			enable_drvlookup="ethtool - auto"
+			NETDRVLKUP_SOURCE="ethtool"
+			;;
+		     *)
+			use_drvlookup=false
+			NETDRVLKUP_SOURCE="none"
+			enable_drvlookup="none. Consider teaching configure about your platform."
+			;;
+		esac
+		;;
+	none)
+		use_drvlookup=false
+		;;
+	*)
+		{ { echo "$as_me:$LINENO: error: --enable-drvlookup takes ethtool or none" >&5
+echo "$as_me: error: --enable-drvlookup takes ethtool or none" >&2;}
+   { (exit 1); exit 1; }; }
+		;;
+esac
+
+	{ echo "$as_me:$LINENO: result: \"$enable_drvlookup\"" >&5
+echo "${ECHO_T}\"$enable_drvlookup\"" >&6; }
 
 
 
@@ -10332,10 +10390,11 @@ NEED_LIBCOMPAT_TRUE!$NEED_LIBCOMPAT_TRUE$ac_delim
 NEED_LIBCOMPAT_FALSE!$NEED_LIBCOMPAT_FALSE$ac_delim
 NETCPU_SOURCE!$NETCPU_SOURCE$ac_delim
 NETRTLKUP_SOURCE!$NETRTLKUP_SOURCE$ac_delim
+NETDRVLKUP_SOURCE!$NETDRVLKUP_SOURCE$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 93; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 94; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

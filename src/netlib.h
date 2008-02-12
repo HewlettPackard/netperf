@@ -535,6 +535,7 @@ extern  float   calibrate_remote_cpu();
 extern  void    bind_to_specific_processor(int processor_affinity,int use_cpu_map);
 extern int      set_nonblock (SOCKET sock);
 extern char     *find_egress_interface(struct sockaddr *source, struct sockaddr *dest);
+extern void     find_driver_info(char *ifname, char *driver, char *version, char *firmware, char *bus, int len);
 
 #ifndef WIN32
 
