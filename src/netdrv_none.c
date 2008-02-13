@@ -1,3 +1,5 @@
+#include <string.h>
+
 void
 find_driver_info(char *ifname, char *driver, char *version, char *firmware, char *bus, int len) {
 
