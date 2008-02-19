@@ -104,10 +104,16 @@ extern int
   remote_send_width,
   remote_recv_width;
 
-#if defined(WANT_INTERVALS) || defined(WANT_DEMO)
+/* hoist these above the #if to deal with either netperf or netserver
+   configured for it */
+
 extern	int          interval_usecs;
 extern  int          interval_wate;
 extern	int	     interval_burst;
+extern  int          remote_interval_usecs;
+extern  int          remote_interval_burst;
+
+#if defined(WANT_INTERVALS) || defined(WANT_DEMO)
 
 extern int    demo_mode;
 extern double demo_interval;

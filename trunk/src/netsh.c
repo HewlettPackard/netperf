@@ -178,11 +178,15 @@ int
   remote_send_width = 0,
   remote_recv_width = 0;
 
-#if defined(WANT_INTERVALS) || defined(WANT_DEMO)
+/* hoist above the if for omni */
 int
   interval_usecs,
   interval_wate,
-  interval_burst;
+  interval_burst,
+  remote_interval_usecs,
+  remote_interval_burst;
+
+#if defined(WANT_INTERVALS) || defined(WANT_DEMO)
 
 int demo_mode;                    /* are we actually in demo mode? */
 double demo_interval = 1000000.0; /* what is the desired interval to
@@ -495,13 +499,13 @@ set_defaults()
   remote_recv_align	= 8;	/* alignment for remote receives*/
   remote_send_align	= 8;	/* alignment for remote sends	*/
   
-#ifdef WANT_INTERVALS
-  /* rate controlling stuff */
+  /* rate controlling stuff, taken out of the #ifdef for omni */
   interval_usecs  = 0;
-  interval_wate   = 1;
+  interval_wate   = 0;
   interval_burst  = 0;
-#endif /* WANT_INTERVALS */
-  
+  remote_interval_usecs = 0;
+  remote_interval_burst = 0;
+
 #ifdef DIRTY
   /* dirty and clean cache stuff */
   loc_dirty_count = 0;
@@ -846,27 +850,55 @@ scan_cmd_line(int argc, char *argv[])
 	local_address_family = parse_address_family(arg2);
       break;
     case 'w':
-      /* We want to send requests at a certain wate. */
-      /* Remember that there are 1000000 usecs in a */
-      /* second, and that the packet rate is */
-      /* expressed in packets per millisecond. */
+      /* We want to send requests at a certain wate.  Remember that
+      there are 1000000 usecs in a second, and that the packet rate is
+      expressed in packets per millisecond. shuffle the #ifdef around
+      a bit to deal with both netperf and netserver possibly doing
+      intervals with omni tests */
+      break_args_explicit(optarg,arg1,arg2);
+      if (arg1[0]) {
 #ifdef WANT_INTERVALS
-      interval_usecs = convert_timespec(optarg);
-      interval_wate  = interval_usecs / 1000;
+	interval_usecs = convert_timespec(arg1);
+	interval_wate  = interval_usecs / 1000;
 #else
-      fprintf(where,
-	      "Packet rate control is not compiled in.\n");
+	fprintf(where,
+		"Packet rate control is not compiled in.\n");
 #endif
+      }
+      if (arg2[0]) {
+	/* we pass usecs to the remote and let it deal to cover both
+	   intervals and spin methods. if he wasn't intervals enabled
+	   he will return a suitable value back to us */
+	remote_interval_usecs = convert_timespec(arg2);
+      }
       break;
     case 'b':
       /* we want to have a burst so many packets per */
       /* interval. */
+      break_args_explicit(optarg,arg1,arg2);
+      if (arg1[0]) {
 #ifdef WANT_INTERVALS
-      interval_burst = convert(optarg);
+	interval_burst = convert(arg1);
+	/* set a default in case the user does not include the -w option */
+	if (interval_usecs == 0) {
+	  interval_wate = 1;
+	  interval_usecs = 1000;
+	}
 #else
-      fprintf(where,
-	      "Packet burst size is not compiled in. \n");
+	fprintf(where,
+		"Packet burst size is not compiled in. \n");
 #endif /* WANT_INTERVALS */
+      }
+      /* there is no ifdef here because we are sending this value to
+	 the remote, which may or may not have been compiled for
+	 intervals and we don't have a way of knowing on this side
+	 until we try */
+      if (arg2[0]) {
+	remote_interval_burst = convert(arg2);
+	if (remote_interval_usecs == 0) {
+	  remote_interval_usecs = 1000;
+	}
+      }
       break;
     case 'B':
       result_brand = malloc(strlen(optarg)+1);

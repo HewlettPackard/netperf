@@ -212,6 +212,98 @@ static struct timeval *temp_demo_ptr = &demo_one;
 
 #endif 
 
+#ifdef WANT_INTERVALS
+int interval_count;
+#ifndef WANT_SPIN
+sigset_t signal_set;
+#define INTERVALS_INIT() \
+    if (interval_burst) { \
+      /* zero means that we never pause, so we never should need the \
+         interval timer. we used to use it for demo mode, but we deal \
+	 with that with a variant on watching the clock rather than \
+	 waiting for a timer. raj 2006-02-06 */ \
+      start_itimer(interval_wate); \
+    } \
+    interval_count = interval_burst; \
+    /* get the signal set for the call to sigsuspend */ \
+    if (sigprocmask(SIG_BLOCK, (sigset_t *)NULL, &signal_set) != 0) { \
+      fprintf(where, \
+	      "%s: unable to get sigmask errno %d\n", \
+	      __func__, \
+	      errno); \
+      fflush(where); \
+      exit(1); \
+    }
+
+#define INTERVALS_WAIT() \
+      /* in this case, the interval count is the count-down couter \
+	 to decide to sleep for a little bit */ \
+      if ((interval_burst) && (--interval_count == 0)) { \
+	/* call sigsuspend and wait for the interval timer to get us \
+	   out */ \
+	if (debug > 1) { \
+	  fprintf(where,"about to suspend\n"); \
+	  fflush(where); \
+	} \
+	if (sigsuspend(&signal_set) == EFAULT) { \
+	  fprintf(where, \
+		  "%s: fault with sigsuspend.\n", \
+                  __func__); \
+	  fflush(where); \
+	  exit(1); \
+	} \
+	interval_count = interval_burst; \
+      }
+#else
+/* first out timestamp */
+#ifdef HAVE_GETHRTIME
+static hrtime_t intvl_one;
+static hrtime_t intvl_two;
+static hrtime_t *intvl_one_ptr = &intvl_one;
+static hrtime_t *intvl_two_ptr = &intvl_two;
+static hrtime_t *temp_intvl_ptr = &intvl_one;
+#elif defined(WIN32)
+static LARGE_INTEGER intvl_one;
+static LARGE_INTEGER intvl_two;
+static LARGE_INTEGER *intvl_one_ptr = &intvl_one;
+static LARGE_INTEGER *intvl_two_ptr = &intvl_two;
+static LARGE_INTEGER *temp_intvl_ptr = &intvl_one;
+#else
+static struct timeval intvl_one;
+static struct timeval intvl_two;
+static struct timeval *intvl_one_ptr = &intvl_one;
+static struct timeval *intvl_two_ptr = &intvl_two;
+static struct timeval *temp_intvl_ptr = &intvl_one;
+#endif
+
+#define INTERVALS_INIT() \
+      if (interval_burst) { \
+	HIST_timestamp(intvl_one_ptr); \
+      } \
+      interval_count = interval_burst; \
+
+#define INTERVALS_WAIT() \
+      /* in this case, the interval count is the count-down couter \
+	 to decide to sleep for a little bit */ \
+      if ((interval_burst) && (--interval_count == 0)) { \
+	/* call sigsuspend and wait for the interval timer to get us \
+	   out */ \
+	if (debug > 1) { \
+	  fprintf(where,"about to spin suspend\n"); \
+	  fflush(where); \
+	} \
+        HIST_timestamp(intvl_two_ptr); \
+        while(delta_micro(intvl_one_ptr,intvl_two_ptr) < interval_usecs) { \
+	  HIST_timestamp(intvl_two_ptr); \
+	} \
+	temp_intvl_ptr = intvl_one_ptr; \
+	intvl_one_ptr = intvl_two_ptr; \
+	intvl_two_ptr = temp_intvl_ptr; \
+	interval_count = interval_burst; \
+      }
+#endif
+#endif
+
 #define NETPERF_WAITALL 0x1
 #define NETPERF_XMIT 0x2
 #define NETPERF_RECV 0x4
@@ -464,6 +556,10 @@ enum netperf_output_name {
   REMOTE_DRIVER_VERSION,
   REMOTE_DRIVER_FIRMWARE,
   REMOTE_DRIVER_BUS,
+  LOCAL_INTERVAL_USECS,
+  LOCAL_INTERVAL_BURST,
+  REMOTE_INTERVAL_USECS,
+  REMOTE_INTERVAL_BURST,
   OUTPUT_END,
   NETPERF_OUTPUT_MAX
 };
@@ -819,6 +915,14 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "LOCAL_DRIVER_VERSION";
   case LOCAL_DRIVER_FIRMWARE:
     return "LOCAL_DRIVER_FIRMWARE";
+  case LOCAL_INTERVAL_USECS:
+    return "LOCAL_INTERVAL_USECS";
+  case LOCAL_INTERVAL_BURST:
+    return "LOCAL_INTERVAL_BURST";
+  case REMOTE_INTERVAL_USECS:
+    return "REMOTE_INTERVAL_USECS";
+  case REMOTE_INTERVAL_BURST:
+    return "REMOTE_INTERVAL_BURST";
   case LOCAL_DRIVER_BUS:
     return "LOCAL_DRIVER_BUS";
   case REMOTE_SYSNAME:
@@ -1192,6 +1296,10 @@ set_output_csv_list_default() {
   output_csv_list[i++] = REMOTE_DRIVER_VERSION;
   output_csv_list[i++] = REMOTE_DRIVER_FIRMWARE;
   output_csv_list[i++] = REMOTE_DRIVER_BUS;
+  output_csv_list[i++] = LOCAL_INTERVAL_USECS;
+  output_csv_list[i++] = LOCAL_INTERVAL_BURST;
+  output_csv_list[i++] = REMOTE_INTERVAL_USECS;
+  output_csv_list[i++] = REMOTE_INTERVAL_BURST;
   output_csv_list[i++] = RESULT_BRAND;
   output_csv_list[i++] = COMMAND_LINE;
 
@@ -2580,6 +2688,54 @@ print_omni_init() {
   netperf_output_source[LOCAL_SYSNAME].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_SYSNAME);
 
+  netperf_output_source[REMOTE_INTERVAL_USECS].output_name = REMOTE_INTERVAL_USECS;
+  netperf_output_source[REMOTE_INTERVAL_USECS].line[0] = "Remote";
+  netperf_output_source[REMOTE_INTERVAL_USECS].line[1] = "Interval";
+  netperf_output_source[REMOTE_INTERVAL_USECS].line[2] = "Usecs";
+  netperf_output_source[REMOTE_INTERVAL_USECS].line[3] = "";
+  netperf_output_source[REMOTE_INTERVAL_USECS].format = "%d";
+  netperf_output_source[REMOTE_INTERVAL_USECS].display_value = &remote_interval_usecs;
+  netperf_output_source[REMOTE_INTERVAL_USECS].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_INTERVAL_USECS);
+  netperf_output_source[REMOTE_INTERVAL_USECS].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_INTERVAL_USECS);
+
+  netperf_output_source[REMOTE_INTERVAL_BURST].output_name = REMOTE_INTERVAL_BURST;
+  netperf_output_source[REMOTE_INTERVAL_BURST].line[0] = "Remote";
+  netperf_output_source[REMOTE_INTERVAL_BURST].line[1] = "Interval";
+  netperf_output_source[REMOTE_INTERVAL_BURST].line[2] = "Burst";
+  netperf_output_source[REMOTE_INTERVAL_BURST].line[3] = "";
+  netperf_output_source[REMOTE_INTERVAL_BURST].format = "%d";
+  netperf_output_source[REMOTE_INTERVAL_BURST].display_value = &remote_interval_burst;
+  netperf_output_source[REMOTE_INTERVAL_BURST].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_INTERVAL_BURST);
+  netperf_output_source[REMOTE_INTERVAL_BURST].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_INTERVAL_BURST);
+
+  netperf_output_source[LOCAL_INTERVAL_USECS].output_name = LOCAL_INTERVAL_USECS;
+  netperf_output_source[LOCAL_INTERVAL_USECS].line[0] = "Local";
+  netperf_output_source[LOCAL_INTERVAL_USECS].line[1] = "Interval";
+  netperf_output_source[LOCAL_INTERVAL_USECS].line[2] = "Usecs";
+  netperf_output_source[LOCAL_INTERVAL_USECS].line[3] = "";
+  netperf_output_source[LOCAL_INTERVAL_USECS].format = "%d";
+  netperf_output_source[LOCAL_INTERVAL_USECS].display_value = &interval_usecs;
+  netperf_output_source[LOCAL_INTERVAL_USECS].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_INTERVAL_USECS);
+  netperf_output_source[LOCAL_INTERVAL_USECS].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_INTERVAL_USECS);
+
+  netperf_output_source[LOCAL_INTERVAL_BURST].output_name = LOCAL_INTERVAL_BURST;
+  netperf_output_source[LOCAL_INTERVAL_BURST].line[0] = "Local";
+  netperf_output_source[LOCAL_INTERVAL_BURST].line[1] = "Interval";
+  netperf_output_source[LOCAL_INTERVAL_BURST].line[2] = "Burst";
+  netperf_output_source[LOCAL_INTERVAL_BURST].line[3] = "";
+  netperf_output_source[LOCAL_INTERVAL_BURST].format = "%d";
+  netperf_output_source[LOCAL_INTERVAL_BURST].display_value = &interval_burst;
+  netperf_output_source[LOCAL_INTERVAL_BURST].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_INTERVAL_BURST);
+  netperf_output_source[LOCAL_INTERVAL_BURST].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_INTERVAL_BURST);
+
   netperf_output_source[OUTPUT_END].output_name = OUTPUT_END;
   netperf_output_source[OUTPUT_END].line[0] = "This";
   netperf_output_source[OUTPUT_END].line[1] = "Is";
@@ -3534,7 +3690,10 @@ send_omni(char remote_host[])
       omni_request->ipfamily               = af_to_nf(remote_res->ai_family);
       omni_request->socket_type            = hst_to_nst(socket_type);
       omni_request->protocol               = protocol;
-      
+
+      omni_request->interval_burst         = remote_interval_burst;
+      omni_request->interval_usecs         = remote_interval_usecs;
+
       omni_request->direction              = 0;
       /* yes, the sense here is correct - if we are transmitting, they
 	 receive, if we are receiving, they are transmitting... */
@@ -3646,7 +3805,11 @@ send_omni(char remote_host[])
     /* grab the current time, and if necessary any starting information
        for the gathering of CPU utilization at this end. */
     cpu_start(local_cpu_usage);
-    
+
+#if defined(WANT_INTERVALS)
+    INTERVALS_INIT();
+#endif /* WANT_INTERVALS */
+
 #ifdef WANT_DEMO
     if (demo_mode) {
       HIST_timestamp(demo_one_ptr);
@@ -3966,6 +4129,11 @@ send_omni(char remote_host[])
 	DEMO_INTERVAL(rret);
       }
 #endif
+
+#if defined(WANT_INTERVALS)
+      INTERVALS_WAIT();
+#endif /* WANT_INTERVALS */
+
 
       /* was this a "transaction" test? */ 
       if (NETPERF_IS_RR(direction)) {
@@ -4383,6 +4551,16 @@ recv_omni()
   loc_rcvavoid = omni_request->so_rcvavoid;
   loc_sndavoid = omni_request->so_sndavoid;
 
+#ifdef WANT_INTERVALS
+  interval_usecs = omni_request->interval_usecs;
+  interval_wate  = interval_usecs / 1000;
+  interval_burst = omni_request->interval_burst;
+#else
+  interval_usecs = 0;
+  interval_wate  = 1;
+  interval_burst = 0;
+#endif
+
   connection_test = omni_request->connect_test;
   direction       = omni_request->direction;
 
@@ -4569,6 +4747,8 @@ recv_omni()
   omni_response->no_delay = loc_nodelay;
   omni_response->so_rcvavoid = loc_rcvavoid;
   omni_response->so_sndavoid = loc_sndavoid;
+  omni_response->interval_usecs = interval_usecs;
+  omni_response->interval_burst = interval_burst;
 
   send_response();
 
@@ -4582,7 +4762,7 @@ recv_omni()
   /* first grab the apropriate counters and then start grabbing. */
   
   cpu_start(omni_request->measure_cpu);
-  
+
   /* if the test is timed, set a timer of suitable length.  if the
      test is by byte/transaction count, we don't need a timer - or
      rather we rely on the netperf to only ask us to do transaction
@@ -4602,6 +4782,11 @@ recv_omni()
     times_up = 1;
     units_remaining = omni_request->test_length * -1;
   }
+
+#if defined(WANT_INTERVALS)
+  INTERVALS_INIT();
+#endif /* WANT_INTERVALS */
+  
   
   trans_completed = 0;
   bytes_sent = 0;
@@ -4827,6 +5012,9 @@ recv_omni()
       connected = 0;
     }
 
+#if defined(WANT_INTERVALS)
+    INTERVALS_WAIT();
+#endif /* WANT_INTERVALS */
 
     /* was this a "transaction" test? don't for get that a TCP_CC
        style test will have no xmit or recv :) so, we check for either

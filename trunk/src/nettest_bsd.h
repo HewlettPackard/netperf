@@ -62,6 +62,8 @@ struct  omni_request_struct {
   uint32_t   protocol;      /* the protocol of the data connection */
   uint32_t   direction;     /* which way flows the data? */
   uint32_t   netperf_port;  /* when netserver needs netperf's data port */
+  uint32_t   interval_burst;/* how many things to do each interval */
+  uint32_t   interval_usecs;/* how long each interval should be */
   uint32_t   ipaddr[4];     /* when netserver needs netperf's data IP */
 };
 
@@ -86,6 +88,9 @@ struct  omni_response_struct {
   uint32_t   so_sndavoid;
 
   uint32_t   data_port;     /* connect to this port number */
+
+  uint32_t   interval_burst;/* how many things to do each interval */
+  uint32_t   interval_usecs;/* how long each interval should be */
 };
 
 struct omni_results_struct {
