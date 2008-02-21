@@ -295,7 +295,7 @@
 /* Use Linux's rtnetlink interface to determine egress interface. */
 #undef USE_RTNETLINK
 
-/* Use FreeBSD's sysctl interface to measure CPU util. */
+/* Use MumbleBSD's sysctl interface to measure CPU util. */
 #undef USE_SYSCTL
 
 /* Version number of package */

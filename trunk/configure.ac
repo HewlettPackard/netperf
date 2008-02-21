@@ -690,9 +690,9 @@ case "$enable_cpuutil" in
 			enable_cpuutil="kstat - auto"
 			NETCPU_SOURCE="kstat"
 			;;
-                     *-*-freebsd4.* | *-*-freebsd5.* | *-*-freebsd6.* | *-*-freebsd7.* )
+                     *-*-freebsd[4-7].* | *-*-netbsd[1-9].* )
 			use_cpuutil=true
-			AC_DEFINE([USE_SYSCTL],,[Use FreeBSD's sysctl interface to measure CPU util.])
+			AC_DEFINE([USE_SYSCTL],,[Use MumbleBSD's sysctl interface to measure CPU util.])
 			enable_cpuutil="sysctl - auto"
 			NETCPU_SOURCE="sysctl"
 			;;
