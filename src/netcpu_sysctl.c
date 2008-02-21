@@ -33,6 +33,11 @@ char   netcpu_sysctl_id[]="\
 # endif /* LONG_LONG_MAX */
 #endif
 
+#ifdef __NetBSD__
+#define	CP_TIME_TYPE	uint64_t
+#else
+#define	CP_TIME_TYPE	long
+#endif
 
 #include <errno.h>
 
@@ -55,8 +60,8 @@ char   netcpu_sysctl_id[]="\
 #include "netsh.h"
 #include "netlib.h"
 
-static long lib_start_count[CPUSTATES];
-static long lib_end_count[CPUSTATES];
+static CP_TIME_TYPE lib_start_count[CPUSTATES];
+static CP_TIME_TYPE lib_end_count[CPUSTATES];
 
 void
 cpu_util_init(void) 
@@ -77,7 +82,7 @@ get_cpu_method(void)
 }
 
 static void
-get_cpu_time(long *cpu_time)
+get_cpu_time(CP_TIME_TYPE *cpu_time)
 {
   size_t cpu_time_len = CPUSTATES * sizeof (cpu_time[0]);
 
@@ -99,7 +104,7 @@ calibrate_idle_rate(int iterations, int interval)
 float
 calc_cpu_util_internal(float elapsed_time)
 {
-  long sum_idle, sum_busy;
+  CP_TIME_TYPE sum_idle, sum_busy;
   int i;
 
   for (sum_busy = 0, i = 0; i < CPUSTATES; i++) {
