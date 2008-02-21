@@ -386,7 +386,7 @@ double      remote_cpu_utilization_double;
 double      remote_service_demand_double;
 double      transaction_rate = 1.0;
 double      rtt_latency = -1.0;
-int32_t     transport_mss = -1;
+int32_t     transport_mss = -2;
 char        *local_interface_name=NULL;
 char        *remote_interface_name=NULL;
 char        local_driver_name[32]="";
@@ -3416,6 +3416,44 @@ disconnect_data_socket(SOCKET data_socket, int initiate, int do_close, struct so
   return 0;
 }
 
+static void
+get_transport_info(SOCKET socket, int *mss, int protocol)
+{
+
+  netperf_socklen_t sock_opt_len;
+  int option;
+  sock_opt_len = sizeof(netperf_socklen_t);
+
+  switch (protocol) {
+#if defined(IPPROTO_TCP) && defined(TCP_MAXSEG)
+  case IPPROTO_TCP:
+    option = TCP_MAXSEG;
+    break;
+#endif
+
+#if defined(IPPROTO_SCTP) && defined(SCTP_MAXSEG)
+  case IPPROTO_SCTP:
+    option = SCTP_MAXSEG;
+    break;
+#endif
+  default:
+    *mss = -1;
+    return;
+  }
+  
+  if (getsockopt(socket,
+		 protocol,
+		 option,
+		 (char *)mss,
+		 &sock_opt_len) == SOCKET_ERROR) {
+    fprintf(where,
+	    "netperf: get_transport_info: getsockopt: errno %d\n",
+	    errno);
+    fflush(where);
+    *mss = -1;
+  }
+}
+
  /* this code is intended to be "the two routines to run them all" for
     BSDish sockets.  it comes about as part of a desire to shrink the
     code footprint of netperf and to avoid having so many blessed
@@ -4062,7 +4100,7 @@ send_omni(char remote_host[])
 #endif
 
       }
-
+      
       /* if this is a connection test, we want to do some stuff about
 	 connection close here in the test loop. raj 2008-01-08 */
       if (connection_test) {
@@ -4085,6 +4123,16 @@ send_omni(char remote_host[])
 	lsr_size_end = lsr_size;
 	lss_size_end = lss_size;
 #endif
+
+	/* we will only make this call the one time - after the first
+	   call, the value will be real or -1. if this is a connection
+	   test we want to do this here because later we won't be
+	   connected and the data may no longer be available */
+	if (transport_mss == -2) 
+	  get_transport_info(data_socket,
+			     &transport_mss,
+			     local_res->ai_protocol);
+
 
 	ret = disconnect_data_socket(data_socket,
 				     (no_control) ? 1 : 0,
@@ -4147,6 +4195,12 @@ send_omni(char remote_host[])
     }
 
     /* we are now, ostensibly, at the end of this iteration */
+
+    if (transport_mss == -2) 
+      get_transport_info(data_socket,
+			 &transport_mss,
+			 local_res->ai_protocol);
+    
 
     /* so, if we have/had a data connection, we will want to close it
        now, and this will be independent of whether there is a control
