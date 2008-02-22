@@ -62,7 +62,6 @@ find_driver_info(char *ifname, char *driver, char *version, char *firmware, char
 
   ret = ioctl(s, SIOCETHTOOL, &ifr);
 
-  printf("ret is %d\n",ret);
   if (ret == -1) {
     strncpy(driver,"IoctlFailure",len);
     strncpy(version,"IoctlFailure",len);
