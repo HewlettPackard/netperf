@@ -2,6 +2,9 @@ These are the Release Notes leading-up to Revision 2.4.5 of netperf:
 
 Things changed in this release:
 
+*) Fixes for BSD CPU utilization to deal with different BSD variants
+   using different types.  Courtesy of Simon Burge <simonb@NetBSD.org>
+
 *) The "omni" suite has been added on an experimental basis.  If it
    works-out then many of the tests in src/nettest_bsd.c,
    src/nettest_sdp.c, and src/nettest_sctp.c will be "migrated" to use

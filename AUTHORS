@@ -218,3 +218,6 @@ Support for sendfile() on OSX
 
 Matt Waddel
 Fix to use vfork() instead of fork() on platforms without fork()
+
+Simon Burge <simonb@NetBSD.org>
+Fixes for *BSD CPU util.
