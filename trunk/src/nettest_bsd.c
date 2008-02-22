@@ -955,7 +955,7 @@ get_port_number(struct addrinfo *res)
 #endif
   default:
     fprintf(where,
-	    "Unexpected Address Family of %u\n",res->ai_family);
+	    "Given Unexpected Address Family of %u\n",res->ai_family);
     fflush(where);
     exit(-1);
   }
@@ -1005,7 +1005,7 @@ set_port_number(struct addrinfo *res, unsigned short port)
 #endif
   default:
     fprintf(where,
-	    "Unexpected Address Family of %u\n",res->ai_family);
+	    "set_port_number Unexpected Address Family of %u\n",res->ai_family);
     fflush(where);
     exit(-1);
   }
@@ -1045,7 +1045,7 @@ set_sockaddr_family_addr_port(struct sockaddr_storage *sockaddr, int family, voi
 #endif
   default:
     fprintf(where,
-	    "Unexpected Address Family of %u\n",family);
+	    "set_sockaddr_family_addr_port Unexpected Address Family of %u\n",family);
     fflush(where);
     exit(-1);
   }
@@ -1088,11 +1088,12 @@ get_sockaddr_family_addr_port(struct sockaddr_storage *sockaddr, int family, voi
       if (foo[i] != 0) ret = 1;
       foo[i] = ntohl(foo[i]);
     }
+    break;
   }
 #endif
   default:
     fprintf(where,
-	    "Unexpected Address Family of %u\n",family);
+	    "get_sockaddr_family_addr_port: Unexpected Address Family of %u\n",family);
     fflush(where);
     exit(-1);
   }
