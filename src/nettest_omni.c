@@ -439,26 +439,42 @@ extern int
   local_connected,
   remote_connected;
 
+/* you should add to this in the order in which they should appear in
+   the default csv (everything) output */
+
 enum netperf_output_name {
   OUTPUT_NONE,
-  COMMAND_LINE,
-  RESULT_BRAND,
   SOCKET_TYPE,
   PROTOCOL,
   DIRECTION,
   ELAPSED_TIME,
-  SOURCE_PORT,
-  SOURCE_ADDR,
-  SOURCE_FAMILY,
-  DEST_PORT,
-  DEST_ADDR,
-  DEST_FAMILY,
   THROUGHPUT,
-  LOCAL_SEND_THROUGHPUT,
-  LOCAL_RECV_THROUGHPUT,
-  REMOTE_SEND_THROUGHPUT,
-  REMOTE_RECV_THROUGHPUT,
   THROUGHPUT_UNITS,
+  LSS_SIZE_REQ,
+  LSS_SIZE,
+  LSS_SIZE_END,
+  LSR_SIZE_REQ,
+  LSR_SIZE,
+  LSR_SIZE_END,
+  RSS_SIZE_REQ,
+  RSS_SIZE,
+  RSS_SIZE_END,
+  RSR_SIZE_REQ,
+  RSR_SIZE,
+  RSR_SIZE_END,
+  LOCAL_SEND_SIZE,
+  LOCAL_RECV_SIZE,
+  REMOTE_SEND_SIZE,
+  REMOTE_RECV_SIZE,
+  REQUEST_SIZE,
+  RESPONSE_SIZE,
+  LOCAL_CPU_UTIL,
+  LOCAL_CPU_METHOD,
+  LOCAL_SD,
+  REMOTE_CPU_UTIL,
+  REMOTE_CPU_METHOD,
+  REMOTE_SD,
+  SD_UNITS,
   CONFIDENCE_LEVEL,
   CONFIDENCE_INTERVAL,
   CONFIDENCE_ITERATION,
@@ -469,16 +485,24 @@ enum netperf_output_name {
   RT_LATENCY,
   BURST_SIZE,
   TRANSPORT_MSS,
-  REQUEST_SIZE,
-  RESPONSE_SIZE,
-  LSS_SIZE_REQ,
-  LSS_SIZE,
-  LSS_SIZE_END,
-  LSR_SIZE_REQ,
-  LSR_SIZE,
-  LSR_SIZE_END,
-  LOCAL_SEND_SIZE,
-  LOCAL_RECV_SIZE,
+  LOCAL_SEND_THROUGHPUT,
+  LOCAL_RECV_THROUGHPUT,
+  REMOTE_SEND_THROUGHPUT,
+  REMOTE_RECV_THROUGHPUT,
+  LOCAL_CPU_BIND,
+  LOCAL_CPU_COUNT,
+  LOCAL_CPU_PEAK_UTIL,
+  LOCAL_CPU_PEAK_ID,
+  REMOTE_CPU_BIND,
+  REMOTE_CPU_COUNT,
+  REMOTE_CPU_PEAK_UTIL,
+  REMOTE_CPU_PEAK_ID,
+  SOURCE_PORT,
+  SOURCE_ADDR,
+  SOURCE_FAMILY,
+  DEST_PORT,
+  DEST_ADDR,
+  DEST_FAMILY,
   LOCAL_SEND_CALLS,
   LOCAL_RECV_CALLS,
   LOCAL_BYTES_PER_RECV,
@@ -495,31 +519,8 @@ enum netperf_output_name {
   LOCAL_SEND_DIRTY_COUNT,
   LOCAL_RECV_DIRTY_COUNT,
   LOCAL_RECV_CLEAN_COUNT,
-  LOCAL_CPU_UTIL,
-  LOCAL_CPU_BIND,
-  LOCAL_SD,
-  LOCAL_CPU_METHOD,
-  LOCAL_CPU_COUNT,
-  LOCAL_CPU_PEAK_UTIL,
-  LOCAL_CPU_PEAK_ID,
-  REMOTE_CPU_UTIL,
-  REMOTE_CPU_BIND,
-  REMOTE_SD,
-  REMOTE_CPU_METHOD,
-  REMOTE_CPU_COUNT,
-  REMOTE_CPU_PEAK_UTIL,
-  REMOTE_CPU_PEAK_ID,
-  SD_UNITS,
   LOCAL_NODELAY,
   LOCAL_CORK,
-  RSS_SIZE_REQ,
-  RSS_SIZE,
-  RSS_SIZE_END,
-  RSR_SIZE_REQ,
-  RSR_SIZE,
-  RSR_SIZE_END,
-  REMOTE_SEND_SIZE,
-  REMOTE_RECV_SIZE,
   REMOTE_SEND_CALLS,
   REMOTE_RECV_CALLS,
   REMOTE_BYTES_PER_RECV,
@@ -560,6 +561,8 @@ enum netperf_output_name {
   LOCAL_INTERVAL_BURST,
   REMOTE_INTERVAL_USECS,
   REMOTE_INTERVAL_BURST,
+  RESULT_BRAND,
+  COMMAND_LINE,
   OUTPUT_END,
   NETPERF_OUTPUT_MAX
 };
@@ -600,7 +603,7 @@ char *direction_to_str(int direction) {
 static unsigned short
 get_port_number(struct addrinfo *res) 
 {
- switch(res->ai_family) {
+  switch(res->ai_family) {
   case AF_INET: {
     struct sockaddr_in *foo = (struct sockaddr_in *)res->ai_addr;
     return(ntohs(foo->sin_port));
@@ -615,7 +618,7 @@ get_port_number(struct addrinfo *res)
 #endif
   default:
     fprintf(where,
-	    "Unexpected Address Family of %u\n",res->ai_family);
+	    "Unexpected Address Family %u\n",res->ai_family);
     fflush(where);
     exit(-1);
   }
@@ -1199,109 +1202,13 @@ void
 set_output_csv_list_default() {
 
   int  i = 0;
-  output_csv_list[i++] = SOCKET_TYPE;
-  output_csv_list[i++] = PROTOCOL;
-  output_csv_list[i++] = DIRECTION;
-  output_csv_list[i++] = LSS_SIZE_REQ;
-  output_csv_list[i++] = LSS_SIZE;
-  output_csv_list[i++] = LSS_SIZE_END;
-  output_csv_list[i++] = RSS_SIZE_REQ;
-  output_csv_list[i++] = RSS_SIZE;
-  output_csv_list[i++] = RSS_SIZE_END;
-  output_csv_list[i++] = LOCAL_SEND_SIZE;
-  output_csv_list[i++] = LOCAL_RECV_SIZE;
-  output_csv_list[i++] = REQUEST_SIZE;
-  output_csv_list[i++] = REMOTE_SEND_SIZE;
-  output_csv_list[i++] = REMOTE_RECV_SIZE;
-  output_csv_list[i++] = RESPONSE_SIZE;
-  output_csv_list[i++] = THROUGHPUT;
-  output_csv_list[i++] = ELAPSED_TIME;
-  output_csv_list[i++] = LOCAL_SEND_THROUGHPUT;
-  output_csv_list[i++] = LOCAL_RECV_THROUGHPUT;
-  output_csv_list[i++] = REMOTE_SEND_THROUGHPUT;
-  output_csv_list[i++] = REMOTE_RECV_THROUGHPUT;
-  output_csv_list[i++] = THROUGHPUT_UNITS;
-  output_csv_list[i++] = LOCAL_CPU_UTIL;
-  output_csv_list[i++] = REMOTE_CPU_UTIL;
-  output_csv_list[i++] = LOCAL_SD;
-  output_csv_list[i++] = REMOTE_SD;
-  output_csv_list[i++] = SD_UNITS;
-  output_csv_list[i++] = LOCAL_CPU_BIND;
-  output_csv_list[i++] = REMOTE_CPU_BIND;
-  output_csv_list[i++] = LOCAL_CPU_COUNT;
-  output_csv_list[i++] = REMOTE_CPU_COUNT;
-  output_csv_list[i++] = LOCAL_CPU_PEAK_UTIL;
-  output_csv_list[i++] = LOCAL_CPU_PEAK_ID;
-  output_csv_list[i++] = REMOTE_CPU_PEAK_UTIL;
-  output_csv_list[i++] = REMOTE_CPU_PEAK_ID;
-  output_csv_list[i++] = CONFIDENCE_LEVEL;
-  output_csv_list[i++] = CONFIDENCE_INTERVAL;
-  output_csv_list[i++] = THROUGHPUT_CONFID;
-  output_csv_list[i++] = LOCAL_CPU_CONFID;
-  output_csv_list[i++] = REMOTE_CPU_CONFID;
-  output_csv_list[i++] = CONFIDENCE_ITERATION;
-  output_csv_list[i++] = RT_LATENCY;
-  output_csv_list[i++] = TRANSACTION_RATE;
-  output_csv_list[i++] = BURST_SIZE;
-  output_csv_list[i++] = TRANSPORT_MSS;
-  output_csv_list[i++] = LOCAL_BYTES_SENT;
-  output_csv_list[i++] = LOCAL_SEND_CALLS;
-  output_csv_list[i++] = LOCAL_BYTES_PER_SEND;
-  output_csv_list[i++] = LOCAL_BYTES_RECVD;
-  output_csv_list[i++] = LOCAL_RECV_CALLS;
-  output_csv_list[i++] = LOCAL_BYTES_PER_RECV;
-  output_csv_list[i++] = LOCAL_SEND_OFFSET;
-  output_csv_list[i++] = LOCAL_RECV_OFFSET;
-  output_csv_list[i++] = LOCAL_SEND_ALIGN;
-  output_csv_list[i++] = LOCAL_RECV_ALIGN;
-  output_csv_list[i++] = LOCAL_SEND_WIDTH;
-  output_csv_list[i++] = LOCAL_RECV_WIDTH;
-  output_csv_list[i++] = LOCAL_SEND_DIRTY_COUNT;
-  output_csv_list[i++] = LOCAL_RECV_DIRTY_COUNT;
-  output_csv_list[i++] = LOCAL_RECV_CLEAN_COUNT;
-  output_csv_list[i++] = LOCAL_NODELAY;
-  output_csv_list[i++] = LOCAL_CORK;
-  output_csv_list[i++] = REMOTE_BYTES_SENT;
-  output_csv_list[i++] = REMOTE_SEND_CALLS;
-  output_csv_list[i++] = REMOTE_BYTES_PER_SEND;
-  output_csv_list[i++] = REMOTE_BYTES_RECVD;
-  output_csv_list[i++] = REMOTE_RECV_CALLS;
-  output_csv_list[i++] = REMOTE_BYTES_PER_RECV;
-  output_csv_list[i++] = REMOTE_SEND_OFFSET;
-  output_csv_list[i++] = REMOTE_RECV_OFFSET;
-  output_csv_list[i++] = REMOTE_SEND_ALIGN;
-  output_csv_list[i++] = REMOTE_RECV_ALIGN;
-  output_csv_list[i++] = REMOTE_SEND_WIDTH;
-  output_csv_list[i++] = REMOTE_RECV_WIDTH;
-  output_csv_list[i++] = REMOTE_SEND_DIRTY_COUNT;
-  output_csv_list[i++] = REMOTE_RECV_DIRTY_COUNT;
-  output_csv_list[i++] = REMOTE_RECV_CLEAN_COUNT;
-  output_csv_list[i++] = REMOTE_NODELAY;
-  output_csv_list[i++] = REMOTE_CORK;
-  output_csv_list[i++] = LOCAL_SYSNAME;
-  output_csv_list[i++] = LOCAL_RELEASE;
-  output_csv_list[i++] = LOCAL_VERSION;
-  output_csv_list[i++] = LOCAL_MACHINE;
-  output_csv_list[i++] = REMOTE_SYSNAME;
-  output_csv_list[i++] = REMOTE_RELEASE;
-  output_csv_list[i++] = REMOTE_VERSION;
-  output_csv_list[i++] = REMOTE_MACHINE;
-  output_csv_list[i++] = LOCAL_INTERFACE_NAME;
-  output_csv_list[i++] = REMOTE_INTERFACE_NAME;
-  output_csv_list[i++] = LOCAL_DRIVER_NAME;
-  output_csv_list[i++] = LOCAL_DRIVER_VERSION;
-  output_csv_list[i++] = LOCAL_DRIVER_FIRMWARE;
-  output_csv_list[i++] = LOCAL_DRIVER_BUS;
-  output_csv_list[i++] = REMOTE_DRIVER_NAME;
-  output_csv_list[i++] = REMOTE_DRIVER_VERSION;
-  output_csv_list[i++] = REMOTE_DRIVER_FIRMWARE;
-  output_csv_list[i++] = REMOTE_DRIVER_BUS;
-  output_csv_list[i++] = LOCAL_INTERVAL_USECS;
-  output_csv_list[i++] = LOCAL_INTERVAL_BURST;
-  output_csv_list[i++] = REMOTE_INTERVAL_USECS;
-  output_csv_list[i++] = REMOTE_INTERVAL_BURST;
-  output_csv_list[i++] = RESULT_BRAND;
-  output_csv_list[i++] = COMMAND_LINE;
+  enum netperf_output_name j;
+
+  /* this should cause us to catch everything unless someone botches
+     adding an output name to the enum.  raj 2008-02-22 */
+  for (j = SOCKET_TYPE; j < OUTPUT_END; j++) {
+    output_csv_list[i++] = j;
+  }
 
 }
 
@@ -1309,28 +1216,34 @@ void
 set_output_human_list_default() {
 
   int i, j;  /* line, column */
+  enum netperf_output_name k;
 
-  /* Line One */
+  /* Line One SOCKET_TYPE to RESPONSE_SIZE */
   i = 0;
   j = 0;
-  output_human_list[i][j++] = LSS_SIZE_REQ;
-  output_human_list[i][j++] = LSS_SIZE;
-  output_human_list[i][j++] = LSS_SIZE_END;
+  for (k = SOCKET_TYPE; k <= RESPONSE_SIZE; k++)
+    output_human_list[i][j++] = k;
 
-  /* Line Two */
+  /* Line Two LOCAL_CPU_UTIL to TRANSPORT_MSS */
   i = 1;
   j = 0;
-  output_human_list[i][j++] = COMMAND_LINE;
+  for (k = LOCAL_CPU_UTIL; k <= TRANSPORT_MSS; k++)
+    output_human_list[i][j++] = k;
 
-  /* Line Three */
+  /* Line Three LOCAL_SEND_THROUGHPUT throught REMOTE_CORK */
   i = 2;
   j = 0;
+  for (k = LOCAL_SEND_THROUGHPUT; k <= REMOTE_CORK; k++)
+    output_human_list[i][j++] = k;
 
-  /* Line Four */
+  /* Line Four LOCAL_SYSNAME through COMMAND_LINE */
   i = 3;
   j = 0;
+  for (k = LOCAL_SYSNAME; k <= COMMAND_LINE; k++)
+    output_human_list[i][j++] = k;
 
 }
+
 /* lots of boring, repetitive code */
 void 
 print_omni_init() {
