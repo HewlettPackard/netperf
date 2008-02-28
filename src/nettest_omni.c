@@ -415,8 +415,8 @@ extern int first_burst_size;
 
 static int confidence_iteration;
 
-static  char  local_cpu_method;
-static  char  remote_cpu_method;
+static  int local_cpu_method;
+static  int remote_cpu_method;
 
 /* these will control the width of port numbers we try to use in the */
 /* TCP_CRR and/or TCP_TRR tests. raj 3/95 */
