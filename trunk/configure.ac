@@ -785,7 +785,49 @@ esac
 
 AC_SUBST(NETRTLKUP_SOURCE)
 
-# time to see about route lookup mechanisms
+# time to see about slot lookup mechanisms
+
+AC_MSG_CHECKING([which slot lookup type to use])
+
+AC_ARG_ENABLE(slotlookup,
+	[AS_HELP_STRING([--enable-slotlookup],[include code to find the probable egress interface using specified mechanism])])
+
+NETSLOTLKUP_SOURCE="$enable_slotlookup"
+case "$enable_slotlookup" in
+
+	linsys)
+		use_slotlookup=true
+		AC_DEFINE([USE_LINSYS],,[Use Linux's /sys interface to dettermine egress interface slot number.])
+		;;
+	'')
+# guess it automagically in a nice big case statement
+		case $target in
+		     *-*-linux*)
+			use_slotlookup=true
+			AC_DEFINE([USE_LINSYS],,[Use Linux's /sys interface to determine egress interface slot number.])
+			enable_slotlookup="linux - auto"
+			NETSLOTLKUP_SOURCE="linux"
+			;;
+		     *)
+			use_slotlookup=false
+			NETSLOTLKUP_SOURCE="none"
+			enable_slotlookup="none. Consider teaching configure about your platform."
+			;;
+		esac
+		;;
+	none)
+		use_slotlookup=false
+		;;
+	*)
+		AC_MSG_ERROR([--enable-slotlookup takes linux or none])
+		;;
+esac
+
+	AC_MSG_RESULT("$enable_slotlookup")
+
+AC_SUBST(NETSLOTLKUP_SOURCE)
+
+# time to see about driver lookup mechanisms
 
 AC_MSG_CHECKING([which driver info lookup type to use])
 

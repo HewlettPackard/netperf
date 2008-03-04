@@ -397,6 +397,8 @@ char        remote_driver_name[32]="";
 char        remote_driver_version[32]="";
 char        remote_driver_firmware[32]="";
 char        remote_driver_bus[32]="";
+char        *local_interface_slot=NULL;
+char        *remote_interface_slot=NULL;
 
 int printing_initialized = 0;
 
@@ -553,10 +555,12 @@ enum netperf_output_name {
   LOCAL_DRIVER_VERSION,
   LOCAL_DRIVER_FIRMWARE,
   LOCAL_DRIVER_BUS,
+  LOCAL_INTERFACE_SLOT,
   REMOTE_DRIVER_NAME,
   REMOTE_DRIVER_VERSION,
   REMOTE_DRIVER_FIRMWARE,
   REMOTE_DRIVER_BUS,
+  REMOTE_INTERFACE_SLOT,
   LOCAL_INTERVAL_USECS,
   LOCAL_INTERVAL_BURST,
   REMOTE_INTERVAL_USECS,
@@ -900,6 +904,10 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "REMOTE_NODELAY";
   case   REMOTE_CORK:
     return "REMOTE_CORK";
+  case LOCAL_INTERFACE_SLOT:
+    return "LOCAL_INTERFACE_SLOT";
+  case REMOTE_INTERFACE_SLOT:
+    return "REMOTE_INTERFACE_SLOT";
   case LOCAL_INTERFACE_NAME:
     return "LOCAL_INTERFACE_NAME";
   case REMOTE_INTERFACE_NAME:
@@ -2504,6 +2512,30 @@ print_omni_init() {
     NETPERF_LINE_MAX(REMOTE_INTERFACE_NAME);
   netperf_output_source[REMOTE_INTERFACE_NAME].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_INTERFACE_NAME);
+
+  netperf_output_source[LOCAL_INTERFACE_SLOT].output_name = LOCAL_INTERFACE_SLOT;
+  netperf_output_source[LOCAL_INTERFACE_SLOT].line[0] = "Local";
+  netperf_output_source[LOCAL_INTERFACE_SLOT].line[1] = "Interface";
+  netperf_output_source[LOCAL_INTERFACE_SLOT].line[2] = "Slot";
+  netperf_output_source[LOCAL_INTERFACE_SLOT].line[3] = "";
+  netperf_output_source[LOCAL_INTERFACE_SLOT].format = "%s";
+  netperf_output_source[LOCAL_INTERFACE_SLOT].display_value = local_interface_slot;
+  netperf_output_source[LOCAL_INTERFACE_SLOT].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_INTERFACE_SLOT);
+  netperf_output_source[LOCAL_INTERFACE_SLOT].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_INTERFACE_SLOT);
+
+  netperf_output_source[REMOTE_INTERFACE_SLOT].output_name = REMOTE_INTERFACE_SLOT;
+  netperf_output_source[REMOTE_INTERFACE_SLOT].line[0] = "Remote";
+  netperf_output_source[REMOTE_INTERFACE_SLOT].line[1] = "Interface";
+  netperf_output_source[REMOTE_INTERFACE_SLOT].line[2] = "Slot";
+  netperf_output_source[REMOTE_INTERFACE_SLOT].line[3] = "";
+  netperf_output_source[REMOTE_INTERFACE_SLOT].format = "%s";
+  netperf_output_source[REMOTE_INTERFACE_SLOT].display_value = remote_interface_slot;
+  netperf_output_source[REMOTE_INTERFACE_SLOT].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_INTERFACE_SLOT);
+  netperf_output_source[REMOTE_INTERFACE_SLOT].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_INTERFACE_SLOT);
 
   netperf_output_source[REMOTE_MACHINE].output_name = REMOTE_MACHINE;
   netperf_output_source[REMOTE_MACHINE].line[0] = "Remote";
@@ -4171,6 +4203,8 @@ send_omni(char remote_host[])
 
     find_driver_info(local_interface_name,local_driver_name,local_driver_version,local_driver_firmware,local_driver_bus,32);
 
+    local_interface_slot = find_interface_slot(local_interface_name);
+
     /* if we timed-out, and had padded the timer, we need to subtract
        the pad_time from the elapsed time on the assumption that we
        were essentially idle for pad_time and just waiting for a timer
@@ -4227,6 +4261,7 @@ send_omni(char remote_host[])
 	  remote_bytes_per_send = 0.0;
 	omni_result->ifname[15] = 0; /* belt and suspenders */
 	remote_interface_name = strdup(omni_result->ifname);
+	remote_interface_slot = strdup(omni_result->ifslot);
 	strncpy(remote_driver_name,omni_result->driver,32);
 	strncpy(remote_driver_version,omni_result->version,32);
 	strncpy(remote_driver_firmware,omni_result->firmware,32);
@@ -5061,6 +5096,9 @@ recv_omni()
     find_egress_interface(local_res->ai_addr,(struct sockaddr *)&peeraddr_in);
   strncpy(omni_results->ifname,local_interface_name,16);
   omni_results->ifname[15] = 0;
+  local_interface_slot = find_interface_slot(local_interface_name);
+  strncpy(omni_results->ifslot,local_interface_slot,16);
+  omni_results->ifslot[16] = 0;
   find_driver_info(local_interface_name,
 		   omni_results->driver,
 		   omni_results->version,
