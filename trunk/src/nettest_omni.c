@@ -4361,7 +4361,7 @@ send_omni(char remote_host[])
 	 calculated service demand and all those interesting things. If
 	 it wasn't supposed to care, it will return obvious values. */
   
-      recv_response_n(17);
+      recv_response_n(21);
       if (!netperf_response.content.serv_errno) {
 	if (debug)
 	  fprintf(where,"remote results obtained\n");
@@ -4404,6 +4404,10 @@ send_omni(char remote_host[])
 	remote_driver_version[31] = 0;
 	remote_driver_firmware[31] = 0;
 	remote_driver_bus[31] = 0;
+	remote_interface_vendor = omni_result->vendor;
+	remote_interface_device = omni_result->device;
+	remote_interface_subvendor = omni_result->subvendor;
+	remote_interface_subdevice = omni_result->subdevice;
       }
       else {
 	Set_errno(netperf_response.content.serv_errno);
@@ -5233,6 +5237,11 @@ recv_omni()
   local_interface_slot = find_interface_slot(local_interface_name);
   strncpy(omni_results->ifslot,local_interface_slot,16);
   omni_results->ifslot[16] = 0;
+  find_interface_ids(local_interface_name,
+		     &omni_results->vendor,
+		     &omni_results->device,
+		     &omni_results->subvendor,
+		     &omni_results->subdevice);
   find_driver_info(local_interface_name,
 		   omni_results->driver,
 		   omni_results->version,
@@ -5245,7 +5254,7 @@ recv_omni()
     fflush(where);
   }
   
-  send_response_n(17);
+  send_response_n(21);
 
   /* when we implement this, it will look a little strange, but we do
      it to avoid certain overheads when running aggregates and using
