@@ -399,6 +399,14 @@ char        remote_driver_firmware[32]="";
 char        remote_driver_bus[32]="";
 char        *local_interface_slot=NULL;
 char        *remote_interface_slot=NULL;
+int         remote_interface_vendor;
+int         remote_interface_device;
+int         remote_interface_subvendor;
+int         remote_interface_subdevice;
+int         local_interface_vendor;
+int         local_interface_device;
+int         local_interface_subvendor;
+int         local_interface_subdevice;
 
 int printing_initialized = 0;
 
@@ -550,12 +558,20 @@ enum netperf_output_name {
   REMOTE_VERSION,
   REMOTE_MACHINE,
   LOCAL_INTERFACE_NAME,
-  REMOTE_INTERFACE_NAME,
+  LOCAL_INTERFACE_VENDOR,
+  LOCAL_INTERFACE_DEVICE,
+  LOCAL_INTERFACE_SUBVENDOR,
+  LOCAL_INTERFACE_SUBDEVICE,
   LOCAL_DRIVER_NAME,
   LOCAL_DRIVER_VERSION,
   LOCAL_DRIVER_FIRMWARE,
   LOCAL_DRIVER_BUS,
   LOCAL_INTERFACE_SLOT,
+  REMOTE_INTERFACE_NAME,
+  REMOTE_INTERFACE_VENDOR,
+  REMOTE_INTERFACE_DEVICE,
+  REMOTE_INTERFACE_SUBVENDOR,
+  REMOTE_INTERFACE_SUBDEVICE,
   REMOTE_DRIVER_NAME,
   REMOTE_DRIVER_VERSION,
   REMOTE_DRIVER_FIRMWARE,
@@ -908,6 +924,22 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "LOCAL_INTERFACE_SLOT";
   case REMOTE_INTERFACE_SLOT:
     return "REMOTE_INTERFACE_SLOT";
+  case REMOTE_INTERFACE_SUBDEVICE:
+    return "REMOTE_INTERFACE_SUBDEVICE";
+  case REMOTE_INTERFACE_SUBVENDOR:
+    return "REMOTE_INTERFACE_SUBVENDOR";
+  case REMOTE_INTERFACE_DEVICE:
+    return "REMOTE_INTERFACE_DEVICE";
+  case REMOTE_INTERFACE_VENDOR:
+    return "REMOTE_INTERFACE_VENDOR";
+  case LOCAL_INTERFACE_SUBDEVICE:
+    return "LOCAL_INTERFACE_SUBDEVICE";
+  case LOCAL_INTERFACE_SUBVENDOR:
+    return "LOCAL_INTERFACE_SUBVENDOR";
+  case LOCAL_INTERFACE_DEVICE:
+    return "LOCAL_INTERFACE_DEVICE";
+  case LOCAL_INTERFACE_VENDOR:
+    return "LOCAL_INTERFACE_VENDOR";
   case LOCAL_INTERFACE_NAME:
     return "LOCAL_INTERFACE_NAME";
   case REMOTE_INTERFACE_NAME:
@@ -2488,6 +2520,102 @@ print_omni_init() {
     NETPERF_LINE_MAX(REMOTE_DRIVER_BUS);
   netperf_output_source[REMOTE_DRIVER_BUS].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_DRIVER_BUS);
+
+  netperf_output_source[LOCAL_INTERFACE_SUBDEVICE].output_name = LOCAL_INTERFACE_SUBDEVICE;
+  netperf_output_source[LOCAL_INTERFACE_SUBDEVICE].line[0] = "Local";
+  netperf_output_source[LOCAL_INTERFACE_SUBDEVICE].line[1] = "Interface";
+  netperf_output_source[LOCAL_INTERFACE_SUBDEVICE].line[2] = "Subdevice";
+  netperf_output_source[LOCAL_INTERFACE_SUBDEVICE].line[3] = "";
+  netperf_output_source[LOCAL_INTERFACE_SUBDEVICE].format = "0x%.4x";
+  netperf_output_source[LOCAL_INTERFACE_SUBDEVICE].display_value = &local_interface_subdevice;
+  netperf_output_source[LOCAL_INTERFACE_SUBDEVICE].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_INTERFACE_SUBDEVICE);
+  netperf_output_source[LOCAL_INTERFACE_SUBDEVICE].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_INTERFACE_SUBDEVICE);
+
+  netperf_output_source[LOCAL_INTERFACE_DEVICE].output_name = LOCAL_INTERFACE_DEVICE;
+  netperf_output_source[LOCAL_INTERFACE_DEVICE].line[0] = "Local";
+  netperf_output_source[LOCAL_INTERFACE_DEVICE].line[1] = "Interface";
+  netperf_output_source[LOCAL_INTERFACE_DEVICE].line[2] = "Device";
+  netperf_output_source[LOCAL_INTERFACE_DEVICE].line[3] = "";
+  netperf_output_source[LOCAL_INTERFACE_DEVICE].format = "0x%.4x";
+  netperf_output_source[LOCAL_INTERFACE_DEVICE].display_value = &local_interface_device;
+  netperf_output_source[LOCAL_INTERFACE_DEVICE].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_INTERFACE_DEVICE);
+  netperf_output_source[LOCAL_INTERFACE_DEVICE].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_INTERFACE_DEVICE);
+
+  netperf_output_source[LOCAL_INTERFACE_SUBVENDOR].output_name = LOCAL_INTERFACE_SUBVENDOR;
+  netperf_output_source[LOCAL_INTERFACE_SUBVENDOR].line[0] = "Local";
+  netperf_output_source[LOCAL_INTERFACE_SUBVENDOR].line[1] = "Interface";
+  netperf_output_source[LOCAL_INTERFACE_SUBVENDOR].line[2] = "Subvendor";
+  netperf_output_source[LOCAL_INTERFACE_SUBVENDOR].line[3] = "";
+  netperf_output_source[LOCAL_INTERFACE_SUBVENDOR].format = "0x%.4x";
+  netperf_output_source[LOCAL_INTERFACE_SUBVENDOR].display_value = &local_interface_subvendor;
+  netperf_output_source[LOCAL_INTERFACE_SUBVENDOR].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_INTERFACE_SUBVENDOR);
+  netperf_output_source[LOCAL_INTERFACE_SUBVENDOR].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_INTERFACE_SUBVENDOR);
+
+  netperf_output_source[LOCAL_INTERFACE_VENDOR].output_name = LOCAL_INTERFACE_VENDOR;
+  netperf_output_source[LOCAL_INTERFACE_VENDOR].line[0] = "Local";
+  netperf_output_source[LOCAL_INTERFACE_VENDOR].line[1] = "Interface";
+  netperf_output_source[LOCAL_INTERFACE_VENDOR].line[2] = "Vendor";
+  netperf_output_source[LOCAL_INTERFACE_VENDOR].line[3] = "";
+  netperf_output_source[LOCAL_INTERFACE_VENDOR].format = "0x%.4x";
+  netperf_output_source[LOCAL_INTERFACE_VENDOR].display_value = &local_interface_vendor;
+  netperf_output_source[LOCAL_INTERFACE_VENDOR].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_INTERFACE_VENDOR);
+  netperf_output_source[LOCAL_INTERFACE_VENDOR].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_INTERFACE_VENDOR);
+
+  netperf_output_source[REMOTE_INTERFACE_SUBDEVICE].output_name = REMOTE_INTERFACE_SUBDEVICE;
+  netperf_output_source[REMOTE_INTERFACE_SUBDEVICE].line[0] = "Remote";
+  netperf_output_source[REMOTE_INTERFACE_SUBDEVICE].line[1] = "Interface";
+  netperf_output_source[REMOTE_INTERFACE_SUBDEVICE].line[2] = "Subdevice";
+  netperf_output_source[REMOTE_INTERFACE_SUBDEVICE].line[3] = "";
+  netperf_output_source[REMOTE_INTERFACE_SUBDEVICE].format = "0x%.4x";
+  netperf_output_source[REMOTE_INTERFACE_SUBDEVICE].display_value = &remote_interface_subdevice;
+  netperf_output_source[REMOTE_INTERFACE_SUBDEVICE].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_INTERFACE_SUBDEVICE);
+  netperf_output_source[REMOTE_INTERFACE_SUBDEVICE].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_INTERFACE_SUBDEVICE);
+
+  netperf_output_source[REMOTE_INTERFACE_DEVICE].output_name = REMOTE_INTERFACE_DEVICE;
+  netperf_output_source[REMOTE_INTERFACE_DEVICE].line[0] = "Remote";
+  netperf_output_source[REMOTE_INTERFACE_DEVICE].line[1] = "Interface";
+  netperf_output_source[REMOTE_INTERFACE_DEVICE].line[2] = "Device";
+  netperf_output_source[REMOTE_INTERFACE_DEVICE].line[3] = "";
+  netperf_output_source[REMOTE_INTERFACE_DEVICE].format = "0x%.4x";
+  netperf_output_source[REMOTE_INTERFACE_DEVICE].display_value = &remote_interface_device;
+  netperf_output_source[REMOTE_INTERFACE_DEVICE].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_INTERFACE_DEVICE);
+  netperf_output_source[REMOTE_INTERFACE_DEVICE].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_INTERFACE_DEVICE);
+
+  netperf_output_source[REMOTE_INTERFACE_SUBVENDOR].output_name = REMOTE_INTERFACE_SUBVENDOR;
+  netperf_output_source[REMOTE_INTERFACE_SUBVENDOR].line[0] = "Remote";
+  netperf_output_source[REMOTE_INTERFACE_SUBVENDOR].line[1] = "Interface";
+  netperf_output_source[REMOTE_INTERFACE_SUBVENDOR].line[2] = "Subvendor";
+  netperf_output_source[REMOTE_INTERFACE_SUBVENDOR].line[3] = "";
+  netperf_output_source[REMOTE_INTERFACE_SUBVENDOR].format = "0x%.4x";
+  netperf_output_source[REMOTE_INTERFACE_SUBVENDOR].display_value = &remote_interface_subvendor;
+  netperf_output_source[REMOTE_INTERFACE_SUBVENDOR].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_INTERFACE_SUBVENDOR);
+  netperf_output_source[REMOTE_INTERFACE_SUBVENDOR].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_INTERFACE_SUBVENDOR);
+
+  netperf_output_source[REMOTE_INTERFACE_VENDOR].output_name = REMOTE_INTERFACE_VENDOR;
+  netperf_output_source[REMOTE_INTERFACE_VENDOR].line[0] = "Remote";
+  netperf_output_source[REMOTE_INTERFACE_VENDOR].line[1] = "Interface";
+  netperf_output_source[REMOTE_INTERFACE_VENDOR].line[2] = "Vendor";
+  netperf_output_source[REMOTE_INTERFACE_VENDOR].line[3] = "";
+  netperf_output_source[REMOTE_INTERFACE_VENDOR].format = "0x%.4x";
+  netperf_output_source[REMOTE_INTERFACE_VENDOR].display_value = &remote_interface_vendor;
+  netperf_output_source[REMOTE_INTERFACE_VENDOR].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_INTERFACE_VENDOR);
+  netperf_output_source[REMOTE_INTERFACE_VENDOR].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_INTERFACE_VENDOR);
 
   netperf_output_source[LOCAL_INTERFACE_NAME].output_name = LOCAL_INTERFACE_NAME;
   netperf_output_source[LOCAL_INTERFACE_NAME].line[0] = "Local";
