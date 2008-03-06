@@ -536,6 +536,7 @@ extern  void    bind_to_specific_processor(int processor_affinity,int use_cpu_ma
 extern int      set_nonblock (SOCKET sock);
 extern char     *find_egress_interface(struct sockaddr *source, struct sockaddr *dest);
 extern char     *find_interface_slot(char *interface_name);
+extern void     find_interface_ids(char *interface_name, int *vendor, int *device, int *sub_vend, int *sub_dev);
 extern void     find_driver_info(char *ifname, char *driver, char *version, char *firmware, char *bus, int len);
 
 #ifndef WIN32

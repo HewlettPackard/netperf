@@ -274,6 +274,9 @@
 /* Use Solaris's kstat interface to measure CPU util. */
 #undef USE_KSTAT
 
+/* Use Linux's /sys interface to determine egress interface slot number. */
+#undef USE_LINSYS
+
 /* Use looper/soaker processes to measure CPU util. */
 #undef USE_LOOPER
 
