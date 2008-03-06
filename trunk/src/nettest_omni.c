@@ -4333,6 +4333,12 @@ send_omni(char remote_host[])
 
     local_interface_slot = find_interface_slot(local_interface_name);
 
+    find_interface_ids(local_interface_name,
+		       &local_interface_vendor,
+		       &local_interface_device,
+		       &local_interface_subvendor,
+		       &local_interface_subdevice);
+
     /* if we timed-out, and had padded the timer, we need to subtract
        the pad_time from the elapsed time on the assumption that we
        were essentially idle for pad_time and just waiting for a timer
