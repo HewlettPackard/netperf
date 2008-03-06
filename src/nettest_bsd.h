@@ -115,7 +115,12 @@ struct omni_results_struct {
 
   int32_t    peak_cpu_id;   /* ID of the most utilized CPU */
   float      peak_cpu_util; /* its individual utilization */
-  /* this is the 18th 32-bit word and we have 248-(17*4) bytes
+  int32_t    vendor;
+  int32_t    device;        /* pci device id of the probable egress
+			       interface */ 
+  int32_t    subvendor;
+  int32_t    subdevice;
+  /* this is the 22dn 32-bit word and we have 248-(17*4) bytes
      available from here */
   char       ifname[16];    /* the probable egress interface */
   char       driver[32];    /* size based on linux/ethtool.h */
@@ -123,7 +128,7 @@ struct omni_results_struct {
   char       firmware[32];  
   char       bus[32];
   char       ifslot[16];    /* slot id of the probable egress interface */
-  /* only 20 bytes left... */
+  /* only 4 bytes left... */
 };
 
 #endif /* WANT_OMNI */
