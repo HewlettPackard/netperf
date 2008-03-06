@@ -110,8 +110,51 @@ find_interface_slot(char *interface_name) {
   return strdup(interface_slot);
 }
 
+static int
+get_val_from_file(char *valsource) {
+  FILE *valfile;
+  char buffer[6]; /* 0xabcd */
+  int ret;
 
+  valfile = fopen(valsource,"r");
+  if (valfile == NULL) return -1;
 
+  ret = fread(buffer,1,sizeof(buffer), valfile);
+  if (ret != sizeof(buffer)) return -1;
+
+  ret = (int)strtol(buffer,NULL,0);
+
+  return ret;
+  
+}
+void
+find_interface_ids(char *interface_name, int *vendor, int *device, int *sub_vend, int *sub_dev) {
+
+  int ret;
+
+  char sysfile[128];  /* gotta love constants */
+
+  /* first the vendor id */
+  ret = snprintf(sysfile,127,"/sys/class/net/%s/device/vendor",interface_name);
+  sysfile[128] = 0;
+  *vendor = get_val_from_file(sysfile);
+
+  /* next the device */
+  ret = snprintf(sysfile,127,"/sys/class/net/%s/device/device",interface_name);
+  sysfile[128] = 0;
+  *device = get_val_from_file(sysfile);
+
+  /* next the subsystem vendor */
+  ret = snprintf(sysfile,127,"/sys/class/net/%s/device/subsystem_vendor",interface_name);
+  sysfile[128] = 0;
+  *sub_vend = get_val_from_file(sysfile);
+
+  /* next the subsystem device */
+  ret = snprintf(sysfile,127,"/sys/class/net/%s/device/subsystem_device",interface_name);
+  sysfile[128] = 0;
+  *sub_dev = get_val_from_file(sysfile);
+
+}
 
 
 
