@@ -96,7 +96,7 @@ struct  omni_response_struct {
   /* these are here because they can be checked before actual data
      connections are made, and the omni_results_struct is already
      full */
-  uint32_t   cpu_frequency;
+  uint32_t   cpu_frequency;  /* this should be megahertz */
   char       system_model[32];
   char       cpu_model[64];  /* seems like an awful lot doesn't it */
   /* 84 bytes left */
