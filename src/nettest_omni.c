@@ -5236,7 +5236,7 @@ recv_omni()
   omni_results->ifname[15] = 0;
   local_interface_slot = find_interface_slot(local_interface_name);
   strncpy(omni_results->ifslot,local_interface_slot,16);
-  omni_results->ifslot[16] = 0;
+  omni_results->ifslot[15] = 0;
   find_interface_ids(local_interface_name,
 		     &omni_results->vendor,
 		     &omni_results->device,
