@@ -271,6 +271,9 @@
 /* Use Linux's ethtool interface to determine driver information. */
 #undef USE_ETHTOOL
 
+/* Use Linux's ethtool interface to determine driver information. */
+#undef USE_HPUX
+
 /* Use Solaris's kstat interface to measure CPU util. */
 #undef USE_KSTAT
 
