@@ -91,6 +91,16 @@ struct  omni_response_struct {
 
   uint32_t   interval_burst;/* how many things to do each interval */
   uint32_t   interval_usecs;/* how long each interval should be */
+  /* there are 16 ints above here, and we have 248 - (16*4) or 184 bytes
+     remaining */
+  /* these are here because they can be checked before actual data
+     connections are made, and the omni_results_struct is already
+     full */
+  uint32_t   cpu_frequency;
+  char       system_model[32];
+  char       cpu_model[64];  /* seems like an awful lot doesn't it */
+  /* 84 bytes left */
+  
 };
 
 struct omni_results_struct {
