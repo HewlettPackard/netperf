@@ -6,7 +6,7 @@
 /* tusc can be a very useful thing... */
 
 #ifndef _SI_MACHINE_MODEL
-#define _SI_MACHING_MODEL 5
+#define _SI_MACHINE_MODEL 5
 #endif
 
 extern int sysinfo(int info, char *buffer, int len);
@@ -16,7 +16,7 @@ void
 find_system_info(char **system_model, char **cpu_model, int *cpu_frequency) {
   char model_str[64];
   int  ret;
-
+  printf("calling find_system_info\n");
   struct pst_processor processor_info;
 
   /* first the system model name */
@@ -45,7 +45,7 @@ find_system_info(char **system_model, char **cpu_model, int *cpu_frequency) {
 #endif 
   }
   else
-    *cpu_frquency = -1;
+    *cpu_frequency = -1;
 
   *cpu_model = strdup("Unknown CPU Model");
 }
