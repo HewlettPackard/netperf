@@ -869,6 +869,38 @@ esac
 
 AC_SUBST(NETDRVLKUP_SOURCE)
 
+# time to see about system lookup mechanisms
+
+AC_MSG_CHECKING([which system info lookup type to use])
+
+AC_ARG_ENABLE(syslookup,
+	[AS_HELP_STRING([--enable-syslookup],[include code to find the probable egress interface using specified mechanism])])
+
+NETSYSLKUP_SOURCE="$enable_syslookup"
+case "$enable_syslookup" in
+
+	'')
+# guess it automagically in a nice big case statement
+		case $target in
+		     *)
+			use_syslookup=false
+			NETSYSLKUP_SOURCE="none"
+			enable_syslookup="none. Consider teaching configure about your platform."
+			;;
+		esac
+		;;
+	none)
+		use_syslookup=false
+		;;
+	*)
+		AC_MSG_ERROR([--enable-syslookup takes none])
+		;;
+esac
+
+	AC_MSG_RESULT("$enable_syslookup")
+
+AC_SUBST(NETSYSLKUP_SOURCE)
+
 # now spit it all out
 AC_CONFIG_FILES([Makefile
                  src/netperf_version.h

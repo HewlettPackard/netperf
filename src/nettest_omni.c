@@ -407,6 +407,12 @@ int         local_interface_vendor;
 int         local_interface_device;
 int         local_interface_subvendor;
 int         local_interface_subdevice;
+char        *local_system_model;
+char        *local_cpu_model;
+int         local_cpu_frequency;
+char        *remote_system_model;
+char        *remote_cpu_model;
+int         remote_cpu_frequency;
 
 int printing_initialized = 0;
 
@@ -503,10 +509,14 @@ enum netperf_output_name {
   LOCAL_CPU_COUNT,
   LOCAL_CPU_PEAK_UTIL,
   LOCAL_CPU_PEAK_ID,
+  LOCAL_CPU_MODEL,
+  LOCAL_CPU_FREQUENCY,
   REMOTE_CPU_BIND,
   REMOTE_CPU_COUNT,
   REMOTE_CPU_PEAK_UTIL,
   REMOTE_CPU_PEAK_ID,
+  REMOTE_CPU_MODEL,
+  REMOTE_CPU_FREQUENCY,
   SOURCE_PORT,
   SOURCE_ADDR,
   SOURCE_FAMILY,
@@ -550,10 +560,12 @@ enum netperf_output_name {
   REMOTE_NODELAY,
   REMOTE_CORK,
   LOCAL_SYSNAME,
+  LOCAL_SYSTEM_MODEL,
   LOCAL_RELEASE,
   LOCAL_VERSION,
   LOCAL_MACHINE,
   REMOTE_SYSNAME,
+  REMOTE_SYSTEM_MODEL,
   REMOTE_RELEASE,
   REMOTE_VERSION,
   REMOTE_MACHINE,
@@ -984,6 +996,18 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "LOCAL_VERSION";
   case LOCAL_RELEASE:
     return "LOCAL_RELEASE";
+  case REMOTE_CPU_MODEL:
+    return "REMOTE_CPU_MODEL";
+  case REMOTE_CPU_FREQUENCY:
+    return "REMOTE_CPU_FREQUENCY";
+  case REMOTE_SYSTEM_MODEL:
+    return "REMOTE_SYSTEM_MODEL";
+  case LOCAL_CPU_MODEL:
+    return "LOCAL_CPU_MODEL";
+  case LOCAL_CPU_FREQUENCY:
+    return "LOCAL_CPU_FREQUENCY";
+  case LOCAL_SYSTEM_MODEL:
+    return "LOCAL_SYSTEM_MODEL";
   case OUTPUT_END:
     return "OUTPUT_END";
   default:
@@ -2809,6 +2833,78 @@ print_omni_init() {
   netperf_output_source[LOCAL_INTERVAL_BURST].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_INTERVAL_BURST);
 
+  netperf_output_source[REMOTE_SYSTEM_MODEL].output_name = REMOTE_SYSTEM_MODEL;
+  netperf_output_source[REMOTE_SYSTEM_MODEL].line[0] = "Remote";
+  netperf_output_source[REMOTE_SYSTEM_MODEL].line[1] = "System";
+  netperf_output_source[REMOTE_SYSTEM_MODEL].line[2] = "Model";
+  netperf_output_source[REMOTE_SYSTEM_MODEL].line[3] = "";
+  netperf_output_source[REMOTE_SYSTEM_MODEL].format = "%s";
+  netperf_output_source[REMOTE_SYSTEM_MODEL].display_value = remote_system_model;
+  netperf_output_source[REMOTE_SYSTEM_MODEL].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_SYSTEM_MODEL);
+  netperf_output_source[REMOTE_SYSTEM_MODEL].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_SYSTEM_MODEL);
+
+  netperf_output_source[REMOTE_CPU_MODEL].output_name = REMOTE_CPU_MODEL;
+  netperf_output_source[REMOTE_CPU_MODEL].line[0] = "Remote";
+  netperf_output_source[REMOTE_CPU_MODEL].line[1] = "CPU";
+  netperf_output_source[REMOTE_CPU_MODEL].line[2] = "Model";
+  netperf_output_source[REMOTE_CPU_MODEL].line[3] = "";
+  netperf_output_source[REMOTE_CPU_MODEL].format = "%s";
+  netperf_output_source[REMOTE_CPU_MODEL].display_value = remote_cpu_model;
+  netperf_output_source[REMOTE_CPU_MODEL].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_CPU_MODEL);
+  netperf_output_source[REMOTE_CPU_MODEL].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_CPU_MODEL);
+
+  netperf_output_source[REMOTE_CPU_FREQUENCY].output_name = REMOTE_CPU_FREQUENCY;
+  netperf_output_source[REMOTE_CPU_FREQUENCY].line[0] = "Remote";
+  netperf_output_source[REMOTE_CPU_FREQUENCY].line[1] = "CPU";
+  netperf_output_source[REMOTE_CPU_FREQUENCY].line[2] = "Frequency";
+  netperf_output_source[REMOTE_CPU_FREQUENCY].line[3] = "MHz";
+  netperf_output_source[REMOTE_CPU_FREQUENCY].format = "%d";
+  netperf_output_source[REMOTE_CPU_FREQUENCY].display_value = &remote_cpu_frequency;
+  netperf_output_source[REMOTE_CPU_FREQUENCY].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_CPU_FREQUENCY);
+  netperf_output_source[REMOTE_CPU_FREQUENCY].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_CPU_FREQUENCY);
+
+  netperf_output_source[LOCAL_SYSTEM_MODEL].output_name = LOCAL_SYSTEM_MODEL;
+  netperf_output_source[LOCAL_SYSTEM_MODEL].line[0] = "Local";
+  netperf_output_source[LOCAL_SYSTEM_MODEL].line[1] = "System";
+  netperf_output_source[LOCAL_SYSTEM_MODEL].line[2] = "Model";
+  netperf_output_source[LOCAL_SYSTEM_MODEL].line[3] = "";
+  netperf_output_source[LOCAL_SYSTEM_MODEL].format = "%s";
+  netperf_output_source[LOCAL_SYSTEM_MODEL].display_value = local_system_model;
+  netperf_output_source[LOCAL_SYSTEM_MODEL].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_SYSTEM_MODEL);
+  netperf_output_source[LOCAL_SYSTEM_MODEL].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_SYSTEM_MODEL);
+
+  netperf_output_source[LOCAL_CPU_MODEL].output_name = LOCAL_CPU_MODEL;
+  netperf_output_source[LOCAL_CPU_MODEL].line[0] = "Local";
+  netperf_output_source[LOCAL_CPU_MODEL].line[1] = "CPU";
+  netperf_output_source[LOCAL_CPU_MODEL].line[2] = "Model";
+  netperf_output_source[LOCAL_CPU_MODEL].line[3] = "";
+  netperf_output_source[LOCAL_CPU_MODEL].format = "%s";
+  netperf_output_source[LOCAL_CPU_MODEL].display_value = local_cpu_model;
+  netperf_output_source[LOCAL_CPU_MODEL].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_CPU_MODEL);
+  netperf_output_source[LOCAL_CPU_MODEL].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_CPU_MODEL);
+
+  netperf_output_source[LOCAL_CPU_FREQUENCY].output_name = LOCAL_CPU_FREQUENCY;
+  netperf_output_source[LOCAL_CPU_FREQUENCY].line[0] = "Local";
+  netperf_output_source[LOCAL_CPU_FREQUENCY].line[1] = "CPU";
+  netperf_output_source[LOCAL_CPU_FREQUENCY].line[2] = "Frequency";
+  netperf_output_source[LOCAL_CPU_FREQUENCY].line[3] = "MHz";
+  netperf_output_source[LOCAL_CPU_FREQUENCY].format = "%d";
+  netperf_output_source[LOCAL_CPU_FREQUENCY].display_value = &local_cpu_frequency;
+  netperf_output_source[LOCAL_CPU_FREQUENCY].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_CPU_FREQUENCY);
+  netperf_output_source[LOCAL_CPU_FREQUENCY].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_CPU_FREQUENCY);
+
   netperf_output_source[OUTPUT_END].output_name = OUTPUT_END;
   netperf_output_source[OUTPUT_END].line[0] = "This";
   netperf_output_source[OUTPUT_END].line[1] = "Is";
@@ -3835,7 +3931,7 @@ send_omni(char remote_host[])
 	 so, we can shove them back into the relevant variables here
 	 and be on our way. */
 
-      recv_response();
+      recv_response_n(17); /* brittle, but functional */
   
       if (!netperf_response.content.serv_errno) {
 	rsr_size	 = omni_response->recv_buf_size;
@@ -3858,6 +3954,16 @@ send_omni(char remote_host[])
 	  fprintf(where,"remote port is %u\n",get_port_number(remote_res));
 	  fflush(where);
 	}
+	/* just in case the remote didn't null terminate */
+	if (NULL == remote_system_model) {
+	  omni_response->system_model[sizeof(omni_response->system_model)-1] = 0;
+	  remote_system_model = strdup(omni_response->system_model);
+	}
+	if (NULL == remote_cpu_model) {
+	  omni_response->cpu_model[sizeof(omni_response->cpu_model) -1 ] = 0;
+	  remote_cpu_model = strdup(omni_response->cpu_model);
+	}
+	remote_cpu_frequency = omni_response->cpu_frequency;
       }
       else {
 	Set_errno(netperf_response.content.serv_errno);
@@ -3869,6 +3975,13 @@ send_omni(char remote_host[])
 	exit(1);
       }
     
+    }
+    else {
+      if (NULL == remote_system_model) 
+	remote_system_model = strdup("Unknown System Model");
+      if (NULL == remote_cpu_model)
+	remote_cpu_model = strdup("Unknown CPU Model");
+      remote_cpu_frequency = -1;
     }
 
 #ifdef WANT_DEMO
@@ -4325,6 +4438,10 @@ send_omni(char remote_host[])
        will also store-away the necessaries for cpu utilization */
 
     cpu_stop(local_cpu_usage,&elapsed_time);
+    
+    find_system_info(&local_system_model,
+		     &local_cpu_model,
+		     &local_cpu_frequency);
 
     local_interface_name = 
       find_egress_interface(local_res->ai_addr,remote_res->ai_addr);
@@ -4890,7 +5007,14 @@ recv_omni()
   omni_response->interval_usecs = interval_usecs;
   omni_response->interval_burst = interval_burst;
 
-  send_response();
+  find_system_info(&local_system_model,&local_cpu_model,&local_cpu_frequency);
+  strncpy(omni_response->system_model,local_system_model,sizeof(omni_response->system_model));
+  omni_response->system_model[sizeof(omni_response->system_model)-1] = 0;
+  strncpy(omni_response->cpu_model,local_cpu_model,sizeof(omni_response->cpu_model));
+  omni_response->cpu_model[sizeof(omni_response->cpu_model)-1] = 0;
+  omni_response->cpu_frequency = local_cpu_frequency;
+
+  send_response_n(17); /* brittle, but functional */
 
   local_send_calls = 0;
   local_receive_calls = 0;

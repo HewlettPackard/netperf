@@ -708,6 +708,7 @@ NETCPU_SOURCE
 NETRTLKUP_SOURCE
 NETSLOTLKUP_SOURCE
 NETDRVLKUP_SOURCE
+NETSYSLKUP_SOURCE
 LTLIBOBJS'
 ac_subst_files=''
       ac_precious_vars='build_alias
@@ -1327,6 +1328,8 @@ Optional Features:
   --enable-slotlookup     include code to find the probable egress interface
                           using specified mechanism
   --enable-drvlookup      include code to find the probable egress interface
+                          using specified mechanism
+  --enable-syslookup      include code to find the probable egress interface
                           using specified mechanism
 
 Some influential environment variables:
@@ -9699,6 +9702,45 @@ echo "${ECHO_T}\"$enable_drvlookup\"" >&6; }
 
 
 
+# time to see about system lookup mechanisms
+
+{ echo "$as_me:$LINENO: checking which system info lookup type to use" >&5
+echo $ECHO_N "checking which system info lookup type to use... $ECHO_C" >&6; }
+
+# Check whether --enable-syslookup was given.
+if test "${enable_syslookup+set}" = set; then
+  enableval=$enable_syslookup;
+fi
+
+
+NETSYSLKUP_SOURCE="$enable_syslookup"
+case "$enable_syslookup" in
+
+	'')
+# guess it automagically in a nice big case statement
+		case $target in
+		     *)
+			use_syslookup=false
+			NETSYSLKUP_SOURCE="none"
+			enable_syslookup="none. Consider teaching configure about your platform."
+			;;
+		esac
+		;;
+	none)
+		use_syslookup=false
+		;;
+	*)
+		{ { echo "$as_me:$LINENO: error: --enable-syslookup takes none" >&5
+echo "$as_me: error: --enable-syslookup takes none" >&2;}
+   { (exit 1); exit 1; }; }
+		;;
+esac
+
+	{ echo "$as_me:$LINENO: result: \"$enable_syslookup\"" >&5
+echo "${ECHO_T}\"$enable_syslookup\"" >&6; }
+
+
+
 # now spit it all out
 ac_config_files="$ac_config_files Makefile src/netperf_version.h src/Makefile src/missing/Makefile src/missing/m4/Makefile doc/Makefile doc/examples/Makefile netperf.spec"
 
@@ -10452,10 +10494,11 @@ NETCPU_SOURCE!$NETCPU_SOURCE$ac_delim
 NETRTLKUP_SOURCE!$NETRTLKUP_SOURCE$ac_delim
 NETSLOTLKUP_SOURCE!$NETSLOTLKUP_SOURCE$ac_delim
 NETDRVLKUP_SOURCE!$NETDRVLKUP_SOURCE$ac_delim
+NETSYSLKUP_SOURCE!$NETSYSLKUP_SOURCE$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 95; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 96; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
@@ -10474,7 +10517,7 @@ fi
 
 cat >>$CONFIG_STATUS <<_ACEOF
 cat >"\$tmp/subs-1.sed" <<\CEOF$ac_eof
-/@[a-zA-Z_][a-zA-Z_0-9]*@/!b end
+/@[a-zA-Z_][a-zA-Z_0-9]*@/!b
 _ACEOF
 sed '
 s/[,\\&]/\\&/g; s/@/@|#_!!_#|/g
@@ -10487,8 +10530,6 @@ N; s/^.*\n//; s/[,\\&]/\\&/g; s/@/@|#_!!_#|/g; b n
 ' >>$CONFIG_STATUS <conf$$subs.sed
 rm -f conf$$subs.sed
 cat >>$CONFIG_STATUS <<_ACEOF
-:end
-s/|#_!!_#|//g
 CEOF$ac_eof
 _ACEOF
 
@@ -10736,7 +10777,7 @@ s&@abs_builddir@&$ac_abs_builddir&;t t
 s&@abs_top_builddir@&$ac_abs_top_builddir&;t t
 s&@INSTALL@&$ac_INSTALL&;t t
 $ac_datarootdir_hack
-" $ac_file_inputs | sed -f "$tmp/subs-1.sed" >$tmp/out
+" $ac_file_inputs | sed -f "$tmp/subs-1.sed" | sed 's/|#_!!_#|//g' >$tmp/out
 
 test -z "$ac_datarootdir_hack$ac_datarootdir_seen" &&
   { ac_out=`sed -n '/\${datarootdir}/p' "$tmp/out"`; test -n "$ac_out"; } &&
