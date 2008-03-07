@@ -4439,6 +4439,7 @@ send_omni(char remote_host[])
 
     cpu_stop(local_cpu_usage,&elapsed_time);
     
+    printf("calling find_system_info\n");
     find_system_info(&local_system_model,
 		     &local_cpu_model,
 		     &local_cpu_frequency);
