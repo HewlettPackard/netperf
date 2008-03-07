@@ -9728,15 +9728,15 @@ _ACEOF
 	'')
 # guess it automagically in a nice big case statement
 		case $target in
-		     *-*-hpux11.1231)
-			use_drvlookup=true
+		     *-*-hpux11*)
+			use_syslookup=true
 
 cat >>confdefs.h <<\_ACEOF
 #define USE_HPUX
 _ACEOF
 
-			enable_drvlookup="hpux11i - auto"
-			NETDRVLKUP_SOURCE="hpux11i"
+			enable_syslookup="hpux11i - auto"
+			NETSYSLKUP_SOURCE="hpux11i"
 			;;
 		     *)
 			use_syslookup=false
