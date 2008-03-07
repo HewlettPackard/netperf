@@ -887,11 +887,11 @@ case "$enable_syslookup" in
 	'')
 # guess it automagically in a nice big case statement
 		case $target in
-		     *-*-hpux11.[123]1)
-			use_drvlookup=true
-			AC_DEFINE([USE_HPUX],,[Use Linux's ethtool interface to determine driver information.])
-			enable_drvlookup="hpux11i - auto"
-			NETDRVLKUP_SOURCE="hpux11i"
+		     *-*-hpux11*)
+			use_syslookup=true
+			AC_DEFINE([USE_HPUX],,[Use HP-UX's sysinfo and pstat interfaces to determine system information.])
+			enable_syslookup="hpux11i - auto"
+			NETSYSLKUP_SOURCE="hpux11i"
 			;;
 		     *)
 			use_syslookup=false
