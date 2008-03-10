@@ -271,7 +271,8 @@
 /* Use Linux's ethtool interface to determine driver information. */
 #undef USE_ETHTOOL
 
-/* Use Linux's ethtool interface to determine driver information. */
+/* Use HP-UX's sysinfo and pstat interfaces to determine system information.
+   */
 #undef USE_HPUX
 
 /* Use Solaris's kstat interface to measure CPU util. */

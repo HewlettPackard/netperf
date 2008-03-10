@@ -1,6 +1,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <string.h>
+#include <math.h>
 #include <sys/pstat.h>
 
 /* tusc can be a very useful thing... */
@@ -35,13 +36,17 @@ find_system_info(char **system_model, char **cpu_model, int *cpu_frequency) {
 
   if (ret > 0) {
 #ifdef PAP_MAX_CACHE_LEVELS
-    /* we can get it "directly" */
-    *cpu_frequency = processor_info.psp_cpu_frequency / 1000000;
+    /* we can get it "directly" but to help make things reconcile with
+       what other tools/platforms support, we shouldn't do a simple
+       integer divide - instead, we should do our division in floating
+       point and then round */
+    *cpu_frequency = rint((double)processor_info.psp_cpu_frequency / 
+			  1000000.0);
 #else
     /* older OSes were "known" to be on CPUs where the itick was
        1to1 here */
-    *cpu_frequency = 
-      (processor_info.psp_iticksperclktick * sysconf(_SC_CLK_TCK)) / 1000000;
+    *cpu_frequency = rint(((double)processor_info.psp_iticksperclktick * 
+			   (double)sysconf(_SC_CLK_TCK)) / 1000000.0);
 #endif 
   }
   else
