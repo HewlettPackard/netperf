@@ -879,20 +879,26 @@ AC_ARG_ENABLE(syslookup,
 NETSYSLKUP_SOURCE="$enable_syslookup"
 case "$enable_syslookup" in
 	hpux11i)
-		use_drvlookup=true
-		AC_DEFINE([USE_HPUX],,[Use pstat and sysinfo on HP-UX.])
+		use_syslookup=true
 		;;
 
-
+	linux)
+		use_syslookup=true;
+		;;
 	'')
 # guess it automagically in a nice big case statement
 		case $target in
 		     *-*-hpux11*)
 			use_syslookup=true
-			AC_DEFINE([USE_HPUX],,[Use HP-UX's sysinfo and pstat interfaces to determine system information.])
 			enable_syslookup="hpux11i - auto"
 			NETSYSLKUP_SOURCE="hpux11i"
 			;;
+		     *-*-linux*)
+			use_syslookup=true
+			enable_syslookup="linux - auto"
+			NETSYSLKUP_SOURCE="linux"
+			;;
+			
 		     *)
 			use_syslookup=false
 			NETSYSLKUP_SOURCE="none"
@@ -904,7 +910,7 @@ case "$enable_syslookup" in
 		use_syslookup=false
 		;;
 	*)
-		AC_MSG_ERROR([--enable-syslookup takes hpux or none])
+		AC_MSG_ERROR([--enable-syslookup takes hpux11i, linux or none])
 		;;
 esac
 

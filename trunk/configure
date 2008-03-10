@@ -9716,28 +9716,26 @@ fi
 NETSYSLKUP_SOURCE="$enable_syslookup"
 case "$enable_syslookup" in
 	hpux11i)
-		use_drvlookup=true
-
-cat >>confdefs.h <<\_ACEOF
-#define USE_HPUX
-_ACEOF
-
+		use_syslookup=true
 		;;
 
-
+	linux)
+		use_syslookup=true;
+		;;
 	'')
 # guess it automagically in a nice big case statement
 		case $target in
 		     *-*-hpux11*)
 			use_syslookup=true
-
-cat >>confdefs.h <<\_ACEOF
-#define USE_HPUX
-_ACEOF
-
 			enable_syslookup="hpux11i - auto"
 			NETSYSLKUP_SOURCE="hpux11i"
 			;;
+		     *-*-linux*)
+			use_syslookup=true
+			enable_syslookup="linux - auto"
+			NETSYSLKUP_SOURCE="linux"
+			;;
+
 		     *)
 			use_syslookup=false
 			NETSYSLKUP_SOURCE="none"
@@ -9749,8 +9747,8 @@ _ACEOF
 		use_syslookup=false
 		;;
 	*)
-		{ { echo "$as_me:$LINENO: error: --enable-syslookup takes hpux or none" >&5
-echo "$as_me: error: --enable-syslookup takes hpux or none" >&2;}
+		{ { echo "$as_me:$LINENO: error: --enable-syslookup takes hpux11i, linux or none" >&5
+echo "$as_me: error: --enable-syslookup takes hpux11i, linux or none" >&2;}
    { (exit 1); exit 1; }; }
 		;;
 esac
