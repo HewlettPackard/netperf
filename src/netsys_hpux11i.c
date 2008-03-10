@@ -10,7 +10,7 @@
 #define _SI_MACHINE_MODEL 5
 #endif
 
-extern int sysinfo(int info, char *buffer, int len);
+extern int sysinfo(int info, char *buffer, ssize_t len);
 
 
 void
