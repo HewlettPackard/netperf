@@ -71,9 +71,39 @@ find_cpu_model_freq(char **cpu_model, int *frequency) {
 }
 
 static void
+find_system_model_sysinfo(char **system_model) {
+
+#include <sys/systeminfo.h>
+  char model_str[37];
+  char *token1,*token2;
+  long  ret;
+  /* sysinfo is kind enough to zero-terminate for us. we will be
+     ignoring the leading SUNW, if present so use 37 instead of 35 in
+     case the platform name is long */
+  ret = sysinfo(SI_PLATFORM,model_str,37);
+  if (-1 != ret) {
+    /* however, it seems to shove potentially redundant information at
+       us and include a comma, which we have no desire to include, so
+       we will ass-u-me we can do a couple strtok calls to be rid of
+       that */
+    token1 = strtok(model_str,",");
+    token2 = strtok(NULL,",");
+    if (token2)
+      *system_model = strdup(token2);
+    else
+      *system_model = strdup(model_str);
+  }
+  else
+    *system_model = strdup("sysinfo");
+
+}
+
+static void
 find_system_model(char **system_model) {
 
-#if defined(HAVE_SYS_SMBIOS_H)
+  /* the .h file will be there even on a SPARC system, so we have to
+     check for both the .h and the libarary... */
+#if defined(HAVE_SYS_SMBIOS_H) && defined(HAVE_LIBSMBIOS)
 #include <sys/smbios.h>
   smbios_hdl_t *smbios_handle;
   smbios_info_t info; 
@@ -95,7 +125,9 @@ find_system_model(char **system_model) {
   smbios_close(smbios_handle);
 
 #else
-  *system_model = strdup("Teach me for SPARC");
+
+  find_system_model_sysinfo(system_model);
+
 #endif
 
   return;
@@ -109,3 +141,19 @@ find_system_info(char **system_model, char **cpu_model, int *cpu_frequency) {
   find_cpu_model_freq(cpu_model,cpu_frequency);
 
 }
+
+#if defined(NETPERF_STANDALONE_DEBUG)
+int
+main(int argc, char *argv[]) {
+  char *system_model;
+  char *cpu_model;
+  int  frequency;
+
+  find_system_info(&system_model,&cpu_model,&frequency);
+  printf("system_model %s, cpu_model %s, frequency %d\n",
+	 system_model,
+	 cpu_model,
+	 frequency);
+}
+#endif
+    
