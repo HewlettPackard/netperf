@@ -1121,7 +1121,10 @@ get_local_system_info()
 {
 #ifdef HAVE_UNAME
   struct utsname buf;
-  if (uname(&buf) == 0) {
+  /* the linux manpage for uname says 0 means success, everyone else
+     says non-negative.  at least they all agree that -1 means
+     error */
+  if (uname(&buf) != -1) {
     local_sysname = strdup(buf.sysname);
     local_release = strdup(buf.release);
     local_version = strdup(buf.version);
