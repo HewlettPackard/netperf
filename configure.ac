@@ -690,7 +690,7 @@ case "$enable_cpuutil" in
 			enable_cpuutil="kstat - auto"
 			NETCPU_SOURCE="kstat"
 			;;
-                     *-*-freebsd[4-7].* | *-*-netbsd[1-9].* )
+                     *-*-freebsd[[4-7]].* | *-*-netbsd[[1-9]].* )
 			use_cpuutil=true
 			AC_DEFINE([USE_SYSCTL],,[Use MumbleBSD's sysctl interface to measure CPU util.])
 			enable_cpuutil="sysctl - auto"
@@ -754,7 +754,7 @@ case "$enable_rtlookup" in
 			enable_rtlookup="rtmget - auto"
 			NETRTLKUP_SOURCE="rtmget"
 			;;
-                     *-*-freebsd4.* | *-*-freebsd5.* | *-*-freebsd6.* | *-*-freebsd7.* )
+                     *-*-freebsd[[4-7]].* )
 			use_rtlookup=true
 			AC_DEFINE([USE_RTMGET],,[Use routing socket interface to determine egress interface.])
 			enable_rtlookup="rtmget - auto"
@@ -874,7 +874,7 @@ AC_SUBST(NETDRVLKUP_SOURCE)
 AC_MSG_CHECKING([which system info lookup type to use])
 
 AC_ARG_ENABLE(syslookup,
-	[AS_HELP_STRING([--enable-syslookup],[include code to find the probable egress interface using specified mechanism])])
+	[AS_HELP_STRING([--enable-syslookup],[include code to find some rudimentary system information])])
 
 NETSYSLKUP_SOURCE="$enable_syslookup"
 case "$enable_syslookup" in
@@ -884,6 +884,12 @@ case "$enable_syslookup" in
 
 	linux)
 		use_syslookup=true;
+		;;
+        solaris)
+		use_syslookup=true;
+		# this will basically tell us if we can use libsmbios
+		AC_CHECK_HEADERS([sys/sbmios.h])
+		AC_HAVE_LIBRARY(smbios)
 		;;
 	'')
 # guess it automagically in a nice big case statement
@@ -898,7 +904,13 @@ case "$enable_syslookup" in
 			enable_syslookup="linux - auto"
 			NETSYSLKUP_SOURCE="linux"
 			;;
-			
+		     *-*-solaris*)
+		        use_syslookup=true
+			enable_syslookup="solaris - auto"
+			NETSYSLKUP_SOURCE="solaris"
+			AC_CHECK_HEADERS([sys/smbios.h])
+			AC_HAVE_LIBRARY(smbios)
+			;;
 		     *)
 			use_syslookup=false
 			NETSYSLKUP_SOURCE="none"
