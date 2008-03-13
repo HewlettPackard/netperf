@@ -98,8 +98,12 @@ struct  omni_response_struct {
      full */
   uint32_t   cpu_frequency;  /* this should be megahertz */
   char       system_model[32];
-  char       cpu_model[64];  /* seems like an awful lot doesn't it */
-  /* 84 bytes left */
+  char       cpu_model[80];  /* seems like an awful lot doesn't
+				it. some clever person at Intel
+				decided to give Montecito processors a
+				name that long - and still didn't
+				include the 9NNN model number! */
+  /* 68 bytes left */
   
 };
 

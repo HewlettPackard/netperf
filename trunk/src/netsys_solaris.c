@@ -3,6 +3,7 @@
 #endif
 
 #include <stdio.h>
+#include <errno.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -120,14 +121,27 @@ find_system_model(char **system_model) {
   if (NULL == smbios_handle) {
     /* fall-back on sysinfo for the system model info, we don't really
        care why we didn't get a handle, just that we didn't get one */
+#if defined(NETPERF_STANDALONE_DEBUG)
+    printf("smbios_open returned NULL, error %d errno %d %s\n",
+	   error,errno,strerror(errno));
+#endif
     find_system_model_sysinfo(system_model);
     return;
   }
   ret = smbios_info_common(smbios_handle,256,&info);
   if (0 == ret) 
     *system_model = strdup(info.smbi_product);
-  else
-    *system_model = strdup("smbios_info_common");
+  else {
+    /* we ass-u-me that while there was smbios on the system it didn't
+       have the smbi_product information we seek, so once again we
+       fallback to sysinfo.  this is getting tiresome isn't it?-) raj
+       2008-03-12 */
+#if defined(NETPERF_STANDALONE_DEBUG)
+    printf("smbios_info_common returned %d errno %d %s\n",
+	   ret,errno,strerror(errno));
+#endif
+    find_system_model_sysinfo(system_model);
+  }
   smbios_close(smbios_handle);
 
 #else
