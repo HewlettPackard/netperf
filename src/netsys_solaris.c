@@ -117,6 +117,12 @@ find_system_model(char **system_model) {
      who got me started.  feel free to make yourself known as you see fit :)
      rick jones 2008-03-12 */
   smbios_handle = smbios_open(NULL,SMB_VERSION,0,&error);
+  if (NULL == smbios_handle) {
+    /* fall-back on sysinfo for the system model info, we don't really
+       care why we didn't get a handle, just that we didn't get one */
+    find_system_model_sysinfo(system_model);
+    return;
+  }
   ret = smbios_info_common(smbios_handle,256,&info);
   if (0 == ret) 
     *system_model = strdup(info.smbi_product);
