@@ -2,6 +2,14 @@ These are the Release Notes leading-up to Revision 2.4.5 of netperf:
 
 Things changed in this release:
 
+*) For the first time, netperf2 has a dependency, albeit optional, on
+   another non-base-os bit of code - libsmbios under Linux.  It will
+   attept to detect this at compile time and use it to report the
+   system model name in an omni test.  All that has to be there at
+   compile time for netperf is the libsmbios runtime - we only make
+   one call from it - SMBIOSGetSystemName(), and if the include file
+   isn't present we just make do.
+
 *) Fixes for BSD CPU utilization to deal with different BSD variants
    using different types.  Courtesy of Simon Burge <simonb@NetBSD.org>
 

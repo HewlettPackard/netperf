@@ -884,6 +884,8 @@ case "$enable_syslookup" in
 
 	linux)
 		use_syslookup=true;
+		AC_CHECK_HEADERS([smbios/SystemInfo.h])
+		AC_HAVE_LIBRARY(smbios)
 		;;
         solaris)
 		use_syslookup=true;
@@ -902,6 +904,8 @@ case "$enable_syslookup" in
 		     *-*-linux*)
 			use_syslookup=true
 			enable_syslookup="linux - auto"
+			AC_CHECK_HEADERS([smbios/SystemInfo.h])
+			AC_HAVE_LIBRARY(smbios)
 			NETSYSLKUP_SOURCE="linux"
 			;;
 		     *-*-solaris*)
