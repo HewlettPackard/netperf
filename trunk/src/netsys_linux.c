@@ -1,3 +1,11 @@
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#ifdef NETPERF_STANDALONE_DEBUG
+#include <errno.h>
+#endif
+
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
@@ -70,12 +78,61 @@ find_cpu_freq() {
   return -1;
 }
 
+static void 
+find_system_model(char **system_model) {
+#if defined(HAVE_LIBSMBIOS)
+#if defined(HAVE_SMBIOS_SYSTEMINFO_H)
+#include <smbios/SystemInfo.h>
+#else
+  /* take our best shot - the interface seems simple and stable enough
+     that we don't have to require the -dev package be installed */
+  extern const char *SMBIOSGetSystemName();
+#endif
+
+  char *temp_model;
+
+  /* SMBIOSGetSystemModel allocated */
+  temp_model = (char *) SMBIOSGetSystemName();
+  if (temp_model)
+    *system_model = temp_model;
+  else
+    *system_model = strdup("SMBIOSGetSystemModel");
+
+#else
+  /* we do not even have the library so there isn't much to do here
+     unless someone wants to teach netperf how to find and parse
+     SMBIOS all by its lonesome. raj 2008-03-13 */
+  *system_model = strdup("Teach Me SMBIOS");
+#endif
+  return;
+}
+
 void
 find_system_info(char **system_model, char **cpu_model, int *cpu_frequency) {
   int ret;
 
-  *system_model = strdup("Teach Me DMI");
+  find_system_model(system_model);
   find_cpu_model(cpu_model);
   *cpu_frequency = find_cpu_freq();
 
 }
+
+#ifdef NETPERF_STANDALONE_DEBUG
+int
+main(int argc, char *argv[]) {
+
+  char *system_model;
+  char *cpu_model;
+  int   frequency;
+
+  find_system_info(&system_model,&cpu_model,&frequency);
+  printf("system_model %s, cpu_model %s, frequency %d\n",
+	 system_model,
+	 cpu_model,
+	 frequency);
+
+  return 0;
+
+}
+
+#endif
