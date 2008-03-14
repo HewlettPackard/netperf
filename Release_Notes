@@ -5,10 +5,12 @@ Things changed in this release:
 *) For the first time, netperf2 has a dependency, albeit optional, on
    another non-base-os bit of code - libsmbios under Linux.  It will
    attept to detect this at compile time and use it to report the
-   system model name in an omni test.  All that has to be there at
-   compile time for netperf is the libsmbios runtime - we only make
-   one call from it - SMBIOSGetSystemName(), and if the include file
-   isn't present we just make do.
+   system model name in an omni test.  If libsmbios is there we will
+   try to use it, otherwise we will not.  If the associated include
+   file is also there (eg the -dev package in apt-get-speak), we will
+   use it to get the prototype for SMBIOSGetSystemName, otherwise we
+   make a guess as to the prototype for SMBIOSGetSystemName(), which
+   is the only call we make to libsmbios.
 
 *) Fixes for BSD CPU utilization to deal with different BSD variants
    using different types.  Courtesy of Simon Burge <simonb@NetBSD.org>

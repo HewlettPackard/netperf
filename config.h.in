@@ -145,6 +145,9 @@
 /* Define to 1 if you have the <signal.h> header file. */
 #undef HAVE_SIGNAL_H
 
+/* Define to 1 if you have the <smbios/SystemInfo.h> header file. */
+#undef HAVE_SMBIOS_SYSTEMINFO_H
+
 /* Define to 1 if you have the `socket' function. */
 #undef HAVE_SOCKET
 
