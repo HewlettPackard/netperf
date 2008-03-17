@@ -9508,61 +9508,26 @@ NETRTLKUP_SOURCE="$enable_rtlookup"
 case "$enable_rtlookup" in
 	rtmget)
 		use_rtlookup=true
-
-cat >>confdefs.h <<\_ACEOF
-#define USE_RTMGET
-_ACEOF
-
 		;;
 
 	rtnetlink)
 		use_rtlookup=true
-
-cat >>confdefs.h <<\_ACEOF
-#define USE_RTNETLINK
-_ACEOF
-
 		;;
 	'')
 # guess it automagically in a nice big case statement
 		case $target in
 		     *-*-linux*)
 			use_rtlookup=true
-
-cat >>confdefs.h <<\_ACEOF
-#define USE_RTNETLINK
-_ACEOF
-
 			enable_rtlookup="rtnetlink - auto"
 			NETRTLKUP_SOURCE="rtnetlink"
 			;;
-		     *-*-hpux11.31)
+		     *-*-hpux11.31 | *-*-solaris* | *-*-aix5*)
 			use_rtlookup=true
-
-cat >>confdefs.h <<\_ACEOF
-#define USE_RTMGET
-_ACEOF
-
 			enable_rtlookup="rtmget - auto"
 			NETRTLKUP_SOURCE="rtmget"
 			;;
-                     *-*-freebsd[4-7].* )
+                     *-*-freebsd[4-7].* | *-*-darwin*)
 			use_rtlookup=true
-
-cat >>confdefs.h <<\_ACEOF
-#define USE_RTMGET
-_ACEOF
-
-			enable_rtlookup="rtmget - auto"
-			NETRTLKUP_SOURCE="rtmget"
-			;;
-		    *-*-darwin*)
-			use_rtlookup=true
-
-cat >>confdefs.h <<\_ACEOF
-#define USE_RTMGET
-_ACEOF
-
 			enable_rtlookup="rtmget - auto"
 			NETRTLKUP_SOURCE="rtmget"
 			;;

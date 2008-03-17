@@ -732,37 +732,26 @@ NETRTLKUP_SOURCE="$enable_rtlookup"
 case "$enable_rtlookup" in
 	rtmget)
 		use_rtlookup=true
-		AC_DEFINE([USE_RTMGET],,[Use RTM_GET on a routing socket to get egress interface.])
 		;;
 
 	rtnetlink)
 		use_rtlookup=true
-		AC_DEFINE([USE_RTNETLINK],,[Use Linux's rtnetlink interface to dettermine egress interface.])
 		;;
 	'')
 # guess it automagically in a nice big case statement
 		case $target in
 		     *-*-linux*)
 			use_rtlookup=true
-			AC_DEFINE([USE_RTNETLINK],,[Use Linux's rtnetlink interface to determine egress interface.])
 			enable_rtlookup="rtnetlink - auto"
 			NETRTLKUP_SOURCE="rtnetlink"
 			;;
-		     *-*-hpux11.31)
+		     *-*-hpux11.31 | *-*-solaris* | *-*-aix5*)
 			use_rtlookup=true
-			AC_DEFINE([USE_RTMGET],,[Use routing sockets to determine egress interface.])
 			enable_rtlookup="rtmget - auto"
 			NETRTLKUP_SOURCE="rtmget"
 			;;
-                     *-*-freebsd[[4-7]].* )
+                     *-*-freebsd[[4-7]].* | *-*-darwin*)
 			use_rtlookup=true
-			AC_DEFINE([USE_RTMGET],,[Use routing socket interface to determine egress interface.])
-			enable_rtlookup="rtmget - auto"
-			NETRTLKUP_SOURCE="rtmget"
-			;;
-		    *-*-darwin*)
-			use_rtlookup=true
-			AC_DEFINE([USE_RTMGET],,[Use routing socket interface to determine egress interface.])
 			enable_rtlookup="rtmget - auto"
 			NETRTLKUP_SOURCE="rtmget"
 			;;

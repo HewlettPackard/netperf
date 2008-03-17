@@ -304,12 +304,6 @@
 /* Use HP-UX's pstat interface to measure CPU util. */
 #undef USE_PSTAT
 
-/* Use routing socket interface to determine egress interface. */
-#undef USE_RTMGET
-
-/* Use Linux's rtnetlink interface to determine egress interface. */
-#undef USE_RTNETLINK
-
 /* Use MumbleBSD's sysctl interface to measure CPU util. */
 #undef USE_SYSCTL
 
