@@ -1,3 +1,7 @@
+#if defined(HAVE_CONFIG_H)
+#include <config.h>
+#endif
+
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
@@ -93,7 +97,10 @@ find_egress_interface_by_addr(struct sockaddr *addr) {
 #ifdef AF_INET6
   sin6 = (struct sockaddr_in6 *)sin;
 #endif
+
+#if defined(NETPERF_STANDALONE_DEBUG)
   printf("Looking for %s\n",inet_ntoa(sin->sin_addr));
+#endif
 
   sockfd = socket(AF_INET,SOCK_DGRAM,0);
   if (sockfd < 0)
@@ -150,13 +157,15 @@ find_egress_interface_by_addr(struct sockaddr *addr) {
       len = sizeof(struct sockaddr_in);
       break;
     }
-
+    
+#if defined(NETPERF_STANDALONE_DEBUG)
     printf("hello i am interface %s family %d\n",
 	   ifr->ifr_name,
 	   ifr->ifr_addr.sa_family);
-
+#endif
+    
     ptr += sizeof(ifr->ifr_name) + len;
-
+    
     if (ifr->ifr_addr.sa_family != sin->sin_family)
       continue;
     else {
@@ -172,14 +181,14 @@ find_egress_interface_by_addr(struct sockaddr *addr) {
 	if (flagsreq.ifr_flags & IFF_UP) {
 #if defined(NETPERF_STANDALONE_DEBUG)
 	  printf("Interface name %s family %d\n",ifr->ifr_name,ifr->ifr_addr.sa_family);
+#endif
 	  close(sockfd);
 	  /* we should probably close the memory leak one of these days */
 	  return strdup(ifr->ifr_name);
 	}
-#endif
       }
     }
-  }    
+  }
   close(sockfd);
   free(buf);
   return strdup("EgressByAddr");
@@ -188,29 +197,34 @@ find_egress_interface_by_addr(struct sockaddr *addr) {
 
 #if defined(AF_LINK)
 char *
-find_egress_interface_by_link(struct sockaddr_dl *link) {
+find_egress_interface_by_link(struct sockaddr_dl *socklink) {
 
   char buffer[IF_NAMESIZE];
   char *cret;
 
 #if defined(NETPERF_STANDALONE_DEBUG)
-  printf("link asdf index %d nlen %d alen %d slen %d\n",
-	 link->sdl_index,
-	 link->sdl_nlen,
-	 link->sdl_alen,
-	 link->sdl_slen);
+  printf("socklink asdf index %d nlen %d alen %d slen %d\n",
+	 socklink->sdl_index,
+	 socklink->sdl_nlen,
+	 socklink->sdl_alen,
+	 socklink->sdl_slen);
 #endif
 
   /* I suspect we could extract the name from the sockaddr_dl
      directly, and perhaps should, but I really don't like mucking
      about with pointers and offsets and characters so will just punt
      to if_indextoname. raj 2008-03-17 */
-  if (link->sdl_index != 0) {
-    cret = if_indextoname(link->sdl_index,buffer);
+  if (socklink->sdl_index != 0) {
+    cret = if_indextoname(socklink->sdl_index,buffer);
     if (NULL != cret)
       return strdup(cret);
     else
       return strdup(strerror(errno));
+  }
+  else if (socklink->sdl_nlen > 0) {
+    /* ok, I might have to care after all */
+    strncpy(buffer,socklink->sdl_data,socklink->sdl_nlen);
+    return strdup(buffer);
   }
   else
     return strdup("noindex");
