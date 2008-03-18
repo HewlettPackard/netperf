@@ -11,9 +11,116 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <sys/ioctl.h>
 
+#if defined(HAVE_SYS_SOCKIO_H)
+#include <sys/sockio.h>
+#endif
+
+/* more UNP leverage */
 char *
 find_egress_interface_by_addr(struct sockaddr *addr) {
+  
+  char *buf,*ptr;
+  int  lastlen,len,cmplen;
+  int   sockfd;
+  struct ifconf ifc;
+  struct ifreq  *ifr;
+  struct sockaddr_in *sin,*tsin;
+#ifdef AF_INET6
+  struct sockaddr_in6 *sin6,*tsin6;
+#endif
+  void *addr1,*addr2;
+
+  sin = (struct sockaddr_in *)addr;
+#ifdef AF_INET6
+  sin6 = (struct sockaddr_in6 *)sin;
+#endif
+  printf("Looking for %s\n",inet_ntoa(sin->sin_addr));
+
+  sockfd = socket(AF_INET,SOCK_DGRAM,0);
+  if (sockfd < 0)
+    return strdup("socket");
+
+  lastlen = 0;
+  len = 100 * sizeof(struct ifreq);
+  while (1) {
+    buf = malloc(len);
+    if (NULL == buf) 
+      return strdup("malloc");
+
+    ifc.ifc_len = len;
+    ifc.ifc_buf = buf;
+
+    if (ioctl(sockfd, SIOCGIFCONF, &ifc) < 0) {
+      if (errno != EINVAL || lastlen != 0) {
+	free(buf);
+	return strdup("SIOCIFCONF");
+      }
+    }
+    else {
+	if (ifc.ifc_len == lastlen)
+	  break;  /* the ioctl was happy */
+	lastlen = ifc.ifc_len;
+      }
+    len += 10 * sizeof(struct ifreq);
+    free(buf);
+  }
+
+#if defined(NETPERF_STANDALONE_DEBUG)
+  printf("ioctl was OK, len is %d\n", ifc.ifc_len);
+#endif
+
+  for (ptr = buf; ptr < buf + ifc.ifc_len; ) {
+    ifr = (struct ifreq *) ptr;
+
+    switch (ifr->ifr_addr.sa_family) {
+#ifdef AF_INET6
+    case AF_INET6:
+      addr1 = &(sin6->sin6_addr);
+      tsin6 = (struct sockaddr_in6 *)&(ifr->ifr_addr);
+      addr2 = &(tsin6->sin6_addr);
+      cmplen = sizeof(tsin6->sin6_addr);
+      len = sizeof(struct sockaddr_in6);
+      break;
+#endif
+    case AF_INET:
+    default:
+      addr1 = &(sin->sin_addr.s_addr);
+      tsin = (struct sockaddr_in *)&(ifr->ifr_addr);
+      addr2 = &(tsin->sin_addr.s_addr);
+      cmplen = sizeof(struct in_addr);
+      len = sizeof(struct sockaddr_in);
+      break;
+    }
+
+    ptr += sizeof(ifr->ifr_name) + len;
+
+    if (ifr->ifr_addr.sa_family != sin->sin_family)
+      continue;
+    else {
+      
+#if defined(NETPERF_STANDALONE_DEBUG)
+      printf("addr1 %p addr2 %p len %d\n",addr1,addr2,cmplen);
+#endif
+      if (0 == memcmp(addr1,addr2,cmplen)) {
+	struct ifreq flagsreq;
+	flagsreq = *ifr;
+	/* we've gotten this far - ass-u-me this will work? */
+	ioctl(sockfd,SIOCGIFFLAGS, &flagsreq);
+	if (flagsreq.ifr_flags & IFF_UP) {
+#if defined(NETPERF_STANDALONE_DEBUG)
+	  printf("Interface name %s family %d\n",ifr->ifr_name,ifr->ifr_addr.sa_family);
+	  close(sockfd);
+	  /* we should probably close the memory leak one of these days */
+	  return strdup(ifr->ifr_name);
+	}
+#endif
+      }
+    }
+  }    
+  close(sockfd);
+  free(buf);
   return strdup("EgressByAddr");
 }
 
@@ -62,6 +169,7 @@ find_egress_interface(struct sockaddr *source, struct sockaddr *dest) {
   int copy_len;
   char *buffer;
   void *next_hop;
+  struct sockaddr_storage holdme;
   struct sockaddr_in  *sin;
   struct sockaddr_in6 *sin6;
 
@@ -93,8 +201,10 @@ find_egress_interface(struct sockaddr *source, struct sockaddr *dest) {
     copy_len = sizeof(struct sockaddr_in6);
   }
 #endif
-  else
+  else {
+    free(buffer);
     return strdup("Unknown AF");
+  }
 
   rtm->rtm_version = RTM_VERSION;
   rtm->rtm_type = RTM_GET;
@@ -107,14 +217,18 @@ find_egress_interface(struct sockaddr *source, struct sockaddr *dest) {
 
   /* send the message */
   ret = write(sockfd,rtm,rtm->rtm_msglen);
-  if (ret != rtm->rtm_msglen)
+  if (ret != rtm->rtm_msglen) {
+    free(buffer);
     return(strdup("write"));
+  }
 
   /* seek the reply */
   do {
     ret = read(sockfd, rtm, BUFLEN);
-    if (ret < sizeof(struct rt_msghdr))
+    if (ret < sizeof(struct rt_msghdr)) {
+      free(buffer);
       return strdup("read");
+    }
   } while (rtm->rtm_type != RTM_GET ||
 	   rtm->rtm_seq  != 12865 ||
 	   rtm->rtm_pid  != getpid());
