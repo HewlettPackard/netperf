@@ -17,7 +17,6 @@ void
 find_system_info(char **system_model, char **cpu_model, int *cpu_frequency) {
   char model_str[64];
   int  ret;
-  printf("calling find_system_info\n");
   struct pst_processor processor_info;
 
   /* first the system model name */
