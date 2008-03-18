@@ -20,7 +20,64 @@
 /* more UNP leverage */
 char *
 find_egress_interface_by_addr(struct sockaddr *addr) {
-  
+
+#ifdef HAVE_GETIFADDRS
+#include <ifaddrs.h>
+
+  struct ifaddrs *ifap;
+  struct ifaddrs *temp;
+  struct sockaddr_in *sin,*tsin;
+#ifdef AF_INET6
+  struct sockaddr_in6 *sin6,*tsin6;
+#endif
+  void *addr1,*addr2;
+  int ret,cmplen;
+  char temp_name[IFNAMSIZ];
+
+  sin = (struct sockaddr_in *)addr;
+  sin6 = (struct sockaddr_in6 *)sin;
+
+  ret = getifaddrs(&ifap);
+
+  if (ret < 0) 
+    return("ifgetaddrs");
+
+  temp = ifap;
+  while (temp) {
+    if ((temp->ifa_flags & IFF_UP) &&
+	(temp->ifa_addr->sa_family == sin->sin_family)) {
+      sin = (struct sockaddr_in *)temp->ifa_addr;
+      switch (temp->ifa_addr->sa_family) {
+#ifdef AF_INET6
+      case AF_INET6:
+	addr1 = &(sin6->sin6_addr);
+	tsin6 = (struct sockaddr_in6 *)(temp->ifa_addr);
+	addr2 = &(tsin6->sin6_addr);
+	cmplen = sizeof(tsin6->sin6_addr);
+	break;
+#endif
+      case AF_INET:
+	addr1 = &(sin->sin_addr.s_addr);
+	tsin = (struct sockaddr_in *)(temp->ifa_addr);
+	addr2 = &(tsin->sin_addr.s_addr);
+	cmplen = sizeof(struct in_addr);
+	break;
+      default:
+	freeifaddrs(ifap);
+	return strdup("BadAF");
+      }
+      if (memcmp(addr1,addr2,cmplen) == 0) {
+	strcpy(temp_name,temp->ifa_name);
+	freeifaddrs(ifap);
+	return strdup(temp_name);
+      }
+    }
+    temp = temp->ifa_next;
+  }
+  freeifaddrs(ifap);
+  return strdup("NotFound");
+
+#else  
   char *buf,*ptr;
   int  lastlen,len,cmplen;
   int   sockfd;
@@ -94,6 +151,10 @@ find_egress_interface_by_addr(struct sockaddr *addr) {
       break;
     }
 
+    printf("hello i am interface %s family %d\n",
+	   ifr->ifr_name,
+	   ifr->ifr_addr.sa_family);
+
     ptr += sizeof(ifr->ifr_name) + len;
 
     if (ifr->ifr_addr.sa_family != sin->sin_family)
@@ -122,6 +183,7 @@ find_egress_interface_by_addr(struct sockaddr *addr) {
   close(sockfd);
   free(buf);
   return strdup("EgressByAddr");
+#endif
 }
 
 #if defined(AF_LINK)
@@ -132,7 +194,7 @@ find_egress_interface_by_link(struct sockaddr_dl *link) {
   char *cret;
 
 #if defined(NETPERF_STANDALONE_DEBUG)
-  printf("link index %d nlen %d alen %d slen %d\n",
+  printf("link asdf index %d nlen %d alen %d slen %d\n",
 	 link->sdl_index,
 	 link->sdl_nlen,
 	 link->sdl_alen,
@@ -253,14 +315,6 @@ find_egress_interface(struct sockaddr *source, struct sockaddr *dest) {
      and I'm _guessing_ BSD and OSX, who are kind enough to take
      things down to an AF_LINK entry. */
 
-#if defined(NETPERF_STANDALONE_DEBUG)
-  printf("rtm_msglen %d\n",rtm->rtm_msglen);
-  printf("rtm_errno %d\n",rtm->rtm_errno);
-  printf("rtm_index %d\n",rtm->rtm_index);
-  printf("rtm_flags %x\n",rtm->rtm_flags);
-  printf("rtm_addrs %x\n",rtm->rtm_addrs);
-#endif
-
   sin = (struct sockaddr_in *)(rtm +1);
   sin = sin + 1;
   sin6 = (struct sockaddr_in6 *)sin;
@@ -269,15 +323,18 @@ find_egress_interface(struct sockaddr *source, struct sockaddr *dest) {
   printf("address two %p family %d\n",sin,sin->sin_family);
 #endif
 
-  if (AF_INET == sin->sin_family)
+  if (AF_INET == sin->sin_family) {
     return find_egress_interface_by_addr((struct sockaddr *)sin);
+  }
 #if defined(AF_INET6)
-  else if (AF_INET6 == sin6->sin6_family)
+  else if (AF_INET6 == sin6->sin6_family) {
     return find_egress_interface_by_addr((struct sockaddr *)sin6);
+  }
 #endif
 #if defined(AF_LINK)
-  else if (AF_LINK == sin->sin_family)
+  else if (AF_LINK == sin->sin_family) {
     return find_egress_interface_by_link((struct sockaddr_dl *)sin);
+  }
 #endif
   else
     return strdup("LastHop AF");
@@ -296,6 +353,7 @@ main(int argc, char *argv[]) {
   sin = (struct sockaddr_in *)&destination;
   sin->sin_family = AF_INET;
   sin->sin_addr.s_addr = inet_addr(argv[1]);
+  sin->sin_len = sizeof(struct sockaddr_in);
   printf("address is %s\n",inet_ntoa(sin->sin_addr));
   egress_if = find_egress_interface(NULL,(struct sockaddr *)&destination);
 
