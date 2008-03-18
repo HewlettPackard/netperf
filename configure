@@ -4418,7 +4418,8 @@ done
 
 
 
-for ac_header in arpa/inet.h endian.h errno.h fcntl.h limits.h malloc.h netdb.h netinet/in.h signal.h stdlib.h string.h strings.h sys/ioctl.h sys/mman.h sys/param.h sys/socket.h sys/time.h unistd.h
+
+for ac_header in arpa/inet.h endian.h errno.h fcntl.h limits.h malloc.h netdb.h netinet/in.h signal.h stdlib.h string.h strings.h sys/ioctl.h sys/mman.h sys/param.h sys/socket.h sys/time.h unistd.h ifaddrs.h
 do
 as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
 if { as_var=$as_ac_Header; eval "test \"\${$as_var+set}\" = set"; }; then
@@ -5869,6 +5870,67 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
 fi
+
+
+        { echo "$as_me:$LINENO: checking if sockaddr struct has sa_len member" >&5
+echo $ECHO_N "checking if sockaddr struct has sa_len member... $ECHO_C" >&6; }
+        if test "${ac_cv_sockaddr_has_sa_len+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+#               include <sys/types.h>
+#               include <sys/socket.h>
+int
+main ()
+{
+u_int i = sizeof(((struct sockaddr *)0)->sa_len)
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_c_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest.$ac_objext; then
+  ac_cv_sockaddr_has_sa_len=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_sockaddr_has_sa_len=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+
+        { echo "$as_me:$LINENO: result: $ac_cv_sockaddr_has_sa_len" >&5
+echo "${ECHO_T}$ac_cv_sockaddr_has_sa_len" >&6; }
+                if test $ac_cv_sockaddr_has_sa_len = yes ; then
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_SOCKADDR_SA_LEN 1
+_ACEOF
+
+        fi
 
 
 # Checks for library functions.
@@ -7322,7 +7384,8 @@ done
 
 
 
-for ac_func in getnameinfo getaddrinfo inet_ntop
+
+for ac_func in getnameinfo getaddrinfo inet_ntop getifaddrs
 do
 as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
 { echo "$as_me:$LINENO: checking for $ac_func" >&5

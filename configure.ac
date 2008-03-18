@@ -31,7 +31,7 @@ AC_HAVE_LIBRARY(m)
 # Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([arpa/inet.h endian.h errno.h fcntl.h limits.h malloc.h netdb.h netinet/in.h signal.h stdlib.h string.h strings.h sys/ioctl.h sys/mman.h sys/param.h sys/socket.h sys/time.h unistd.h])
+AC_CHECK_HEADERS([arpa/inet.h endian.h errno.h fcntl.h limits.h malloc.h netdb.h netinet/in.h signal.h stdlib.h string.h strings.h sys/ioctl.h sys/mman.h sys/param.h sys/socket.h sys/time.h unistd.h ifaddrs.h])
 
 # Some platforms require these.  There may be a better way.
 AC_HAVE_LIBRARY(socket)
@@ -57,6 +57,7 @@ AC_DECL_H_ERRNO
 AC_STRUCT_SOCKADDR_STORAGE
 AC_HEADER_TIME
 AC_HEADER_STDBOOL
+AC_CHECK_SA_LEN(ac_cv_sockaddr_has_sa_len)
 
 # Checks for library functions.
 # AC_FUNC_ERROR_AT_LINE
@@ -74,7 +75,7 @@ AC_CHECK_FUNCS([alarm bzero gethostbyname gethrtime gettimeofday inet_ntoa memse
 #AC_CONFIG_SUBDIRS(src/missing)
 
 # does this platform need the replacement getaddrinfo
-AC_CHECK_FUNCS([getnameinfo getaddrinfo inet_ntop])
+AC_CHECK_FUNCS([getnameinfo getaddrinfo inet_ntop getifaddrs])
 # AC_REPLACE_FUNCS([getaddrinfo])
 
 
