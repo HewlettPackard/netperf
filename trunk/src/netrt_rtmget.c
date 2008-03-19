@@ -163,7 +163,16 @@ find_egress_interface_by_addr(struct sockaddr *addr) {
 	   ifr->ifr_name,
 	   ifr->ifr_addr.sa_family);
 #endif
-    
+
+#ifdef HAVE_SOCKADDR_SA_LEN
+    if (sizeof(struct sockaddr) > ifr->ifr_addr.sa_len)
+      len = sizeof(struct sockaddr);
+    else
+      len = ifr->ifr_addr.sa_len;
+#endif
+
+    /* we are basicaly ass-u-me-ing that an ifr is only a name and a
+       sockaddr */
     ptr += sizeof(ifr->ifr_name) + len;
     
     if (ifr->ifr_addr.sa_family != sin->sin_family)
