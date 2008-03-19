@@ -1327,8 +1327,8 @@ Optional Features:
                           using specified mechanism
   --enable-slotlookup     include code to find the probable egress interface
                           using specified mechanism
-  --enable-drvlookup      include code to find the probable egress interface
-                          using specified mechanism
+  --enable-drvlookup      include code to find the driver information for the
+                          probable egress interface
   --enable-syslookup      include code to find some rudimentary system
                           information
 
@@ -9689,25 +9689,23 @@ NETDRVLKUP_SOURCE="$enable_drvlookup"
 case "$enable_drvlookup" in
 	ethtool)
 		use_drvlookup=true
-
-cat >>confdefs.h <<\_ACEOF
-#define USE_ETHTOOL
-_ACEOF
-
 		;;
 
+	solaris)
+		use_drvlookup=true
+		;;
 	'')
 # guess it automagically in a nice big case statement
 		case $target in
 		     *-*-linux*)
 			use_drvlookup=true
-
-cat >>confdefs.h <<\_ACEOF
-#define USE_ETHTOOL
-_ACEOF
-
 			enable_drvlookup="ethtool - auto"
 			NETDRVLKUP_SOURCE="ethtool"
+			;;
+		     *-*-solaris*)
+		        use_drvlookup=true
+			enable_drvlookup="solaris - auto"
+			NETDRVLKUP_SOURCE="solaris"
 			;;
 		     *)
 			use_drvlookup=false

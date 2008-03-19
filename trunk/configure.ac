@@ -822,23 +822,29 @@ AC_SUBST(NETSLOTLKUP_SOURCE)
 AC_MSG_CHECKING([which driver info lookup type to use])
 
 AC_ARG_ENABLE(drvlookup,
-	[AS_HELP_STRING([--enable-drvlookup],[include code to find the probable egress interface using specified mechanism])])
+	[AS_HELP_STRING([--enable-drvlookup],[include code to find the driver information for the probable egress interface])])
 
 NETDRVLKUP_SOURCE="$enable_drvlookup"
 case "$enable_drvlookup" in
 	ethtool)
 		use_drvlookup=true
-		AC_DEFINE([USE_ETHTOOL],,[Use Ethtool IOCTLs on a socket to get egress interface.])
 		;;
 
+	solaris)
+		use_drvlookup=true
+		;;
 	'')
 # guess it automagically in a nice big case statement
 		case $target in
 		     *-*-linux*)
 			use_drvlookup=true
-			AC_DEFINE([USE_ETHTOOL],,[Use Linux's ethtool interface to determine driver information.])
 			enable_drvlookup="ethtool - auto"
 			NETDRVLKUP_SOURCE="ethtool"
+			;;
+		     *-*-solaris*)
+		        use_drvlookup=true
+			enable_drvlookup="solaris - auto"
+			NETDRVLKUP_SOURCE="solaris"
 			;;
 		     *)
 			use_drvlookup=false
