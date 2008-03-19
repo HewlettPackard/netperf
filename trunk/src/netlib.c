@@ -1597,7 +1597,7 @@ alloc_sendfile_buf_ring(int width,
      file. 08/2000 */
   if (strcmp(fill_file,"") == 0) {
     /* use an temp file for the fill file */
-    char *temp_file;
+    char temp_file[] = {"netperfXXXXXX\0"};
     int *temp_buffer;
     
     /* make sure we have at least an ints worth, even if the user is
@@ -1608,9 +1608,8 @@ alloc_sendfile_buf_ring(int width,
     if (temp_buffer) {
       /* ok, we have the buffer we are going to write, lets get a
 	 temporary filename */
-      temp_file = tmpnam(NULL);
-      if (NULL != temp_file) {
-	fildes = open(temp_file,O_RDWR | O_EXCL | O_CREAT,0600);
+      fildes = mkstemp(temp_file);
+      /* no need to call open because mkstemp did it */
 	if (-1 != fildes) {
 	  int count;
 	  int *int_ptr;
@@ -1640,14 +1639,9 @@ alloc_sendfile_buf_ring(int width,
 	      exit(-1);
 	    }
 	  }
-	}
-	else {
-	  perror("allocate_sendfile_buf_ring: could not open tempfile");
-	  exit(-1);
-	}
       }
       else {
-	perror("allocate_sendfile_buf_ring: could not allocate temp name");
+	perror("alloc_sendfile_buf_ring: could not allocate temp name");
 	exit(-1);
       }
     }
