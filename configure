@@ -9631,26 +9631,24 @@ fi
 NETSLOTLKUP_SOURCE="$enable_slotlookup"
 case "$enable_slotlookup" in
 
-	linsys)
+	linux)
 		use_slotlookup=true
-
-cat >>confdefs.h <<\_ACEOF
-#define USE_LINSYS
-_ACEOF
-
+		;;
+	solaris)
+		use_slotlookup=true
 		;;
 	'')
 # guess it automagically in a nice big case statement
 		case $target in
 		     *-*-linux*)
 			use_slotlookup=true
-
-cat >>confdefs.h <<\_ACEOF
-#define USE_LINSYS
-_ACEOF
-
 			enable_slotlookup="linux - auto"
 			NETSLOTLKUP_SOURCE="linux"
+			;;
+		     *-*-solaris*)
+			use_slotlookup=true
+			enable_slotlookup="solaris - auto"
+			NETSLOTLKUP_SOURCE="solaris"
 			;;
 		     *)
 			use_slotlookup=false
