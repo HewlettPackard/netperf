@@ -803,6 +803,7 @@ case "$enable_slotlookup" in
 			use_slotlookup=true
 			enable_slotlookup="solaris - auto"
 			NETSLOTLKUP_SOURCE="solaris"
+			AC_HAVE_LIBRARY(devinfo)
 			;;
 		     *)
 			use_slotlookup=false
