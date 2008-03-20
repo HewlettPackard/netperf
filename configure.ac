@@ -785,18 +785,24 @@ AC_ARG_ENABLE(slotlookup,
 NETSLOTLKUP_SOURCE="$enable_slotlookup"
 case "$enable_slotlookup" in
 
-	linsys)
+	linux)
 		use_slotlookup=true
-		AC_DEFINE([USE_LINSYS],,[Use Linux's /sys interface to dettermine egress interface slot number.])
+		;;
+	solaris)
+		use_slotlookup=true
 		;;
 	'')
 # guess it automagically in a nice big case statement
 		case $target in
 		     *-*-linux*)
 			use_slotlookup=true
-			AC_DEFINE([USE_LINSYS],,[Use Linux's /sys interface to determine egress interface slot number.])
 			enable_slotlookup="linux - auto"
 			NETSLOTLKUP_SOURCE="linux"
+			;;
+		     *-*-solaris*)
+			use_slotlookup=true
+			enable_slotlookup="solaris - auto"
+			NETSLOTLKUP_SOURCE="solaris"
 			;;
 		     *)
 			use_slotlookup=false
