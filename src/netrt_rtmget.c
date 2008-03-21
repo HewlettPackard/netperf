@@ -21,9 +21,8 @@
 #include <sys/sockio.h>
 #endif
 
-/* more UNP leverage */
 char *
-find_egress_interface_by_addr(struct sockaddr *addr) {
+find_egress_interface_by_addr(struct sockaddr *addr, int local_ip_check) {
 
 #ifdef HAVE_GETIFADDRS
 #include <ifaddrs.h>
@@ -43,8 +42,12 @@ find_egress_interface_by_addr(struct sockaddr *addr) {
 
   ret = getifaddrs(&ifap);
 
-  if (ret < 0) 
-    return("ifgetaddrs");
+  if (ret < 0) {
+    if (local_ip_check)
+      return NULL;
+    else
+      return("ifgetaddrs");
+  }
 
   temp = ifap;
   while (temp) {
@@ -68,7 +71,10 @@ find_egress_interface_by_addr(struct sockaddr *addr) {
 	break;
       default:
 	freeifaddrs(ifap);
-	return strdup("BadAF");
+	if (local_ip_check)
+	  return NULL;
+	else
+	  return strdup("BadAF");
       }
       if (memcmp(addr1,addr2,cmplen) == 0) {
 	strcpy(temp_name,temp->ifa_name);
@@ -79,7 +85,10 @@ find_egress_interface_by_addr(struct sockaddr *addr) {
     temp = temp->ifa_next;
   }
   freeifaddrs(ifap);
-  return strdup("NotFound");
+  if (local_ip_check)
+    return NULL;
+  else
+    return strdup("NotFound");
 
 #else  
   char *buf,*ptr;
@@ -103,15 +112,22 @@ find_egress_interface_by_addr(struct sockaddr *addr) {
 #endif
 
   sockfd = socket(AF_INET,SOCK_DGRAM,0);
-  if (sockfd < 0)
-    return strdup("socket");
-
+  if (sockfd < 0) {
+    if (local_ip_check) 
+      return NULL;
+    else
+      return strdup("socket");
+  }
   lastlen = 0;
   len = 100 * sizeof(struct ifreq);
   while (1) {
     buf = malloc(len);
-    if (NULL == buf) 
-      return strdup("malloc");
+    if (NULL == buf) {
+      if (local_ip_check)
+	return NULL;
+      else
+	return strdup("malloc");
+    }
 
     ifc.ifc_len = len;
     ifc.ifc_buf = buf;
@@ -119,7 +135,10 @@ find_egress_interface_by_addr(struct sockaddr *addr) {
     if (ioctl(sockfd, SIOCGIFCONF, &ifc) < 0) {
       if (errno != EINVAL || lastlen != 0) {
 	free(buf);
-	return strdup("SIOCIFCONF");
+	if (local_ip_check)
+	  return NULL;
+	else
+	  return strdup("SIOCIFCONF");
       }
     }
     else {
@@ -200,7 +219,10 @@ find_egress_interface_by_addr(struct sockaddr *addr) {
   }
   close(sockfd);
   free(buf);
-  return strdup("EgressByAddr");
+  if (local_ip_check)
+    return NULL;
+  else
+    return strdup("EgressByAddr");
 #endif
 }
 
@@ -258,13 +280,24 @@ find_egress_interface(struct sockaddr *source, struct sockaddr *dest) {
   struct sockaddr_in  *sin;
   struct sockaddr_in6 *sin6;
 
+  /* first, check if the destination address is a local one. if it is,
+     return "lo0" as the interface because we will ass-u-me the
+     traffic isn't leaving the host */
+  if (NULL != find_egress_interface_by_addr(dest,1)) {
+#if defined(NETPERF_STANDALONE_DEBUG)
+    printf("Destination is a local IP\n");
+#endif
+    return strdup("lo0");
+  }
+    
+
   sockfd = socket(AF_ROUTE, SOCK_RAW, 0);
   if (sockfd < 0)
-    return (strdup("socket"));
+    return strdup("socket");
 
   buffer = calloc(1,BUFLEN); 
   if (NULL == buffer)
-    return (strdup("calloc"));
+    return strdup("calloc");
 
   rtm = (struct rt_msghdr *)buffer;
   
@@ -304,7 +337,7 @@ find_egress_interface(struct sockaddr *source, struct sockaddr *dest) {
   ret = write(sockfd,rtm,rtm->rtm_msglen);
   if (ret != rtm->rtm_msglen) {
     free(buffer);
-    return(strdup("write"));
+    return strdup("write");
   }
 
   /* seek the reply */
@@ -347,11 +380,11 @@ find_egress_interface(struct sockaddr *source, struct sockaddr *dest) {
 #endif
 
   if (AF_INET == sin->sin_family) {
-    return find_egress_interface_by_addr((struct sockaddr *)sin);
+    return find_egress_interface_by_addr((struct sockaddr *)sin,0);
   }
 #if defined(AF_INET6)
   else if (AF_INET6 == sin6->sin6_family) {
-    return find_egress_interface_by_addr((struct sockaddr *)sin6);
+    return find_egress_interface_by_addr((struct sockaddr *)sin6,0);
   }
 #endif
 #if defined(AF_LINK)
