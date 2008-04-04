@@ -2,6 +2,9 @@ These are the Release Notes leading-up to Revision 2.4.5 of netperf:
 
 Things changed in this release:
 
+*) Fixes from Adam Bidema for launching netserver children when the
+   path to netserver.exe is very long.  
+
 *) For the first time, netperf2 has a dependency, albeit optional, on
    another non-base-os bit of code - libsmbios under Linux.  It will
    attept to detect this at compile time and use it to report the
