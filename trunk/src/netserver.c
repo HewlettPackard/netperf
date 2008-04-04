@@ -712,10 +712,13 @@ set_up_server(char hostname[], char port[], int af)
 #elif WIN32
 		{
 			BOOL b;
-			char cmdline[80];
+			char *cmdline;
 			PROCESS_INFORMATION pi;
 			STARTUPINFO si;
 			int i;
+
+			/* create the cmdline array based on strlen(program) + 80 chars */
+			cmdline = malloc(strlen(program) + 80);
 
 			memset(&si, 0 , sizeof(STARTUPINFO));
 			si.cb = sizeof(STARTUPINFO);
@@ -752,6 +755,7 @@ set_up_server(char hostname[], char port[], int af)
 			if (!b)
 			{
 				perror("CreateProcessfailure: ");
+				free(cmdline); /* even though we exit :) */
 				exit(1);
 			}
 
@@ -764,6 +768,7 @@ set_up_server(char hostname[], char port[], int af)
 			/* And close the server_sock since the child will own it. */
 
 			close(server_sock);
+			free(cmdline);
 		}
 #else
       signal(SIGCLD, SIG_IGN);

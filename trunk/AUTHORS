@@ -221,3 +221,7 @@ Fix to use vfork() instead of fork() on platforms without fork()
 
 Simon Burge <simonb@NetBSD.org>
 Fixes for *BSD CPU util.
+
+Adam Bidema
+Fixes for launching netserver children when the path to netserver.exe
+is very long. 
