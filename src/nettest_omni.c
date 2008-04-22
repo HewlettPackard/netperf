@@ -1020,6 +1020,26 @@ print_netperf_output_entry(FILE *where, enum netperf_output_name what)
 {
 }
 
+void print_omni_init_list();
+
+void
+dump_netperf_output_list(FILE *where, int csv) {
+  int i;
+
+  print_omni_init_list();
+
+  for (i = OUTPUT_NONE; i < NETPERF_OUTPUT_MAX; i++){
+    if (OUTPUT_NONE != i) {
+      fprintf(where,"%c",(csv) ? ',' : '\n');
+    }
+    fprintf(where,
+	    "%s",
+	    netperf_output_enum_to_str(netperf_output_source[i].output_name));
+  }
+  fprintf(where,"\n");
+  fflush(where);
+}
+
 void
 dump_netperf_output_source(FILE *where)
 {
@@ -1308,15 +1328,10 @@ set_output_human_list_default() {
 
 }
 
-/* lots of boring, repetitive code */
-void 
-print_omni_init() {
+void
+print_omni_init_list() {
 
-  int i,j;
-
-  if (printing_initialized) return;
-
-  printing_initialized = 1;
+  int i;
 
   /* belts and suspenders everyone... */
   for (i = OUTPUT_NONE; i < NETPERF_OUTPUT_MAX; i++) {
@@ -2916,6 +2931,19 @@ print_omni_init() {
     NETPERF_LINE_MAX(OUTPUT_END);
   netperf_output_source[OUTPUT_END].tot_line_len = 
     NETPERF_LINE_TOT(OUTPUT_END);
+
+}
+/* lots of boring, repetitive code */
+void 
+print_omni_init() {
+
+  int i,j;
+
+  if (printing_initialized) return;
+
+  printing_initialized = 1;
+
+  print_omni_init_list();
 
   /* belts and suspenders */
   for (i = OUTPUT_NONE; i < NETPERF_OUTPUT_MAX; i++)
@@ -5574,6 +5602,12 @@ scan_omni_args(int argc, char *argv[])
 	   list of desired output values. */
 	csv_selection_file = strdup(argv[optind]);
 	optind++;
+	/* special case - if the file name is "?" then we will emit a
+	   list of the available outputs */
+	if (strcmp(csv_selection_file,"?") == 0) {
+	  dump_netperf_output_list(where,1);
+	  exit(1);
+	}
       }
       break;
     case 'O':
@@ -5592,6 +5626,10 @@ scan_omni_args(int argc, char *argv[])
 	   list of desired output values */
 	human_selection_file = strdup(argv[optind]);
 	optind++;
+	if (strcmp(human_selection_file,"?") == 0) {
+	  dump_netperf_output_list(where,0);
+	  exit(1);
+	}
       }
       break;
     case 'p':
