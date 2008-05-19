@@ -5605,7 +5605,7 @@ scan_omni_args(int argc, char *argv[])
 	/* special case - if the file name is "?" then we will emit a
 	   list of the available outputs */
 	if (strcmp(csv_selection_file,"?") == 0) {
-	  dump_netperf_output_list(where,1);
+	  dump_netperf_output_list(stdout,1);
 	  exit(1);
 	}
       }
@@ -5627,7 +5627,7 @@ scan_omni_args(int argc, char *argv[])
 	human_selection_file = strdup(argv[optind]);
 	optind++;
 	if (strcmp(human_selection_file,"?") == 0) {
-	  dump_netperf_output_list(where,0);
+	  dump_netperf_output_list(stdout,0);
 	  exit(1);
 	}
       }
