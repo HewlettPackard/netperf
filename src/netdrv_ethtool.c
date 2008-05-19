@@ -1,3 +1,7 @@
+#if defined(HAVE_CONFIG_H)
+#include <config.h>
+#endif
+
 #include <sys/types.h>
 #include <string.h>
 #include <sys/ioctl.h>
@@ -15,6 +19,12 @@ typedef __uint64_t __u64;
 typedef __uint32_t __u32;
 typedef __uint16_t __u16;
 typedef __uint8_t  __u8;
+
+/* older ones want them without the leading underscores */
+typedef __uint64_t u64;
+typedef __uint32_t u32;
+typedef __uint16_t u16;
+typedef __uint8_t  u8;
 
 #include <linux/ethtool.h>
 
@@ -84,3 +94,26 @@ find_driver_info(char *ifname, char *driver, char *version, char *firmware, char
   
   return;
 }
+
+#if defined(NETPERF_STANDALONE_DEBUG)
+int
+main(int argc, char *argv[]) {
+
+  char driver[32];
+  char version[32];
+  char firmware[32];
+  char businfo[32];
+
+  if (argc != 2) {
+    fprintf(stderr,"%s <interface>\n",argv[0]);
+    return -1;
+  }
+
+  find_driver_info(argv[1],driver, version, firmware, businfo, 32);
+
+  printf("For %s driver %s version %s firmware %s businfo %s\n",
+	 argv[1],driver, version, firmware, businfo);
+
+  return 0;
+}
+#endif
