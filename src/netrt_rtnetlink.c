@@ -1,3 +1,7 @@
+#if defined(HAVE_CONFIG_H)
+#include <config.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -200,3 +204,23 @@ find_egress_interface(struct sockaddr *source, struct sockaddr *dest) {
     }
   }
 }
+#if defined(NETPERF_STANDALONE_DEBUG)
+int
+main(int argc, char *argv[]) {
+
+  struct sockaddr_storage destination;
+  struct sockaddr_in *sin;
+  int ret;
+  char *egress_if;
+
+  sin = (struct sockaddr_in *)&destination;
+  sin->sin_family = AF_INET;
+  sin->sin_addr.s_addr = inet_addr(argv[1]);
+
+  printf("address is %s\n",inet_ntoa(sin->sin_addr));
+  egress_if = find_egress_interface(NULL,(struct sockaddr *)&destination);
+
+  printf("egress interface %p %s\n",egress_if,egress_if);
+
+}
+#endif
