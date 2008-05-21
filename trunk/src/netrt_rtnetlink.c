@@ -208,17 +208,31 @@ find_egress_interface(struct sockaddr *source, struct sockaddr *dest) {
 int
 main(int argc, char *argv[]) {
 
-  struct sockaddr_storage destination;
+  struct sockaddr_storage source,destination;
   struct sockaddr_in *sin;
   int ret;
   char *egress_if;
+
+  if ((argc < 2) || (argc > 3)) {
+    fprintf(stderr,"%s <destIP> [srcip]\n",argv[0]);
+    return -1;
+  }
 
   sin = (struct sockaddr_in *)&destination;
   sin->sin_family = AF_INET;
   sin->sin_addr.s_addr = inet_addr(argv[1]);
 
-  printf("address is %s\n",inet_ntoa(sin->sin_addr));
-  egress_if = find_egress_interface(NULL,(struct sockaddr *)&destination);
+  printf("destination address is %s\n",inet_ntoa(sin->sin_addr));
+
+  sin = NULL;
+
+  if (argc == 3) {
+    sin = (struct sockaddr_in *)&source;
+    sin->sin_family = AF_INET;
+    sin->sin_addr.s_addr = inet_addr(argv[2]);
+  }
+
+  egress_if = find_egress_interface((struct sockaddr *)sin,(struct sockaddr *)&destination);
 
   printf("egress interface %p %s\n",egress_if,egress_if);
 
