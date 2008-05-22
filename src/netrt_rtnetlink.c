@@ -78,11 +78,14 @@ find_egress_interface(struct sockaddr *source, struct sockaddr *dest) {
     rtap = (struct rtattr *)request.buf;
     rtap->rta_type = RTA_DST;
     if (AF_INET == in4->sin_family) {
-      rtap->rta_len = RTA_LENGTH(sizeof(in4->sin_addr));
+      /* while a sin_addr is a multiple of 4 bytes in length, we
+	 should still use RTA_SPACE rather than RTA_LENGTH. kudos to
+	 Thomas Graf for pointing that out */
+      rtap->rta_len = RTA_SPACE(sizeof(in4->sin_addr));
       memcpy(RTA_DATA(rtap), &(in4->sin_addr), sizeof(in4->sin_addr));
     }
     else if (AF_INET6 == in6->sin6_family) {
-      rtap->rta_len = RTA_LENGTH(sizeof(in6->sin6_addr));
+      rtap->rta_len = RTA_SPACE(sizeof(in6->sin6_addr));
       memcpy(RTA_DATA(rtap), &(in6->sin6_addr), sizeof(in6->sin6_addr));
     }
     else {
@@ -96,7 +99,7 @@ find_egress_interface(struct sockaddr *source, struct sockaddr *dest) {
   }
 
   /* add the length of our request to our overall message length. it
-     should already be suitably padded by the previous RTA_LENGTH */
+     should already be suitably padded by the previous RTA_SPACE */
   request.nl.nlmsg_len += rtap->rta_len;
 
   /* now the src */
@@ -105,14 +108,18 @@ find_egress_interface(struct sockaddr *source, struct sockaddr *dest) {
        current value of rta_len */
     in4 = (struct sockaddr_in *)source;
     in6 = (struct sockaddr_in6 *)source;
-    rtap +=  rtap->rta_len;
+
+    /* pointer math is fun.  silly me initially tried to to rtap +=
+       rtap->rta_len but since rtap isn't pointing at bytes... again
+       kudos to Thomas Graf for finding that mistake */
+    rtap = (struct rtattr *)((char *)rtap + (rtap->rta_len));
     rtap->rta_type = RTA_SRC;
     if (AF_INET == in4->sin_family) {
-      rtap->rta_len = RTA_LENGTH(sizeof(in4->sin_addr));
+      rtap->rta_len = RTA_SPACE(sizeof(in4->sin_addr));
       memcpy(RTA_DATA(rtap), &(in4->sin_addr), sizeof(in4->sin_addr));
     }
     else if (AF_INET6 == in6->sin6_family) {
-      rtap->rta_len = RTA_LENGTH(sizeof(in6->sin6_addr));
+      rtap->rta_len = RTA_SPACE(sizeof(in6->sin6_addr));
       memcpy(RTA_DATA(rtap), &(in6->sin6_addr), sizeof(in6->sin6_addr));
     }
     else {
@@ -122,7 +129,7 @@ find_egress_interface(struct sockaddr *source, struct sockaddr *dest) {
 
     /* add the length of the just added attribute to the overall
      message length. it should already be suitably padded by the
-     previous RTA_LENGTH */
+     previous RTA_SPACE */
     request.nl.nlmsg_len += rtap->rta_len;
   }
   
