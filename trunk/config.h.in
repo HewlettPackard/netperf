@@ -66,6 +66,9 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
+/* Define to 1 if you have the `devinfo' library (-ldevinfo). */
+#undef HAVE_LIBDEVINFO
+
 /* Define to 1 if you have the `exs' library (-lexs). */
 #undef HAVE_LIBEXS
 
