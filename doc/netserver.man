@@ -6,7 +6,7 @@ netserver \- a network performance benchmark server
 .SH SYNOPSIS
 
 .B netserver
-[-P portnum]
+[-p portnum]
 [-n numcpus]
 
 .SH DESCRIPTION
