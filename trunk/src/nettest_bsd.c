@@ -8915,6 +8915,15 @@ newport:
     /* zero return we can avoid race conditions that stick us with the */
     /* TIME_WAIT connection and not the server. raj 8/96 */
 
+#ifdef VMWARE_UW
+    /* why this should be for VMware I'm not sure, but it was given as
+       part of the patches, so we include it here, but put it under an
+       ifdef VMWARE_UW. raj 2008-07-25 */
+    if (sp_bytes_recvd < 0 && errno == ECONNRESET) {
+      rsp_bytes_recvd = 0;
+    } 
+#endif /* VMWARE_UW */
+
     if (rsp_bytes_recvd == 0) {
       /* connection close, call close. we assume that the requisite */
       /* number of bytes have been received */
