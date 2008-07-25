@@ -2636,7 +2636,6 @@ recv_response_n(int n)
 void 
 get_remote_system_info()
 {
-  int ret;
   char delim[2];
   char *token;
 
@@ -2762,7 +2761,6 @@ set_sock_buffer (SOCKET sd, enum sock_buffer which, int requested_size, int *eff
 {
 #ifdef SO_SNDBUF
   int optname = (which == SEND_BUFFER) ? SO_SNDBUF : SO_RCVBUF;
-  netperf_socklen_t sock_opt_len;
 
   /* seems that under Windows, setting a value of zero is how one
      tells the stack you wish to enable copy-avoidance. Knuth only
@@ -3798,7 +3796,7 @@ void HIST_timestamp(LARGE_INTEGER *timestamp)
 int delta_micro(LARGE_INTEGER *begin, LARGE_INTEGER *end)
 {
 	LARGE_INTEGER DeltaTimestamp;
-	static LARGE_INTEGER TickHz = {0,0};
+	static LARGE_INTEGER TickHz = {{0,0}};
 
 	if (TickHz.QuadPart == 0) 
 	{

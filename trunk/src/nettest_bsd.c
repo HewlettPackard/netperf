@@ -1,6 +1,6 @@
 #ifndef lint
 char	nettest_id[]="\
-@(#)nettest_bsd.c (c) Copyright 1993-2004 Hewlett-Packard Co. Version 2.4.3";
+@(#)nettest_bsd.c (c) Copyright 1993-2008 Hewlett-Packard Co. Version 2.4.5";
 #endif /* lint */
 
 
@@ -5397,12 +5397,6 @@ Local /Remote\n\
 Socket Size   Request  Resp.   Elapsed  \n\
 Send   Recv   Size     Size    Time     Throughput \n\
 bytes  Bytes  bytes    bytes   secs.    %s/sec   \n\n";
-
-  char *tput_title_latency = "\
-Local /Remote\n\
-Socket Size   Request  Resp.   Elapsed  \n\
-Send   Recv   Size     Size    Time     Latency \n\
-bytes  Bytes  bytes    bytes   secs.    usec/tran   \n\n";
 
   char *tput_fmt_0 =
     "%7.2f %s\n";

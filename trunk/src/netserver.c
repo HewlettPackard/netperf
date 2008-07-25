@@ -869,7 +869,7 @@ main(int argc, char *argv[])
 
 	/* Initialize the winsock lib ( version 2.2 ) */
 	if ( WSAStartup(MAKEWORD(2,2), &wsa_data) == SOCKET_ERROR ){
-		printf("WSAStartup() failed : %d\n", GetLastError()) ;
+		printf("WSAStartup() failed : %lu\n", GetLastError()) ;
 		return 1 ;
 	}
 #endif /* WIN32 */

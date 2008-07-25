@@ -15,18 +15,6 @@ char   netcpu_ntperf_id[]="\
 # endif
 #endif
 
-#if 0
-#include <limits.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <string.h>
-#endif
-
-#include <assert.h>
-
 #include <process.h>
 #include <time.h>
 
@@ -77,7 +65,7 @@ typedef ULONG (__stdcall *NT_QUERY_SYSTEM_INFORMATION)(
 NT_QUERY_SYSTEM_INFORMATION NtQuerySystemInformation = NULL;
 
 
-static LARGE_INTEGER TickHz = {0,0};
+static LARGE_INTEGER TickHz = {{0,0}};
 
 _inline LARGE_INTEGER ReadPerformanceCounter(VOID)
 {
@@ -190,7 +178,7 @@ PerfObj *InitPerfCntrs()
     {
       //Lint
       status = GetLastError();
-      fprintf(stderr, "GetProcAddressFailed, status: %X\n", status);
+      fprintf(stderr, "GetProcAddressFailed, status: %lX\n", status);
       exit(1);
     }
   
@@ -240,7 +228,7 @@ void RestartPerfCntrs(PerfObj *PerfCntrs)
 					   (PCHAR)&PerfCntrs->EndInfo[0], sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION)*MAXCPUS,
 					   &returnLength )) != 0) 
     {
-      fprintf(stderr, "NtQuery failed, status: %X\n", status);
+      fprintf(stderr, "NtQuery failed, status: %lX\n", status);
       exit(1);
     }
   
@@ -250,7 +238,7 @@ void RestartPerfCntrs(PerfObj *PerfCntrs)
   if ((returnLength % sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION)) != 0)
     {
       fprintf(stderr, "NtQuery didn't return expected amount of data\n");
-      fprintf(stderr, "Expected a multiple of %i, returned %i\n",
+      fprintf(stderr, "Expected a multiple of %i, returned %lu\n",
 	      sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION), returnLength);
       exit(1);
     }
@@ -259,7 +247,7 @@ void RestartPerfCntrs(PerfObj *PerfCntrs)
   if (returnNumCPUs != (int)SystemInfo.dwNumberOfProcessors)
     {
       fprintf(stderr, "NtQuery didn't return expected amount of data\n");
-      fprintf(stderr, "Expected data for %i CPUs, returned %i\n",
+      fprintf(stderr, "Expected data for %i CPUs, returned %lu\n",
 	      (int)SystemInfo.dwNumberOfProcessors, returnNumCPUs);
       exit(1);
     }

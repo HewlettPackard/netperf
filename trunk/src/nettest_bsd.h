@@ -584,6 +584,7 @@ extern int  get_sockaddr_family_addr_port(struct sockaddr_storage *sockaddr,
 					  int family,
 					  void *addr,
 					  int *port);
+extern void send_tcp_mss(char remote_host[]);
 extern void send_tcp_stream(char remote_host[]);
 extern void send_tcp_maerts(char remote_host[]);
 extern void send_tcp_rr(char remote_host[]);
