@@ -151,6 +151,13 @@ get_cpu_counters(int cpu_num, cpu_time_counters_t *counters)
 	  found++;
 	  counters[cpu_num].kernel = knp->value.ui64;
 	}
+	else if (!strcmp("cpu_nsec_intr",knp->name)) {
+	  if (debug >= 2) {
+	    fprintf(where,
+		    "Found a cpu_nsec_intr but it doesn't do what we want\n");
+	    fflush(where);
+	  }
+	}
 	else if (strstr(knp->name,"nsec")) {
 	  /* finding another nsec here means Sun have changed
 	     something and we need to warn the user. raj 2005-01-28 */ 
