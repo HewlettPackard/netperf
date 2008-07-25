@@ -418,7 +418,6 @@ int
 parse_protocol(char protocol_string[]) 
 {
   char temp[10];
-  int temp_protocol;
 
   strncpy(temp,protocol_string,10);
 

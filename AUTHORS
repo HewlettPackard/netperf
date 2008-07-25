@@ -225,3 +225,6 @@ Fixes for *BSD CPU util.
 Adam Bidema
 Fixes for launching netserver children when the path to netserver.exe
 is very long. 
+
+Gisle Vanem
+Cygwin cleanups.
