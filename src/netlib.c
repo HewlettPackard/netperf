@@ -3678,6 +3678,10 @@ HIST_add(register HIST h, int time_delta){
    register int val;
    h->total++;
    val = time_delta;
+   /* check for < 0 added via VMware ESX patches */
+   if (val < 0) {
+     h->ridiculous++;
+   }
    if(val <= 9) h->unit_usec[val]++;
    else {
      val = val/10;

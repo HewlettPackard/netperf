@@ -614,7 +614,7 @@ set_up_server(char hostname[], char port[], int af)
     setpgrp();
     */
 
-#if !defined(WIN32) && !defined(MPE) && !defined(__VMS)
+#if !defined(WIN32) && !defined(MPE) && !defined(__VMS) && !defined(VMWARE_UW)
   /* Flush the standard I/O file descriptors before forking. */
   fflush (stdin);
   fflush (stdout);
@@ -702,7 +702,7 @@ set_up_server(char hostname[], char port[], int af)
 	      printf("server_control: accept failed errno %d\n",errno);
 	      exit(1);
 	    }
-#if defined(MPE) || defined(__VMS)
+#if defined(MPE) || defined(__VMS) || defined(VMWARE_UW)
 	  /*
 	   * Since we cannot fork this process , we cant fire any threads
 	   * as they all share the same global data . So we better allow
@@ -806,7 +806,7 @@ set_up_server(char hostname[], char port[], int af)
 	    }
 #endif /* !WIN32 !MPE !__VMS */  
 	} /*for*/
-#if !defined(WIN32) && !defined(MPE) && !defined(__VMS)
+#if !defined(WIN32) && !defined(MPE) && !defined(__VMS) && !defined(VMWARE_UW)
       break; /*case 0*/
       
     default: 

@@ -2,6 +2,10 @@ These are the Release Notes leading-up to Revision 2.4.5 of netperf:
 
 Things changed in this release:
 
+*) Changes to enable compilation and building of netperf for
+   VMware. Kudos to the person who did the first port, I will be happy
+   to name that person when told it is OK :)
+
 *) Fixes from Adam Bidema for launching netserver children when the
    path to netserver.exe is very long.  
 
