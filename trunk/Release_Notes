@@ -2,7 +2,7 @@ These are the Release Notes leading-up to Revision 2.4.5 of netperf:
 
 Things changed in this release:
 
-*) Compilation cleanups for Cygwin courtesy of Gisle Vanem.
+*) Compilation cleanups for MingW courtesy of Gisle Vanem.
 
 *) Changes to enable compilation and building of netperf for
    VMware. Kudos to the person who did the first port, I will be happy
