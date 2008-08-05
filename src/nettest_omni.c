@@ -320,6 +320,7 @@ static struct timeval *temp_intvl_ptr = &intvl_one;
 /* a boatload of globals while I settle things out */
 char *csv_selection_file = NULL;
 char *human_selection_file = NULL;
+char *keyword_selection_file = NULL;
 
 double result_confid_pct = -1.0;
 double loc_cpu_confid_pct = -1.0;
@@ -353,6 +354,7 @@ int bytes_to_recv;
 double bytes_per_recv;
 int null_message_ok = 0;
 int csv = 0;
+int keyword = 0;
 uint64_t      trans_completed = 0;
 uint64_t      units_remaining;
 uint64_t      bytes_sent = 0;
@@ -2957,7 +2959,7 @@ print_omni_init() {
   /* the default for csv is the kitchen-sink.  ultimately it will be
      possible to override by providing one's own list in a file */
 
-  if (csv) {
+  if ((csv) || (keyword)) {
     if (csv_selection_file) 
       /* name of file, list to fill, number of rows/lines */
       parse_output_csv_selection_file(csv_selection_file);
@@ -3162,6 +3164,41 @@ print_omni_csv()
 }
 
 void
+print_omni_keyword()
+{
+  /* this one should be the simplest of all - no buffers to allocate,
+     just spit it all out. raj 20080805 */
+
+  int j;
+  char tmpval[1024];
+  int vallen;
+
+  for (j = 0; 
+       ((j < NETPERF_OUTPUT_MAX) && 
+	(output_csv_list[j] != OUTPUT_END));
+       j++) {
+    if ((netperf_output_source[output_csv_list[j]].format != NULL) &&
+	(netperf_output_source[output_csv_list[j]].display_value != NULL)) {
+      vallen = 
+	my_snprintf(tmpval,
+		    1024,
+		    netperf_output_source[output_csv_list[j]].format,
+		    (netperf_output_source[output_csv_list[j]].display_value));
+      if (vallen == -1) {
+	snprintf(tmpval,
+		 1024,
+		 "my_snprintf failed with format %s\n",
+		 netperf_output_source[output_csv_list[j]].format);
+      }
+      fprintf(where,
+	      "%s=%s\n",netperf_output_enum_to_str(output_csv_list[j]),
+	      tmpval);
+    }
+  }
+  fflush(where);
+}
+
+void
 print_omni_human()
 {
   
@@ -3302,6 +3339,8 @@ print_omni()
 
   if (csv) 
     print_omni_csv();
+  else if (keyword)
+    print_omni_keyword();
   else
     print_omni_human();
 
@@ -5427,7 +5466,7 @@ scan_omni_args(int argc, char *argv[])
 
 {
 
-#define OMNI_ARGS "b:cCd:DnNhH:L:m:M:oOp:P:r:s:S:t:T:Vw:W:46"
+#define OMNI_ARGS "b:cCd:DnNhH:kL:m:M:oOp:P:r:s:S:t:T:Vw:W:46"
 
   extern char	*optarg;	  /* pointer to option string	*/
   
@@ -5538,6 +5577,31 @@ scan_omni_args(int argc, char *argv[])
       if (arg2[0])
 	remote_data_family = parse_address_family(arg2);
       break;
+    case 'k':
+      csv = 0;
+      keyword = 1;
+      /* obliterate any previous file name */
+      if (human_selection_file) {
+	free(human_selection_file);
+	human_selection_file = NULL;
+      }
+      if (csv_selection_file) {
+	free(csv_selection_file);
+	csv_selection_file = NULL;
+      }
+      if (argv[optind] && ((unsigned char)argv[optind][0] != '-')) {
+	/* we assume that what follows is the name of a file with the
+	   list of desired output values. */
+	csv_selection_file = strdup(argv[optind]);
+	optind++;
+	/* special case - if the file name is "?" then we will emit a
+	   list of the available outputs */
+	if (strcmp(csv_selection_file,"?") == 0) {
+	  dump_netperf_output_list(stdout,1);
+	  exit(1);
+	}
+      }
+      break;
     case 'L':
       break_args_explicit(optarg,arg1,arg2);
       if (arg1[0]) {
@@ -5588,6 +5652,7 @@ scan_omni_args(int argc, char *argv[])
       break;
     case 'o':
       csv = 1;
+      keyword = 0;
       /* obliterate any previous file name */
       if (human_selection_file) {
 	free(human_selection_file);
@@ -5612,6 +5677,7 @@ scan_omni_args(int argc, char *argv[])
       break;
     case 'O':
       csv = 0;
+      keyword = 0;
       /* obliterate any previous file name */
       if (human_selection_file) {
 	free(human_selection_file);
