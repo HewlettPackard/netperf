@@ -70,6 +70,8 @@ print_cpu_time_counters(char *name, int instance, cpu_time_counters_t *counters)
 void
 cpu_util_init(void) 
 {
+  kstat_t   *ksp;
+  int i;
   kc = kstat_open();
 
   if (kc == NULL) {
@@ -80,6 +82,37 @@ cpu_util_init(void)
     fflush(where);
     exit(-1);
   }
+
+  /* lets flesh-out a CPU instance number map since it seems that some
+     systems, not even those which are partitioned, can have
+     non-contiguous CPU numbers.  discovered "the hard way" on a
+     T5220. raj 20080804 */
+  i = 0;
+  for (ksp = kc->kc_chain, i = 0;
+       (ksp != NULL) && (i < MAXCPUS);
+       ksp = ksp->ks_next) {  
+    if ((strcmp(ksp->ks_module,"cpu") == 0) &&
+	(strcmp(ksp->ks_name,"sys") == 0)) {
+      if (debug) {
+	fprintf(where,"Mapping CPU instance %d to entry %d\n",
+		ksp->ks_instance,i);
+	fflush(where);
+      }
+      lib_cpu_map[i++] = ksp->ks_instance;
+    }
+  }  
+
+  if (MAXCPUS == i) {
+    fprintf(where,
+            "Sorry, this system has more CPUs (%d) than netperf can handle (%d).\n",
+            i,
+            MAXCPUS);
+    fprintf(where,
+            "Please alter MAXCPUS in netlib.h and recompile.\n");
+    fflush(where);
+    exit(1);
+  }
+
   return;
 }
 
@@ -126,7 +159,7 @@ get_cpu_counters(int cpu_num, cpu_time_counters_t *counters)
   kstat_named_t *knp;
   int i;
 
-  ksp = kstat_lookup(kc, "cpu", cpu_num, "sys");
+  ksp = kstat_lookup(kc, "cpu", lib_cpu_map[cpu_num], "sys");
   if ((ksp) && (ksp->ks_type == KSTAT_TYPE_NAMED)) {
     /* happiness and joy, keep going */
     nkcid = kstat_read(kc, ksp, NULL);
@@ -201,8 +234,9 @@ get_cpu_counters(int cpu_num, cpu_time_counters_t *counters)
   else {
     /* the lookup failed or found the wrong type */
     fprintf(where,
-	    "get_cpu_counters: kstat_lookup failed for module 'cpu' instance %d name 'sys' and KSTAT_TYPE_NAMED: errno %d %s\n",
+	    "get_cpu_counters: kstat_lookup failed for module 'cpu' number %d instance %d name 'sys' and KSTAT_TYPE_NAMED: errno %d %s\n",
 	    cpu_num,
+	    lib_cpu_map[cpu_num],
 	    errno,
 	    strerror(errno));
     fflush(where);
@@ -219,7 +253,7 @@ get_interrupt_counters(int cpu_num, cpu_time_counters_t *counters)
   kstat_named_t *knp;
   int i;
 
-  ksp = kstat_lookup(kc, "cpu", cpu_num, "intrstat");
+  ksp = kstat_lookup(kc, "cpu", lib_cpu_map[cpu_num], "intrstat");
 
   counters[cpu_num].interrupt = 0;
   if ((ksp) && (ksp->ks_type == KSTAT_TYPE_NAMED)) {
@@ -273,8 +307,9 @@ get_interrupt_counters(int cpu_num, cpu_time_counters_t *counters)
   else {
     /* the lookup failed or found the wrong type */
     fprintf(where,
-	    "get_cpu_counters: kstat_lookup failed for module 'cpu' instance %d class 'intrstat' and KSTAT_TYPE_NAMED: errno %d %s\n",
+	    "get_cpu_counters: kstat_lookup failed for module 'cpu' %d instance %d class 'intrstat' and KSTAT_TYPE_NAMED: errno %d %s\n",
 	    cpu_num,
+	    lib_cpu_map[cpu_num],
 	    errno,
 	    strerror(errno));
     fflush(where);

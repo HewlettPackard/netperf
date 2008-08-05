@@ -596,6 +596,7 @@ extern double confidence;
 extern double result_confid;
 extern double loc_cpu_confid;
 extern double rem_cpu_confid;
+extern int lib_cpu_map[];
 #endif
 
 #ifdef WIN32
