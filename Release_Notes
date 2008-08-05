@@ -29,15 +29,18 @@ Things changed in this release:
    src/nettest_sdp.c, and src/nettest_sctp.c will be "migrated" to use
    the "omni infrastructure" (aka two routines to measure them
    all...).  Apart from reduced socket code, the omni suite has
-   user-configurable output in either "human readable" or CSV format.
-   By default, a VERY large quantity of data is output when asking for
-   csv format (test-specific -o option).  The omni suite is not yet
-   documented (there are some as-yet undiagnosed problems with
+   user-configurable output in either "human readable," CSV or
+   keyword=value format.  By default, a VERY large quantity of data is
+   output when asking for csv format (test-specific -o option) or
+   keyword format (test-specific -k option).  The omni suite is not
+   yet documented (there are some as-yet undiagnosed problems with
    doc/netperf.texi in emacs texinfo mode and updating nodes and links
    and such - any help there would be appreciated) but there is a
    small text file in doc/ describing the names (most) of the
    available output's.  For the most up-to-date list consult
-   src/nettest_omni.c and the enum netperf_output_name.  
+   src/nettest_omni.c and the enum netperf_output_name. Or, you can
+   pass-in a "filename" of '?' to either of the -O, -o or -k options
+   and netperf will emit a list of the known available outputs.
 
 *) Coming along for the ride are some new platform specific files to
    determine the probable egress interface for each end of a test, as
