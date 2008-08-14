@@ -78,7 +78,7 @@ char    netlib_id[]="\
 #ifndef WIN32
  /* at some point, I would like to get rid of all these "sys/" */
  /* includes where appropriate. if you have a system that requires */
- /* them, speak now, or your system may not comile later revisions of */
+ /* them, speak now, or your system may not compile later revisions of */
  /* netperf. raj 1/96 */
 #include <unistd.h>
 #include <sys/stat.h>
