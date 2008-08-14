@@ -87,9 +87,9 @@ char	netserver_id[]="\
 #include <errno.h>
 #include <signal.h>
 #endif
-#if !defined(WIN32) && !defined(__VMS)
+#if !defined(WIN32) && !defined(__VMS) && !defined(MSDOS)
 #include <sys/ipc.h>
-#endif /* !defined(WIN32) && !defined(__VMS) */
+#endif /* !defined(WIN32) && !defined(__VMS) && !defined(MSDOS) */
 #include <fcntl.h>
 #ifdef WIN32
 #include <time.h>
@@ -225,7 +225,7 @@ process_requests()
       if (!debug) 
       {
 	fclose(where);
-#if !defined(WIN32) && !defined(MPE) && !defined(__VMS)
+#if !defined(WIN32) && !defined(MPE) && !defined(__VMS) && !defined(MSDOS)
 	/* For Unix: reopen the debug write file descriptor to "/dev/null" */
 	/* and redirect stdout to it.					   */
 	fflush (stdout);
@@ -245,7 +245,7 @@ process_requests()
 	  perror ("netserver: duplicate /dev/null write file descr. to stdout");
 	  exit   (1);
 	}
-#endif /* !WIN32 !MPE !__VMS */
+#endif /* !WIN32 !MPE !__VMS !MSDOS */
       }
       break;
 
@@ -496,10 +496,10 @@ set_up_server(char hostname[], char port[], int af)
   int error;
   int not_listening;
 
-#if !defined(WIN32) && !defined(MPE) && !defined(__VMS)
+#if !defined(WIN32) && !defined(MPE) && !defined(__VMS) && !defined(MSDOS)
   FILE *rd_null_fp;    /* Used to redirect from "/dev/null". */
   FILE *wr_null_fp;    /* Used to redirect to   "/dev/null". */
-#endif /* !WIN32 !MPE !__VMS */
+#endif /* !WIN32 !MPE !__VMS !MDOS */
 
   if (debug) {
     fprintf(stderr,
@@ -614,7 +614,7 @@ set_up_server(char hostname[], char port[], int af)
     setpgrp();
     */
 
-#if !defined(WIN32) && !defined(MPE) && !defined(__VMS) && !defined(VMWARE_UW)
+#if !defined(WIN32) && !defined(MPE) && !defined(__VMS) && !defined(VMWARE_UW) && !defined(MSDOS)
   /* Flush the standard I/O file descriptors before forking. */
   fflush (stdin);
   fflush (stdout);
@@ -691,7 +691,7 @@ set_up_server(char hostname[], char port[], int af)
 
       signal(SIGCLD, SIG_IGN);
       
-#endif /* !WIN32 !MPE !__VMS */
+#endif /* !WIN32 !MPE !__VMS !MSDOS */
 
       for (;;)
 	{
@@ -702,7 +702,7 @@ set_up_server(char hostname[], char port[], int af)
 	      printf("server_control: accept failed errno %d\n",errno);
 	      exit(1);
 	    }
-#if defined(MPE) || defined(__VMS) || defined(VMWARE_UW)
+#if defined(MPE) || defined(__VMS) || defined(VMWARE_UW) || defined(MSDOS)
 	  /*
 	   * Since we cannot fork this process , we cant fire any threads
 	   * as they all share the same global data . So we better allow
@@ -804,16 +804,16 @@ set_up_server(char hostname[], char port[], int af)
 #endif /* DONT_WAIT */
 	      break;
 	    }
-#endif /* !WIN32 !MPE !__VMS */  
+#endif /* !WIN32 !MPE !__VMS !MSDOS */
 	} /*for*/
-#if !defined(WIN32) && !defined(MPE) && !defined(__VMS) && !defined(VMWARE_UW)
+#if !defined(WIN32) && !defined(MPE) && !defined(__VMS) && !defined(VMWARE_UW) && !defined(MSDOS)
       break; /*case 0*/
       
     default: 
       exit (0);
       
     }
-#endif /* !WIN32 !MPE !__VMS */  
+#endif /* !WIN32 !MPE !__VMS !MSDOS */
 }
 
 #ifdef WIN32
@@ -901,6 +901,9 @@ main(int argc, char *argv[])
     case 'd':
       /* we want to set the debug file name sometime */
       debug++;
+#ifdef MSDOS
+       dbug_init();
+#endif
       break;
     case 'L':
       not_inetd = 1;

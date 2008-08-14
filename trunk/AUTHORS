@@ -227,4 +227,4 @@ Fixes for launching netserver children when the path to netserver.exe
 is very long. 
 
 Gisle Vanem
-MingW cleanups.
+MingW cnd MSDOS (djgpp) leanups.

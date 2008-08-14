@@ -17,9 +17,9 @@ char	netsh_id[]="\
 #include <sys/types.h>
 #ifndef WIN32
 #include <unistd.h>
-#ifndef __VMS
+#if !defined(__VMS) && !defined(MSDOS)
 #include <sys/ipc.h>
-#endif /* __VMS */
+#endif /* __VMS/MSDOS */
 #endif /* WIN32 */
 #include <fcntl.h>
 #ifndef WIN32
@@ -640,6 +640,9 @@ scan_cmd_line(int argc, char *argv[])
       break;
     case 'd':
       debug++;
+#ifdef MSDOS
+      dbug_init();
+#endif
       break;
     case 'D':
 #if (defined WANT_DEMO)
