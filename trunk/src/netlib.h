@@ -533,6 +533,8 @@ extern  void    get_remote_system_info();
 extern  char    *inet_ftos(int family);
 extern  char    *inet_ttos(int type);
 extern  char    *inet_ptos(int protocol);
+extern  char    *nsec_enabled_to_str(int enabled);
+extern  char    *nsec_type_to_str(int type);
 extern  double  ntohd(double net_double);
 extern  double  htond(double host_double);
 extern  int     inet_nton(int af, const void *src, char *dst, int cnt);
