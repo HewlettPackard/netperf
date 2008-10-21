@@ -5264,7 +5264,7 @@ recv_omni()
 		     &local_security_specific);
   /* top bits type, bottom bits enabled */
   omni_response->security_info = local_security_type_id << 16;
-  omni_response->security_info += local_security_enabled_num & 0xff;
+  omni_response->security_info += local_security_enabled_num & 0xffff;
   strncpy(omni_response->security_string,
 	  local_security_specific,
 	  sizeof(omni_response->security_string));
