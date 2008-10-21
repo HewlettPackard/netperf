@@ -1301,7 +1301,18 @@ create_data_socket(struct addrinfo *res)
 		 /* it is REALLY SILLY THAT THIS SHOULD BE NEEDED!! I
 		    should be able to use SOL_SOCKET for this just
 		    like TCP and SCTP */
+		 /* IT IS EVEN SILLIER THAT THERE COULD BE SYSTEMS
+		    WITH IPPROTO_DCCP and no SOL_DCCP */
+#ifndef SOL_DCCP
+#define SOL_DCCP SOL_SOCKET
+#define NETPERF_NEED_CLEANUP 1
+#endif
 		 (res->ai_protocol == IPPROTO_DCCP) ? SOL_DCCP : SOL_SOCKET,
+#ifdef NETPERF_NEED_CLEANUP
+#undef SOL_DCCP
+#undef NETPERF_NEED_CLEANUP
+#endif
+
 #else
 		 SOL_SOCKET,
 #endif
