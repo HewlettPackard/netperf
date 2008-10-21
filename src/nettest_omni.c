@@ -416,11 +416,15 @@ char        *remote_system_model;
 char        *remote_cpu_model;
 int         remote_cpu_frequency;
 
-int         local_security_type;
-int         local_security_enabled;
+int         local_security_type_id;
+int         local_security_enabled_num;
+char        *local_security_type;
+char        *local_security_enabled;
 char        *local_security_specific;
-int         remote_security_type;
-int         remote_security_enabled;
+int         remote_security_type_id;
+int         remote_security_enabled_num;
+char        *remote_security_enabled;
+char        *remote_security_type;
 char        *remote_security_specific;
 
 int printing_initialized = 0;
@@ -602,10 +606,14 @@ enum netperf_output_name {
   LOCAL_INTERVAL_BURST,
   REMOTE_INTERVAL_USECS,
   REMOTE_INTERVAL_BURST,
+  LOCAL_SECURITY_TYPE_ID,
   LOCAL_SECURITY_TYPE,
+  LOCAL_SECURITY_ENABLED_NUM,
   LOCAL_SECURITY_ENABLED,
   LOCAL_SECURITY_SPECIFIC,
+  REMOTE_SECURITY_TYPE_ID,
   REMOTE_SECURITY_TYPE,
+  REMOTE_SECURITY_ENABLED_NUM,
   REMOTE_SECURITY_ENABLED,
   REMOTE_SECURITY_SPECIFIC,
   RESULT_BRAND,
@@ -993,12 +1001,20 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "REMOTE_INTERVAL_USECS";
   case REMOTE_INTERVAL_BURST:
     return "REMOTE_INTERVAL_BURST";
+  case LOCAL_SECURITY_TYPE_ID:
+    return "LOCAL_SECURITY_TYPE_ID";
+  case LOCAL_SECURITY_ENABLED_NUM:
+    return "LOCAL_SECURITY_ENABLED_NUM";
   case LOCAL_SECURITY_TYPE:
     return "LOCAL_SECURITY_TYPE";
   case LOCAL_SECURITY_ENABLED:
     return "LOCAL_SECURITY_ENABLED";
   case LOCAL_SECURITY_SPECIFIC:
     return "LOCAL_SECURITY_SPECIFIC";
+  case REMOTE_SECURITY_TYPE_ID:
+    return "REMOTE_SECURITY_TYPE_ID";
+  case REMOTE_SECURITY_ENABLED_NUM:
+    return "REMOTE_SECURITY_ENABLED_NUM";
   case REMOTE_SECURITY_TYPE:
     return "REMOTE_SECURITY_TYPE";
   case REMOTE_SECURITY_ENABLED:
@@ -2851,6 +2867,30 @@ print_omni_init_list() {
   netperf_output_source[REMOTE_INTERVAL_BURST].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_INTERVAL_BURST);
 
+  netperf_output_source[LOCAL_SECURITY_ENABLED].output_name = LOCAL_SECURITY_ENABLED;
+  netperf_output_source[LOCAL_SECURITY_ENABLED].line[0] = "Local";
+  netperf_output_source[LOCAL_SECURITY_ENABLED].line[1] = "OS";
+  netperf_output_source[LOCAL_SECURITY_ENABLED].line[2] = "Security";
+  netperf_output_source[LOCAL_SECURITY_ENABLED].line[3] = "Enabled";
+  netperf_output_source[LOCAL_SECURITY_ENABLED].format = "%s";
+  netperf_output_source[LOCAL_SECURITY_ENABLED].display_value = local_security_enabled;
+  netperf_output_source[LOCAL_SECURITY_ENABLED].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_SECURITY_ENABLED);
+  netperf_output_source[LOCAL_SECURITY_ENABLED].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_SECURITY_ENABLED);
+
+  netperf_output_source[LOCAL_SECURITY_TYPE].output_name = LOCAL_SECURITY_TYPE;
+  netperf_output_source[LOCAL_SECURITY_TYPE].line[0] = "Local";
+  netperf_output_source[LOCAL_SECURITY_TYPE].line[1] = "OS";
+  netperf_output_source[LOCAL_SECURITY_TYPE].line[2] = "Security";
+  netperf_output_source[LOCAL_SECURITY_TYPE].line[3] = "Type";
+  netperf_output_source[LOCAL_SECURITY_TYPE].format = "%s";
+  netperf_output_source[LOCAL_SECURITY_TYPE].display_value = local_security_type;
+  netperf_output_source[LOCAL_SECURITY_TYPE].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_SECURITY_TYPE);
+  netperf_output_source[LOCAL_SECURITY_TYPE].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_SECURITY_TYPE);
+
   netperf_output_source[LOCAL_SECURITY_SPECIFIC].output_name = LOCAL_SECURITY_SPECIFIC;
   netperf_output_source[LOCAL_SECURITY_SPECIFIC].line[0] = "Local";
   netperf_output_source[LOCAL_SECURITY_SPECIFIC].line[1] = "OS";
@@ -2863,29 +2903,53 @@ print_omni_init_list() {
   netperf_output_source[LOCAL_SECURITY_SPECIFIC].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_SECURITY_SPECIFIC);
 
-  netperf_output_source[LOCAL_SECURITY_ENABLED].output_name = LOCAL_SECURITY_ENABLED;
-  netperf_output_source[LOCAL_SECURITY_ENABLED].line[0] = "Local";
-  netperf_output_source[LOCAL_SECURITY_ENABLED].line[1] = "OS";
-  netperf_output_source[LOCAL_SECURITY_ENABLED].line[2] = "Security";
-  netperf_output_source[LOCAL_SECURITY_ENABLED].line[3] = "Enabled";
-  netperf_output_source[LOCAL_SECURITY_ENABLED].format = "%d";
-  netperf_output_source[LOCAL_SECURITY_ENABLED].display_value = &local_security_enabled;
-  netperf_output_source[LOCAL_SECURITY_ENABLED].max_line_len = 
-    NETPERF_LINE_MAX(LOCAL_SECURITY_ENABLED);
-  netperf_output_source[LOCAL_SECURITY_ENABLED].tot_line_len = 
-    NETPERF_LINE_TOT(LOCAL_SECURITY_ENABLED);
+  netperf_output_source[LOCAL_SECURITY_ENABLED_NUM].output_name = LOCAL_SECURITY_ENABLED_NUM;
+  netperf_output_source[LOCAL_SECURITY_ENABLED_NUM].line[0] = "Local";
+  netperf_output_source[LOCAL_SECURITY_ENABLED_NUM].line[1] = "OS";
+  netperf_output_source[LOCAL_SECURITY_ENABLED_NUM].line[2] = "Security";
+  netperf_output_source[LOCAL_SECURITY_ENABLED_NUM].line[3] = "Enabled Num";
+  netperf_output_source[LOCAL_SECURITY_ENABLED_NUM].format = "%d";
+  netperf_output_source[LOCAL_SECURITY_ENABLED_NUM].display_value = &local_security_enabled_num;
+  netperf_output_source[LOCAL_SECURITY_ENABLED_NUM].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_SECURITY_ENABLED_NUM);
+  netperf_output_source[LOCAL_SECURITY_ENABLED_NUM].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_SECURITY_ENABLED_NUM);
 
-  netperf_output_source[LOCAL_SECURITY_TYPE].output_name = LOCAL_SECURITY_TYPE;
-  netperf_output_source[LOCAL_SECURITY_TYPE].line[0] = "Local";
-  netperf_output_source[LOCAL_SECURITY_TYPE].line[1] = "OS";
-  netperf_output_source[LOCAL_SECURITY_TYPE].line[2] = "Security";
-  netperf_output_source[LOCAL_SECURITY_TYPE].line[3] = "Type";
-  netperf_output_source[LOCAL_SECURITY_TYPE].format = "%d";
-  netperf_output_source[LOCAL_SECURITY_TYPE].display_value = &local_security_type;
-  netperf_output_source[LOCAL_SECURITY_TYPE].max_line_len = 
-    NETPERF_LINE_MAX(LOCAL_SECURITY_TYPE);
-  netperf_output_source[LOCAL_SECURITY_TYPE].tot_line_len = 
-    NETPERF_LINE_TOT(LOCAL_SECURITY_TYPE);
+  netperf_output_source[LOCAL_SECURITY_TYPE_ID].output_name = LOCAL_SECURITY_TYPE_ID;
+  netperf_output_source[LOCAL_SECURITY_TYPE_ID].line[0] = "Local";
+  netperf_output_source[LOCAL_SECURITY_TYPE_ID].line[1] = "OS";
+  netperf_output_source[LOCAL_SECURITY_TYPE_ID].line[2] = "Security";
+  netperf_output_source[LOCAL_SECURITY_TYPE_ID].line[3] = "Type ID";
+  netperf_output_source[LOCAL_SECURITY_TYPE_ID].format = "%d";
+  netperf_output_source[LOCAL_SECURITY_TYPE_ID].display_value = &local_security_type_id;
+  netperf_output_source[LOCAL_SECURITY_TYPE_ID].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_SECURITY_TYPE_ID);
+  netperf_output_source[LOCAL_SECURITY_TYPE_ID].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_SECURITY_TYPE_ID);
+
+  netperf_output_source[REMOTE_SECURITY_ENABLED].output_name = REMOTE_SECURITY_ENABLED;
+  netperf_output_source[REMOTE_SECURITY_ENABLED].line[0] = "Remote";
+  netperf_output_source[REMOTE_SECURITY_ENABLED].line[1] = "OS";
+  netperf_output_source[REMOTE_SECURITY_ENABLED].line[2] = "Security";
+  netperf_output_source[REMOTE_SECURITY_ENABLED].line[3] = "Enabled";
+  netperf_output_source[REMOTE_SECURITY_ENABLED].format = "%s";
+  netperf_output_source[REMOTE_SECURITY_ENABLED].display_value = remote_security_enabled;
+  netperf_output_source[REMOTE_SECURITY_ENABLED].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_SECURITY_ENABLED);
+  netperf_output_source[REMOTE_SECURITY_ENABLED].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_SECURITY_ENABLED);
+
+  netperf_output_source[REMOTE_SECURITY_TYPE].output_name = REMOTE_SECURITY_TYPE;
+  netperf_output_source[REMOTE_SECURITY_TYPE].line[0] = "Remote";
+  netperf_output_source[REMOTE_SECURITY_TYPE].line[1] = "OS";
+  netperf_output_source[REMOTE_SECURITY_TYPE].line[2] = "Security";
+  netperf_output_source[REMOTE_SECURITY_TYPE].line[3] = "Type";
+  netperf_output_source[REMOTE_SECURITY_TYPE].format = "%s";
+  netperf_output_source[REMOTE_SECURITY_TYPE].display_value = remote_security_type;
+  netperf_output_source[REMOTE_SECURITY_TYPE].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_SECURITY_TYPE);
+  netperf_output_source[REMOTE_SECURITY_TYPE].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_SECURITY_TYPE);
 
   netperf_output_source[REMOTE_SECURITY_SPECIFIC].output_name = REMOTE_SECURITY_SPECIFIC;
   netperf_output_source[REMOTE_SECURITY_SPECIFIC].line[0] = "Remote";
@@ -2899,29 +2963,29 @@ print_omni_init_list() {
   netperf_output_source[REMOTE_SECURITY_SPECIFIC].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_SECURITY_SPECIFIC);
 
-  netperf_output_source[REMOTE_SECURITY_ENABLED].output_name = REMOTE_SECURITY_ENABLED;
-  netperf_output_source[REMOTE_SECURITY_ENABLED].line[0] = "Remote";
-  netperf_output_source[REMOTE_SECURITY_ENABLED].line[1] = "OS";
-  netperf_output_source[REMOTE_SECURITY_ENABLED].line[2] = "Security";
-  netperf_output_source[REMOTE_SECURITY_ENABLED].line[3] = "Enabled";
-  netperf_output_source[REMOTE_SECURITY_ENABLED].format = "%d";
-  netperf_output_source[REMOTE_SECURITY_ENABLED].display_value = &remote_security_enabled;
-  netperf_output_source[REMOTE_SECURITY_ENABLED].max_line_len = 
-    NETPERF_LINE_MAX(REMOTE_SECURITY_ENABLED);
-  netperf_output_source[REMOTE_SECURITY_ENABLED].tot_line_len = 
-    NETPERF_LINE_TOT(REMOTE_SECURITY_ENABLED);
+  netperf_output_source[REMOTE_SECURITY_ENABLED_NUM].output_name = REMOTE_SECURITY_ENABLED_NUM;
+  netperf_output_source[REMOTE_SECURITY_ENABLED_NUM].line[0] = "Remote";
+  netperf_output_source[REMOTE_SECURITY_ENABLED_NUM].line[1] = "OS";
+  netperf_output_source[REMOTE_SECURITY_ENABLED_NUM].line[2] = "Security";
+  netperf_output_source[REMOTE_SECURITY_ENABLED_NUM].line[3] = "Enabled";
+  netperf_output_source[REMOTE_SECURITY_ENABLED_NUM].format = "%d";
+  netperf_output_source[REMOTE_SECURITY_ENABLED_NUM].display_value = &remote_security_enabled_num;
+  netperf_output_source[REMOTE_SECURITY_ENABLED_NUM].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_SECURITY_ENABLED_NUM);
+  netperf_output_source[REMOTE_SECURITY_ENABLED_NUM].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_SECURITY_ENABLED_NUM);
 
-  netperf_output_source[REMOTE_SECURITY_TYPE].output_name = REMOTE_SECURITY_TYPE;
-  netperf_output_source[REMOTE_SECURITY_TYPE].line[0] = "Remote";
-  netperf_output_source[REMOTE_SECURITY_TYPE].line[1] = "OS";
-  netperf_output_source[REMOTE_SECURITY_TYPE].line[2] = "Security";
-  netperf_output_source[REMOTE_SECURITY_TYPE].line[3] = "Type";
-  netperf_output_source[REMOTE_SECURITY_TYPE].format = "%d";
-  netperf_output_source[REMOTE_SECURITY_TYPE].display_value = &remote_security_type;
-  netperf_output_source[REMOTE_SECURITY_TYPE].max_line_len = 
-    NETPERF_LINE_MAX(REMOTE_SECURITY_TYPE);
-  netperf_output_source[REMOTE_SECURITY_TYPE].tot_line_len = 
-    NETPERF_LINE_TOT(REMOTE_SECURITY_TYPE);
+  netperf_output_source[REMOTE_SECURITY_TYPE_ID].output_name = REMOTE_SECURITY_TYPE_ID;
+  netperf_output_source[REMOTE_SECURITY_TYPE_ID].line[0] = "Remote";
+  netperf_output_source[REMOTE_SECURITY_TYPE_ID].line[1] = "OS";
+  netperf_output_source[REMOTE_SECURITY_TYPE_ID].line[2] = "Security";
+  netperf_output_source[REMOTE_SECURITY_TYPE_ID].line[3] = "Type";
+  netperf_output_source[REMOTE_SECURITY_TYPE_ID].format = "%d";
+  netperf_output_source[REMOTE_SECURITY_TYPE_ID].display_value = &remote_security_type_id;
+  netperf_output_source[REMOTE_SECURITY_TYPE_ID].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_SECURITY_TYPE_ID);
+  netperf_output_source[REMOTE_SECURITY_TYPE_ID].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_SECURITY_TYPE_ID);
 
   netperf_output_source[LOCAL_INTERVAL_USECS].output_name = LOCAL_INTERVAL_USECS;
   netperf_output_source[LOCAL_INTERVAL_USECS].line[0] = "Local";
@@ -4134,8 +4198,11 @@ send_omni(char remote_host[])
 	  remote_security_specific = strdup(omni_response->security_string);
 	}
 	/* top bits type, bottom bits enabled */
-	remote_security_type = (int) omni_response->security_info >> 16;
-	remote_security_enabled = (short)omni_response->security_info;
+	remote_security_type_id = (int) omni_response->security_info >> 16;
+	remote_security_enabled_num = (short)omni_response->security_info;
+	remote_security_type = nsec_type_to_str(remote_security_type_id);
+	remote_security_enabled = 
+	  nsec_enabled_to_str(remote_security_enabled_num);
       }
       else {
 	Set_errno(netperf_response.content.serv_errno);
@@ -4560,9 +4627,11 @@ send_omni(char remote_host[])
 			 local_res->ai_protocol);
     
 
-    find_security_info(&local_security_enabled,
-		       &local_security_type,
+    find_security_info(&local_security_enabled_num,
+		       &local_security_type_id,
 		       &local_security_specific);
+    local_security_enabled = nsec_enabled_to_str(local_security_enabled_num);
+    local_security_type    = nsec_type_to_str(local_security_type_id);
 
     /* so, if we have/had a data connection, we will want to close it
        now, and this will be independent of whether there is a control
@@ -5190,12 +5259,12 @@ recv_omni()
   omni_response->cpu_model[sizeof(omni_response->cpu_model)-1] = 0;
   omni_response->cpu_frequency = local_cpu_frequency;
 
-  find_security_info(&local_security_enabled,
-		     &local_security_type,
+  find_security_info(&local_security_enabled_num,
+		     &local_security_type_id,
 		     &local_security_specific);
   /* top bits type, bottom bits enabled */
-  omni_response->security_info = local_security_type << 16;
-  omni_response->security_info += local_security_enabled & 0xff;
+  omni_response->security_info = local_security_type_id << 16;
+  omni_response->security_info += local_security_enabled_num & 0xff;
   strncpy(omni_response->security_string,
 	  local_security_specific,
 	  sizeof(omni_response->security_string));
