@@ -707,6 +707,7 @@ NEED_LIBCOMPAT_FALSE
 NETCPU_SOURCE
 NETRTLKUP_SOURCE
 NETSLOTLKUP_SOURCE
+NETSECLKUP_SOURCE
 NETDRVLKUP_SOURCE
 NETSYSLKUP_SOURCE
 LTLIBOBJS'
@@ -1327,6 +1328,8 @@ Optional Features:
                           using specified mechanism
   --enable-slotlookup     include code to find the probable egress interface
                           using specified mechanism
+  --enable-seclookup      include code to find the system security mechanism
+                          and its state
   --enable-drvlookup      include code to find the driver information for the
                           probable egress interface
   --enable-syslookup      include code to find some rudimentary system
@@ -9738,6 +9741,121 @@ echo "${ECHO_T}\"$enable_slotlookup\"" >&6; }
 
 
 
+
+# time to see about sec lookup mechanisms
+
+{ echo "$as_me:$LINENO: checking which sec lookup type to use" >&5
+echo $ECHO_N "checking which sec lookup type to use... $ECHO_C" >&6; }
+
+# Check whether --enable-seclookup was given.
+if test "${enable_seclookup+set}" = set; then
+  enableval=$enable_seclookup;
+fi
+
+
+NETSECLKUP_SOURCE="$enable_seclookup"
+case "$enable_seclookup" in
+
+	linux)
+		use_seclookup=true
+		;;
+	'')
+# guess it automagically in a nice big case statement
+		case $target in
+		     *-*-linux*)
+
+{ echo "$as_me:$LINENO: checking for main in -ldl" >&5
+echo $ECHO_N "checking for main in -ldl... $ECHO_C" >&6; }
+if test "${ac_cv_lib_dl_main+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-ldl  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+
+int
+main ()
+{
+return main ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_link") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_c_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext &&
+       $as_test_x conftest$ac_exeext; then
+  ac_cv_lib_dl_main=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_lib_dl_main=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
+      conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ echo "$as_me:$LINENO: result: $ac_cv_lib_dl_main" >&5
+echo "${ECHO_T}$ac_cv_lib_dl_main" >&6; }
+if test $ac_cv_lib_dl_main = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBDL 1
+_ACEOF
+
+  LIBS="-ldl $LIBS"
+
+fi
+ac_cv_lib_dl=ac_cv_lib_dl_main
+
+			use_seclookup=true
+			enable_seclookup="linux - auto"
+			NETSECLKUP_SOURCE="linux"
+			;;
+		     *)
+			use_seclookup=false
+			NETSECLKUP_SOURCE="none"
+			enable_seclookup="none. Consider teaching configure about your platform."
+			;;
+		esac
+		;;
+	none)
+		use_seclookup=false
+		;;
+	*)
+		{ { echo "$as_me:$LINENO: error: --enable-seclookup takes linux or none" >&5
+echo "$as_me: error: --enable-seclookup takes linux or none" >&2;}
+   { (exit 1); exit 1; }; }
+		;;
+esac
+
+	{ echo "$as_me:$LINENO: result: \"$enable_seclookup\"" >&5
+echo "${ECHO_T}\"$enable_seclookup\"" >&6; }
+
+
+
+
 # time to see about driver lookup mechanisms
 
 { echo "$as_me:$LINENO: checking which driver info lookup type to use" >&5
@@ -11433,12 +11551,13 @@ NEED_LIBCOMPAT_FALSE!$NEED_LIBCOMPAT_FALSE$ac_delim
 NETCPU_SOURCE!$NETCPU_SOURCE$ac_delim
 NETRTLKUP_SOURCE!$NETRTLKUP_SOURCE$ac_delim
 NETSLOTLKUP_SOURCE!$NETSLOTLKUP_SOURCE$ac_delim
+NETSECLKUP_SOURCE!$NETSECLKUP_SOURCE$ac_delim
 NETDRVLKUP_SOURCE!$NETDRVLKUP_SOURCE$ac_delim
 NETSYSLKUP_SOURCE!$NETSYSLKUP_SOURCE$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 96; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

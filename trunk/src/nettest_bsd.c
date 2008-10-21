@@ -1961,8 +1961,10 @@ Size (bytes)\n\
     
       recv_response();
       if (!netperf_response.content.serv_errno) {
-	if (debug)
-	  fprintf(where,"remote results obtained\n");
+	if (debug) 
+	  fprintf(where,
+		  "remote reporting results for %.2f seconds\n",
+		  tcp_stream_result->elapsed_time);
       }
       else {
 	Set_errno(netperf_response.content.serv_errno);

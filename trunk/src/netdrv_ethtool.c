@@ -9,23 +9,23 @@
 #include <string.h>
 #include <errno.h>
 #include <net/if.h>
+#include <asm/types.h>
 #include <linux/sockios.h>
 
 /* alas, direct inclusion of ethtool.h depends on some types not
    normally found in nature, which we must provide or things will be
-   quite unhappy. */
+   quite unhappy. newer ethtool.h include files will it seems be happy
+   with our including linux/types.h which will give us __umumble */
 
-typedef __uint64_t __u64;
-typedef __uint32_t __u32;
-typedef __uint16_t __u16;
-typedef __uint8_t  __u8;
+#include <linux/types.h>
 
-/* older ones want them without the leading underscores */
-typedef __uint64_t u64;
-typedef __uint32_t u32;
-typedef __uint16_t u16;
-typedef __uint8_t  u8;
+/* older ethtool.h includes want them without the leading underscores */
+typedef unsigned long long u64;
+typedef unsigned int       u32;
+typedef unsigned short     u16;
+typedef unsigned char       u8;
 
+/* ostensibly at this point we should be covered for any ethtool.h? */
 #include <linux/ethtool.h>
 
 void

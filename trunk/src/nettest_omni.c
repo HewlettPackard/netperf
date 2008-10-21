@@ -416,6 +416,13 @@ char        *remote_system_model;
 char        *remote_cpu_model;
 int         remote_cpu_frequency;
 
+int         local_security_type;
+int         local_security_enabled;
+char        *local_security_specific;
+int         remote_security_type;
+int         remote_security_enabled;
+char        *remote_security_specific;
+
 int printing_initialized = 0;
 
 char *sd_str;
@@ -595,6 +602,12 @@ enum netperf_output_name {
   LOCAL_INTERVAL_BURST,
   REMOTE_INTERVAL_USECS,
   REMOTE_INTERVAL_BURST,
+  LOCAL_SECURITY_TYPE,
+  LOCAL_SECURITY_ENABLED,
+  LOCAL_SECURITY_SPECIFIC,
+  REMOTE_SECURITY_TYPE,
+  REMOTE_SECURITY_ENABLED,
+  REMOTE_SECURITY_SPECIFIC,
   RESULT_BRAND,
   COMMAND_LINE,
   OUTPUT_END,
@@ -980,6 +993,18 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "REMOTE_INTERVAL_USECS";
   case REMOTE_INTERVAL_BURST:
     return "REMOTE_INTERVAL_BURST";
+  case LOCAL_SECURITY_TYPE:
+    return "LOCAL_SECURITY_TYPE";
+  case LOCAL_SECURITY_ENABLED:
+    return "LOCAL_SECURITY_ENABLED";
+  case LOCAL_SECURITY_SPECIFIC:
+    return "LOCAL_SECURITY_SPECIFIC";
+  case REMOTE_SECURITY_TYPE:
+    return "REMOTE_SECURITY_TYPE";
+  case REMOTE_SECURITY_ENABLED:
+    return "REMOTE_SECURITY_ENABLED";
+  case REMOTE_SECURITY_SPECIFIC:
+    return "REMOTE_SECURITY_SPECIFIC";
   case LOCAL_DRIVER_BUS:
     return "LOCAL_DRIVER_BUS";
   case REMOTE_SYSNAME:
@@ -2826,6 +2851,78 @@ print_omni_init_list() {
   netperf_output_source[REMOTE_INTERVAL_BURST].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_INTERVAL_BURST);
 
+  netperf_output_source[LOCAL_SECURITY_SPECIFIC].output_name = LOCAL_SECURITY_SPECIFIC;
+  netperf_output_source[LOCAL_SECURITY_SPECIFIC].line[0] = "Local";
+  netperf_output_source[LOCAL_SECURITY_SPECIFIC].line[1] = "OS";
+  netperf_output_source[LOCAL_SECURITY_SPECIFIC].line[2] = "Security";
+  netperf_output_source[LOCAL_SECURITY_SPECIFIC].line[3] = "Specific";
+  netperf_output_source[LOCAL_SECURITY_SPECIFIC].format = "%s";
+  netperf_output_source[LOCAL_SECURITY_SPECIFIC].display_value = local_security_specific;
+  netperf_output_source[LOCAL_SECURITY_SPECIFIC].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_SECURITY_SPECIFIC);
+  netperf_output_source[LOCAL_SECURITY_SPECIFIC].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_SECURITY_SPECIFIC);
+
+  netperf_output_source[LOCAL_SECURITY_ENABLED].output_name = LOCAL_SECURITY_ENABLED;
+  netperf_output_source[LOCAL_SECURITY_ENABLED].line[0] = "Local";
+  netperf_output_source[LOCAL_SECURITY_ENABLED].line[1] = "OS";
+  netperf_output_source[LOCAL_SECURITY_ENABLED].line[2] = "Security";
+  netperf_output_source[LOCAL_SECURITY_ENABLED].line[3] = "Enabled";
+  netperf_output_source[LOCAL_SECURITY_ENABLED].format = "%d";
+  netperf_output_source[LOCAL_SECURITY_ENABLED].display_value = &local_security_enabled;
+  netperf_output_source[LOCAL_SECURITY_ENABLED].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_SECURITY_ENABLED);
+  netperf_output_source[LOCAL_SECURITY_ENABLED].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_SECURITY_ENABLED);
+
+  netperf_output_source[LOCAL_SECURITY_TYPE].output_name = LOCAL_SECURITY_TYPE;
+  netperf_output_source[LOCAL_SECURITY_TYPE].line[0] = "Local";
+  netperf_output_source[LOCAL_SECURITY_TYPE].line[1] = "OS";
+  netperf_output_source[LOCAL_SECURITY_TYPE].line[2] = "Security";
+  netperf_output_source[LOCAL_SECURITY_TYPE].line[3] = "Type";
+  netperf_output_source[LOCAL_SECURITY_TYPE].format = "%d";
+  netperf_output_source[LOCAL_SECURITY_TYPE].display_value = &local_security_type;
+  netperf_output_source[LOCAL_SECURITY_TYPE].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_SECURITY_TYPE);
+  netperf_output_source[LOCAL_SECURITY_TYPE].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_SECURITY_TYPE);
+
+  netperf_output_source[REMOTE_SECURITY_SPECIFIC].output_name = REMOTE_SECURITY_SPECIFIC;
+  netperf_output_source[REMOTE_SECURITY_SPECIFIC].line[0] = "Remote";
+  netperf_output_source[REMOTE_SECURITY_SPECIFIC].line[1] = "OS";
+  netperf_output_source[REMOTE_SECURITY_SPECIFIC].line[2] = "Security";
+  netperf_output_source[REMOTE_SECURITY_SPECIFIC].line[3] = "Specific";
+  netperf_output_source[REMOTE_SECURITY_SPECIFIC].format = "%s";
+  netperf_output_source[REMOTE_SECURITY_SPECIFIC].display_value = remote_security_specific;
+  netperf_output_source[REMOTE_SECURITY_SPECIFIC].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_SECURITY_SPECIFIC);
+  netperf_output_source[REMOTE_SECURITY_SPECIFIC].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_SECURITY_SPECIFIC);
+
+  netperf_output_source[REMOTE_SECURITY_ENABLED].output_name = REMOTE_SECURITY_ENABLED;
+  netperf_output_source[REMOTE_SECURITY_ENABLED].line[0] = "Remote";
+  netperf_output_source[REMOTE_SECURITY_ENABLED].line[1] = "OS";
+  netperf_output_source[REMOTE_SECURITY_ENABLED].line[2] = "Security";
+  netperf_output_source[REMOTE_SECURITY_ENABLED].line[3] = "Enabled";
+  netperf_output_source[REMOTE_SECURITY_ENABLED].format = "%d";
+  netperf_output_source[REMOTE_SECURITY_ENABLED].display_value = &remote_security_enabled;
+  netperf_output_source[REMOTE_SECURITY_ENABLED].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_SECURITY_ENABLED);
+  netperf_output_source[REMOTE_SECURITY_ENABLED].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_SECURITY_ENABLED);
+
+  netperf_output_source[REMOTE_SECURITY_TYPE].output_name = REMOTE_SECURITY_TYPE;
+  netperf_output_source[REMOTE_SECURITY_TYPE].line[0] = "Remote";
+  netperf_output_source[REMOTE_SECURITY_TYPE].line[1] = "OS";
+  netperf_output_source[REMOTE_SECURITY_TYPE].line[2] = "Security";
+  netperf_output_source[REMOTE_SECURITY_TYPE].line[3] = "Type";
+  netperf_output_source[REMOTE_SECURITY_TYPE].format = "%d";
+  netperf_output_source[REMOTE_SECURITY_TYPE].display_value = &remote_security_type;
+  netperf_output_source[REMOTE_SECURITY_TYPE].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_SECURITY_TYPE);
+  netperf_output_source[REMOTE_SECURITY_TYPE].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_SECURITY_TYPE);
+
   netperf_output_source[LOCAL_INTERVAL_USECS].output_name = LOCAL_INTERVAL_USECS;
   netperf_output_source[LOCAL_INTERVAL_USECS].line[0] = "Local";
   netperf_output_source[LOCAL_INTERVAL_USECS].line[1] = "Interval";
@@ -3998,7 +4095,7 @@ send_omni(char remote_host[])
 	 so, we can shove them back into the relevant variables here
 	 and be on our way. */
 
-      recv_response_n(17); /* brittle, but functional */
+      recv_response_n(OMNI_RESPONSE_CONV_CUTOFF); /* brittle, but functional */
   
       if (!netperf_response.content.serv_errno) {
 	rsr_size	 = omni_response->recv_buf_size;
@@ -4031,6 +4128,14 @@ send_omni(char remote_host[])
 	  remote_cpu_model = strdup(omni_response->cpu_model);
 	}
 	remote_cpu_frequency = omni_response->cpu_frequency;
+
+	if (NULL == remote_security_specific) {
+	  omni_response->security_string[sizeof(omni_response->security_string) - 1] = 0;
+	  remote_security_specific = strdup(omni_response->security_string);
+	}
+	/* top bits type, bottom bits enabled */
+	remote_security_type = (int) omni_response->security_info >> 16;
+	remote_security_enabled = (short)omni_response->security_info;
       }
       else {
 	Set_errno(netperf_response.content.serv_errno);
@@ -4455,6 +4560,10 @@ send_omni(char remote_host[])
 			 local_res->ai_protocol);
     
 
+    find_security_info(&local_security_enabled,
+		       &local_security_type,
+		       &local_security_specific);
+
     /* so, if we have/had a data connection, we will want to close it
        now, and this will be independent of whether there is a control
        connection. */
@@ -4545,7 +4654,7 @@ send_omni(char remote_host[])
 	 calculated service demand and all those interesting things. If
 	 it wasn't supposed to care, it will return obvious values. */
   
-      recv_response_n(21);
+      recv_response_n(OMNI_RESULTS_CONF_CUTOFF);
       if (!netperf_response.content.serv_errno) {
 	if (debug)
 	  fprintf(where,"remote results obtained\n");
@@ -5081,7 +5190,18 @@ recv_omni()
   omni_response->cpu_model[sizeof(omni_response->cpu_model)-1] = 0;
   omni_response->cpu_frequency = local_cpu_frequency;
 
-  send_response_n(17); /* brittle, but functional */
+  find_security_info(&local_security_enabled,
+		     &local_security_type,
+		     &local_security_specific);
+  /* top bits type, bottom bits enabled */
+  omni_response->security_info = local_security_type << 16;
+  omni_response->security_info += local_security_enabled & 0xff;
+  strncpy(omni_response->security_string,
+	  local_security_specific,
+	  sizeof(omni_response->security_string));
+  omni_response->security_string[sizeof(omni_response->security_string)-1] = 0;
+
+  send_response_n(OMNI_RESPONSE_CONV_CUTOFF); /* brittle, but functional */
 
   local_send_calls = 0;
   local_receive_calls = 0;
@@ -5445,7 +5565,7 @@ recv_omni()
     fflush(where);
   }
   
-  send_response_n(21);
+  send_response_n(OMNI_RESULTS_CONF_CUTOFF);
 
   /* when we implement this, it will look a little strange, but we do
      it to avoid certain overheads when running aggregates and using

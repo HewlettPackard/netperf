@@ -824,6 +824,49 @@ esac
 
 AC_SUBST(NETSLOTLKUP_SOURCE)
 
+
+# time to see about sec lookup mechanisms
+
+AC_MSG_CHECKING([which sec lookup type to use])
+
+AC_ARG_ENABLE(seclookup,
+	[AS_HELP_STRING([--enable-seclookup],[include code to find the system security mechanism and its state])])
+
+NETSECLKUP_SOURCE="$enable_seclookup"
+case "$enable_seclookup" in
+
+	linux)
+		use_seclookup=true
+		;;
+	'')
+# guess it automagically in a nice big case statement
+		case $target in
+		     *-*-linux*)
+		        AC_HAVE_LIBRARY(dl)
+			use_seclookup=true
+			enable_seclookup="linux - auto"
+			NETSECLKUP_SOURCE="linux"
+			;;
+		     *)
+			use_seclookup=false
+			NETSECLKUP_SOURCE="none"
+			enable_seclookup="none. Consider teaching configure about your platform."
+			;;
+		esac
+		;;
+	none)
+		use_seclookup=false
+		;;
+	*)
+		AC_MSG_ERROR([--enable-seclookup takes linux or none])
+		;;
+esac
+
+	AC_MSG_RESULT("$enable_seclookup")
+
+AC_SUBST(NETSECLKUP_SOURCE)
+
+
 # time to see about driver lookup mechanisms
 
 AC_MSG_CHECKING([which driver info lookup type to use])

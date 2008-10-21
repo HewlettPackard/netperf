@@ -24,6 +24,7 @@
 #define NST_DGRAM  2
 #define NST_DCCP   3
 
+
 #ifdef WANT_OMNI
 struct  omni_request_struct {
   int32_t    send_buf_size;         /* SO_SNDBUF */
@@ -97,13 +98,16 @@ struct  omni_response_struct {
      connections are made, and the omni_results_struct is already
      full */
   uint32_t   cpu_frequency;  /* this should be megahertz */
-  char       system_model[32];
+  uint32_t   security_info;
+#define OMNI_RESPONSE_CONV_CUTOFF 18
+  char       system_model[33];
   char       cpu_model[80];  /* seems like an awful lot doesn't
 				it. some clever person at Intel
 				decided to give Montecito processors a
 				name that long - and still didn't
 				include the 9NNN model number! */
-  /* 68 bytes left */
+  char       security_string[16];
+  /* 48 bytes left */
   
 };
 
@@ -134,6 +138,7 @@ struct omni_results_struct {
 			       interface */ 
   int32_t    subvendor;
   int32_t    subdevice;
+  #define OMNI_RESULTS_CONF_CUTOFF 21
   /* this is the 22dn 32-bit word and we have 248-(17*4) bytes
      available from here */
   char       ifname[16];    /* the probable egress interface */

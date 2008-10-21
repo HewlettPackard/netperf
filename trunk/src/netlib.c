@@ -448,6 +448,33 @@ void PrintWin32Error(FILE *stream, LPSTR text)
 }
 #endif /* WIN32 */
 
+char *
+nsec_enabled_to_str(int enabled) {
+  switch (enabled) {
+  case NSEC_UNKNOWN:
+    return("Unknown");
+  case NSEC_DISABLED:
+    return("Disabled");
+  case NSEC_PERMISSIVE:
+    return("Permissive");
+  case NSEC_ENFORCING:
+    return("Enforcing");
+  default:
+    return("UNKNOWN MODE");
+  }
+}
+
+char * nsec_type_to_str(int type) {
+  switch (type) {
+  case NSEC_TYPE_UNKNOWN:
+    return("Unknown");
+  case NSEC_TYPE_SELINUX:
+    return("SELinux");
+  default:
+    return("UNKNOWN TYPE");
+  }
+}
+
 
 char *
 inet_ttos(int type) 
