@@ -241,6 +241,17 @@ enum sock_buffer{
   RECV_BUFFER
 };
 
+/* some defines for security types, perhaps these would be better
+   elsewhere but for now here they are */
+
+#define NSEC_UNKNOWN  -1
+#define NSEC_DISABLED 0
+#define NSEC_PERMISSIVE  1
+#define NSEC_ENFORCING 2
+
+#define NSEC_TYPE_UNKNOWN -1
+#define NSEC_TYPE_SELINUX 1
+
  /* some of the fields in these structures are going to be doubles and */
  /* such. so, we probably want to ensure that they will start on */
  /* "double" boundaries. this will break compatability to pre-2.1 */

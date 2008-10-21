@@ -69,6 +69,9 @@
 /* Define to 1 if you have the `devinfo' library (-ldevinfo). */
 #undef HAVE_LIBDEVINFO
 
+/* Define to 1 if you have the `dl' library (-ldl). */
+#undef HAVE_LIBDL
+
 /* Define to 1 if you have the `exs' library (-lexs). */
 #undef HAVE_LIBEXS
 
