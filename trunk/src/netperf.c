@@ -269,6 +269,9 @@ main(int argc, char *argv[])
   else if (strcasecmp(test_name,"OMNI") == 0) {
     send_omni(host_name);
   }
+  else if (strcasecmp(test_name,"UUID") == 0) {
+    print_uuid(host_name);
+  }
 #endif
   else {
     printf("The test you requested is unknown to this netperf.\n");
