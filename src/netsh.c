@@ -1096,7 +1096,8 @@ scan_cmd_line(int argc, char *argv[])
 #endif
 
 #ifdef WANT_OMNI
-    else if ((strcasecmp(test_name,"OMNI") == 0)) {
+    else if ((strcasecmp(test_name,"OMNI") == 0) ||
+	     (strcasecmp(test_name,"UUID") == 0)) {
       scan_omni_args(argc, argv);
     }
 #endif

@@ -598,6 +598,10 @@ extern void send_tcp_cc(char remote_host[]);
 extern void send_udp_stream(char remote_host[]);
 extern void send_udp_rr(char remote_host[]);
 
+extern void send_omni(char remote_host[]);
+extern void print_uuid(char remote_host[]);
+extern void recv_omni();
+
 extern void recv_tcp_stream();
 extern void recv_tcp_maerts();
 extern void recv_tcp_rr();

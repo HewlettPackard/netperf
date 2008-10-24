@@ -317,10 +317,14 @@ static struct timeval *temp_intvl_ptr = &intvl_one;
 
 #define NETPERF_CC(x) (!(x & NETPERF_XMIT) && !(x & NETPERF_RECV))
 
+extern void get_uuid_string(char *string, size_t size);
+
 /* a boatload of globals while I settle things out */
 char *csv_selection_file = NULL;
 char *human_selection_file = NULL;
 char *keyword_selection_file = NULL;
+
+char test_uuid[38];
 
 double result_confid_pct = -1.0;
 double loc_cpu_confid_pct = -1.0;
@@ -617,6 +621,7 @@ enum netperf_output_name {
   REMOTE_SECURITY_ENABLED,
   REMOTE_SECURITY_SPECIFIC,
   RESULT_BRAND,
+  UUID,
   COMMAND_LINE,
   OUTPUT_END,
   NETPERF_OUTPUT_MAX
@@ -763,6 +768,8 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "OUTPUT_NONE";
   case   COMMAND_LINE:
     return "COMMAND_LINE";
+  case UUID:
+    return "UUID";
   case RESULT_BRAND:
     return "RESULT_BRAND";
   case   SOCKET_TYPE:
@@ -1408,6 +1415,16 @@ print_omni_init_list() {
     NETPERF_LINE_MAX(COMMAND_LINE);
   netperf_output_source[COMMAND_LINE].tot_line_len = 
     NETPERF_LINE_TOT(COMMAND_LINE);
+
+  netperf_output_source[UUID].output_name = UUID;
+  netperf_output_source[UUID].line[0] = "Test";
+  netperf_output_source[UUID].line[1] = "UUID";
+  netperf_output_source[UUID].format = "%s";
+  netperf_output_source[UUID].display_value = test_uuid;
+  netperf_output_source[UUID].max_line_len = 
+    NETPERF_LINE_MAX(UUID);
+  netperf_output_source[UUID].tot_line_len = 
+    NETPERF_LINE_TOT(UUID);
 
   netperf_output_source[RESULT_BRAND].output_name = RESULT_BRAND;
   netperf_output_source[RESULT_BRAND].line[0] = "Result";
@@ -3851,6 +3868,17 @@ get_transport_info(SOCKET socket, int *mss, int protocol)
   }
 }
 
+/* brain dead simple way to get netperf to emit a uuid. sadly, by this
+   point we will have already established the control connection but
+   those are the breaks. we do _NOT_ include a trailing newline
+   because we want to be able to use this in a script */
+
+void
+print_uuid(char remote_host[])
+{
+  printf("%s",test_uuid);
+}
+
  /* this code is intended to be "the two routines to run them all" for
     BSDish sockets.  it comes about as part of a desire to shrink the
     code footprint of netperf and to avoid having so many blessed
@@ -5655,12 +5683,13 @@ scan_omni_args(int argc, char *argv[])
 
 {
 
-#define OMNI_ARGS "b:cCd:DnNhH:kL:m:M:oOp:P:r:s:S:t:T:Vw:W:46"
+#define OMNI_ARGS "b:cCd:DnNhH:kL:m:M:oOp:P:r:s:S:t:T:u:Vw:W:46"
 
   extern char	*optarg;	  /* pointer to option string	*/
   
   int		c;
-  
+  int           have_uuid = 0;
+
   char	
     arg1[BUFSIZ],  /* argument holders		*/
     arg2[BUFSIZ];
@@ -5941,6 +5970,15 @@ scan_omni_args(int argc, char *argv[])
       /* set the protocol - aka "Transport" */
       protocol = parse_protocol(optarg);
       break;
+    case 'u':
+      /* use the supplied string as the UUID for this test. at some
+	 point we may want to sanity check the string we are given but
+	 for now we won't worry about it */
+      strncpy(test_uuid,optarg,sizeof(test_uuid));
+      /* strncpy may leave us with a string without a null at the end */
+      test_uuid[sizeof(test_uuid) - 1] = 0;
+      have_uuid = 1;
+      break;
     case 'W':
       /* set the "width" of the user space data */
       /* buffer. This will be the number of */
@@ -5973,7 +6011,11 @@ scan_omni_args(int argc, char *argv[])
     };
   }
 
-  socket_type_str = hst_to_str(socket_type);
+  /* generate the UUID for this test if the user has not supplied it */
+  if (!have_uuid)
+    get_uuid_string(test_uuid,sizeof(test_uuid));
+
+
   protocol_str = protocol_to_str(protocol);
   /* ok, if we have gone through all that, and direction is still
      zero, let us see if it needs to be set to something else. */
