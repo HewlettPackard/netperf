@@ -58,6 +58,8 @@ char nettest_omni_id[]="\
 # endif
 #endif
 
+#include <ctype.h>
+
 #ifdef NOSTDLIBH
 #include <malloc.h>
 #endif /* NOSTDLIBH */
@@ -712,7 +714,7 @@ void
 pick_next_port_number(struct addrinfo *local_res, struct addrinfo *remote_res) {
 
   static int myport_init = 0;
-  static myport = 0;
+  static unsigned short myport = 0;
 
   if (0 == myport_init)  {
     /* pick a nice random spot between client_port_min and
@@ -3764,7 +3766,7 @@ disconnect_data_socket(SOCKET data_socket, int initiate, int do_close, struct so
 
   if (debug) {
     fprintf(where,
-	    "disconnect_d_s sock %d init %d do_close %d protocol\n",
+	    "disconnect_d_s sock %d init %d do_close %d protocol %d\n",
 	    data_socket,
 	    initiate,
 	    do_close,

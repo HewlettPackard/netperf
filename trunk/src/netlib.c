@@ -994,6 +994,7 @@ start_timer(int time)
 #else /* not WIN32 */
 
 struct sigaction action;
+int ret;
 
 if (debug) {
   fprintf(where,"About to start a timer for %d seconds.\n",time);
@@ -1020,9 +1021,11 @@ if (debug) {
   }
 
   /* this is the easy case - just set the timer for so many seconds */ 
-  if (alarm(time) != 0) {
+  ret = alarm(time);
+  if (ret != 0) {
     fprintf(where,
-            "error starting alarm timer, errno %d\n",
+            "error starting alarm timer, ret %d errno %d\n",
+	    ret,
             errno);
     fflush(where);
   }
@@ -4427,19 +4430,19 @@ retrieve_confident_values(float *elapsed_time,
   *remote_service_demand   = (float)measured_mean_remote_service_demand;
 }
 
-float
+double
 get_result_confid()
 {
   return 100.0 * (interval - result_confid);
 }
 
-float
+double
 get_loc_cpu_confid()
 {
   return 100.0 * (interval - loc_cpu_confid);
 }
 
-float
+double
 get_rem_cpu_confid()
 {
   return 100.0 * (interval - rem_cpu_confid);

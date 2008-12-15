@@ -1,7 +1,7 @@
-This is netperf.info, produced by makeinfo version 4.8 from
+This is netperf.info, produced by makeinfo version 4.11 from
 netperf.texi.
 
-   This is Rick Jones' feeble attempt at a Texinfo-based manual for the
+This is Rick Jones' feeble attempt at a Texinfo-based manual for the
 netperf benchmark.
 
    Copyright (C) 2005-2007 Hewlett-Packard Company
@@ -934,7 +934,7 @@ File: netperf.info,  Node: Global Options,  Prev: Command-line Options Syntax,  
 `-n numcpus'
      This option tells netperf how many CPUs it should ass-u-me are
      active on the system running netperf.  In particular, this is used
-     for the *Note CPU utilization: CPU Utilization. and service demand
+     for the *note CPU utilization: CPU Utilization. and service demand
      calculations.  On certain systems, netperf is able to determine
      the number of CPU's automagically. This option will override any
      number netperf might be able to determine on its own.
@@ -1025,22 +1025,22 @@ File: netperf.info,  Node: Global Options,  Prev: Command-line Options Syntax,  
 `-t testname'
      This option is used to tell netperf which test you wish to run.
      As of this writing, valid values for TESTNAME include:
-        * *Note TCP_STREAM::, *Note TCP_MAERTS::, *Note TCP_SENDFILE::,
-          *Note TCP_RR::, *Note TCP_CRR::, *Note TCP_CC::
+        * *note TCP_STREAM::, *note TCP_MAERTS::, *note TCP_SENDFILE::,
+          *note TCP_RR::, *note TCP_CRR::, *note TCP_CC::
 
-        * *Note UDP_STREAM::, *Note UDP_RR::
+        * *note UDP_STREAM::, *note UDP_RR::
 
-        * *Note XTI_TCP_STREAM::,  *Note XTI_TCP_RR::, *Note
-          XTI_TCP_CRR::, *Note XTI_TCP_CC::
+        * *note XTI_TCP_STREAM::,  *note XTI_TCP_RR::, *note
+          XTI_TCP_CRR::, *note XTI_TCP_CC::
 
-        * *Note XTI_UDP_STREAM::, *Note XTI_UDP_RR::
+        * *note XTI_UDP_STREAM::, *note XTI_UDP_RR::
 
-        * *Note SCTP_STREAM::, *Note SCTP_RR::
+        * *note SCTP_STREAM::, *note SCTP_RR::
 
-        * *Note DLCO_STREAM::, *Note DLCO_RR::,  *Note DLCL_STREAM::,
-          *Note DLCL_RR::
+        * *note DLCO_STREAM::, *note DLCO_RR::,  *note DLCL_STREAM::,
+          *note DLCL_RR::
 
-        * *Note LOC_CPU: Other Netperf Tests, *Note REM_CPU: Other
+        * *note LOC_CPU: Other Netperf Tests, *note REM_CPU: Other
           Netperf Tests.
      Not all tests are always compiled into netperf.  In particular, the
      "XTI," "SCTP," "UNIX," and "DL*" tests are only included in
@@ -1055,7 +1055,7 @@ File: netperf.info,  Node: Global Options,  Prev: Command-line Options Syntax,  
      This option controls how verbose netperf will be in its output,
      and is often used in conjunction with the `-P' option. If the
      verbosity is set to a value of "0" then only the test's SFM (Single
-     Figure of Merit) is displayed.  If local *Note CPU utilization:
+     Figure of Merit) is displayed.  If local *note CPU utilization:
      CPU Utilization. is requested via the `-c' option then the SFM is
      the local service demand.  Othersise, if remote CPU utilization is
      requested via the `-C' option then the SFM is the remote service
@@ -1346,7 +1346,7 @@ netperf to the system running netserver.  While time spent establishing
 the connection is not included in the throughput calculation, time
 spent flushing the last of the data to the remote at the end of the
 test is.  This is how netperf knows that all the data it sent was
-received by the remote.  In addition to the *Note options common to
+received by the remote.  In addition to the *note options common to
 STREAM tests: Options common to TCP UDP and SCTP tests, the following
 test-specific options can be included to possibly alter the behavior of
 the test:
@@ -1387,7 +1387,7 @@ the test:
      Algorithm _may_ be broken, perhaps interpreting the Nagle
      Algorithm on a segment by segment basis rather than the proper user
      send by user send basis.  However, a better test of this can be
-     achieved with the *Note TCP_RR:: test.
+     achieved with the *note TCP_RR:: test.
 
 
    Here is an example of a basic TCP_STREAM test, in this case from a
@@ -1414,14 +1414,14 @@ File: netperf.info,  Node: TCP_MAERTS,  Next: TCP_SENDFILE,  Prev: TCP_STREAM,  
 5.2.2 TCP_MAERTS
 ----------------
 
-A TCP_MAERTS (MAERTS is STREAM backwards) test is "just like" a *Note
+A TCP_MAERTS (MAERTS is STREAM backwards) test is "just like" a *note
 TCP_STREAM:: test except the data flows from the netserver to the
 netperf. The global command-line `-F' option is ignored for this test
 type.  The test-specific command-line `-C' option is ignored for this
 test type.
 
    Here is an example of a TCP_MAERTS test between the same two systems
-as in the example for the *Note TCP_STREAM:: test.  This time we request
+as in the example for the *note TCP_STREAM:: test.  This time we request
 larger socket buffers with `-s' and `-S' options:
 
      $ netperf -H lag -t TCP_MAERTS -- -s 128K -S 128K
@@ -1445,7 +1445,7 @@ File: netperf.info,  Node: TCP_SENDFILE,  Next: UDP_STREAM,  Prev: TCP_MAERTS,  
 5.2.3 TCP_SENDFILE
 ------------------
 
-The TCP_SENDFILE test is "just like" a *Note TCP_STREAM:: test except
+The TCP_SENDFILE test is "just like" a *note TCP_STREAM:: test except
 netperf the platform's `sendfile()' call instead of calling `send()'.
 Often this results in a "zero-copy" operation where data is sent
 directly from the filesystem buffer cache.  This _should_ result in
@@ -1462,7 +1462,7 @@ can be easier to DMA to the NIC.  When no copy is performed, there is
 no opportunity to reserve space for headers and so a packet will be
 contained in two or more buffers.
 
-   The *Note global `-F' option: Global Options. is required for this
+   The *note global `-F' option: Global Options. is required for this
 test and it must specify a file of at least the size of the send ring
 (*Note the global `-W' option: Global Options.) multiplied by the send
 size (*Note the test-specific `-m' option: Options common to TCP UDP
@@ -1494,7 +1494,7 @@ File: netperf.info,  Node: UDP_STREAM,  Next: XTI_TCP_STREAM,  Prev: TCP_SENDFIL
 5.2.4 UDP_STREAM
 ----------------
 
-A UDP_STREAM test is similar to a *Note TCP_STREAM:: test except UDP is
+A UDP_STREAM test is similar to a *note TCP_STREAM:: test except UDP is
 used as the transport rather than TCP.
 
    A UDP_STREAM test has no end-to-end flow control - UDP provides none
@@ -1564,7 +1564,7 @@ File: netperf.info,  Node: XTI_TCP_STREAM,  Next: XTI_UDP_STREAM,  Prev: UDP_STR
 5.2.5 XTI_TCP_STREAM
 --------------------
 
-An XTI_TCP_STREAM test is simply a *Note TCP_STREAM:: test using the XTI
+An XTI_TCP_STREAM test is simply a *note TCP_STREAM:: test using the XTI
 rather than BSD Sockets interface.  The test-specific `-X <devspec>'
 option can be used to specify the name of the local and/or remote XTI
 device files, which is required by the `t_open()' call made by netperf
@@ -1580,7 +1580,7 @@ File: netperf.info,  Node: XTI_UDP_STREAM,  Next: SCTP_STREAM,  Prev: XTI_TCP_ST
 5.2.6 XTI_UDP_STREAM
 --------------------
 
-An XTI_UDP_STREAM test is simply a *Note UDP_STREAM:: test using the XTI
+An XTI_UDP_STREAM test is simply a *note UDP_STREAM:: test using the XTI
 rather than BSD Sockets Interface.  The test-specific `-X <devspec>'
 option can be used to specify the name of the local and/or remote XTI
 device files, which is required by the `t_open()' call made by netperf
@@ -1596,7 +1596,7 @@ File: netperf.info,  Node: SCTP_STREAM,  Next: DLCO_STREAM,  Prev: XTI_UDP_STREA
 5.2.7 SCTP_STREAM
 -----------------
 
-An SCTP_STREAM test is essentially a *Note TCP_STREAM:: test using the
+An SCTP_STREAM test is essentially a *note TCP_STREAM:: test using the
 SCTP rather than TCP.  The `-D' option will set SCTP_NODELAY, which is
 much like the TCP_NODELAY option for TCP.  The `-C' option is not
 applicable to an SCTP test as there is no corresponding SCTP_CORK
@@ -1614,7 +1614,7 @@ File: netperf.info,  Node: DLCO_STREAM,  Next: DLCL_STREAM,  Prev: SCTP_STREAM, 
 -----------------
 
 A DLPI Connection Oriented Stream (DLCO_STREAM) test is very similar in
-concept to a *Note TCP_STREAM:: test.  Both use reliable,
+concept to a *note TCP_STREAM:: test.  Both use reliable,
 connection-oriented protocols.  The DLPI test differs from the TCP test
 in that its protocol operates only at the link-level and does not
 include TCP-style segmentation and reassembly.  This last difference
@@ -1662,15 +1662,15 @@ File: netperf.info,  Node: DLCL_STREAM,  Next: STREAM_STREAM,  Prev: DLCO_STREAM
 5.2.9 DLCL_STREAM
 -----------------
 
-A DLPI ConnectionLess Stream (DLCL_STREAM) test is analogous to a *Note
+A DLPI ConnectionLess Stream (DLCL_STREAM) test is analogous to a *note
 UDP_STREAM:: test in that both make use of unreliable/best-effort,
 connection-less transports.  The DLCL_STREAM test differs from the
-*Note UDP_STREAM:: test in that the message size (`-m' option) must
+*note UDP_STREAM:: test in that the message size (`-m' option) must
 always be less than the link MTU as there is no IP-like fragmentation
 and reassembly available and netperf does not presume to provide one.
 
    The test-specific command-line options for a DLCL_STREAM test are the
-same as those for a *Note DLCO_STREAM:: test.
+same as those for a *note DLCO_STREAM:: test.
 
    The DLCL_STREAM test is only present if netperf was configured with
 `--enable-dlpi=yes'. The remote netserver must have also been
@@ -1683,7 +1683,7 @@ File: netperf.info,  Node: STREAM_STREAM,  Next: DG_STREAM,  Prev: DLCL_STREAM, 
 --------------------
 
 A Unix Domain Stream Socket Stream test (STREAM_STREAM) is similar in
-concept to a *Note TCP_STREAM:: test, but using Unix Domain sockets.
+concept to a *note TCP_STREAM:: test, but using Unix Domain sockets.
 It is, naturally, limited to intra-machine traffic.  A STREAM_STREAM
 test shares the `-m', `-M', `-s' and `-S' options of the other _STREAM
 tests.  In a STREAM_STREAM test the `-p' option sets the directory in
@@ -1702,11 +1702,11 @@ File: netperf.info,  Node: DG_STREAM,  Prev: STREAM_STREAM,  Up: Options common 
 ----------------
 
 A Unix Domain Datagram Socket Stream test (SG_STREAM) is very much like
-a *Note TCP_STREAM:: test except that message boundaries are preserved.
+a *note TCP_STREAM:: test except that message boundaries are preserved.
 In this way, it may also be considered similar to certain flavors of
 SCTP test which can also preserve message boundaries.
 
-   All the options of a *Note STREAM_STREAM:: test are applicable to a
+   All the options of a *note STREAM_STREAM:: test are applicable to a
 DG_STREAM test.
 
    The DG_STREAM test is only present if netperf was configured with
@@ -1757,7 +1757,7 @@ File: netperf.info,  Node: Issues in Request/Response,  Next: Options Common to 
 6.1 Issues in Reqeust/Response
 ==============================
 
-Most if not all the *Note Issues in Bulk Transfer:: apply to
+Most if not all the *note Issues in Bulk Transfer:: apply to
 request/response.  The issue of round-trip latency is even more
 important as netperf generally only has one transaction outstanding at
 a time.
@@ -2070,7 +2070,7 @@ File: netperf.info,  Node: XTI_TCP_RR,  Next: XTI_TCP_CC,  Prev: UDP_RR,  Up: Op
 6.2.5 XTI_TCP_RR
 ----------------
 
-An XTI_TCP_RR test is essentially the same as a *Note TCP_RR:: test only
+An XTI_TCP_RR test is essentially the same as a *note TCP_RR:: test only
 using the XTI rather than BSD Sockets interface. It is requested by
 passing a value of "XTI_TCP_RR" to the `-t' global command-line option.
 
@@ -2128,7 +2128,7 @@ File: netperf.info,  Node: Using Netperf to Measure Aggregate Performance,  Next
 7 Using Netperf to Measure Aggregate Performance
 ************************************************
 
-*Note Netperf4: Netperf4. is the preferred benchmark to use when one
+*note Netperf4: Netperf4. is the preferred benchmark to use when one
 wants to measure aggregate performance because netperf has no support
 for explicit synchronization of concurrent tests.
 
@@ -2148,7 +2148,7 @@ File: netperf.info,  Node: Running Concurrent Netperf Tests,  Next: Using --enab
 7.1 Running Concurrent Netperf Tests
 ====================================
 
-*Note Netperf4: Netperf4. is the preferred benchmark to use when one
+*note Netperf4: Netperf4. is the preferred benchmark to use when one
 wants to measure aggregate performance because netperf has no support
 for explicit synchronization of concurrent tests.  This leaves netperf2
 results vulnerable to "skew" errors.
@@ -2163,7 +2163,7 @@ multiple tests from the shell using a `for' loop or the like:
      netperf -t TCP_STREAM -H tardy.cup.hp.com -i 10 -P 0 &
      done
 
-   which will run four, concurrent *Note TCP_STREAM: TCP_STREAM. tests
+   which will run four, concurrent *note TCP_STREAM: TCP_STREAM. tests
 from the system on which it is executed to tardy.cup.hp.com.  Each
 concurrent netperf will iterate 10 times thanks to the `-i' option and
 will omit the test banners (option `-P') for brevity.  The output looks
@@ -2239,8 +2239,8 @@ If one configures netperf with `--enable-burst':
 
      configure --enable-burst
 
-   Then a test-specific `-b num' option is added to the *Note TCP_RR:
-TCP_RR. and *Note UDP_RR: UDP_RR. tests. This option causes TCP_RR and
+   Then a test-specific `-b num' option is added to the *note TCP_RR:
+TCP_RR. and *note UDP_RR: UDP_RR. tests. This option causes TCP_RR and
 UDP_RR to quickly work their way up to having at least `num'
 transactions in flight at one time.
 
@@ -2411,7 +2411,7 @@ File: netperf.info,  Node: Using Netperf to Measure Bidirectional Transfer,  Nex
 There are two ways to use netperf to measure the perfomance of
 bidirectional transfer.  The first is to run concurrent netperf tests
 from the command line.  The second is to configure netperf with
-`--enable-burst' and use a single instance of the *Note TCP_RR: TCP_RR.
+`--enable-burst' and use a single instance of the *note TCP_RR: TCP_RR.
 test.
 
    While neither method is more "correct" than the other, each is doing
@@ -2433,16 +2433,16 @@ File: netperf.info,  Node: Bidirectional Transfer with Concurrent Tests,  Next: 
 8.1 Bidirectional Transfer with Concurrent Tests
 ================================================
 
-If we had two hosts Fred and Ethel, we could simply run a netperf *Note
+If we had two hosts Fred and Ethel, we could simply run a netperf *note
 TCP_STREAM: TCP_STREAM. test on Fred pointing at Ethel, and a
 concurrent netperf TCP_STREAM test on Ethel pointing at Fred, but since
 there are no mechanisms to synchronize netperf tests and we would be
 starting tests from two different systems, there is a considerable risk
 of skew error.
 
-   Far better would be to run simultaneous TCP_STREAM and *Note
+   Far better would be to run simultaneous TCP_STREAM and *note
 TCP_MAERTS: TCP_MAERTS. tests from just one system, using the concepts
-and procedures outlined in *Note Running Concurrent Netperf Tests:
+and procedures outlined in *note Running Concurrent Netperf Tests:
 Running Concurrent Netperf Tests. Here then is an example:
 
      for i in 1
@@ -2462,7 +2462,7 @@ the throughput, and the global `-B' option is used to tag each output
 so we know which was inbound and which outbound relative to the system
 on which we were running netperf.  Of course that sense is switched on
 the system running netserver :)  The use of the global `-i' option is
-explained in *Note Running Concurrent Netperf Tests: Running Concurrent
+explained in *note Running Concurrent Netperf Tests: Running Concurrent
 Netperf Tests.
 
 
@@ -2490,7 +2490,7 @@ netperf might attempt to do this automagically, but there are some
 issues to be worked-out.
 
    Here then is an example of a bidirectional transfer test using
-`--enable-burst' and the *Note TCP_RR: TCP_RR. test:
+`--enable-burst' and the *note TCP_RR: TCP_RR. test:
 
      netperf -t TCP_RR -H hpcpc108 -- -b 6 -r 32K -s 256K -S 256K
      TCP REQUEST/RESPONSE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to hpcpc108.cup.hp.com (16.89.84.108) port 0 AF_INET : first burst 6
@@ -2802,58 +2802,58 @@ Option Index
 
 
 Tag Table:
-Node: Top441
-Node: Introduction2702
-Node: Conventions5163
-Node: Installing Netperf6926
-Node: Getting Netperf Bits8480
-Node: Installing Netperf Bits10298
-Node: Verifying Installation16762
-Node: The Design of Netperf17466
-Node: CPU Utilization19048
-Node: Global Command-line Options27661
-Node: Command-line Options Syntax28200
-Node: Global Options29582
-Node: Using Netperf to Measure Bulk Data Transfer48878
-Node: Issues in Bulk Transfer49543
-Node: Options common to TCP UDP and SCTP tests53072
-Node: TCP_STREAM59366
-Node: TCP_MAERTS63134
-Node: TCP_SENDFILE64367
-Node: UDP_STREAM66683
-Node: XTI_TCP_STREAM70119
-Node: XTI_UDP_STREAM70764
-Node: SCTP_STREAM71409
-Node: DLCO_STREAM72109
-Node: DLCL_STREAM74082
-Node: STREAM_STREAM74956
-Node: DG_STREAM75802
-Node: Using Netperf to Measure Request/Response76471
-Node: Issues in Request/Response78392
-Node: Options Common to TCP UDP and SCTP _RR tests80398
-Node: TCP_RR85377
-Node: TCP_CC87721
-Node: TCP_CRR89918
-Node: UDP_RR90964
-Node: XTI_TCP_RR92985
-Node: XTI_TCP_CC93568
-Node: XTI_TCP_CRR93734
-Node: XTI_UDP_RR93902
-Node: DLCL_RR94479
-Node: DLCO_RR94632
-Node: SCTP_RR94784
-Node: Using Netperf to Measure Aggregate Performance94920
-Node: Running Concurrent Netperf Tests95755
-Node: Using --enable-burst99647
-Node: Using Netperf to Measure Bidirectional Transfer105832
-Node: Bidirectional Transfer with Concurrent Tests106905
-Node: Bidirectional Transfer with TCP_RR108771
-Node: Other Netperf Tests111305
-Node: CPU rate calibration111751
-Node: Address Resolution114092
-Node: Enhancing Netperf116068
-Node: Netperf4117305
-Node: Concept Index118214
-Node: Option Index120604
+Node: Top439
+Node: Introduction2700
+Node: Conventions5161
+Node: Installing Netperf6924
+Node: Getting Netperf Bits8478
+Node: Installing Netperf Bits10296
+Node: Verifying Installation16760
+Node: The Design of Netperf17464
+Node: CPU Utilization19046
+Node: Global Command-line Options27659
+Node: Command-line Options Syntax28198
+Node: Global Options29580
+Node: Using Netperf to Measure Bulk Data Transfer48876
+Node: Issues in Bulk Transfer49541
+Node: Options common to TCP UDP and SCTP tests53070
+Node: TCP_STREAM59364
+Node: TCP_MAERTS63132
+Node: TCP_SENDFILE64365
+Node: UDP_STREAM66681
+Node: XTI_TCP_STREAM70117
+Node: XTI_UDP_STREAM70762
+Node: SCTP_STREAM71407
+Node: DLCO_STREAM72107
+Node: DLCL_STREAM74080
+Node: STREAM_STREAM74954
+Node: DG_STREAM75800
+Node: Using Netperf to Measure Request/Response76469
+Node: Issues in Request/Response78390
+Node: Options Common to TCP UDP and SCTP _RR tests80396
+Node: TCP_RR85375
+Node: TCP_CC87719
+Node: TCP_CRR89916
+Node: UDP_RR90962
+Node: XTI_TCP_RR92983
+Node: XTI_TCP_CC93566
+Node: XTI_TCP_CRR93732
+Node: XTI_UDP_RR93900
+Node: DLCL_RR94477
+Node: DLCO_RR94630
+Node: SCTP_RR94782
+Node: Using Netperf to Measure Aggregate Performance94918
+Node: Running Concurrent Netperf Tests95753
+Node: Using --enable-burst99645
+Node: Using Netperf to Measure Bidirectional Transfer105830
+Node: Bidirectional Transfer with Concurrent Tests106903
+Node: Bidirectional Transfer with TCP_RR108769
+Node: Other Netperf Tests111303
+Node: CPU rate calibration111749
+Node: Address Resolution114090
+Node: Enhancing Netperf116066
+Node: Netperf4117303
+Node: Concept Index118212
+Node: Option Index120602
 
 End Tag Table

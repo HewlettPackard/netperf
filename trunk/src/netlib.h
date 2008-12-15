@@ -252,6 +252,9 @@ enum sock_buffer{
 #define NSEC_TYPE_UNKNOWN -1
 #define NSEC_TYPE_SELINUX 1
 
+#define NETFW_UNKNOWN -1
+#define NETFW_IPTABLES 1
+
  /* some of the fields in these structures are going to be doubles and */
  /* such. so, we probably want to ensure that they will start on */
  /* "double" boundaries. this will break compatability to pre-2.1 */

@@ -13,6 +13,9 @@
 #include <net/if.h>
 #include <netdb.h>
 
+#include <sys/types.h>
+#include <unistd.h>
+
 char *
 find_egress_interface(struct sockaddr *source, struct sockaddr *dest) {
 
