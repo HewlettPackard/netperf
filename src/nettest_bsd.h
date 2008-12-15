@@ -552,6 +552,9 @@ extern int
   rem_rcvavoid;         /* avoid recv_copies remotely           */
 
 
+#ifdef WANT_OMNI
+extern void scan_omni_args(int argc, char *argv[]);
+#endif
 extern void scan_sockets_args(int argc, char *argv[]);
 extern struct addrinfo *complete_addrinfo(char *controlhost, 
 				   char *data_address, 
