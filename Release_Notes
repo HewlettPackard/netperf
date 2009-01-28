@@ -2,6 +2,8 @@ These are the Release Notes leading-up to Revision 2.4.5 of netperf:
 
 Things changed in this release:
 
+*) Fix for a TCP_RR hang from Michael Shuldman
+
 *) Compilation cleanups for MingW cnd MSDOS (djgpp) ourtesy of Gisle
    Vanem.
 
