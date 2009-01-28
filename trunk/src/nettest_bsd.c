@@ -5824,7 +5824,7 @@ Send   Recv    Send   Recv    usec/Tran  per sec  Outbound   Inbound\n\
 	if((rsp_bytes_recvd=recv(send_socket,
 				 temp_message_ptr,
 				 rsp_bytes_left,
-				 0)) == SOCKET_ERROR) {
+				 0)) == SOCKET_ERROR || rsp_bytes_recvd == 0) {
 		if ( SOCKET_EINTR(rsp_bytes_recvd) ) {
 		    /* We hit the end of a timed test. */
 			timed_out = 1;
