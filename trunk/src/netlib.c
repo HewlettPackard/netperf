@@ -114,6 +114,8 @@ char    netlib_id[]="\
 
 #include <windows.h>
 
+#define strdup _strdup
+
 #define SIGALRM (14)
 #define sleep(x) Sleep((x)*1000)
 
@@ -923,6 +925,7 @@ void
 emulate_alarm( int seconds )
 {
 	DWORD ErrorCode;
+	DWORD HandlesClosedFlags = 0;
 
 	/* Wait on this event for parm seconds. */
 
@@ -940,21 +943,38 @@ emulate_alarm( int seconds )
 
         times_up = 1;
 
-        /* We have yet to find a good way to fully emulate the effects */
-        /* of signals and getting EINTR from system calls under */
-        /* winsock, so what we do here is close the socket out from */
-        /* under the other thread.  It is rather kludgy, but should be */
-        /* sufficient to get this puppy shipped.  The concept can be */
-        /* attributed/blamed :) on Robin raj 1/96 */
+		// Give the other threads time to notice that times_up
+	        // has changed state before taking the harsh step of
+	        // closing the sockets.
 
-        if (win_kludge_socket != INVALID_SOCKET) {
-          closesocket(win_kludge_socket);
-        }
-        if (win_kludge_socket2 != INVALID_SOCKET) {
-          closesocket(win_kludge_socket2);
-        }
+		if (WaitForSingleObject(hAlarm, PAD_TIME/2*1000) ==
+		    WAIT_TIMEOUT) {
+		  /* We have yet to find a good way to fully emulate
+		     the effects of signals and getting EINTR from
+		     system calls under winsock, so what we do here is
+		     close the socket out from under the other thread.
+		     It is rather kludgy, but should be sufficient to
+		     get this puppy shipped.  The concept can be
+		     attributed/blamed :) on Robin raj 1/96 */
+
+		  if (win_kludge_socket != INVALID_SOCKET) {
+		    HandlesClosedFlags |= 1;
+		    closesocket(win_kludge_socket);
+		  }
+		  if (win_kludge_socket2 != INVALID_SOCKET) {
+		    HandlesClosedFlags |= 1;
+		    closesocket(win_kludge_socket2);
+		  }
+		}
+		if(debug) {
+		  fprintf(where,
+			  "emulate_alarm - HandlesClosedFlags: %x\n",
+			  HandlesClosedFlags);
+		  fflush(where);
+		}
 	}
 }
+
 
 #endif /* WIN32 */
 
@@ -4439,19 +4459,19 @@ retrieve_confident_values(float *elapsed_time,
 double
 get_result_confid()
 {
-  return 100.0 * (interval - result_confid);
+  return (double) (100.0 * (interval - result_confid));
 }
 
 double
 get_loc_cpu_confid()
 {
-  return 100.0 * (interval - loc_cpu_confid);
+  return (double) (100.0 * (interval - loc_cpu_confid));
 }
 
 double
 get_rem_cpu_confid()
 {
-  return 100.0 * (interval - rem_cpu_confid);
+  return (double) (100.0 * (interval - rem_cpu_confid));
 }
 
  /* display_confidence() is called when we could not achieve the */

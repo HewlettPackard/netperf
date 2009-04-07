@@ -102,6 +102,7 @@ char	netserver_id[]="\
 #include <ws2tcpip.h>
 #endif  /* DONT_IPV6 */
 #include <windows.h>
+#define strdup _strdup
 #define sleep(x) Sleep((x)*1000)
 #else
 #ifndef MPE
