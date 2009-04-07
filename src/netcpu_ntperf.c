@@ -285,7 +285,7 @@ double ReportPerfCntrs(PerfObj *PerfCntrs)
 {
   double tot_CPU_Util;
   int i;
-  int duration;  // in 100 usecs
+  double duration;  // in milliseconds
   
   LARGE_INTEGER ActualDuration;
   
@@ -327,13 +327,13 @@ double ReportPerfCntrs(PerfObj *PerfCntrs)
   ActualDuration.QuadPart = PerfCntrs->EndTime.QuadPart - 
     PerfCntrs->StartTime.QuadPart;
   
-  // convert to 1/10 milliseconds (100 usec) 
+  // convert to 100 usec (1/10th milliseconds) timebase.
   ActualDuration.QuadPart = (ActualDuration.QuadPart*10000)/TickHz.QuadPart;
-  duration = ActualDuration.LowPart;
+  duration = (double)ActualDuration.QuadPart/10.0;  // duration in ms
   
   if (verbosity > 1)
     {
-      fprintf(where,"ActualDuration (ms): %d\n", duration/10);
+      fprintf(where,"ActualDuration (ms): %d\n", (int)duration);
     }
   
   if (verbosity > 1)
@@ -412,14 +412,14 @@ double ReportPerfCntrs(PerfObj *PerfCntrs)
       fprintf(where, "\n\n");
       
       fprintf(where, "Interrupt/Sec. %5.1f", 
-	      (double)DeltaInfo[MAXCPUS].InterruptCount*10000.0/(double)duration);
+	      (double)DeltaInfo[MAXCPUS].InterruptCount*1000.0/duration);
       
       if ((int)SystemInfo.dwNumberOfProcessors > 1)
 	{
 	  for (i=0; i < (int)SystemInfo.dwNumberOfProcessors; i++)
 	    {
 	      fprintf(where, "\t %5.1f", 
-		      (double)DeltaInfo[i].InterruptCount*10000.0/(double)duration);
+		      (double)DeltaInfo[i].InterruptCount*1000.0/duration);
 	    }
 	}
       fprintf(where, "\n\n");
