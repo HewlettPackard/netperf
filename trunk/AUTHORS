@@ -228,3 +228,6 @@ is very long.
 
 Gisle Vanem
 MingW cnd MSDOS (djgpp) leanups.
+
+Marcel Shuldman
+Changes to make netperf more profiling friendly

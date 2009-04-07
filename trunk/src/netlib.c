@@ -894,7 +894,13 @@ install_signal_catchers()
 
 
   for (i = 1; i <= NSIG; i++) {
-    if (i != SIGALRM) {
+    switch (i) {
+    case SIGALRM:
+    case SIGPROF:
+    case SIGSTOP:
+    case SIGKILL:
+      break;
+    default:
       if (sigaction(i,&action,NULL) != 0) {
         fprintf(where,
                 "Could not install signal catcher for sig %d, errno %d\n",
