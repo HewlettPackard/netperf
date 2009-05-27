@@ -40,12 +40,29 @@ char   netcpu_procstat_id[]="\
    idle. The rate at which this increments during a test is compared
    with a previous calibrarion to arrive at a CPU utilization
    percentage. raj 2005-01-26 */
-static uint64_t  lib_start_count[MAXCPUS];
-static uint64_t  lib_end_count[MAXCPUS];
+
+#define IDLE_IDX 4
+#define CPU_STATES 9
+
+typedef struct cpu_states
+{
+  uint64_t     	user;
+  uint64_t     	nice;
+  uint64_t     	sys;
+  uint64_t     	idle;
+  uint64_t     	iowait;
+  uint64_t     	hard_irq;
+  uint64_t     	soft_irq;
+  uint64_t     	steal;
+  uint64_t     	guest;  
+} cpu_states_t;
+
+static cpu_states_t  lib_start_count[MAXCPUS];
+static cpu_states_t  lib_end_count[MAXCPUS];
 
 
 /* The max. length of one line of /proc/stat cpu output */
-#define CPU_LINE_LENGTH ((8 * sizeof (long) / 3 + 1) * 4 + 8)
+#define CPU_LINE_LENGTH ((CPU_STATES * sizeof (long) / 3 + 1) * 4 + 8)
 #define PROC_STAT_FILE_NAME "/proc/stat"
 #define N_CPU_LINES(nr) (nr == 1 ? 1 : 1 + nr)
 
@@ -140,8 +157,8 @@ calibrate_idle_rate (int iterations, int interval)
   return sysconf (_SC_CLK_TCK);
 }
 
-void
-get_cpu_idle (uint64_t *res)
+static void
+get_cpu (cpu_states_t *res)
 {
   int space;
   int i;
@@ -158,15 +175,31 @@ get_cpu_idle (uint64_t *res)
   /* Skip first line (total) on SMP */
   if (n > 1) p = strchr (p, '\n');
 
-  /* Idle time is the 4th space-separated token */
   for (i = 0; i < n; i++) {
-    for (space = 0; space < 4; space ++) {
-      p = strchr (p, ' ');
-      while (*++p == ' ');
-    };
-    res[i] = strtoul (p, &p, 10);
+    memset(&res[i], 0, sizeof (&res[i]));
+    p = strchr (p, ' ');
+    sscanf(p, "%llu %llu %llu %llu %llu %llu %llu %llu %llu",
+	   (unsigned long long *)&res[i].user,
+	   (unsigned long long *)&res[i].nice,
+	   (unsigned long long *)&res[i].sys,
+	   (unsigned long long *)&res[i].idle,
+	   (unsigned long long *)&res[i].iowait,
+	   (unsigned long long *)&res[i].hard_irq,
+	   (unsigned long long *)&res[i].soft_irq,
+	   (unsigned long long *)&res[i].steal,
+	   (unsigned long long *)&res[i].guest);
     if (debug) {
-      fprintf(where,"res[%d] is %llu\n",i,res[i]);
+      fprintf(where,"res[%d] is %llu %llu %llu %llu %llu %llu %llu %llu %llu\n",
+           i,
+	   (unsigned long long)res[i].user,
+	   (unsigned long long)res[i].nice,
+	   (unsigned long long)res[i].sys,
+	   (unsigned long long)res[i].idle,
+	   (unsigned long long)res[i].iowait,
+	   (unsigned long long)res[i].hard_irq,
+	   (unsigned long long)res[i].soft_irq,
+	   (unsigned long long)res[i].steal,
+	   (unsigned long long)res[i].guest);
       fflush(where);
     }
     p = strchr (p, '\n');
@@ -181,30 +214,50 @@ void
 measure_cpu_start()
 {
   cpu_method = PROC_STAT;
-  get_cpu_idle(lib_start_count);
+  get_cpu(lib_start_count);
 }
 
 /* collect final CPU utilization raw data */
 void
 measure_cpu_stop()
 {
-  get_cpu_idle(lib_end_count);
+  get_cpu(lib_end_count);
+}
+
+static uint64_t
+tick_subtract(uint64_t start, uint64_t end)
+{
+  uint64_t ret;
+
+  if (end >= start || (start & 0xffffffff00000000ULL))
+    return (end - start);
+
+  /* 
+   *  We wrapped, and it is likely that the kernel is suppling 32-bit
+   *  counters, because "start" is less than 32-bits wide.  If that's
+   *  the case, then handle the wrap by subtracting off everything but
+   *  the lower 32-bits so as to get back to unsigned 32-bit
+   *  arithmetic.
+   */
+  return (end - start +  0xffffffff00000000ULL);
 }
 
 float
 calc_cpu_util_internal(float elapsed_time)
 {
-  int i;
+  int i, j;
 
-  float actual_rate;
   float correction_factor;
+  cpu_states_t diff;
+  uint64_t total_ticks;
 
   lib_local_cpu_util = (float)0.0;
-  /* It is possible that the library measured a time other than */
-  /* the one that the user want for the cpu utilization */
-  /* calculations - for example, tests that were ended by */
-  /* watchdog timers such as the udp stream test. We let these */
-  /* tests tell up what the elapsed time should be. */
+
+  /* It is possible that the library measured a time other than the
+     one that the user want for the cpu utilization calculations - for
+     example, tests that were ended by watchdog timers such as the udp
+     stream test. We let these tests tell up what the elapsed time
+     should be. */
   
   if (elapsed_time != 0.0) {
     correction_factor = (float) 1.0 + 
@@ -214,6 +267,10 @@ calc_cpu_util_internal(float elapsed_time)
     correction_factor = (float) 1.0;
   }
 
+  if (debug) {
+    fprintf(where,
+	    "lib_local_maxrate = %f\n", lib_local_maxrate);
+  }
   for (i = 0; i < lib_num_loc_cpus; i++) {
 
     /* it would appear that on some systems, in loopback, nice is
@@ -222,25 +279,55 @@ calc_cpu_util_internal(float elapsed_time)
      does not go south. raj 6/95 and if we run completely out of idle,
      the same thing could in theory happen to the USE_KSTAT path. raj
      8/2000 */ 
-    
-    if (lib_end_count[i] == lib_start_count[i]) {
-      lib_end_count[i]++;
+
+    /* Find the difference in all CPU stat fields */
+    diff.user = 
+      tick_subtract(lib_start_count[i].user, lib_end_count[i].user);
+    diff.nice = 
+      tick_subtract(lib_start_count[i].nice, lib_end_count[i].nice);
+    diff.sys =
+      tick_subtract(lib_start_count[i].sys, lib_end_count[i].sys);
+    diff.idle =
+      tick_subtract(lib_start_count[i].idle, lib_end_count[i].idle);
+    diff.iowait =
+      tick_subtract(lib_start_count[i].iowait, lib_end_count[i].iowait);
+    diff.hard_irq =
+      tick_subtract(lib_start_count[i].hard_irq, lib_end_count[i].hard_irq);
+    diff.soft_irq =
+      tick_subtract(lib_start_count[i].soft_irq, lib_end_count[i].soft_irq);
+    diff.steal =
+      tick_subtract(lib_start_count[i].steal, lib_end_count[i].steal);
+    diff.guest =
+      tick_subtract(lib_start_count[i].guest, lib_end_count[i].guest);
+    total_ticks = diff.user + diff.nice + diff.sys + diff.idle + diff.iowait 
+      + diff.hard_irq + diff.soft_irq + diff.steal + diff.guest;
+
+    /* calculate idle time as a percentage of all CPU states */
+    if (total_ticks == 0) {
+      fprintf(stderr, "Total ticks 0 on CPU %d, charging nothing!\n", i);
+      lib_local_per_cpu_util[i] = 100.0;
+    } else {
+      lib_local_per_cpu_util[i] = 100.0 * 
+	((float) diff.idle / (float) total_ticks);
     }
-    
-    actual_rate = (lib_end_count[i] > lib_start_count[i]) ?
-      (float)(lib_end_count[i] - lib_start_count[i])/lib_elapsed :
-      (float)(lib_end_count[i] - lib_start_count[i] +
-	      MAXLONG)/ lib_elapsed;
-    lib_local_per_cpu_util[i] = (lib_local_maxrate - actual_rate) /
-      lib_local_maxrate * 100;
+    /* invert percentage to reflect non-idle time */
+    lib_local_per_cpu_util[i] = 100.0 - lib_local_per_cpu_util[i];
+
+    /* apply correction factor */
     lib_local_per_cpu_util[i] *= correction_factor;
     if (debug) {
       fprintf(where,
-              "calc_cpu_util: actual_rate on processor %d is %f start %llx end %llx util %f cf %f\n",
+              "calc_cpu_util: util on processor %d, diff = %llu %llu %llu %llu %llu %llu %llu %llu %llu util %f cf %f\n",
               i,
-              actual_rate,
-              lib_start_count[i],
-              lib_end_count[i],
+	      (unsigned long long)diff.user,
+	      (unsigned long long)diff.nice,
+	      (unsigned long long)diff.sys,
+	      (unsigned long long)diff.idle,
+	      (unsigned long long)diff.iowait,
+	      (unsigned long long)diff.hard_irq,
+	      (unsigned long long)diff.soft_irq,
+	      (unsigned long long)diff.steal,
+	      (unsigned long long)diff.guest,
 	      lib_local_per_cpu_util[i],
 	      correction_factor);
     }
@@ -255,12 +342,12 @@ calc_cpu_util_internal(float elapsed_time)
 void
 cpu_start_internal(void)
 {
-  get_cpu_idle(lib_start_count);
+  get_cpu(lib_start_count);
   return;
 }
 
 void
 cpu_stop_internal(void)
 {
-  get_cpu_idle(lib_end_count);
+  get_cpu(lib_end_count);
 }
