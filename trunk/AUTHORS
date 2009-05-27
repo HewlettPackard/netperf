@@ -104,6 +104,7 @@ Andrew Gallatin
 for assistance with the FreeBSD sysctl() stuff, and later making it
 calibration-free
 fixes to configure to recognize Solaris 11
+fixes to netcpu_procstat.c for later linux kernels
 
 Mark Cooper
 pointing-out the need for -lresolv when compiling -DDO_DNS on RedHat

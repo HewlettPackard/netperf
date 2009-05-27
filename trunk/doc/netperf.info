@@ -2656,8 +2656,8 @@ File: netperf.info,  Node: Netperf4,  Next: Concept Index,  Prev: Enhancing Netp
 Netperf4 is the shorthand name given to version 4.X.X of netperf.  This
 is really a separate benchmark more than a newer version of netperf,
 but it is a decendant of netperf so the netperf name is kept.  The
-facitious way to describe netperf4 is to say it is the
-egg-laying-wolly-milk-pig version of netperf :)  The more respectful
+facetious way to describe netperf4 is to say it is the
+egg-laying-woolly-milk-pig version of netperf :)  The more respectful
 way to describe it is to say it is the version of netperf with support
 for synchronized, multiple-thread, multiple-test, multiple-system,
 network-oriented benchmarking.
@@ -2853,7 +2853,7 @@ Node: CPU rate calibration111749
 Node: Address Resolution114090
 Node: Enhancing Netperf116066
 Node: Netperf4117303
-Node: Concept Index118212
-Node: Option Index120602
+Node: Concept Index118213
+Node: Option Index120603
 
 End Tag Table
