@@ -5778,7 +5778,7 @@ Send   Recv    Send   Recv    usec/Tran  per sec  Outbound   Inbound\n\
     /* return WSAEINTR with the test is over. anything that will run on */
     /* 95 and NT and is closer to what netperf expects from Unix signals */
     /* and such would be appreciated raj 1/96 */
-    win_kludge_socket = recv_socket;
+    win_kludge_socket = send_socket;
 #endif /* WIN32 */
 
     /* Data Socket set-up is finished. If there were problems, either the */
@@ -6496,12 +6496,12 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     }
     
 #ifdef WIN32
-   /* this is used so the timer thread can close the socket out from
-      under us, which to date is the easiest/cleanest/least
-      Windows-specific way I can find to force the winsock calls to
-      return WSAEINTR with the test is over. anything that will run on
-      95 and NT and is closer to what netperf expects from Unix
-      signals and such would be appreciated raj 1/96 */
+  /* this is used so the timer thread can close the socket out from */
+  /* under us, which to date is the easiest/cleanest/least */
+  /* Windows-specific way I can find to force the winsock calls to */
+  /* return WSAEINTR with the test is over. anything that will run on */
+  /* 95 and NT and is closer to what netperf expects from Unix signals */
+  /* and such would be appreciated raj 1/96 */
     win_kludge_socket = data_socket;
 #endif /* WIN32 */
 
@@ -7432,6 +7432,16 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
       perror("netperf: data socket connect failed");
       exit(1);
     }
+
+#ifdef WIN32
+  /* this is used so the timer thread can close the socket out from */
+  /* under us, which to date is the easiest/cleanest/least */
+  /* Windows-specific way I can find to force the winsock calls to */
+  /* return WSAEINTR with the test is over. anything that will run on */
+  /* 95 and NT and is closer to what netperf expects from Unix signals */
+  /* and such would be appreciated raj 1/96 */
+  win_kludge_socket = send_socket;
+#endif /* WIN32 */
     
     /* Data Socket set-up is finished. If there were problems, either the */
     /* connect would have failed, or the previous response would have */
@@ -8378,6 +8388,7 @@ recv_tcp_rr()
   /* 95 and NT and is closer to what netperf expects from Unix signals */
   /* and such would be appreciated raj 1/96 */
   win_kludge_socket = s_data;
+  win_kludge_socket2 = INVALID_SOCKET;
 #endif /* WIN32 */
 
   if (debug) {
@@ -11014,16 +11025,6 @@ Send   Recv    Send   Recv\n\
   win_kludge_socket = send_socket;
 #endif /* WIN32 */
 
-#ifdef WIN32
-  /* this is used so the timer thread can close the socket out from */
-  /* under us, which to date is the easiest/cleanest/least */
-  /* Windows-specific way I can find to force the winsock calls to */
-  /* return WSAEINTR with the test is over. anything that will run on */
-  /* 95 and NT and is closer to what netperf expects from Unix signals */
-  /* and such would be appreciated raj 1/96 */
-  win_kludge_socket = send_socket;
-#endif /* WIN32 */
-
     /* Data Socket set-up is finished. If there were problems, either the */
     /* connect would have failed, or the previous response would have */
     /* indicated a problem. I failed to see the value of the extra */
@@ -12646,7 +12647,6 @@ recv_tcp_cc()
   /* 95 and NT and is closer to what netperf expects from Unix signals */
   /* and such would be appreciated raj 1/96 */
   win_kludge_socket = s_data;
-  win_kludge_socket2 = INVALID_SOCKET;
 #endif /* WIN32 */
 
     if (debug) {

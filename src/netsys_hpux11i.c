@@ -34,7 +34,7 @@ find_system_info(char **system_model, char **cpu_model, int *cpu_frequency) {
 			   0);
 
   if (ret > 0) {
-#ifdef PAP_MAX_CACHE_LEVELS
+#ifdef PSP_MAX_CACHE_LEVELS
     /* we can get it "directly" but to help make things reconcile with
        what other tools/platforms support, we shouldn't do a simple
        integer divide - instead, we should do our division in floating

@@ -23,6 +23,7 @@ SOURCES= \
 	..\netlib.c \
 	..\netsh.c \
 	..\nettest_bsd.c \
-	..\netperf.c
+	..\netperf.c \
+	..\inet_ntop.c
 
 
