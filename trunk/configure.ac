@@ -2,11 +2,11 @@
 # Process this file with autoconf to produce a configure script.
 
 FULL-PACKAGE-NAME=netperf
-VERSION=2.4.5pre2
+VERSION=2.4.5pre3
 BUG-REPORT-ADDRESS=netperf-feedback@netperf.org
 
 AC_PREREQ(2.59)
-AC_INIT(netperf, 2.4.5pre2)
+AC_INIT(netperf, 2.4.5pre3)
 # use the target version rather than host - one day we may want cross-compile
 AC_CANONICAL_TARGET
 AC_CONFIG_SRCDIR([src/hist.h])

@@ -943,9 +943,9 @@ emulate_alarm( int seconds )
 
         times_up = 1;
 
-		// Give the other threads time to notice that times_up
-	        // has changed state before taking the harsh step of
-	        // closing the sockets.
+	/* Give the other threads time to notice that times_up has
+	   changed state before taking the harsh step of closing the
+	   sockets. */
 
 		if (WaitForSingleObject(hAlarm, PAD_TIME/2*1000) ==
 		    WAIT_TIMEOUT) {
@@ -962,7 +962,7 @@ emulate_alarm( int seconds )
 		    closesocket(win_kludge_socket);
 		  }
 		  if (win_kludge_socket2 != INVALID_SOCKET) {
-		    HandlesClosedFlags |= 1;
+		    HandlesClosedFlags |= 2;
 		    closesocket(win_kludge_socket2);
 		  }
 		}
