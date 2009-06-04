@@ -813,8 +813,15 @@ complete_addrinfo(char *controlhost, char *data_address, char *port, int family,
   /* if we dropped the protocol hint, it would be for a protocol that
      getaddrinfo() wasn't supporting yet, not for the bug that it took
      our hint and still returned zero. raj 2006-10-16 */
+  /* as there is now an open bug against (Open)Solaris (id 6847733) on
+     this behaviour we will only emit this warning if debug is set
+     under Solaris and will continue to emit it under any circumstance
+     on other platforms should it arise. raj 2009-06-03 */
   if ((change_info & CHANGED_PROTOCOL) &&
       !(change_warning_displayed & CHANGED_PROTOCOL) &&
+#ifdef __sun
+      (debug) &&
+#endif
       (hints.ai_protocol != 0)) {
     change_warning_displayed |= CHANGED_PROTOCOL;
     fprintf(where,
