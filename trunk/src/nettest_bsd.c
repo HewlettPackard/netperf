@@ -9581,9 +9581,16 @@ recv_tcp_conn_rr()
 	send_response();
 	exit(1);
       }
-      else {
+      else if (request_bytes_recvd > 0) {
 	request_bytes_remaining -= request_bytes_recvd;
 	temp_message_ptr  += request_bytes_recvd;
+      }
+      else {
+      	/* for some reason the remote closed the connection on
+	 * us and that is unexpected so we should just close the 
+	 * socket and move-on. for that we will use an evil goto
+	 * neener neener raj 20090622 */
+    	goto bail;
       }
     }
     
@@ -9636,8 +9643,10 @@ recv_tcp_conn_rr()
 	 recv_message_ptr,
 	 1,
 	 0);
+bail:
     close(s_data);
 #else
+bail:
     close(s_data);
 #endif /* TCP_CRR_SHUTDOWN */
 
@@ -12986,10 +12995,6 @@ scan_sockets_args(int argc, char *argv[])
     }
     else if (strstr(test_name,"MAERTS")) {
       send_size = -1;
-    }
-    else {
-      printf("No default port known for the %s test, please set one yourself\n",test_name);
-      exit(-1);
     }
   }
 }
