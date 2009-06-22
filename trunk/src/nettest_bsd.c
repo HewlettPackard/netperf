@@ -9428,7 +9428,7 @@ recv_tcp_conn_rr()
 
 
   /* Now, let's set-up the socket to listen for connections */
-  if (listen(s_listen, 5) == SOCKET_ERROR) {
+  if (listen(s_listen, 128) == SOCKET_ERROR) {
     netperf_response.content.serv_errno = errno;
     close(s_listen);
     send_response();
@@ -12983,12 +12983,6 @@ scan_sockets_args(int argc, char *argv[])
     if (strstr(test_name,"STREAM") ||
 	strstr(test_name,"SENDFILE")) {
       recv_size = -1;
-    }
-    else if (strstr(test_name,"RR")) {
-      /* I am however _certain_ that for a no control RR test the
-	 response size must equal the request size since 99 times out
-	 of ten we will be speaking to the echo service somewhere */
-      rsp_size = req_size;
     }
     else if (strstr(test_name,"MAERTS")) {
       send_size = -1;
