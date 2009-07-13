@@ -1455,7 +1455,7 @@ print_top_test_header(char test_name[], struct addrinfo *source, struct addrinfo
   /* the headers. we know some of it here, but not all, so we will */
   /* only print the test title here and will print the results */
   /* titles after the test is finished */
-  fprintf(where,test_name);
+  fprintf(where,"%s",test_name);
   address_buf[0] = '\0';
   inet_ntop(source->ai_family,get_address_address(source),address_buf,sizeof(address_buf));
   fprintf(where,
@@ -3126,7 +3126,7 @@ Size (bytes)\n\n";
     case 1:
     case 2:
       if (print_headers) {
-		fprintf(where,mss_title);
+		fprintf(where,"%s",mss_title);
       }
       fprintf(where,
 	      mss_fmt_0,		/* the format string */
