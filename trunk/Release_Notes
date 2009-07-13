@@ -1,4 +1,8 @@
-These are the Release Notes leading-up to Revision 2.4.5 of netperf:
+These are the Release Notes for post-revision 2.4.5 of netperf:
+
+*) Missing fprintf format statements provided by Bruno Cornec
+
+These are the Release Notes for Revision 2.4.5 of netperf:
 
 Things changed in this release:
 

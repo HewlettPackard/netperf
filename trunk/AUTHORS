@@ -232,3 +232,6 @@ MingW cnd MSDOS (djgpp) leanups.
 
 Marcel Shuldman
 Changes to make netperf more profiling friendly
+
+Bruno Cornec
+Fixes to supply some missing fprintf format statements.

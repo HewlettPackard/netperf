@@ -1505,6 +1505,7 @@ Send   Recv    Send   Recv\n\
     /* and all that sort of rot... */
     
     fprintf(where,
+    	    "%s",
 	    ksink_fmt);
   }
   /* The test is over. Kill the data socket */
