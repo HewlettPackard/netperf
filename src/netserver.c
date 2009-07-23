@@ -45,7 +45,7 @@
 #include "netperf_version.h"
 
 char	netserver_id[]="\
-@(#)netserver.c (c) Copyright 1993-2007 Hewlett-Packard Co. Version 2.4.3";
+@(#)netserver.c (c) Copyright 1993-2007 Hewlett-Packard Co. Version 2.4.5";
 
  /***********************************************************************/
  /*									*/
@@ -711,66 +711,72 @@ set_up_server(char hostname[], char port[], int af)
 	   */
 	  process_requests() ;
 #elif WIN32
-		{
-			BOOL b;
-			char *cmdline;
-			PROCESS_INFORMATION pi;
-			STARTUPINFO si;
-			int i;
-
-			/* create the cmdline array based on strlen(program) + 80 chars */
-			cmdline = malloc(strlen(program) + 80);
-
-			memset(&si, 0 , sizeof(STARTUPINFO));
-			si.cb = sizeof(STARTUPINFO);
-
-			/* Pass the server_sock as stdin for the new process. */
-			/* Hopefully this will continue to be created with the OBJ_INHERIT attribute. */
-			si.hStdInput = (HANDLE)server_sock;
-			si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-			si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
-			si.dwFlags = STARTF_USESTDHANDLES;
-
-			/* Build cmdline for child process */
-			strcpy(cmdline, program);
-			if (verbosity > 1) {
-				snprintf(&cmdline[strlen(cmdline)], sizeof(cmdline) - strlen(cmdline), " -v %d", verbosity);
-			}
-			for (i=0; i < debug; i++) {
-				snprintf(&cmdline[strlen(cmdline)], sizeof(cmdline) - strlen(cmdline), " -d");
-			}
-			snprintf(&cmdline[strlen(cmdline)], sizeof(cmdline) - strlen(cmdline), " -I %x", (int)(UINT_PTR)server_sock);
-			snprintf(&cmdline[strlen(cmdline)], sizeof(cmdline) - strlen(cmdline), " -i %x", (int)(UINT_PTR)server_control);
-			snprintf(&cmdline[strlen(cmdline)], sizeof(cmdline) - strlen(cmdline), " -i %x", (int)(UINT_PTR)where);
-
-			b = CreateProcess(NULL,	 /* Application Name */
-					cmdline,
-					NULL,    /* Process security attributes */
-					NULL,    /* Thread security attributes */
-					TRUE,    /* Inherit handles */
-					0,	   /* Creation flags  PROCESS_QUERY_INFORMATION,  */
-					NULL,    /* Enviornment */
-					NULL,    /* Current directory */
-					&si,	   /* StartupInfo */
-					&pi);
-			if (!b)
-			{
-				perror("CreateProcessfailure: ");
-				free(cmdline); /* even though we exit :) */
-				exit(1);
-			}
-
-			/* We don't need the thread or process handles any more; let them */
-			/* go away on their own timeframe. */
-
-			CloseHandle(pi.hThread);
-			CloseHandle(pi.hProcess);
-
-			/* And close the server_sock since the child will own it. */
-
-			close(server_sock);
-			free(cmdline);
-		}
+	  {
+	    BOOL b;
+	    char *cmdline;
+	    int cmdline_length;
+	    int cmd_index;
+	    PROCESS_INFORMATION pi;
+	    STARTUPINFO si;
+	    int i;
+	    
+	    /* create the cmdline array based on strlen(program) + 80 chars */
+	    cmdline_length = strlen(program) + 80;
+	    cmdline = malloc(cmdline_length + 1);  // +1 for trailing null
+	    
+	    memset(&si, 0 , sizeof(STARTUPINFO));
+	    si.cb = sizeof(STARTUPINFO);
+	    
+	    /* Pass the server_sock as stdin for the new process.
+	       Hopefully this will continue to be created with the
+	       OBJ_INHERIT attribute. */
+	    si.hStdInput = (HANDLE)server_sock;
+	    si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+	    si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
+	    si.dwFlags = STARTF_USESTDHANDLES;
+	    
+	    /* Build cmdline for child process */
+	    strcpy(cmdline, program);
+	    cmd_index = strlen(cmdline);
+	    if (verbosity > 1) {
+	      cmd_index += snprintf(&cmdline[cmd_index], cmdline_length - cmd_index, " -v %d", verbosity);
+	    }
+	    for (i=0; i < debug; i++) {
+	      cmd_index += snprintf(&cmdline[cmd_index], cmdline_length - cmd_index, " -d");
+	    }
+	    cmd_index += snprintf(&cmdline[cmd_index], cmdline_length - cmd_index, " -I %x", (int)(UINT_PTR)server_sock);
+	    cmd_index += snprintf(&cmdline[cmd_index], cmdline_length - cmd_index, " -i %x", (int)(UINT_PTR)server_control);
+	    cmd_index += snprintf(&cmdline[cmd_index], cmdline_length - cmd_index, " -i %x", (int)(UINT_PTR)where);
+	    
+	    b = CreateProcess(NULL,    /* Application Name */
+			      cmdline,
+			      NULL,    /* Process security attributes */
+			      NULL,    /* Thread security attributes */
+			      TRUE,    /* Inherit handles */
+			      0,       /* Creation flags
+					  PROCESS_QUERY_INFORMATION,  */
+			      NULL,    /* Enviornment */
+			      NULL,    /* Current directory */
+			      &si,     /* StartupInfo */
+			      &pi);
+	    if (!b)
+	      {
+		perror("CreateProcessfailure: ");
+		free(cmdline); /* even though we exit :) */
+		exit(1);
+	      }
+	    
+	    /* We don't need the thread or process handles any more;
+	       let them go away on their own timeframe. */
+	    
+	    CloseHandle(pi.hThread);
+	    CloseHandle(pi.hProcess);
+	    
+	    /* And close the server_sock since the child will own it. */
+	    
+	    close(server_sock);
+	    free(cmdline);
+	  }
 #else
       signal(SIGCLD, SIG_IGN);
 #if defined(HAVE_FORK)
