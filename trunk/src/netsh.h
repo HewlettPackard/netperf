@@ -35,6 +35,9 @@
 
 #ifdef WANT_DCCP
 
+/* include netinet/in.h to see if SOCK_DCCP and IPPROTO_DCCP are there */
+#include <netinet/in.h>
+
 #ifndef SOCK_DCCP
 #define DCCP_WARNING
 #define SOCK_DCCP 6

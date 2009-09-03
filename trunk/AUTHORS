@@ -235,3 +235,6 @@ Changes to make netperf more profiling friendly
 
 Bruno Cornec
 Fixes to supply some missing fprintf format statements.
+
+Jose  Pedro Oliveira
+Linux compilation fixes when SCTP and DCCP are enabled.
