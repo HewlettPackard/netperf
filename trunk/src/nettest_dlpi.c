@@ -245,7 +245,7 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
     fprintf(where,
 	    "netperf: send_dlpi_co_stream: window sizes determined...\n");
     fprintf(where,"         send: %d recv: %d\n",lsw_size,lrw_size);
-    ffluch(where);
+    fflush(where);
   }
   
 #else /* DL_HP_SET_LOCAL_WIN_REQ */
