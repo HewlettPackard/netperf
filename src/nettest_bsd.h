@@ -26,6 +26,12 @@
 
 
 #ifdef WANT_OMNI
+#define OMNI_NO_DELAY 0x1
+#define OMNI_USE_SENDFILE 0x2
+#define OMNI_CONNECT_TEST 0x4
+#define OMNI_MEASURE_CPU 0x8
+#define OMNI_CHECKSUM_OFF 0x10
+
 struct  omni_request_struct {
   int32_t    send_buf_size;         /* SO_SNDBUF */
   uint32_t   send_size;             /* bytes per send() call */
@@ -41,11 +47,10 @@ struct  omni_request_struct {
   uint32_t   recv_width;            /* number of recv buffers to use */
   int32_t    response_size;         /* size of a response */
 
-  uint32_t   no_delay;              /* do we set mumble_NODELAY? */
-  uint32_t   use_sendfile;          /* use sendfile rather than send? */
-  uint32_t   connect_test;          /* does the test include connect? */
+  uint32_t   flags;                 /* to convey things that didn't
+				       really need to burn an entire
+				       int */
 
-  uint32_t   measure_cpu;    /* do we measure CPU? */
   float      cpu_rate;       /* do we know how fast the cpu is already? */
 
   int32_t    test_length;    /* how long is the test? */
@@ -56,7 +61,6 @@ struct  omni_request_struct {
   uint32_t   recv_dirty_count; /* bytes to dirty before calling recv */
   uint32_t   recv_clean_count; /* bytes to access before calling recv */
 
-  uint32_t   checksum_off;  /* should checksums be disabled? */
   uint32_t   data_port;     /* what port number should netserver use? */
   uint32_t   ipfamily;      /* address family of the data connection */
   uint32_t   socket_type;   /* dgram? stream? other? */
@@ -65,7 +69,8 @@ struct  omni_request_struct {
   uint32_t   netperf_port;  /* when netserver needs netperf's data port */
   uint32_t   interval_burst;/* how many things to do each interval */
   uint32_t   interval_usecs;/* how long each interval should be */
-  uint32_t   ipaddr[4];     /* when netserver needs netperf's data IP */
+  uint32_t   netperf_ip[4]; /* when netserver needs netperf's data IP */
+  uint32_t   netserver_ip[4]; /* when netperf tells netserver his IP */
 };
 
 struct  omni_response_struct {
@@ -77,10 +82,8 @@ struct  omni_response_struct {
   uint32_t   send_size;
   int32_t    send_width;
 
-  uint32_t   no_delay;
-  uint32_t   use_sendfile;
+  uint32_t   flags;
 
-  uint32_t   measure_cpu;
   float      cpu_rate;
 
   uint32_t   test_length;
@@ -92,14 +95,14 @@ struct  omni_response_struct {
 
   uint32_t   interval_burst;/* how many things to do each interval */
   uint32_t   interval_usecs;/* how long each interval should be */
-  /* there are 16 ints above here, and we have 248 - (16*4) or 184 bytes
-     remaining */
   /* these are here because they can be checked before actual data
      connections are made, and the omni_results_struct is already
      full */
   uint32_t   cpu_frequency;  /* this should be megahertz */
   uint32_t   security_info;
-#define OMNI_RESPONSE_CONV_CUTOFF 18
+  /* there are 16 ints above here, and we have 248 - (16*4) or 184 bytes
+     remaining */
+#define OMNI_RESPONSE_CONV_CUTOFF 16
   char       system_model[33];
   char       cpu_model[80];  /* seems like an awful lot doesn't
 				it. some clever person at Intel

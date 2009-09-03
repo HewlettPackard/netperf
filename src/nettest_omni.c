@@ -686,6 +686,34 @@ get_port_number(struct addrinfo *res)
   }
 }
 
+/* does this need to become conditional on the presence of the macros
+   or might we ass-u-me that we will not be compiled on something so
+   old as to not have what we use? raj 20090803 */
+static int
+is_multicast_addr(struct addrinfo *res) {
+  switch(res->ai_family) {
+  case AF_INET: {
+    /* IPv4 multicast runs from 224.0.0.0 to 239.255.255.255 or
+       0xE0000000 to 0xEFFFFFFF. Thankfully though there are macros
+       available to make the checks for one */
+    struct in_addr bar = ((struct sockaddr_in *)res->ai_addr)->sin_addr;
+    return IN_MULTICAST(bar.s_addr);
+  }
+#if defined(AF_INET6)
+  case AF_INET6: {
+    struct in6_addr *bar = &(((struct sockaddr_in6 *)res->ai_addr)->sin6_addr);
+    return IN6_IS_ADDR_MULTICAST(bar);
+  }
+#endif
+  default:
+    fprintf(where,
+	    "Unexpected Address Family for Multicast Check %u\n",
+	    res->ai_family);
+    fflush(where);
+    return 0;  /* or should we exit? */
+  }
+}
+
 static void
 extract_inet_address_and_port(struct addrinfo *res, void *addr, int len, int *port)
 {
@@ -762,6 +790,7 @@ pick_next_port_number(struct addrinfo *local_res, struct addrinfo *remote_res) {
   set_port_number(local_res, (unsigned short)myport);
 }
 
+/* at some point this should become a table lookup... raj 20090813 */
 char *
 netperf_output_enum_to_str(enum netperf_output_name output_name)
 {
@@ -1548,45 +1577,53 @@ print_omni_init_list() {
   netperf_output_source[THROUGHPUT].tot_line_len = 
     NETPERF_LINE_TOT(THROUGHPUT);
 
-  netperf_output_source[LOCAL_SEND_THROUGHPUT].output_name = LOCAL_SEND_THROUGHPUT;
+  netperf_output_source[LOCAL_SEND_THROUGHPUT].output_name =
+    LOCAL_SEND_THROUGHPUT;
   netperf_output_source[LOCAL_SEND_THROUGHPUT].line[0] = "Local";
   netperf_output_source[LOCAL_SEND_THROUGHPUT].line[1] = "Send";
   netperf_output_source[LOCAL_SEND_THROUGHPUT].line[2] = "Throughput";
   netperf_output_source[LOCAL_SEND_THROUGHPUT].format = "%.2f";
-  netperf_output_source[LOCAL_SEND_THROUGHPUT].display_value = &local_send_thruput;
+  netperf_output_source[LOCAL_SEND_THROUGHPUT].display_value = 
+    &local_send_thruput;
   netperf_output_source[LOCAL_SEND_THROUGHPUT].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_SEND_THROUGHPUT);
   netperf_output_source[LOCAL_SEND_THROUGHPUT].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_SEND_THROUGHPUT);
 
-  netperf_output_source[LOCAL_RECV_THROUGHPUT].output_name = LOCAL_RECV_THROUGHPUT;
+  netperf_output_source[LOCAL_RECV_THROUGHPUT].output_name =
+    LOCAL_RECV_THROUGHPUT;
   netperf_output_source[LOCAL_RECV_THROUGHPUT].line[0] = "Local";
   netperf_output_source[LOCAL_RECV_THROUGHPUT].line[1] = "Recv";
   netperf_output_source[LOCAL_RECV_THROUGHPUT].line[2] = "Throughput";
   netperf_output_source[LOCAL_RECV_THROUGHPUT].format = "%.2f";
-  netperf_output_source[LOCAL_RECV_THROUGHPUT].display_value = &local_recv_thruput;
+  netperf_output_source[LOCAL_RECV_THROUGHPUT].display_value = 
+    &local_recv_thruput;
   netperf_output_source[LOCAL_RECV_THROUGHPUT].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_RECV_THROUGHPUT);
   netperf_output_source[LOCAL_RECV_THROUGHPUT].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_RECV_THROUGHPUT);
 
-  netperf_output_source[REMOTE_SEND_THROUGHPUT].output_name = REMOTE_SEND_THROUGHPUT;
+  netperf_output_source[REMOTE_SEND_THROUGHPUT].output_name = 
+    REMOTE_SEND_THROUGHPUT;
   netperf_output_source[REMOTE_SEND_THROUGHPUT].line[0] = "Remote";
   netperf_output_source[REMOTE_SEND_THROUGHPUT].line[1] = "Send";
   netperf_output_source[REMOTE_SEND_THROUGHPUT].line[2] = "Throughput";
   netperf_output_source[REMOTE_SEND_THROUGHPUT].format = "%.2f";
-  netperf_output_source[REMOTE_SEND_THROUGHPUT].display_value = &remote_send_thruput;
+  netperf_output_source[REMOTE_SEND_THROUGHPUT].display_value = 
+    &remote_send_thruput;
   netperf_output_source[REMOTE_SEND_THROUGHPUT].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_SEND_THROUGHPUT);
   netperf_output_source[REMOTE_SEND_THROUGHPUT].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_SEND_THROUGHPUT);
 
-  netperf_output_source[REMOTE_RECV_THROUGHPUT].output_name = REMOTE_RECV_THROUGHPUT;
+  netperf_output_source[REMOTE_RECV_THROUGHPUT].output_name = 
+    REMOTE_RECV_THROUGHPUT;
   netperf_output_source[REMOTE_RECV_THROUGHPUT].line[0] = "Remote";
   netperf_output_source[REMOTE_RECV_THROUGHPUT].line[1] = "Recv";
   netperf_output_source[REMOTE_RECV_THROUGHPUT].line[2] = "Throughput";
   netperf_output_source[REMOTE_RECV_THROUGHPUT].format = "%.2f";
-  netperf_output_source[REMOTE_RECV_THROUGHPUT].display_value = &remote_recv_thruput;
+  netperf_output_source[REMOTE_RECV_THROUGHPUT].display_value = 
+    &remote_recv_thruput;
   netperf_output_source[REMOTE_RECV_THROUGHPUT].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_RECV_THROUGHPUT);
   netperf_output_source[REMOTE_RECV_THROUGHPUT].tot_line_len = 
@@ -1624,12 +1661,14 @@ print_omni_init_list() {
   netperf_output_source[CONFIDENCE_INTERVAL].tot_line_len = 
     NETPERF_LINE_TOT(CONFIDENCE_INTERVAL);
 
-  netperf_output_source[CONFIDENCE_ITERATION].output_name = CONFIDENCE_ITERATION;
+  netperf_output_source[CONFIDENCE_ITERATION].output_name =
+    CONFIDENCE_ITERATION;
   netperf_output_source[CONFIDENCE_ITERATION].line[0] = "Confidence";
   netperf_output_source[CONFIDENCE_ITERATION].line[1] = "Iterations";
   netperf_output_source[CONFIDENCE_ITERATION].line[2] = "Run";
   netperf_output_source[CONFIDENCE_ITERATION].format = "%d";
-  netperf_output_source[CONFIDENCE_ITERATION].display_value = &confidence_iteration;
+  netperf_output_source[CONFIDENCE_ITERATION].display_value =
+    &confidence_iteration;
   netperf_output_source[CONFIDENCE_ITERATION].max_line_len = 
     NETPERF_LINE_MAX(CONFIDENCE_ITERATION);
   netperf_output_source[CONFIDENCE_ITERATION].tot_line_len = 
@@ -1857,7 +1896,8 @@ print_omni_init_list() {
   netperf_output_source[LOCAL_RECV_CALLS].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_RECV_CALLS);
 
-  netperf_output_source[LOCAL_BYTES_PER_RECV].output_name = LOCAL_BYTES_PER_RECV;
+  netperf_output_source[LOCAL_BYTES_PER_RECV].output_name =
+    LOCAL_BYTES_PER_RECV;
   netperf_output_source[LOCAL_BYTES_PER_RECV].line[0] = "Local";
   netperf_output_source[LOCAL_BYTES_PER_RECV].line[1] = "Bytes";
   netperf_output_source[LOCAL_BYTES_PER_RECV].line[2] = "Per";
@@ -1869,7 +1909,8 @@ print_omni_init_list() {
   netperf_output_source[LOCAL_BYTES_PER_RECV].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_BYTES_PER_RECV);
 
-  netperf_output_source[LOCAL_BYTES_PER_SEND].output_name = LOCAL_BYTES_PER_SEND;
+  netperf_output_source[LOCAL_BYTES_PER_SEND].output_name =
+    LOCAL_BYTES_PER_SEND;
   netperf_output_source[LOCAL_BYTES_PER_SEND].line[0] = "Local";
   netperf_output_source[LOCAL_BYTES_PER_SEND].line[1] = "Bytes";
   netperf_output_source[LOCAL_BYTES_PER_SEND].line[2] = "Per";
@@ -1983,37 +2024,43 @@ print_omni_init_list() {
   netperf_output_source[LOCAL_SEND_ALIGN].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_SEND_ALIGN);
 
-  netperf_output_source[LOCAL_SEND_DIRTY_COUNT].output_name = LOCAL_SEND_DIRTY_COUNT;
+  netperf_output_source[LOCAL_SEND_DIRTY_COUNT].output_name = 
+    LOCAL_SEND_DIRTY_COUNT;
   netperf_output_source[LOCAL_SEND_DIRTY_COUNT].line[0] = "Local";
   netperf_output_source[LOCAL_SEND_DIRTY_COUNT].line[1] = "Send";
   netperf_output_source[LOCAL_SEND_DIRTY_COUNT].line[2] = "Dirty";
   netperf_output_source[LOCAL_SEND_DIRTY_COUNT].line[3] = "Count";
   netperf_output_source[LOCAL_SEND_DIRTY_COUNT].format = "%d";
-  netperf_output_source[LOCAL_SEND_DIRTY_COUNT].display_value = &loc_dirty_count;
+  netperf_output_source[LOCAL_SEND_DIRTY_COUNT].display_value =
+    &loc_dirty_count;
   netperf_output_source[LOCAL_SEND_DIRTY_COUNT].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_SEND_DIRTY_COUNT);
   netperf_output_source[LOCAL_SEND_DIRTY_COUNT].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_SEND_DIRTY_COUNT);
 
-  netperf_output_source[LOCAL_RECV_DIRTY_COUNT].output_name = LOCAL_RECV_DIRTY_COUNT;
+  netperf_output_source[LOCAL_RECV_DIRTY_COUNT].output_name =
+    LOCAL_RECV_DIRTY_COUNT;
   netperf_output_source[LOCAL_RECV_DIRTY_COUNT].line[0] = "Local";
   netperf_output_source[LOCAL_RECV_DIRTY_COUNT].line[1] = "Recv";
   netperf_output_source[LOCAL_RECV_DIRTY_COUNT].line[2] = "Dirty";
   netperf_output_source[LOCAL_RECV_DIRTY_COUNT].line[3] = "Count";
   netperf_output_source[LOCAL_RECV_DIRTY_COUNT].format = "%d";
-  netperf_output_source[LOCAL_RECV_DIRTY_COUNT].display_value = &loc_dirty_count;
+  netperf_output_source[LOCAL_RECV_DIRTY_COUNT].display_value =
+    &loc_dirty_count;
   netperf_output_source[LOCAL_RECV_DIRTY_COUNT].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_RECV_DIRTY_COUNT);
   netperf_output_source[LOCAL_RECV_DIRTY_COUNT].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_RECV_DIRTY_COUNT);
 
-  netperf_output_source[LOCAL_RECV_CLEAN_COUNT].output_name = LOCAL_RECV_CLEAN_COUNT;
+  netperf_output_source[LOCAL_RECV_CLEAN_COUNT].output_name =
+    LOCAL_RECV_CLEAN_COUNT;
   netperf_output_source[LOCAL_RECV_CLEAN_COUNT].line[0] = "Local";
   netperf_output_source[LOCAL_RECV_CLEAN_COUNT].line[1] = "Recv";
   netperf_output_source[LOCAL_RECV_CLEAN_COUNT].line[2] = "Clean";
   netperf_output_source[LOCAL_RECV_CLEAN_COUNT].line[3] = "Count";
   netperf_output_source[LOCAL_RECV_CLEAN_COUNT].format = "%d";
-  netperf_output_source[LOCAL_RECV_CLEAN_COUNT].display_value = &loc_clean_count;
+  netperf_output_source[LOCAL_RECV_CLEAN_COUNT].display_value =
+    &loc_clean_count;
   netperf_output_source[LOCAL_RECV_CLEAN_COUNT].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_RECV_CLEAN_COUNT);
   netperf_output_source[LOCAL_RECV_CLEAN_COUNT].tot_line_len = 
@@ -2025,7 +2072,8 @@ print_omni_init_list() {
   netperf_output_source[LOCAL_CPU_UTIL].line[2] = "Util";
   netperf_output_source[LOCAL_CPU_UTIL].line[3] = "%";
   netperf_output_source[LOCAL_CPU_UTIL].format = "%.2f";
-  netperf_output_source[LOCAL_CPU_UTIL].display_value = &local_cpu_utilization_double;
+  netperf_output_source[LOCAL_CPU_UTIL].display_value =
+    &local_cpu_utilization_double;
   netperf_output_source[LOCAL_CPU_UTIL].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_CPU_UTIL);
   netperf_output_source[LOCAL_CPU_UTIL].tot_line_len = 
@@ -2037,7 +2085,8 @@ print_omni_init_list() {
   netperf_output_source[LOCAL_CPU_PEAK_UTIL].line[2] = "Per CPU";
   netperf_output_source[LOCAL_CPU_PEAK_UTIL].line[3] = "Util %";
   netperf_output_source[LOCAL_CPU_PEAK_UTIL].format = "%.2f";
-  netperf_output_source[LOCAL_CPU_PEAK_UTIL].display_value = &lib_local_peak_cpu_util;
+  netperf_output_source[LOCAL_CPU_PEAK_UTIL].display_value =
+    &lib_local_peak_cpu_util;
   netperf_output_source[LOCAL_CPU_PEAK_UTIL].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_CPU_PEAK_UTIL);
   netperf_output_source[LOCAL_CPU_PEAK_UTIL].tot_line_len = 
@@ -2049,7 +2098,8 @@ print_omni_init_list() {
   netperf_output_source[LOCAL_CPU_PEAK_ID].line[2] = "Per CPU";
   netperf_output_source[LOCAL_CPU_PEAK_ID].line[3] = "ID";
   netperf_output_source[LOCAL_CPU_PEAK_ID].format = "%d";
-  netperf_output_source[LOCAL_CPU_PEAK_ID].display_value = &lib_local_peak_cpu_id;
+  netperf_output_source[LOCAL_CPU_PEAK_ID].display_value =
+    &lib_local_peak_cpu_id;
   netperf_output_source[LOCAL_CPU_PEAK_ID].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_CPU_PEAK_ID);
   netperf_output_source[LOCAL_CPU_PEAK_ID].tot_line_len = 
@@ -2251,31 +2301,36 @@ print_omni_init_list() {
   netperf_output_source[REMOTE_RECV_CALLS].line[2] = "Calls";
   netperf_output_source[REMOTE_RECV_CALLS].line[3] = "";
   netperf_output_source[REMOTE_RECV_CALLS].format = "%lld";
-  netperf_output_source[REMOTE_RECV_CALLS].display_value = &remote_receive_calls;
+  netperf_output_source[REMOTE_RECV_CALLS].display_value =
+    &remote_receive_calls;
   netperf_output_source[REMOTE_RECV_CALLS].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_RECV_CALLS);
   netperf_output_source[REMOTE_RECV_CALLS].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_RECV_CALLS);
 
-  netperf_output_source[REMOTE_BYTES_PER_RECV].output_name = REMOTE_BYTES_PER_RECV;
+  netperf_output_source[REMOTE_BYTES_PER_RECV].output_name =
+    REMOTE_BYTES_PER_RECV;
   netperf_output_source[REMOTE_BYTES_PER_RECV].line[0] = "Remote";
   netperf_output_source[REMOTE_BYTES_PER_RECV].line[1] = "Bytes";
   netperf_output_source[REMOTE_BYTES_PER_RECV].line[2] = "Per";
   netperf_output_source[REMOTE_BYTES_PER_RECV].line[3] = "Recv";
   netperf_output_source[REMOTE_BYTES_PER_RECV].format = "%.2f";
-  netperf_output_source[REMOTE_BYTES_PER_RECV].display_value = &remote_bytes_per_recv;
+  netperf_output_source[REMOTE_BYTES_PER_RECV].display_value =
+    &remote_bytes_per_recv;
   netperf_output_source[REMOTE_BYTES_PER_RECV].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_BYTES_PER_RECV);
   netperf_output_source[REMOTE_BYTES_PER_RECV].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_BYTES_PER_RECV);
 
-  netperf_output_source[REMOTE_BYTES_PER_SEND].output_name = REMOTE_BYTES_PER_SEND;
+  netperf_output_source[REMOTE_BYTES_PER_SEND].output_name =
+    REMOTE_BYTES_PER_SEND;
   netperf_output_source[REMOTE_BYTES_PER_SEND].line[0] = "Remote";
   netperf_output_source[REMOTE_BYTES_PER_SEND].line[1] = "Bytes";
   netperf_output_source[REMOTE_BYTES_PER_SEND].line[2] = "Per";
   netperf_output_source[REMOTE_BYTES_PER_SEND].line[3] = "Send";
   netperf_output_source[REMOTE_BYTES_PER_SEND].format = "%.2f";
-  netperf_output_source[REMOTE_BYTES_PER_SEND].display_value = &remote_bytes_per_send;
+  netperf_output_source[REMOTE_BYTES_PER_SEND].display_value =
+    &remote_bytes_per_send;
   netperf_output_source[REMOTE_BYTES_PER_SEND].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_BYTES_PER_SEND);
   netperf_output_source[REMOTE_BYTES_PER_SEND].tot_line_len = 
@@ -2287,7 +2342,8 @@ print_omni_init_list() {
   netperf_output_source[REMOTE_BYTES_RECVD].line[2] = "Received";
   netperf_output_source[REMOTE_BYTES_RECVD].line[3] = "";
   netperf_output_source[REMOTE_BYTES_RECVD].format = "%lld";
-  netperf_output_source[REMOTE_BYTES_RECVD].display_value = &remote_bytes_received;
+  netperf_output_source[REMOTE_BYTES_RECVD].display_value =
+    &remote_bytes_received;
   netperf_output_source[REMOTE_BYTES_RECVD].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_BYTES_RECVD);
   netperf_output_source[REMOTE_BYTES_RECVD].tot_line_len = 
@@ -2383,37 +2439,43 @@ print_omni_init_list() {
   netperf_output_source[REMOTE_SEND_ALIGN].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_SEND_ALIGN);
 
-  netperf_output_source[REMOTE_SEND_DIRTY_COUNT].output_name = REMOTE_SEND_DIRTY_COUNT;
+  netperf_output_source[REMOTE_SEND_DIRTY_COUNT].output_name =
+    REMOTE_SEND_DIRTY_COUNT;
   netperf_output_source[REMOTE_SEND_DIRTY_COUNT].line[0] = "Remote";
   netperf_output_source[REMOTE_SEND_DIRTY_COUNT].line[1] = "Send";
   netperf_output_source[REMOTE_SEND_DIRTY_COUNT].line[2] = "Dirty";
   netperf_output_source[REMOTE_SEND_DIRTY_COUNT].line[3] = "Count";
   netperf_output_source[REMOTE_SEND_DIRTY_COUNT].format = "%d";
-  netperf_output_source[REMOTE_SEND_DIRTY_COUNT].display_value = &rem_dirty_count;
+  netperf_output_source[REMOTE_SEND_DIRTY_COUNT].display_value =
+    &rem_dirty_count;
   netperf_output_source[REMOTE_SEND_DIRTY_COUNT].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_SEND_DIRTY_COUNT);
   netperf_output_source[REMOTE_SEND_DIRTY_COUNT].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_SEND_DIRTY_COUNT);
 
-  netperf_output_source[REMOTE_RECV_DIRTY_COUNT].output_name = REMOTE_RECV_DIRTY_COUNT;
+  netperf_output_source[REMOTE_RECV_DIRTY_COUNT].output_name =
+    REMOTE_RECV_DIRTY_COUNT;
   netperf_output_source[REMOTE_RECV_DIRTY_COUNT].line[0] = "Remote";
   netperf_output_source[REMOTE_RECV_DIRTY_COUNT].line[1] = "Recv";
   netperf_output_source[REMOTE_RECV_DIRTY_COUNT].line[2] = "Dirty";
   netperf_output_source[REMOTE_RECV_DIRTY_COUNT].line[3] = "Count";
   netperf_output_source[REMOTE_RECV_DIRTY_COUNT].format = "%d";
-  netperf_output_source[REMOTE_RECV_DIRTY_COUNT].display_value = &rem_dirty_count;
+  netperf_output_source[REMOTE_RECV_DIRTY_COUNT].display_value =
+    &rem_dirty_count;
   netperf_output_source[REMOTE_RECV_DIRTY_COUNT].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_RECV_DIRTY_COUNT);
   netperf_output_source[REMOTE_RECV_DIRTY_COUNT].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_RECV_DIRTY_COUNT);
 
-  netperf_output_source[REMOTE_RECV_CLEAN_COUNT].output_name = REMOTE_RECV_CLEAN_COUNT;
+  netperf_output_source[REMOTE_RECV_CLEAN_COUNT].output_name =
+    REMOTE_RECV_CLEAN_COUNT;
   netperf_output_source[REMOTE_RECV_CLEAN_COUNT].line[0] = "Remote";
   netperf_output_source[REMOTE_RECV_CLEAN_COUNT].line[1] = "Recv";
   netperf_output_source[REMOTE_RECV_CLEAN_COUNT].line[2] = "Clean";
   netperf_output_source[REMOTE_RECV_CLEAN_COUNT].line[3] = "Count";
   netperf_output_source[REMOTE_RECV_CLEAN_COUNT].format = "%d";
-  netperf_output_source[REMOTE_RECV_CLEAN_COUNT].display_value = &rem_clean_count;
+  netperf_output_source[REMOTE_RECV_CLEAN_COUNT].display_value =
+    &rem_clean_count;
   netperf_output_source[REMOTE_RECV_CLEAN_COUNT].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_RECV_CLEAN_COUNT);
   netperf_output_source[REMOTE_RECV_CLEAN_COUNT].tot_line_len = 
@@ -2425,19 +2487,22 @@ print_omni_init_list() {
   netperf_output_source[REMOTE_CPU_UTIL].line[2] = "Util";
   netperf_output_source[REMOTE_CPU_UTIL].line[3] = "%";
   netperf_output_source[REMOTE_CPU_UTIL].format = "%.2f";
-  netperf_output_source[REMOTE_CPU_UTIL].display_value = &remote_cpu_utilization_double;
+  netperf_output_source[REMOTE_CPU_UTIL].display_value =
+    &remote_cpu_utilization_double;
   netperf_output_source[REMOTE_CPU_UTIL].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_CPU_UTIL);
   netperf_output_source[REMOTE_CPU_UTIL].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_CPU_UTIL);
 
-  netperf_output_source[REMOTE_CPU_PEAK_UTIL].output_name = REMOTE_CPU_PEAK_UTIL;
+  netperf_output_source[REMOTE_CPU_PEAK_UTIL].output_name =
+    REMOTE_CPU_PEAK_UTIL;
   netperf_output_source[REMOTE_CPU_PEAK_UTIL].line[0] = "Remote";
   netperf_output_source[REMOTE_CPU_PEAK_UTIL].line[1] = "Peak";
   netperf_output_source[REMOTE_CPU_PEAK_UTIL].line[2] = "Per CPU";
   netperf_output_source[REMOTE_CPU_PEAK_UTIL].line[3] = "Util %";
   netperf_output_source[REMOTE_CPU_PEAK_UTIL].format = "%.2f";
-  netperf_output_source[REMOTE_CPU_PEAK_UTIL].display_value = &lib_remote_peak_cpu_util;
+  netperf_output_source[REMOTE_CPU_PEAK_UTIL].display_value =
+    &lib_remote_peak_cpu_util;
   netperf_output_source[REMOTE_CPU_PEAK_UTIL].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_CPU_PEAK_UTIL);
   netperf_output_source[REMOTE_CPU_PEAK_UTIL].tot_line_len = 
@@ -2449,7 +2514,8 @@ print_omni_init_list() {
   netperf_output_source[REMOTE_CPU_PEAK_ID].line[2] = "Per CPU";
   netperf_output_source[REMOTE_CPU_PEAK_ID].line[3] = "ID";
   netperf_output_source[REMOTE_CPU_PEAK_ID].format = "%d";
-  netperf_output_source[REMOTE_CPU_PEAK_ID].display_value = &lib_remote_peak_cpu_id;
+  netperf_output_source[REMOTE_CPU_PEAK_ID].display_value =
+    &lib_remote_peak_cpu_id;
   netperf_output_source[REMOTE_CPU_PEAK_ID].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_CPU_PEAK_ID);
   netperf_output_source[REMOTE_CPU_PEAK_ID].tot_line_len = 
@@ -2473,7 +2539,8 @@ print_omni_init_list() {
   netperf_output_source[REMOTE_SD].line[2] = "Demand";
   netperf_output_source[REMOTE_SD].line[3] = "";
   netperf_output_source[REMOTE_SD].format = "%.3f";
-  netperf_output_source[REMOTE_SD].display_value = &remote_service_demand_double;
+  netperf_output_source[REMOTE_SD].display_value =
+    &remote_service_demand_double;
   netperf_output_source[REMOTE_SD].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_SD);
   netperf_output_source[REMOTE_SD].tot_line_len = 
@@ -2538,25 +2605,29 @@ print_omni_init_list() {
   netperf_output_source[LOCAL_DRIVER_NAME].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_DRIVER_NAME);
 
-  netperf_output_source[LOCAL_DRIVER_VERSION].output_name = LOCAL_DRIVER_VERSION;
+  netperf_output_source[LOCAL_DRIVER_VERSION].output_name =
+    LOCAL_DRIVER_VERSION;
   netperf_output_source[LOCAL_DRIVER_VERSION].line[0] = "Local";
   netperf_output_source[LOCAL_DRIVER_VERSION].line[1] = "Driver";
   netperf_output_source[LOCAL_DRIVER_VERSION].line[2] = "Version";
   netperf_output_source[LOCAL_DRIVER_VERSION].line[3] = "";
   netperf_output_source[LOCAL_DRIVER_VERSION].format = "%s";
-  netperf_output_source[LOCAL_DRIVER_VERSION].display_value = local_driver_version;
+  netperf_output_source[LOCAL_DRIVER_VERSION].display_value =
+    local_driver_version;
   netperf_output_source[LOCAL_DRIVER_VERSION].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_DRIVER_VERSION);
   netperf_output_source[LOCAL_DRIVER_VERSION].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_DRIVER_VERSION);
 
-  netperf_output_source[LOCAL_DRIVER_FIRMWARE].output_name = LOCAL_DRIVER_FIRMWARE;
+  netperf_output_source[LOCAL_DRIVER_FIRMWARE].output_name =
+    LOCAL_DRIVER_FIRMWARE;
   netperf_output_source[LOCAL_DRIVER_FIRMWARE].line[0] = "Local";
   netperf_output_source[LOCAL_DRIVER_FIRMWARE].line[1] = "Driver";
   netperf_output_source[LOCAL_DRIVER_FIRMWARE].line[2] = "Firmware";
   netperf_output_source[LOCAL_DRIVER_FIRMWARE].line[3] = "";
   netperf_output_source[LOCAL_DRIVER_FIRMWARE].format = "%s";
-  netperf_output_source[LOCAL_DRIVER_FIRMWARE].display_value = local_driver_firmware;
+  netperf_output_source[LOCAL_DRIVER_FIRMWARE].display_value =
+    local_driver_firmware;
   netperf_output_source[LOCAL_DRIVER_FIRMWARE].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_DRIVER_FIRMWARE);
   netperf_output_source[LOCAL_DRIVER_FIRMWARE].tot_line_len = 
@@ -2586,25 +2657,29 @@ print_omni_init_list() {
   netperf_output_source[REMOTE_DRIVER_NAME].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_DRIVER_NAME);
 
-  netperf_output_source[REMOTE_DRIVER_VERSION].output_name = REMOTE_DRIVER_VERSION;
+  netperf_output_source[REMOTE_DRIVER_VERSION].output_name =
+    REMOTE_DRIVER_VERSION;
   netperf_output_source[REMOTE_DRIVER_VERSION].line[0] = "Remote";
   netperf_output_source[REMOTE_DRIVER_VERSION].line[1] = "Driver";
   netperf_output_source[REMOTE_DRIVER_VERSION].line[2] = "Version";
   netperf_output_source[REMOTE_DRIVER_VERSION].line[3] = "";
   netperf_output_source[REMOTE_DRIVER_VERSION].format = "%s";
-  netperf_output_source[REMOTE_DRIVER_VERSION].display_value = remote_driver_version;
+  netperf_output_source[REMOTE_DRIVER_VERSION].display_value =
+    remote_driver_version;
   netperf_output_source[REMOTE_DRIVER_VERSION].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_DRIVER_VERSION);
   netperf_output_source[REMOTE_DRIVER_VERSION].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_DRIVER_VERSION);
 
-  netperf_output_source[REMOTE_DRIVER_FIRMWARE].output_name = REMOTE_DRIVER_FIRMWARE;
+  netperf_output_source[REMOTE_DRIVER_FIRMWARE].output_name =
+    REMOTE_DRIVER_FIRMWARE;
   netperf_output_source[REMOTE_DRIVER_FIRMWARE].line[0] = "Remote";
   netperf_output_source[REMOTE_DRIVER_FIRMWARE].line[1] = "Driver";
   netperf_output_source[REMOTE_DRIVER_FIRMWARE].line[2] = "Firmware";
   netperf_output_source[REMOTE_DRIVER_FIRMWARE].line[3] = "";
   netperf_output_source[REMOTE_DRIVER_FIRMWARE].format = "%s";
-  netperf_output_source[REMOTE_DRIVER_FIRMWARE].display_value = remote_driver_firmware;
+  netperf_output_source[REMOTE_DRIVER_FIRMWARE].display_value =
+    remote_driver_firmware;
   netperf_output_source[REMOTE_DRIVER_FIRMWARE].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_DRIVER_FIRMWARE);
   netperf_output_source[REMOTE_DRIVER_FIRMWARE].tot_line_len = 
@@ -2622,145 +2697,169 @@ print_omni_init_list() {
   netperf_output_source[REMOTE_DRIVER_BUS].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_DRIVER_BUS);
 
-  netperf_output_source[LOCAL_INTERFACE_SUBDEVICE].output_name = LOCAL_INTERFACE_SUBDEVICE;
+  netperf_output_source[LOCAL_INTERFACE_SUBDEVICE].output_name =
+    LOCAL_INTERFACE_SUBDEVICE;
   netperf_output_source[LOCAL_INTERFACE_SUBDEVICE].line[0] = "Local";
   netperf_output_source[LOCAL_INTERFACE_SUBDEVICE].line[1] = "Interface";
   netperf_output_source[LOCAL_INTERFACE_SUBDEVICE].line[2] = "Subdevice";
   netperf_output_source[LOCAL_INTERFACE_SUBDEVICE].line[3] = "";
   netperf_output_source[LOCAL_INTERFACE_SUBDEVICE].format = "0x%.4x";
-  netperf_output_source[LOCAL_INTERFACE_SUBDEVICE].display_value = &local_interface_subdevice;
+  netperf_output_source[LOCAL_INTERFACE_SUBDEVICE].display_value =
+    &local_interface_subdevice;
   netperf_output_source[LOCAL_INTERFACE_SUBDEVICE].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_INTERFACE_SUBDEVICE);
   netperf_output_source[LOCAL_INTERFACE_SUBDEVICE].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_INTERFACE_SUBDEVICE);
 
-  netperf_output_source[LOCAL_INTERFACE_DEVICE].output_name = LOCAL_INTERFACE_DEVICE;
+  netperf_output_source[LOCAL_INTERFACE_DEVICE].output_name =
+    LOCAL_INTERFACE_DEVICE;
   netperf_output_source[LOCAL_INTERFACE_DEVICE].line[0] = "Local";
   netperf_output_source[LOCAL_INTERFACE_DEVICE].line[1] = "Interface";
   netperf_output_source[LOCAL_INTERFACE_DEVICE].line[2] = "Device";
   netperf_output_source[LOCAL_INTERFACE_DEVICE].line[3] = "";
   netperf_output_source[LOCAL_INTERFACE_DEVICE].format = "0x%.4x";
-  netperf_output_source[LOCAL_INTERFACE_DEVICE].display_value = &local_interface_device;
+  netperf_output_source[LOCAL_INTERFACE_DEVICE].display_value =
+    &local_interface_device;
   netperf_output_source[LOCAL_INTERFACE_DEVICE].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_INTERFACE_DEVICE);
   netperf_output_source[LOCAL_INTERFACE_DEVICE].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_INTERFACE_DEVICE);
 
-  netperf_output_source[LOCAL_INTERFACE_SUBVENDOR].output_name = LOCAL_INTERFACE_SUBVENDOR;
+  netperf_output_source[LOCAL_INTERFACE_SUBVENDOR].output_name =
+    LOCAL_INTERFACE_SUBVENDOR;
   netperf_output_source[LOCAL_INTERFACE_SUBVENDOR].line[0] = "Local";
   netperf_output_source[LOCAL_INTERFACE_SUBVENDOR].line[1] = "Interface";
   netperf_output_source[LOCAL_INTERFACE_SUBVENDOR].line[2] = "Subvendor";
   netperf_output_source[LOCAL_INTERFACE_SUBVENDOR].line[3] = "";
   netperf_output_source[LOCAL_INTERFACE_SUBVENDOR].format = "0x%.4x";
-  netperf_output_source[LOCAL_INTERFACE_SUBVENDOR].display_value = &local_interface_subvendor;
+  netperf_output_source[LOCAL_INTERFACE_SUBVENDOR].display_value =
+    &local_interface_subvendor;
   netperf_output_source[LOCAL_INTERFACE_SUBVENDOR].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_INTERFACE_SUBVENDOR);
   netperf_output_source[LOCAL_INTERFACE_SUBVENDOR].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_INTERFACE_SUBVENDOR);
 
-  netperf_output_source[LOCAL_INTERFACE_VENDOR].output_name = LOCAL_INTERFACE_VENDOR;
+  netperf_output_source[LOCAL_INTERFACE_VENDOR].output_name =
+    LOCAL_INTERFACE_VENDOR;
   netperf_output_source[LOCAL_INTERFACE_VENDOR].line[0] = "Local";
   netperf_output_source[LOCAL_INTERFACE_VENDOR].line[1] = "Interface";
   netperf_output_source[LOCAL_INTERFACE_VENDOR].line[2] = "Vendor";
   netperf_output_source[LOCAL_INTERFACE_VENDOR].line[3] = "";
   netperf_output_source[LOCAL_INTERFACE_VENDOR].format = "0x%.4x";
-  netperf_output_source[LOCAL_INTERFACE_VENDOR].display_value = &local_interface_vendor;
+  netperf_output_source[LOCAL_INTERFACE_VENDOR].display_value =
+    &local_interface_vendor;
   netperf_output_source[LOCAL_INTERFACE_VENDOR].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_INTERFACE_VENDOR);
   netperf_output_source[LOCAL_INTERFACE_VENDOR].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_INTERFACE_VENDOR);
 
-  netperf_output_source[REMOTE_INTERFACE_SUBDEVICE].output_name = REMOTE_INTERFACE_SUBDEVICE;
+  netperf_output_source[REMOTE_INTERFACE_SUBDEVICE].output_name =
+    REMOTE_INTERFACE_SUBDEVICE;
   netperf_output_source[REMOTE_INTERFACE_SUBDEVICE].line[0] = "Remote";
   netperf_output_source[REMOTE_INTERFACE_SUBDEVICE].line[1] = "Interface";
   netperf_output_source[REMOTE_INTERFACE_SUBDEVICE].line[2] = "Subdevice";
   netperf_output_source[REMOTE_INTERFACE_SUBDEVICE].line[3] = "";
   netperf_output_source[REMOTE_INTERFACE_SUBDEVICE].format = "0x%.4x";
-  netperf_output_source[REMOTE_INTERFACE_SUBDEVICE].display_value = &remote_interface_subdevice;
+  netperf_output_source[REMOTE_INTERFACE_SUBDEVICE].display_value =
+    &remote_interface_subdevice;
   netperf_output_source[REMOTE_INTERFACE_SUBDEVICE].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_INTERFACE_SUBDEVICE);
   netperf_output_source[REMOTE_INTERFACE_SUBDEVICE].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_INTERFACE_SUBDEVICE);
 
-  netperf_output_source[REMOTE_INTERFACE_DEVICE].output_name = REMOTE_INTERFACE_DEVICE;
+  netperf_output_source[REMOTE_INTERFACE_DEVICE].output_name =
+    REMOTE_INTERFACE_DEVICE;
   netperf_output_source[REMOTE_INTERFACE_DEVICE].line[0] = "Remote";
   netperf_output_source[REMOTE_INTERFACE_DEVICE].line[1] = "Interface";
   netperf_output_source[REMOTE_INTERFACE_DEVICE].line[2] = "Device";
   netperf_output_source[REMOTE_INTERFACE_DEVICE].line[3] = "";
   netperf_output_source[REMOTE_INTERFACE_DEVICE].format = "0x%.4x";
-  netperf_output_source[REMOTE_INTERFACE_DEVICE].display_value = &remote_interface_device;
+  netperf_output_source[REMOTE_INTERFACE_DEVICE].display_value =
+    &remote_interface_device;
   netperf_output_source[REMOTE_INTERFACE_DEVICE].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_INTERFACE_DEVICE);
   netperf_output_source[REMOTE_INTERFACE_DEVICE].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_INTERFACE_DEVICE);
 
-  netperf_output_source[REMOTE_INTERFACE_SUBVENDOR].output_name = REMOTE_INTERFACE_SUBVENDOR;
+  netperf_output_source[REMOTE_INTERFACE_SUBVENDOR].output_name =
+    REMOTE_INTERFACE_SUBVENDOR;
   netperf_output_source[REMOTE_INTERFACE_SUBVENDOR].line[0] = "Remote";
   netperf_output_source[REMOTE_INTERFACE_SUBVENDOR].line[1] = "Interface";
   netperf_output_source[REMOTE_INTERFACE_SUBVENDOR].line[2] = "Subvendor";
   netperf_output_source[REMOTE_INTERFACE_SUBVENDOR].line[3] = "";
   netperf_output_source[REMOTE_INTERFACE_SUBVENDOR].format = "0x%.4x";
-  netperf_output_source[REMOTE_INTERFACE_SUBVENDOR].display_value = &remote_interface_subvendor;
+  netperf_output_source[REMOTE_INTERFACE_SUBVENDOR].display_value =
+    &remote_interface_subvendor;
   netperf_output_source[REMOTE_INTERFACE_SUBVENDOR].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_INTERFACE_SUBVENDOR);
   netperf_output_source[REMOTE_INTERFACE_SUBVENDOR].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_INTERFACE_SUBVENDOR);
 
-  netperf_output_source[REMOTE_INTERFACE_VENDOR].output_name = REMOTE_INTERFACE_VENDOR;
+  netperf_output_source[REMOTE_INTERFACE_VENDOR].output_name =
+    REMOTE_INTERFACE_VENDOR;
   netperf_output_source[REMOTE_INTERFACE_VENDOR].line[0] = "Remote";
   netperf_output_source[REMOTE_INTERFACE_VENDOR].line[1] = "Interface";
   netperf_output_source[REMOTE_INTERFACE_VENDOR].line[2] = "Vendor";
   netperf_output_source[REMOTE_INTERFACE_VENDOR].line[3] = "";
   netperf_output_source[REMOTE_INTERFACE_VENDOR].format = "0x%.4x";
-  netperf_output_source[REMOTE_INTERFACE_VENDOR].display_value = &remote_interface_vendor;
+  netperf_output_source[REMOTE_INTERFACE_VENDOR].display_value =
+    &remote_interface_vendor;
   netperf_output_source[REMOTE_INTERFACE_VENDOR].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_INTERFACE_VENDOR);
   netperf_output_source[REMOTE_INTERFACE_VENDOR].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_INTERFACE_VENDOR);
 
-  netperf_output_source[LOCAL_INTERFACE_NAME].output_name = LOCAL_INTERFACE_NAME;
+  netperf_output_source[LOCAL_INTERFACE_NAME].output_name =
+    LOCAL_INTERFACE_NAME;
   netperf_output_source[LOCAL_INTERFACE_NAME].line[0] = "Local";
   netperf_output_source[LOCAL_INTERFACE_NAME].line[1] = "Interface";
   netperf_output_source[LOCAL_INTERFACE_NAME].line[2] = "Name";
   netperf_output_source[LOCAL_INTERFACE_NAME].line[3] = "";
   netperf_output_source[LOCAL_INTERFACE_NAME].format = "%s";
-  netperf_output_source[LOCAL_INTERFACE_NAME].display_value = local_interface_name;
+  netperf_output_source[LOCAL_INTERFACE_NAME].display_value =
+    local_interface_name;
   netperf_output_source[LOCAL_INTERFACE_NAME].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_INTERFACE_NAME);
   netperf_output_source[LOCAL_INTERFACE_NAME].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_INTERFACE_NAME);
 
-  netperf_output_source[REMOTE_INTERFACE_NAME].output_name = REMOTE_INTERFACE_NAME;
+  netperf_output_source[REMOTE_INTERFACE_NAME].output_name =
+    REMOTE_INTERFACE_NAME;
   netperf_output_source[REMOTE_INTERFACE_NAME].line[0] = "Remote";
   netperf_output_source[REMOTE_INTERFACE_NAME].line[1] = "Interface";
   netperf_output_source[REMOTE_INTERFACE_NAME].line[2] = "Name";
   netperf_output_source[REMOTE_INTERFACE_NAME].line[3] = "";
   netperf_output_source[REMOTE_INTERFACE_NAME].format = "%s";
-  netperf_output_source[REMOTE_INTERFACE_NAME].display_value = remote_interface_name;
+  netperf_output_source[REMOTE_INTERFACE_NAME].display_value =
+    remote_interface_name;
   netperf_output_source[REMOTE_INTERFACE_NAME].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_INTERFACE_NAME);
   netperf_output_source[REMOTE_INTERFACE_NAME].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_INTERFACE_NAME);
 
-  netperf_output_source[LOCAL_INTERFACE_SLOT].output_name = LOCAL_INTERFACE_SLOT;
+  netperf_output_source[LOCAL_INTERFACE_SLOT].output_name =
+    LOCAL_INTERFACE_SLOT;
   netperf_output_source[LOCAL_INTERFACE_SLOT].line[0] = "Local";
   netperf_output_source[LOCAL_INTERFACE_SLOT].line[1] = "Interface";
   netperf_output_source[LOCAL_INTERFACE_SLOT].line[2] = "Slot";
   netperf_output_source[LOCAL_INTERFACE_SLOT].line[3] = "";
   netperf_output_source[LOCAL_INTERFACE_SLOT].format = "%s";
-  netperf_output_source[LOCAL_INTERFACE_SLOT].display_value = local_interface_slot;
+  netperf_output_source[LOCAL_INTERFACE_SLOT].display_value =
+    local_interface_slot;
   netperf_output_source[LOCAL_INTERFACE_SLOT].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_INTERFACE_SLOT);
   netperf_output_source[LOCAL_INTERFACE_SLOT].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_INTERFACE_SLOT);
 
-  netperf_output_source[REMOTE_INTERFACE_SLOT].output_name = REMOTE_INTERFACE_SLOT;
+  netperf_output_source[REMOTE_INTERFACE_SLOT].output_name =
+    REMOTE_INTERFACE_SLOT;
   netperf_output_source[REMOTE_INTERFACE_SLOT].line[0] = "Remote";
   netperf_output_source[REMOTE_INTERFACE_SLOT].line[1] = "Interface";
   netperf_output_source[REMOTE_INTERFACE_SLOT].line[2] = "Slot";
   netperf_output_source[REMOTE_INTERFACE_SLOT].line[3] = "";
   netperf_output_source[REMOTE_INTERFACE_SLOT].format = "%s";
-  netperf_output_source[REMOTE_INTERFACE_SLOT].display_value = remote_interface_slot;
+  netperf_output_source[REMOTE_INTERFACE_SLOT].display_value =
+    remote_interface_slot;
   netperf_output_source[REMOTE_INTERFACE_SLOT].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_INTERFACE_SLOT);
   netperf_output_source[REMOTE_INTERFACE_SLOT].tot_line_len = 
@@ -2862,37 +2961,43 @@ print_omni_init_list() {
   netperf_output_source[LOCAL_SYSNAME].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_SYSNAME);
 
-  netperf_output_source[REMOTE_INTERVAL_USECS].output_name = REMOTE_INTERVAL_USECS;
+  netperf_output_source[REMOTE_INTERVAL_USECS].output_name =
+    REMOTE_INTERVAL_USECS;
   netperf_output_source[REMOTE_INTERVAL_USECS].line[0] = "Remote";
   netperf_output_source[REMOTE_INTERVAL_USECS].line[1] = "Interval";
   netperf_output_source[REMOTE_INTERVAL_USECS].line[2] = "Usecs";
   netperf_output_source[REMOTE_INTERVAL_USECS].line[3] = "";
   netperf_output_source[REMOTE_INTERVAL_USECS].format = "%d";
-  netperf_output_source[REMOTE_INTERVAL_USECS].display_value = &remote_interval_usecs;
+  netperf_output_source[REMOTE_INTERVAL_USECS].display_value =
+    &remote_interval_usecs;
   netperf_output_source[REMOTE_INTERVAL_USECS].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_INTERVAL_USECS);
   netperf_output_source[REMOTE_INTERVAL_USECS].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_INTERVAL_USECS);
 
-  netperf_output_source[REMOTE_INTERVAL_BURST].output_name = REMOTE_INTERVAL_BURST;
+  netperf_output_source[REMOTE_INTERVAL_BURST].output_name =
+    REMOTE_INTERVAL_BURST;
   netperf_output_source[REMOTE_INTERVAL_BURST].line[0] = "Remote";
   netperf_output_source[REMOTE_INTERVAL_BURST].line[1] = "Interval";
   netperf_output_source[REMOTE_INTERVAL_BURST].line[2] = "Burst";
   netperf_output_source[REMOTE_INTERVAL_BURST].line[3] = "";
   netperf_output_source[REMOTE_INTERVAL_BURST].format = "%d";
-  netperf_output_source[REMOTE_INTERVAL_BURST].display_value = &remote_interval_burst;
+  netperf_output_source[REMOTE_INTERVAL_BURST].display_value =
+    &remote_interval_burst;
   netperf_output_source[REMOTE_INTERVAL_BURST].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_INTERVAL_BURST);
   netperf_output_source[REMOTE_INTERVAL_BURST].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_INTERVAL_BURST);
 
-  netperf_output_source[LOCAL_SECURITY_ENABLED].output_name = LOCAL_SECURITY_ENABLED;
+  netperf_output_source[LOCAL_SECURITY_ENABLED].output_name =
+    LOCAL_SECURITY_ENABLED;
   netperf_output_source[LOCAL_SECURITY_ENABLED].line[0] = "Local";
   netperf_output_source[LOCAL_SECURITY_ENABLED].line[1] = "OS";
   netperf_output_source[LOCAL_SECURITY_ENABLED].line[2] = "Security";
   netperf_output_source[LOCAL_SECURITY_ENABLED].line[3] = "Enabled";
   netperf_output_source[LOCAL_SECURITY_ENABLED].format = "%s";
-  netperf_output_source[LOCAL_SECURITY_ENABLED].display_value = local_security_enabled;
+  netperf_output_source[LOCAL_SECURITY_ENABLED].display_value =
+    local_security_enabled;
   netperf_output_source[LOCAL_SECURITY_ENABLED].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_SECURITY_ENABLED);
   netperf_output_source[LOCAL_SECURITY_ENABLED].tot_line_len = 
@@ -2904,109 +3009,127 @@ print_omni_init_list() {
   netperf_output_source[LOCAL_SECURITY_TYPE].line[2] = "Security";
   netperf_output_source[LOCAL_SECURITY_TYPE].line[3] = "Type";
   netperf_output_source[LOCAL_SECURITY_TYPE].format = "%s";
-  netperf_output_source[LOCAL_SECURITY_TYPE].display_value = local_security_type;
+  netperf_output_source[LOCAL_SECURITY_TYPE].display_value =
+    local_security_type;
   netperf_output_source[LOCAL_SECURITY_TYPE].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_SECURITY_TYPE);
   netperf_output_source[LOCAL_SECURITY_TYPE].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_SECURITY_TYPE);
 
-  netperf_output_source[LOCAL_SECURITY_SPECIFIC].output_name = LOCAL_SECURITY_SPECIFIC;
+  netperf_output_source[LOCAL_SECURITY_SPECIFIC].output_name =
+    LOCAL_SECURITY_SPECIFIC;
   netperf_output_source[LOCAL_SECURITY_SPECIFIC].line[0] = "Local";
   netperf_output_source[LOCAL_SECURITY_SPECIFIC].line[1] = "OS";
   netperf_output_source[LOCAL_SECURITY_SPECIFIC].line[2] = "Security";
   netperf_output_source[LOCAL_SECURITY_SPECIFIC].line[3] = "Specific";
   netperf_output_source[LOCAL_SECURITY_SPECIFIC].format = "%s";
-  netperf_output_source[LOCAL_SECURITY_SPECIFIC].display_value = local_security_specific;
+  netperf_output_source[LOCAL_SECURITY_SPECIFIC].display_value =
+    local_security_specific;
   netperf_output_source[LOCAL_SECURITY_SPECIFIC].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_SECURITY_SPECIFIC);
   netperf_output_source[LOCAL_SECURITY_SPECIFIC].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_SECURITY_SPECIFIC);
 
-  netperf_output_source[LOCAL_SECURITY_ENABLED_NUM].output_name = LOCAL_SECURITY_ENABLED_NUM;
+  netperf_output_source[LOCAL_SECURITY_ENABLED_NUM].output_name =
+    LOCAL_SECURITY_ENABLED_NUM;
   netperf_output_source[LOCAL_SECURITY_ENABLED_NUM].line[0] = "Local";
   netperf_output_source[LOCAL_SECURITY_ENABLED_NUM].line[1] = "OS";
   netperf_output_source[LOCAL_SECURITY_ENABLED_NUM].line[2] = "Security";
   netperf_output_source[LOCAL_SECURITY_ENABLED_NUM].line[3] = "Enabled Num";
   netperf_output_source[LOCAL_SECURITY_ENABLED_NUM].format = "%d";
-  netperf_output_source[LOCAL_SECURITY_ENABLED_NUM].display_value = &local_security_enabled_num;
+  netperf_output_source[LOCAL_SECURITY_ENABLED_NUM].display_value =
+    &local_security_enabled_num;
   netperf_output_source[LOCAL_SECURITY_ENABLED_NUM].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_SECURITY_ENABLED_NUM);
   netperf_output_source[LOCAL_SECURITY_ENABLED_NUM].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_SECURITY_ENABLED_NUM);
 
-  netperf_output_source[LOCAL_SECURITY_TYPE_ID].output_name = LOCAL_SECURITY_TYPE_ID;
+  netperf_output_source[LOCAL_SECURITY_TYPE_ID].output_name =
+    LOCAL_SECURITY_TYPE_ID;
   netperf_output_source[LOCAL_SECURITY_TYPE_ID].line[0] = "Local";
   netperf_output_source[LOCAL_SECURITY_TYPE_ID].line[1] = "OS";
   netperf_output_source[LOCAL_SECURITY_TYPE_ID].line[2] = "Security";
   netperf_output_source[LOCAL_SECURITY_TYPE_ID].line[3] = "Type ID";
   netperf_output_source[LOCAL_SECURITY_TYPE_ID].format = "%d";
-  netperf_output_source[LOCAL_SECURITY_TYPE_ID].display_value = &local_security_type_id;
+  netperf_output_source[LOCAL_SECURITY_TYPE_ID].display_value =
+    &local_security_type_id;
   netperf_output_source[LOCAL_SECURITY_TYPE_ID].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_SECURITY_TYPE_ID);
   netperf_output_source[LOCAL_SECURITY_TYPE_ID].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_SECURITY_TYPE_ID);
 
-  netperf_output_source[REMOTE_SECURITY_ENABLED].output_name = REMOTE_SECURITY_ENABLED;
+  netperf_output_source[REMOTE_SECURITY_ENABLED].output_name =
+    REMOTE_SECURITY_ENABLED;
   netperf_output_source[REMOTE_SECURITY_ENABLED].line[0] = "Remote";
   netperf_output_source[REMOTE_SECURITY_ENABLED].line[1] = "OS";
   netperf_output_source[REMOTE_SECURITY_ENABLED].line[2] = "Security";
   netperf_output_source[REMOTE_SECURITY_ENABLED].line[3] = "Enabled";
   netperf_output_source[REMOTE_SECURITY_ENABLED].format = "%s";
-  netperf_output_source[REMOTE_SECURITY_ENABLED].display_value = remote_security_enabled;
+  netperf_output_source[REMOTE_SECURITY_ENABLED].display_value =
+    remote_security_enabled;
   netperf_output_source[REMOTE_SECURITY_ENABLED].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_SECURITY_ENABLED);
   netperf_output_source[REMOTE_SECURITY_ENABLED].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_SECURITY_ENABLED);
 
-  netperf_output_source[REMOTE_SECURITY_TYPE].output_name = REMOTE_SECURITY_TYPE;
+  netperf_output_source[REMOTE_SECURITY_TYPE].output_name =
+    REMOTE_SECURITY_TYPE;
   netperf_output_source[REMOTE_SECURITY_TYPE].line[0] = "Remote";
   netperf_output_source[REMOTE_SECURITY_TYPE].line[1] = "OS";
   netperf_output_source[REMOTE_SECURITY_TYPE].line[2] = "Security";
   netperf_output_source[REMOTE_SECURITY_TYPE].line[3] = "Type";
   netperf_output_source[REMOTE_SECURITY_TYPE].format = "%s";
-  netperf_output_source[REMOTE_SECURITY_TYPE].display_value = remote_security_type;
+  netperf_output_source[REMOTE_SECURITY_TYPE].display_value =
+    remote_security_type;
   netperf_output_source[REMOTE_SECURITY_TYPE].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_SECURITY_TYPE);
   netperf_output_source[REMOTE_SECURITY_TYPE].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_SECURITY_TYPE);
 
-  netperf_output_source[REMOTE_SECURITY_SPECIFIC].output_name = REMOTE_SECURITY_SPECIFIC;
+  netperf_output_source[REMOTE_SECURITY_SPECIFIC].output_name =
+    REMOTE_SECURITY_SPECIFIC;
   netperf_output_source[REMOTE_SECURITY_SPECIFIC].line[0] = "Remote";
   netperf_output_source[REMOTE_SECURITY_SPECIFIC].line[1] = "OS";
   netperf_output_source[REMOTE_SECURITY_SPECIFIC].line[2] = "Security";
   netperf_output_source[REMOTE_SECURITY_SPECIFIC].line[3] = "Specific";
   netperf_output_source[REMOTE_SECURITY_SPECIFIC].format = "%s";
-  netperf_output_source[REMOTE_SECURITY_SPECIFIC].display_value = remote_security_specific;
+  netperf_output_source[REMOTE_SECURITY_SPECIFIC].display_value =
+    remote_security_specific;
   netperf_output_source[REMOTE_SECURITY_SPECIFIC].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_SECURITY_SPECIFIC);
   netperf_output_source[REMOTE_SECURITY_SPECIFIC].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_SECURITY_SPECIFIC);
 
-  netperf_output_source[REMOTE_SECURITY_ENABLED_NUM].output_name = REMOTE_SECURITY_ENABLED_NUM;
+  netperf_output_source[REMOTE_SECURITY_ENABLED_NUM].output_name =
+    REMOTE_SECURITY_ENABLED_NUM;
   netperf_output_source[REMOTE_SECURITY_ENABLED_NUM].line[0] = "Remote";
   netperf_output_source[REMOTE_SECURITY_ENABLED_NUM].line[1] = "OS";
   netperf_output_source[REMOTE_SECURITY_ENABLED_NUM].line[2] = "Security";
   netperf_output_source[REMOTE_SECURITY_ENABLED_NUM].line[3] = "Enabled";
   netperf_output_source[REMOTE_SECURITY_ENABLED_NUM].format = "%d";
-  netperf_output_source[REMOTE_SECURITY_ENABLED_NUM].display_value = &remote_security_enabled_num;
+  netperf_output_source[REMOTE_SECURITY_ENABLED_NUM].display_value =
+    &remote_security_enabled_num;
   netperf_output_source[REMOTE_SECURITY_ENABLED_NUM].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_SECURITY_ENABLED_NUM);
   netperf_output_source[REMOTE_SECURITY_ENABLED_NUM].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_SECURITY_ENABLED_NUM);
 
-  netperf_output_source[REMOTE_SECURITY_TYPE_ID].output_name = REMOTE_SECURITY_TYPE_ID;
+  netperf_output_source[REMOTE_SECURITY_TYPE_ID].output_name =
+    REMOTE_SECURITY_TYPE_ID;
   netperf_output_source[REMOTE_SECURITY_TYPE_ID].line[0] = "Remote";
   netperf_output_source[REMOTE_SECURITY_TYPE_ID].line[1] = "OS";
   netperf_output_source[REMOTE_SECURITY_TYPE_ID].line[2] = "Security";
   netperf_output_source[REMOTE_SECURITY_TYPE_ID].line[3] = "Type";
   netperf_output_source[REMOTE_SECURITY_TYPE_ID].format = "%d";
-  netperf_output_source[REMOTE_SECURITY_TYPE_ID].display_value = &remote_security_type_id;
+  netperf_output_source[REMOTE_SECURITY_TYPE_ID].display_value =
+    &remote_security_type_id;
   netperf_output_source[REMOTE_SECURITY_TYPE_ID].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_SECURITY_TYPE_ID);
   netperf_output_source[REMOTE_SECURITY_TYPE_ID].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_SECURITY_TYPE_ID);
 
-  netperf_output_source[LOCAL_INTERVAL_USECS].output_name = LOCAL_INTERVAL_USECS;
+  netperf_output_source[LOCAL_INTERVAL_USECS].output_name =
+    LOCAL_INTERVAL_USECS;
   netperf_output_source[LOCAL_INTERVAL_USECS].line[0] = "Local";
   netperf_output_source[LOCAL_INTERVAL_USECS].line[1] = "Interval";
   netperf_output_source[LOCAL_INTERVAL_USECS].line[2] = "Usecs";
@@ -3018,13 +3141,15 @@ print_omni_init_list() {
   netperf_output_source[LOCAL_INTERVAL_USECS].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_INTERVAL_USECS);
 
-  netperf_output_source[LOCAL_INTERVAL_BURST].output_name = LOCAL_INTERVAL_BURST;
+  netperf_output_source[LOCAL_INTERVAL_BURST].output_name =
+    LOCAL_INTERVAL_BURST;
   netperf_output_source[LOCAL_INTERVAL_BURST].line[0] = "Local";
   netperf_output_source[LOCAL_INTERVAL_BURST].line[1] = "Interval";
   netperf_output_source[LOCAL_INTERVAL_BURST].line[2] = "Burst";
   netperf_output_source[LOCAL_INTERVAL_BURST].line[3] = "";
   netperf_output_source[LOCAL_INTERVAL_BURST].format = "%d";
-  netperf_output_source[LOCAL_INTERVAL_BURST].display_value = &interval_burst;
+  netperf_output_source[LOCAL_INTERVAL_BURST].display_value =
+    &interval_burst;
   netperf_output_source[LOCAL_INTERVAL_BURST].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_INTERVAL_BURST);
   netperf_output_source[LOCAL_INTERVAL_BURST].tot_line_len = 
@@ -3036,7 +3161,8 @@ print_omni_init_list() {
   netperf_output_source[REMOTE_SYSTEM_MODEL].line[2] = "Model";
   netperf_output_source[REMOTE_SYSTEM_MODEL].line[3] = "";
   netperf_output_source[REMOTE_SYSTEM_MODEL].format = "%s";
-  netperf_output_source[REMOTE_SYSTEM_MODEL].display_value = remote_system_model;
+  netperf_output_source[REMOTE_SYSTEM_MODEL].display_value =
+    remote_system_model;
   netperf_output_source[REMOTE_SYSTEM_MODEL].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_SYSTEM_MODEL);
   netperf_output_source[REMOTE_SYSTEM_MODEL].tot_line_len = 
@@ -3054,13 +3180,15 @@ print_omni_init_list() {
   netperf_output_source[REMOTE_CPU_MODEL].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_CPU_MODEL);
 
-  netperf_output_source[REMOTE_CPU_FREQUENCY].output_name = REMOTE_CPU_FREQUENCY;
+  netperf_output_source[REMOTE_CPU_FREQUENCY].output_name =
+    REMOTE_CPU_FREQUENCY;
   netperf_output_source[REMOTE_CPU_FREQUENCY].line[0] = "Remote";
   netperf_output_source[REMOTE_CPU_FREQUENCY].line[1] = "CPU";
   netperf_output_source[REMOTE_CPU_FREQUENCY].line[2] = "Frequency";
   netperf_output_source[REMOTE_CPU_FREQUENCY].line[3] = "MHz";
   netperf_output_source[REMOTE_CPU_FREQUENCY].format = "%d";
-  netperf_output_source[REMOTE_CPU_FREQUENCY].display_value = &remote_cpu_frequency;
+  netperf_output_source[REMOTE_CPU_FREQUENCY].display_value =
+    &remote_cpu_frequency;
   netperf_output_source[REMOTE_CPU_FREQUENCY].max_line_len = 
     NETPERF_LINE_MAX(REMOTE_CPU_FREQUENCY);
   netperf_output_source[REMOTE_CPU_FREQUENCY].tot_line_len = 
@@ -3096,7 +3224,8 @@ print_omni_init_list() {
   netperf_output_source[LOCAL_CPU_FREQUENCY].line[2] = "Frequency";
   netperf_output_source[LOCAL_CPU_FREQUENCY].line[3] = "MHz";
   netperf_output_source[LOCAL_CPU_FREQUENCY].format = "%d";
-  netperf_output_source[LOCAL_CPU_FREQUENCY].display_value = &local_cpu_frequency;
+  netperf_output_source[LOCAL_CPU_FREQUENCY].display_value =
+    &local_cpu_frequency;
   netperf_output_source[LOCAL_CPU_FREQUENCY].max_line_len = 
     NETPERF_LINE_MAX(LOCAL_CPU_FREQUENCY);
   netperf_output_source[LOCAL_CPU_FREQUENCY].tot_line_len = 
@@ -3407,10 +3536,12 @@ print_omni_human()
 	  (output_human_list[i][j] != OUTPUT_END));
 	 j++) {
       if ((netperf_output_source[output_human_list[i][j]].format != NULL) &&
-	  (netperf_output_source[output_human_list[i][j]].display_value != NULL))
+	  (netperf_output_source[output_human_list[i][j]].display_value !=
+	   NULL))
 	vallen = my_snprintf(tmpval,
 			     1024,
-			     netperf_output_source[output_human_list[i][j]].format,
+			     netperf_output_source[output_human_list[i][j]].
+format,
 			     (netperf_output_source[output_human_list[i][j]].display_value)) + 1; /* need to count the \n */
       else
 	vallen = 0;
@@ -3723,6 +3854,9 @@ close_data_socket(SOCKET data_socket, struct sockaddr *peer, int peerlen)
   char buffer[4];
 
   if (protocol == IPPROTO_UDP) {
+    /* try to give the remote a signal. what this means if we ever
+       wanted to actually send zero-length messages remains to be seen
+       :)  */
     int i;
     for (i = 0; i < 3; i++) {
       if (peer) 
@@ -3786,7 +3920,10 @@ disconnect_data_socket(SOCKET data_socket, int initiate, int do_close, struct so
       shutdown(data_socket, SHUT_WR);
     
     /* we are expecting to get either a return of zero indicating
-       connection close, or an error.  */
+       connection close, or an error. of course, we *may* never
+       receive anything from the remote which means we probably really
+       aught to have a select here but until we are once bitten we
+       will remain twice bold */
     bytes_recvd = recv(data_socket,
 		       buffer,
 		       1,
@@ -3820,7 +3957,8 @@ disconnect_data_socket(SOCKET data_socket, int initiate, int do_close, struct so
 			   0);
       /* we only really care if the timer expired on us */
       if (SOCKET_EINTR(bytes_recvd)) {
-	if (do_close) close(data_socket);
+	if (do_close) 
+	  close(data_socket);
 	return -1;
       }
     }
@@ -3989,12 +4127,12 @@ send_omni(char remote_host[])
     pick_next_port_number(local_res,remote_res);
 
   
-  /* If the user has requested cpu utilization measurements, we must */
-  /* calibrate the cpu(s). We will perform this task within the tests */
-  /* themselves. If the user has specified the cpu rate, then */
-  /* calibrate_local_cpu will return rather quickly as it will have */
-  /* nothing to do. If local_cpu_rate is zero, then we will go through */
-  /* all the "normal" calibration stuff and return the rate back.*/
+  /* If the user has requested cpu utilization measurements, we must
+     calibrate the cpu(s). We will perform this task within the tests
+     themselves. If the user has specified the cpu rate, then
+     calibrate_local_cpu will return rather quickly as it will have
+     nothing to do. If local_cpu_rate is zero, then we will go through
+     all the "normal" calibration stuff and return the rate back.*/
   
   if (local_cpu_usage) {
     local_cpu_rate = calibrate_local_cpu(local_cpu_rate);
@@ -4120,6 +4258,7 @@ send_omni(char remote_host[])
 	 alterations. */
       
       netperf_request.content.request_type = DO_OMNI;
+      omni_request->flags                  = 0;
       omni_request->send_buf_size	   = rss_size_req;
       omni_request->send_size              = remote_send_size_req;
       omni_request->send_alignment	   = remote_send_align;
@@ -4134,11 +4273,23 @@ send_omni(char remote_host[])
       omni_request->recv_width             = 1; /* FIX THIS */
       omni_request->response_size	   = rsp_size;
       
-      omni_request->no_delay	           = rem_nodelay;
-      omni_request->use_sendfile           = remote_use_sendfile;
-      omni_request->connect_test           = connection_test;
+      /* we have no else clauses here because we previously set flags
+	 to zero above raj 20090803 */
+      if (rem_nodelay)
+	omni_request->flags |= OMNI_NO_DELAY;
+
+      if (remote_use_sendfile)
+	omni_request->flags |= OMNI_USE_SENDFILE;
+
+      if (connection_test) 
+	omni_request->flags |= OMNI_CONNECT_TEST;
       
-      omni_request->measure_cpu	           = remote_cpu_usage;
+      if (remote_checksum_off)
+	omni_request->flags |= OMNI_CHECKSUM_OFF;
+
+      if (remote_cpu_usage)
+	omni_request->flags |= OMNI_MEASURE_CPU;
+
       omni_request->cpu_rate	           = remote_cpu_rate;
       if (test_time)
 	omni_request->test_length	   = test_time;
@@ -4150,7 +4301,6 @@ send_omni(char remote_host[])
       omni_request->recv_dirty_count       = rem_dirty_count;
       omni_request->recv_clean_count       = rem_clean_count;
       
-      omni_request->checksum_off           = remote_checksum_off;
       omni_request->data_port              = atoi(remote_data_port);
       omni_request->ipfamily               = af_to_nf(remote_res->ai_family);
       omni_request->socket_type            = hst_to_nst(socket_type);
@@ -4173,7 +4323,7 @@ send_omni(char remote_host[])
       getsockname(data_socket, (struct sockaddr *)&my_addr, &my_addr_len);
       ret = get_sockaddr_family_addr_port(&my_addr,
 					  nf_to_af(omni_request->ipfamily),
-					  omni_request->ipaddr,
+					  omni_request->netperf_ip,
 					  &(omni_request->netperf_port));
       
       if (debug > 1) {
@@ -4192,16 +4342,16 @@ send_omni(char remote_host[])
       recv_response_n(OMNI_RESPONSE_CONV_CUTOFF); /* brittle, but functional */
   
       if (!netperf_response.content.serv_errno) {
-	rsr_size	 = omni_response->recv_buf_size;
-	remote_recv_size = omni_response->receive_size;
-	rss_size	 = omni_response->send_buf_size;
-	remote_send_size = omni_response->send_size;
-	rem_nodelay      = omni_response->no_delay;
-	remote_use_sendfile = omni_response->use_sendfile;
-	remote_cpu_usage = omni_response->measure_cpu;
-	remote_cpu_rate  = omni_response->cpu_rate;
-	remote_send_width = omni_response->send_width;
-	remote_recv_width = omni_response->recv_width;
+	rsr_size	    = omni_response->recv_buf_size;
+	remote_recv_size    = omni_response->receive_size;
+	rss_size	    = omni_response->send_buf_size;
+	remote_send_size    = omni_response->send_size;
+	rem_nodelay         = omni_response->flags & OMNI_NO_DELAY;
+	remote_use_sendfile = omni_response->flags & OMNI_USE_SENDFILE;
+	remote_cpu_usage    = omni_response->flags & OMNI_MEASURE_CPU;
+	remote_cpu_rate     = omni_response->cpu_rate;
+	remote_send_width   = omni_response->send_width;
+	remote_recv_width   = omni_response->recv_width;
 	/* make sure that port numbers are in network order because
 	   recv_response will have put everything into host order */
 	set_port_number(remote_res,
@@ -4214,7 +4364,8 @@ send_omni(char remote_host[])
 	}
 	/* just in case the remote didn't null terminate */
 	if (NULL == remote_system_model) {
-	  omni_response->system_model[sizeof(omni_response->system_model)-1] = 0;
+	  omni_response->system_model[sizeof(omni_response->system_model)-1] =
+	    0;
 	  remote_system_model = strdup(omni_response->system_model);
 	}
 	if (NULL == remote_cpu_model) {
@@ -4366,8 +4517,10 @@ send_omni(char remote_host[])
 	else if ((ret == -2) && connection_test) {
 	  /* transient error  on a connection test means go around and
 	     try again with another local port number */
-	  fprintf(where,"transient! transient! torpedo in the water!\n");
-	  fflush(where);
+	  if (debug) {
+	    fprintf(where,"transient! transient! torpedo in the water!\n");
+	    fflush(where);
+	  }
 	  close(data_socket);
 	  connected = 0;  /* probably redundant but what the heck... */
 	  need_socket = 1;
@@ -4377,6 +4530,8 @@ send_omni(char remote_host[])
 	     allocating a new socket it will do the right thing with the
 	     bind() call */
 	  pick_next_port_number(local_res,remote_res);
+	  /* yes Virginia, a goto.  perhaps one day we will rewrite
+	     the code to avoid it but for now, a goto... raj */
 	  goto again;
 	}
 	else {
@@ -4582,7 +4737,7 @@ send_omni(char remote_host[])
 	/* we will only make this call the one time - after the first
 	   call, the value will be real or -1. if this is a connection
 	   test we want to do this here because later we won't be
-	   connected and the data may no longer be available */
+	   connected and the data may no longer be available. */
 	if (transport_mss == -2) 
 	  get_transport_info(data_socket,
 			     &transport_mss,
@@ -5079,7 +5234,7 @@ recv_omni()
      based on the updated value of those globals. raj 7/94 */
   lss_size_req = omni_request->send_buf_size;
   lsr_size_req = omni_request->recv_buf_size;
-  loc_nodelay = omni_request->no_delay;
+  loc_nodelay = (omni_request->flags) & OMNI_NO_DELAY;
   loc_rcvavoid = omni_request->so_rcvavoid;
   loc_sndavoid = omni_request->so_sndavoid;
 
@@ -5093,7 +5248,7 @@ recv_omni()
   interval_burst = 0;
 #endif
 
-  connection_test = omni_request->connect_test;
+  connection_test = omni_request->flags & OMNI_CONNECT_TEST;
   direction       = omni_request->direction;
 
   set_hostname_and_port(local_name,
@@ -5265,9 +5420,9 @@ recv_omni()
   /* the initiator. */
   
   omni_response->cpu_rate = (float)0.0; 	/* assume no cpu */
-  omni_response->measure_cpu = 0;
-  if (omni_request->measure_cpu) {
-    omni_response->measure_cpu = 1;
+  omni_response->flags &= ~OMNI_MEASURE_CPU;
+  if (omni_request->flags & OMNI_MEASURE_CPU) {
+    omni_response->flags |= OMNI_MEASURE_CPU;
     omni_response->cpu_rate = 
       calibrate_local_cpu(omni_request->cpu_rate);
   }
@@ -5276,7 +5431,11 @@ recv_omni()
   /* the socket parms from the globals */
   omni_response->send_buf_size = lss_size;
   omni_response->recv_buf_size = lsr_size;
-  omni_response->no_delay = loc_nodelay;
+  if (loc_nodelay)
+    omni_response->flags |= OMNI_NO_DELAY;
+  else
+    omni_response->flags &= ~OMNI_NO_DELAY;
+
   omni_response->so_rcvavoid = loc_rcvavoid;
   omni_response->so_sndavoid = loc_sndavoid;
   omni_response->interval_usecs = interval_usecs;
@@ -5311,7 +5470,7 @@ recv_omni()
   /* Now it's time to start receiving data on the connection. We will */
   /* first grab the apropriate counters and then start grabbing. */
   
-  cpu_start(omni_request->measure_cpu);
+  cpu_start(omni_request->flags & OMNI_MEASURE_CPU);
 
   /* if the test is timed, set a timer of suitable length.  if the
      test is by byte/transaction count, we don't need a timer - or
@@ -5395,7 +5554,7 @@ recv_omni()
 	data_socket = s_listen;
 	set_sockaddr_family_addr_port(&peeraddr_in,
 				      nf_to_af(omni_request->ipfamily),
-				      omni_request->ipaddr,
+				      omni_request->netperf_ip,
 				      omni_request->netperf_port);
       }
     }
@@ -5580,7 +5739,7 @@ recv_omni()
   /* The current iteration loop now exits due to timeout or unit count
      being  reached */
   
-  cpu_stop(omni_request->measure_cpu,&elapsed_time);
+  cpu_stop(omni_request->flags & OMNI_MEASURE_CPU,&elapsed_time);
   
   if (timed_out) {
     /* we ended the test by time, which may have been PAD_TIME seconds
@@ -5635,7 +5794,7 @@ recv_omni()
   omni_results->elapsed_time	= elapsed_time;
   omni_results->cpu_method      = cpu_method;
   omni_results->num_cpus        = lib_num_loc_cpus;
-  if (omni_request->measure_cpu) {
+  if (omni_request->flags & OMNI_MEASURE_CPU) {
     omni_results->cpu_util = calc_cpu_util(elapsed_time);
   }
   omni_results->peak_cpu_util   = (float)lib_local_peak_cpu_util;
