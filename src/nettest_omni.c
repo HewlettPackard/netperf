@@ -64,10 +64,6 @@ char nettest_omni_id[]="\
 #include <malloc.h>
 #endif /* NOSTDLIBH */
 
-#ifdef WANT_SCTP
-#include <netinet/sctp.h>
-#endif
-
 #ifndef WIN32
 #if !defined(__VMS)
 #include <sys/ipc.h>
@@ -75,6 +71,11 @@ char nettest_omni_id[]="\
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
+
+#ifdef WANT_SCTP
+#include <netinet/sctp.h>
+#endif
+
 #include <arpa/inet.h>
 #include <netdb.h>
 #else /* WIN32 */
