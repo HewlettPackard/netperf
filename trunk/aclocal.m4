@@ -1219,7 +1219,7 @@ dnl
 dnl
 dnl Checks to see if the sockaddr struct has the 4.4 BSD sa_len member
 dnl borrowed from LBL libpcap
-AC_DEFUN(AC_CHECK_SA_LEN, [
+AC_DEFUN([AC_CHECK_SA_LEN], [
         AC_MSG_CHECKING(if sockaddr struct has sa_len member)
         AC_CACHE_VAL($1,
         AC_TRY_COMPILE([
