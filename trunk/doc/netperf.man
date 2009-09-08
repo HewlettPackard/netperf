@@ -146,6 +146,8 @@ Valid testnames include, but are not limited to, nor always compiled-in:
 .I STREAM_RR
 .I DG_STREAM
 .I DG_RR
+.I SCTP_STREAM
+.I SCTP_RR
 .I LOC_CPU
 .I REM_CPU
 .fi
@@ -158,7 +160,9 @@ CPU rcpu.
 .TP
 .B \-v verbosity
 Set the verbosity level for the test (only with -P).
-
+.TP
+.B \-V
+Display the netperf version and exit.
 
 .SS TEST SPECIFIC OPTIONS
 
@@ -192,7 +196,7 @@ There are bound to be bugs. If you think you have found a bug, please
 mention it in netperf-talk@netperf.org.  List membership is required
 to send email to the list.  See
 http://www.netperf.org/cgi-bin/mailman/listinfo/netperf-talk . If all
-else fails send email to Rick Jones <raj@cup.hp.com>.
+else fails send email to netperf-feedback@netperf.org.
 
 .SH SEE ALSO
 .C netserver
@@ -205,10 +209,10 @@ http://www.netperf.org/
 .SH AUTHORS
 HP Information Networks Division - Networking Performance Team.
 .br
-Rick Jones	<raj@cup.hp.com>
+Rick Jones	<rick.jones2@hp.com>
 .br
 Karen Choy	HP IND
 .br
 Dave Shield	<daves@csc.liv.ac.uk>	(man pages)
 .br
-Others too numerous to mention here - see the ACKNWLDGMNTS file
+Others too numerous to mention here - see the AUTHORS file
