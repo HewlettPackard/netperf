@@ -281,6 +281,8 @@ process_requests()
 	}
 	if (i == 4) {
 	  /* none of the delimiters were unique, use the last one */
+	  /* of course, the last one is not i but i-1 */
+	  i -= 1;
 	  snprintf((char *)netperf_response.content.test_specific_data,
 		   sizeof(netperf_response) - 7,
 		   "%c%s%c%s%c%s%c%s",
