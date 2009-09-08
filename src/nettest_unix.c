@@ -152,7 +152,6 @@ create_unix_socket(int family, int type)
 {
 
   SOCKET temp_socket;
-  int sock_opt_len;
 
   /*set up the data socket                        */
   temp_socket = socket(family, 

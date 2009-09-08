@@ -408,8 +408,6 @@ Size (bytes)\n\
   
   struct addrinfo	*remote_res;
   struct addrinfo	*local_res;
-  struct addrinfo	*local_remote_res;
-  struct addrinfo	*local_local_res;
 
   struct	sctp_stream_request_struct	*sctp_stream_request;
   struct	sctp_stream_response_struct	*sctp_stream_response;
@@ -1533,7 +1531,6 @@ Size (bytes)\n\
 #ifdef DIRTY
   int	i;
 #endif /* DIRTY */
-  int j;
 
   float	local_cpu_utilization;
   float	local_service_demand;
@@ -1544,8 +1541,6 @@ Size (bytes)\n\
   
   struct addrinfo *remote_res;
   struct addrinfo *local_res;
-  struct addrinfo *last_remote_res;
-  struct addrinfo *last_local_res;
 
   struct	sctp_stream_request_struct	*sctp_stream_request;
   struct	sctp_stream_response_struct	*sctp_stream_response;
@@ -2637,7 +2632,6 @@ Send   Recv    Send   Recv\n\
   float	remote_service_demand;
   double	thruput;
 
-  struct sockaddr_storage peer;
   struct addrinfo *remote_res;
   struct addrinfo *local_res;
 
@@ -3690,7 +3684,6 @@ Send   Recv    Send   Recv\n\
   float	remote_service_demand;
   double	thruput;
 
-  struct sockaddr_storage peer;
   struct addrinfo *local_res;
   struct addrinfo *remote_res;
 
@@ -4322,7 +4315,6 @@ recv_sctp_rr_1toMany()
 
   int	s_rcv;
   int 	addrlen;
-  char	*temp_message_ptr;
   int	trans_received;
   int	trans_remaining;
   int	bytes_sent;

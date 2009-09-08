@@ -160,7 +160,6 @@ calibrate_idle_rate (int iterations, int interval)
 static void
 get_cpu (cpu_states_t *res)
 {
-  int space;
   int i;
   int n = lib_num_loc_cpus;
   char *p = proc_stat_buf;
@@ -227,8 +226,6 @@ measure_cpu_stop()
 static uint64_t
 tick_subtract(uint64_t start, uint64_t end)
 {
-  uint64_t ret;
-
   if (end >= start || (start & 0xffffffff00000000ULL))
     return (end - start);
 
@@ -245,7 +242,7 @@ tick_subtract(uint64_t start, uint64_t end)
 float
 calc_cpu_util_internal(float elapsed_time)
 {
-  int i, j;
+  int i;
 
   float correction_factor;
   cpu_states_t diff;

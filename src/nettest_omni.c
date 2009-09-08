@@ -1231,7 +1231,6 @@ parse_output_csv_selection_file(char *selection_file) {
   int namepos;
   int c;
   int j;
-  enum netperf_output_name match;
   int line,column;
 
   selections = fopen(selection_file,"r");
@@ -1303,7 +1302,6 @@ parse_output_human_selection_file(char *selection_file) {
   int namepos;
   char c;
   int j;
-  enum netperf_output_name match;
   int line,column;
 
   selections = fopen(selection_file,"r");
@@ -4033,8 +4031,6 @@ void
 send_omni(char remote_host[])
 {
   
-  
-  int len;
   int ret,rret;
   int connected = 0;
   int timed_out = 0;
@@ -5169,8 +5165,7 @@ send_omni(char remote_host[])
 void
 recv_omni()
 {
-  
-  char  *message;
+
   struct addrinfo *local_res;
   char local_name[BUFSIZ];
   char port_buffer[PORTBUFSIZE];
