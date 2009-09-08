@@ -127,6 +127,7 @@ get_val_from_file(char *valsource) {
   return ret;
   
 }
+
 void
 find_interface_ids(char *interface_name, int *vendor, int *device, int *sub_vend, int *sub_dev) {
 
@@ -135,23 +136,19 @@ find_interface_ids(char *interface_name, int *vendor, int *device, int *sub_vend
   char sysfile[128];  /* gotta love constants */
 
   /* first the vendor id */
-  ret = snprintf(sysfile,127,"/sys/class/net/%s/device/vendor",interface_name);
-  sysfile[128] = 0;
+  ret = snprintf(sysfile,128,"/sys/class/net/%s/device/vendor",interface_name);
   *vendor = get_val_from_file(sysfile);
 
   /* next the device */
-  ret = snprintf(sysfile,127,"/sys/class/net/%s/device/device",interface_name);
-  sysfile[128] = 0;
+  ret = snprintf(sysfile,128,"/sys/class/net/%s/device/device",interface_name);
   *device = get_val_from_file(sysfile);
 
   /* next the subsystem vendor */
-  ret = snprintf(sysfile,127,"/sys/class/net/%s/device/subsystem_vendor",interface_name);
-  sysfile[128] = 0;
+  ret = snprintf(sysfile,128,"/sys/class/net/%s/device/subsystem_vendor",interface_name);
   *sub_vend = get_val_from_file(sysfile);
 
   /* next the subsystem device */
-  ret = snprintf(sysfile,127,"/sys/class/net/%s/device/subsystem_device",interface_name);
-  sysfile[128] = 0;
+  ret = snprintf(sysfile,128,"/sys/class/net/%s/device/subsystem_device",interface_name);
   *sub_dev = get_val_from_file(sysfile);
 
 }
