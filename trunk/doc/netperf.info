@@ -342,9 +342,9 @@ that area, feel free to contact <netperf-feedback@netperf.org>.
 
    Similarly, if you want tests using the XTI interface, Unix Domain
 Sockets, DLPI or SCTP it will be necessary to add one or more
-`--enable-[xti|unix|dlpi|sctp]=yes' options to the configure command.
-As of this writing, the configure script will not include those tests
-automagically.
+`--enable-[xti|unixdomain|dlpi|sctp]=yes' options to the configure
+command.  As of this writing, the configure script will not include
+those tests automagically.
 
    On some platforms, it may be necessary to precede the configure
 command with a CFLAGS and/or LIBS variable as the netperf configure
@@ -1692,8 +1692,8 @@ default is to create the pipes in the system default for the
 `tempnam()' call.
 
    The STREAM_STREAM test is only present if netperf was configured with
-`--enable-unix=yes'. The remote netserver must have also been
-configured with `--enable-unix=yes'.
+`--enable-unixdomain=yes'. The remote netserver must have also been
+configured with `--enable-unixdomain=yes'.
 
 
 File: netperf.info,  Node: DG_STREAM,  Prev: STREAM_STREAM,  Up: Options common to TCP UDP and SCTP tests
@@ -1710,8 +1710,8 @@ SCTP test which can also preserve message boundaries.
 DG_STREAM test.
 
    The DG_STREAM test is only present if netperf was configured with
-`--enable-unix=yes'. The remote netserver must have also been
-configured with `--enable-unix=yes'.
+`--enable-unixdomain=yes'. The remote netserver must have also been
+configured with `--enable-unixdomain=yes'.
 
 
 File: netperf.info,  Node: Using Netperf to Measure Request/Response,  Next: Using Netperf to Measure Aggregate Performance,  Prev: Using Netperf to Measure Bulk Data Transfer,  Up: Top
@@ -2730,7 +2730,7 @@ Option Index
                                                               (line  41)
 * --enable-sctp, Configure:              Installing Netperf Bits.
                                                               (line  28)
-* --enable-unix, Configure:              Installing Netperf Bits.
+* --enable-unixdomain, Configure:        Installing Netperf Bits.
                                                               (line  28)
 * --enable-xti, Configure:               Installing Netperf Bits.
                                                               (line  28)
@@ -2808,52 +2808,52 @@ Node: Conventions5161
 Node: Installing Netperf6924
 Node: Getting Netperf Bits8478
 Node: Installing Netperf Bits10296
-Node: Verifying Installation16760
-Node: The Design of Netperf17464
-Node: CPU Utilization19046
-Node: Global Command-line Options27659
-Node: Command-line Options Syntax28198
-Node: Global Options29580
-Node: Using Netperf to Measure Bulk Data Transfer48876
-Node: Issues in Bulk Transfer49541
-Node: Options common to TCP UDP and SCTP tests53070
-Node: TCP_STREAM59364
-Node: TCP_MAERTS63132
-Node: TCP_SENDFILE64365
-Node: UDP_STREAM66681
-Node: XTI_TCP_STREAM70117
-Node: XTI_UDP_STREAM70762
-Node: SCTP_STREAM71407
-Node: DLCO_STREAM72107
-Node: DLCL_STREAM74080
-Node: STREAM_STREAM74954
-Node: DG_STREAM75800
-Node: Using Netperf to Measure Request/Response76469
-Node: Issues in Request/Response78390
-Node: Options Common to TCP UDP and SCTP _RR tests80396
-Node: TCP_RR85375
-Node: TCP_CC87719
-Node: TCP_CRR89916
-Node: UDP_RR90962
-Node: XTI_TCP_RR92983
-Node: XTI_TCP_CC93566
-Node: XTI_TCP_CRR93732
-Node: XTI_UDP_RR93900
-Node: DLCL_RR94477
-Node: DLCO_RR94630
-Node: SCTP_RR94782
-Node: Using Netperf to Measure Aggregate Performance94918
-Node: Running Concurrent Netperf Tests95753
-Node: Using --enable-burst99645
-Node: Using Netperf to Measure Bidirectional Transfer105830
-Node: Bidirectional Transfer with Concurrent Tests106903
-Node: Bidirectional Transfer with TCP_RR108769
-Node: Other Netperf Tests111303
-Node: CPU rate calibration111749
-Node: Address Resolution114090
-Node: Enhancing Netperf116066
-Node: Netperf4117303
-Node: Concept Index118213
-Node: Option Index120603
+Node: Verifying Installation16767
+Node: The Design of Netperf17471
+Node: CPU Utilization19053
+Node: Global Command-line Options27666
+Node: Command-line Options Syntax28205
+Node: Global Options29587
+Node: Using Netperf to Measure Bulk Data Transfer48883
+Node: Issues in Bulk Transfer49548
+Node: Options common to TCP UDP and SCTP tests53077
+Node: TCP_STREAM59371
+Node: TCP_MAERTS63139
+Node: TCP_SENDFILE64372
+Node: UDP_STREAM66688
+Node: XTI_TCP_STREAM70124
+Node: XTI_UDP_STREAM70769
+Node: SCTP_STREAM71414
+Node: DLCO_STREAM72114
+Node: DLCL_STREAM74087
+Node: STREAM_STREAM74961
+Node: DG_STREAM75819
+Node: Using Netperf to Measure Request/Response76500
+Node: Issues in Request/Response78421
+Node: Options Common to TCP UDP and SCTP _RR tests80427
+Node: TCP_RR85406
+Node: TCP_CC87750
+Node: TCP_CRR89947
+Node: UDP_RR90993
+Node: XTI_TCP_RR93014
+Node: XTI_TCP_CC93597
+Node: XTI_TCP_CRR93763
+Node: XTI_UDP_RR93931
+Node: DLCL_RR94508
+Node: DLCO_RR94661
+Node: SCTP_RR94813
+Node: Using Netperf to Measure Aggregate Performance94949
+Node: Running Concurrent Netperf Tests95784
+Node: Using --enable-burst99676
+Node: Using Netperf to Measure Bidirectional Transfer105861
+Node: Bidirectional Transfer with Concurrent Tests106934
+Node: Bidirectional Transfer with TCP_RR108800
+Node: Other Netperf Tests111334
+Node: CPU rate calibration111780
+Node: Address Resolution114121
+Node: Enhancing Netperf116097
+Node: Netperf4117334
+Node: Concept Index118244
+Node: Option Index120634
 
 End Tag Table
