@@ -15,8 +15,6 @@ static void
 find_cpu_model(char **cpu_model) {
   char linebuf[256];
   char *cret;
-  int  ret;
-  int  c;
 
   FILE *proccpu;
 
@@ -52,8 +50,6 @@ static int
 find_cpu_freq() {
   char linebuf[256];
   char *cret;
-  int  ret;
-  int  c;
 
   FILE *proccpu;
 
@@ -109,7 +105,6 @@ find_system_model(char **system_model) {
 
 void
 find_system_info(char **system_model, char **cpu_model, int *cpu_frequency) {
-  int ret;
 
   find_system_model(system_model);
   find_cpu_model(cpu_model);
