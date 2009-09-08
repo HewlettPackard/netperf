@@ -372,12 +372,12 @@ command.   If you have knowledge and/or experience to contribute to
 that area, feel free to contact @email{netperf-feedback@@netperf.org}.
 
 @vindex --enable-xti, Configure
-@vindex --enable-unix, Configure
+@vindex --enable-unixdomain, Configure
 @vindex --enable-dlpi, Configure
 @vindex --enable-sctp, Configure
 Similarly, if you want tests using the XTI interface, Unix Domain
 Sockets, DLPI or SCTP it will be necessary to add one or more
-@code{--enable-[xti|unix|dlpi|sctp]=yes} options to the configure
+@code{--enable-[xti|unixdomain|dlpi|sctp]=yes} options to the configure
 command.  As of this writing, the configure script will not include
 those tests automagically.
 
@@ -1789,8 +1789,8 @@ created rather than setting a port number.  The default is to create
 the pipes in the system default for the @code{tempnam()} call.
 
 The STREAM_STREAM test is only present if netperf was configured with
-@code{--enable-unix=yes}. The remote netserver must have also been
-configured with @code{--enable-unix=yes}.
+@code{--enable-unixdomain=yes}. The remote netserver must have also been
+configured with @code{--enable-unixdomain=yes}.
 
 @node DG_STREAM,  , STREAM_STREAM, Options common to TCP UDP and SCTP tests
 @comment  node-name,  next,  previous,  up
@@ -1805,8 +1805,8 @@ All the options of a @ref{STREAM_STREAM} test are applicable to a DG_STREAM
 test. 
 
 The DG_STREAM test is only present if netperf was configured with
-@code{--enable-unix=yes}. The remote netserver must have also been
-configured with @code{--enable-unix=yes}.
+@code{--enable-unixdomain=yes}. The remote netserver must have also been
+configured with @code{--enable-unixdomain=yes}.
 
 
 @node Using Netperf to Measure Request/Response , Using Netperf to Measure Aggregate Performance, Using Netperf to Measure Bulk Data Transfer, Top
