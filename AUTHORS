@@ -228,7 +228,7 @@ Fixes for launching netserver children when the path to netserver.exe
 is very long. 
 
 Gisle Vanem
-MingW cnd MSDOS (djgpp) leanups.
+MingW cnd MSDOS (djgpp) cleanups.
 
 Marcel Shuldman
 Changes to make netperf more profiling friendly
@@ -236,7 +236,7 @@ Changes to make netperf more profiling friendly
 Bruno Cornec
 Fixes to supply some missing fprintf format statements.
 
-Jose  Pedro Oliveira
+Jose Pedro Oliveira
 Linux compilation fixes when SCTP and DCCP are enabled. Changes to
 configure.ac to allow it to inherit compiler flags from environment
 variables.
