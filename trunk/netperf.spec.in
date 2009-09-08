@@ -1,48 +1,50 @@
-Summary: Network Performance Testing Tool
-Name: netperf
-Version: @VERSION@
-Release: 1
-Copyright: Unknown
-Group: System Environment/Base
-URL: http://www.netperf.org/
-Packager: Martin A. Brown
-Source: ftp://ftp.netperf.org/netperf/%{name}-%{version}.tar.gz
-BuildRoot: %{_tmppath}/%{name}-root
-Prefix: /usr
+Summary:       Network Performance Testing Tool
+Name:          netperf
+Version:       @VERSION@
+Release:       1
+
+Group:         System Environment/Base
+License:       Unknown
+URL:           http://www.netperf.org/
+Packager:      Martin A. Brown
+Source:        ftp://ftp.netperf.org/netperf/%{name}-%{version}.tar.bz2
+BuildRoot:     %{_tmppath}/%{name}-%{version}-%{release}-root
+
+# we are not quite ready to make this a requirement but leave
+# the line here as a heads up for the attentive :)
+# BuildRequires: libsmbios-devel
 
 %description
 Many different network benchmarking tools are collected in this package,
 maintained by Rick Jones of HP.
 
+
 %prep
-%setup
+%setup -q
 
 %build
-#%patch0 -p1
-./configure \
-  --prefix=%{_prefix} \
-  --mandir=%{_mandir} \
-  --infodir=%{_infodir}
-make
+%configure
+make  %{_smp_mflags}
 
 %install
-test "$RPM_BUILD_ROOT" = "/"    || rm -rf $RPM_BUILD_ROOT
-make DESTDIR=${RPM_BUILD_ROOT} install
+rm -rf $RPM_BUILD_ROOT
+make install DESTDIR=${RPM_BUILD_ROOT}
 
-# -- .svn directory only needed by developers; blowing it away
-#    in our BUILD/ directory, so that we do not package it
-#
-rm -rf doc/examples/.svn
+# We don't want to package the Makefile files in the examples directory
+rm -f doc/examples/Makefile*
+
+# Info
+rm -f $RPM_BUILD_ROOT/%{_infodir}/dir
 
 %clean
-test "$RPM_BUILD_ROOT" = "/"    || rm -rf $RPM_BUILD_ROOT
+rm -rf $RPM_BUILD_ROOT
 
 # %post
 
 %files
-%defattr(-,root,root)
-%doc README AUTHORS ChangeLog INSTALL COPYING
-%doc README.* Release_Notes
+%defattr(-,root,root,-)
+%doc README AUTHORS COPYING Release_Notes
+#doc doc/netperf.txt doc/netperf.pdf
 %doc doc/examples
 %{_mandir}/man1/*
 %{_infodir}/*
@@ -51,5 +53,8 @@ test "$RPM_BUILD_ROOT" = "/"    || rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
-* Sat Jun 17 2006 Martin A. Brown <martin@linux-ip.net>
+* Mon Sep  7 2009 Jose Pedro Oliveira <jpo at di.uminho.pt> - 2.4.5-1
+- Specfile cleanup.
+
+* Sat Jun 17 2006 Martin A. Brown <martin@linux-ip.net> - 2.4.2-1
 - initial contributed specfile for netperf package (v2.4.2)
