@@ -147,7 +147,9 @@ Valid testnames include, but are not limited to, nor always compiled-in:
 .I DG_STREAM
 .I DG_RR
 .I SCTP_STREAM
+.I SCTP_STREAM_MANY
 .I SCTP_RR
+.I SCTP_RR_MANY
 .I LOC_CPU
 .I REM_CPU
 .fi
