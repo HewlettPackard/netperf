@@ -36,9 +36,19 @@
 #ifdef WIN32
 #include <windows.h>
 #else
+
+#if HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
+
+#if HAVE_SYS_TIME_H
 #include <sys/time.h>
+#endif
+
+#if HAVE_SYS_SYSINFO_H
 #include <sys/sysinfo.h>
+#endif
+
 #endif
 
 /* system dependent call to get the current system time. Returned as
