@@ -382,3 +382,5 @@
 
 /* Define as `fork' if `vfork' does not work. */
 #undef vfork
+
+#undef HAVE_SYS_SYSINFO_H
