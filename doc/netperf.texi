@@ -1149,6 +1149,12 @@ recv call, or a histogram of the time spent in each send() call or for
 each transaction if netperf was configured with
 @option{--enable-histogram=yes}. [Default: 1 - normal verbosity]
 
+@vindex -V, Global
+@item -V
+This option displays the netperf version and then exits.
+
+Added in netperf 2.4.4.
+
 @vindex -w, Global
 @item -w time
 If netperf was configured with @option{--enable-intervals=yes} then

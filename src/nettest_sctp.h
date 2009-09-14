@@ -119,7 +119,9 @@ typedef enum sctp_disposition {
 } sctp_disposition_t;
 
 extern void send_sctp_stream();
+extern void recv_sctp_stream_1toMany();
 extern void send_sctp_rr();
+extern void recv_sctp_rr_1toMany();
 
 extern void recv_sctp_stream();
 extern void recv_sctp_rr();
