@@ -1073,6 +1073,11 @@ File: netperf.info,  Node: Global Options,  Prev: Command-line Options Syntax,  
      call or for each transaction if netperf was configured with
      `--enable-histogram=yes'. [Default: 1 - normal verbosity]
 
+`-V'
+     This option displays the netperf version and then exits.
+
+     Added in netperf 2.4.4.
+
 `-w time'
      If netperf was configured with `--enable-intervals=yes' then this
      value will set the inter-burst time to time milliseconds, and the
@@ -2734,14 +2739,14 @@ Option Index
                                                               (line  28)
 * --enable-xti, Configure:               Installing Netperf Bits.
                                                               (line  28)
-* -4, Global:                            Global Options.      (line 379)
+* -4, Global:                            Global Options.      (line 384)
 * -4, Test-specific <1>:                 Options Common to TCP UDP and SCTP _RR tests.
                                                               (line  88)
 * -4, Test-specific:                     Options common to TCP UDP and SCTP tests.
                                                               (line 110)
 * -6 Test-specific:                      Options Common to TCP UDP and SCTP _RR tests.
                                                               (line  94)
-* -6, Global:                            Global Options.      (line 388)
+* -6, Global:                            Global Options.      (line 393)
 * -6, Test-specific:                     Options common to TCP UDP and SCTP tests.
                                                               (line 116)
 * -A, Global:                            Global Options.      (line  18)
@@ -2795,9 +2800,10 @@ Option Index
 * -s, Test-specific:                     Options common to TCP UDP and SCTP tests.
                                                               (line  64)
 * -t, Global:                            Global Options.      (line 312)
+* -V, Global:                            Global Options.      (line 363)
 * -v, Global:                            Global Options.      (line 341)
-* -W, Global:                            Global Options.      (line 370)
-* -w, Global:                            Global Options.      (line 363)
+* -W, Global:                            Global Options.      (line 375)
+* -w, Global:                            Global Options.      (line 368)
 
 
 
@@ -2814,46 +2820,46 @@ Node: CPU Utilization19053
 Node: Global Command-line Options27666
 Node: Command-line Options Syntax28205
 Node: Global Options29587
-Node: Using Netperf to Measure Bulk Data Transfer48883
-Node: Issues in Bulk Transfer49548
-Node: Options common to TCP UDP and SCTP tests53077
-Node: TCP_STREAM59371
-Node: TCP_MAERTS63139
-Node: TCP_SENDFILE64372
-Node: UDP_STREAM66688
-Node: XTI_TCP_STREAM70124
-Node: XTI_UDP_STREAM70769
-Node: SCTP_STREAM71414
-Node: DLCO_STREAM72114
-Node: DLCL_STREAM74087
-Node: STREAM_STREAM74961
-Node: DG_STREAM75819
-Node: Using Netperf to Measure Request/Response76500
-Node: Issues in Request/Response78421
-Node: Options Common to TCP UDP and SCTP _RR tests80427
-Node: TCP_RR85406
-Node: TCP_CC87750
-Node: TCP_CRR89947
-Node: UDP_RR90993
-Node: XTI_TCP_RR93014
-Node: XTI_TCP_CC93597
-Node: XTI_TCP_CRR93763
-Node: XTI_UDP_RR93931
-Node: DLCL_RR94508
-Node: DLCO_RR94661
-Node: SCTP_RR94813
-Node: Using Netperf to Measure Aggregate Performance94949
-Node: Running Concurrent Netperf Tests95784
-Node: Using --enable-burst99676
-Node: Using Netperf to Measure Bidirectional Transfer105861
-Node: Bidirectional Transfer with Concurrent Tests106934
-Node: Bidirectional Transfer with TCP_RR108800
-Node: Other Netperf Tests111334
-Node: CPU rate calibration111780
-Node: Address Resolution114121
-Node: Enhancing Netperf116097
-Node: Netperf4117334
-Node: Concept Index118244
-Node: Option Index120634
+Node: Using Netperf to Measure Bulk Data Transfer48981
+Node: Issues in Bulk Transfer49646
+Node: Options common to TCP UDP and SCTP tests53175
+Node: TCP_STREAM59469
+Node: TCP_MAERTS63237
+Node: TCP_SENDFILE64470
+Node: UDP_STREAM66786
+Node: XTI_TCP_STREAM70222
+Node: XTI_UDP_STREAM70867
+Node: SCTP_STREAM71512
+Node: DLCO_STREAM72212
+Node: DLCL_STREAM74185
+Node: STREAM_STREAM75059
+Node: DG_STREAM75917
+Node: Using Netperf to Measure Request/Response76598
+Node: Issues in Request/Response78519
+Node: Options Common to TCP UDP and SCTP _RR tests80525
+Node: TCP_RR85504
+Node: TCP_CC87848
+Node: TCP_CRR90045
+Node: UDP_RR91091
+Node: XTI_TCP_RR93112
+Node: XTI_TCP_CC93695
+Node: XTI_TCP_CRR93861
+Node: XTI_UDP_RR94029
+Node: DLCL_RR94606
+Node: DLCO_RR94759
+Node: SCTP_RR94911
+Node: Using Netperf to Measure Aggregate Performance95047
+Node: Running Concurrent Netperf Tests95882
+Node: Using --enable-burst99774
+Node: Using Netperf to Measure Bidirectional Transfer105959
+Node: Bidirectional Transfer with Concurrent Tests107032
+Node: Bidirectional Transfer with TCP_RR108898
+Node: Other Netperf Tests111432
+Node: CPU rate calibration111878
+Node: Address Resolution114219
+Node: Enhancing Netperf116195
+Node: Netperf4117432
+Node: Concept Index118342
+Node: Option Index120732
 
 End Tag Table
