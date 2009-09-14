@@ -266,7 +266,7 @@ process_requests()
 	      (!strstr(local_machine,delims[i])) &&
 	      (!strstr(local_version,delims[i]))) {
 	    snprintf((char *)netperf_response.content.test_specific_data,
-		     sizeof(netperf_response) - 7,
+		     sizeof(netperf_response.content.test_specific_data),
 		     "%c%s%c%s%c%s%c%s",
 		     delims[i][0],
 		     local_sysname,
@@ -284,7 +284,7 @@ process_requests()
 	  /* of course, the last one is not i but i-1 */
 	  i -= 1;
 	  snprintf((char *)netperf_response.content.test_specific_data,
-		   sizeof(netperf_response) - 7,
+		   sizeof(netperf_response.content.test_specific_data),
 		   "%c%s%c%s%c%s%c%s",
 		   delims[i][0],
 		   "NoDelimUnique",
