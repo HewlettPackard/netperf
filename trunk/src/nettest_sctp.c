@@ -4664,7 +4664,7 @@ print_sctp_usage( void )
 }
 
 void
-scan_sctp_args( int	argc, char *argv[] )
+scan_sctp_args( int argc, char *argv[] )
 {
 
 #define SOCKETS_ARGS "BDhH:I:L:m:M:P:r:s:S:VN:T:46"

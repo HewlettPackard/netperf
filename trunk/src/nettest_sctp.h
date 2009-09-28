@@ -118,6 +118,8 @@ typedef enum sctp_disposition {
     SCTP_CLOSE,
 } sctp_disposition_t;
 
+extern void scan_sctp_args( int argc, char *argv[] );
+
 extern void send_sctp_stream( char remote_host[] );
 extern void send_sctp_stream_1toMany( char remote_host[] );
 extern void send_sctp_rr( char remote_host[] );
