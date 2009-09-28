@@ -1117,9 +1117,9 @@ this writing, valid values for @var{testname} include:
 @ref{Other Netperf Tests,LOC_CPU}, @ref{Other Netperf Tests,REM_CPU}
 @end itemize
 Not all tests are always compiled into netperf.  In particular, the
-``XTI,'' ``SCTP,'' ``UNIX,'' and ``DL*'' tests are only included in
+``XTI,'' ``SCTP,'' ``UNIXDOMAIN,'' and ``DL*'' tests are only included in
 netperf when configured with
-@option{--enable-[xti|sctp|unix|dlpi]=yes}.
+@option{--enable-[xti|sctp|unixdomain|dlpi]=yes}.
 
 Netperf only runs one type of test no matter how many @option{-t}
 options may be present on the command-line.  The last @option{-t}
@@ -1853,7 +1853,7 @@ benchmarker.
 
 @node Issues in Request/Response, Options Common to TCP UDP and SCTP _RR tests, Using Netperf to Measure Request/Response , Using Netperf to Measure Request/Response
 @comment  node-name,  next,  previous,  up
-@section Issues in Reqeust/Response
+@section Issues in Request/Response
 
 Most if not all the @ref{Issues in Bulk Transfer} apply to
 request/response.  The issue of round-trip latency is even more

@@ -44,6 +44,11 @@ char   netcpu_sysctl_id[]="\
    here */
 #include <mach/message.h>
 
+/* some of this is to make SnowLeopard happy, we hope it does not
+   anger previous versions */
+#include <mach/mach_host.h>
+/* #include <mach/mach_port.h> */
+
 #include "netsh.h"
 #include "netlib.h"
 
