@@ -44,8 +44,9 @@ char   netcpu_sysctl_id[]="\
    here */
 #include <mach/message.h>
 
-/* some of this is to make SnowLeopard happy, we hope it does not
-   anger previous versions */
+/* some of this is to make Tiger (10.4), Leopard (10.5) and
+   SnowLeopard (10.6) happy, we hope it does not anger previous
+   versions */
 #include <mach/mach_host.h>
 /* #include <mach/mach_port.h> */
 
