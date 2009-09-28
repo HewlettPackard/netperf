@@ -636,3 +636,5 @@ extern void send_tcp_nbrr(char remote_host[]);
 
 extern void recv_tcp_nbrr();
 #endif
+
+extern SOCKET create_data_socket(struct addrinfo *res);
