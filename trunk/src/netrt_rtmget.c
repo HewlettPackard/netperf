@@ -275,8 +275,6 @@ find_egress_interface(struct sockaddr *source, struct sockaddr *dest) {
   struct rt_msghdr  *rtm;
   int copy_len;
   char *buffer;
-  void *next_hop;
-  struct sockaddr_storage holdme;
   struct sockaddr_in  *sin;
   struct sockaddr_in6 *sin6;
 
