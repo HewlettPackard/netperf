@@ -534,15 +534,14 @@ set_defaults()
 void
 print_netserver_usage()
 {
-  fwrite(netserver_usage, sizeof(char), strlen(netserver_usage), stderr);
+  fprintf(stderr, "%s", netserver_usage);
 }
 
 
 void
 print_netperf_usage()
 {
-  fwrite(netperf_usage1, sizeof(char), strlen(netperf_usage1),  stderr);
-  fwrite(netperf_usage2, sizeof(char), strlen(netperf_usage2),  stderr);
+  fprintf(stderr, "%s%s", netperf_usage1, netperf_usage2);
 }
 
 void
