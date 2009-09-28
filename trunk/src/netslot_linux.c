@@ -17,7 +17,7 @@ find_slot(const char *fpath, const struct stat *sb,
   FILE *address_file;
   char *myfpath;
   char *this_tok;
-  char *last_tok;
+  char *last_tok = NULL;
 
   /* so, are we at a point in the tree where the basename is
      "address" ? */
@@ -69,7 +69,8 @@ find_interface(const char *fpath, const struct stat *sb,
 {
   char *myfpath;
   char *this_tok;
-  char *last_tok;
+  char *last_tok = NULL;
+
   if (strcmp(interface_match,fpath + ftwbuf->base) == 0) {
     myfpath = strdup(fpath);
     if (myfpath == NULL) {
