@@ -118,14 +118,15 @@ typedef enum sctp_disposition {
     SCTP_CLOSE,
 } sctp_disposition_t;
 
-extern void send_sctp_stream();
-extern void send_sctp_stream_1toMany(char remote_host[]);
-extern void send_sctp_rr();
+extern void send_sctp_stream( char remote_host[] );
+extern void send_sctp_stream_1toMany( char remote_host[] );
+extern void send_sctp_rr( char remote_host[] );
+extern void send_sctp_rr_1toMany( char remote_host[] );
 
-extern void recv_sctp_stream();
-extern void recv_sctp_stream_1toMany();
-extern void recv_sctp_rr();
-extern void recv_sctp_rr_1toMany();
+extern void recv_sctp_stream( void );
+extern void recv_sctp_stream_1toMany( void );
+extern void recv_sctp_rr( void );
+extern void recv_sctp_rr_1toMany( void );
 
 extern void loc_cpu_rate();
 extern void rem_cpu_rate();
