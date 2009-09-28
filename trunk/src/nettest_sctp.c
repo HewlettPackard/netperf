@@ -147,12 +147,10 @@ comma.\n";
  /* called outside of the timing loop */
 static
 void
-get_sctp_info(socket, mss)
-     int socket;
-     int *mss;
+get_sctp_info( int socket, int *mss )
 {
 
-  int sock_opt_len;
+  socklen_t sock_opt_len;
 
   if (sctp_opt_info(socket,
 		    0,
@@ -166,9 +164,7 @@ get_sctp_info(socket, mss)
 
 static
 void
-sctp_enable_events(socket, ev_mask)
-    int socket;
-    int ev_mask;
+sctp_enable_events( int socket, int ev_mask )
 {
     struct sctp_event_subscribe ev;
 
@@ -222,9 +218,7 @@ sctp_enable_events(socket, ev_mask)
 
 static
 sctp_disposition_t
-sctp_process_event(socket, buf)
-    int socket;
-    void *buf;
+sctp_process_event( int socket, void *buf )
 {
 
     struct sctp_assoc_change *sac;
@@ -322,8 +316,7 @@ sctp_process_event(socket, buf)
 
 
 void 
-send_sctp_stream(remote_host)
-char	remote_host[];
+send_sctp_stream( char remote_host[] )
 {
   
   char *tput_title = "\
@@ -1056,13 +1049,13 @@ Size (bytes)\n\
 /* didn't feel it was necessary. */
 
 void
-recv_sctp_stream()
+recv_sctp_stream( void )
 {
   
   struct sockaddr_in myaddr_in; /* needed to get port number */
   struct sockaddr_storage peeraddr;	/* used in accept */
   int	s_listen,s_data;
-  int 	addrlen;
+  socklen_t 	addrlen;
   int	len;
   unsigned int	receive_calls;
   float	elapsed_time;
@@ -1456,8 +1449,7 @@ recv_sctp_stream()
 
 
 void 
-send_sctp_stream_1toMany(remote_host)
-char	remote_host[];
+send_sctp_stream_1toMany( char remote_host[] )
 {
   
   char *tput_title = "\
@@ -2215,12 +2207,12 @@ Size (bytes)\n\
 /* didn't feel it was necessary. */
 
 void
-recv_sctp_stream_1toMany()
+recv_sctp_stream_1toMany( void )
 {
   
   struct sockaddr_in myaddr_in;
   int	s_recv;
-  int 	addrlen;
+  socklen_t 	addrlen;
   int	len;
   unsigned int	receive_calls;
   float	elapsed_time;
@@ -2569,8 +2561,7 @@ recv_sctp_stream_1toMany()
  /* test. */
 
 void
-send_sctp_rr(remote_host)
-     char	remote_host[];
+send_sctp_rr( char remote_host[] )
 {
   
   char *tput_title = "\
@@ -3248,7 +3239,7 @@ Send   Recv    Send   Recv\n\
  /* this routine implements the receive (netserver) side of a TCP_RR */
  /* test */
 void
-recv_sctp_rr()
+recv_sctp_rr( void )
 {
   
   struct ring_elt *send_ring;
@@ -3260,7 +3251,7 @@ recv_sctp_rr()
 
   struct sockaddr_in        myaddr_in, peeraddr_in;
   int	s_listen, s_data;
-  int 	addrlen;
+  socklen_t 	addrlen;
   char	*temp_message_ptr;
   int	trans_received;
   int	trans_remaining;
@@ -3621,8 +3612,7 @@ recv_sctp_rr()
    SCTP_RR_1TOMANY test */
 
 void
-send_sctp_rr_1toMany(remote_host)
-     char	remote_host[];
+send_sctp_rr_1toMany( char remote_host[] )
 {
   
   char *tput_title = "\
@@ -4299,7 +4289,7 @@ Send   Recv    Send   Recv\n\
  /* this routine implements the receive (netserver) side of a TCP_RR */
  /* test */
 void
-recv_sctp_rr_1toMany()
+recv_sctp_rr_1toMany( void )
 {
   
   struct ring_elt *send_ring;
@@ -4314,7 +4304,7 @@ recv_sctp_rr_1toMany()
   int    msg_flags;
 
   int	s_rcv;
-  int 	addrlen;
+  socklen_t 	addrlen;
   int	trans_received;
   int	trans_remaining;
   int	bytes_sent;
@@ -4665,18 +4655,16 @@ recv_sctp_rr_1toMany()
 
 
 void
-print_sctp_usage()
+print_sctp_usage( void )
 {
 
   printf("%s",sctp_usage);
   exit(1);
 
 }
-void
-scan_sctp_args(argc, argv)
-     int	argc;
-     char	*argv[];
 
+void
+scan_sctp_args( int	argc, char *argv[] )
 {
 
 #define SOCKETS_ARGS "BDhH:I:L:m:M:P:r:s:S:VN:T:46"
