@@ -4546,7 +4546,7 @@ recv_sctp_rr_1toMany( void )
 	  /* the timer popped */
 	  timed_out = 1;
 	  break;
-	} else if (non_block & errno == EAGAIN) {
+	} else if (non_block && errno == EAGAIN) {
 	    /* do recvmsg again */
 	    continue;
 	}
