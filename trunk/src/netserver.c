@@ -156,9 +156,9 @@ extern	char	*optarg;
 extern	int	optind, opterr;
 
 #ifndef WIN32
-#define SERVER_ARGS "dL:n:p:v:V46"
+#define SERVER_ARGS "dhL:n:p:v:V46"
 #else
-#define SERVER_ARGS "dL:n:p:v:V46I:i:"
+#define SERVER_ARGS "dhL:n:p:v:V46I:i:"
 #endif
 
 /* perhaps one day we will use this as part of only opening a debug
