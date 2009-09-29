@@ -61,7 +61,7 @@ Display the netperf version and exit.
 No known bugs at this time. If you think you have found a bug, please report it to either netperf-talk@netperf.org or netperf-feedback@netperf.org.
 
 .SH SEE ALSO
-.BR netperf
+.BR netperf (1)
 .br
 .I
 Netperf: A Network Performance Benchmark
