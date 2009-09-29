@@ -201,7 +201,7 @@ http://www.netperf.org/cgi-bin/mailman/listinfo/netperf-talk . If all
 else fails send email to netperf-feedback@netperf.org.
 
 .SH SEE ALSO
-.C netserver
+.BR netserver (1)
 .br
 .I
 Netperf: A Network Performance Benchmark

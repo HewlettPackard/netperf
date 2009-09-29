@@ -52,7 +52,7 @@ Listen on the specified port.
 This is used when running as a standalone daemon.
 .TP
 .B \-v verbosity
-Set the verbosity level for the test (only with -P).
+Set the verbosity level for the test.
 .TP
 .B \-V
 Display the netperf version and exit.
@@ -61,7 +61,7 @@ Display the netperf version and exit.
 No known bugs at this time. If you think you have found a bug, please report it to either netperf-talk@netperf.org or netperf-feedback@netperf.org.
 
 .SH SEE ALSO
-.C netperf
+.BR netperf
 .br
 .I
 Netperf: A Network Performance Benchmark
