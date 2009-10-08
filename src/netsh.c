@@ -969,26 +969,14 @@ scan_cmd_line(int argc, char *argv[])
     }
   } else {
     /* resolve the hostname and pull the address family from the addrinfo */
-    struct addrinfo *ai, *ai_tmp;
+    struct addrinfo *ai;
 
     ai = resolve_host(host_name, NULL, address_family);
     if (!ai) {
       printf("Netperf could not resolve %s as a host name\n", host_name);
       exit(-1);
     }
-    ai_tmp = ai;
-    if (address_family != AF_UNSPEC) {
-      for (; ai_tmp; ai_tmp = ai_tmp->ai_next) {
-        if (address_family == ai_tmp->ai_family)
-	  break;
-      }
-      if (!ai_tmp) {
-        printf("Netperf address family mismatch: host %s, family %d\n",
-		host_name, address_family);
-        exit(-1);
-      }
-    }
-    address_family = ai_tmp->ai_family;
+    address_family = ai->ai_family;
     freeaddrinfo(ai);
   }
   
