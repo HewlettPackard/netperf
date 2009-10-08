@@ -482,6 +482,9 @@ extern  float   lib_local_per_cpu_util[];
 extern  void    netlib_init();
 extern  int     netlib_get_page_size();
 extern  void    install_signal_catchers();
+extern  struct addrinfo *resolve_host(char hostname[], 
+				      char port[], 
+				      int af);
 extern  void    establish_control(char hostname[], 
 				  char port[], 
 				  int af,
