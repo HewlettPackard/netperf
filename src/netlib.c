@@ -2902,6 +2902,64 @@ dump_addrinfo(FILE *dumploc, struct addrinfo *info,
   fflush(dumploc);
 }
 
+struct addrinfo *
+resolve_host(char *hostname,
+	     char *port,
+	     int   family)
+{
+  struct addrinfo   hints;
+  struct addrinfo  *ai;
+  int count;
+  int error;
+
+  if (debug) {
+    fprintf(where,
+            "resolve_host called with host '%s' port '%s' family %s\n",
+            hostname,
+            port,
+            inet_ftos(family));
+    fflush(where);
+  }
+
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_family = family;
+  hints.ai_socktype = SOCK_STREAM;
+  hints.ai_protocol = IPPROTO_TCP;
+  hints.ai_flags = AI_CANONNAME;
+  count = 0;
+  do {
+    error = getaddrinfo((char *)hostname,
+                        (char *)port,
+                        &hints,
+                        &ai);
+    count += 1;
+    if (error == EAI_AGAIN) {
+      if (debug) {
+        fprintf(where,"Sleeping on getaddrinfo EAI_AGAIN\n");
+        fflush(where);
+      }
+      sleep(1);
+    }
+  } while ((error == EAI_AGAIN) && (count <= 5));
+
+  if (error) {
+    printf("establish control: could not resolve host '%s' port '%s' af %s",
+           hostname,
+           port,
+           inet_ftos(family));
+    printf("\n\tgetaddrinfo returned %d %s\n",
+           error,
+           gai_strerror(error));
+    return(NULL);
+  }
+
+  if (debug) {
+    dump_addrinfo(where, ai, hostname, port, family);
+  }
+
+  return (ai);
+}
+
 /*
   establish_control()
 
@@ -2934,14 +2992,19 @@ establish_control_internal(char *hostname,
 {
   int not_connected;
   SOCKET control_sock;
-  int count;
-  int error;
 
-  struct addrinfo   hints;
   struct addrinfo  *local_res;
   struct addrinfo  *remote_res;
   struct addrinfo  *local_res_temp;
   struct addrinfo  *remote_res_temp;
+
+  remote_res = resolve_host(hostname, port, remfam);
+  if (!remote_res)
+    return(INVALID_SOCKET);
+
+  local_res = resolve_host(localhost, localport, locfam);
+  if (!local_res)
+    return(INVALID_SOCKET);
 
   if (debug) {
     fprintf(where,
@@ -2955,84 +3018,6 @@ establish_control_internal(char *hostname,
             localport,
             inet_ftos(locfam));
     fflush(where);
-  }
-
-  /* first, we do the remote */
-  memset(&hints, 0, sizeof(hints));
-  hints.ai_family = remfam;
-  hints.ai_socktype = SOCK_STREAM;
-  hints.ai_protocol = IPPROTO_TCP;
-  hints.ai_flags = 0|AI_CANONNAME;
-  count = 0;
-  do {
-    error = getaddrinfo((char *)hostname,
-                        (char *)port,
-                        &hints,
-                        &remote_res);
-    count += 1;
-    if (error == EAI_AGAIN) {
-      if (debug) {
-        fprintf(where,"Sleeping on getaddrinfo EAI_AGAIN\n");
-        fflush(where);
-      }
-      sleep(1);
-    }
-  } while ((error == EAI_AGAIN) && (count <= 5));
-
-  if (error) {
-    printf("establish control: could not resolve remote '%s' port '%s' af %s",
-           hostname,
-           port,
-           inet_ftos(remfam));
-    printf("\n\tgetaddrinfo returned %d %s\n",
-           error,
-           gai_strerror(error));
-    return(INVALID_SOCKET);
-  }
-
-  if (debug) {
-    dump_addrinfo(where, remote_res, hostname, port, remfam);
-  }
-
-  /* now we do the local */
-  memset(&hints, 0, sizeof(hints));
-  hints.ai_family = locfam;
-  hints.ai_socktype = SOCK_STREAM;
-  hints.ai_protocol = IPPROTO_TCP;
-  hints.ai_flags = AI_PASSIVE|AI_CANONNAME;
-  count = 0;
-  do {
-    count += 1;
-    error = getaddrinfo((char *)localhost,
-                           (char *)localport,
-                           &hints,
-                           &local_res);
-    if (error == EAI_AGAIN) {
-      if (debug) {
-        fprintf(where,
-                "Sleeping on getaddrinfo(%s,%s) EAI_AGAIN count %d \n",
-                localhost,
-                localport,
-                count);
-        fflush(where);
-      }
-      sleep(1);
-    }
-  } while ((error == EAI_AGAIN) && (count <= 5));
-
-  if (error) {
-    printf("establish control: could not resolve local '%s' port '%s' af %s",
-           localhost,
-           localport,
-           inet_ftos(locfam));
-    printf("\n\tgetaddrinfo returned %d %s\n",
-           error,
-           gai_strerror(error));
-    return(INVALID_SOCKET);
-  }
-
-  if (debug) {
-    dump_addrinfo(where, local_res, localhost, localport, locfam);
   }
 
   not_connected = 1;

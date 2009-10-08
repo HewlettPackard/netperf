@@ -2,6 +2,11 @@ These are the Release Notes for post-revision 2.4.5 of netperf:
 
 *) Missing fprintf format statements provided by Bruno Cornec
 
+*) Numerous cleanups from Jose Pedro Oliveira
+
+*) Fixes to allow netperf -H ::1 to work without having to add -6 or
+    an AF_INET6 -L option
+
 These are the Release Notes for Revision 2.4.5 of netperf:
 
 Things changed in this release:

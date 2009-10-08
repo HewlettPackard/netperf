@@ -243,3 +243,6 @@ variables.
 
 Pal Baranyai
 Typo in nettest_dlpi.c
+
+Brian Haley
+Changes to allow something like netperf -H ::1 to work
