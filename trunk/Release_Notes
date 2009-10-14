@@ -1,5 +1,11 @@
 These are the Release Notes for post-revision 2.4.5 of netperf:
 
+*) At least the beginnings of support for RDS, based on a c 2007 patch
+   against 2.4.2 by Vladimir Sokolovsky. Rather than create the
+   "RDS_STREAM" test of his patch, the intention this time around is
+   to enable RDS for the "omni" tests by using an omni test-specific
+   -T rds specifyer for the "transport" to use.
+
 *) Missing fprintf format statements provided by Bruno Cornec
 
 *) Numerous cleanups from Jose Pedro Oliveira

@@ -453,20 +453,22 @@ nf_to_af(int nf) {
   switch(nf) {
   case NF_INET:
     return AF_INET;
-    break;
   case NF_UNSPEC:
     return AF_UNSPEC;
-    break;
   case NF_INET6:
 #if defined(AF_INET6)
     return AF_INET6;
 #else
     return AF_UNSPEC;
 #endif
-    break;
+  case NF_RDS:
+#if defined(AF_RDS)
+    return AF_RDS;
+#else
+    return AF_UNSPEC;
+#endif
   default:
     return AF_UNSPEC;
-    break;
   }
 }
 
@@ -476,18 +478,18 @@ af_to_nf(int af) {
   switch(af) {
   case AF_INET:
     return NF_INET;
-    break;
   case AF_UNSPEC:
     return NF_UNSPEC;
-    break;
 #if defined(AF_INET6)
   case AF_INET6:
     return NF_INET6;
-    break;
+#endif
+#if defined(AF_RDS)
+  case AF_RDS:
+    return NF_RDS;
 #endif
   default:
     return NF_UNSPEC;
-    break;
   }
 }     
 
@@ -515,6 +517,10 @@ nst_to_hst(int nst) {
     return SOCK_DCCP;
     break;
 #endif
+#ifdef SOCK_SEQPACKET
+  case NST_SEQPACKET:
+    return NST_SEQPACKET;
+#endif
   default:
     return -1;
   }
@@ -539,6 +545,10 @@ hst_to_nst(int hst) {
     return NST_DCCP;
     break;
 #endif
+#ifdef SOCK_SEQPACKET
+  case SOCK_SEQPACKET:
+    return NST_SEQPACKET;
+#endif
   default:
     return NST_UNKN;
   }
@@ -561,6 +571,10 @@ hst_to_str(int hst) {
   case SOCK_DCCP:
     return "DCCP";
     break;
+#endif
+#ifdef SOCK_SEQPACKET
+  case SOCK_SEQPACKET:
+    return "Seqpacket";
 #endif
   default:
     return "Unknown";
@@ -1000,11 +1014,15 @@ void
 set_port_number(struct addrinfo *res, unsigned short port)
 {
   switch(res->ai_family) {
-  case AF_INET: {
-    struct sockaddr_in *foo = (struct sockaddr_in *)res->ai_addr;
-    foo->sin_port = htons(port);
-    break;
-  }
+  case AF_INET: 
+#if defined(AF_RDS)
+  case AF_RDS:
+#endif
+    {
+      struct sockaddr_in *foo = (struct sockaddr_in *)res->ai_addr;
+      foo->sin_port = htons(port);
+      break;
+    }
 #if defined(AF_INET6)
   case AF_INET6: {
     struct sockaddr_in6 *foo = (struct sockaddr_in6 *)res->ai_addr;
@@ -1029,6 +1047,9 @@ set_sockaddr_family_addr_port(struct sockaddr_storage *sockaddr, int family, voi
   memset(sockaddr,0,sizeof(struct sockaddr_storage));
 
   switch (family) {
+#if defined(AF_RDS)
+  case AF_RDS:
+#endif
   case AF_INET: {
     struct sockaddr_in *foo = (struct sockaddr_in *)sockaddr;
     foo->sin_port = htons((unsigned short) port);
@@ -1077,6 +1098,9 @@ get_sockaddr_family_addr_port(struct sockaddr_storage *sockaddr, int family, voi
   }
 
   switch(family) {
+#if defined(AF_RDS)
+  case AF_RDS:
+#endif
   case  AF_INET: {
     *port = ntohs(sin->sin_port);
     memcpy(addr,&(sin->sin_addr),sizeof(sin->sin_addr));

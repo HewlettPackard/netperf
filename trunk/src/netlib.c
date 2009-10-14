@@ -490,7 +490,11 @@ inet_ttos(int type)
     break;
 #ifdef SOCK_DCCP
   case SOCK_DCCP:
-    return "SOCK_DCCP";
+    return("SOCK_DCCP");
+#endif
+#ifdef SOCK_SEQPACKET
+  case SOCK_SEQPACKET:
+    return("SOCK_SEQPACKET");
 #endif
   default:
     return("SOCK_UNKNOWN");
@@ -538,16 +542,17 @@ inet_ftos(int family)
   switch(family) {
   case AF_INET:
     return("AF_INET");
-    break;
 #if defined(AF_INET6)
   case AF_INET6:
     return("AF_INET6");
-    break;
 #endif
 #if defined(AF_INET_SDP)
   case AF_INET_SDP:
     return("AF_INET_SDP");
-    break;
+#endif
+#if defined(AF_RDS)
+  case AF_RDS:
+    return("AF_RDS");
 #endif
   default:
     return("AF_UNSPEC");
@@ -582,6 +587,13 @@ inet_nton(int af, const void *src, char *dst, int cnt)
       return(-1);
     }
     break;
+#endif
+#if defined(AF_RDS)
+  case AF_RDS:
+    if (cnt >= 4) {
+      memcpy(dst,src,4);
+      return 4;
+    }
 #endif
   default:
     Set_errno(EAFNOSUPPORT);

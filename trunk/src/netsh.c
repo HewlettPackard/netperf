@@ -375,6 +375,12 @@ parse_address_family(char family_string[])
       strstr(temp,"4")) {
     return(AF_INET);
   }
+#if defined(AF_RDS)
+  if (strstr(temp,"af_rds") ||
+      strstr(temp,"32")) {
+    return(AF_RDS);
+  }
+#endif
   if (strstr(temp,"unspec") ||
       strstr(temp,"0")) {
     return(AF_UNSPEC);
@@ -936,6 +942,9 @@ scan_cmd_line(int argc, char *argv[])
     /* host_name was not set */
     switch (address_family) {
     case AF_INET:
+#if defined(AF_RDS)
+    case AF_RDS:
+#endif
       strcpy(host_name,"localhost");
       break;
     case AF_UNSPEC:
@@ -944,6 +953,9 @@ scan_cmd_line(int argc, char *argv[])
       switch (local_address_family) {
       case AF_INET:
       case AF_UNSPEC:
+#if defined(AF_RDS)
+      case AF_RDS:
+#endif
 	strcpy(host_name,"localhost");
 	break;
 #if defined(AF_INET6)
@@ -985,12 +997,18 @@ scan_cmd_line(int argc, char *argv[])
   if ('\0' == local_host_name[0]) {
     switch (local_address_family) {
     case AF_INET:
+#if defined(AF_RDS)
+    case AF_RDS:
+#endif
       strcpy(local_host_name,"0.0.0.0");
       break;
     case AF_UNSPEC:
       switch (address_family) {
       case AF_INET:
       case AF_UNSPEC:
+#if defined(AF_RDS)
+    case AF_RDS:
+#endif
 	strcpy(local_host_name,"0.0.0.0");
 	break;
 #if defined(AF_INET6)
