@@ -14,16 +14,20 @@
 #define NF_UNSPEC 0
 #define NF_INET   4
 #define NF_INET6  6
+/* since it isn't clear that AF_RDS will be the same value everywhere
+   we will have an NF_RDS as well and will make it "lucky 7" raj
+   20091014 */
+#define NF_RDS    7
 
 /* it would also seem that the socket type defines differ from
    platform to platform, which means we need to define our own values
    to pass between netperf and netserver so they can be translated to
    the local versions.  NST == Netperf Socket Type raj 2008-01-14 */
-#define NST_UNKN   -1
-#define NST_STREAM 1
-#define NST_DGRAM  2
-#define NST_DCCP   3
-
+#define NST_UNKN     -1
+#define NST_STREAM    1
+#define NST_DGRAM     2
+#define NST_DCCP      3
+#define NST_SEQPACKET 4
 
 #ifdef WANT_OMNI
 #define OMNI_NO_DELAY 0x1
