@@ -4287,6 +4287,9 @@ send_omni(char remote_host[])
       if (remote_cpu_usage)
 	omni_request->flags |= OMNI_MEASURE_CPU;
 
+      if (routing_allowed)
+	omni_request->flags |= OMNI_ROUTING_ALLOWED;
+
       omni_request->cpu_rate	           = remote_cpu_rate;
       if (test_time)
 	omni_request->test_length	   = test_time;
@@ -5233,6 +5236,7 @@ recv_omni()
   loc_nodelay = (omni_request->flags) & OMNI_NO_DELAY;
   loc_rcvavoid = omni_request->so_rcvavoid;
   loc_sndavoid = omni_request->so_sndavoid;
+  routing_allowed = (omni_request->flags) & OMNI_ROUTING_ALLOWED;
 
 #ifdef WANT_INTERVALS
   interval_usecs = omni_request->interval_usecs;
@@ -5840,12 +5844,13 @@ scan_omni_args(int argc, char *argv[])
 
 {
 
-#define OMNI_ARGS "b:cCd:DnNhH:kL:m:M:oOp:P:r:s:S:t:T:u:Vw:W:46"
+#define OMNI_ARGS "b:cCd:DnNhH:kL:m:M:oOp:P:r:R:s:S:t:T:u:Vw:W:46"
 
   extern char	*optarg;	  /* pointer to option string	*/
   
   int		c;
   int           have_uuid = 0;
+  int           have_R_option = 0;
 
   char	
     arg1[BUFSIZ],  /* argument holders		*/
@@ -6103,6 +6108,10 @@ scan_omni_args(int argc, char *argv[])
       if (arg2[0])	
 	rsp_size = convert(arg2);
       break;
+    case 'R':
+      routing_allowed = atoi(optarg);
+      have_R_option = 1;
+      break;
     case 's':
       /* set local socket sizes */
       break_args(optarg,arg1,arg2);
@@ -6172,6 +6181,16 @@ scan_omni_args(int argc, char *argv[])
   if (!have_uuid)
     get_uuid_string(test_uuid,sizeof(test_uuid));
 
+  /* to cover the backside of blithering idiots who run unidirectional
+     UDP tests on test setups where they might trash their corporate
+     WAN, we grudgingly provide a safety latch. unless explicitly
+     enabled, UDP_STREAM/UDP_MAERTS sockets will not allow themselves
+     to be routed via a gateway. raj 20091026 */
+
+  if ((!have_R_option) && 
+      (protocol == IPPROTO_UDP) && 
+      (!NETPERF_IS_RR(direction)))
+    routing_allowed = 0;
 
   protocol_str = protocol_to_str(protocol);
   /* ok, if we have gone through all that, and direction is still
