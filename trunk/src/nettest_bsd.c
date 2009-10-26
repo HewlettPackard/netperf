@@ -216,7 +216,8 @@ int
   rem_sndavoid,		/* avoid send copies remotely		*/
   rem_rcvavoid, 	/* avoid recv_copies remotely		*/
   local_connected = 0,  /* local socket type, connected/non-connected */
-  remote_connected = 0; /* remote socket type, connected/non-connected */
+  remote_connected = 0, /* remote socket type, connected/non-connected */
+  routing_allowed = 1;    /* set/clear SO_DONTROUTE on data socket */
 
 #ifdef WANT_HISTOGRAM
 #ifdef HAVE_GETHRTIME
@@ -1369,7 +1370,31 @@ create_data_socket(struct addrinfo *res)
       fflush(where);
     }
   }
-  
+
+  /* this one is a slightly grudgingly added backside covering for
+     those folks who (ab)use netperf as a functional testing tool, and
+     further compound that error by running tests on systems also
+     connected to their site networks, and then compound it even
+     further compound it by running UDP_STREAM tests over links that
+     generate link-down events and so cause the traffic to be sent out
+     the default route into their corporate network...  frankly such
+     people should not be allowed to run netperf in the first place
+     but there we are... raj 20091026 */
+
+#if defined (SO_DONTROUTE)
+  if (!routing_allowed) {
+    if (setsockopt(temp_socket,
+		   SOL_SOCKET,
+		   SO_DONTROUTE,
+		   (char *)&one,
+		   sizeof(one)) == SOCKET_ERROR) {
+      fprintf(where,
+	      "netperf: create_data_socket: so_dontroute: errno %d\n",
+	      errno);
+      fflush(where);
+    }
+  }
+#endif
 
   return(temp_socket);
 
@@ -12773,7 +12798,7 @@ scan_sockets_args(int argc, char *argv[])
 
 {
 
-#define SOCKETS_ARGS "b:CDnNhH:L:m:M:p:P:r:s:S:T:Vw:W:z46"
+#define SOCKETS_ARGS "b:CDnNhH:L:m:M:p:P:r:R:s:S:T:Vw:W:z46"
 
   extern char	*optarg;	  /* pointer to option string	*/
   
@@ -12795,6 +12820,12 @@ scan_sockets_args(int argc, char *argv[])
 
   strncpy(local_data_port,"0",sizeof(local_data_port));
   strncpy(remote_data_port,"0",sizeof(remote_data_port));
+
+  /* by default, only a UDP_STREAM test disallows routing, to cover
+     the backsides of incompetent testers who have bogus setups */
+  if (strcasecmp(test_name,"UDP_STREAM") == 0) {
+    routing_allowed = 0;
+  }
 
   /* Go through all the command line arguments and break them */
   /* out. For those options that take two parms, specifying only */
@@ -12889,6 +12920,10 @@ scan_sockets_args(int argc, char *argv[])
 	req_size = convert(arg1);
       if (arg2[0])	
 	rsp_size = convert(arg2);
+      break;
+    case 'R':
+      /* enable/disable routing on the data connection*/
+      routing_allowed = atoi(optarg);
       break;
     case 'm':
       /* set the send size */

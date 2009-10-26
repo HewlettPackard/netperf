@@ -1,7 +1,16 @@
 These are the Release Notes for post-revision 2.4.5 of netperf:
 
-*) At least the beginnings of support for RDS, based on a c 2007 patch
-   against 2.4.2 by Vladimir Sokolovsky. Rather than create the
+*) The BSD and "omni" tests now have a test-specific -R option which
+   is a boolean controlling whether or not SO_DONTROUTE will be set on
+   the data socket.  By default, any unidirectional UDP test will have
+   SO_DONTROUTE set unless a -R 1 option is given.  All other tests
+   (including UDP request/response tests) will not have SO_DONTROUTE
+   set unless a -R 0 option is given.  This is put into place to make
+   it take longer for blithering idiots to shoot themselves in the
+   foot by running tests on setups they shouldn't.
+
+*) At least the beginnings of support for RDS, based on a circa 2007
+   patch against 2.4.2 by Vladimir Sokolovsky. Rather than create the
    "RDS_STREAM" test of his patch, the intention this time around is
    to enable RDS for the "omni" tests by using an omni test-specific
    -T rds specifyer for the "transport" to use.

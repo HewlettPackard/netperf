@@ -35,6 +35,7 @@
 #define OMNI_CONNECT_TEST 0x4
 #define OMNI_MEASURE_CPU 0x8
 #define OMNI_CHECKSUM_OFF 0x10
+#define OMNI_ROUTING_ALLOWED 0x20
 
 struct  omni_request_struct {
   int32_t    send_buf_size;         /* SO_SNDBUF */
@@ -556,8 +557,8 @@ extern int
   loc_sndavoid,         /* avoid send copies locally            */
   loc_rcvavoid,         /* avoid recv copies locally            */
   rem_sndavoid,         /* avoid send copies remotely           */
-  rem_rcvavoid;         /* avoid recv_copies remotely           */
-
+  rem_rcvavoid,         /* avoid recv_copies remotely           */
+  routing_allowed;    /* do we set/clear SO_DONTROUTE on data sock */
 
 #ifdef WANT_OMNI
 extern void scan_omni_args(int argc, char *argv[]);
