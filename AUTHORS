@@ -246,3 +246,6 @@ Typo in nettest_dlpi.c
 
 Brian Haley
 Changes to allow something like netperf -H ::1 to work
+
+Frank Schuster
+Discovering that FreeBSD 8.X also does not need an SCTP library

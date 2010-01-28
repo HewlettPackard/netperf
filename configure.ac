@@ -464,8 +464,8 @@ case "$enable_sctp" in
 #include <sys/socket.h>
 ]])
 		case "$host" in
-		*-*-freebsd7.*)
-			# FreeBSD 7.x SCTP support doesn't need -lsctp.
+		*-*-freebsd[78].*)
+			# FreeBSD 7.x and later SCTP support doesn't need -lsctp.
 			;;
 		*)
 			AC_HAVE_LIBRARY(sctp,,use_sctp=false)
