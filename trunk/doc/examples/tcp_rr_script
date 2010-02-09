@@ -101,7 +101,3 @@ for SOCKET_SIZE in $SOCKET_SIZES
  done
 done
 echo
-echo If you wish to submit these results to the netperf database at
-echo http://www.cup.hp.com/netperf/NetperfPage.html, please submit each
-echo datapoint individually. Individual datapoints are separated by
-echo lines of dashes. 
