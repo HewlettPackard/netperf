@@ -715,6 +715,80 @@ is_multicast_addr(struct addrinfo *res) {
   }
 }
 
+/* we presume we are only called with something which is actually a
+   multicast address. raj 20100315 */
+static void
+join_multicast_addr(SOCKET sock, struct addrinfo *res) {
+  switch(res->ai_family) {
+  case AF_INET: {
+    struct ip_mreq mreq;
+    struct in_addr bar = ((struct sockaddr_in *)res->ai_addr)->sin_addr;
+    int optlen = sizeof(int);
+    int one    = 1;
+
+    mreq.imr_multiaddr.s_addr=bar.s_addr;
+    mreq.imr_interface.s_addr=htonl(INADDR_ANY);
+    if (setsockopt(sock,
+		   IPPROTO_IP,
+		   IP_ADD_MEMBERSHIP,
+		   &mreq,sizeof(mreq)) == 0) {
+
+      /* let others do the same */
+      if (setsockopt(sock,
+		     SOL_SOCKET,
+		     SO_REUSEADDR,
+		     &one,
+		     sizeof(one)) < 0) {
+	if (debug) {
+	  fprintf(where,
+		  "join_multicast_addr SO_REUSADDR failed errno %d\n",
+		  errno);
+	  fflush(where);
+	}
+      }
+
+      /* now set/get the TTL */
+      if (multicast_ttl >= 0) {
+	if (setsockopt(sock,
+		       IPPROTO_IP,
+		       IP_TTL,
+		       &multicast_ttl,
+		       sizeof(multicast_ttl)) < 0) {
+	  fprintf(where,
+		  "setsockopt(IP_TTL) failed errno %d\n",
+		  errno);
+	}
+      }
+      if (getsockopt(sock,
+		     IPPROTO_IP,
+		     IP_TTL,
+		     &multicast_ttl,
+		     &optlen) < 0) {
+	fprintf(where,
+		"getsockopt(IP_TTL) failed errno %d\n",
+		errno);
+	multicast_ttl = -2;
+      }
+    }
+    else {
+      if (debug) {
+	fprintf(where,
+		"setsockopt(IP_ADD_MEMBERSHIP) failed errno %d\n",
+		errno);
+	fflush(where);
+      }
+    }
+    break;
+  }
+  case AF_INET6: {
+    fprintf(where,"I do not know how to join an IPv6 multicast group\n");
+    break;
+  }
+
+  }
+  return;
+}
+
 static void
 extract_inet_address_and_port(struct addrinfo *res, void *addr, int len, int *port)
 {
@@ -4209,36 +4283,44 @@ send_omni(char remote_host[])
       }
     }
     
-    if ((direction & NETPERF_RECV) && (NULL == recv_ring)) {
-      if (rsp_size > 0) {
-	if (recv_width == 0) recv_width = 1;
-	bytes_to_recv = rsp_size;
+    if (direction & NETPERF_RECV) {
+      /* do we need to join a multicast group? */
+      if (is_multicast_addr(local_res)) {
+	join_multicast_addr(data_socket, local_res);
       }
-      else {
-	/* stream test */
-	if (recv_size == 0) {
-	  if (lsr_size > 0) {
-	    recv_size = lsr_size;
-	  }
-	  else {
-	    recv_size = 4096;
-	  }
+
+      /* do we need to allocate a recv_ring? */
+      if (NULL == recv_ring) {
+	if (rsp_size > 0) {
+	  if (recv_width == 0) recv_width = 1;
+	  bytes_to_recv = rsp_size;
 	}
-	if (recv_width == 0) {
-	  recv_width = (lsr_size/recv_size) + 1;
-	  if (recv_width == 1) recv_width++;
+	else {
+	  /* stream test */
+	  if (recv_size == 0) {
+	    if (lsr_size > 0) {
+	      recv_size = lsr_size;
+	    }
+	    else {
+	      recv_size = 4096;
+	    }
+	  }
+	  if (recv_width == 0) {
+	    recv_width = (lsr_size/recv_size) + 1;
+	    if (recv_width == 1) recv_width++;
+	  }
+	  bytes_to_recv = recv_size;
 	}
-	bytes_to_recv = recv_size;
-      }
-      
-      recv_ring = allocate_buffer_ring(recv_width,
-				       bytes_to_recv,
-				       local_recv_align,
-				       local_recv_offset);
-      if (debug) {
-	fprintf(where,
-		"send_omni: %d entry recv_ring obtained...\n",
-		recv_width);
+	
+	recv_ring = allocate_buffer_ring(recv_width,
+					 bytes_to_recv,
+					 local_recv_align,
+					 local_recv_offset);
+	if (debug) {
+	  fprintf(where,
+		  "send_omni: %d entry recv_ring obtained...\n",
+		  recv_width);
+	}
       }
     }
     
@@ -5326,6 +5408,12 @@ recv_omni()
   omni_response->receive_size = omni_request->receive_size;
   omni_response->recv_width = omni_response->recv_width;
   if (omni_request->direction & NETPERF_RECV) {
+
+    /* do we need to join a multicast group? */
+    if (is_multicast_addr(local_res)) {
+      join_multicast_addr(data_socket, local_res);
+    }
+
     if (omni_request->request_size > 0) {
       /* request/response test */
       bytes_to_recv = omni_request->request_size;
@@ -5844,7 +5932,7 @@ scan_omni_args(int argc, char *argv[])
 
 {
 
-#define OMNI_ARGS "b:cCd:DnNhH:kL:m:M:oOp:P:r:R:s:S:t:T:u:Vw:W:46"
+#define OMNI_ARGS "b:cCd:DnNhH:kl:L:m:M:oOp:P:r:R:s:S:t:T:u:Vw:W:46"
 
   extern char	*optarg;	  /* pointer to option string	*/
   
@@ -5981,6 +6069,9 @@ scan_omni_args(int argc, char *argv[])
 	  exit(1);
 	}
       }
+      break;
+    case 'l':
+      multicast_ttl = atoi(optarg);
       break;
     case 'L':
       break_args_explicit(optarg,arg1,arg2);
