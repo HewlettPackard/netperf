@@ -4403,15 +4403,15 @@ send_omni(char remote_host[])
 	 tests will for the time being require that the user specify a
 	 local IP/name so we can extract them from the data_socket. */
       getsockname(data_socket, (struct sockaddr *)&my_addr, &my_addr_len);
+
       ret = get_sockaddr_family_addr_port(&my_addr,
 					  nf_to_af(omni_request->ipfamily),
 					  omni_request->netperf_ip,
 					  &(omni_request->netperf_port));
-      ret = get_sockaddr_family_addr_port(&remote_addr,
+      ret = get_sockaddr_family_addr_port((struct sockaddr_storage *)remote_res->ai_addr,
 					  nf_to_af(omni_request->ipfamily),
 					  omni_request->netserver_ip,
 					  &(omni_request->data_port));
-      
       
       if (debug > 1) {
 	fprintf(where,"netperf: send_omni: requesting OMNI test\n");
