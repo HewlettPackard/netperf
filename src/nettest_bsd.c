@@ -219,6 +219,8 @@ int
   remote_connected = 0, /* remote socket type, connected/non-connected */
   routing_allowed = 1;    /* set/clear SO_DONTROUTE on data socket */
 
+int multicast_ttl = -1; /* should we set the multicast TTL to a value? */
+
 #ifdef WANT_HISTOGRAM
 #ifdef HAVE_GETHRTIME
 static hrtime_t time_one;
