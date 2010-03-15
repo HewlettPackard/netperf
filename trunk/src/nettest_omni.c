@@ -4407,6 +4407,11 @@ send_omni(char remote_host[])
 					  nf_to_af(omni_request->ipfamily),
 					  omni_request->netperf_ip,
 					  &(omni_request->netperf_port));
+      ret = get_sockaddr_family_addr_port(&remote_addr,
+					  nf_to_af(omni_request->ipfamily),
+					  omni_request->netserver_ip,
+					  &(omni_request->data_port));
+      
       
       if (debug > 1) {
 	fprintf(where,"netperf: send_omni: requesting OMNI test\n");
@@ -5242,6 +5247,16 @@ send_omni(char remote_host[])
   
 }
 
+static void
+set_hostname_and_port_2(void *addr, char *hostname, char *portstr, int family, int port)
+{
+
+  inet_ntop(family, addr, hostname, BUFSIZ);
+    
+  sprintf(portstr, "%u", port);
+
+}
+
 
 
 /* the name is something of a misnomer since this test could send, or
@@ -5333,10 +5348,11 @@ recv_omni()
   connection_test = omni_request->flags & OMNI_CONNECT_TEST;
   direction       = omni_request->direction;
 
-  set_hostname_and_port(local_name,
-			port_buffer,
-			nf_to_af(omni_request->ipfamily),
-			omni_request->data_port);
+  set_hostname_and_port_2(omni_request->netserver_ip,
+			  local_name,
+			  port_buffer,
+			  nf_to_af(omni_request->ipfamily),
+			  omni_request->data_port);
 
   local_res = complete_addrinfo(local_name,
 				local_name,
