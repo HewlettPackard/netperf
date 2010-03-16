@@ -698,7 +698,9 @@ is_multicast_addr(struct addrinfo *res) {
        0xE0000000 to 0xEFFFFFFF. Thankfully though there are macros
        available to make the checks for one */
     struct in_addr bar = ((struct sockaddr_in *)res->ai_addr)->sin_addr;
-    return IN_MULTICAST(bar.s_addr);
+    /* and here I thought IN_MULTICAST would operate on things in
+       network byte order???  raj 20100315 */
+    return IN_MULTICAST(ntohl(bar.s_addr));
   }
 #if defined(AF_INET6)
   case AF_INET6: {
@@ -5348,6 +5350,13 @@ recv_omni()
   connection_test = omni_request->flags & OMNI_CONNECT_TEST;
   direction       = omni_request->direction;
 
+  /* kludgy, because I have no way at present to say how many bytes
+     needed to be swapped around for the request from which this is
+     pulled, and it is probably all wrong for IPv6 :( */
+  for (ret=0; ret < 4; ret++) {
+    omni_request->netserver_ip[ret] = htonl(omni_request->netserver_ip[ret]);
+  }
+
   set_hostname_and_port_2(omni_request->netserver_ip,
 			  local_name,
 			  port_buffer,
@@ -5427,7 +5436,9 @@ recv_omni()
 
     /* do we need to join a multicast group? */
     if (is_multicast_addr(local_res)) {
-      join_multicast_addr(data_socket, local_res);
+      /* yes, s_listen - for a UDP test we will be copying it to
+	 data_socket but that hasn't happened yet. raj 20100315 */
+      join_multicast_addr(s_listen, local_res);
     }
 
     if (omni_request->request_size > 0) {
