@@ -60,9 +60,31 @@ static cpu_time_counters_t  starting_cpu_counters[MAXCPUS];
 static cpu_time_counters_t  ending_cpu_counters[MAXCPUS];
 static cpu_time_counters_t  delta_cpu_counters[MAXCPUS];
 
+/* there can be more "processors" in the system than are actually
+   online. so, we can either walk all the processors one at a time,
+   which would be slow, or we can track not just lib_num_loc_cpu,
+   which is the number of active "processors" but also the total
+   number, and retrieve all of them at one shot and walk the list
+   once, ignoring those that are offline.  we will ass-u-me there is
+   no change to the number of processors online while we are running
+   or there will be strange things happening to CPU utilization. raj
+   2010-04-27 */
+
+static long max_proc_count;
+
 void
 cpu_util_init(void) 
 {
+  struct pst_dynamic psd;
+  if (pstat_getdynamic((struct pst_dynamic *)&psd,
+                       (size_t)sizeof(psd), (size_t)1, 0) != -1) {
+    max_proc_count = psd.psd_max_proc_cnt;
+  }
+  else {
+    /* we hope this never happens */
+    max_proc_count = lib_num_loc_cpus;
+  }
+
   return;
 }
 
@@ -89,20 +111,31 @@ get_cpu_counters(cpu_time_counters_t *res)
 	 2005/09/06 */ 
       struct pst_processor *psp;
 
-      psp = (struct pst_processor *)malloc(lib_num_loc_cpus * sizeof(*psp));
+      /* to handle the cases of "processors" present but disabled, we
+	 will have to allocate a buffer big enough for everyone and
+	 then walk the entire list, pulling data for those which are
+	 online, assuming the processors online have not changed in
+	 the middle of the run. raj 2010-04-27 */
+      psp = (struct pst_processor *)malloc(max_proc_count * sizeof(*psp));
       if (psp == NULL) {
-        printf("malloc(%d) failed!\n", lib_num_loc_cpus * sizeof(*psp));
+        printf("malloc(%d) failed!\n", max_proc_count * sizeof(*psp));
         exit(1);
-	  }
-      if (pstat_getprocessor(psp, sizeof(*psp), lib_num_loc_cpus, 0) != -1) {
-        int i;
+      }
+      if (pstat_getprocessor(psp, sizeof(*psp), max_proc_count, 0) != -1) {
+        int i,j;
 	/* we use lib_iticksperclktick in our sanity checking. we
 	   ass-u-me it is the same value for each CPU - famous last
 	   words no doubt. raj 2005/09/06 */
 	lib_iticksperclktick = psp[0].psp_iticksperclktick;
-        for (i = 0; i < lib_num_loc_cpus; i++) {
-          res[i].idle = (((uint64_t)psp[i].psp_idlecycles.psc_hi << 32) +
-			 psp[i].psp_idlecycles.psc_lo);
+	i = j = 0;
+	while ((i < lib_num_loc_cpus) && (j < max_proc_count)) {
+	  if (psp[j].psp_processor_state == PSP_SPU_DISABLED) {
+	    j++;
+	    continue;
+	  }
+	  /* we know that psp[j] is online */
+          res[i].idle = (((uint64_t)psp[j].psp_idlecycles.psc_hi << 32) +
+			 psp[j].psp_idlecycles.psc_lo);
           if(debug) {
             fprintf(where,
                     "\tidle[%d] = 0x%"PRIx64" ",
@@ -110,8 +143,8 @@ get_cpu_counters(cpu_time_counters_t *res)
                     res[i].idle);
             fflush(where);
           }
-          res[i].user = (((uint64_t)psp[i].psp_usercycles.psc_hi << 32) +
-			 psp[i].psp_usercycles.psc_lo);
+          res[i].user = (((uint64_t)psp[j].psp_usercycles.psc_hi << 32) +
+			 psp[j].psp_usercycles.psc_lo);
           if(debug) {
             fprintf(where,
                     "user[%d] = 0x%"PRIx64" ",
@@ -119,8 +152,8 @@ get_cpu_counters(cpu_time_counters_t *res)
                     res[i].user);
             fflush(where);
           }
-          res[i].kernel = (((uint64_t)psp[i].psp_systemcycles.psc_hi << 32) +
-			    psp[i].psp_systemcycles.psc_lo);
+          res[i].kernel = (((uint64_t)psp[j].psp_systemcycles.psc_hi << 32) +
+			    psp[j].psp_systemcycles.psc_lo);
           if(debug) {
             fprintf(where,
                     "kern[%d] = 0x%"PRIx64" ",
@@ -128,8 +161,8 @@ get_cpu_counters(cpu_time_counters_t *res)
                     res[i].kernel);
             fflush(where);
           }
-          res[i].interrupt = (((uint64_t)psp[i].psp_interruptcycles.psc_hi << 32) +
-			      psp[i].psp_interruptcycles.psc_lo);
+          res[i].interrupt = (((uint64_t)psp[j].psp_interruptcycles.psc_hi << 32) +
+			      psp[j].psp_interruptcycles.psc_lo);
           if(debug) {
             fprintf(where,
                     "intr[%d] = 0x%"PRIx64"\n",
@@ -137,7 +170,9 @@ get_cpu_counters(cpu_time_counters_t *res)
                     res[i].interrupt);
             fflush(where);
           }
-        }
+	  i++;
+	  j++;
+	}
         free(psp);
       }
 }
