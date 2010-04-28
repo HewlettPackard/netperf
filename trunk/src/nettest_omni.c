@@ -717,6 +717,34 @@ is_multicast_addr(struct addrinfo *res) {
   }
 }
 
+static void
+set_multicast_ttl(SOCKET sock) {
+  int optlen = sizeof(int);
+
+  /* now set/get the TTL */
+  if (multicast_ttl >= 0) {
+    if (setsockopt(sock,
+		   IPPROTO_IP,
+		   IP_TTL,
+		   &multicast_ttl,
+		   sizeof(multicast_ttl)) < 0) {
+      fprintf(where,
+	      "setsockopt(IP_TTL) failed errno %d\n",
+	      errno);
+    }
+  }
+  if (getsockopt(sock,
+		 IPPROTO_IP,
+		 IP_TTL,
+		 &multicast_ttl,
+		 &optlen) < 0) {
+    fprintf(where,
+	    "getsockopt(IP_TTL) failed errno %d\n",
+	    errno);
+    multicast_ttl = -2;
+  }
+}
+
 /* we presume we are only called with something which is actually a
    multicast address. raj 20100315 */
 static void
@@ -4252,36 +4280,42 @@ send_omni(char remote_host[])
        and send buffer rings. we should only need to do this once, and
        that would be when the relevant _ring variable is NULL. raj
        2008-01-18 */
-    if ((direction & NETPERF_XMIT) && (NULL == send_ring)) {
-      if (req_size > 0) {
-	/* request/response test */
-	if (send_width == 0) send_width = 1;
-	bytes_to_send = req_size;
+    if (direction & NETPERF_XMIT) {
+      if (is_multicast_addr(remote_res)) {
+	set_multicast_ttl(data_socket);
       }
-      else {
-	/* stream test */
-	if (send_size == 0) {
-	  if (lss_size > 0) {
-	    send_size = lss_size;
-	  }
-	  else {
-	    send_size = 4096;
-	  }
+
+      if (NULL == send_ring) {
+	if (req_size > 0) {
+	  /* request/response test */
+	  if (send_width == 0) send_width = 1;
+	  bytes_to_send = req_size;
 	}
-	if (send_width == 0) 
-	  send_width = (lss_size/send_size) + 1;
-	if (send_width == 1) send_width++;
-	bytes_to_send = send_size;
-      }
-      
-      send_ring = allocate_buffer_ring(send_width,
-				       bytes_to_send,
-				       local_send_align,
-				       local_send_offset);
-      if (debug) {
-	fprintf(where,
-		"send_omni: %d entry send_ring obtained...\n",
-		send_width);
+	else {
+	  /* stream test */
+	  if (send_size == 0) {
+	    if (lss_size > 0) {
+	      send_size = lss_size;
+	    }
+	    else {
+	      send_size = 4096;
+	    }
+	  }
+	  if (send_width == 0) 
+	    send_width = (lss_size/send_size) + 1;
+	  if (send_width == 1) send_width++;
+	  bytes_to_send = send_size;
+	}
+	
+	send_ring = allocate_buffer_ring(send_width,
+					 bytes_to_send,
+					 local_send_align,
+					 local_send_offset);
+	if (debug) {
+	  fprintf(where,
+		  "send_omni: %d entry send_ring obtained...\n",
+		  send_width);
+	}
       }
     }
     
@@ -5401,6 +5435,15 @@ recv_omni()
   omni_response->send_size = omni_request->send_size;
   omni_response->send_width = omni_request->send_width;
   if (omni_request->direction & NETPERF_XMIT) {
+#ifdef fo
+    /* do we need to set multicast ttl? */
+    if (is_multicast_addr(remote_res)) {
+      /* yes, s_listen - for a UDP test we will be copying it to
+	 data_socket but that hasn't happened yet. raj 20100315 */
+      set_multicast_ttl(s_listen);
+    }
+#endif
+
     if (omni_request->response_size > 0) {
       /* request/response_test */
       bytes_to_send = omni_request->response_size;
