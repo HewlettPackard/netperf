@@ -1,5 +1,9 @@
 These are the Release Notes for post-revision 2.4.5 of netperf:
 
+*) Add a workaround to get Linux to report TX queue drops in a
+   UDP_STREAM test when the socket buffer size is larger than the
+   TX queue.  Provided by Andrew Gallatin.
+
 *) Fix the configure script to know it does not have to look for an 
    SCTP library on FreeBSD 8.X
 

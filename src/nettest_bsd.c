@@ -6323,6 +6323,35 @@ Send   Recv    Send   Recv    usec/Tran  per sec  Outbound   Inbound\n\
   
 }
 
+#if defined(__linux)
+/*
+ * Linux has this odd behavior where if the socket buffers are larger than
+ * a device's txqueuelen, the kernel will silently drop transmits which would
+ * not fit into the tx queue, and not  pass an ENOBUFS error back to the 
+ * application.  As a result, a UDP stream test can report absurd transmit
+ * bandwidths (like 20Gb/s on a 1GbE NIC).  This behavior can be avoided if 
+ * you  request extended error reporting on the socket.  This is done by 
+ * setting the IP_RECVERR socket option at the IP level.
+ */
+static void
+enable_enobufs(int s)
+{
+  struct protoent *pr;
+  int on = 1;
+
+  if ((pr = getprotobyname("ip")) == NULL) {
+    fprintf(where, "enable_enobufs failed: getprotobyname\n");
+    fflush(where);
+    return;
+  }
+  if (setsockopt(s, pr->p_proto, IP_RECVERR, (char *)&on, sizeof(on)) < 0) {
+    fprintf(where, "enable_enobufs failed: setsockopt\n");
+    fflush(where);
+    return;
+  }
+}
+#endif
+
 void
 send_udp_stream(char remote_host[])
 {
@@ -6554,6 +6583,10 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
           fflush(where);
        }
     }
+
+#if defined (__linux)
+  enable_enobufs(data_socket);
+#endif
     
 #ifdef WIN32
   /* this is used so the timer thread can close the socket out from */
