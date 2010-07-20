@@ -1050,9 +1050,12 @@ scan_cmd_line(int argc, char *argv[])
     being a "--" in the option stream.  however, some of the tests
     have other initialization happening in their "scan" routines so we
     want to call them regardless. raj 2005-02-08 */
-    if ((strcasecmp(test_name,"TCP_STREAM") == 0) ||
+    if (
+#ifndef WANT_MIGRATION
+	(strcasecmp(test_name,"TCP_STREAM") == 0) ||
+#endif
 #ifdef HAVE_ICSC_EXS
-    (strcasecmp(test_name,"EXS_TCP_STREAM") == 0) ||
+	(strcasecmp(test_name,"EXS_TCP_STREAM") == 0) ||
 #endif /* HAVE_ICSC_EXS */ 
 #ifdef HAVE_SENDFILE
 	(strcasecmp(test_name,"TCP_SENDFILE") == 0) ||
@@ -1125,6 +1128,9 @@ scan_cmd_line(int argc, char *argv[])
 
 #ifdef WANT_OMNI
     else if ((strcasecmp(test_name,"OMNI") == 0) ||
+#ifdef WANT_MIGRATION
+	     (strcasecmp(test_name,"TCP_STREAM") == 0) ||
+#endif
 	     (strcasecmp(test_name,"UUID") == 0)) {
       scan_omni_args(argc, argv);
     }

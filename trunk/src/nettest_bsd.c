@@ -1580,12 +1580,14 @@ print_top_test_header(char test_name[], struct addrinfo *source, struct addrinfo
   
 }
 
+/* if WANT_MIGRATION is defined, we will use the send_tcp_stream()
+   call in src/nettest_omni.c */
+#ifndef WANT_MIGRATION
 
 /* This routine implements the TCP unidirectional data transfer test */
 /* (a.k.a. stream) for the sockets interface. It receives its */
 /* parameters via global variables from the shell and writes its */
 /* output to the standard output. */
-
 
 void 
 send_tcp_stream(char remote_host[])
@@ -2285,7 +2287,7 @@ Size (bytes)\n\
   }
   
 }
-
+#endif /* WANT_MIGRATION */
 
 
 /* This routine implements the netperf-side TCP unidirectional data
