@@ -360,6 +360,8 @@ int failed_sends;
 int bytes_to_recv;
 double bytes_per_recv;
 int null_message_ok = 0;
+int human = 0;
+int legacy = 0;
 int csv = 0;
 int keyword = 0;
 uint64_t      trans_completed = 0;
@@ -4132,7 +4134,7 @@ print_uuid(char remote_host[])
     etc etc... raj 2008-01-07 */
 
 void
-send_omni(char remote_host[])
+send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[])
 {
   
   int ret,rret;
@@ -4217,7 +4219,7 @@ send_omni(char remote_host[])
 		     0);
 
   if ( print_headers ) {
-    print_top_test_header("OMNI TEST",local_res,remote_res);
+    print_top_test_header(header_str,local_res,remote_res);
   }
 
   /* initialize a few counters */
@@ -5236,7 +5238,11 @@ send_omni(char remote_host[])
   remote_send_thruput = calc_thruput(remote_bytes_sent);
   remote_recv_thruput = calc_thruput(remote_bytes_received);
 
-  print_omni();
+  /* if we are running a legacy test we do not do the nifty new omni
+     output stuff */
+  if (!legacy) {
+    print_omni();
+  }
 
 #if defined(DEBUG_OMNI_OUTPUT)  
  {
@@ -5253,7 +5259,7 @@ send_omni(char remote_host[])
 #endif
 
   /* likely as not we are going to do something slightly different here */
-  if (verbosity > 1) {
+  if ((verbosity > 1) && (!legacy)) {
 
 #ifdef WANT_HISTOGRAM
     fprintf(where,"\nHistogram of ");
@@ -5281,6 +5287,12 @@ send_omni(char remote_host[])
 
   }
   
+}
+
+void
+send_omni(char remote_host[])
+{
+  send_omni_inner(remote_host, 0, "OMNI TEST");
 }
 
 static void
@@ -5996,6 +6008,211 @@ recv_omni()
      rings and the listen socket and the like */
   
 }
+
+
+#ifdef WANT_MIGRATION
+void 
+send_tcp_stream(char remote_host[])
+{
+  
+  char *tput_title = "\
+Recv   Send    Send                          \n\
+Socket Socket  Message  Elapsed              \n\
+Size   Size    Size     Time     Throughput  \n\
+bytes  bytes   bytes    secs.    %s/sec  \n\n";
+  
+  char *tput_fmt_0 =
+    "%7.2f %s\n";
+  
+  char *tput_fmt_1 =
+    "%6d %6d %6d    %-6.2f   %7.2f   %s\n";
+  
+  char *cpu_title = "\
+Recv   Send    Send                          Utilization       Service Demand\n\
+Socket Socket  Message  Elapsed              Send     Recv     Send    Recv\n\
+Size   Size    Size     Time     Throughput  local    remote   local   remote\n\
+bytes  bytes   bytes    secs.    %-8.8s/s  %% %c      %% %c      us/KB   us/KB\n\n";
+  
+  char *cpu_fmt_0 =
+    "%6.3f %c %s\n";
+
+  char *cpu_fmt_1 =
+    "%6d %6d %6d    %-6.2f     %7.2f   %-6.2f   %-6.2f   %-6.3f  %-6.3f %s\n";
+  
+  char *ksink_fmt = "\n\
+Alignment      Offset         %-8.8s %-8.8s    Sends   %-8.8s Recvs\n\
+Local  Remote  Local  Remote  Xfered   Per                 Per\n\
+Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
+%5d   %5d  %5d   %5d %6.4g  %6.2f    %6d   %6.2f %6d\n";
+
+  char *ksink_fmt2 = "\n\
+Maximum\n\
+Segment\n\
+Size (bytes)\n\
+%6d\n";
+
+  send_omni_inner(remote_host, legacy, "MIGRATED TCP STREAM TEST");
+
+
+  if (legacy) {
+
+    /* We are now ready to print all the information, but only if we
+       are truly acting as a legacy test. If the user has specified
+       zero-level verbosity, we will just print the local service
+       demand, or the remote service demand. If the user has requested
+       verbosity level 1, he will get the basic "streamperf"
+       numbers. If the user has specified a verbosity of greater than
+       1, we will display a veritable plethora of background
+       information from outside of this block as it it not
+       cpu_measurement specific...  */
+
+    if (confidence < 0) {
+      /* we did not hit confidence, but were we asked to look for it? */
+      if (iteration_max > 1) {
+	display_confidence();
+      }
+    }
+
+    if (local_cpu_usage || remote_cpu_usage) {
+    
+      switch (verbosity) {
+      case 0:
+	if (local_cpu_usage) {
+	  fprintf(where,
+		  cpu_fmt_0,
+		  local_service_demand,
+		  local_cpu_method,
+		  ((print_headers) || 
+		   (result_brand == NULL)) ? "" : result_brand);
+	}
+	else {
+	  fprintf(where,
+		  cpu_fmt_0,
+		  remote_service_demand,
+		  remote_cpu_method,
+		  ((print_headers) || 
+		   (result_brand == NULL)) ? "" : result_brand);
+	}
+	break;
+      case 1:
+      case 2:
+	if (print_headers) {
+	  fprintf(where,
+		  cpu_title,
+		  sd_str,
+		  local_cpu_method,
+		  remote_cpu_method);
+	}
+    
+	fprintf(where,
+		cpu_fmt_1,		/* the format string */
+		rsr_size,		        /* remote recvbuf size */
+		lss_size,		        /* local sendbuf size */
+		send_size,		/* how large were the sends */
+		elapsed_time,		/* how long was the test */
+		thruput, 		        /* what was the xfer rate */
+		local_cpu_utilization,	/* local cpu */
+		remote_cpu_utilization,	/* remote cpu */
+		local_service_demand,	/* local service demand */
+		remote_service_demand,	/* remote service demand */
+		((print_headers) || 
+		 (result_brand == NULL)) ? "" : result_brand);
+	break;
+      }
+    }
+    else {
+      /* The tester did not wish to measure service demand. */
+    
+      switch (verbosity) {
+      case 0:
+	fprintf(where,
+		tput_fmt_0,
+		thruput,
+		((print_headers) || 
+		 (result_brand == NULL)) ? "" : result_brand);
+	break;
+      case 1:
+      case 2:
+	if (print_headers) {
+	  fprintf(where,tput_title,format_units());
+	}
+	fprintf(where,
+		tput_fmt_1,		/* the format string */
+		rsr_size, 		/* remote recvbuf size */
+		lss_size, 		/* local sendbuf size */
+		send_size,		/* how large were the sends */
+		elapsed_time, 		/* how long did it take */
+		thruput,                  /* how fast did it go */
+		((print_headers) || 
+		 (result_brand == NULL)) ? "" : result_brand);
+	break;
+      }
+    }
+  
+    /* it would be a good thing to include information about some of the */
+    /* other parameters that may have been set for this test, but at the */
+    /* moment, I do not wish to figure-out all the  formatting, so I will */
+    /* just put this comment here to help remind me that it is something */
+    /* that should be done at a later time. */
+  
+    if (verbosity > 1) {
+      /* The user wanted to know it all, so we will give it to him. */
+      /* This information will include as much as we can find about */
+      /* TCP statistics, the alignments of the sends and receives */
+      /* and all that sort of rot... */
+   
+      /* this stuff needs to be worked-out in the presence of confidence */
+      /* intervals and multiple iterations of the test... raj 11/94 */
+ 
+      fprintf(where,
+	      ksink_fmt,
+	      "Bytes",
+	      "Bytes",
+	      "Bytes",
+	      local_send_align,
+	      remote_recv_align,
+	      local_send_offset,
+	      remote_recv_offset,
+	      bytes_sent,
+	      bytes_sent / (double)local_send_calls,
+	      local_send_calls,
+	      bytes_sent / (double)remote_receive_calls,
+	      remote_receive_calls);
+      fprintf(where,
+	      ksink_fmt2,
+	      transport_mss);
+      fflush(where);
+#ifdef WANT_HISTOGRAM
+      fprintf(where,"\n\nHistogram of time spent in send() call.\n");
+      fflush(where);
+      HIST_report(time_hist);
+#endif /* WANT_HISTOGRAM */
+    }
+  
+  }
+}
+#endif /* WANT_MIGRATION */
+
+
+/* using legacy test names will cause certain default settings to be
+   made before we scan the test-specific arguments.  raj 2010-07-20 */ 
+static void
+set_omni_defaults_by_legacy_testname() {
+
+  /* the uber defaults are for a unidirectional test using TCP */
+  direction = NETPERF_XMIT;
+  protocol = IPPROTO_TCP;
+  socket_type = SOCK_STREAM;
+  req_size = rsp_size = -1;
+  if (strcasecmp(test_name,"TCP_STREAM") == 0) {
+    legacy = 1;
+  }
+  else if (strcasecmp(test_name,"omni") == 0) {
+    legacy = 0;
+  }
+  socket_type_str = hst_to_str(socket_type);
+}
+
 
 void
 scan_omni_args(int argc, char *argv[])
@@ -6027,32 +6244,14 @@ scan_omni_args(int argc, char *argv[])
   strncpy(local_data_port,"0",sizeof(local_data_port));
   strncpy(remote_data_port,"0",sizeof(remote_data_port));
 
-  /* default to a STREAM socket type. i wonder if this should be part
-     of send_omni or here... */
-  socket_type = nst_to_hst(NST_STREAM);
-  socket_type_str = hst_to_str(socket_type);
+  /* this will handle setting default settings based on test name */
+  set_omni_defaults_by_legacy_testname();
 
-  /* default to TCP. i wonder if this should be here or in
-     send_omni? */
-#ifdef IPPROTO_TCP
-  protocol = IPPROTO_TCP;
-#endif
-
-  /* we will check to see if this needs to remain 0 or set to
-     something else when we get finished scanning all the argument
-     values */
-  direction = 0;
-
-  /* default is to be a stream test, so req_size and rsp_size should
-     be < 0)  */
-
-  req_size = rsp_size = -1;
-     
-  /* Go through all the command line arguments and break them */
-  /* out. For those options that take two parms, specifying only */
-  /* the first will set both to that value. Specifying only the */
-  /* second will leave the first untouched. To change only the */
-  /* first, use the form "first," (see the routine break_args.. */
+  /* Go through all the command line arguments and break them out. For
+     those options that take two parms, specifying only the first will
+     set both to that value. Specifying only the second will leave the
+     first untouched. To change only the first, use the form "first,"
+     (see the routine break_args.. */
   
   while ((c= getopt(argc, argv, OMNI_ARGS)) != EOF) {
     switch (c) {
@@ -6116,6 +6315,8 @@ scan_omni_args(int argc, char *argv[])
 	remote_data_family = parse_address_family(arg2);
       break;
     case 'k':
+      human = 0;
+      legacy = 1;
       csv = 0;
       keyword = 1;
       /* obliterate any previous file name */
@@ -6192,6 +6393,8 @@ scan_omni_args(int argc, char *argv[])
       remote_connected = 1;
       break;
     case 'o':
+      human = 0;
+      legacy = 0;
       csv = 1;
       keyword = 0;
       /* obliterate any previous file name */
@@ -6217,6 +6420,8 @@ scan_omni_args(int argc, char *argv[])
       }
       break;
     case 'O':
+      human = 1;
+      legacy = 0;
       csv = 0;
       keyword = 0;
       /* obliterate any previous file name */
