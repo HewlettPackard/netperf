@@ -5524,7 +5524,7 @@ recv_tcp_maerts()
 
  /* this routine implements the sending (netperf) side of the TCP_RR */
  /* test. */
-
+#ifndef WANT_MIGRATION
 void
 send_tcp_rr(char remote_host[])
 {
@@ -6324,6 +6324,7 @@ Send   Recv    Send   Recv    usec/Tran  per sec  Outbound   Inbound\n\
   }
   
 }
+#endif /* WANT_MIGRATION */
 
 #if defined(__linux)
 /*
@@ -6354,6 +6355,7 @@ enable_enobufs(int s)
 }
 #endif
 
+#ifndef WANT_MIGRATION
 void
 send_udp_stream(char remote_host[])
 {
@@ -6939,6 +6941,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
 #endif /* WANT_HISTOGRAM */
 
 }
+#endif /* WANT_MIGRATION */
 
 
  /* this routine implements the receive side (netserver) of the */
@@ -7269,6 +7272,7 @@ recv_udp_stream()
 
 }
 
+#ifndef WANT_MIGRATION
 void
 send_udp_rr(char remote_host[])
 {
@@ -7943,6 +7947,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 #endif /* WANT_HISTOGRAM */
   }
 }
+#endif /* WANT_MIGRATION */
 
  /* this routine implements the receive side (netserver) of a UDP_RR */
  /* test. */

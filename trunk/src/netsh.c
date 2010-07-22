@@ -1053,6 +1053,9 @@ scan_cmd_line(int argc, char *argv[])
     if (
 #ifndef WANT_MIGRATION
 	(strcasecmp(test_name,"TCP_STREAM") == 0) ||
+	(strcasecmp(test_name,"TCP_RR") == 0) ||
+	(strcasecmp(test_name,"UDP_STREAM") == 0) ||
+	(strcasecmp(test_name,"UDP_RR") == 0) ||
 #endif
 #ifdef HAVE_ICSC_EXS
 	(strcasecmp(test_name,"EXS_TCP_STREAM") == 0) ||
@@ -1061,7 +1064,6 @@ scan_cmd_line(int argc, char *argv[])
 	(strcasecmp(test_name,"TCP_SENDFILE") == 0) ||
 #endif /* HAVE_SENDFILE */
 	(strcasecmp(test_name,"TCP_MAERTS") == 0) ||
-	(strcasecmp(test_name,"TCP_RR") == 0) ||
 	(strcasecmp(test_name,"TCP_CRR") == 0) ||
 	(strcasecmp(test_name,"TCP_CC") == 0) ||
 	(strcasecmp(test_name,"TCP_MSS") == 0) ||
@@ -1071,8 +1073,7 @@ scan_cmd_line(int argc, char *argv[])
 #ifdef DO_NBRR
 	(strcasecmp(test_name,"TCP_TRR") == 0) ||
 #endif /* DO_NBRR */
-	(strcasecmp(test_name,"UDP_STREAM") == 0) ||
-	(strcasecmp(test_name,"UDP_RR") == 0))
+	(0))
       {
 	scan_sockets_args(argc, argv);
       }
@@ -1130,6 +1131,9 @@ scan_cmd_line(int argc, char *argv[])
     else if ((strcasecmp(test_name,"OMNI") == 0) ||
 #ifdef WANT_MIGRATION
 	     (strcasecmp(test_name,"TCP_STREAM") == 0) ||
+	     (strcasecmp(test_name,"TCP_RR") == 0) ||
+	     (strcasecmp(test_name,"UDP_STREAM") == 0) ||
+	     (strcasecmp(test_name,"UDP_RR") == 0) ||
 #endif
 	     (strcasecmp(test_name,"UUID") == 0)) {
       scan_omni_args(argc, argv);
