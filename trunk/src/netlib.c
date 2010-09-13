@@ -161,9 +161,8 @@ char    netlib_id[]="\
 #endif
 
 
-#ifdef WANT_HISTOGRAM
 #include "hist.h"
-#endif /* WANT_HISTOGRAM */
+
 /****************************************************************/
 /*                                                              */
 /*      Local Include Files                                     */
@@ -3667,7 +3666,6 @@ msec_sleep( int msecs )
 }
 #endif /* WIN32 */
 
-#ifdef WANT_HISTOGRAM
 /* hist.c
 
    Given a time difference in microseconds, increment one of 61
@@ -3710,7 +3708,7 @@ HIST_new(void){
 void 
 HIST_clear(HIST h){
    int i;
-   for(i = 0; i < 10; i++){
+   for(i = 0; i < HIST_NUM_OF_BUCKET; i++){
       h->unit_usec[i] = 0;
       h->ten_usec[i] = 0;
       h->hundred_usec[i] = 0;
@@ -3722,39 +3720,50 @@ HIST_clear(HIST h){
    }
    h->ridiculous = 0;
    h->total = 0;
+   h->sum = 0;
+   h->sumsquare = 0;
+   h->hmin = 0;
+   h->hmax =0;
 }
 
 void 
 HIST_add(register HIST h, int time_delta){
-   register int val;
+   register float val;
+   register int base = HIST_NUM_OF_BUCKET / 10;
+   if (!h->total)
+      h->hmin = h->hmax = time_delta;
    h->total++;
+   h->sum += time_delta;
+   h->sumsquare += pow(time_delta, 2);
+   h->hmin = ((h->hmin < time_delta) ? h->hmin : time_delta);
+   h->hmax = ((h->hmax > time_delta) ? h->hmax : time_delta);
    val = time_delta;
    /* check for < 0 added via VMware ESX patches */
    if (val < 0) {
      h->ridiculous++;
    }
-   if(val <= 9) h->unit_usec[val]++;
+   if(val < 10) h->unit_usec[(int)(val * base)]++;
    else {
-     val = val/10;
-     if(val <= 9) h->ten_usec[val]++;
+     val /= 10;
+     if(val < 10) h->ten_usec[(int)(val * base)]++;
      else {
-       val = val/10;
-       if(val <= 9) h->hundred_usec[val]++;
+       val /= 10;
+       if(val < 10) h->hundred_usec[(int)(val * base)]++;
        else {
-	 val = val/10;
-	 if(val <= 9) h->unit_msec[val]++;
+	 val /= 10;
+	 if(val < 10) h->unit_msec[(int)(val * base)]++;
 	 else {
-	   val = val/10;
-	   if(val <= 9) h->ten_msec[val]++;
+	   val /= 10;
+	   if(val < 10) h->ten_msec[(int)(val * base)]++;
 	   else {
-	     val = val/10;
-	     if(val <= 9) h->hundred_msec[val]++;
+	     val /= 10;
+	     if(val < 10) h->hundred_msec[(int)(val * base)]++;
 	     else {
-               val = val/10;
-               if(val <= 9) h->unit_sec[val]++;
+               val /= 10;
+               if(val < 10) h->unit_sec[(int)(val * base)]++;
                else {
-		 val = val/10;
-		 if(val <= 9) h->ten_sec[val]++;
+		 val /= 10;
+		 if(val < 10) h->ten_sec[(int)(val * base)]++;
 		 else h->ridiculous++;
                }
 	     }
@@ -3769,23 +3778,33 @@ HIST_add(register HIST h, int time_delta){
 
 void 
 output_row(FILE *fd, char *title, int *row){
-   register int i;
-   RB_printf("%s", title);
-   for(i = 0; i < 10; i++) RB_printf(": %4d", row[i]);
-   RB_printf("\n");
+  register int i;
+  register int j;
+  register int base =  HIST_NUM_OF_BUCKET / 10;
+  register int sum;
+  RB_printf("%s", title);
+  for(i = 0; i < 10; i++){
+    sum = 0;
+    for (j = i * base; j <  (i + 1) * base; j++) {
+      sum += row[j];
+    }
+    RB_printf(": %4d", sum);
+  }
+  RB_printf("\n");
 }
 
 int
 sum_row(int *row) {
   int sum = 0;
   int i;
-  for (i = 0; i < 10; i++) sum += row[i];
+  for (i = 0; i < HIST_NUM_OF_BUCKET; i++) sum += row[i];
   return(sum);
 }
 
 void 
 HIST_report(HIST h){
 #ifndef OLD_HISTOGRAM
+  printf("calling output_row for hist %p\n",h);
    output_row(stdout, "UNIT_USEC     ", h->unit_usec);
    output_row(stdout, "TEN_USEC      ", h->ten_usec);
    output_row(stdout, "HUNDRED_USEC  ", h->hundred_usec);
@@ -3803,7 +3822,91 @@ HIST_report(HIST h){
    RB_printf("HIST_TOTAL:      %d\n", h->total);
 }
 
-#endif
+/* search buckets for each unit */
+int
+HIST_search_bucket(int *unit, int num, int *last, int *current, double scale){
+  int base = HIST_NUM_OF_BUCKET / 10;
+  int i;
+  for (i = 0; i < HIST_NUM_OF_BUCKET; i++){
+    *last = *current;
+    *current += unit[i];
+    if (*current >= num)
+      return (int)((i + (double)(num - *last)/(*current - *last)) * scale/base);
+  }
+  return 0;
+}
+
+/* get percentile from histogram */
+int
+HIST_get_percentile(HIST h, const double percentile){
+  int num = h->total * percentile;
+  int last = 0;
+  int current = 0;
+  int result;
+
+  if (!num)
+    return 0;
+
+  /* search in unit usec range */
+  result = HIST_search_bucket(h->unit_usec, num, &last, &current, 1e0);
+  if (result)
+    return result;
+
+  /* search in ten usec range */
+  result = HIST_search_bucket(h->ten_usec, num, &last, &current, 1e1);
+  if (result)
+    return result;
+
+  /* search in ten hundred usec range */
+  result = HIST_search_bucket(h->hundred_usec, num, &last, &current, 1e2);
+  if (result)
+    return result;
+
+  /* search in unic msec range */
+  result = HIST_search_bucket(h->unit_msec, num, &last, &current, 1e3);
+  if (result)
+    return result;
+
+  /* search in ten msec range */
+  result = HIST_search_bucket(h->ten_msec, num, &last, &current, 1e4);
+  if (result)
+    return result;
+
+  /* search in hundred msec range */
+  result = HIST_search_bucket(h->hundred_msec, num, &last, &current, 1e5);
+  if (result)
+    return result;
+
+  /* search in unit sec range */
+  result = HIST_search_bucket(h->unit_sec, num, &last, &current, 1e6);
+  if (result)
+    return result;
+
+  /* search in ten sec range */
+  result = HIST_search_bucket(h->ten_sec, num, &last, &current, 1e7);
+  if (result)
+    return result;
+
+  return (int)(1e8);
+}
+
+
+/* get basic stats */
+void
+HIST_get_stats(HIST h, int *min, int *max, double *mean, double *stddev){
+  *min = h->hmin;
+  *max = h->hmax;
+  if (h->total){
+    *mean = h->sum / h->total;
+    *stddev = (h->sumsquare * h->total - pow(h->sum, 2)) / pow(h->total, 2);
+    *stddev = sqrt(*stddev);
+  }
+  else{
+    *mean = 0;
+    *stddev = 0;
+  }
+}
+
 
 /* with the advent of sit-and-spin intervals support, we might as well
    make these things available all the time, not just for demo or

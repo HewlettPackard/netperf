@@ -43,17 +43,25 @@
 #include "hrt.h"
 #endif
    
+#ifndef HIST_NUM_OF_BUCKET
+#define HIST_NUM_OF_BUCKET 100
+#endif
+
 struct histogram_struct {
-  int unit_usec[10];
-  int ten_usec[10];
-  int hundred_usec[10];
-  int unit_msec[10];
-  int ten_msec[10];
-  int hundred_msec[10];
-  int unit_sec[10];
-  int ten_sec[10];
+  int unit_usec[HIST_NUM_OF_BUCKET];
+  int ten_usec[HIST_NUM_OF_BUCKET];
+  int hundred_usec[HIST_NUM_OF_BUCKET];
+  int unit_msec[HIST_NUM_OF_BUCKET];
+  int ten_msec[HIST_NUM_OF_BUCKET];
+  int hundred_msec[HIST_NUM_OF_BUCKET];
+  int unit_sec[HIST_NUM_OF_BUCKET];
+  int ten_sec[HIST_NUM_OF_BUCKET];
   int ridiculous;
   int total;
+  int sum;
+  double sumsquare;
+  int hmin;
+  int hmax;
 };
 
 typedef struct histogram_struct *HIST;
