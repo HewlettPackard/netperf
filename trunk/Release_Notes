@@ -1,5 +1,10 @@
 These are the Release Notes for post-revision 2.4.5 of netperf:
 
+*) Additional timing statistics will be kept by the omni tests when
+   the global "-j" option is specified.  The additional statistics are
+   min, max, mean, stddev and the 50th, 90th and 99th percentiles on
+   the timings measured by histograms.
+
 *) Add a workaround to get Linux to report TX queue drops in a
    UDP_STREAM test when the socket buffer size is larger than the
    TX queue.  Provided by Andrew Gallatin.
