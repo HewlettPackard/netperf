@@ -94,7 +94,7 @@ double atof(const char *);
  /* Some of the args take optional parameters. Since we are using */
  /* getopt to parse the command line, we will tell getopt that they do */
  /* not take parms, and then look for them ourselves */
-#define GLOBAL_CMD_LINE_ARGS "A:a:b:B:CcdDf:F:H:hi:I:k:K:l:L:n:NO:o:P:p:rt:T:v:VW:w:46"
+#define GLOBAL_CMD_LINE_ARGS "A:a:b:B:CcdDf:F:H:hi:I:jk:K:l:L:n:NO:o:P:p:rt:T:v:VW:w:46"
 
 /************************************************************************/
 /*									*/
@@ -136,7 +136,9 @@ char    fill_file[BUFSIZ];
 int
   debug,			/* debugging level */
   print_headers,		/* do/don't display headers */
-  verbosity;		/* verbosity level */
+  verbosity,		/* verbosity level */
+  keep_histogram,
+  keep_statistics;
 
 /* When specified with -B, this will be displayed at the end of the line
    for output that does not include the test header.  mostly this is
@@ -485,6 +487,9 @@ set_defaults()
   debug			= 0;/* debugging level			*/
   print_headers		= 1;/* do print test headers		*/
   verbosity		= 1;/* verbosity level			*/
+  keep_histogram        = 0;
+  keep_statistics       = 0;
+
   /* cpu variables */
   local_cpu_usage	= 0;/* measure local cpu		*/
   remote_cpu_usage	= 0;/* what do you think ;-)		*/
@@ -722,6 +727,10 @@ scan_cmd_line(int argc, char *argv[])
       /* make sure that the interval is set if it isn't at its default
 	 value */
       if (interval == 0.0) interval = 0.05; /* five percent */
+      break;
+    case 'j':
+      keep_histogram = 1;
+      keep_statistics = 1;
       break;
     case 'k':
       /* local dirty and clean counts */
