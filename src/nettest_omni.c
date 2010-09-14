@@ -7075,7 +7075,7 @@ scan_omni_args(int argc, char *argv[])
       break;
     case 'k':
       human = 0;
-      legacy = 1;
+      legacy = 0;
       csv = 0;
       keyword = 1;
       /* obliterate any previous file name */
