@@ -96,6 +96,10 @@ extern int
   test_bytes,		/* test ends on byte count		*/
   test_trans;		/* test ends on tran count		*/
 
+/* wait time between control/data connection establishment and start
+   of data traffic  */
+extern int wait_time_secs;
+
 /* the alignment conditions for the tests				*/
 extern int
   local_recv_align,	/* alignment for local receives		*/

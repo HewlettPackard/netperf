@@ -94,7 +94,7 @@ double atof(const char *);
  /* Some of the args take optional parameters. Since we are using */
  /* getopt to parse the command line, we will tell getopt that they do */
  /* not take parms, and then look for them ourselves */
-#define GLOBAL_CMD_LINE_ARGS "A:a:b:B:CcdDf:F:H:hi:I:jk:K:l:L:n:NO:o:P:p:rt:T:v:VW:w:46"
+#define GLOBAL_CMD_LINE_ARGS "A:a:b:B:CcdDf:F:H:hi:I:jk:K:l:L:n:NO:o:P:p:rs:t:T:v:VW:w:46"
 
 /************************************************************************/
 /*									*/
@@ -188,6 +188,8 @@ int
   remote_interval_usecs,
   remote_interval_burst;
 
+int wait_time_secs;
+
 #if defined(WANT_INTERVALS) || defined(WANT_DEMO)
 
 int demo_mode;                    /* are we actually in demo mode? */
@@ -278,6 +280,7 @@ Global options:\n\
     -p port,lport*    Specify netserver port number and/or local port\n\
     -P 0|1            Don't/Do display test headers\n\
     -r                Allow confidence to be hit on result only\n\
+    -s seconds        Wait seconds between test setup and test start\n\
     -t testname       Specify test to perform\n\
     -T lcpu,rcpu      Request netperf/netserver be bound to local/remote cpu\n\
     -v verbosity      Specify the verbosity level\n\
@@ -516,6 +519,10 @@ set_defaults()
   interval_burst  = 0;
   remote_interval_usecs = 0;
   remote_interval_burst = 0;
+
+/* wait time between control/data connection establishment and start
+   of data traffic  */
+  wait_time_secs = 0;
 
 #ifdef DIRTY
   /* dirty and clean cache stuff */
@@ -793,6 +800,11 @@ scan_cmd_line(int argc, char *argv[])
 	 result even if not yet reached on CPU utilization.  only
 	 meaningful if cpu util is enabled */
       result_confidence_only = 1;
+      break;
+    case 's':
+      /* the user wishes us to sleep/pause some length of time before
+	 actually starting the test */ 
+      wait_time_secs = convert(optarg);
       break;
     case 't':
       /* set the test name */
