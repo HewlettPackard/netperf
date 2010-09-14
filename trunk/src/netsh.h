@@ -82,9 +82,11 @@ extern void     print_netserver_usage();
 
 /* output controlling variables                                         */
 extern int
-  debug,		/* debugging level			*/
-  print_headers,	/* do/don't print test headers		*/
-  verbosity;		/* verbosity level			*/
+  debug,	    /* debugging level */
+  print_headers,    /* do/don't print test headers */
+  verbosity,	    /* verbosity level */
+  keep_histogram,   /* do we keep a histogram of interesting times? */
+  keep_statistics;  /* do we keep/calculate expensive statistics? */
 
 /* the end-test conditions for the tests - either transactions, bytes,  */
 /* or time. different vars used for clarity - space is cheap ;-)        */

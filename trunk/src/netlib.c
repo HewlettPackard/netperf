@@ -3734,7 +3734,12 @@ HIST_add(register HIST h, int time_delta){
       h->hmin = h->hmax = time_delta;
    h->total++;
    h->sum += time_delta;
-   h->sumsquare += pow(time_delta, 2);
+   /* am I just being paranoid about the overhead of pow() when we
+      aren't all that interested in the statistics derived from it?
+      raj 20100914 */
+   if (keep_statistics) {
+     h->sumsquare += pow(time_delta, 2);
+   }
    h->hmin = ((h->hmin < time_delta) ? h->hmin : time_delta);
    h->hmax = ((h->hmax > time_delta) ? h->hmax : time_delta);
    val = time_delta;
@@ -3804,7 +3809,6 @@ sum_row(int *row) {
 void 
 HIST_report(HIST h){
 #ifndef OLD_HISTOGRAM
-  printf("calling output_row for hist %p\n",h);
    output_row(stdout, "UNIT_USEC     ", h->unit_usec);
    output_row(stdout, "TEN_USEC      ", h->ten_usec);
    output_row(stdout, "HUNDRED_USEC  ", h->hundred_usec);

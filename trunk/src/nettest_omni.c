@@ -112,11 +112,10 @@ char nettest_omni_id[]="\
 #include "netsh.h"
 #include "nettest_bsd.h"
 
-#if defined(WANT_HISTOGRAM) || defined(WANT_DEMO) 
+/* since someone can ask for latency stats, we will always include
+   this and to the other other things */
 #include "hist.h"
-#endif /* WANT_HISTOGRAM */
 
-#ifdef WANT_HISTOGRAM
 #ifdef HAVE_GETHRTIME
 static hrtime_t time_one;
 static hrtime_t time_two;
@@ -132,7 +131,6 @@ static struct timeval time_one;
 static struct timeval time_two;
 #endif /* HAVE_GETHRTIME */
 static HIST time_hist;
-#endif /* WANT_HISTOGRAM */
 
 #ifdef WANT_DEMO
 #ifdef HAVE_GETHRTIME
@@ -436,6 +434,18 @@ char        *remote_security_enabled;
 char        *remote_security_type;
 char        *remote_security_specific;
 
+/* new statistics based on code diffs from Google, with raj's own
+   personal twist added to make them compatible with the omni
+   tests... 20100913 */
+
+/* min and max "latency" */
+int         min_latency = -1, max_latency = -1;
+/* the percentiles */
+int         p50_latency = -1, p90_latency = -1, p99_latency = -1;
+/* mean and stddev - while the mean is reduntant with the *_RR test we
+   keep it because it won't be for other tests */
+double      mean_latency = -1.0, stddev_latency = -1.0;
+
 int printing_initialized = 0;
 
 char *sd_str;
@@ -627,7 +637,14 @@ enum netperf_output_name {
   REMOTE_SECURITY_SPECIFIC,
   RESULT_BRAND,
   UUID,
-  COMMAND_LINE,
+  MIN_LATENCY,
+  MAX_LATENCY,
+  P50_LATENCY,
+  P90_LATENCY,
+  P99_LATENCY,
+  MEAN_LATENCY,
+  STDDEV_LATENCY,
+  COMMAND_LINE,    /* COMMAND_LINE should always be "last" */
   OUTPUT_END,
   NETPERF_OUTPUT_MAX
 };
@@ -637,9 +654,10 @@ typedef struct netperf_output_elt {
   int max_line_len; /* length of the longest of the "lines" */
   int tot_line_len; /* total length of all lines, including spaces */
   char *line[4];
-  char *brief;          /* the brief name of the value */
-  char *format;         /* format to apply to value */
-  void *display_value;  /* where to find the value */
+  char *brief;           /* the brief name of the value */
+  char *format;          /* format to apply to value */
+  void *display_value;   /* where to find the value */
+  int  output_default; /* is it included in the default output */
 } netperf_output_elt_t;
 
 netperf_output_elt_t netperf_output_source[NETPERF_OUTPUT_MAX];
@@ -1196,6 +1214,20 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "LOCAL_CPU_FREQUENCY";
   case LOCAL_SYSTEM_MODEL:
     return "LOCAL_SYSTEM_MODEL";
+  case MIN_LATENCY:
+    return "MIN_LATENCY";
+  case MAX_LATENCY:
+    return "MAX_LATENCY";
+  case P50_LATENCY:
+    return "P50_LATENCY";
+  case P90_LATENCY:
+    return "P90_LATENCY";
+  case P99_LATENCY:
+    return "P99_LATENCY";
+  case MEAN_LATENCY:
+    return "MEAN_LATENCY";
+  case STDDEV_LATENCY:
+    return "STDDEV_LATENCY";
   case OUTPUT_END:
     return "OUTPUT_END";
   default:
@@ -1531,6 +1563,7 @@ print_omni_init_list() {
     netperf_output_source[i].brief = "";
     netperf_output_source[i].format = "";
     netperf_output_source[i].display_value = NULL;
+    netperf_output_source[i].output_default = 1;
   }
 
   netperf_output_source[OUTPUT_NONE].output_name = OUTPUT_NONE;
@@ -3336,6 +3369,104 @@ print_omni_init_list() {
   netperf_output_source[LOCAL_CPU_FREQUENCY].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_CPU_FREQUENCY);
 
+  netperf_output_source[MIN_LATENCY].output_name = MIN_LATENCY;
+  netperf_output_source[MIN_LATENCY].line[0] = "Minimum";
+  netperf_output_source[MIN_LATENCY].line[1] = "Latency";
+  netperf_output_source[MIN_LATENCY].line[2] = "Microseconds";
+  netperf_output_source[MIN_LATENCY].line[3] = "";
+  netperf_output_source[MIN_LATENCY].format = "%d";
+  netperf_output_source[MIN_LATENCY].display_value =
+    &min_latency;
+  netperf_output_source[MIN_LATENCY].max_line_len = 
+    NETPERF_LINE_MAX(MIN_LATENCY);
+  netperf_output_source[MIN_LATENCY].tot_line_len = 
+    NETPERF_LINE_TOT(MIN_LATENCY);
+  netperf_output_source[MIN_LATENCY].output_default = 0;
+
+  netperf_output_source[MAX_LATENCY].output_name = MAX_LATENCY;
+  netperf_output_source[MAX_LATENCY].line[0] = "Maximum";
+  netperf_output_source[MAX_LATENCY].line[1] = "Latency";
+  netperf_output_source[MAX_LATENCY].line[2] = "Microseconds";
+  netperf_output_source[MAX_LATENCY].line[3] = "";
+  netperf_output_source[MAX_LATENCY].format = "%d";
+  netperf_output_source[MAX_LATENCY].display_value =
+    &max_latency;
+  netperf_output_source[MAX_LATENCY].max_line_len = 
+    NETPERF_LINE_MAX(MAX_LATENCY);
+  netperf_output_source[MAX_LATENCY].tot_line_len = 
+    NETPERF_LINE_TOT(MAX_LATENCY);
+  netperf_output_source[MAX_LATENCY].output_default = 0;
+
+  netperf_output_source[P50_LATENCY].output_name = P50_LATENCY;
+  netperf_output_source[P50_LATENCY].line[0] = "50th";
+  netperf_output_source[P50_LATENCY].line[1] = "Percentile";
+  netperf_output_source[P50_LATENCY].line[2] = "Latency";
+  netperf_output_source[P50_LATENCY].line[3] = "Microseconds";
+  netperf_output_source[P50_LATENCY].format = "%d";
+  netperf_output_source[P50_LATENCY].display_value =
+    &p50_latency;
+  netperf_output_source[P50_LATENCY].max_line_len = 
+    NETPERF_LINE_MAX(P50_LATENCY);
+  netperf_output_source[P50_LATENCY].tot_line_len = 
+    NETPERF_LINE_TOT(P50_LATENCY);
+  netperf_output_source[P50_LATENCY].output_default = 0;
+
+  netperf_output_source[P90_LATENCY].output_name = P90_LATENCY;
+  netperf_output_source[P90_LATENCY].line[0] = "90th";
+  netperf_output_source[P90_LATENCY].line[1] = "Percentile";
+  netperf_output_source[P90_LATENCY].line[2] = "Latency";
+  netperf_output_source[P90_LATENCY].line[3] = "Microseconds";
+  netperf_output_source[P90_LATENCY].format = "%d";
+  netperf_output_source[P90_LATENCY].display_value =
+    &p90_latency;
+  netperf_output_source[P90_LATENCY].max_line_len = 
+    NETPERF_LINE_MAX(P90_LATENCY);
+  netperf_output_source[P90_LATENCY].tot_line_len = 
+    NETPERF_LINE_TOT(P90_LATENCY);
+  netperf_output_source[P90_LATENCY].output_default = 0;
+
+  netperf_output_source[P99_LATENCY].output_name = P99_LATENCY;
+  netperf_output_source[P99_LATENCY].line[0] = "99th";
+  netperf_output_source[P99_LATENCY].line[1] = "Percentile";
+  netperf_output_source[P99_LATENCY].line[2] = "Latency";
+  netperf_output_source[P99_LATENCY].line[3] = "Microseconds";
+  netperf_output_source[P99_LATENCY].format = "%d";
+  netperf_output_source[P99_LATENCY].display_value =
+    &p99_latency;
+  netperf_output_source[P99_LATENCY].max_line_len = 
+    NETPERF_LINE_MAX(P99_LATENCY);
+  netperf_output_source[P99_LATENCY].tot_line_len = 
+    NETPERF_LINE_TOT(P99_LATENCY);
+  netperf_output_source[P99_LATENCY].output_default = 0;
+
+  netperf_output_source[MEAN_LATENCY].output_name = MEAN_LATENCY;
+  netperf_output_source[MEAN_LATENCY].line[0] = "Mean";
+  netperf_output_source[MEAN_LATENCY].line[1] = "Latency";
+  netperf_output_source[MEAN_LATENCY].line[2] = "Microseconds";
+  netperf_output_source[MEAN_LATENCY].line[3] = "";
+  netperf_output_source[MEAN_LATENCY].format = "%.2f";
+  netperf_output_source[MEAN_LATENCY].display_value =
+    &mean_latency;
+  netperf_output_source[MEAN_LATENCY].max_line_len = 
+    NETPERF_LINE_MAX(MEAN_LATENCY);
+  netperf_output_source[MEAN_LATENCY].tot_line_len = 
+    NETPERF_LINE_TOT(MEAN_LATENCY);
+  netperf_output_source[MEAN_LATENCY].output_default = 0;
+
+  netperf_output_source[STDDEV_LATENCY].output_name = STDDEV_LATENCY;
+  netperf_output_source[STDDEV_LATENCY].line[0] = "Stddev";
+  netperf_output_source[STDDEV_LATENCY].line[1] = "Latency";
+  netperf_output_source[STDDEV_LATENCY].line[2] = "Microseconds";
+  netperf_output_source[STDDEV_LATENCY].line[3] = "";
+  netperf_output_source[STDDEV_LATENCY].format = "%.2f";
+  netperf_output_source[STDDEV_LATENCY].display_value =
+    &stddev_latency;
+  netperf_output_source[STDDEV_LATENCY].max_line_len = 
+    NETPERF_LINE_MAX(STDDEV_LATENCY);
+  netperf_output_source[STDDEV_LATENCY].tot_line_len = 
+    NETPERF_LINE_TOT(STDDEV_LATENCY);
+  netperf_output_source[STDDEV_LATENCY].output_default = 0;
+
   netperf_output_source[OUTPUT_END].output_name = OUTPUT_END;
   netperf_output_source[OUTPUT_END].line[0] = "This";
   netperf_output_source[OUTPUT_END].line[1] = "Is";
@@ -4201,11 +4332,9 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
      we probably need to put this somewhere else... */
   get_remote_system_info();
   
-#ifdef WANT_HISTOGRAM
-  if (verbosity > 1) {
+  if (keep_histogram) {
     time_hist = HIST_new();
   }
-#endif /* WANT_HISTOGRAM */
 
   /* since we are now disconnected from the code that established the
      control socket, and since we want to be able to use different
@@ -4596,7 +4725,6 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
     
     while ((!times_up) || (units_remaining > 0)) {
       
-#ifdef WANT_HISTOGRAM
       /* only pull the timestamp if we are actually going to use the
 	 results of the work.  we put the call here so it can work for
 	 any sort of test - connection, request/response, or stream.
@@ -4606,10 +4734,9 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	 epsilon compared to time spent elsewhere in the stack so it
 	 should not be a big deal.  famous last words of raj
 	 2008-01-08 */
-      if (verbosity > 1) {
+      if (keep_histogram) {
 	HIST_timestamp(&time_one);
       }
-#endif /* WANT_HISTOGRAM */
 
     again:
 
@@ -4895,12 +5022,10 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
       }
 
 
-#ifdef WANT_HISTOGRAM
-      if (verbosity > 1) {
+      if (keep_histogram) {
 	HIST_timestamp(&time_two);
 	HIST_add(time_hist,delta_micro(&time_one,&time_two));
       }
-#endif /* WANT_HISTOGRAM */
     
 #ifdef WANT_DEMO
       if (NETPERF_IS_RR(direction)) {
@@ -5239,6 +5364,19 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
   remote_recv_thruput = calc_thruput(remote_bytes_received);
 
   libfmt = tmpfmt;
+
+  /* were we tracking possibly expensive statistics? */
+  if (keep_statistics) {
+    HIST_get_stats(time_hist,
+		   &min_latency,
+		   &max_latency,
+		   &mean_latency,
+		   &stddev_latency);
+    p50_latency = HIST_get_percentile(time_hist, 0.50);
+    p90_latency = HIST_get_percentile(time_hist, 0.90);
+    p99_latency = HIST_get_percentile(time_hist, 0.99);
+
+  }
 
   /* if we are running a legacy test we do not do the nifty new omni
      output stuff */
@@ -7174,13 +7312,14 @@ scan_omni_args(int argc, char *argv[])
      then the code will simply ignore the values from -m and -M when
      -r is set. */
 
-#if defined(WANT_FIRST_BURST) 
 #if defined(WANT_HISTOGRAM)
+  if (verbosity > 1) keep_histogram = 1;
+#if defined(WANT_FIRST_BURST) 
   /* if WANT_FIRST_BURST and WANT_HISTOGRAM are defined and the user
      indeed wants a non-zero first burst size, and we would emit a
      histogram, then we should emit a warning that the two are not
      compatible. raj 2006-01-31 */
-  if ((first_burst_size > 0) && (verbosity >= 2)) {
+  if ((first_burst_size > 0) && (verbosity > 1)) {
     fprintf(stderr,
 	    "WARNING! Histograms and first bursts are incompatible!\n");
     fflush(stderr);
