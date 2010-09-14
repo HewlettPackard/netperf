@@ -268,6 +268,7 @@ Global options:\n\
     -i max,min        Specify the max and min number of iterations (15,1)\n\
     -I lvl[,intvl]    Specify confidence level (95 or 99) (99) \n\
                       and confidence interval in percentage (10)\n\
+    -j                Keep additional timing statistics\n\
     -l testlen        Specify test duration (>0 secs) (<0 bytes|trans)\n\
     -L name|ip,fam *  Specify the local ip|name and address family\n\
     -o send,recv      Set the local send,recv buffer offsets\n\
