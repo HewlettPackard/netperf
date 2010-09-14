@@ -112,6 +112,18 @@ char nettest_omni_id[]="\
 #include "netsh.h"
 #include "nettest_bsd.h"
 
+/* we only really use this once, but the initial patch to
+   src/nettest_bsd.c used it in several places. keep it as a macro
+   just for kicks and just in case we do end-up needing to use it
+   multiple times. */
+
+#define WAIT_BEFORE_DATA_TRAFFIC() \
+{ \
+  if (wait_time_secs) \
+    sleep(wait_time_secs); \
+} \
+
+
 /* since someone can ask for latency stats, we will always include
    this and to the other other things */
 #include "hist.h"
@@ -4670,7 +4682,12 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
        some point even if we are a connectionless protocol, we may
        still want to "connect" for convenience raj 2008-01-14 */
     need_to_connect = (protocol != IPPROTO_UDP);
-      
+
+    /* possibly wait just a moment before actually starting - used
+       mainly when one is doing many many many concurrent netperf
+       tests */
+    WAIT_BEFORE_DATA_TRAFFIC();
+
     /* Set-up the test end conditions. For tests over a
        "reliable/connection-oriented" transport (eg TCP, SCTP, etc) this
        can be either time or byte/transaction count based.  for
