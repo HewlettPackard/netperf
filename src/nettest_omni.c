@@ -6349,6 +6349,183 @@ Size (bytes)\n\
   }
 }
 
+void 
+send_tcp_maerts(char remote_host[])
+{
+
+  char *tput_title = "\
+Recv   Send    Send                          \n\
+Socket Socket  Message  Elapsed              \n\
+Size   Size    Size     Time     Throughput  \n\
+bytes  bytes   bytes    secs.    %s/sec  \n\n";
+  
+  char *tput_fmt_0 =
+    "%7.2f %s\n";
+  
+  char *tput_fmt_1 =
+    "%6d %6d %6d    %-6.2f   %7.2f   %s\n";
+  
+  char *cpu_title = "\
+Recv   Send    Send                          Utilization       Service Demand\n\
+Socket Socket  Message  Elapsed              Recv     Send     Recv    Send\n\
+Size   Size    Size     Time     Throughput  local    remote   local   remote\n\
+bytes  bytes   bytes    secs.    %-8.8s/s  %% %c      %% %c      us/KB   us/KB\n\n";
+  
+  char *cpu_fmt_0 =
+    "%6.3f %c %s\n";
+
+  char *cpu_fmt_1 =
+    "%6d %6d %6d    %-6.2f     %7.2f   %-6.2f   %-6.2f   %-6.3f  %-6.3f %s\n";
+  
+  char *ksink_fmt = "\n\
+Alignment      Offset         %-8.8s %-8.8s    Recvs   %-8.8s Sends\n\
+Local  Remote  Local  Remote  Xfered   Per                 Per\n\
+Recv   Send    Recv   Send             Recv (avg)          Send (avg)\n\
+%5d   %5d  %5d   %5d %6.4g  %6.2f    %6d   %6.2f %6d\n";
+
+  char *ksink_fmt2 = "\n\
+Maximum\n\
+Segment\n\
+Size (bytes)\n\
+%6d\n";
+
+  send_omni_inner(remote_host, legacy, "MIGRATED TCP STREAM TEST");
+
+
+  /* We are now ready to print all the information, but only if we are
+     truly acting as a leacy test.  If the user has specified
+     zero-level verbosity, we will just print the local service
+     demand, or the remote service demand. If the user has requested
+     verbosity level 1, he will get the basic "streamperf" numbers. If
+     the user has specified a verbosity of greater than 1, we will
+     display a veritable plethora of background information from
+     outside of this block as it it not cpu_measurement
+     specific...  */
+
+  if (confidence < 0) {
+    /* we did not hit confidence, but were we asked to look for it? */
+    if (iteration_max > 1) {
+      display_confidence();
+    }
+  }
+
+  if (local_cpu_usage || remote_cpu_usage) {
+    
+    switch (verbosity) {
+    case 0:
+      if (local_cpu_usage) {
+	fprintf(where,
+		cpu_fmt_0,
+		local_service_demand,
+		local_cpu_method,
+		((print_headers) || 
+		 (result_brand == NULL)) ? "" : result_brand);
+      }
+      else {
+	fprintf(where,
+		cpu_fmt_0,
+		remote_service_demand,
+		remote_cpu_method,
+		((print_headers) || 
+		 (result_brand == NULL)) ? "" : result_brand);
+      }
+      break;
+    case 1:
+    case 2:
+      if (print_headers) {
+	fprintf(where,
+		cpu_title,
+		format_units(),
+		local_cpu_method,
+		remote_cpu_method);
+      }
+    
+      fprintf(where,
+	      cpu_fmt_1,		/* the format string */
+	      rsr_size,		        /* remote recvbuf size */
+	      lss_size,		        /* local sendbuf size */
+	      send_size,		/* how large were the recvs */
+	      elapsed_time,		/* how long was the test */
+	      thruput, 		        /* what was the xfer rate */
+	      local_cpu_utilization,	/* local cpu */
+	      remote_cpu_utilization,	/* remote cpu */
+	      local_service_demand,	/* local service demand */
+	      remote_service_demand,	/* remote service demand */
+	      ((print_headers) || 
+	       (result_brand == NULL)) ? "" : result_brand);
+      break;
+    }
+  }
+  else {
+    /* The tester did not wish to measure service demand. */
+    
+    switch (verbosity) {
+    case 0:
+      fprintf(where,
+	      tput_fmt_0,
+	      thruput,
+	      ((print_headers) || 
+	       (result_brand == NULL)) ? "" : result_brand);
+      break;
+    case 1:
+    case 2:
+      if (print_headers) {
+	fprintf(where,tput_title,format_units());
+      }
+      fprintf(where,
+	      tput_fmt_1,		/* the format string */
+	      lsr_size, 		/* local recvbuf size */
+	      rss_size, 		/* remot sendbuf size */
+	      remote_send_size,		/* how large were the recvs */
+	      elapsed_time, 		/* how long did it take */
+	      thruput,                  /* how fast did it go */
+	      ((print_headers) || 
+	       (result_brand == NULL)) ? "" : result_brand);
+      break;
+    }
+  }
+  
+  /* it would be a good thing to include information about some of the */
+  /* other parameters that may have been set for this test, but at the */
+  /* moment, I do not wish to figure-out all the  formatting, so I will */
+  /* just put this comment here to help remind me that it is something */
+  /* that should be done at a later time. */
+  
+  if (verbosity > 1) {
+    /* The user wanted to know it all, so we will give it to him. */
+    /* This information will include as much as we can find about */
+    /* TCP statistics, the alignments of the sends and receives */
+    /* and all that sort of rot... */
+   
+    /* this stuff needs to be worked-out in the presence of confidence */
+    /* intervals and multiple iterations of the test... raj 11/94 */
+ 
+    fprintf(where,
+	    ksink_fmt,
+	    "Bytes",
+	    "Bytes",
+	    "Bytes",
+	    local_recv_align,
+	    remote_recv_align,
+	    local_recv_offset,
+	    remote_recv_offset,
+	    bytes_received,
+	    bytes_received / (double)local_receive_calls,
+	    local_receive_calls,
+	    remote_bytes_sent / (double)remote_send_calls,
+	    remote_send_calls);
+    fprintf(where,
+	    ksink_fmt2,
+	    transport_mss);
+    fflush(where);
+#ifdef WANT_HISTOGRAM
+    fprintf(where,"\n\nHistogram of time spent in recv() call.\n");
+    fflush(where);
+    HIST_report(time_hist);
+#endif /* WANT_HISTOGRAM */
+  }
+}
+
 void
 send_tcp_rr(char remote_host[]) {
 
@@ -6924,6 +7101,8 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
     }
   }
 }
+
+
 #endif /* WANT_MIGRATION */
 
 

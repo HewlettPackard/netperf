@@ -2287,7 +2287,7 @@ Size (bytes)\n\
   }
   
 }
-#endif /* WANT_MIGRATION */
+
 
 
 /* This routine implements the netperf-side TCP unidirectional data
@@ -3002,7 +3002,7 @@ Size (bytes)\n\
   }
   
 }
-
+#endif /* WANT_MIGRATION */
 
 
 /* this routine implements the TCP_MSS test.  All it does is pretend
