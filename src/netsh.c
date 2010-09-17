@@ -446,6 +446,7 @@ parse_protocol(char protocol_string[])
     return IPPROTO_TCP;
   }
 #endif
+
 #ifdef IPPROTO_UDP
   if (!strcasecmp(temp,"udp")) {
     socket_type = SOCK_DGRAM;
@@ -468,6 +469,12 @@ parse_protocol(char protocol_string[])
   if (!strcasecmp(temp,"dccp")) {
     socket_type = SOCK_DCCP;
     return IPPROTO_DCCP;
+  }
+#endif
+#ifdef IPPROTO_UDPLITE
+  if (!strcasecmp(temp,"udplite")) {
+    socket_type = SOCK_DGRAM;
+    return IPPROTO_UDPLITE;
   }
 #endif
   return IPPROTO_IP;

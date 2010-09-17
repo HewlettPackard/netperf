@@ -523,6 +523,11 @@ inet_ptos(int protocol) {
     return "IPPROTO_DCCP";
     break;
 #endif
+#if defined(IPPROTO_UDPLITE)
+  case IPPROTO_UDPLITE:
+    return "IPPROTO_UDPLITE";
+    break;
+#endif
   default:
     snprintf(unknown,sizeof(unknown),"IPPROTO_UNKNOWN(%d)",protocol);
     return(unknown);
