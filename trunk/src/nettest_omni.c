@@ -7112,16 +7112,13 @@ static void
 set_omni_defaults_by_legacy_testname() {
 
   /* the uber defaults are for a unidirectional test using TCP */
-  direction = NETPERF_XMIT;
   protocol = IPPROTO_TCP;
   socket_type = SOCK_STREAM;
+  connection_test = 0;
   req_size = rsp_size = -1;
   legacy = 1;
   if (strcasecmp(test_name,"TCP_STREAM") == 0) {
-    /* yes, it does look a trifle odd having an empty case here, but
-       the only thing here had been a legacy = 1 statement, and I've
-       hoisted that.  I leave the TCP_STREAM case here as a placeholder and
-       as an homage to foolish consistency :) */
+    direction = NETPERF_XMIT;
   }
   else if (strcasecmp(test_name,"TCP_MAERTS") == 0) {
     direction = NETPERF_RECV;
@@ -7139,6 +7136,16 @@ set_omni_defaults_by_legacy_testname() {
   else if (strcasecmp(test_name,"UDP_RR") == 0) {
      protocol = IPPROTO_UDP;
     socket_type = SOCK_DGRAM;
+    direction = 0;
+    direction |= NETPERF_XMIT;
+    direction |= NETPERF_RECV;
+    req_size = rsp_size = 1;
+  }
+  else if (strcasecmp(test_name,"TCP_CC") == 0) {
+    direction = 0;
+    connection_test = 1;
+  }
+  else if (strcasecmp(test_name,"TCP_CRR") == 0) {
     direction = 0;
     direction |= NETPERF_XMIT;
     direction |= NETPERF_RECV;
