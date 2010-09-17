@@ -4991,11 +4991,13 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	   one takes the defaults at time of socket creation.  if we
 	   took those defaults, we should inquire as to what the values
 	   ultimately became. raj 2008-01-15 */
-	if (lsr_size_req < 0)
+	/* however annoying having to do this might be, it really
+	   shouldn't be done over and over again. raj 20100917 */
+	if ((lsr_size_req < 0) && (-1 == lsr_size_end))
 	  get_sock_buffer(data_socket, RECV_BUFFER, &lsr_size_end);
 	else
 	  lsr_size_end = lsr_size;
-	if (lss_size_req < 0)
+	if ((lss_size_req < 0) && (-1 == lss_size_end))
 	  get_sock_buffer(data_socket, SEND_BUFFER, &lss_size_end);
 	else
 	  lss_size_end = lss_size;
@@ -6020,11 +6022,14 @@ recv_omni()
 	 one takes the defaults at time of socket creation.  if we
 	 took those defaults, we should inquire as to what the values
 	 ultimately became. raj 2008-01-15 */
-      if (lsr_size_req < 0)
+      /* but as annoying as it is to have to make these calls, don't
+	 penalize linux by calling them over and over again. raj
+	 20100917 */
+      if ((lsr_size_req < 0) && (-1 == lsr_size_end))
 	get_sock_buffer(data_socket, RECV_BUFFER, &lsr_size_end);
       else
 	lsr_size_end = lsr_size;
-      if (lss_size_req < 0)
+      if ((lss_size_req < 0) && (-1 == lss_size_end))
 	get_sock_buffer(data_socket, SEND_BUFFER, &lss_size_end);
       else
 	lss_size_end = lss_size;
@@ -6402,130 +6407,134 @@ Size (bytes)\n\
      outside of this block as it it not cpu_measurement
      specific...  */
 
-  if (confidence < 0) {
-    /* we did not hit confidence, but were we asked to look for it? */
-    if (iteration_max > 1) {
-      display_confidence();
-    }
-  }
+  if (legacy) {
 
-  if (local_cpu_usage || remote_cpu_usage) {
+    if (confidence < 0) {
+      /* we did not hit confidence, but were we asked to look for it? */
+      if (iteration_max > 1) {
+	display_confidence();
+      }
+    }
+
+    if (local_cpu_usage || remote_cpu_usage) {
     
-    switch (verbosity) {
-    case 0:
-      if (local_cpu_usage) {
+      switch (verbosity) {
+      case 0:
+	if (local_cpu_usage) {
+	  fprintf(where,
+		  cpu_fmt_0,
+		  local_service_demand,
+		  local_cpu_method,
+		  ((print_headers) || 
+		   (result_brand == NULL)) ? "" : result_brand);
+	}
+	else {
+	  fprintf(where,
+		  cpu_fmt_0,
+		  remote_service_demand,
+		  remote_cpu_method,
+		  ((print_headers) || 
+		   (result_brand == NULL)) ? "" : result_brand);
+	}
+	break;
+      case 1:
+      case 2:
+	if (print_headers) {
+	  fprintf(where,
+		  cpu_title,
+		  format_units(),
+		  local_cpu_method,
+		  remote_cpu_method);
+	}
+    
 	fprintf(where,
-		cpu_fmt_0,
-		local_service_demand,
-		local_cpu_method,
+		cpu_fmt_1,		/* the format string */
+		rsr_size,		        /* remote recvbuf size */
+		lss_size,		        /* local sendbuf size */
+		send_size,		/* how large were the recvs */
+		elapsed_time,		/* how long was the test */
+		thruput, 		        /* what was the xfer rate */
+		local_cpu_utilization,	/* local cpu */
+		remote_cpu_utilization,	/* remote cpu */
+		local_service_demand,	/* local service demand */
+		remote_service_demand,	/* remote service demand */
 		((print_headers) || 
 		 (result_brand == NULL)) ? "" : result_brand);
+	break;
       }
-      else {
+    }
+    else {
+      /* The tester did not wish to measure service demand. */
+    
+      switch (verbosity) {
+      case 0:
 	fprintf(where,
-		cpu_fmt_0,
-		remote_service_demand,
-		remote_cpu_method,
+		tput_fmt_0,
+		thruput,
 		((print_headers) || 
 		 (result_brand == NULL)) ? "" : result_brand);
-      }
-      break;
-    case 1:
-    case 2:
-      if (print_headers) {
+	break;
+      case 1:
+      case 2:
+	if (print_headers) {
+	  fprintf(where,tput_title,format_units());
+	}
 	fprintf(where,
-		cpu_title,
-		format_units(),
-		local_cpu_method,
-		remote_cpu_method);
+		tput_fmt_1,		/* the format string */
+		lsr_size, 		/* local recvbuf size */
+		rss_size, 		/* remot sendbuf size */
+		remote_send_size,		/* how large were the recvs */
+		elapsed_time, 		/* how long did it take */
+		thruput,                  /* how fast did it go */
+		((print_headers) || 
+		 (result_brand == NULL)) ? "" : result_brand);
+	break;
       }
-    
-      fprintf(where,
-	      cpu_fmt_1,		/* the format string */
-	      rsr_size,		        /* remote recvbuf size */
-	      lss_size,		        /* local sendbuf size */
-	      send_size,		/* how large were the recvs */
-	      elapsed_time,		/* how long was the test */
-	      thruput, 		        /* what was the xfer rate */
-	      local_cpu_utilization,	/* local cpu */
-	      remote_cpu_utilization,	/* remote cpu */
-	      local_service_demand,	/* local service demand */
-	      remote_service_demand,	/* remote service demand */
-	      ((print_headers) || 
-	       (result_brand == NULL)) ? "" : result_brand);
-      break;
     }
-  }
-  else {
-    /* The tester did not wish to measure service demand. */
-    
-    switch (verbosity) {
-    case 0:
-      fprintf(where,
-	      tput_fmt_0,
-	      thruput,
-	      ((print_headers) || 
-	       (result_brand == NULL)) ? "" : result_brand);
-      break;
-    case 1:
-    case 2:
-      if (print_headers) {
-	fprintf(where,tput_title,format_units());
-      }
-      fprintf(where,
-	      tput_fmt_1,		/* the format string */
-	      lsr_size, 		/* local recvbuf size */
-	      rss_size, 		/* remot sendbuf size */
-	      remote_send_size,		/* how large were the recvs */
-	      elapsed_time, 		/* how long did it take */
-	      thruput,                  /* how fast did it go */
-	      ((print_headers) || 
-	       (result_brand == NULL)) ? "" : result_brand);
-      break;
-    }
-  }
   
-  /* it would be a good thing to include information about some of the */
-  /* other parameters that may have been set for this test, but at the */
-  /* moment, I do not wish to figure-out all the  formatting, so I will */
-  /* just put this comment here to help remind me that it is something */
-  /* that should be done at a later time. */
+    /* it would be a good thing to include information about some of the */
+    /* other parameters that may have been set for this test, but at the */
+    /* moment, I do not wish to figure-out all the  formatting, so I will */
+    /* just put this comment here to help remind me that it is something */
+    /* that should be done at a later time. */
   
-  if (verbosity > 1) {
-    /* The user wanted to know it all, so we will give it to him. */
-    /* This information will include as much as we can find about */
-    /* TCP statistics, the alignments of the sends and receives */
-    /* and all that sort of rot... */
+    if (verbosity > 1) {
+      /* The user wanted to know it all, so we will give it to him. */
+      /* This information will include as much as we can find about */
+      /* TCP statistics, the alignments of the sends and receives */
+      /* and all that sort of rot... */
    
-    /* this stuff needs to be worked-out in the presence of confidence */
-    /* intervals and multiple iterations of the test... raj 11/94 */
+      /* this stuff needs to be worked-out in the presence of confidence */
+      /* intervals and multiple iterations of the test... raj 11/94 */
  
-    fprintf(where,
-	    ksink_fmt,
-	    "Bytes",
-	    "Bytes",
-	    "Bytes",
-	    local_recv_align,
-	    remote_recv_align,
-	    local_recv_offset,
-	    remote_recv_offset,
-	    bytes_received,
-	    bytes_received / (double)local_receive_calls,
-	    local_receive_calls,
-	    remote_bytes_sent / (double)remote_send_calls,
-	    remote_send_calls);
-    fprintf(where,
-	    ksink_fmt2,
-	    transport_mss);
-    fflush(where);
+      fprintf(where,
+	      ksink_fmt,
+	      "Bytes",
+	      "Bytes",
+	      "Bytes",
+	      local_recv_align,
+	      remote_recv_align,
+	      local_recv_offset,
+	      remote_recv_offset,
+	      bytes_received,
+	      bytes_received / (double)local_receive_calls,
+	      local_receive_calls,
+	      remote_bytes_sent / (double)remote_send_calls,
+	      remote_send_calls);
+      fprintf(where,
+	      ksink_fmt2,
+	      transport_mss);
+      fflush(where);
 #ifdef WANT_HISTOGRAM
-    fprintf(where,"\n\nHistogram of time spent in recv() call.\n");
-    fflush(where);
-    HIST_report(time_hist);
+      fprintf(where,"\n\nHistogram of time spent in recv() call.\n");
+      fflush(where);
+      HIST_report(time_hist);
 #endif /* WANT_HISTOGRAM */
+    }
   }
 }
 
+
 void
 send_tcp_rr(char remote_host[]) {
 
@@ -6764,6 +6773,176 @@ Send   Recv    Send   Recv    usec/Tran  per sec  Outbound   Inbound\n\
 
     }
   }  
+}
+
+
+void
+send_tcp_conn_rr(char remote_host[])
+{
+  
+  char *tput_title = "\
+Local /Remote\n\
+Socket Size   Request  Resp.   Elapsed  Trans.\n\
+Send   Recv   Size     Size    Time     Rate         \n\
+bytes  Bytes  bytes    bytes   secs.    per sec   \n\n";
+  
+  char *tput_fmt_0 =
+    "%7.2f\n";
+  
+  char *tput_fmt_1_line_1 = "\
+%-6d %-6d %-6d   %-6d  %-6.2f   %7.2f   \n";
+  char *tput_fmt_1_line_2 = "\
+%-6d %-6d\n";
+  
+  char *cpu_title = "\
+Local /Remote\n\
+Socket Size   Request Resp.  Elapsed Trans.   CPU    CPU    S.dem   S.dem\n\
+Send   Recv   Size    Size   Time    Rate     local  remote local   remote\n\
+bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      us/Tr   us/Tr\n\n";
+  
+  char *cpu_fmt_0 =
+    "%6.3f\n";
+  
+  char *cpu_fmt_1_line_1 = "\
+%-6d %-6d %-6d  %-6d %-6.2f  %-6.2f   %-6.2f %-6.2f %-6.3f  %-6.3f\n";
+  
+  char *cpu_fmt_1_line_2 = "\
+%-6d %-6d\n";
+  
+  char *ksink_fmt = "\n\
+Alignment      Offset\n\
+Local  Remote  Local  Remote\n\
+Send   Recv    Send   Recv\n\
+%5d  %5d   %5d  %5d\n";
+
+  send_omni_inner(remote_host, 
+		  legacy,
+		  "MIGRATED TCP Connect/Request/Response TEST");
+
+  /* We are now ready to print all the information. If the user */
+  /* has specified zero-level verbosity, we will just print the */
+  /* local service demand, or the remote service demand. If the */
+  /* user has requested verbosity level 1, he will get the basic */
+  /* "streamperf" numbers. If the user has specified a verbosity */
+  /* of greater than 1, we will display a veritable plethora of */
+  /* background information from outside of this block as it it */
+  /* not cpu_measurement specific...  */
+
+  if (legacy) {
+    if (confidence < 0) {
+      /* we did not hit confidence, but were we asked to look for it? */
+      if (iteration_max > 1) {
+	display_confidence();
+      }
+    }
+
+    if (local_cpu_usage || remote_cpu_usage) {
+    
+      switch (verbosity) {
+      case 0:
+	if (local_cpu_usage) {
+	  fprintf(where,
+		  cpu_fmt_0,
+		  local_service_demand,
+		  local_cpu_method);
+	}
+	else {
+	  fprintf(where,
+		  cpu_fmt_0,
+		  remote_service_demand,
+		  remote_cpu_method);
+	}
+	break;
+      case 1:
+      case 2:
+	if (print_headers) {
+	  fprintf(where,
+		  cpu_title,
+		  local_cpu_method,
+		  remote_cpu_method);
+	}
+
+	fprintf(where,
+		cpu_fmt_1_line_1,		/* the format string */
+		lss_size,		/* local sendbuf size */
+		lsr_size,
+		req_size,		/* how large were the requests */
+		rsp_size,		/* guess */
+		elapsed_time,		/* how long was the test */
+		thruput,
+		local_cpu_utilization,	/* local cpu */
+		remote_cpu_utilization,	/* remote cpu */
+		local_service_demand,	/* local service demand */
+		remote_service_demand);	/* remote service demand */
+	fprintf(where,
+		cpu_fmt_1_line_2,
+		rss_size,
+		rsr_size);
+	break;
+      }
+    }
+    else {
+      /* The tester did not wish to measure service demand. */
+    
+      switch (verbosity) {
+      case 0:
+	fprintf(where,
+		tput_fmt_0,
+		thruput);
+	break;
+      case 1:
+      case 2:
+	if (print_headers) {
+	  fprintf(where,tput_title,format_units());
+	}
+
+	fprintf(where,
+		tput_fmt_1_line_1,	/* the format string */
+		lss_size,
+		lsr_size,
+		req_size,		/* how large were the requests */
+		rsp_size,		/* how large were the responses */
+		elapsed_time, 		/* how long did it take */
+		thruput);
+	fprintf(where,
+		tput_fmt_1_line_2,
+		rss_size, 		/* remote recvbuf size */
+		rsr_size);
+      
+	break;
+      }
+    }
+  
+    /* it would be a good thing to include information about some of the */
+    /* other parameters that may have been set for this test, but at the */
+    /* moment, I do not wish to figure-out all the  formatting, so I will */
+    /* just put this comment here to help remind me that it is something */
+    /* that should be done at a later time. */
+  
+    /* how to handle the verbose information in the presence of */
+    /* confidence intervals is yet to be determined... raj 11/94 */
+    if (verbosity > 1) {
+      /* The user wanted to know it all, so we will give it to him. */
+      /* This information will include as much as we can find about */
+      /* TCP statistics, the alignments of the sends and receives */
+      /* and all that sort of rot... */
+    
+      fprintf(where,
+	      ksink_fmt,
+	      local_send_align,
+	      remote_recv_offset,
+	      local_send_offset,
+	      remote_recv_offset);
+
+#ifdef WANT_HISTOGRAM
+      fprintf(where,"\nHistogram of request/response times\n");
+      fflush(where);
+      HIST_report(time_hist);
+#endif /* WANT_HISTOGRAM */
+
+    }
+  
+  }
 }
 
 void
@@ -7150,6 +7329,7 @@ set_omni_defaults_by_legacy_testname() {
     direction |= NETPERF_XMIT;
     direction |= NETPERF_RECV;
     req_size = rsp_size = 1;
+    connection_test = 1;
   }
   else if (strcasecmp(test_name,"omni") == 0) {
     /* there is not much to do here but clear the legacy flag */

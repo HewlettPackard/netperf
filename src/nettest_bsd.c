@@ -595,6 +595,10 @@ protocol_to_str(int protocol) {
   case IPPROTO_UDP:
     return "UDP";
 #endif
+#ifdef IPPROTO_UDPLITE
+  case IPPROTO_UDPLITE:
+    return "UDPLite";
+#endif
 #ifdef IPPROTO_SCTP
   case IPPROTO_SCTP:
     return "SCTP";
@@ -8689,8 +8693,9 @@ rem_cpu_rate()
 	    (lib_num_rem_cpus > 1) ? "cpus" : "cpu");
 
 }
-
 
+
+#ifndef WANT_MIGRATION
  /* this test is intended to test the performance of establishing a
     connection, exchanging a request/response pair, and repeating. it
     is expected that this would be a good starting-point for
@@ -9373,7 +9378,7 @@ newport:
   }
   
 }
-
+#endif /* WANT_MIGRATION */
 
 void
 recv_tcp_conn_rr()
