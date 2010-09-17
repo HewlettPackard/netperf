@@ -1084,6 +1084,7 @@ scan_cmd_line(int argc, char *argv[])
 	(strcasecmp(test_name,"TCP_STREAM") == 0) ||
 	(strcasecmp(test_name,"TCP_MAERTS") == 0) ||
 	(strcasecmp(test_name,"TCP_RR") == 0) ||
+	(strcasecmp(test_name,"TCP_CRR") == 0) ||
 	(strcasecmp(test_name,"UDP_STREAM") == 0) ||
 	(strcasecmp(test_name,"UDP_RR") == 0) ||
 #endif
@@ -1093,7 +1094,6 @@ scan_cmd_line(int argc, char *argv[])
 #ifdef HAVE_SENDFILE
 	(strcasecmp(test_name,"TCP_SENDFILE") == 0) ||
 #endif /* HAVE_SENDFILE */
-	(strcasecmp(test_name,"TCP_CRR") == 0) ||
 	(strcasecmp(test_name,"TCP_CC") == 0) ||
 	(strcasecmp(test_name,"TCP_MSS") == 0) ||
 #ifdef DO_1644
@@ -1162,6 +1162,7 @@ scan_cmd_line(int argc, char *argv[])
 	     (strcasecmp(test_name,"TCP_STREAM") == 0) ||
 	     (strcasecmp(test_name,"TCP_MAERTS") == 0) ||
 	     (strcasecmp(test_name,"TCP_RR") == 0) ||
+	     (strcasecmp(test_name,"TCP_CRR") == 0) ||
 	     (strcasecmp(test_name,"UDP_STREAM") == 0) ||
 	     (strcasecmp(test_name,"UDP_RR") == 0) ||
 #endif
