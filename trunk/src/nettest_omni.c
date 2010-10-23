@@ -4992,7 +4992,9 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	   took those defaults, we should inquire as to what the values
 	   ultimately became. raj 2008-01-15 */
 	/* however annoying having to do this might be, it really
-	   shouldn't be done over and over again. raj 20100917 */
+	   shouldn't be done over and over again. instead we will
+	   assume it does not change, which is fine since we would
+	   have only reported one of them anyway. raj 20100917 */
 	if ((lsr_size_req < 0) && (-1 == lsr_size_end))
 	  get_sock_buffer(data_socket, RECV_BUFFER, &lsr_size_end);
 	else
@@ -6023,8 +6025,9 @@ recv_omni()
 	 took those defaults, we should inquire as to what the values
 	 ultimately became. raj 2008-01-15 */
       /* but as annoying as it is to have to make these calls, don't
-	 penalize linux by calling them over and over again. raj
-	 20100917 */
+	 penalize linux by calling them over and over again. instead
+	 we will simply ass-u-me that it will become the same value
+	 over and over again. raj 20100917 */
       if ((lsr_size_req < 0) && (-1 == lsr_size_end))
 	get_sock_buffer(data_socket, RECV_BUFFER, &lsr_size_end);
       else

@@ -1,5 +1,7 @@
 These are the Release Notes for post-revision 2.4.5 of netperf:
 
+*) Add intial attempt to report Slot ID on HP-UX 11.31.
+
 *) Add global -s option to cause omni tests to pause between
    setting-up the test and actually starting it.  pause is in seconds.
    Poor man's way to (attempt to) avoid issues when starting many,

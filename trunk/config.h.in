@@ -75,6 +75,9 @@
 /* Define to 1 if you have the `exs' library (-lexs). */
 #undef HAVE_LIBEXS
 
+/* Define to 1 if you have the `IO' library (-lIO). */
+#undef HAVE_LIBIO
+
 /* Define to 1 if you have the `kstat' library (-lkstat). */
 #undef HAVE_LIBKSTAT
 
@@ -86,6 +89,9 @@
 
 /* Define to 1 if you have the `nsl' library (-lnsl). */
 #undef HAVE_LIBNSL
+
+/* Define to 1 if you have the `olrad' library (-lolrad). */
+#undef HAVE_LIBOLRAD
 
 /* Define to 1 if you have the `perfstat' library (-lperfstat). */
 #undef HAVE_LIBPERFSTAT
@@ -276,9 +282,6 @@
 
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME
-
-/* Define to the home page for this package. */
-#undef PACKAGE_URL
 
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
