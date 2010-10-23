@@ -1,3 +1,5 @@
+/* Copyright 2010, Hewlett-Packard Company */
+
 #include <sys/libIO.h>
 #include <stdlib.h>
 #include <sys/types.h>
