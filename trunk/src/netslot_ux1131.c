@@ -1,9 +1,17 @@
 #include <sys/libIO.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <string.h>
+#include <strings.h>
+#include <netsh.h>
+#include <netlib.h>
 
 /*
- * No OLAR headerfile on target system! ;-(
+ * No OLAR headerfile on target system! ;-( Yes, this means that these
+ * interfaces are NOT DOCUMENTED FOR PUBLIC USE, which means you don't
+ * really see what you are reading here, and if you attempt to use it
+ * elsewhere, no one will profess any knowledge of what you are doing.
+ * You will be utterly and completely on your own.
  */
 typedef uint64_t olar_io_slot_t;
 
@@ -36,15 +44,35 @@ find_interface_slot(char *interface_name) {
 
   slot_id = 0;
   if ( olar_path_to_id(hw_str,&slot_id,&oe) == -1 ) {
-    free(hw_str);
-    return strdup("olar_path_to_id");
+    /* since the call failed, lets give them the HW path as a
+       consolation prize. we will ass-u-me that the caller will be
+       freeing the string we give him anyway. */
+    if (debug) {
+      fprintf(where,
+	      "%s olar_path_to_id hw_str %s oe_err %d path %s\n",
+	      __func__,
+	      hw_str,
+	      oe.oe_err,
+	      oe.oe_hwpath);
+      fflush(where);
+    }
+    return hw_str;
   }
 
   if ( olar_slot_id_to_string(slot_id,slot_str,30) == -1 ) {
-    free(hw_str);
-    return strdup("slot_to_string");
+    /* do the same thing here, give them the hw path if this call
+       fails */
+    if (debug) {
+      fprintf(where,
+	      "%s olar_slot_id_to_string slot_id %" PRId64 "\n",
+	      slot_id);
+      fflush(where);
+    }
+    return hw_str;
   }
 
+  /* we can give them the honest to goodness slot id as a string now,
+     so let us free that which we should free */
   free(hw_str);
   
   return strdup(slot_str);
