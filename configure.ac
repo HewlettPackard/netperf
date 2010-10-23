@@ -796,6 +796,9 @@ case "$enable_slotlookup" in
 	solaris)
 		use_slotlookup=true
 		;;
+	hpux)
+		use_slotlookup=true
+		;;
 	'')
 # guess it automagically in a nice big case statement
 		case $target in
@@ -809,6 +812,13 @@ case "$enable_slotlookup" in
 			enable_slotlookup="solaris - auto"
 			NETSLOTLKUP_SOURCE="solaris"
 			AC_HAVE_LIBRARY(devinfo)
+			;;
+		     *-*-hpux11.31*)
+			use_slotlookup=true
+			enable_slotlookup="hpux 11.31 - auto"
+			NETSLOTLKUP_SOURCE="ux1131"
+			AC_HAVE_LIBRARY(IO)
+			AC_HAVE_LIBRARY(olrad)
 			;;
 		     *)
 			use_slotlookup=false
