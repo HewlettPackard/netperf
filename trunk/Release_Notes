@@ -1,5 +1,8 @@
 These are the Release Notes for post-revision 2.4.5 of netperf:
 
+*) Massage and include a DEBUG_LOG_FILE patch for Android from
+   Josselin Costanzi
+
 *) Add intial attempt to report Slot ID on HP-UX 11.31.
 
 *) Add global -s option to cause omni tests to pause between

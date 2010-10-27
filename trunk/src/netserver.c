@@ -141,11 +141,13 @@ char	netserver_id[]="\
 #include "netsh.h"
 
 #ifndef DEBUG_LOG_FILE
-#ifndef WIN32
-#define DEBUG_LOG_FILE "/tmp/netperf.debug"
-#else
+#if defined(WIN32)
 #define DEBUG_LOG_FILE "c:\\temp\\netperf.debug"
-#endif  /* WIN32 */
+#elif defined(ANDROID)
+#define DEBUG_LOG_FILE "/data/tmp/netperf.debug"
+#else
+#define DEBUG_LOG_FILE "/tmp/netperf.debug"
+#endif
 #endif /* DEBUG_LOG_FILE */
 
  /* some global variables */
