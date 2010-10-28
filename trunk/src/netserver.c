@@ -144,7 +144,7 @@ char	netserver_id[]="\
 #if defined(WIN32)
 #define DEBUG_LOG_FILE "c:\\temp\\netperf.debug"
 #elif defined(ANDROID)
-#define DEBUG_LOG_FILE "/data/tmp/netperf.debug"
+#define DEBUG_LOG_FILE "/data/local/tmp/netperf.debug"
 #else
 #define DEBUG_LOG_FILE "/tmp/netperf.debug"
 #endif
