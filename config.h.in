@@ -205,6 +205,9 @@
 /* Define to 1 if <netinet/in.h> defines `struct sockaddr_storage' */
 #undef HAVE_STRUCT_SOCKADDR_STORAGE
 
+/* Define to 1 if you have the <syscall.h> header file. */
+#undef HAVE_SYSCALL_H
+
 /* Define to 1 if you have the <sys/ioctl.h> header file. */
 #undef HAVE_SYS_IOCTL_H
 
