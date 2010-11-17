@@ -60,6 +60,9 @@ char    netlib_id[]="\
  /* If you have trouble compiling you may want to add "sys/" raj 10/95 */
 #include <limits.h>
 #include <signal.h>
+#ifdef HAVE_SYSCALL_H
+#include <syscall.h>
+#endif
 #ifdef MPE
 #  define NSIG _NSIG
 #endif /* MPE */
