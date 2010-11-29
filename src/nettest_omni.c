@@ -125,7 +125,7 @@ char nettest_omni_id[]="\
 
 
 /* since someone can ask for latency stats, we will always include
-   this and to the other other things */
+   this and do the other other things */
 #include "hist.h"
 
 #ifdef HAVE_GETHRTIME
@@ -299,7 +299,7 @@ static struct timeval *temp_intvl_ptr = &intvl_one;
       /* in this case, the interval count is the count-down couter \
 	 to decide to sleep for a little bit */ \
       if ((interval_burst) && (--interval_count == 0)) { \
-	/* call sigsuspend and wait for the interval timer to get us \
+	/* spin and wait for the interval timer to get us \
 	   out */ \
 	if (debug > 1) { \
 	  fprintf(where,"about to spin suspend\n"); \

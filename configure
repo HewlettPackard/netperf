@@ -8198,6 +8198,11 @@ cat >>confdefs.h <<\_ACEOF
 #define WANT_OMNI
 _ACEOF
 
+
+cat >>confdefs.h <<\_ACEOF
+#define WANT_MIGRATION
+_ACEOF
+
 fi
 
 
