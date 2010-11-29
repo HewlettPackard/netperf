@@ -341,6 +341,7 @@ fi
 if $use_omni
 then
 	AC_DEFINE([WANT_OMNI],,[Define to one to include OMNI tests.])
+	AC_DEFINE([WANT_MIGRATION],,[Define to one to migrate classic to OMNI tests.])
 fi
 
 

@@ -352,6 +352,9 @@
 /* Define to one to enable paced operation support. May affect results. */
 #undef WANT_INTERVALS
 
+/* Define to one to migrate classic to OMNI tests. */
+#undef WANT_MIGRATION
+
 /* Define to one to include OMNI tests. */
 #undef WANT_OMNI
 
