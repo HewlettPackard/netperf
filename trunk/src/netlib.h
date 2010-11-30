@@ -544,6 +544,7 @@ extern  char    *nsec_type_to_str(int type);
 extern  double  ntohd(double net_double);
 extern  double  htond(double host_double);
 extern  int     inet_nton(int af, const void *src, char *dst, int cnt);
+extern  void    random_ip_address(struct addrinfo *res, int mask_len);
 extern  void    libmain();
 extern  double  calc_thruput(double units_received);
 extern  double  calc_thruput_interval(double units_received,double elapsed);

@@ -78,6 +78,7 @@ extern void     scan_cmd_line(int argc, char *argv[]);
 extern void     dump_globals();
 extern void     break_args(char *s, char *arg1, char *arg2);
 extern void     break_args_explicit(char *s, char *arg1, char *arg2);
+extern void     break_args_explicit_sep(char *s, int sep, char *arg1, char *arg2);
 extern void     print_netserver_usage();
 
 /* output controlling variables                                         */
