@@ -327,31 +327,44 @@ break_args(char *s, char *arg1, char *arg2)
   while ((*arg1++ = *s++) != '\0');
 }
 
-/* break_args_explicit
+/* break_args_explicit_sep
 
    this routine is somewhat like break_args in that it will separate a
-   pair of comma-separated values.  however, if there is no comma,
-   this version will not ass-u-me that arg2 should be the same as
-   arg1. raj 2005-02-04 */
+   pair of values using the given separator.  however, if there is no
+   separator this version will not ass-u-me that arg2 should be the
+   same as arg1. raj 20101129 */
+
 void
-break_args_explicit(char *s, char *arg1, char *arg2)
+break_args_explicit_sep(char *s, int sep, char *arg1, char *arg2)
 
 {
   char *ns;
-  ns = strchr(s,',');
+  ns = strchr(s,sep);
   if (ns) {
-    /* there was a comma arg2 should be the second arg*/
+    /* there was a separator arg2 should be the second arg*/
     *ns++ = '\0';
     while ((*arg2++ = *ns++) != '\0');
   }
   else {
-    /* there was not a comma, so we should make sure that arg2 is \0
+    /* there was no separator, so we should make sure that arg2 is \0
        lest something become confused. raj 2005-02-04 */
     *arg2 = '\0';
   };
   while ((*arg1++ = *s++) != '\0');
 
 }
+
+/* break_args_explicit - now just a wrapper around a call to
+   break_args_explicit_sep passing-in a ',' as the separator. raj
+   20101129 */ 
+
+void
+break_args_explicit(char *s, char *arg1, char *arg2)
+
+{
+  break_args_explicit_sep(s, ',', arg1, arg2);
+}
+
 
 /* given a string with possible values for setting an address family,
    convert that into one of the AF_mumble values - AF_INET, AF_INET6,

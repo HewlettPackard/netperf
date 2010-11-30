@@ -29,8 +29,10 @@ char    netlib_id[]="\
 /*      format_units()          return the format in english    */
 /*      msec_sleep()            sleep for some msecs            */
 /*      start_timer()           start a timer                   */
+/*      random_ip_address()     select a random IP address from */
+/*                              specified range                 */
 /*                                                              */
-/*      the routines you get when WANT_DLPI is defined...         */
+/*      the routines you get when WANT_DLPI is defined...       */
 /*                                                              */
 /*      dl_open()               open a file descriptor and      */
 /*                              attach to the card              */
@@ -505,6 +507,7 @@ inet_ttos(int type)
 
 
 
+
 char unknown[32];
 
 char *
@@ -705,6 +708,76 @@ htond(double host_double)
   
   return(conv_rec.whole_thing);
   
+}
+
+
+
+unsigned long
+rand32(){
+  return (unsigned long)lrand48() * 2 + lrand48() % 2;
+}
+
+/* this routine will set the ip address of the sockaddr in the
+   addrinfo to a random number in range, based on the address
+   family. for grins, we will sanity check the value of mask_len
+   against the address family. initial version from google,
+   enhancements by raj 20101129 */
+void
+random_ip_address(struct addrinfo *res, int mask_len)
+{
+  switch(res->ai_family) {
+  case AF_INET: {
+    struct sockaddr_in *foo = (struct sockaddr_in *)res->ai_addr;
+    unsigned int addr = ntohl(foo->sin_addr.s_addr);
+    unsigned long mask = ((unsigned long)1 << (32 - mask_len)) - 1;
+
+    if ((mask_len < 0) || (mask_len > 32)) {
+      fprintf(where,
+	      "Mask length must be between 0 and 32 inclusive for AF_INET\n");
+      fflush(where);
+      exit(-1);
+    }
+
+    addr = ntohl(foo->sin_addr.s_addr);
+    do {
+      addr = (addr & ~mask) | (rand32() & mask);
+    } while ((addr & 0xff) == 0xff);
+    foo->sin_addr.s_addr = htonl(addr);
+    break;
+  }
+#if defined(AF_INET6)
+  case AF_INET6: {
+    struct sockaddr_in6 *foo = (struct sockaddr_in6 *)res->ai_addr;
+
+    unsigned int i, len;
+    unsigned int *addr = (unsigned int *)&(foo->sin6_addr.s6_addr);
+    unsigned long mask;
+
+    if ((mask_len < 0) || (mask_len > 128)) {
+      fprintf(where,
+	      "Mask length must be between 0 and 128 inclusive for AF_INET\n");
+      fflush(where);
+      exit(-1);
+    }
+    
+    for (i = 0; i < 4; i ++){
+      addr[i] = ntohl(addr[i]);
+      len = mask_len - i * 32;
+      len = ((len < 32) ? len : 32);
+      len = ((len > 0) ? len : 0);
+      mask = ((unsigned long)1 << (32 - len)) - 1;
+      addr[i] = (addr[i] & ~mask) | (rand32() & mask);
+      addr[i] = htonl(addr[i]);
+     }
+    break;
+  }
+#endif
+  default:
+    fprintf(where,
+            "Unexpected Address Family of %u\n",res->ai_family);
+    fflush(where);
+    exit(-1);
+  }
 }
 
 

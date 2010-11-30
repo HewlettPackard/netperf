@@ -458,6 +458,10 @@ int         p50_latency = -1, p90_latency = -1, p99_latency = -1;
    keep it because it won't be for other tests */
 double      mean_latency = -1.0, stddev_latency = -1.0;
 
+/* default to zero to avoid randomizing */
+int local_mask_len=0;
+int remote_mask_len=0;
+
 int printing_initialized = 0;
 
 char *sd_str;
@@ -4410,6 +4414,13 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
     request_cwnd = REQUEST_CWND_INITIAL;
 #endif
 
+    /* if the command-line included requests to randomize the IP
+       addresses, then honor it.  of course, this may not work all that
+       well for some tests... raj 20101129 */
+    if (local_mask_len) 
+      random_ip_address(local_res, local_mask_len);
+    if (remote_mask_len)
+      random_ip_address(remote_res, remote_mask_len);
 
     data_socket = create_data_socket(local_res);
     
@@ -7341,13 +7352,71 @@ set_omni_defaults_by_legacy_testname() {
   socket_type_str = hst_to_str(socket_type);
 }
 
+char omni_usage[] = "\n\
+Usage: netperf [global options] -- [test options] \n\
+\n\
+OMNI and Migrated BSD Sockets Test Options:\n\
+    -b number         Send number requests at start of _RR tests\n\
+    -c                Explicitly declare this a connection test such as\n\
+                      TCP_CRR or TCP_CC\n\
+    -C                Set TCP_CORK when available\n\
+    -d direction      Explicitly set test direction based on bitwise OR\n\
+                      of 0x2 for transmit and 0x4 for receive. Default:\n\
+                      based on test type\n\
+    -D [L][,R]        Set TCP_NODELAY locally and/or remotely (TCP_*)\n\
+    -h                Display this text\n\
+    -H name[/mask],fam  Use name (or IP) and family as target of data connection\n\
+                      A mask value will cause randomization of the IP used\n\
+    -k [file]         Generate keyval output optionally based on file\n\
+                      Use filename of '?' to get the list of choices\n\
+    -L name[/mask],fam  Use name (or IP) and family as source of data connection\n\
+                      A mask value will cause randomization of the IP used\n\
+    -m bytes          Set the send size (TCP_STREAM, UDP_STREAM)\n\
+    -M bytes          Set the recv size (TCP_STREAM, UDP_STREAM)\n\
+    -n                Use the connected socket for UDP locally\n\
+    -N                Use the connected socket for UDP remotely\n\
+    -o [file]         Generate CSV output optionally based on file\n\
+                      Use filename of '?' to get the list of choices\n\
+    -O [file]         Generate classic-style output based on file\n\
+                      Use filename of '?' to get the list of choices\n\
+    -p min[,max]      Set the min/max port numbers for TCP_CRR, TCP_TRR\n\
+    -P local[,remote] Set the local/remote port for the data socket\n\
+    -r req,[rsp]      Set request/response sizes (TCP_RR, UDP_RR)\n\
+    -R 0/1            Allow routing of traffic on data connection.\n\
+                      Default: 0 (off) for UDP_STREAM, 1 (on) otherwise\n\
+    -s send[,recv]    Set local socket send/recv buffer sizes\n\
+    -S send[,recv]    Set remote socket send/recv buffer sizes\n\
+    -t type           Explicitly set socket type. Default is implicit\n\
+                      based on other settings\n\
+    -T protocol       Explicitly set data connection protocol. Default is\n\
+                      implicit based on other settings\n\
+    -u uuid           Use the supplied string as the UUID for this test.\n\
+    -4                Use AF_INET (eg IPv4) on both ends of the data conn\n\
+    -6                Use AF_INET6 (eg IPv6) on both ends of the data conn\n\
+\n\
+For those options taking two parms, at least one must be specified;\n\
+specifying one value without a comma will set both parms to that\n\
+value, specifying a value with a leading comma will set just the second\n\
+parm, a value with a trailing comma will set just the first. To set\n\
+each parm to unique values, specify both and separate them with a\n\
+comma.\n"; 
+
+void
+print_omni_usage()
+{
+
+  fwrite(omni_usage, sizeof(char), strlen(omni_usage), stdout);
+  exit(1);
+
+}
+
 
 void
 scan_omni_args(int argc, char *argv[])
 
 {
 
-#define OMNI_ARGS "b:cCd:DnNhH:kl:L:m:M:oOp:P:r:R:s:S:t:T:u:Vw:W:46"
+#define OMNI_ARGS "b:cCd:DhH:kl:L:m:M:nNoOp:P:r:R:s:S:t:T:u:Vw:W:46"
 
   extern char	*optarg;	  /* pointer to option string	*/
   
@@ -7357,7 +7426,8 @@ scan_omni_args(int argc, char *argv[])
 
   char	
     arg1[BUFSIZ],  /* argument holders		*/
-    arg2[BUFSIZ];
+    arg2[BUFSIZ],
+    arg3[BUFSIZ];
 
   if (debug) {
     int i;
@@ -7400,7 +7470,7 @@ scan_omni_args(int argc, char *argv[])
 #endif
       break;
     case 'h':
-      print_sockets_usage();
+      print_omni_usage();
       exit(1);
     case 'b':
 #ifdef WANT_FIRST_BURST
@@ -7432,15 +7502,25 @@ scan_omni_args(int argc, char *argv[])
       rem_nodelay = 1;
       break;
     case 'H':
-      break_args_explicit(optarg,arg1,arg2);
+      break_args_explicit_sep(optarg,',',arg1,arg2);
       if (arg1[0]) {
-	/* make sure we leave room for the NULL termination boys and
-	   girls. raj 2005-02-82 */ 
-	remote_data_address = malloc(strlen(arg1)+1);
-	strcpy(remote_data_address,arg1);
+	/* check to see if there was a width, which we would want to
+	   be arg3. for simplicities sake, we will assume the width
+	   must follow the address and not the address family - ie
+	   1.2.3.4/24,inet.  This means we can just pass optarg again
+	   as the source rather than have to shuffle arg values. */ 
+	break_args_explicit_sep(optarg,'/',arg1,arg3);
+	if (arg1[0]) {
+	  remote_data_address = malloc(strlen(arg1)+1);
+	  strcpy(remote_data_address,arg1);
+	}
+	if (arg3[0]) {
+	  remote_mask_len = convert(arg3);
+	}
       }
-      if (arg2[0])
+      if (arg2[0]) {
 	remote_data_family = parse_address_family(arg2);
+      }
       break;
     case 'k':
       human = 0;
@@ -7473,15 +7553,25 @@ scan_omni_args(int argc, char *argv[])
       multicast_ttl = atoi(optarg);
       break;
     case 'L':
-      break_args_explicit(optarg,arg1,arg2);
+      break_args_explicit_sep(optarg,',',arg1,arg2);
       if (arg1[0]) {
-	/* make sure we leave room for the NULL termination boys and
-	   girls. raj 2005-02-82 */ 
-	local_data_address = malloc(strlen(arg1)+1);
-	strcpy(local_data_address,arg1);
+	/* check to see if there was a width, which we would want to
+	   be arg3. for simplicities sake, we will assume the width
+	   must follow the address and not the address family - ie
+	   1.2.3.4/24,inet.  This means we can just pass optarg again
+	   as the source rather than have to shuffle arg values. */ 
+	break_args_explicit_sep(optarg,'/',arg1,arg3);
+	if (arg1[0]) {
+	  local_data_address = malloc(strlen(arg1)+1);
+	  strcpy(local_data_address,arg1);
+	}
+	if (arg3[0]) {
+	  local_mask_len = convert(arg3);
+	}
       }
-      if (arg2[0])
+      if (arg2[0]) {
 	local_data_family = parse_address_family(arg2);
+      }
       break;
     case 'm':
       /* set the send size. if we set the local send size it will add
