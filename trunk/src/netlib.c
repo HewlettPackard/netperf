@@ -1349,6 +1349,10 @@ netlib_init()
     fflush(where);
   }
 
+  /* some functionality might want to use random numbers, so we should
+     initialize the random number generator */
+  srand48(getpid());
+
 }
 
  /* this routine will conver the string into an unsigned integer. it */
