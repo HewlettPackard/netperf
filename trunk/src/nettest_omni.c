@@ -4345,8 +4345,12 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 
   /* before we start doing things with our own requests and responses
      lets go ahead and find-out about the remote system. at some point
-     we probably need to put this somewhere else... */
-  get_remote_system_info();
+     we probably need to put this somewhere else...  however, we do
+     not want to do this if this is a no_control test. raj 20101220 */
+  /* should we also not call this if this is a legacy test? */
+  if (!no_control) {
+    get_remote_system_info();
+  }
   
   if (keep_histogram) {
     time_hist = HIST_new();
@@ -4515,7 +4519,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
       }
     }
     
-    if (!no_control) { /* foo */
+    if (!no_control) {
   
       /* Tell the remote end to do a listen or otherwise prepare for
 	 what is to come. The server alters the socket paramters on the
@@ -4608,7 +4612,6 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	fprintf(where,"netperf: send_omni: requesting OMNI test\n");
       }
     
-
       send_request();
 
     
@@ -4675,6 +4678,8 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
     
     }
     else {
+      /* we are a no_control test so some things about the remote need
+	 to be set accordingly */
       if (NULL == remote_system_model) 
 	remote_system_model = strdup("Unknown System Model");
       if (NULL == remote_cpu_model)
@@ -5152,22 +5157,28 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 
     cpu_stop(local_cpu_usage,&elapsed_time);
     
-    find_system_info(&local_system_model,
-		     &local_cpu_model,
-		     &local_cpu_frequency);
+    /* if this is a legacy test, there is not much point to finding
+       all these things since they will not be emitted. */
+    if (!legacy) {
+      find_system_info(&local_system_model,
+		       &local_cpu_model,
+		       &local_cpu_frequency);
 
-    local_interface_name = 
-      find_egress_interface(local_res->ai_addr,remote_res->ai_addr);
+      local_interface_name = 
+	find_egress_interface(local_res->ai_addr,remote_res->ai_addr);
 
-    find_driver_info(local_interface_name,local_driver_name,local_driver_version,local_driver_firmware,local_driver_bus,32);
+      find_driver_info(local_interface_name,local_driver_name,
+		       local_driver_version,local_driver_firmware,
+		       local_driver_bus,32);
 
-    local_interface_slot = find_interface_slot(local_interface_name);
+      local_interface_slot = find_interface_slot(local_interface_name);
 
-    find_interface_ids(local_interface_name,
-		       &local_interface_vendor,
-		       &local_interface_device,
-		       &local_interface_subvendor,
-		       &local_interface_subdevice);
+      find_interface_ids(local_interface_name,
+			 &local_interface_vendor,
+			 &local_interface_device,
+			 &local_interface_subvendor,
+			 &local_interface_subdevice);
+    }
 
     /* if we timed-out, and had padded the timer, we need to subtract
        the pad_time from the elapsed time on the assumption that we
@@ -5249,6 +5260,12 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
       
 	exit(1);
       }
+    }
+    else {
+      /* when we are sending, in a no_control test, we have to
+	 ass-u-me that everything we sent was received, otherwise, we
+	 will report a transfer rate of zero. */
+      remote_bytes_xferd = bytes_sent;
     }
 
     /* so, what was the end result? */
@@ -7829,22 +7846,21 @@ scan_omni_args(int argc, char *argv[])
      different settings for a few things */
 
   if (no_control) {
-
-    fprintf(where,"I don't know about no control connection tests yet\n");
-    exit(1);
-
     if (strcmp(remote_data_port,"0") == 0) {
       /* we need to select either the discard port, echo port or
-	 chargen port dedepending on the test name. raj 2007-02-08 */
-      if (strstr(test_name,"STREAM") ||
-	  strstr(test_name,"SENDFILE")) {
+	 chargen port dedepending on the test direction. raj
+	 20101220 */
+      if (NETPERF_XMIT_ONLY(direction)) {
 	strncpy(remote_data_port,"discard",sizeof(remote_data_port));
+	recv_size = -1;
       }
-      else if (strstr(test_name,"RR")) {
-	strncpy(remote_data_port,"echo",sizeof(remote_data_port));
-      }
-      else if (strstr(test_name,"MAERTS")) {
+      else if (NETPERF_RECV_ONLY(direction)) {
 	strncpy(remote_data_port,"chargen",sizeof(remote_data_port));
+	send_size = -1;
+      }
+      else if (NETPERF_IS_RR(direction) || NETPERF_CC(direction)) {
+	strncpy(remote_data_port,"echo",sizeof(remote_data_port));
+	rsp_size = req_size;
       }
       else {
 	printf("No default port known for the %s test, please set one yourself\n",test_name);
@@ -7863,23 +7879,6 @@ scan_omni_args(int argc, char *argv[])
     rsr_size_req = -1;
     rem_nodelay = -1;
 
-    if (strstr(test_name,"STREAM") ||
-	strstr(test_name,"SENDFILE")) {
-      recv_size = -1;
-    }
-    else if (strstr(test_name,"RR")) {
-      /* I am however _certain_ that for a no control RR test the
-	 response size must equal the request size since 99 times out
-	 of ten we will be speaking to the echo service somewhere */
-      rsp_size = req_size;
-    }
-    else if (strstr(test_name,"MAERTS")) {
-      send_size = -1;
-    }
-    else {
-      printf("No default port known for the %s test, please set one yourself\n",test_name);
-      exit(-1);
-    }
   }
 }
 
