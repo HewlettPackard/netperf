@@ -583,6 +583,23 @@ print_netperf_usage()
   fprintf(stderr, "%s%s", netperf_usage1, netperf_usage2);
 }
 
+/* convert the specified string to upper case if we know how */
+static void
+convert_to_upper(char *source) 
+{
+#if defined(HAVE_TOUPPER)
+  int i,length;
+
+  length = strlen(source);
+
+  for (i=0; i < length; i++) {
+    source[i] = toupper(source[i]);
+  }
+#endif
+  return;
+
+}
+
 void
 scan_cmd_line(int argc, char *argv[])
 {
@@ -827,8 +844,10 @@ scan_cmd_line(int argc, char *argv[])
       wait_time_secs = convert(optarg);
       break;
     case 't':
-      /* set the test name */
-      strcpy(test_name,optarg);
+      /* set the test name and shift it to upper case so we don't have
+	 to worry about compares on things like substrings */
+      strncpy(test_name,optarg,sizeof(test_name)-1);
+      convert_to_upper(test_name);
       break;
     case 'T':
       /* We want to set the processor on which netserver or netperf */
@@ -1089,9 +1108,13 @@ scan_cmd_line(int argc, char *argv[])
   }
 
   /* parsing test-specific options used to be conditional on there
-    being a "--" in the option stream.  however, some of the tests
-    have other initialization happening in their "scan" routines so we
-    want to call them regardless. raj 2005-02-08 */
+     being a "--" in the option stream.  however, some of the tests
+     have other initialization happening in their "scan" routines so
+     we want to call them regardless. raj 2005-02-08 */
+  /* while the parsing of the command line will upshift the test name,
+     since we don't know that there will always be a way to do so? we
+     will retain for now the strcasecmp calls rather than switch to
+     strcmp. raj 20101220 */
     if (
 #ifndef WANT_MIGRATION
 	(strcasecmp(test_name,"TCP_STREAM") == 0) ||
