@@ -247,6 +247,9 @@
 /* Define to 1 if you have <sys/wait.h> that is POSIX.1 compatible. */
 #undef HAVE_SYS_WAIT_H
 
+/* Define to 1 if you have the `toupper' function. */
+#undef HAVE_TOUPPER
+
 /* Define to 1 if you have the `uname' function. */
 #undef HAVE_UNAME
 

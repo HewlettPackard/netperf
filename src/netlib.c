@@ -712,9 +712,16 @@ htond(double host_double)
 
 
 
-unsigned long
+/* The original patch from Google used lrand48, but I have been
+   informed that is not easily available under Windows. So, rather
+   than have some #ifdefs here I'll just simplistically replace
+   lrand48 with rand(), which should be "good enough" at some point it
+   may be sufficient to just call rand() directly rather than call
+   this raj 20101130 */
+
+unsigned int
 rand32(){
-  return (unsigned long)lrand48() * 2 + lrand48() % 2;
+  return (unsigned int)rand() * 2 + rand() % 2;
 }
 
 /* this routine will set the ip address of the sockaddr in the
@@ -729,7 +736,7 @@ random_ip_address(struct addrinfo *res, int mask_len)
   case AF_INET: {
     struct sockaddr_in *foo = (struct sockaddr_in *)res->ai_addr;
     unsigned int addr = ntohl(foo->sin_addr.s_addr);
-    unsigned long mask = ((unsigned long)1 << (32 - mask_len)) - 1;
+    unsigned int mask = ((unsigned int)1 << (32 - mask_len)) - 1;
 
     if ((mask_len < 0) || (mask_len > 32)) {
       fprintf(where,
@@ -751,7 +758,7 @@ random_ip_address(struct addrinfo *res, int mask_len)
 
     unsigned int i, len;
     unsigned int *addr = (unsigned int *)&(foo->sin6_addr.s6_addr);
-    unsigned long mask;
+    unsigned int mask;
 
     if ((mask_len < 0) || (mask_len > 128)) {
       fprintf(where,
@@ -765,7 +772,7 @@ random_ip_address(struct addrinfo *res, int mask_len)
       len = mask_len - i * 32;
       len = ((len < 32) ? len : 32);
       len = ((len > 0) ? len : 0);
-      mask = ((unsigned long)1 << (32 - len)) - 1;
+      mask = ((unsigned int)1 << (32 - len)) - 1;
       addr[i] = (addr[i] & ~mask) | (rand32() & mask);
       addr[i] = htonl(addr[i]);
      }
