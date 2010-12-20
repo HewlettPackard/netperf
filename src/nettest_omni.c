@@ -7511,7 +7511,7 @@ scan_omni_args(int argc, char *argv[])
       break;
     case 'd':
       /* arbitrarily set the direction variable */
-      direction = strtol(optarg,NULL,0);
+      direction = parse_direction(optarg);
       break;
     case 'D':
       /* set the TCP nodelay flag */

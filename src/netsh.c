@@ -440,6 +440,59 @@ parse_socket_type(char socket_string[]) {
 }
 
 int
+parse_direction(char direction_string[])
+{
+  char arg1[BUFSIZ],arg2[BUFSIZ];
+  int left, right;
+
+  if (NULL == direction_string) {
+    return 0;
+  }
+
+  if (direction_string[0] == '\0') {
+    return 0;
+  }
+
+  /* allow someone to "or" break_args_explicit will split at the first
+     '|' in the string so if arg1 exists as something other than '\0'
+     we know it has no '|' in it */
+  break_args_explicit_sep(direction_string,'|',arg1,arg2);
+
+  /* at this point only arg2 could contain a '|' so recurse on that */
+  right = parse_direction(arg2);
+
+  /* now we parse the "left side" or arg1 */
+  if (arg1[0] == '\0') {
+    left = 0;
+  }
+  else if ((strcasecmp(arg1,"xmit") == 0) ||
+	   (strcasecmp(arg1,"send") == 0) ||
+	   (strcasecmp(arg1,"stream") == 0) ||
+	   (strcasecmp(arg1,"transmit") == 0)) {
+    /* yes, a magic number - we need to make NETPERF_XMIT known to
+       netsh */
+    left = 0x2;
+  }
+  else if ((strcasecmp(arg1,"recv") == 0) ||
+	   (strcasecmp(arg1,"receive") == 0) ||
+	   (strcasecmp(arg1,"maerts") == 0)) {
+    /* yes, another magic number... */
+    left =  0x4;
+  }
+  else  if (strcasecmp(arg1,"rr") == 0) {
+    left = 0x6;
+  }
+  else {
+    /* we now "ass-u-me" it is a number that can be parsed by strtol()
+     */
+    left = strtol(arg1,NULL,0);
+  }
+
+  return (left | right);
+
+}
+
+int
 parse_protocol(char protocol_string[]) 
 {
   char temp[10];
