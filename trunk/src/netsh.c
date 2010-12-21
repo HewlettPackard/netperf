@@ -469,18 +469,16 @@ parse_direction(char direction_string[])
 	   (strcasecmp(arg1,"send") == 0) ||
 	   (strcasecmp(arg1,"stream") == 0) ||
 	   (strcasecmp(arg1,"transmit") == 0)) {
-    /* yes, a magic number - we need to make NETPERF_XMIT known to
-       netsh */
-    left = 0x2;
+    left = NETPERF_XMIT;
   }
   else if ((strcasecmp(arg1,"recv") == 0) ||
 	   (strcasecmp(arg1,"receive") == 0) ||
 	   (strcasecmp(arg1,"maerts") == 0)) {
     /* yes, another magic number... */
-    left =  0x4;
+    left =  NETPERF_RECV;
   }
   else  if (strcasecmp(arg1,"rr") == 0) {
-    left = 0x6;
+    left = NETPERF_XMIT|NETPERF_RECV;
   }
   else {
     /* we now "ass-u-me" it is a number that can be parsed by strtol()

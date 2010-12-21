@@ -1,5 +1,5 @@
 /*
-        Copyright (C) 1993,1995 Hewlett-Packard Company
+        Copyright (C) 1993-2010 Hewlett-Packard Company
 */
 
 /* libraried performance include file 				*/
@@ -27,6 +27,20 @@
 #define 	LOC_SEND_ALIGN	4	/* alignment for local sends	*/
 #define 	REM_RECV_ALIGN	4	/* alignment for remote receive	*/
 #define 	REM_SEND_ALIGN	4	/* alignment for remote sends	*/
+
+/* which way are we going and what are we doing in this handbasket?-) */
+#define NETPERF_XMIT 0x2
+#define NETPERF_RECV 0x4
+
+#define NETPERF_IS_RR(x) (((x & NETPERF_XMIT) && (x & NETPERF_RECV)) || \
+			  (!((x & NETPERF_XMIT) || (x & NETPERF_RECV))))
+
+#define NETPERF_RECV_ONLY(x) ((x & NETPERF_RECV) && !(x & NETPERF_XMIT))
+
+#define NETPERF_XMIT_ONLY(x) ((x & NETPERF_XMIT) && !(x & NETPERF_RECV))
+
+#define NETPERF_CC(x) (!(x & NETPERF_XMIT) && !(x & NETPERF_RECV))
+
 
 /* misc defines for the hell of it					*/
 #ifndef MAXLONG

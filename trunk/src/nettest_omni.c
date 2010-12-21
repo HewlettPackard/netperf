@@ -318,17 +318,6 @@ static struct timeval *temp_intvl_ptr = &intvl_one;
 #endif
 
 #define NETPERF_WAITALL 0x1
-#define NETPERF_XMIT 0x2
-#define NETPERF_RECV 0x4
-
-#define NETPERF_IS_RR(x) (((x & NETPERF_XMIT) && (x & NETPERF_RECV)) || \
-			  (!((x & NETPERF_XMIT) || (x & NETPERF_RECV))))
-
-#define NETPERF_RECV_ONLY(x) ((x & NETPERF_RECV) && !(x & NETPERF_XMIT))
-
-#define NETPERF_XMIT_ONLY(x) ((x & NETPERF_XMIT) && !(x & NETPERF_RECV))
-
-#define NETPERF_CC(x) (!(x & NETPERF_XMIT) && !(x & NETPERF_RECV))
 
 extern void get_uuid_string(char *string, size_t size);
 
