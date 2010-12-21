@@ -454,8 +454,8 @@ parse_direction(char direction_string[])
   }
 
   /* allow someone to "or" break_args_explicit will split at the first
-     '|' in the string so if arg1 exists as something other than '\0'
-     we know it has no '|' in it */
+     '|' in the string so we know that arg1 has no '|' in it and arg2
+     might */
   break_args_explicit_sep(direction_string,'|',arg1,arg2);
 
   /* at this point only arg2 could contain a '|' so recurse on that */
