@@ -1651,11 +1651,16 @@ Size (bytes)\n\
   int bytes_remaining;
   int tcp_mss = -1;  /* possibly uninitialized on printf far below */
 
-  /* with links like fddi, one can send > 32 bits worth of bytes */
-  /* during a test... ;-) at some point, this should probably become a */
-  /* 64bit integral type, but those are not entirely common yet */
-
+  /* with links like fddi, one can send > 32 bits worth of bytes
+     during a test... ;-) at some point, this should probably become a
+     64bit integral type, but those are not entirely common
+     yet... time passes, and 64 bit types do indeed become common. */
+#if _MSC_VER <= 1200
+  __int64 local_bytes_sent = 0
+#else
   unsigned long long local_bytes_sent = 0;
+#endif
+
   double	bytes_sent = 0.0;
   
   float	local_cpu_utilization;
@@ -2359,11 +2364,17 @@ Size (bytes)\n\
   int bytes_remaining;
   int tcp_mss = -1;  /* possibly uninitialized on printf far below */
 
-  /* with links like fddi, one can recv > 32 bits worth of bytes */
-  /* during a test... ;-) at some point, this should probably become a */
-  /* 64bit integral type, but those are not entirely common yet */
+  /* with links like fddi, one can recv > 32 bits worth of bytes
+     during a test... ;-) at some point, this should probably become a
+     64bit integral type, but those are not entirely common yet.  of
+     course, time passes and they do become common.
+ */
   double	bytes_sent = 0.0;
+#if _MSC_VER < 1200
+  __int64 local_bytes_recvd = 0;
+#else
   unsigned long long local_bytes_recvd = 0;
+#endif
 
   float	local_cpu_utilization;
   float	local_service_demand;
@@ -12858,7 +12869,11 @@ scan_sockets_args(int argc, char *argv[])
   if (debug) {
     int i;
     printf("%s called with the following argument vector\n",
+#if _MSC_VER <= 1200
+	   "scan_sockets_args");
+#else
 	   __func__);
+#endif
     for (i = 0; i< argc; i++) {
       printf("%s ",argv[i]);
     }

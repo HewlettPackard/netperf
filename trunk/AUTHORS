@@ -253,3 +253,6 @@ Discovering that FreeBSD 8.X also does not need an SCTP library
 
 Josselin Costanzi
 DEBUG_LOG_FILE patch for Android
+
+Dongsheng Song
+Assorted Windows fixes
