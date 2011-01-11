@@ -1358,7 +1358,7 @@ netlib_init()
 
   /* some functionality might want to use random numbers, so we should
      initialize the random number generator */
-  srand48(getpid());
+  srand(getpid());
 
 }
 
@@ -1773,8 +1773,8 @@ alloc_sendfile_buf_ring(int width,
 	  int count;
 	  int *int_ptr;
 
-	  /* initialize the random number generator */
-	  srand(getpid());
+	  /* we initialize the random number generator in
+	     netlib_init() now. raj 20110111 */
 
 	  /* unlink the file so it goes poof when we
 	     exit. unless/until shown to be a problem we will
@@ -3834,7 +3834,7 @@ HIST_add(register HIST h, int time_delta){
    }
    h->hmin = ((h->hmin < time_delta) ? h->hmin : time_delta);
    h->hmax = ((h->hmax > time_delta) ? h->hmax : time_delta);
-   val = time_delta;
+   val = (float) time_delta;
    /* check for < 0 added via VMware ESX patches */
    if (val < 0) {
      h->ridiculous++;
@@ -3935,7 +3935,7 @@ HIST_search_bucket(int *unit, int num, int *last, int *current, double scale){
 /* get percentile from histogram */
 int
 HIST_get_percentile(HIST h, const double percentile){
-  int num = h->total * percentile;
+  int num = (int) h->total * percentile;
   int last = 0;
   int current = 0;
   int result;
