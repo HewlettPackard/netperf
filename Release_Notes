@@ -1,5 +1,11 @@
 These are the Release Notes for post-revision 2.4.5 of netperf:
 
+*) The histogram code has been enhanced to track more than one latency
+   at a time and so --enable-histogram and --enable-burst are now
+   compatible - for the omni tests or migrated "classic" tests only
+   however.  This change was inspired/instigated by Jim Gettys and his
+   work on overly-large queues of buffers
+
 *) WANT_MIGRATION is enabled when one specifies --enable-omni on the
    configure command line.
 
