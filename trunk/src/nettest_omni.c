@@ -128,20 +128,6 @@ char nettest_omni_id[]="\
    this and do the other other things */
 #include "hist.h"
 
-#ifdef HAVE_GETHRTIME
-static hrtime_t time_one;
-static hrtime_t time_two;
-#elif HAVE_GET_HRT
-#include "hrt.h"
-static hrt_t time_one;
-static hrt_t time_two;
-#elif defined(WIN32)
-static LARGE_INTEGER time_one;
-static LARGE_INTEGER time_two;
-#else
-static struct timeval time_one;
-static struct timeval time_two;
-#endif /* HAVE_GETHRTIME */
 static HIST time_hist;
 
 #ifdef WANT_DEMO
@@ -4749,24 +4735,22 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
        data. at least that is the plan :)  raj 2008-01-08 */
     
     while ((!times_up) || (units_remaining > 0)) {
+
+      /* we need to be careful about when we snap a timestamp
+	 depending on the test parameters. this one *should* cover
+	 everything but the burst request/response test - famous last
+	 words of course. raj 20110111 */
       
-      /* only pull the timestamp if we are actually going to use the
-	 results of the work.  we put the call here so it can work for
-	 any sort of test - connection, request/response, or stream.
-	 no, it isn't "perfect" for all of them - for some it will
-	 include a few more "if's" than a purpose-written routine, but
-	 it _should_ be the case that the time spent up here is
-	 epsilon compared to time spent elsewhere in the stack so it
-	 should not be a big deal.  famous last words of raj
-	 2008-01-08 */
       if (keep_histogram) {
 	HIST_timestamp_start(time_hist);
       }
-
+      
+      
     again:
 
       if (need_socket) {
 	if (connection_test) 
+
 	  pick_next_port_number(local_res,remote_res);
 
 	data_socket = create_data_socket(local_res);
@@ -4846,6 +4830,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 		  request_cwnd,
 		  first_burst_size);
 	}
+
 	if ((ret = send_data(data_socket,
 			     send_ring,
 			     bytes_to_send,
@@ -4858,6 +4843,17 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	}
 	local_send_calls += 1;
 	requests_outstanding += 1;
+
+	/* yes, it seems a trifle odd having this *after* the send()
+	   just above, but really this is for the next send() or
+	   recv() call below or in the iteration of this loop, and the
+	   first HIST_timestamp_start() call at the top of the
+	   outermost loop will be for the first send() call here in
+	   the burst code.  clear ain't it?-) raj 20110111 */
+
+	if (keep_histogram) {
+	  HIST_timestamp_start(time_hist);
+	} 
       }
 
 #endif /* WANT_FIRST_BURST */
@@ -4865,6 +4861,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
       /* if we should try to send something, then by all means, let us
 	 try to send something. */
       if (direction & NETPERF_XMIT) {
+
 	ret = send_data(data_socket,
 			send_ring,
 			bytes_to_send,
