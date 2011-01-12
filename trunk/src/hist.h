@@ -62,6 +62,24 @@ struct histogram_struct {
   double sumsquare;
   int hmin;
   int hmax;
+  int limit;
+  int count;
+  int producer;
+  int consumer;
+#ifdef HAVE_GETHRTIME
+  hrtime_t *time_ones;
+  hrtime_t time_two;
+#elif HAVE_GET_HRT
+  hrt_t *time_ones;
+  hrt_t time_two;
+#elif defined(WIN32)
+  LARGE_INTEGER *time_ones;
+  LARGE_INTEGER time_two;
+#else
+  struct timeval *time_ones;
+  struct timeval time_two;
+#endif /* HAVE_GETHRTIME */
+
 };
 
 typedef struct histogram_struct *HIST;
@@ -73,8 +91,16 @@ typedef struct histogram_struct *HIST;
 HIST HIST_new(void); 
 
 /* 
+   HIST_new_n - return a new, cleard histogram data type able to track
+   at least max_outstanding timestamps
+*/
+
+HIST HIST_new_n(int max_outstanding);
+
+/* 
    HIST_clear - reset a histogram by clearing all totals to zero
 */
+
 
 void HIST_clear(HIST h);
 
@@ -105,6 +131,19 @@ void HIST_timestamp(LARGE_INTEGER *timestamp);
 #else
 void HIST_timestamp(struct timeval *timestamp);
 #endif
+
+/*
+  HIST_timestamp_start - start a new timestamp
+*/
+
+void HIST_timestamp_start(HIST h);
+
+/* 
+  HIST_timestamp_stop_add - complete the oldest outstanding timestamp
+  and add it to the histogram
+*/
+
+void HIST_timestamp_stop_add(HIST h);
 
 /*
   delta_micro - calculate the difference in microseconds between two

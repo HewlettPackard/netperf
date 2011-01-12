@@ -4342,7 +4342,10 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
   }
   
   if (keep_histogram) {
-    time_hist = HIST_new();
+    if (first_burst_size > 0)
+      time_hist = HIST_new_n(first_burst_size + 1);
+    else
+      time_hist = HIST_new_n(1);
   }
 
   /* since we are now disconnected from the code that established the
@@ -4757,7 +4760,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	 should not be a big deal.  famous last words of raj
 	 2008-01-08 */
       if (keep_histogram) {
-	HIST_timestamp(&time_one);
+	HIST_timestamp_start(time_hist);
       }
 
     again:
@@ -5049,8 +5052,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 
 
       if (keep_histogram) {
-	HIST_timestamp(&time_two);
-	HIST_add(time_hist,delta_micro(&time_one,&time_two));
+	HIST_timestamp_stop_add(time_hist);
       }
     
 #ifdef WANT_DEMO
@@ -7796,17 +7798,6 @@ scan_omni_args(int argc, char *argv[])
 
 #if defined(WANT_HISTOGRAM)
   if (verbosity > 1) keep_histogram = 1;
-#if defined(WANT_FIRST_BURST) 
-  /* if WANT_FIRST_BURST and WANT_HISTOGRAM are defined and the user
-     indeed wants a non-zero first burst size, and we would emit a
-     histogram, then we should emit a warning that the two are not
-     compatible. raj 2006-01-31 */
-  if ((first_burst_size > 0) && (verbosity > 1)) {
-    fprintf(stderr,
-	    "WARNING! Histograms and first bursts are incompatible!\n");
-    fflush(stderr);
-  }
-#endif
 #endif
 
   /* ok, time to sanity check the output units */

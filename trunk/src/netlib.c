@@ -3786,16 +3786,48 @@ msec_sleep( int msecs )
 
 /*#define HIST_TEST*/
 
+HIST
+HIST_new_n(int max_outstanding) {
+  HIST h;
+  int bytes;
+  void *buf;
+  if((h = (HIST) malloc(sizeof(struct histogram_struct))) == NULL) {
+    perror("HIST_new_n - histogram_struct malloc failed");
+    exit(1);
+  }
+  HIST_clear(h);
+  /* now allocate the time_ones based on max_outstanding */
+  if (max_outstanding > 0) {
+#ifdef HAVE_GETHRTIME
+    h->time_ones = (hrtime_t *) malloc(max_outstanding * sizeof(hrtime_t));
+#elif HAVE_GET_HRT
+    h->time_ones = (hrt_t *) malloc(max_outstanding * sizeof(hrt_t));
+#elif defined(WIN32)
+    h->time_ones = (LARGE_INTEGER *) malloc(max_outstanding * 
+					    sizeof(LARGE_INTEGER));
+#else
+    h->time_ones = (struct timeval *) malloc(max_outstanding * 
+					     sizeof(struct timeval));
+#endif /* HAVE_GETHRTIME */
+    if (h->time_ones == NULL) {
+      perror("HIST_new_n - time_ones malloc failed");
+      exit(1);
+    }
+  }
+  else {
+    h->time_ones = NULL;
+  }
+  /* we never want to have a full queue, so will trade a little space
+     for that. one day we may still have to check for a full queue */
+  h->limit = max_outstanding + 1; 
+  return h;
+}
+  
 HIST 
 HIST_new(void){
-   HIST h;
-   if((h = (HIST) malloc(sizeof(struct histogram_struct))) == NULL) {
-     perror("HIST_new - malloc failed");
-     exit(1);
-   }
-   HIST_clear(h);
-   return h;
+  return HIST_new_n(0);
 }
+
 
 void 
 HIST_clear(HIST h){
@@ -3815,7 +3847,12 @@ HIST_clear(HIST h){
    h->sum = 0;
    h->sumsquare = 0;
    h->hmin = 0;
-   h->hmax =0;
+   h->hmax = 0;
+   h->limit = 0;
+   h->count = 0;
+   h->producer = 0;
+   h->consumer = 0;
+   h->time_ones = NULL;
 }
 
 void 
@@ -4098,6 +4135,73 @@ delta_micro(struct timeval *begin,struct timeval *end)
 
 }
 #endif /* HAVE_GETHRTIME */
+
+void
+HIST_timestamp_start(HIST h) {
+
+  if (NULL == h) {
+    fprintf(where,"HIST_timestamp_start called with NULL histogram\n");
+    fflush(where);
+    exit(-1);
+  }
+  if (h->count == h->limit) {
+    fprintf(where,"HIST_timestamp_start called with full time_ones\n");
+  }
+  if (debug) {
+    fprintf(where,
+	    "producing a timestamp at offset %d with consumer %d count %d limit %d\n",
+	    h->producer,
+	    h->consumer,
+	    h->count,
+	    h->limit);
+    fflush(where);
+  }
+
+  HIST_timestamp(&(h->time_ones[h->producer]));
+  h->producer += 1;
+  h->producer %= h->limit;
+  h->count += 1;
+
+
+}
+
+/* snap an ending timestamp and add the delta to the histogram */
+void
+HIST_timestamp_stop_add(HIST h) {
+
+  if (NULL == h) {
+    fprintf(where,"HIST_timestamp_stop called with NULL histogram\n");
+    fflush(where);
+    exit(-1);
+  }
+
+  if (h->consumer == h->producer) {
+    fprintf(where,
+	    "HIST_timestamp_stop called with empty time_ones consumer %d producer %d\n",
+	    h->consumer,
+	    h->producer);
+    fflush(where);
+    exit(-1);
+  }
+  /* take our stopping timestamp */
+  HIST_timestamp(&(h->time_two));
+
+  if (debug) {
+    fprintf(where,
+	    "consuming timstamp at offset %d with producer %d count %d\n",
+	    h->consumer,
+	    h->producer,
+	    h->count);
+    fflush(where);
+  }
+
+  /* now add it */
+  HIST_add(h,delta_micro(&(h->time_ones[h->consumer]),&(h->time_two)));
+  h->consumer += 1;
+  h->consumer %= h->limit;
+  h->count -= 1;
+
+}
 
 
 #ifdef WANT_DLPI
