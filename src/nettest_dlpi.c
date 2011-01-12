@@ -48,6 +48,12 @@ char	nettest_dlpi_id[]="\
 #include "netsh.h"
 #include "nettest_dlpi.h"
 
+/* some stuff for DLPI control messages */
+#define DLPI_DATA_SIZE 2048
+
+unsigned long control_data[DLPI_DATA_SIZE];
+struct strbuf control_message = {DLPI_DATA_SIZE, 0, (char *)control_data};
+
 /* these are some variables global to all the DLPI tests. declare */
 /* them static to make them global only to this file */
 
@@ -91,6 +97,240 @@ value, specifying a value with a leading comma will set just the second\n\
 parm, a value with a trailing comma will set just the first. To set\n\
 each parm to unique values, specify both and separate them with a\n\
 comma.\n"; 
+
+
+
+/* routines that used to be in src/netlib.c but this code is the only
+   code that uses them. raj 20110111 */ 
+
+
+int
+put_control(fd, len, pri, ack)
+     int fd, len, pri, ack;
+{
+  int error;
+  int flags = 0;
+  dl_error_ack_t *err_ack = (dl_error_ack_t *)control_data;
+
+  control_message.len = len;
+
+  if ((error = putmsg(fd, &control_message, 0, pri)) < 0 ) {
+    fprintf(where,"put_control: putmsg error %d\n",error);
+    fflush(where);
+    return(-1);
+  }
+  if ((error = getmsg(fd, &control_message, 0, &flags)) < 0) {
+    fprintf(where,"put_control: getsmg error %d\n",error);
+    fflush(where);
+    return(-1);
+  }
+  if (err_ack->dl_primitive != ack) {
+    fprintf(where,"put_control: acknowledgement error wanted %u got %u \n",
+            ack,err_ack->dl_primitive);
+    if (err_ack->dl_primitive == DL_ERROR_ACK) {
+      fprintf(where,"             dl_error_primitive: %u\n",
+              err_ack->dl_error_primitive);
+      fprintf(where,"             dl_errno:           %u\n",
+              err_ack->dl_errno);
+      fprintf(where,"             dl_unix_errno       %u\n",
+              err_ack->dl_unix_errno);
+    }
+    fflush(where);
+    return(-1);
+  }
+
+  return(0);
+}
+    
+int
+dl_open(char devfile[], int ppa)
+{
+  int fd;
+  dl_attach_req_t *attach_req = (dl_attach_req_t *)control_data;
+
+  if ((fd = open(devfile, O_RDWR)) == -1) {
+    fprintf(where,"netperf: dl_open: open of %s failed, errno = %d\n",
+            devfile,
+            errno);
+    return(-1);
+  }
+
+  attach_req->dl_primitive = DL_ATTACH_REQ;
+  attach_req->dl_ppa = ppa;
+
+  if (put_control(fd, sizeof(dl_attach_req_t), 0, DL_OK_ACK) < 0) {
+    fprintf(where,
+            "netperf: dl_open: could not send control message, errno = %d\n",
+            errno);
+    return(-1);
+  }
+  return(fd);
+}
+
+int
+dl_bind(int fd, int sap, int mode, char *dlsap_ptr, int *dlsap_len)
+{
+  dl_bind_req_t *bind_req = (dl_bind_req_t *)control_data;
+  dl_bind_ack_t *bind_ack = (dl_bind_ack_t *)control_data;
+
+  bind_req->dl_primitive = DL_BIND_REQ;
+  bind_req->dl_sap = sap;
+  bind_req->dl_max_conind = 1;
+  bind_req->dl_service_mode = mode;
+  bind_req->dl_conn_mgmt = 0;
+  bind_req->dl_xidtest_flg = 0;
+
+  if (put_control(fd, sizeof(dl_bind_req_t), 0, DL_BIND_ACK) < 0) {
+    fprintf(where,
+            "netperf: dl_bind: could not send control message, errno = %d\n",
+            errno);
+    return(-1);
+  }
+
+  /* at this point, the control_data portion of the control message */
+  /* structure should contain a DL_BIND_ACK, which will have a full */
+  /* DLSAP in it. we want to extract this and pass it up so that    */
+  /* it can be passed around. */
+  if (*dlsap_len >= bind_ack->dl_addr_length) {
+    bcopy((char *)bind_ack+bind_ack->dl_addr_offset,
+          dlsap_ptr,
+          bind_ack->dl_addr_length);
+    *dlsap_len = bind_ack->dl_addr_length;
+    return(0);
+  }
+  else { 
+    return (-1); 
+  }
+}
+
+int
+dl_connect(int fd, unsigned char *remote_addr, int remote_addr_len)
+{
+  dl_connect_req_t *connection_req = (dl_connect_req_t *)control_data;
+  dl_connect_con_t *connection_con = (dl_connect_con_t *)control_data;
+  struct pollfd pinfo;
+
+  int flags = 0;
+
+  /* this is here on the off chance that we really want some data */
+  u_long data_area[512];
+  struct strbuf data_message;
+
+  int error;
+
+  data_message.maxlen = 2048;
+  data_message.len = 0;
+  data_message.buf = (char *)data_area;
+
+  connection_req->dl_primitive = DL_CONNECT_REQ;
+  connection_req->dl_dest_addr_length = remote_addr_len;
+  connection_req->dl_dest_addr_offset = sizeof(dl_connect_req_t);
+  connection_req->dl_qos_length = 0;
+  connection_req->dl_qos_offset = 0;
+  bcopy (remote_addr, 
+         (unsigned char *)control_data + sizeof(dl_connect_req_t),
+         remote_addr_len);
+
+  /* well, I would call the put_control routine here, but the sequence */
+  /* of connection stuff with DLPI is a bit screwey with all this */
+  /* message passing - Toto, I don't think were in Berkeley anymore. */
+
+  control_message.len = sizeof(dl_connect_req_t) + remote_addr_len;
+  if ((error = putmsg(fd,&control_message,0,0)) !=0) {
+    fprintf(where,"dl_connect: putmsg failure, errno = %d, error 0x%x \n",
+            errno,error);
+    fflush(where);
+    return(-1);
+  };
+
+  pinfo.fd = fd;
+  pinfo.events = POLLIN | POLLPRI;
+  pinfo.revents = 0;
+
+  if ((error = getmsg(fd,&control_message,&data_message,&flags)) != 0) {
+    fprintf(where,"dl_connect: getmsg failure, errno = %d, error 0x%x \n",
+            errno,error);
+    fflush(where);
+    return(-1);
+  }
+  while (control_data[0] == DL_TEST_CON) {
+    /* i suppose we spin until we get an error, or a connection */
+    /* indication */
+    if((error = getmsg(fd,&control_message,&data_message,&flags)) !=0) {
+       fprintf(where,"dl_connect: getmsg failure, errno = %d, error = 0x%x\n",
+               errno,error);
+       fflush(where);
+       return(-1);
+    }
+  }
+
+  /* we are out - it either worked or it didn't - which was it? */
+  if (control_data[0] == DL_CONNECT_CON) {
+    return(0);
+  }
+  else {
+    return(-1);
+  }
+}
+
+int
+dl_accept(fd, remote_addr, remote_addr_len)
+     int fd;
+     unsigned char *remote_addr;
+     int remote_addr_len;
+{
+  dl_connect_ind_t *connect_ind = (dl_connect_ind_t *)control_data;
+  dl_connect_res_t *connect_res = (dl_connect_res_t *)control_data;
+  int tmp_cor;
+  int flags = 0;
+
+  /* hang around and wait for a connection request */
+  getmsg(fd,&control_message,0,&flags);
+  while (control_data[0] != DL_CONNECT_IND) {
+    getmsg(fd,&control_message,0,&flags);
+  }
+
+  /* now respond to the request. at some point, we may want to be sure */
+  /* that the connection came from the correct station address, but */
+  /* will assume that we do not have to worry about it just now. */
+
+  tmp_cor = connect_ind->dl_correlation;
+
+  connect_res->dl_primitive = DL_CONNECT_RES;
+  connect_res->dl_correlation = tmp_cor;
+  connect_res->dl_resp_token = 0;
+  connect_res->dl_qos_length = 0;
+  connect_res->dl_qos_offset = 0;
+  connect_res->dl_growth = 0;
+
+  return(put_control(fd, sizeof(dl_connect_res_t), 0, DL_OK_ACK));
+
+}
+
+int
+dl_set_window(fd, window)
+     int fd, window;
+{
+  return(0);
+}
+
+void
+dl_stats(fd)
+     int fd;
+{
+}
+
+int
+dl_send_disc(fd)
+     int fd;
+{
+}
+
+int
+dl_recv_disc(fd)
+     int fd;
+{
+}
 
 
 /* This routine implements the CO unidirectional data transfer test */
