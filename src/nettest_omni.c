@@ -308,9 +308,7 @@ static struct timeval *temp_intvl_ptr = &intvl_one;
 extern void get_uuid_string(char *string, size_t size);
 
 /* a boatload of globals while I settle things out */
-char *csv_selection_file = NULL;
-char *human_selection_file = NULL;
-char *keyword_selection_file = NULL;
+char *selection_file_name = NULL;
 
 char test_uuid[38];
 
@@ -652,17 +650,6 @@ typedef struct netperf_output_elt {
 } netperf_output_elt_t;
 
 netperf_output_elt_t netperf_output_source[NETPERF_OUTPUT_MAX];
-
-/* the list of things we will emit for CSV output.  I suppose we could
-   at some point try to make this a special case of output_human_list,
-   or at least use some of that space... but for now we won't worry
-   about it.  that can come after things are actually working :) raj
-   2008-01-23  */
-enum netperf_output_name output_csv_list[NETPERF_OUTPUT_MAX];
-
-/* the list of things we will emit for "human" output. up to
-   NETPERF_MAX_BLOCKS of output (groups of lines) each out to
-   NETPERF_OUTPUT_MAX entries. that should more than cover it */
 
 #define NETPERF_MAX_BLOCKS 4
 
@@ -1430,7 +1417,7 @@ parse_output_csv_selection_file(char *selection_file) {
   }
 }
 void
-parse_output_human_selection_file(char *selection_file) {
+parse_output_selection_file(char *selection_file) {
   FILE *selections;
   char name[81]; /* best be more than enough */
   int namepos;
@@ -1492,20 +1479,6 @@ parse_output_human_selection_file(char *selection_file) {
   if ((c == EOF) && (namepos > 0)) {
     name[namepos] = 0;
     output_list[line][j] =   match_string_to_output(name);
-  }
-
-}
-
-void
-set_output_csv_list_default() {
-
-  int  i = 0;
-  enum netperf_output_name j;
-
-  /* this should cause us to catch everything unless someone botches
-     adding an output name to the enum.  raj 2008-02-22 */
-  for (j = SOCKET_TYPE; j < OUTPUT_END; j++) {
-    output_list[0][i++] = j;
   }
 
 }
@@ -3489,9 +3462,6 @@ print_omni_init() {
   print_omni_init_list();
 
   /* belts and suspenders */
-  for (i = OUTPUT_NONE; i < NETPERF_OUTPUT_MAX; i++)
-    output_list[0][i] = OUTPUT_END;
-
   for (j = 0; j < NETPERF_MAX_BLOCKS; j++)
     for (i = OUTPUT_NONE; i < NETPERF_OUTPUT_MAX; i++)
       output_list[j][i] = OUTPUT_END;
@@ -3500,20 +3470,13 @@ print_omni_init() {
   /* the default for csv is the kitchen-sink.  ultimately it will be
      possible to override by providing one's own list in a file */
 
-  if ((csv) || (keyword)) {
-    if (csv_selection_file) 
+  if (selection_file_name) {
       /* name of file, list to fill, number of rows/lines */
-      parse_output_csv_selection_file(csv_selection_file);
-    else
-      set_output_csv_list_default();
+      parse_output_selection_file(selection_file_name);
   }
   else {
-    if (human_selection_file)
-      parse_output_human_selection_file(human_selection_file);
-    else
       set_output_list_default();
   }
-      
 
 }
 
@@ -3593,41 +3556,43 @@ void
 print_omni_csv()
 {
 
-  int j,k,buflen,vallen;
+  int i,j,k,buflen,vallen;
 
   char *hdr1 = NULL;
   char *val1 = NULL;
   char tmpval[1024];
 
   buflen = 0;
-  for (j = 0; 
-       ((j < NETPERF_OUTPUT_MAX) && 
-	(output_list[0][j] != OUTPUT_END));
-       j++) {
-    if ((netperf_output_source[output_list[0][j]].format != NULL) &&
-	(netperf_output_source[output_list[0][j]].display_value != NULL)) {
-      vallen = 
-	my_snprintf(tmpval,
-		    1024,
-		    netperf_output_source[output_list[0][j]].format,
-		    (netperf_output_source[output_list[0][j]].display_value));
-      if (vallen == -1) {
-	fprintf(where,"my_snprintf failed on %s with format %s\n",
-		netperf_output_enum_to_str(j),
-		netperf_output_source[output_list[0][j]].format);
-	fflush(where);
+  for (i = 0; i < NETPERF_MAX_BLOCKS; i++) {
+    for (j = 0; 
+	 ((j < NETPERF_OUTPUT_MAX) && 
+	  (output_list[i][j] != OUTPUT_END));
+	 j++) {
+      if ((netperf_output_source[output_list[i][j]].format != NULL) &&
+	  (netperf_output_source[output_list[i][j]].display_value != NULL)) {
+	vallen = 
+	  my_snprintf(tmpval,
+		      1024,
+		      netperf_output_source[output_list[i][j]].format,
+		      (netperf_output_source[output_list[i][j]].display_value));
+	if (vallen == -1) {
+	  fprintf(where,"my_snprintf failed on %s with format %s\n",
+		  netperf_output_enum_to_str(j),
+		  netperf_output_source[output_list[i][j]].format);
+	  fflush(where);
+	}
+	vallen += 1; /* forget not the terminator */
       }
-      vallen += 1; /* forget not the terminator */
+      else
+	vallen = 0;
+      
+      if (vallen > 
+	  netperf_output_source[output_list[i][j]].tot_line_len)
+	netperf_output_source[output_list[i][j]].tot_line_len = vallen;
+      
+      buflen += 
+	netperf_output_source[output_list[i][j]].tot_line_len;
     }
-    else
-      vallen = 0;
-
-    if (vallen > 
-	netperf_output_source[output_list[0][j]].tot_line_len)
-      netperf_output_source[output_list[0][j]].tot_line_len = vallen;
-    
-    buflen += 
-      netperf_output_source[output_list[0][j]].tot_line_len;
   }
 
   if (print_headers) hdr1 = malloc(buflen + 1);
@@ -3647,44 +3612,46 @@ print_omni_csv()
      strings, and we have spaces where we want them etc */
   char *h1 = hdr1;
   char *v1 = val1;
-  for (j = 0; 
-       ((j < NETPERF_OUTPUT_MAX) && 
-	(output_list[0][j] != OUTPUT_END));
-       j++) {
-    int len;
-    len = 0; 
-    if (print_headers) {
-      for (k = 0; ((k < 4) && 
-		   (NULL != 
-		    netperf_output_source[output_list[0][j]].line[k]) &&
-		   (strcmp("",netperf_output_source[output_list[0][j]].line[k]))); k++) {
-
-	len = sprintf(h1,
-		      "%s",
-		      netperf_output_source[output_list[0][j]].line[k]);
-	*(h1 + len) = ' ';
-	/* now move to the next starting column. for csv we aren't worried
-	   about alignment between the header and the value lines */
-	h1 += len + 1;
+  for (i = 0; i < NETPERF_MAX_BLOCKS; i++) {
+    for (j = 0; 
+	 ((j < NETPERF_OUTPUT_MAX) && 
+	  (output_list[i][j] != OUTPUT_END));
+	 j++) {
+      int len;
+      len = 0; 
+      if (print_headers) {
+	for (k = 0; ((k < 4) && 
+		     (NULL != 
+		      netperf_output_source[output_list[i][j]].line[k]) &&
+		     (strcmp("",netperf_output_source[output_list[i][j]].line[k]))); k++) {
+	  
+	  len = sprintf(h1,
+			"%s",
+			netperf_output_source[output_list[i][j]].line[k]);
+	  *(h1 + len) = ' ';
+	  /* now move to the next starting column. for csv we aren't worried
+	     about alignment between the header and the value lines */
+	  h1 += len + 1;
+	}
+	*(h1 - 1) = ',';
       }
-      *(h1 - 1) = ',';
-    }
-    if ((netperf_output_source[output_list[0][j]].format != NULL) &&
-	(netperf_output_source[output_list[0][j]].display_value != NULL)) {
-      /* tot_line_len is bogus here, but should be "OK" ? */
-      len = my_snprintf(v1,
-			netperf_output_source[output_list[0][j]].tot_line_len,
-			netperf_output_source[output_list[0][j]].format,
-			netperf_output_source[output_list[0][j]].display_value);
-
-      /* nuke the trailing \n" from the string routine.  */
-      *(v1 + len) = ',';
-      v1 += len + 1;
-    }
-    else {
-      /* we need a ',' even if there is no value */
-      *v1 = ',';
-      v1 += 2;
+      if ((netperf_output_source[output_list[i][j]].format != NULL) &&
+	  (netperf_output_source[output_list[i][j]].display_value != NULL)) {
+	/* tot_line_len is bogus here, but should be "OK" ? */
+	len = my_snprintf(v1,
+			  netperf_output_source[output_list[i][j]].tot_line_len,
+			  netperf_output_source[output_list[i][j]].format,
+			  netperf_output_source[output_list[i][j]].display_value);
+	
+	/* nuke the trailing \n" from the string routine.  */
+	*(v1 + len) = ',';
+	v1 += len + 1;
+      }
+      else {
+	/* we need a ',' even if there is no value */
+	*v1 = ',';
+	v1 += 2;
+      }
     }
   }
 
@@ -3710,30 +3677,32 @@ print_omni_keyword()
   /* this one should be the simplest of all - no buffers to allocate,
      just spit it all out. raj 20080805 */
 
-  int j;
+  int i,j;
   char tmpval[1024];
   int vallen;
 
-  for (j = 0; 
-       ((j < NETPERF_OUTPUT_MAX) && 
-	(output_list[0][j] != OUTPUT_END));
-       j++) {
-    if ((netperf_output_source[output_list[0][j]].format != NULL) &&
-	(netperf_output_source[output_list[0][j]].display_value != NULL)) {
-      vallen = 
-	my_snprintf(tmpval,
-		    1024,
-		    netperf_output_source[output_list[0][j]].format,
-		    (netperf_output_source[output_list[0][j]].display_value));
-      if (vallen == -1) {
-	snprintf(tmpval,
-		 1024,
-		 "my_snprintf failed with format %s\n",
-		 netperf_output_source[output_list[0][j]].format);
+  for (i = 0; i < NETPERF_MAX_BLOCKS; i++) {
+    for (j = 0; 
+	 ((j < NETPERF_OUTPUT_MAX) && 
+	  (output_list[i][j] != OUTPUT_END));
+	 j++) {
+      if ((netperf_output_source[output_list[i][j]].format != NULL) &&
+	  (netperf_output_source[output_list[i][j]].display_value != NULL)) {
+	vallen = 
+	  my_snprintf(tmpval,
+		      1024,
+		      netperf_output_source[output_list[i][j]].format,
+		      (netperf_output_source[output_list[i][j]].display_value));
+	if (vallen == -1) {
+	  snprintf(tmpval,
+		   1024,
+		   "my_snprintf failed with format %s\n",
+		   netperf_output_source[output_list[i][j]].format);
+	}
+	fprintf(where,
+		"%s=%s\n",netperf_output_enum_to_str(output_list[i][j]),
+		tmpval);
       }
-      fprintf(where,
-	      "%s=%s\n",netperf_output_enum_to_str(output_list[0][j]),
-	      tmpval);
     }
   }
   fflush(where);
@@ -7538,22 +7507,18 @@ scan_omni_args(int argc, char *argv[])
       csv = 0;
       keyword = 1;
       /* obliterate any previous file name */
-      if (human_selection_file) {
-	free(human_selection_file);
-	human_selection_file = NULL;
-      }
-      if (csv_selection_file) {
-	free(csv_selection_file);
-	csv_selection_file = NULL;
+      if (selection_file_name) {
+	free(selection_file_name);
+	selection_file_name = NULL;
       }
       if (argv[optind] && ((unsigned char)argv[optind][0] != '-')) {
 	/* we assume that what follows is the name of a file with the
 	   list of desired output values. */
-	csv_selection_file = strdup(argv[optind]);
+	selection_file_name = strdup(argv[optind]);
 	optind++;
 	/* special case - if the file name is "?" then we will emit a
 	   list of the available outputs */
-	if (strcmp(csv_selection_file,"?") == 0) {
+	if (strcmp(selection_file_name,"?") == 0) {
 	  dump_netperf_output_list(stdout,1);
 	  exit(1);
 	}
@@ -7626,22 +7591,22 @@ scan_omni_args(int argc, char *argv[])
       csv = 1;
       keyword = 0;
       /* obliterate any previous file name */
-      if (human_selection_file) {
-	free(human_selection_file);
-	human_selection_file = NULL;
+      if (selection_file_name) {
+	free(selection_file_name);
+	selection_file_name = NULL;
       }
-      if (csv_selection_file) {
-	free(csv_selection_file);
-	csv_selection_file = NULL;
+      if (selection_file_name) {
+	free(selection_file_name);
+	selection_file_name = NULL;
       }
       if (argv[optind] && ((unsigned char)argv[optind][0] != '-')) {
 	/* we assume that what follows is the name of a file with the
 	   list of desired output values. */
-	csv_selection_file = strdup(argv[optind]);
+	selection_file_name = strdup(argv[optind]);
 	optind++;
 	/* special case - if the file name is "?" then we will emit a
 	   list of the available outputs */
-	if (strcmp(csv_selection_file,"?") == 0) {
+	if (strcmp(selection_file_name,"?") == 0) {
 	  dump_netperf_output_list(stdout,1);
 	  exit(1);
 	}
@@ -7653,20 +7618,16 @@ scan_omni_args(int argc, char *argv[])
       csv = 0;
       keyword = 0;
       /* obliterate any previous file name */
-      if (human_selection_file) {
-	free(human_selection_file);
-	human_selection_file = NULL;
-      }
-      if (csv_selection_file) {
-	free(csv_selection_file);
-	csv_selection_file = NULL;
+      if (selection_file_name) {
+	free(selection_file_name);
+	selection_file_name = NULL;
       }
       if (argv[optind] && ((unsigned char)argv[optind][0] != '-')) {
 	/* we assume that what follows is the name of a file with the
 	   list of desired output values */
-	human_selection_file = strdup(argv[optind]);
+	selection_file_name = strdup(argv[optind]);
 	optind++;
-	if (strcmp(human_selection_file,"?") == 0) {
+	if (strcmp(selection_file_name,"?") == 0) {
 	  dump_netperf_output_list(stdout,0);
 	  exit(1);
 	}
