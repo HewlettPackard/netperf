@@ -665,7 +665,12 @@ enum netperf_output_name output_csv_list[NETPERF_OUTPUT_MAX];
    NETPERF_OUTPUT_MAX entries. that should more than cover it */
 
 #define NETPERF_MAX_BLOCKS 4
-enum netperf_output_name output_human_list[NETPERF_MAX_BLOCKS][NETPERF_OUTPUT_MAX];
+
+/* let us simply use one, two-dimensional list, and either use or some
+   of the additional dimension depending on the type of output we are
+   doing.  this should help simplify matters. raj 20110120 */
+
+enum netperf_output_name output_list[NETPERF_MAX_BLOCKS][NETPERF_OUTPUT_MAX];
 
 char *direction_to_str(int direction) {
   if (NETPERF_RECV_ONLY(direction)) return "Receive";
@@ -1400,13 +1405,13 @@ parse_output_csv_selection_file(char *selection_file) {
 	exit(-1);
       }
       name[namepos] = 0;
-      output_csv_list[j++] = match_string_to_output(name);
+      output_list[0][j++] = match_string_to_output(name);
       namepos = 0;
     }
     else if (c == '\n') {
       /* move to the next line after checking for a match */
       name[namepos] = 0;
-      output_csv_list[j++] = match_string_to_output(name);
+      output_list[0][j++] = match_string_to_output(name);
       line++;
       namepos = 0;
     }
@@ -1421,7 +1426,7 @@ parse_output_csv_selection_file(char *selection_file) {
      count */
   if ((c == EOF) && (namepos > 0)) {
     name[namepos] = 0;
-    output_csv_list[j] =   match_string_to_output(name);
+    output_list[0][j] =   match_string_to_output(name);
   }
 }
 void
@@ -1465,13 +1470,13 @@ parse_output_human_selection_file(char *selection_file) {
 	exit(-1);
       }
       name[namepos] = 0;
-      output_human_list[line][j++] = match_string_to_output(name);
+      output_list[line][j++] = match_string_to_output(name);
       namepos = 0;
     }
     else if (c == '\n') {
       /* move to the next line after checking for a match */
       name[namepos] = 0;
-      output_human_list[line++][j++] = match_string_to_output(name);
+      output_list[line++][j++] = match_string_to_output(name);
       namepos = 0;
       j = 0;
     }
@@ -1486,7 +1491,7 @@ parse_output_human_selection_file(char *selection_file) {
      count */
   if ((c == EOF) && (namepos > 0)) {
     name[namepos] = 0;
-    output_human_list[line][j] =   match_string_to_output(name);
+    output_list[line][j] =   match_string_to_output(name);
   }
 
 }
@@ -1500,13 +1505,13 @@ set_output_csv_list_default() {
   /* this should cause us to catch everything unless someone botches
      adding an output name to the enum.  raj 2008-02-22 */
   for (j = SOCKET_TYPE; j < OUTPUT_END; j++) {
-    output_csv_list[i++] = j;
+    output_list[0][i++] = j;
   }
 
 }
 
 void
-set_output_human_list_default() {
+set_output_list_default() {
 
   int i, j;  /* line, column */
   enum netperf_output_name k;
@@ -1515,25 +1520,25 @@ set_output_human_list_default() {
   i = 0;
   j = 0;
   for (k = SOCKET_TYPE; k <= RESPONSE_SIZE; k++)
-    output_human_list[i][j++] = k;
+    output_list[i][j++] = k;
 
   /* Line Two LOCAL_CPU_UTIL to TRANSPORT_MSS */
   i = 1;
   j = 0;
   for (k = LOCAL_CPU_UTIL; k <= TRANSPORT_MSS; k++)
-    output_human_list[i][j++] = k;
+    output_list[i][j++] = k;
 
   /* Line Three LOCAL_SEND_THROUGHPUT throught REMOTE_CORK */
   i = 2;
   j = 0;
   for (k = LOCAL_SEND_THROUGHPUT; k <= REMOTE_CORK; k++)
-    output_human_list[i][j++] = k;
+    output_list[i][j++] = k;
 
   /* Line Four LOCAL_SYSNAME through COMMAND_LINE */
   i = 3;
   j = 0;
   for (k = LOCAL_SYSNAME; k <= COMMAND_LINE; k++)
-    output_human_list[i][j++] = k;
+    output_list[i][j++] = k;
 
 }
 
@@ -3485,11 +3490,11 @@ print_omni_init() {
 
   /* belts and suspenders */
   for (i = OUTPUT_NONE; i < NETPERF_OUTPUT_MAX; i++)
-    output_csv_list[i] = OUTPUT_END;
+    output_list[0][i] = OUTPUT_END;
 
   for (j = 0; j < NETPERF_MAX_BLOCKS; j++)
     for (i = OUTPUT_NONE; i < NETPERF_OUTPUT_MAX; i++)
-      output_human_list[j][i] = OUTPUT_END;
+      output_list[j][i] = OUTPUT_END;
 
 
   /* the default for csv is the kitchen-sink.  ultimately it will be
@@ -3500,13 +3505,13 @@ print_omni_init() {
       /* name of file, list to fill, number of rows/lines */
       parse_output_csv_selection_file(csv_selection_file);
     else
-      set_output_csv_list_default(output_csv_list);
+      set_output_csv_list_default();
   }
   else {
     if (human_selection_file)
       parse_output_human_selection_file(human_selection_file);
     else
-      set_output_human_list_default(output_human_list);
+      set_output_list_default();
   }
       
 
@@ -3597,19 +3602,19 @@ print_omni_csv()
   buflen = 0;
   for (j = 0; 
        ((j < NETPERF_OUTPUT_MAX) && 
-	(output_csv_list[j] != OUTPUT_END));
+	(output_list[0][j] != OUTPUT_END));
        j++) {
-    if ((netperf_output_source[output_csv_list[j]].format != NULL) &&
-	(netperf_output_source[output_csv_list[j]].display_value != NULL)) {
+    if ((netperf_output_source[output_list[0][j]].format != NULL) &&
+	(netperf_output_source[output_list[0][j]].display_value != NULL)) {
       vallen = 
 	my_snprintf(tmpval,
 		    1024,
-		    netperf_output_source[output_csv_list[j]].format,
-		    (netperf_output_source[output_csv_list[j]].display_value));
+		    netperf_output_source[output_list[0][j]].format,
+		    (netperf_output_source[output_list[0][j]].display_value));
       if (vallen == -1) {
 	fprintf(where,"my_snprintf failed on %s with format %s\n",
 		netperf_output_enum_to_str(j),
-		netperf_output_source[output_csv_list[j]].format);
+		netperf_output_source[output_list[0][j]].format);
 	fflush(where);
       }
       vallen += 1; /* forget not the terminator */
@@ -3618,11 +3623,11 @@ print_omni_csv()
       vallen = 0;
 
     if (vallen > 
-	netperf_output_source[output_csv_list[j]].tot_line_len)
-      netperf_output_source[output_csv_list[j]].tot_line_len = vallen;
+	netperf_output_source[output_list[0][j]].tot_line_len)
+      netperf_output_source[output_list[0][j]].tot_line_len = vallen;
     
     buflen += 
-      netperf_output_source[output_csv_list[j]].tot_line_len;
+      netperf_output_source[output_list[0][j]].tot_line_len;
   }
 
   if (print_headers) hdr1 = malloc(buflen + 1);
@@ -3644,19 +3649,19 @@ print_omni_csv()
   char *v1 = val1;
   for (j = 0; 
        ((j < NETPERF_OUTPUT_MAX) && 
-	(output_csv_list[j] != OUTPUT_END));
+	(output_list[0][j] != OUTPUT_END));
        j++) {
     int len;
     len = 0; 
     if (print_headers) {
       for (k = 0; ((k < 4) && 
 		   (NULL != 
-		    netperf_output_source[output_csv_list[j]].line[k]) &&
-		   (strcmp("",netperf_output_source[output_csv_list[j]].line[k]))); k++) {
+		    netperf_output_source[output_list[0][j]].line[k]) &&
+		   (strcmp("",netperf_output_source[output_list[0][j]].line[k]))); k++) {
 
 	len = sprintf(h1,
 		      "%s",
-		      netperf_output_source[output_csv_list[j]].line[k]);
+		      netperf_output_source[output_list[0][j]].line[k]);
 	*(h1 + len) = ' ';
 	/* now move to the next starting column. for csv we aren't worried
 	   about alignment between the header and the value lines */
@@ -3664,13 +3669,13 @@ print_omni_csv()
       }
       *(h1 - 1) = ',';
     }
-    if ((netperf_output_source[output_csv_list[j]].format != NULL) &&
-	(netperf_output_source[output_csv_list[j]].display_value != NULL)) {
+    if ((netperf_output_source[output_list[0][j]].format != NULL) &&
+	(netperf_output_source[output_list[0][j]].display_value != NULL)) {
       /* tot_line_len is bogus here, but should be "OK" ? */
       len = my_snprintf(v1,
-			netperf_output_source[output_csv_list[j]].tot_line_len,
-			netperf_output_source[output_csv_list[j]].format,
-			netperf_output_source[output_csv_list[j]].display_value);
+			netperf_output_source[output_list[0][j]].tot_line_len,
+			netperf_output_source[output_list[0][j]].format,
+			netperf_output_source[output_list[0][j]].display_value);
 
       /* nuke the trailing \n" from the string routine.  */
       *(v1 + len) = ',';
@@ -3689,7 +3694,7 @@ print_omni_csv()
   *(v1-1) = 0;
   /* and now spit it out, but only if it is going to have something
      in it. we don't want a bunch of blank lines or nulls...  */
-  if (output_csv_list[0] != OUTPUT_END) {
+  if (output_list[0][0] != OUTPUT_END) {
     if (print_headers) printf("%s\n",hdr1);
     printf("%s\n",val1);
   }
@@ -3711,23 +3716,23 @@ print_omni_keyword()
 
   for (j = 0; 
        ((j < NETPERF_OUTPUT_MAX) && 
-	(output_csv_list[j] != OUTPUT_END));
+	(output_list[0][j] != OUTPUT_END));
        j++) {
-    if ((netperf_output_source[output_csv_list[j]].format != NULL) &&
-	(netperf_output_source[output_csv_list[j]].display_value != NULL)) {
+    if ((netperf_output_source[output_list[0][j]].format != NULL) &&
+	(netperf_output_source[output_list[0][j]].display_value != NULL)) {
       vallen = 
 	my_snprintf(tmpval,
 		    1024,
-		    netperf_output_source[output_csv_list[j]].format,
-		    (netperf_output_source[output_csv_list[j]].display_value));
+		    netperf_output_source[output_list[0][j]].format,
+		    (netperf_output_source[output_list[0][j]].display_value));
       if (vallen == -1) {
 	snprintf(tmpval,
 		 1024,
 		 "my_snprintf failed with format %s\n",
-		 netperf_output_source[output_csv_list[j]].format);
+		 netperf_output_source[output_list[0][j]].format);
       }
       fprintf(where,
-	      "%s=%s\n",netperf_output_enum_to_str(output_csv_list[j]),
+	      "%s=%s\n",netperf_output_enum_to_str(output_list[0][j]),
 	      tmpval);
     }
   }
@@ -3760,25 +3765,25 @@ print_omni_human()
     buflen = 0;
     for (j = 0; 
 	 ((j < NETPERF_OUTPUT_MAX) && 
-	  (output_human_list[i][j] != OUTPUT_END));
+	  (output_list[i][j] != OUTPUT_END));
 	 j++) {
-      if ((netperf_output_source[output_human_list[i][j]].format != NULL) &&
-	  (netperf_output_source[output_human_list[i][j]].display_value !=
+      if ((netperf_output_source[output_list[i][j]].format != NULL) &&
+	  (netperf_output_source[output_list[i][j]].display_value !=
 	   NULL))
 	vallen = my_snprintf(tmpval,
 			     1024,
-			     netperf_output_source[output_human_list[i][j]].
+			     netperf_output_source[output_list[i][j]].
 format,
-			     (netperf_output_source[output_human_list[i][j]].display_value)) + 1; /* need to count the \n */
+			     (netperf_output_source[output_list[i][j]].display_value)) + 1; /* need to count the \n */
       else
 	vallen = 0;
 
       if (vallen > 
-	  netperf_output_source[output_human_list[i][j]].max_line_len)
-	netperf_output_source[output_human_list[i][j]].max_line_len = vallen;
+	  netperf_output_source[output_list[i][j]].max_line_len)
+	netperf_output_source[output_list[i][j]].max_line_len = vallen;
       
       buflen += 
-	netperf_output_source[output_human_list[i][j]].max_line_len + 1;
+	netperf_output_source[output_list[i][j]].max_line_len + 1;
     }
 
     if (buflen > buflen_max) 
@@ -3818,31 +3823,31 @@ format,
 
     for (j = 0; 
 	 ((j < NETPERF_OUTPUT_MAX) && 
-	  (output_human_list[i][j] != OUTPUT_END));
+	  (output_list[i][j] != OUTPUT_END));
 	 j++) {
       if (print_headers) {
 	for (k = 0; k < 4; k++) {
 	  memcpy(h[k],
-		 netperf_output_source[output_human_list[i][j]].line[k],
-		 strlen(netperf_output_source[output_human_list[i][j]].line[k]));
+		 netperf_output_source[output_list[i][j]].line[k],
+		 strlen(netperf_output_source[output_list[i][j]].line[k]));
 	}
       }
-      if ((netperf_output_source[output_human_list[i][j]].format != NULL) &&
-	  (netperf_output_source[output_human_list[i][j]].display_value != NULL)) {
+      if ((netperf_output_source[output_list[i][j]].format != NULL) &&
+	  (netperf_output_source[output_list[i][j]].display_value != NULL)) {
 	int len;
 	len = my_snprintf(v1,
-			  netperf_output_source[output_human_list[i][j]].max_line_len,
-			  netperf_output_source[output_human_list[i][j]].format,
-			  netperf_output_source[output_human_list[i][j]].display_value);
+			  netperf_output_source[output_list[i][j]].max_line_len,
+			  netperf_output_source[output_list[i][j]].format,
+			  netperf_output_source[output_list[i][j]].display_value);
 	/* nuke the trailing \n" from the string routine.  */
 	*(v1 + len) = ' ';
       }
       /* now move to the next starting column */
     for (k = 0; (k < 4) && (print_headers); k++) {
 	h[k] += 
-	  netperf_output_source[output_human_list[i][j]].max_line_len + 1;
+	  netperf_output_source[output_list[i][j]].max_line_len + 1;
       }
-      v1 += netperf_output_source[output_human_list[i][j]].max_line_len + 1;
+      v1 += netperf_output_source[output_list[i][j]].max_line_len + 1;
     }
     /* ok, _now_ null terminate each line.  do we have an OBOB here? */
     for (k = 0; (k < 4) && (print_headers); k++) {
@@ -3853,7 +3858,7 @@ format,
        in it. we don't want a bunch of blank lines or nulls... at some
      point we might want to work backwards collapsine whitespace from
      the right but for now, we won't bother */
-    if (output_human_list[i][0] != OUTPUT_END) {
+    if (output_list[i][0] != OUTPUT_END) {
       if (i > 0) printf("\n"); /* we want a blank line between blocks ? */
       for (k = 0; (k < 4) && (print_headers); k++) {
 	printf("%s\n",hdr[k]);
@@ -3978,7 +3983,7 @@ send_data(SOCKET data_socket, struct ring_elt *send_ring, uint32_t bytes_to_send
     if (errno == ENOBUFS)
       return -2;
     else {
-      fprintf(where,"send_data: data send error: errno %d",errno);
+      fprintf(where,"send_data: data send error: errno %d\n",errno);
       return -3;
     }
   }
@@ -5427,9 +5432,9 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
       should be gone for "production" :) */
    int i;
    print_omni_init();
-   output_csv_list[1] = OUTPUT_END;
+   output_list[0][1] = OUTPUT_END;
    for (i = OUTPUT_NONE; i < NETPERF_OUTPUT_MAX; i++) {
-     output_csv_list[0] = i;
+     output_list[0][0] = i;
      print_omni_csv();
    }
  }

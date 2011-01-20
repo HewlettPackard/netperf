@@ -3007,7 +3007,7 @@ resolve_host(char *hostname,
   hints.ai_family = family;
   hints.ai_socktype = SOCK_STREAM;
   hints.ai_protocol = IPPROTO_TCP;
-  hints.ai_flags = AI_CANONNAME;
+  hints.ai_flags = AI_CANONNAME|AI_ADDRCONFIG;
   count = 0;
   do {
     error = getaddrinfo((char *)hostname,

@@ -697,7 +697,7 @@ complete_addrinfo(char *controlhost, char *data_address, char *port, int family,
   hints.ai_family = family;
   hints.ai_socktype = type;
   hints.ai_protocol = protocol;
-  hints.ai_flags = flags|AI_CANONNAME;
+  hints.ai_flags = flags|AI_CANONNAME|AI_ADDRCONFIG;
 
   count = 0;
   do {
