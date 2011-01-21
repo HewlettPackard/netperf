@@ -308,7 +308,7 @@ static struct timeval *temp_intvl_ptr = &intvl_one;
 extern void get_uuid_string(char *string, size_t size);
 
 /* a boatload of globals while I settle things out */
-char *selection_file_name = NULL;
+char *output_selection_spec = NULL;
 
 char test_uuid[38];
 
@@ -480,6 +480,7 @@ extern int
    the default csv (everything) output */
 
 enum netperf_output_name {
+  NETPERF_OUTPUT_UNKNOWN,
   OUTPUT_NONE,
   SOCKET_TYPE,
   PROTOCOL,
@@ -1301,6 +1302,17 @@ dump_netperf_output_source(FILE *where)
     strlen(netperf_output_source[x].line[3]) + 4
 
 enum netperf_output_name
+match_string_to_output_mnenomic(char *candidate) {
+
+  enum netperf_output_name name;
+  for (name = OUTPUT_NONE; name < NETPERF_OUTPUT_MAX; name++) {
+    if(!strcasecmp(candidate,netperf_output_enum_to_str(name)))
+      return name;
+  }
+  return NETPERF_OUTPUT_UNKNOWN;
+}
+
+enum netperf_output_name
 match_string_to_output(char *candidate)
 {
   char *h1,*temp;
@@ -1345,77 +1357,39 @@ match_string_to_output(char *candidate)
   return OUTPUT_NONE;
 }
 
+
 void
-parse_output_csv_selection_file(char *selection_file) {
-  FILE *selections;
-  char name[81]; /* best be more than enough */
-  int namepos;
-  int c;
-  int j;
-  int line,column;
+set_output_list_all() {
 
-  selections = fopen(selection_file,"r");
-  if (!selections) {
-    perror("Could Not Open output selection file");
-    exit(-1);
-  }
-  
-  /* should this really be necessary? */
-  rewind(selections);
+  int i, j;  /* line, column */
+  enum netperf_output_name k;
 
-  line = 0;
-  column = 1;
-  namepos = 0;
-  name[0] = 0;
-  name[80] = 0;
+  /* Line One SOCKET_TYPE to RESPONSE_SIZE */
+  i = 0;
   j = 0;
-  /* let's allow the csv to turn the four lines of a human readable
-     output file to be used to create a single line csv output file by
-     not worrying about the line count. raj 2008--02-04 */
-  while ((c = fgetc(selections)) != EOF) {
-    if (namepos == 80) {
-      /* too long */
-      
-      fprintf(where,
-	      "Output selection starting column %d on line %d is too long\n",
-	      line + 1,
-	      column);
-      fflush(where);
-      exit(-1);
-    }
-    if (c == ',') {
-      /* time to check for a match, but only if we won't overflow the
-	 current row of the array  */
-      if (j == NETPERF_OUTPUT_MAX) {
-	fprintf(where,"Too many output selectors on line %d\n",line);
-	fflush(where);
-	exit(-1);
-      }
-      name[namepos] = 0;
-      output_list[0][j++] = match_string_to_output(name);
-      namepos = 0;
-    }
-    else if (c == '\n') {
-      /* move to the next line after checking for a match */
-      name[namepos] = 0;
-      output_list[0][j++] = match_string_to_output(name);
-      line++;
-      namepos = 0;
-    }
-    else if (isprint(c)) {
-      name[namepos++] = c;
-    }
-    column++;
-  }
+  for (k = SOCKET_TYPE; k <= RESPONSE_SIZE; k++)
+    output_list[i][j++] = k;
 
-  /* ok, do we need/want to do anything here? at present we will
-     silently ignore the rest of the file if we exit the loop on line
-     count */
-  if ((c == EOF) && (namepos > 0)) {
-    name[namepos] = 0;
-    output_list[0][j] =   match_string_to_output(name);
-  }
+  /* Line Two LOCAL_CPU_UTIL to TRANSPORT_MSS */
+  i = 1;
+  j = 0;
+  for (k = LOCAL_CPU_UTIL; k <= TRANSPORT_MSS; k++)
+    output_list[i][j++] = k;
+
+  /* Line Three LOCAL_SEND_THROUGHPUT throught REMOTE_CORK */
+  i = 2;
+  j = 0;
+  for (k = LOCAL_SEND_THROUGHPUT; k <= REMOTE_CORK; k++)
+    output_list[i][j++] = k;
+
+  /* Line Four LOCAL_SYSNAME through COMMAND_LINE */
+  i = 3;
+  j = 0;
+  for (k = LOCAL_SYSNAME; k <= COMMAND_LINE; k++)
+    output_list[i][j++] = k;
+
 }
+
 void
 parse_output_selection_file(char *selection_file) {
   FILE *selections;
@@ -1427,7 +1401,11 @@ parse_output_selection_file(char *selection_file) {
 
   selections = fopen(selection_file,"r");
   if (!selections) {
-    perror("Could Not Open output selection file");
+    fprintf(where,
+	    "Could not open output selection file '%s' errno %d\n",
+	    selection_file,
+	    errno);
+    fflush(where);
     exit(-1);
   }
   
@@ -1484,35 +1462,133 @@ parse_output_selection_file(char *selection_file) {
 }
 
 void
-set_output_list_default() {
+parse_output_selection_line(int line, char *list) {
 
-  int i, j;  /* line, column */
-  enum netperf_output_name k;
+  char *token;
+  int j;
+  enum netperf_output_name name;
 
-  /* Line One SOCKET_TYPE to RESPONSE_SIZE */
+  /* belt and suspenders */
+  if (line < 0) {
+    fprintf(where,
+	    "parse_output_selection_line called with negative line number %d\n",line);
+    fflush(where);
+    exit(-1);
+  }
+
+  /* silently ignore extra lines and only warn if debug is set */
+  if (line >= NETPERF_MAX_BLOCKS) {
+    if (debug) {
+      fprintf(where,
+	      "There can be no more than %d output selection lines. Ignoring output selection line %d |%s|\n",
+	      NETPERF_MAX_BLOCKS,
+	      line + 1,
+	      list);
+      fflush(where);
+    }
+    return;
+  }
+
+      
+  j=0;
+  token = strtok(list," ,");
+  while ((token) && (j < NETPERF_OUTPUT_MAX)) {
+
+    name = match_string_to_output_mnenomic(token);
+
+    if ((name == NETPERF_OUTPUT_UNKNOWN) && (debug)) {
+      fprintf(where,"Ignoring unknown output selector %d |%s| on line %d\n",
+	      j + 1,
+	      token,
+	      line +1);
+      fflush(where);
+    }
+    else {
+      output_list[line][j] = name;
+    }
+	      
+    j++;
+    token = strtok(NULL," ,");
+  }
+  if ((token) && (debug)) {
+    fprintf(where,"There can be no more than %d output selectors per line. Ignoring remaining selectors on line %d\n",NETPERF_OUTPUT_MAX,line +1);
+    fflush(where);
+  }
+}
+
+void
+parse_output_selection_direct(char *output_selection) {
+
+  char *source,*line,*remainder,*temp;
+  int i,len,done;
+
+  len = strlen(output_selection);
+
+  source = strdup(output_selection);
+  line = (char *) malloc(len);
+  remainder = (char *) malloc(len);
+
+  if ((NULL == source) ||
+      (NULL == line) ||
+      (NULL == remainder)) {
+    fprintf(where,"Unable to malloc memory for output selection parsing\n");
+    fflush(where);
+    exit(-1);
+  }
+
   i = 0;
-  j = 0;
-  for (k = SOCKET_TYPE; k <= RESPONSE_SIZE; k++)
-    output_list[i][j++] = k;
+  done = 0;
+  do {
+    break_args_explicit_sep(source,';',line,remainder);
+    if (line[0]) {
+      parse_output_selection_line(i,line);
+    }
+    if (remainder[0]) {
+      temp = source;
+      source = remainder;
+      remainder = temp;
+      i++;
+      /*
+      if (i == NETPERF_MAX_BLOCKS) {
+	fprintf(where,
+		"Too many output blocks requested, maximum is %d\n",
+		NETPERF_MAX_BLOCKS);
+	fflush(where);
+	exit(-1);
+      }
+      */
+      continue;
+    }
+    else {
+      done = 1;
+    }
+  } while (!done);
 
-  /* Line Two LOCAL_CPU_UTIL to TRANSPORT_MSS */
-  i = 1;
-  j = 0;
-  for (k = LOCAL_CPU_UTIL; k <= TRANSPORT_MSS; k++)
-    output_list[i][j++] = k;
+  free(source);
+  free(line);
+  free(remainder);
 
-  /* Line Three LOCAL_SEND_THROUGHPUT throught REMOTE_CORK */
-  i = 2;
-  j = 0;
-  for (k = LOCAL_SEND_THROUGHPUT; k <= REMOTE_CORK; k++)
-    output_list[i][j++] = k;
+}
 
-  /* Line Four LOCAL_SYSNAME through COMMAND_LINE */
-  i = 3;
-  j = 0;
-  for (k = LOCAL_SYSNAME; k <= COMMAND_LINE; k++)
-    output_list[i][j++] = k;
+void
+parse_output_selection(char *output_selection) {
 
+  /* is it the magic keyword? */
+  if (strcasecmp(output_selection,"all") == 0) {
+    set_output_list_all();
+  }
+  /* do not forget the case when the output_selection is a single
+     mnemonic without any separators... */
+  else if (strchr(output_selection,',') ||
+	   strchr(output_selection,';') ||
+	   (match_string_to_output_mnenomic(output_selection) != 
+	    NETPERF_OUTPUT_UNKNOWN)) {
+    parse_output_selection_direct(output_selection);
+  }
+  else {
+    parse_output_selection_file(output_selection);
+  }
+  return;
 }
 
 void
@@ -3470,12 +3546,11 @@ print_omni_init() {
   /* the default for csv is the kitchen-sink.  ultimately it will be
      possible to override by providing one's own list in a file */
 
-  if (selection_file_name) {
-      /* name of file, list to fill, number of rows/lines */
-      parse_output_selection_file(selection_file_name);
+  if (output_selection_spec) {
+      parse_output_selection(output_selection_spec);
   }
   else {
-      set_output_list_default();
+      set_output_list_all();
   }
 
 }
@@ -7507,18 +7582,18 @@ scan_omni_args(int argc, char *argv[])
       csv = 0;
       keyword = 1;
       /* obliterate any previous file name */
-      if (selection_file_name) {
-	free(selection_file_name);
-	selection_file_name = NULL;
+      if (output_selection_spec) {
+	free(output_selection_spec);
+	output_selection_spec = NULL;
       }
       if (argv[optind] && ((unsigned char)argv[optind][0] != '-')) {
 	/* we assume that what follows is the name of a file with the
 	   list of desired output values. */
-	selection_file_name = strdup(argv[optind]);
+	output_selection_spec = strdup(argv[optind]);
 	optind++;
 	/* special case - if the file name is "?" then we will emit a
 	   list of the available outputs */
-	if (strcmp(selection_file_name,"?") == 0) {
+	if (strcmp(output_selection_spec,"?") == 0) {
 	  dump_netperf_output_list(stdout,1);
 	  exit(1);
 	}
@@ -7591,22 +7666,22 @@ scan_omni_args(int argc, char *argv[])
       csv = 1;
       keyword = 0;
       /* obliterate any previous file name */
-      if (selection_file_name) {
-	free(selection_file_name);
-	selection_file_name = NULL;
+      if (output_selection_spec) {
+	free(output_selection_spec);
+	output_selection_spec = NULL;
       }
-      if (selection_file_name) {
-	free(selection_file_name);
-	selection_file_name = NULL;
+      if (output_selection_spec) {
+	free(output_selection_spec);
+	output_selection_spec = NULL;
       }
       if (argv[optind] && ((unsigned char)argv[optind][0] != '-')) {
 	/* we assume that what follows is the name of a file with the
 	   list of desired output values. */
-	selection_file_name = strdup(argv[optind]);
+	output_selection_spec = strdup(argv[optind]);
 	optind++;
 	/* special case - if the file name is "?" then we will emit a
 	   list of the available outputs */
-	if (strcmp(selection_file_name,"?") == 0) {
+	if (strcmp(output_selection_spec,"?") == 0) {
 	  dump_netperf_output_list(stdout,1);
 	  exit(1);
 	}
@@ -7618,16 +7693,16 @@ scan_omni_args(int argc, char *argv[])
       csv = 0;
       keyword = 0;
       /* obliterate any previous file name */
-      if (selection_file_name) {
-	free(selection_file_name);
-	selection_file_name = NULL;
+      if (output_selection_spec) {
+	free(output_selection_spec);
+	output_selection_spec = NULL;
       }
       if (argv[optind] && ((unsigned char)argv[optind][0] != '-')) {
 	/* we assume that what follows is the name of a file with the
 	   list of desired output values */
-	selection_file_name = strdup(argv[optind]);
+	output_selection_spec = strdup(argv[optind]);
 	optind++;
-	if (strcmp(selection_file_name,"?") == 0) {
+	if (strcmp(output_selection_spec,"?") == 0) {
 	  dump_netperf_output_list(stdout,0);
 	  exit(1);
 	}
