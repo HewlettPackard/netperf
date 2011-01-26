@@ -213,7 +213,33 @@ static struct timeval *temp_demo_ptr = &demo_one;
 
 #ifdef WANT_INTERVALS
 int interval_count;
-int num_intervals;
+unsigned int interval_wait_microseconds;
+
+/* hoist the timestamps up here so we can use them to factor-out the
+   time spent "waiting" */
+/* first out timestamp */
+#ifdef HAVE_GETHRTIME
+static hrtime_t intvl_one;
+static hrtime_t intvl_two;
+static hrtime_t intvl_wait_start;
+static hrtime_t *intvl_one_ptr = &intvl_one;
+static hrtime_t *intvl_two_ptr = &intvl_two;
+static hrtime_t *temp_intvl_ptr = &intvl_one;
+#elif defined(WIN32)
+static LARGE_INTEGER intvl_one;
+static LARGE_INTEGER intvl_two;
+static LARGE_INTEGER intvl_wait_start;
+static LARGE_INTEGER *intvl_one_ptr = &intvl_one;
+static LARGE_INTEGER *intvl_two_ptr = &intvl_two;
+static LARGE_INTEGER *temp_intvl_ptr = &intvl_one;
+#else
+static struct timeval intvl_one;
+static struct timeval intvl_two;
+static struct timeval intvl_wait_start; 
+static struct timeval *intvl_one_ptr = &intvl_one;
+static struct timeval *intvl_two_ptr = &intvl_two;
+static struct timeval *temp_intvl_ptr = &intvl_one;
+#endif
 
 #ifndef WANT_SPIN
 sigset_t signal_set;
@@ -225,8 +251,8 @@ sigset_t signal_set;
 	 waiting for a timer. raj 2006-02-06 */ \
       start_itimer(interval_wate); \
     } \
-    num_intervals = 0;
     interval_count = interval_burst; \
+    interval_wait_microseconds = 0; \
     /* get the signal set for the call to sigsuspend */ \
     if (sigprocmask(SIG_BLOCK, (sigset_t *)NULL, &signal_set) != 0) { \
       fprintf(where, \
@@ -247,6 +273,7 @@ sigset_t signal_set;
 	  fprintf(where,"about to suspend\n"); \
 	  fflush(where); \
 	} \
+        HIST_timestamp(&intvl_wait_start); \
 	if (sigsuspend(&signal_set) == EFAULT) { \
 	  fprintf(where, \
 		  "%s: fault with sigsuspend.\n", \
@@ -254,36 +281,18 @@ sigset_t signal_set;
 	  fflush(where); \
 	  exit(1); \
 	} \
+        HIST_timestamp(&intvl_two); \
+        interval_wait_microseconds += \
+          delta_micro(&intvl_wait_start,&intvl_two); \
 	interval_count = interval_burst; \
-        num_intervals += 1; \
       }
 #else
-/* first out timestamp */
-#ifdef HAVE_GETHRTIME
-static hrtime_t intvl_one;
-static hrtime_t intvl_two;
-static hrtime_t *intvl_one_ptr = &intvl_one;
-static hrtime_t *intvl_two_ptr = &intvl_two;
-static hrtime_t *temp_intvl_ptr = &intvl_one;
-#elif defined(WIN32)
-static LARGE_INTEGER intvl_one;
-static LARGE_INTEGER intvl_two;
-static LARGE_INTEGER *intvl_one_ptr = &intvl_one;
-static LARGE_INTEGER *intvl_two_ptr = &intvl_two;
-static LARGE_INTEGER *temp_intvl_ptr = &intvl_one;
-#else
-static struct timeval intvl_one;
-static struct timeval intvl_two;
-static struct timeval *intvl_one_ptr = &intvl_one;
-static struct timeval *intvl_two_ptr = &intvl_two;
-static struct timeval *temp_intvl_ptr = &intvl_one;
-#endif
 
 #define INTERVALS_INIT() \
       if (interval_burst) { \
 	HIST_timestamp(intvl_one_ptr); \
       } \
-      num_intervals = 0; \
+      interval_wait_microseconds = 0; \
       interval_count = interval_burst; \
 
 #define INTERVALS_WAIT() \
@@ -296,15 +305,17 @@ static struct timeval *temp_intvl_ptr = &intvl_one;
 	  fprintf(where,"about to spin suspend\n"); \
 	  fflush(where); \
 	} \
-        HIST_timestamp(intvl_two_ptr); \
-        while(delta_micro(intvl_one_ptr,intvl_two_ptr) < interval_usecs) { \
-	  HIST_timestamp(intvl_two_ptr); \
-	} \
+        \
+        HIST_timestamp(&intvl_wait_start); \
+        do {
+          HIST_timestamp(intvl_two_ptr); } \
+        while(delta_micro(intvl_one_ptr,intvl_two_ptr) < interval_usecs); \
+        interval_wait_microseconds += \
+          delta_micro(&intvl_wait_start,&intvl_two); \
 	temp_intvl_ptr = intvl_one_ptr; \
 	intvl_one_ptr = intvl_two_ptr; \
 	intvl_two_ptr = temp_intvl_ptr; \
 	interval_count = interval_burst; \
-        num_intervals += 1; \
       }
 #endif
 #endif
@@ -5369,7 +5380,9 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	 will be additional overhead affecting CPU utilization.  but,
 	 there is no such thing as a free lunch is there :) raj
 	 20110121 */
-      
+      if (interval_burst) {
+	rtt_elapsed_time -= (float)interval_wait_microseconds / 1000000.0;
+      }
 #endif /* WANT_INTERVALS */
 
       if (!connection_test) {
@@ -5382,9 +5395,10 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	 (double)1000000.0) * 
 	(double) (1 + ((first_burst_size > 0) ? first_burst_size : 0));
       }
-      else 
+      else {
 	rtt_latency = ((double)1.0/(trans_completed/rtt_elapsed_time)) *
 	  (double)1000000.0;
+      }
       tmpfmt = libfmt;
       libfmt = 'x';
       transaction_rate = calc_thruput(trans_completed);
