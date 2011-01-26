@@ -213,6 +213,8 @@ static struct timeval *temp_demo_ptr = &demo_one;
 
 #ifdef WANT_INTERVALS
 int interval_count;
+int num_intervals;
+
 #ifndef WANT_SPIN
 sigset_t signal_set;
 #define INTERVALS_INIT() \
@@ -223,6 +225,7 @@ sigset_t signal_set;
 	 waiting for a timer. raj 2006-02-06 */ \
       start_itimer(interval_wate); \
     } \
+    num_intervals = 0;
     interval_count = interval_burst; \
     /* get the signal set for the call to sigsuspend */ \
     if (sigprocmask(SIG_BLOCK, (sigset_t *)NULL, &signal_set) != 0) { \
@@ -252,6 +255,7 @@ sigset_t signal_set;
 	  exit(1); \
 	} \
 	interval_count = interval_burst; \
+        num_intervals += 1; \
       }
 #else
 /* first out timestamp */
@@ -279,6 +283,7 @@ static struct timeval *temp_intvl_ptr = &intvl_one;
       if (interval_burst) { \
 	HIST_timestamp(intvl_one_ptr); \
       } \
+      num_intervals = 0; \
       interval_count = interval_burst; \
 
 #define INTERVALS_WAIT() \
@@ -299,6 +304,7 @@ static struct timeval *temp_intvl_ptr = &intvl_one;
 	intvl_one_ptr = intvl_two_ptr; \
 	intvl_two_ptr = temp_intvl_ptr; \
 	interval_count = interval_burst; \
+        num_intervals += 1; \
       }
 #endif
 #endif
@@ -1227,7 +1233,22 @@ print_netperf_output_entry(FILE *where, enum netperf_output_name what)
 void print_omni_init_list();
 
 void
-dump_netperf_output_list(FILE *where, int csv) {
+dump_netperf_output_list(FILE *where) {
+
+  int i,j;
+
+  for (i = 0; i < NETPERF_MAX_BLOCKS; i++) {
+    fprintf(where,"Output Block %d\n",i + 1);
+    for (j = 0; j < NETPERF_OUTPUT_MAX; j++) {
+      fprintf(where,"%s ",netperf_output_enum_to_str(output_list[i][j]));
+    }
+    fprintf(where,"\n");
+  }
+  fflush(where);
+}
+
+void
+dump_netperf_output_choices(FILE *where, int csv) {
   int i;
 
   print_omni_init_list();
@@ -1587,6 +1608,9 @@ parse_output_selection(char *output_selection) {
   }
   else {
     parse_output_selection_file(output_selection);
+  }
+  if (debug > 2) {
+    dump_netperf_output_list(stderr);
   }
   return;
 }
@@ -3539,7 +3563,7 @@ print_omni_init() {
 
   /* belts and suspenders */
   for (j = 0; j < NETPERF_MAX_BLOCKS; j++)
-    for (i = OUTPUT_NONE; i < NETPERF_OUTPUT_MAX; i++)
+    for (i = 0; i < NETPERF_OUTPUT_MAX; i++)
       output_list[j][i] = OUTPUT_END;
 
 
@@ -5335,18 +5359,32 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
       thruput = calc_thruput(remote_bytes_xferd);
 
     if (NETPERF_IS_RR(direction)) {
+      float rtt_elapsed_time = elapsed_time;
+
+#ifdef WANT_INTERVALS
+      /* if the test was paced, we need to subtract the time we were
+	 sitting paced from the time we use to calculate the averate
+	 rtt_latency. Of course, won't really know how long we were
+	 sitting unless we bracket the sit with timing calls, which
+	 will be additional overhead affecting CPU utilization.  but,
+	 there is no such thing as a free lunch is there :) raj
+	 20110121 */
+      
+#endif /* WANT_INTERVALS */
+
       if (!connection_test) {
       /* calculate the round trip latency, using the transaction rate
 	 whether or not the user was asking for thruput to be in 'x'
 	 units please... however... a connection_test only ever has
 	 one transaction in flight at one time */
       rtt_latency = 
-	(((double)1.0/(trans_completed/elapsed_time)) * (double)1000000.0) * 
+	(((double)1.0/(trans_completed/rtt_elapsed_time)) * 
+	 (double)1000000.0) * 
 	(double) (1 + ((first_burst_size > 0) ? first_burst_size : 0));
       }
       else 
-	rtt_latency = 
-	  ((double)1.0/(trans_completed/elapsed_time)) * (double)1000000.0;
+	rtt_latency = ((double)1.0/(trans_completed/rtt_elapsed_time)) *
+	  (double)1000000.0;
       tmpfmt = libfmt;
       libfmt = 'x';
       transaction_rate = calc_thruput(trans_completed);
@@ -7594,7 +7632,7 @@ scan_omni_args(int argc, char *argv[])
 	/* special case - if the file name is "?" then we will emit a
 	   list of the available outputs */
 	if (strcmp(output_selection_spec,"?") == 0) {
-	  dump_netperf_output_list(stdout,1);
+	  dump_netperf_output_choices(stdout,1);
 	  exit(1);
 	}
       }
@@ -7682,7 +7720,7 @@ scan_omni_args(int argc, char *argv[])
 	/* special case - if the file name is "?" then we will emit a
 	   list of the available outputs */
 	if (strcmp(output_selection_spec,"?") == 0) {
-	  dump_netperf_output_list(stdout,1);
+	  dump_netperf_output_choices(stdout,1);
 	  exit(1);
 	}
       }
@@ -7703,7 +7741,7 @@ scan_omni_args(int argc, char *argv[])
 	output_selection_spec = strdup(argv[optind]);
 	optind++;
 	if (strcmp(output_selection_spec,"?") == 0) {
-	  dump_netperf_output_list(stdout,0);
+	  dump_netperf_output_choices(stdout,0);
 	  exit(1);
 	}
       }
