@@ -1537,9 +1537,9 @@ parse_output_selection_line(int line, char *list) {
     }
     else {
       output_list[line][j] = name;
+      j++;
     }
 	      
-    j++;
     token = strtok(NULL," ,");
   }
   if ((token) && (debug)) {
@@ -1602,6 +1602,54 @@ parse_output_selection_direct(char *output_selection) {
 
 }
 
+/* building blocks for output selection */
+#define NETPERF_TPUT "ELAPSED_TIME,THROUGHPUT,THROUGHPUT_UNITS"
+#define NETPERF_OUTPUT_STREAM "LSS_SIZE_END,LSS_SIZE_END,LOCAL_SEND_SIZE"
+#define NETPERF_OUTPUT_MAERTS "RSS_SIZE_END,LSR_SIZE_END,REMOTE_SEND_SIZE"
+#define NETPERF_CPU "LOCAL_CPU,LOCAL_CPU_METHOD,REMOTE_CPU_UTIL,REMOTE_CPU_METHOD,LOCAL_SD,REMOTE_SD,SD_UNITS"
+#define NETPERF_RR "LSS_SIZE_END,LSR_SIZE_END,RSR_SIZE_END,RSS_SIZE_END,REQUEST_SIZE,RESPONSE_SIZE"
+
+void
+set_output_list_by_test() {
+
+  char *stream_no_cpu = NETPERF_OUTPUT_STREAM "," NETPERF_TPUT;
+  char *stream_cpu = NETPERF_OUTPUT_STREAM "," NETPERF_TPUT "," NETPERF_CPU;
+  char *maerts_no_cpu = NETPERF_OUTPUT_MAERTS "," NETPERF_TPUT;
+  char *maerts_cpu =  NETPERF_OUTPUT_MAERTS "," NETPERF_TPUT "," NETPERF_CPU;
+  char *rr_no_cpu = NETPERF_RR "," NETPERF_TPUT;
+  char *rr_cpu = NETPERF_RR "," NETPERF_TPUT "," NETPERF_CPU;
+
+
+  if (NETPERF_XMIT_ONLY(direction)) {
+    if (!(local_cpu_usage || remote_cpu_usage))
+      parse_output_selection_direct(stream_no_cpu);
+    else 
+      parse_output_selection_direct(stream_cpu);
+  }
+  else if (NETPERF_RECV_ONLY(direction)) {
+    if (!(local_cpu_usage || remote_cpu_usage))
+      parse_output_selection_direct(maerts_no_cpu);
+    else
+      parse_output_selection_direct(maerts_cpu);
+  }
+  else if (NETPERF_CC(direction)) {
+  }
+  else if (NETPERF_IS_RR(direction)) {
+    if (!(local_cpu_usage || remote_cpu_usage))
+      parse_output_selection_direct(rr_no_cpu);
+    else
+      parse_output_selection_direct(rr_cpu);
+  }
+  else {
+    /* no idea */
+    if (debug) {
+      fprintf(where,"Cannot determine default test output, using mins\n");
+      fflush(where);
+    }
+    parse_output_selection_direct(NETPERF_TPUT "," NETPERF_CPU);
+  }
+}
+
 void
 parse_output_selection(char *output_selection) {
 
@@ -1632,7 +1680,7 @@ print_omni_init_list() {
   int i;
 
   /* belts and suspenders everyone... */
-  for (i = OUTPUT_NONE; i < NETPERF_OUTPUT_MAX; i++) {
+  for (i = NETPERF_OUTPUT_UNKNOWN; i < NETPERF_OUTPUT_MAX; i++) {
     netperf_output_source[i].output_name = i;
     netperf_output_source[i].max_line_len = 0;
     netperf_output_source[i].tot_line_len = 0;
@@ -1648,6 +1696,9 @@ print_omni_init_list() {
 
   netperf_output_source[OUTPUT_NONE].output_name = OUTPUT_NONE;
   netperf_output_source[OUTPUT_NONE].line[0] = " ";
+  netperf_output_source[OUTPUT_NONE].line[1] = "";
+  netperf_output_source[OUTPUT_NONE].line[2] = "";
+  netperf_output_source[OUTPUT_NONE].line[3] = "";
   netperf_output_source[OUTPUT_NONE].format = "%s";
   netperf_output_source[OUTPUT_NONE].display_value = &" ";
   netperf_output_source[OUTPUT_NONE].max_line_len = 
@@ -3585,7 +3636,7 @@ print_omni_init() {
       parse_output_selection(output_selection_spec);
   }
   else {
-      set_output_list_all();
+      set_output_list_by_test();
   }
 
 }
@@ -7879,6 +7930,7 @@ scan_omni_args(int argc, char *argv[])
      zero, let us see if it needs to be set to something else. */
   if ((0 == direction) && (!connection_test)) direction = NETPERF_XMIT;
   direction_str = direction_to_str(direction);
+
   /* some other sanity checks we need to make would include stuff when
      the user has set -m and -M such that both XMIT and RECV are set
      and has not set -r. initially we will not allow that.  at some
@@ -7889,6 +7941,14 @@ scan_omni_args(int argc, char *argv[])
 #if defined(WANT_HISTOGRAM)
   if (verbosity > 1) keep_histogram = 1;
 #endif
+
+  /* did the user use -d 6 but not set -r? */
+  if (NETPERF_IS_RR(direction) && !NETPERF_CC(direction)) {
+    if (req_size == -1)
+      req_size = 1;
+    if (rsp_size == -1)
+      rsp_size = 1;
+  }
 
   /* ok, time to sanity check the output units */
   if ('?' == libfmt) {
