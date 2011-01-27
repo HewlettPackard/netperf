@@ -72,7 +72,7 @@ char nettest_omni_id[]="\
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 
-#ifdef WANT_SCTP
+#ifdef HAVE_NETINET_SCTP_H
 #include <netinet/sctp.h>
 #endif
 

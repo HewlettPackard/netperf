@@ -105,7 +105,7 @@ char	nettest_id[]="\
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 
-#ifdef WANT_SCTP
+#ifdef HAVE_NETINET_SCTP_H
 #include <netinet/sctp.h>
 #endif
 
@@ -610,6 +610,10 @@ protocol_to_str(int protocol) {
 #ifdef IPPROTO_SDP
   case IPPROTO_SDP:
     return "SDP";
+#endif
+#ifdef IPPROTO_IP
+  case IPPROTO_IP:
+    return "IP Default";
 #endif
   default:
     return "Unknown Protocol";
@@ -1279,7 +1283,7 @@ create_data_socket(struct addrinfo *res)
        for SCTP, but just in case there is an SCTP implementation out
        there _without_ SCTP_NODELAY... raj 2005-03-15 */ 
     /* change this to IPPROTO_SCTP rather than WANT_SCTP to better fit
-       with the modus operendi (sp) of the new "omni" tests. raj
+       with the modus operandi of the new "omni" tests. raj
        2008-02-04 */
 #if defined(IPPROTO_SCTP) && defined(SCTP_NODELAY)
     if (IPPROTO_SCTP == res->ai_protocol) {
