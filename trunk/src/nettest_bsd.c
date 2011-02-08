@@ -1659,7 +1659,7 @@ Size (bytes)\n\
      during a test... ;-) at some point, this should probably become a
      64bit integral type, but those are not entirely common
      yet... time passes, and 64 bit types do indeed become common. */
-#if _MSC_VER <= 1200
+#if defined(WIN32) && _MSC_VER <= 1200
   __int64 local_bytes_sent = 0
 #else
   unsigned long long local_bytes_sent = 0;
@@ -2374,7 +2374,8 @@ Size (bytes)\n\
      course, time passes and they do become common.
  */
   double	bytes_sent = 0.0;
-#if _MSC_VER < 1200
+
+#if defined(WIN32) && (_MSC_VER < 1200)
   __int64 local_bytes_recvd = 0;
 #else
   unsigned long long local_bytes_recvd = 0;

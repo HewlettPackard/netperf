@@ -4332,6 +4332,41 @@ disconnect_data_socket(SOCKET data_socket, int initiate, int do_close, struct so
   return 0;
 }
 
+#ifdef HAVE_LINUX_TCP_H
+static void
+dump_transport_stats(SOCKET socket, int protocol)
+{
+
+  struct tcp_info tcp_info;
+  int ret, infosize;
+
+  if (protocol != IPPROTO_TCP)
+    return;
+
+  infosize = sizeof(struct tcp_info);
+
+  if (ret = getsockopt(socket,protocol,TCP_INFO,&tcp_info,&infosize)) {
+    perror("dump_transport_stats:getsockopt");
+    return;
+  }
+
+  printf("tcpi_rto %d tcpi_ato %d tcpi_pmtu %d tcpi_rcv_ssthresh %d\n",
+	 tcp_info.tcpi_rto,
+	 tcp_info.tcpi_ato,
+	 tcp_info.tcpi_pmtu,
+	 tcp_info.tcpi_rcv_ssthresh);
+  printf("tcpi_rtt %d tcpi_rttvar %d tcpi_snd_ssthresh %d tpci_snd_cwnd %d\n",
+	 tcp_info.tcpi_rtt,
+	 tcp_info.tcpi_rttvar,
+	 tcp_info.tcpi_snd_ssthresh,
+	 tcp_info.tcpi_snd_cwnd);
+  printf("tcpi_reordering %d tcpi_total_retrans %d\n",
+	 tcp_info.tcpi_reordering,
+	 tcp_info.tcpi_total_retrans);
+  return;
+}
+#endif
+
 static void
 get_transport_info(SOCKET socket, int *mss, int protocol)
 {
@@ -4368,6 +4403,12 @@ get_transport_info(SOCKET socket, int *mss, int protocol)
     fflush(where);
     *mss = -1;
   }
+
+#ifdef HAVE_LINUX_TCP_H
+  if (debug) {
+    dump_transport_stats(socket,protocol);
+  }
+#endif
 }
 
 /* brain dead simple way to get netperf to emit a uuid. sadly, by this
