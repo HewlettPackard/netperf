@@ -1457,7 +1457,7 @@ allocate_buffer_ring(int width, int buffer_size, int alignment, int offset)
     /* get the ring element */
     temp_link = (struct ring_elt *)malloc(sizeof(struct ring_elt));
     if (temp_link == NULL) {
-      printf("malloc(%u) failed!\n", sizeof(struct ring_elt));
+      printf("malloc(%u) failed!\n", (unsigned int)sizeof(struct ring_elt));
       exit(1);
     }
     /* remember the first one so we can close the ring at the end */
@@ -1825,7 +1825,7 @@ alloc_sendfile_buf_ring(int width,
     temp_link = (struct sendfile_ring_elt *)
       malloc(sizeof(struct sendfile_ring_elt));
     if (temp_link == NULL) {
-      printf("malloc(%u) failed!\n", sizeof(struct sendfile_ring_elt));
+      printf("malloc(%u) failed!\n",(unsigned int) sizeof(struct sendfile_ring_elt));
       exit(1);
 	}
 
@@ -2361,7 +2361,7 @@ send_request_n(int n)
 
     fprintf(where,
             "\nsend_request: about to send %u bytes from %p\n",
-            sizeof(netperf_request),
+            (unsigned int) sizeof(netperf_request),
             &netperf_request);
     fflush(where);
   }
@@ -2434,7 +2434,7 @@ send_response_n(int n)
   if (debug > 1) {
     fprintf(where,
             "send_response_n: contents of %u ints before %d htonl,\n",
-            sizeof(netperf_response)/4,
+            (unsigned int) sizeof(netperf_response)/4,
 	    count);
     dump_response();
   }
@@ -2455,7 +2455,7 @@ send_response_n(int n)
     dump_response();
     fprintf(where,
             "about to send %u bytes from %p\n",
-            sizeof(netperf_response),
+            (unsigned int) sizeof(netperf_response),
             &netperf_response);
     fflush(where);
   }
@@ -3775,30 +3775,28 @@ HIST_new_n(int max_outstanding) {
     exit(1);
   }
   HIST_clear(h);
-  /* now allocate the time_ones based on max_outstanding */
-  if (max_outstanding > 0) {
-#ifdef HAVE_GETHRTIME
-    h->time_ones = (hrtime_t *) malloc(max_outstanding * sizeof(hrtime_t));
-#elif HAVE_GET_HRT
-    h->time_ones = (hrt_t *) malloc(max_outstanding * sizeof(hrt_t));
-#elif defined(WIN32)
-    h->time_ones = (LARGE_INTEGER *) malloc(max_outstanding * 
-					    sizeof(LARGE_INTEGER));
-#else
-    h->time_ones = (struct timeval *) malloc(max_outstanding * 
-					     sizeof(struct timeval));
-#endif /* HAVE_GETHRTIME */
-    if (h->time_ones == NULL) {
-      perror("HIST_new_n - time_ones malloc failed");
-      exit(1);
-    }
-  }
-  else {
-    h->time_ones = NULL;
-  }
+
   /* we never want to have a full queue, so will trade a little space
      for that. one day we may still have to check for a full queue */
   h->limit = max_outstanding + 1; 
+
+  /* now allocate the time_ones based on h->limit */
+#ifdef HAVE_GETHRTIME
+  h->time_ones = (hrtime_t *) malloc(h->limit * sizeof(hrtime_t));
+#elif HAVE_GET_HRT
+  h->time_ones = (hrt_t *) malloc(h->limit * sizeof(hrt_t));
+#elif defined(WIN32)
+  h->time_ones = (LARGE_INTEGER *) malloc(h->limit * 
+					  sizeof(LARGE_INTEGER));
+#else
+  h->time_ones = (struct timeval *) malloc(h->limit * 
+					   sizeof(struct timeval));
+#endif /* HAVE_GETHRTIME */
+  if (h->time_ones == NULL) {
+    perror("HIST_new_n - time_ones malloc failed");
+    exit(1);
+  }
+  
   return h;
 }
   
@@ -3832,6 +3830,13 @@ HIST_clear(HIST h){
    h->producer = 0;
    h->consumer = 0;
    h->time_ones = NULL;
+}
+
+void
+HIST_purge(HIST h) {
+  h->count = 0;
+  h->producer = 0;
+  h->consumer = 0;
 }
 
 void 

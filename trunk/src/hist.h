@@ -105,6 +105,13 @@ HIST HIST_new_n(int max_outstanding);
 void HIST_clear(HIST h);
 
 /*
+   HIST_purge - forget about any remaining outstanding timestamps
+   being tracked 
+*/
+
+void HIST_purge(HIST h);
+
+/*
    HIST_add - add a time difference to a histogram. Time should be in
    microseconds. 
 */

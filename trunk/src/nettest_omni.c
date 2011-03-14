@@ -70,7 +70,16 @@ char nettest_omni_id[]="\
 #endif /* !defined(__VMS) */
 #include <sys/socket.h>
 #include <netinet/in.h>
+
+/* it would seem that including both <netinet/tcp.h> and <linux/tcp.h>
+   is not a path to happiness and joy when one wishes to grab tcp_info
+   stats and not get something like the compiler complaining about
+   either redefinitions, or missing tcpi_total_retrans. */
+#ifdef HAVE_LINUX_TCP_H
+#include <linux/tcp.h>
+#else
 #include <netinet/tcp.h>
+#endif
 
 #ifdef HAVE_NETINET_SCTP_H
 #include <netinet/sctp.h>
@@ -4338,6 +4347,7 @@ dump_transport_stats(SOCKET socket, int protocol)
 {
 
   struct tcp_info tcp_info;
+
   int ret, infosize;
 
   if (protocol != IPPROTO_TCP)
@@ -4363,6 +4373,7 @@ dump_transport_stats(SOCKET socket, int protocol)
   printf("tcpi_reordering %d tcpi_total_retrans %d\n",
 	 tcp_info.tcpi_reordering,
 	 tcp_info.tcpi_total_retrans);
+
   return;
 }
 #endif
@@ -4563,6 +4574,15 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
     bytes_received = 0;
     local_send_calls = 0;
     local_receive_calls = 0;
+
+    /* since we are tracking the number of outstanding requests for
+       timestamping purposes, and since the previous iteration if
+       using confidence intervals may not have completed all of them,
+       we now need to forget about them or we will mistakenly fill our
+       tracking array. raj 2011-03-14 */
+    if (keep_histogram) {
+      HIST_purge(time_hist);
+    }
 
 #ifdef WANT_FIRST_BURST
     /* we have to remember to reset the number of transactions
@@ -4862,7 +4882,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
        "reliable/connection-oriented" transport (eg TCP, SCTP, etc) this
        can be either time or byte/transaction count based.  for
        unreliable transport or connection tests it can only be time
-       based.  having said that, we rely entirely on other code to
+p       based.  having said that, we rely entirely on other code to
        enforce this before we even get here. raj 2008-01-08 */
     
     if (test_time) {
