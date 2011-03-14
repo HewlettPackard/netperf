@@ -407,6 +407,8 @@ double      remote_service_demand_double;
 double      transaction_rate = 1.0;
 double      rtt_latency = -1.0;
 int32_t     transport_mss = -2;
+int32_t     local_transport_retrans = -2;
+int32_t     remote_transport_retrans = -2;
 char        *local_interface_name=NULL;
 char        *remote_interface_name=NULL;
 char        local_driver_name[32]="";
@@ -548,6 +550,8 @@ enum netperf_output_name {
   TRANSACTION_RATE,
   RT_LATENCY,
   BURST_SIZE,
+  LOCAL_TRANSPORT_RETRANS,
+  REMOTE_TRANSPORT_RETRANS,
   TRANSPORT_MSS,
   LOCAL_SEND_THROUGHPUT,
   LOCAL_RECV_THROUGHPUT,
@@ -988,6 +992,10 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "TRANSACTION_RATE";
   case BURST_SIZE:
     return "BURST_SIZE";
+  case LOCAL_TRANSPORT_RETRANS:
+    return "LOCAL_TRANSPORT_RETRANS";
+  case REMOTE_TRANSPORT_RETRANS:
+    return "REMOTE_TRANSPORT_RETRANS";
   case TRANSPORT_MSS:
     return "TRANSPORT_MSS";
   case REQUEST_SIZE:
@@ -2020,6 +2028,32 @@ print_omni_init_list() {
     NETPERF_LINE_MAX(TRANSPORT_MSS);
   netperf_output_source[TRANSPORT_MSS].tot_line_len = 
     NETPERF_LINE_TOT(TRANSPORT_MSS);
+
+  netperf_output_source[LOCAL_TRANSPORT_RETRANS].output_name = 
+    LOCAL_TRANSPORT_RETRANS;
+  netperf_output_source[LOCAL_TRANSPORT_RETRANS].line[0] = "Local";
+  netperf_output_source[LOCAL_TRANSPORT_RETRANS].line[1] = "Transport";
+  netperf_output_source[LOCAL_TRANSPORT_RETRANS].line[2] = "Retransmissions";
+  netperf_output_source[LOCAL_TRANSPORT_RETRANS].format = "%d";
+  netperf_output_source[LOCAL_TRANSPORT_RETRANS].display_value = 
+    &local_transport_retrans;
+  netperf_output_source[LOCAL_TRANSPORT_RETRANS].max_line_len = 
+    NETPERF_LINE_MAX(LOCAL_TRANSPORT_RETRANS);
+  netperf_output_source[LOCAL_TRANSPORT_RETRANS].tot_line_len = 
+    NETPERF_LINE_TOT(LOCAL_TRANSPORT_RETRANS);
+
+  netperf_output_source[REMOTE_TRANSPORT_RETRANS].output_name = 
+    REMOTE_TRANSPORT_RETRANS;
+  netperf_output_source[REMOTE_TRANSPORT_RETRANS].line[0] = "Remote";
+  netperf_output_source[REMOTE_TRANSPORT_RETRANS].line[1] = "Transport";
+  netperf_output_source[REMOTE_TRANSPORT_RETRANS].line[2] = "Retransmissions";
+  netperf_output_source[REMOTE_TRANSPORT_RETRANS].format = "%d";
+  netperf_output_source[REMOTE_TRANSPORT_RETRANS].display_value = 
+    &remote_transport_retrans;
+  netperf_output_source[REMOTE_TRANSPORT_RETRANS].max_line_len = 
+    NETPERF_LINE_MAX(REMOTE_TRANSPORT_RETRANS);
+  netperf_output_source[REMOTE_TRANSPORT_RETRANS].tot_line_len = 
+    NETPERF_LINE_TOT(REMOTE_TRANSPORT_RETRANS);
 
   netperf_output_source[REQUEST_SIZE].output_name = REQUEST_SIZE;
   netperf_output_source[REQUEST_SIZE].line[0] = "Request";
@@ -4343,40 +4377,65 @@ disconnect_data_socket(SOCKET data_socket, int initiate, int do_close, struct so
 
 #ifdef HAVE_LINUX_TCP_H
 static void
-dump_transport_stats(SOCKET socket, int protocol)
+dump_tcp_info(struct tcp_info *tcp_info) 
 {
 
+  printf("tcpi_rto %d tcpi_ato %d tcpi_pmtu %d tcpi_rcv_ssthresh %d\n",
+	 tcp_info->tcpi_rto,
+	 tcp_info->tcpi_ato,
+	 tcp_info->tcpi_pmtu,
+	 tcp_info->tcpi_rcv_ssthresh);
+  printf("tcpi_rtt %d tcpi_rttvar %d tcpi_snd_ssthresh %d tpci_snd_cwnd %d\n",
+	 tcp_info->tcpi_rtt,
+	 tcp_info->tcpi_rttvar,
+	 tcp_info->tcpi_snd_ssthresh,
+	 tcp_info->tcpi_snd_cwnd);
+  printf("tcpi_reordering %d tcpi_total_retrans %d\n",
+	 tcp_info->tcpi_reordering,
+	 tcp_info->tcpi_total_retrans);
+
+  return;
+}
+
+#endif
+
+static int
+get_transport_retrans(SOCKET socket, int protocol) {
+
+#ifdef HAVE_LINUX_TCP_H
   struct tcp_info tcp_info;
 
   int ret, infosize;
 
   if (protocol != IPPROTO_TCP)
-    return;
+    return -1;
 
   infosize = sizeof(struct tcp_info);
 
   if (ret = getsockopt(socket,protocol,TCP_INFO,&tcp_info,&infosize)) {
-    perror("dump_transport_stats:getsockopt");
-    return;
+    if (debug) {
+      fprintf(where,
+	      "get_tcp_retrans:getsockopt errno %d %s\n",
+	      errno,
+	      strerror(errno));
+      fflush(where);
+    }
+    return -1;
+  }
+  else {
+
+    if (debug > 1) {
+      dump_tcp_info(&tcp_info);
+    }
+    return tcp_info.tcpi_total_retrans;
   }
 
-  printf("tcpi_rto %d tcpi_ato %d tcpi_pmtu %d tcpi_rcv_ssthresh %d\n",
-	 tcp_info.tcpi_rto,
-	 tcp_info.tcpi_ato,
-	 tcp_info.tcpi_pmtu,
-	 tcp_info.tcpi_rcv_ssthresh);
-  printf("tcpi_rtt %d tcpi_rttvar %d tcpi_snd_ssthresh %d tpci_snd_cwnd %d\n",
-	 tcp_info.tcpi_rtt,
-	 tcp_info.tcpi_rttvar,
-	 tcp_info.tcpi_snd_ssthresh,
-	 tcp_info.tcpi_snd_cwnd);
-  printf("tcpi_reordering %d tcpi_total_retrans %d\n",
-	 tcp_info.tcpi_reordering,
-	 tcp_info.tcpi_total_retrans);
 
-  return;
-}
+#else
+  return -1;
 #endif
+}
+
 
 static void
 get_transport_info(SOCKET socket, int *mss, int protocol)
@@ -4385,6 +4444,7 @@ get_transport_info(SOCKET socket, int *mss, int protocol)
   netperf_socklen_t sock_opt_len;
   int option;
   sock_opt_len = sizeof(netperf_socklen_t);
+  struct tcp_info tcp_info;
 
   switch (protocol) {
 #if defined(IPPROTO_TCP) && defined(TCP_MAXSEG)
@@ -4415,11 +4475,6 @@ get_transport_info(SOCKET socket, int *mss, int protocol)
     *mss = -1;
   }
 
-#ifdef HAVE_LINUX_TCP_H
-  if (debug) {
-    dump_transport_stats(socket,protocol);
-  }
-#endif
 }
 
 /* brain dead simple way to get netperf to emit a uuid. sadly, by this
@@ -5019,7 +5074,7 @@ p       based.  having said that, we rely entirely on other code to
 	     (requests_outstanding < first_burst_size) &&
 	     (NETPERF_IS_RR(direction)) &&
 	     (!connection_test)) {
-	if (debug) {
+	if (debug > 1) {
 	  fprintf(where,
 		  "injecting, req_outstanding %d req_cwnd %d burst %d\n",
 		  requests_outstanding,
@@ -5282,6 +5337,8 @@ p       based.  having said that, we rely entirely on other code to
       get_transport_info(data_socket,
 			 &transport_mss,
 			 local_res->ai_protocol);
+    local_transport_retrans = get_transport_retrans(data_socket,
+						    local_res->ai_protocol);
     
 
     find_security_info(&local_security_enabled_num,
