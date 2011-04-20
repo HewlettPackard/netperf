@@ -256,3 +256,6 @@ DEBUG_LOG_FILE patch for Android
 
 Dongsheng Song
 Assorted Windows fixes
+
+Hushan Jia
+Fix to actually run SCTP_RR_MANY when requested
