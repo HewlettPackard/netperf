@@ -242,7 +242,7 @@ main(int argc, char *argv[])
     send_sctp_stream_1toMany(host_name);
   }
   else if (strcasecmp(test_name, "SCTP_RR_MANY") == 0) {
-    send_sctp_stream_1toMany(host_name);
+    send_sctp_rr_1toMany(host_name);
   }
 #endif
   
