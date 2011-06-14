@@ -4113,7 +4113,7 @@ send_data(SOCKET data_socket, struct ring_elt *send_ring, uint32_t bytes_to_send
 
   if (debug > 1) {
     fprintf(where,
-	    "send_data sock %d ring %p bytes %d dest %p len %d\n",
+	    "send_data sock %d, ring elt %p, bytes %d, dest %p, len %d\n",
 	    data_socket,
 	    send_ring,
 	    bytes_to_send,
@@ -4180,7 +4180,7 @@ recv_data(SOCKET data_socket, struct ring_elt *recv_ring, uint32_t bytes_to_recv
 
   if (debug > 1) {
     fprintf(where,
-	    "recv_data sock %d, elt %p, bytes %d source %p srclen %d, flags %x num_recv %p\n",
+	    "recv_data sock %d, ring elt %p, bytes %d, source %p, srclen %d, flags %x, num_recv %p\n",
 	    data_socket,
 	    recv_ring,
 	    bytes_to_recv,
