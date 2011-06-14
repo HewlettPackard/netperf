@@ -197,6 +197,7 @@ static struct timeval *temp_demo_ptr = &demo_one;
 					  actual_interval/1000000.0), \
 		    format_units(), \
 		    actual_interval/1000000.0); \
+	    fflush(where); \
 	    units_this_tick = 0.0; \
 	    /* now get a new starting timestamp.  we could be clever \
 	       and swap pointers - the math we do probably does not \
@@ -4766,14 +4767,14 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
       omni_request->send_size              = remote_send_size_req;
       omni_request->send_alignment	   = remote_send_align;
       omni_request->send_offset	           = remote_send_offset;
-      omni_request->send_width             = 1; /* FIX THIS */
+      omni_request->send_width             = send_width;
       omni_request->request_size	   = req_size;
       
       omni_request->recv_buf_size	   = rsr_size_req;
       omni_request->receive_size           = remote_recv_size_req;
       omni_request->recv_alignment	   = remote_recv_align;
       omni_request->recv_offset	           = remote_recv_offset;
-      omni_request->recv_width             = 1; /* FIX THIS */
+      omni_request->recv_width             = recv_width;
       omni_request->response_size	   = rsp_size;
       
       /* we have no else clauses here because we previously set flags
@@ -5933,7 +5934,7 @@ recv_omni()
   }
 
   omni_response->receive_size = omni_request->receive_size;
-  omni_response->recv_width = omni_response->recv_width;
+  omni_response->recv_width = omni_request->recv_width;
   if (omni_request->direction & NETPERF_RECV) {
 
     /* do we need to join a multicast group? */
