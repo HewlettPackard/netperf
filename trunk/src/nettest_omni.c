@@ -176,38 +176,43 @@ static struct timeval *temp_demo_ptr = &demo_one;
     }
 
 #define DEMO_INTERVAL(units) \
-      if (demo_mode) { \
-	double actual_interval; \
-	units_this_tick += units; \
-	if (units_this_tick >= demo_units) { \
-	  /* time to possibly update demo_units and maybe output an \
-	     interim result */ \
-	  HIST_timestamp(demo_two_ptr); \
-	  actual_interval = delta_micro(demo_one_ptr,demo_two_ptr); \
-	  /* we always want to fine-tune demo_units here whether we \
-	     emit an interim result or not.  if we are short, this \
-	     will lengthen demo_units.  if we are long, this will \
-	     shorten it */ \
-	  demo_units = demo_units * (demo_interval / actual_interval); \
-	  if (actual_interval >= demo_interval) { \
-	    /* time to emit an interim result */ \
-	    fprintf(where, \
-		    "Interim result: %7.2f %s/s over %.2f seconds\n", \
-		    calc_thruput_interval(units_this_tick, \
-					  actual_interval/1000000.0), \
-		    format_units(), \
-		    actual_interval/1000000.0); \
-	    fflush(where); \
-	    units_this_tick = 0.0; \
-	    /* now get a new starting timestamp.  we could be clever \
-	       and swap pointers - the math we do probably does not \
-	       take all that long, but for now this will suffice */ \
-	    temp_demo_ptr = demo_one_ptr; \
-	    demo_one_ptr = demo_two_ptr; \
-	    demo_two_ptr = temp_demo_ptr; \
-	  } \
-	} \
-      }
+  if (demo_mode) {		\
+    double actual_interval;	\
+    struct timeval now;		  \
+    units_this_tick += units;		     \
+    if (units_this_tick >= demo_units) {			    \
+      /* time to possibly update demo_units and maybe output an	    \
+	 interim result */					    \
+      HIST_timestamp(demo_two_ptr);				    \
+      actual_interval = delta_micro(demo_one_ptr,demo_two_ptr);	    \
+      /* we always want to fine-tune demo_units here whether we	    \
+	 emit an interim result or not.  if we are short, this	    \
+	 will lengthen demo_units.  if we are long, this will	    \
+	 shorten it */						       \
+      demo_units = demo_units * (demo_interval / actual_interval);     \
+      if (actual_interval >= demo_interval) {			       \
+        /* time to emit an interim result, giving the current time \ 
+	   to the millisecond for compatability with RRD  */ \
+        gettimeofday(&now,NULL); \
+	fprintf(where,							\
+		"Interim result: %7.2f %s/s over %.2f seconds ending at %ld.%ld\n", \
+		calc_thruput_interval(units_this_tick,			\
+				      actual_interval/1000000.0),	\
+		format_units(),						\
+		actual_interval/1000000.0, \
+		now.tv_sec, \
+		now.tv_usec/1000);	    \
+	fflush(where);		    \
+	units_this_tick = 0.0;					     \
+	/* now get a new starting timestamp.  we could be clever     \
+	   and swap pointers - the math we do probably does not	     \
+	   take all that long, but for now this will suffice */	     \
+	temp_demo_ptr = demo_one_ptr;				     \
+	demo_one_ptr = demo_two_ptr;				     \
+	demo_two_ptr = temp_demo_ptr;				     \
+      }								     \
+    }								     \
+  }
 
 #define DEMO_STREAM_INTERVAL(units) DEMO_INTERVAL(units)
 
