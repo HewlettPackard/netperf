@@ -1,5 +1,9 @@
 These are the Release Notes for post-revision 2.4.5 of netperf:
 
+*) The "omni" tests will be compiled by default, and WANT_MIGRATION
+   are the default.  One must ./configure with --enable-omni=no to
+   disable this.
+
 *) When ./configured with --enable-intervals and intervals are
    actually used, the round-trip latency reported by an omni (or
    migrated classic) request/response test should better reflect
@@ -16,10 +20,10 @@ These are the Release Notes for post-revision 2.4.5 of netperf:
 *) WANT_MIGRATION is enabled when one specifies --enable-omni on the
    configure command line.
 
-*) Massage and encorporate a patch from Google that enables randomization
-   of the IP addresses used in a test.  An optional mask length in the
-   standard '/' notation can be added to the end of the IP/name in the 
-   test-specific -H or -L options of an Omni test.
+*) Massage and encorporate a patch from Google that enables
+   randomization of the IP addresses used in a test.  An optional mask
+   length in the standard '/' notation can be added to the end of the
+   IP/name in the test-specific -H or -L options of an Omni test.
 
 *) Massage and include a DEBUG_LOG_FILE patch for Android from
    Josselin Costanzi
