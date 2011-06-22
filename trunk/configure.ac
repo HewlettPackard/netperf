@@ -324,7 +324,7 @@ case "$enable_omni" in
 		use_omni=false
 		;;
      '')
-		use_omni=false
+		use_omni=true
 		;;
      *)
 		AC_MSG_ERROR([--enable-omni takes yes or no])
