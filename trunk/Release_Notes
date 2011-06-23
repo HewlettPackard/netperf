@@ -1,5 +1,11 @@
 These are the Release Notes for post-revision 2.4.5 of netperf:
 
+*) The output of the -D global command line option has been enhanced
+   to include seconds and milliseconds since the epoch as returned by
+   a gettimeofday() call with a null pointer for the timezone.  This
+   is in support of being able to easily shove interim results into an
+   rrdtool Round-Robin Database (RRD).
+
 *) The "omni" tests will be compiled by default, and WANT_MIGRATION
    are the default.  One must ./configure with --enable-omni=no to
    disable this.

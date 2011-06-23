@@ -1,14 +1,14 @@
 \input texinfo   @c -*-texinfo-*-
 @c %**start of header
 @setfilename netperf.info
-@settitle Care and Feeding of Netperf 2.4.X
+@settitle Care and Feeding of Netperf 2.5.X
 @c %**end of header
 
 @copying
 This is Rick Jones' feeble attempt at a Texinfo-based manual for the
 netperf benchmark. 
 
-Copyright @copyright{} 2005-2007 Hewlett-Packard Company
+Copyright @copyright{} 2005-2011 Hewlett-Packard Company
 @quotation
 Permission is granted to copy, distribute and/or modify this document
 per the terms of the netperf source licence, a copy of which can be
@@ -18,7 +18,7 @@ found in the file @file{COPYING} of the basic netperf distribution.
 
 @titlepage
 @title Care and Feeding of Netperf
-@subtitle Versions 2.4.3 and Later
+@subtitle Versions 2.5.0 and Later
 @author Rick Jones @email{rick.jones2@@hp.com}
 @c this is here to start the copyright page
 @page
@@ -381,6 +381,23 @@ Sockets, DLPI or SCTP it will be necessary to add one or more
 command.  As of this writing, the configure script will not include
 those tests automagically.
 
+@vindex --enable-omni, Configure
+Starting with version 2.5.0, netperf is migrating most of the
+``classic'' netperf tests found in @file{src/nettest_bsd.c} to the
+so-called ``omni'' tests (aka ``two routines to run them all'') found
+in @file{src/nettest_omni.c}.  This migration enables a number of new
+features such as greater control over what output is included, and new
+things to output.  The ``omni'' test is enabled by default in 2.5.0
+and a number of the classic tests are migrated - you can tell this
+from the presence of ``MIGRATED'' in the test banner.  If you
+encounter problems with either the omni or migrated tests, please
+first attempt to obtain resolution via
+@email{netperf-talk@@netperf.org} or
+@email{netperf-feedback@@netperf.org}.  If that is unsuccessful, you
+can add a @code{--enable-omni=no} to the configure command and the
+omni tests will not be compiled-in and the classic tests will not be
+migrated.
+
 On some platforms, it may be necessary to precede the configure
 command with a CFLAGS and/or LIBS variable as the netperf configure
 script is not yet smart enough to set them itself.  Whenever possible,
@@ -440,33 +457,44 @@ occasionally as long as ten to nineteen milliseconds
 The @option{--enable-demo=yes} configure option will cause code to be
 included to report interim results during a test run.  The rate at
 which interim results are reported can then be controlled via the
-global @option{-D} option.  Here is an example of --enable-demo mode
-output:
+global @option{-D} option.  Here is an example of @option{-D} output:
 
 @example
-src/netperf -D 1.35 -H lag -f M
-TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to lag.hpl.hp.com (15.4.89.214) port 0 AF_INET : demo
-Interim result:    9.66 MBytes/s over 1.67 seconds
-Interim result:    9.64 MBytes/s over 1.35 seconds
-Interim result:    9.58 MBytes/s over 1.36 seconds
-Interim result:    9.51 MBytes/s over 1.36 seconds
-Interim result:    9.71 MBytes/s over 1.35 seconds
-Interim result:    9.66 MBytes/s over 1.36 seconds
-Interim result:    9.61 MBytes/s over 1.36 seconds
+$ src/netperf -D 1.35 -H tardy.hpl.hp.com -f M
+MIGRATED TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to tardy.hpl.hp.com (15.9.116.144) port 0 AF_INET : demo
+Interim result:    5.41 MBytes/s over 1.35 seconds ending at 1308789765.848
+Interim result:   11.07 MBytes/s over 1.36 seconds ending at 1308789767.206
+Interim result:   16.00 MBytes/s over 1.36 seconds ending at 1308789768.566
+Interim result:   20.66 MBytes/s over 1.36 seconds ending at 1308789769.922
+Interim result:   22.74 MBytes/s over 1.36 seconds ending at 1308789771.285
+Interim result:   23.07 MBytes/s over 1.36 seconds ending at 1308789772.647
+Interim result:   23.77 MBytes/s over 1.37 seconds ending at 1308789774.016
 Recv   Send    Send                          
 Socket Socket  Message  Elapsed              
 Size   Size    Size     Time     Throughput  
 bytes  bytes   bytes    secs.    MBytes/sec  
 
- 32768  16384  16384    10.00       9.61  
+ 87380  16384  16384    10.06      17.81   
 @end example
 
 Notice how the units of the interim result track that requested by the
 @option{-f} option.  Also notice that sometimes the interval will be
 longer than the value specified in the @option{-D} option.  This is
-normal and stems from how demo mode is implemented without relying on
-interval timers, but by calculating how many units of work must be
-performed to take at least the desired interval.
+normal and stems from how demo mode is implemented not by relying on
+interval timers or frequent calls to get the current time, but by
+calculating how many units of work must be performed to take at least
+the desired interval.
+
+Those familiar with this option in earlier versions of netperf will
+note the addition of the ``ending at'' text.  This is the time as
+reported by a @code{gettimeofday()} call (or its emulation) with a
+@code{NULL} timezone pointer.  This addition is intended to make it
+easier to insert interim results into an 
+@uref{http://oss.oetiker.ch/rrdtool/doc/rrdtool.en.html,rrdtool}
+Round-Robin Database (RRD).  A likely bug-riddled example of doing so
+can be found in @file{doc/examples/netperf_interim_to_rrd.sh}.  The
+time is reported out to milliseconds rather than microseconds because
+that is the most rrdtool understands as of the time of this writing.
 
 As of this writing, a @code{make install} will not actually update the
 files @file{/etc/services} and/or @file{/etc/inetd.conf} or their
@@ -547,9 +575,9 @@ the results.
 * CPU Utilization::             
 @end menu
 
-@cindex CPU Utilization
 @node CPU Utilization,  , The Design of Netperf, The Design of Netperf
 @section CPU Utilization
+@cindex CPU Utilization
 
 CPU utilization is an important, and alas all-too infrequently
 reported component of networking performance.  Unfortunately, it can
@@ -824,12 +852,14 @@ be done to take at least @var{interval} seconds. If omitted,
 specific to each test type.
 
 @vindex -f, Global
-@item -f G|M|K|g|m|k
+@item -f G|M|K|g|m|k|x
 This option can be used to change the reporting units for _STREAM
 tests.  Arguments of ``G,'' ``M,'' or ``K'' will set the units to
 2^30, 2^20 or 2^10 bytes/s respectively (EG power of two GB, MB or
 KB).  Arguments of ``g,'' ``,m'' or ``k'' will set the units to 10^9,
-10^6 or 10^3 bits/s respectively.  [Default: 'm' or 10^6 bits/s]
+10^6 or 10^3 bits/s respectively.  An argument of ``x'' requests the
+units be transactions per second and is only meaninful for a
+request-response test. [Default: ``m'' or 10^6 bits/s]
 
 @vindex -F, Global
 @item -F <fillfile>
@@ -936,6 +966,14 @@ the real mean value of throughput it is only confident it was within
 (described below) and/or increasing the iteration length with the
 @option{-l} option might resolve the situation.
 
+In an explicit ``omni'' test, failure to meet the confidence intervals
+will not result in netperf emitting a warning.  To verify the hitting,
+or not, of the confidence intervals one will need to include them in
+output specification in the test-specific @option{-o}, @option{-O} or
+@option{k} output selection options.  The warning about not hitting
+the confidence intervals will remain in a ``migrated'' classic netperf
+test.
+
 @vindex -i, Global
 @item -i <sizespec>
 This option enables the calculation of confidence intervals and sets
@@ -958,6 +996,25 @@ been met, it emits a noticeable warning.
 The total test time will be somewhere between the minimum and maximum
 number of iterations multiplied by the test length supplied by the
 @option{-l} option.
+
+@vindex -j, Global
+@item -j
+This option instructs netperf to keep additional timing statistics
+when explicitly running an ``omni'' test of the request/response
+variety.  These can be output when the test-specific @option{-o},
+@option{-O} or @option{-k} output selectors include one or more of:
+
+@itemize
+@item MIN_LATENCY
+@item MAX_LATENCY
+@item P50_LATENCY
+@item P90_LATENCY
+@item P99_LATENCY
+@item MEAN_LATENCY
+@item STDDEV_LATENCY
+@end itemize
+
+Added for netperf 2.5.0.
 
 @vindex -l, Global
 @item -l testlen
@@ -1007,6 +1064,11 @@ Note that this option does _not_ set the number of CPUs on the system
 running netserver.  When netperf/netserver cannot automagically
 determine the number of CPUs that can only be set for netserver via a
 netserver @option{-n} command-line option.
+
+As it is almost universally possible for netperf/netserver to
+determine the number of CPUs on the system automagically, 99 times out
+of 10 this option should not be necessary and may be removed in a
+future release of netperf.
 
 @vindex -N, Global
 @item -N
@@ -1115,6 +1177,7 @@ this writing, valid values for @var{testname} include:
 @ref{DLCO_STREAM}, @ref{DLCO_RR},  @ref{DLCL_STREAM}, @ref{DLCL_RR}
 @item
 @ref{Other Netperf Tests,LOC_CPU}, @ref{Other Netperf Tests,REM_CPU}
+@item OMNI
 @end itemize
 Not all tests are always compiled into netperf.  In particular, the
 ``XTI,'' ``SCTP,'' ``UNIXDOMAIN,'' and ``DL*'' tests are only included in
@@ -1288,6 +1351,22 @@ and then one can look at the statistics in @file{delta}.  Beforeafter
 is distributed in source form so one can compile it on the platofrm(s)
 of interest. 
 
+If running a version 2.5.0 or later ``omni'' test under Linux one can
+include either or both of:
+@itemize
+@item LOCAL_TRANSPORT_RETRANS
+@item REMOTE_TRANSPORT_RETRANS
+@end itemize
+
+in the values provided via a test-specific @option{-o}, @option{-O},
+or @option{-k} output selction option and netperf will report the
+retransmissions experienced on the data connection, as reported via a
+@code{getsockopt(TCP_INFO)} call.  If confidence intervals have been
+requested via the global @option{-I} or @option{-i} options, the
+reported value(s) will be for the last iteration.  If the test is over
+a protocol other than TCP, or on a platform other than Linux, the
+results are undefined.
+
 While it was written with HP-UX's netstat in mind, the
 @uref{ftp://ftp.cup.hp.com/dist/networking/briefs/annotated_netstat.txt,annotated
 netstat} writeup may be helpful with other platforms as well.
@@ -1384,8 +1463,8 @@ Will request the local send and receive socket buffer sizes to be
 While the historic expectation is that setting the socket buffer size
 has a direct effect on say the TCP window, today that may not hold
 true for all stacks. Further, while the historic expectation is that
-the value specified in a setsockopt() call will be the value returned
-via a getsockopt() call, at least one stack is known to deliberately
+the value specified in a @code{setsockopt()} call will be the value returned
+via a @code{getsockopt()} call, at least one stack is known to deliberately
 ignore history.  When running under Windows a value of 0 may be used
 which will be an indication to the stack the user wants to enable a
 form of copy avoidance. [Default: -1 - use the system's default socket
@@ -1410,8 +1489,8 @@ Will request the local send and receive socket buffer sizes to be
 While the historic expectation is that setting the socket buffer size
 has a direct effect on say the TCP window, today that may not hold
 true for all stacks.  Further, while the historic expectation is that
-the value specified in a setsockopt() call will be the value returned
-via a getsockopt() call, at least one stack is known to deliberately
+the value specified in a @code{setsockopt()} call will be the value returned
+via a @code{getsockopt()} call, at least one stack is known to deliberately
 ignore history.  When running under Windows a value of 0 may be used
 which will be an indication to the stack the user wants to enable a
 form of copy avoidance. [Default: -1 - use the system's default socket
@@ -1548,7 +1627,7 @@ bytes  bytes   bytes    secs.    10^6bits/sec
 @end example
 
 Where we see that Linux, unlike HP-UX, may not return the same value
-in a getsockopt() as was requested in the prior setsockopt().
+in a @code{getsockopt()} as was requested in the prior @code{setsockopt()}.
 
 This test is included more for benchmarking convenience than anything
 else.
@@ -2020,9 +2099,9 @@ addresses for the local and remote ends of the data connection.
 @end menu
 
 @node TCP_RR, TCP_CC, Options Common to TCP UDP and SCTP _RR tests, Options Common to TCP UDP and SCTP _RR tests
+@subsection TCP_RR
 @cindex Measuring Latency
 @cindex Latency, Request-Response
-@subsection TCP_RR
 
 A TCP_RR (TCP Request/Response) test is requested by passing a value
 of ``TCP_RR'' to the global @option{-t} command-line option.  A TCP_RR
@@ -2072,9 +2151,9 @@ socket buffers were left at their defaults, and the test ran for all
 of 10 seconds.  The transaction per second rate was rather good :)
 
 @node TCP_CC, TCP_CRR, TCP_RR, Options Common to TCP UDP and SCTP _RR tests
+@subsection TCP_CC
 @cindex Connection Latency
 @cindex Latency, Connection Establishment
-@subsection TCP_CC
 
 A TCP_CC (TCP Connect/Close) test is requested by passing a value of
 ``TCP_CC'' to the global @option{-t} option.  A TCP_CC test simply
@@ -2120,9 +2199,9 @@ a TCP_CC test is not symmetric in its loading of the two systems under
 test.
 
 @node TCP_CRR, UDP_RR, TCP_CC, Options Common to TCP UDP and SCTP _RR tests
+@subsection TCP_CRR
 @cindex Latency, Connection Establishment
 @cindex Latency, Request-Response
-@subsection TCP_CRR
 
 The TCP Connect/Request/Response (TCP_CRR) test is requested by
 passing a value of ``TCP_CRR'' to the global @option{-t} command-line
@@ -2143,9 +2222,9 @@ and tear-down is not symmetric, a TCP_CRR test is not symmetric even
 when the request and response sizes are the same.
 
 @node UDP_RR, XTI_TCP_RR, TCP_CRR, Options Common to TCP UDP and SCTP _RR tests
+@subsection UDP_RR
 @cindex Latency, Request-Response
 @cindex Packet Loss
-@subsection UDP_RR
 
 A UDP Request/Response (UDP_RR) test is requested by passing a value
 of ``UDP_RR'' to a global @option{-t} option.  It is very much the
@@ -2187,8 +2266,8 @@ loading.  The @option{-T} option was used to make sure netperf and
 netserver ran on a given CPU and did not move around during the test.
 
 @node XTI_TCP_RR, XTI_TCP_CC, UDP_RR, Options Common to TCP UDP and SCTP _RR tests
-@cindex Latency, Request-Response
 @subsection XTI_TCP_RR
+@cindex Latency, Request-Response
 
 An XTI_TCP_RR test is essentially the same as a @ref{TCP_RR} test only
 using the XTI rather than BSD Sockets interface. It is requested by
@@ -2201,18 +2280,18 @@ specify the names of the local and/or remote XTI device file(s).
 
 @node XTI_TCP_CC, XTI_TCP_CRR, XTI_TCP_RR, Options Common to TCP UDP and SCTP _RR tests
 @comment  node-name,  next,  previous,  up
-@cindex Latency, Connection Establishment
 @subsection XTI_TCP_CC
+@cindex Latency, Connection Establishment
 
 @node XTI_TCP_CRR, XTI_UDP_RR, XTI_TCP_CC, Options Common to TCP UDP and SCTP _RR tests
 @comment  node-name,  next,  previous,  up
+@subsection XTI_TCP_CRR
 @cindex Latency, Connection Establishment
 @cindex Latency, Request-Response
-@subsection XTI_TCP_CRR
 
 @node XTI_UDP_RR, DLCL_RR, XTI_TCP_CRR, Options Common to TCP UDP and SCTP _RR tests
-@cindex Latency, Request-Response
 @subsection XTI_UDP_RR
+@cindex Latency, Request-Response
 
 An XTI_UDP_RR test is essentially the same as a UDP_RR test only using
 the XTI rather than BSD Sockets interface.  It is requested by passing
@@ -2226,24 +2305,24 @@ file(s).
 
 @node DLCL_RR, DLCO_RR, XTI_UDP_RR, Options Common to TCP UDP and SCTP _RR tests
 @comment  node-name,  next,  previous,  up
-@cindex Latency, Request-Response
 @subsection DLCL_RR
+@cindex Latency, Request-Response
 
 @node DLCO_RR, SCTP_RR, DLCL_RR, Options Common to TCP UDP and SCTP _RR tests
 @comment  node-name,  next,  previous,  up
-@cindex Latency, Request-Response
 @subsection DLCO_RR
+@cindex Latency, Request-Response
 
 @node SCTP_RR,  , DLCO_RR, Options Common to TCP UDP and SCTP _RR tests
 @comment  node-name,  next,  previous,  up
-@cindex Latency, Request-Response
 @subsection SCTP_RR
+@cindex Latency, Request-Response
 
 @node Using Netperf to Measure Aggregate Performance, Using Netperf to Measure Bidirectional Transfer, Using Netperf to Measure Request/Response , Top
 @comment  node-name,  next,  previous,  up
+@chapter Using Netperf to Measure Aggregate Performance
 @cindex Aggregate Performance
 @vindex --enable-burst, Configure
-@chapter Using Netperf to Measure Aggregate Performance
 
 @ref{Netperf4,Netperf4} is the preferred benchmark to use when one
 wants to measure aggregate performance because netperf has no support
@@ -2431,7 +2510,7 @@ settings in the driver for the NICs used.
 @b{NOTE: Even if you set the @option{-D} option that is still not a
 guarantee that each transaction is in its own TCP segments.  You
 should get into the habit of verifying the relationship between the
-transaction rate and the packet rate via other means}
+transaction rate and the packet rate via other means.}
 @end quotation
 
 You can also combine @code{--enable-burst} functionality with

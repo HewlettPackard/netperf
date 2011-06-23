@@ -28,7 +28,7 @@ Netperf Manual
     5.2.10 STREAM_STREAM
     5.2.11 DG_STREAM
 6 Using Netperf to Measure Request/Response
-  6.1 Issues in Reqeust/Response
+  6.1 Issues in Request/Response
   6.2 Options Common to TCP UDP and SCTP _RR tests
     6.2.1 TCP_RR
     6.2.2 TCP_CC
@@ -52,7 +52,8 @@ Netperf Manual
 10 Address Resolution
 11 Enhancing Netperf
 12 Netperf4
-Index
+Concept Index
+Option Index
 
 
 Netperf Manual
@@ -61,7 +62,7 @@ Netperf Manual
 This is Rick Jones' feeble attempt at a Texinfo-based manual for the
 netperf benchmark.
 
-   Copyright (C) 2005-2007 Hewlett-Packard Company
+   Copyright (C) 2005-2011 Hewlett-Packard Company
 
      Permission is granted to copy, distribute and/or modify this
      document per the terms of the netperf source licence, a copy of
@@ -218,8 +219,13 @@ subdirectory.
    For convenience and ease of remembering, a link to the download site
 is provided via the NetperfPage (http://www.netperf.org/)
 
-   Those wishing to be on the bleeding edge of netperf development can
-grab the top of trunk from the netperf subversion repository
+   The bits corresponding to each discrete release of netperf are
+tagged (http://www.netperf.org/svn/netperf2/tags) for retrieval via
+subversion.  For example, there is a tag for the first version
+corresponding to this version of the manual - netperf 2.4.3
+(http://www.netperf.org/svn/netperf2/tags/netperf-2.4.3).  Those
+wishing to be on the bleeding edge of netperf development can use
+subversion to grab the top of trunk
 (http://www.netperf.org/svn/netperf2/trunk).
 
    There are likely other places around the Internet from which one can
@@ -263,9 +269,9 @@ that area, feel free to contact <netperf-feedback@netperf.org>.
 
    Similarly, if you want tests using the XTI interface, Unix Domain
 Sockets, DLPI or SCTP it will be necessary to add one or more
-`--enable-[xti|unix|dlpi|sctp]=yes' options to the configure command.
-As of this writing, the configure script will not include those tests
-automagically.
+`--enable-[xti|unixdomain|dlpi|sctp]=yes' options to the configure
+command.  As of this writing, the configure script will not include
+those tests automagically.
 
    On some platforms, it may be necessary to precede the configure
 command with a CFLAGS and/or LIBS variable as the netperf configure
@@ -633,6 +639,10 @@ still be preceded by a `--'.  For example:
      conjunction with the `-w' option it can cause the rate at which
      data is sent to be "paced."
 
+`-B <string>'
+     This option will cause `<string>' to be appended to the brief (see
+     -P) output of netperf.
+
 `-c [rate]'
      This option will ask that CPU utilization and service demand be
      calculated for the local system.  For those CPU utilization
@@ -667,12 +677,14 @@ still be preceded by a `--'.  For example:
      take at least INTERVAL seconds. If omitted, INTERVAL defaults to
      one second and UNITS to values specific to each test type.
 
-`-f G|M|K|g|m|k'
+`-f G|M|K|g|m|k|x'
      This option can be used to change the reporting units for _STREAM
      tests.  Arguments of "G," "M," or "K" will set the units to 2^30,
      2^20 or 2^10 bytes/s respectively (EG power of two GB, MB or KB).
      Arguments of "g," ",m" or "k" will set the units to 10^9, 10^6 or
-     10^3 bits/s respectively.  [Default: 'm' or 10^6 bits/s]
+     10^3 bits/s respectively.  An argument of "x" requests the units
+     be transactions per second and is only meaninful for a
+     request-response test. [Default: "m" or 10^6 bits/s]
 
 `-F <fillfile>'
      This option specified the file from which send which buffers will
@@ -768,6 +780,14 @@ still be preceded by a `--'.  For example:
      (described below) and/or increasing the iteration length with the
      `-l' option might resolve the situation.
 
+     In an explicit "omni" test, failure to meet the confidence
+     intervals will not result in netperf emitting a warning.  To
+     verify the hitting, or not, of the confidence intervals one will
+     need to include them in output specification in the test-specific
+     `-o', `-O' or `k' output selection options.  The warning about not
+     hitting the confidence intervals will remain in a "migrated"
+     classic netperf test.
+
 `-i <sizespec>'
      This option enables the calculation of confidence intervals and
      sets the minimum and maximum number of iterations to run in
@@ -785,6 +805,32 @@ still be preceded by a `--'.  For example:
      If netperf determines that the desired confidence intervals have
      not been met, it emits a noticeable warning.
 
+     The total test time will be somewhere between the minimum and
+     maximum number of iterations multiplied by the test length
+     supplied by the `-l' option.
+
+`-j'
+     This option instructs netperf to keep additional timing statistics
+     when explicitly running an "omni" test of the request/response
+     variety.  These can be output when the test-specific `-o', `-O' or
+     `-k' output selectors include one or more of:
+
+        * MIN_LATENCY
+
+        * MAX_LATENCY
+
+        * P50_LATENCY
+
+        * P90_LATENCY
+
+        * P99_LATENCY
+
+        * MEAN_LATENCY
+
+        * STDDEV_LATENCY
+
+     Added for netperf 2.5.0.
+
 `-l testlen'
      This option controls the length of any one iteration of the
      requested test.  A positive value for TESTLEN will run each
@@ -801,6 +847,10 @@ still be preceded by a `--'.  For example:
      of the link(s) over which the data connection passes, or those
      tests where there may be non-trivial numbers of retransmissions.
 
+     If confidence intervals are enabled via either `-I' or `-i' the
+     total length of the netperf test will be somewhere between the
+     minimum and maximum iteration count multiplied by TESTLEN.
+
 `-L <optionspec>'
      This option is identical to the `-H' option with the difference
      being it sets the _local_ hostname/IP and/or address family
@@ -816,7 +866,7 @@ still be preceded by a `--'.  For example:
 `-n numcpus'
      This option tells netperf how many CPUs it should ass-u-me are
      active on the system running netperf.  In particular, this is used
-     for the *Note CPU utilization: CPU Utilization. and service demand
+     for the *note CPU utilization: CPU Utilization. and service demand
      calculations.  On certain systems, netperf is able to determine
      the number of CPU's automagically. This option will override any
      number netperf might be able to determine on its own.
@@ -825,6 +875,11 @@ still be preceded by a `--'.  For example:
      system running netserver.  When netperf/netserver cannot
      automagically determine the number of CPUs that can only be set
      for netserver via a netserver `-n' command-line option.
+
+     As it is almost universally possible for netperf/netserver to
+     determine the number of CPUs on the system automagically, 99 times
+     out of 10 this option should not be necessary and may be removed
+     in a future release of netperf.
 
 `-N'
      This option tells netperf to forego establishing a control
@@ -907,26 +962,29 @@ still be preceded by a `--'.  For example:
 `-t testname'
      This option is used to tell netperf which test you wish to run.
      As of this writing, valid values for TESTNAME include:
-        * *Note TCP_STREAM::, *Note TCP_MAERTS::, *Note TCP_SENDFILE::,
-          *Note TCP_RR::, *Note TCP_CRR::, *Note TCP_CC::
+        * *note TCP_STREAM::, *note TCP_MAERTS::, *note TCP_SENDFILE::,
+          *note TCP_RR::, *note TCP_CRR::, *note TCP_CC::
 
-        * *Note UDP_STREAM::, *Note UDP_RR::
+        * *note UDP_STREAM::, *note UDP_RR::
 
-        * *Note XTI_TCP_STREAM::,  *Note XTI_TCP_RR::, *Note
-          XTI_TCP_CRR::, *Note XTI_TCP_CC::
+        * *note XTI_TCP_STREAM::,  *note XTI_TCP_RR::, *note
+          XTI_TCP_CRR::, *note XTI_TCP_CC::
 
-        * *Note XTI_UDP_STREAM::, *Note XTI_UDP_RR::
+        * *note XTI_UDP_STREAM::, *note XTI_UDP_RR::
 
-        * *Note SCTP_STREAM::, *Note SCTP_RR::
+        * *note SCTP_STREAM::, *note SCTP_RR::
 
-        * *Note DLCO_STREAM::, *Note DLCO_RR::,  *Note DLCL_STREAM::,
-          *Note DLCL_RR::
+        * *note DLCO_STREAM::, *note DLCO_RR::,  *note DLCL_STREAM::,
+          *note DLCL_RR::
 
-        * *Note LOC_CPU: Other Netperf Tests, *Note REM_CPU: Other
+        * *note LOC_CPU: Other Netperf Tests, *note REM_CPU: Other
           Netperf Tests.
+
+        * OMNI
      Not all tests are always compiled into netperf.  In particular, the
-     "XTI," "SCTP," "UNIX," and "DL*" tests are only included in
-     netperf when configured with `--enable-[xti|sctp|unix|dlpi]=yes'.
+     "XTI," "SCTP," "UNIXDOMAIN," and "DL*" tests are only included in
+     netperf when configured with
+     `--enable-[xti|sctp|unixdomain|dlpi]=yes'.
 
      Netperf only runs one type of test no matter how many `-t' options
      may be present on the command-line.  The last `-t' global
@@ -937,7 +995,7 @@ still be preceded by a `--'.  For example:
      This option controls how verbose netperf will be in its output,
      and is often used in conjunction with the `-P' option. If the
      verbosity is set to a value of "0" then only the test's SFM (Single
-     Figure of Merit) is displayed.  If local *Note CPU utilization:
+     Figure of Merit) is displayed.  If local *note CPU utilization:
      CPU Utilization. is requested via the `-c' option then the SFM is
      the local service demand.  Othersise, if remote CPU utilization is
      requested via the `-C' option then the SFM is the remote service
@@ -954,6 +1012,11 @@ still be preceded by a `--'.  For example:
      send or recv call, or a histogram of the time spent in each send()
      call or for each transaction if netperf was configured with
      `--enable-histogram=yes'. [Default: 1 - normal verbosity]
+
+`-V'
+     This option displays the netperf version and then exits.
+
+     Added in netperf 2.4.4.
 
 `-w time'
      If netperf was configured with `--enable-intervals=yes' then this
@@ -1065,6 +1128,20 @@ subtract the statistics in `before' from the statistics in `after'
 distributed in source form so one can compile it on the platofrm(s) of
 interest.
 
+   If running a version 2.5.0 or later "omni" test under Linux one can
+include either or both of:
+   * LOCAL_TRANSPORT_RETRANS
+
+   * REMOTE_TRANSPORT_RETRANS
+
+   in the values provided via a test-specific `-o', `-O', or `-k'
+output selction option and netperf will report the retransmissions
+experienced on the data connection, as reported via a
+`getsockopt(TCP_INFO)' call.  If confidence intervals have been
+requested via the global `-I' or `-i' options, the reported value(s)
+will be for the last iteration.  If the test is over a protocol other
+than TCP, or on a platform other than Linux, the results are undefined.
+
    While it was written with HP-UX's netstat in mind, the annotated
 netstat
 (ftp://ftp.cup.hp.com/dist/networking/briefs/annotated_netstat.txt)
@@ -1133,7 +1210,7 @@ BSD Sockets or the XTI interface those common options include:
 
 `-s <sizespec>'
      This option sets the local send and receive socket buffer sizes for
-     the control connection to the value(s) specified.  Often, this will
+     the data connection to the value(s) specified.  Often, this will
      affect the advertised and/or effective TCP or other window, but on
      some platforms it may not. By default the units are bytes, but
      suffix of "G," "M," or "K" will specify the units to be 2^30 (GB),
@@ -1147,14 +1224,16 @@ BSD Sockets or the XTI interface those common options include:
      While the historic expectation is that setting the socket buffer
      size has a direct effect on say the TCP window, today that may not
      hold true for all stacks. Further, while the historic expectation
-     is that the value specified in a setsockopt() call will be the
-     value returned via a getsockopt() call, at least one stack is
-     known to deliberately ignore history. [Default: 0 - use the
-     system's default socket buffer sizes]
+     is that the value specified in a `setsockopt()' call will be the
+     value returned via a `getsockopt()' call, at least one stack is
+     known to deliberately ignore history.  When running under Windows
+     a value of 0 may be used which will be an indication to the stack
+     the user wants to enable a form of copy avoidance. [Default: -1 -
+     use the system's default socket buffer sizes]
 
 `-S <sizespec>'
      This option sets the remote send and/or receive socket buffer sizes
-     for the control connection to the value(s) specified.  Often, this
+     for the data connection to the value(s) specified.  Often, this
      will affect the advertised and/or effective TCP or other window,
      but on some platforms it may not. By default the units are bytes,
      but suffix of "G," "M," or "K" will specify the units to be 2^30
@@ -1168,10 +1247,12 @@ BSD Sockets or the XTI interface those common options include:
      While the historic expectation is that setting the socket buffer
      size has a direct effect on say the TCP window, today that may not
      hold true for all stacks.  Further, while the historic expectation
-     is that the value specified in a setsockopt() call will be the
-     value returned via a getsockopt() call, at least one stack is
-     known to deliberately ignore history. [Default: 0 - use the
-     system's default socket buffer sizes]
+     is that the value specified in a `setsockopt()' call will be the
+     value returned via a `getsockopt()' call, at least one stack is
+     known to deliberately ignore history.  When running under Windows
+     a value of 0 may be used which will be an indication to the stack
+     the user wants to enable a form of copy avoidance. [Default: -1 -
+     use the system's default socket buffer sizes]
 
 `-4'
      Set the local and remote address family for the data connection to
@@ -1193,7 +1274,7 @@ netperf to the system running netserver.  While time spent establishing
 the connection is not included in the throughput calculation, time
 spent flushing the last of the data to the remote at the end of the
 test is.  This is how netperf knows that all the data it sent was
-received by the remote.  In addition to the *Note options common to
+received by the remote.  In addition to the *note options common to
 STREAM tests: Options common to TCP UDP and SCTP tests, the following
 test-specific options can be included to possibly alter the behavior of
 the test:
@@ -1234,7 +1315,7 @@ the test:
      Algorithm _may_ be broken, perhaps interpreting the Nagle
      Algorithm on a segment by segment basis rather than the proper user
      send by user send basis.  However, a better test of this can be
-     achieved with the *Note TCP_RR:: test.
+     achieved with the *note TCP_RR:: test.
 
 
    Here is an example of a basic TCP_STREAM test, in this case from a
@@ -1258,14 +1339,14 @@ seconds.  IPv4 addresses (AF_INET) were used.
 5.2.2 TCP_MAERTS
 ----------------
 
-A TCP_MAERTS (MAERTS is STREAM backwards) test is "just like" a *Note
+A TCP_MAERTS (MAERTS is STREAM backwards) test is "just like" a *note
 TCP_STREAM:: test except the data flows from the netserver to the
 netperf. The global command-line `-F' option is ignored for this test
 type.  The test-specific command-line `-C' option is ignored for this
 test type.
 
    Here is an example of a TCP_MAERTS test between the same two systems
-as in the example for the *Note TCP_STREAM:: test.  This time we request
+as in the example for the *note TCP_STREAM:: test.  This time we request
 larger socket buffers with `-s' and `-S' options:
 
      $ netperf -H lag -t TCP_MAERTS -- -s 128K -S 128K
@@ -1278,7 +1359,7 @@ larger socket buffers with `-s' and `-S' options:
      221184 131072 131072    10.03      81.14
 
    Where we see that Linux, unlike HP-UX, may not return the same value
-in a getsockopt() as was requested in the prior setsockopt().
+in a `getsockopt()' as was requested in the prior `setsockopt()'.
 
    This test is included more for benchmarking convenience than anything
 else.
@@ -1286,7 +1367,7 @@ else.
 5.2.3 TCP_SENDFILE
 ------------------
 
-The TCP_SENDFILE test is "just like" a *Note TCP_STREAM:: test except
+The TCP_SENDFILE test is "just like" a *note TCP_STREAM:: test except
 netperf the platform's `sendfile()' call instead of calling `send()'.
 Often this results in a "zero-copy" operation where data is sent
 directly from the filesystem buffer cache.  This _should_ result in
@@ -1303,7 +1384,7 @@ can be easier to DMA to the NIC.  When no copy is performed, there is
 no opportunity to reserve space for headers and so a packet will be
 contained in two or more buffers.
 
-   The *Note global `-F' option: Global Options. is required for this
+   The *note global `-F' option: Global Options. is required for this
 test and it must specify a file of at least the size of the send ring
 (*Note the global `-W' option: Global Options.) multiplied by the send
 size (*Note the test-specific `-m' option: Options common to TCP UDP
@@ -1332,7 +1413,7 @@ optional.
 5.2.4 UDP_STREAM
 ----------------
 
-A UDP_STREAM test is similar to a *Note TCP_STREAM:: test except UDP is
+A UDP_STREAM test is similar to a *note TCP_STREAM:: test except UDP is
 used as the transport rather than TCP.
 
    A UDP_STREAM test has no end-to-end flow control - UDP provides none
@@ -1399,7 +1480,7 @@ that a message of 65000 bytes would fit, but the socket isn't _really_
 5.2.5 XTI_TCP_STREAM
 --------------------
 
-An XTI_TCP_STREAM test is simply a *Note TCP_STREAM:: test using the XTI
+An XTI_TCP_STREAM test is simply a *note TCP_STREAM:: test using the XTI
 rather than BSD Sockets interface.  The test-specific `-X <devspec>'
 option can be used to specify the name of the local and/or remote XTI
 device files, which is required by the `t_open()' call made by netperf
@@ -1412,7 +1493,7 @@ configured with `--enable-xti=yes'.
 5.2.6 XTI_UDP_STREAM
 --------------------
 
-An XTI_UDP_STREAM test is simply a *Note UDP_STREAM:: test using the XTI
+An XTI_UDP_STREAM test is simply a *note UDP_STREAM:: test using the XTI
 rather than BSD Sockets Interface.  The test-specific `-X <devspec>'
 option can be used to specify the name of the local and/or remote XTI
 device files, which is required by the `t_open()' call made by netperf
@@ -1425,7 +1506,7 @@ configured with `--enable-xti=yes'.
 5.2.7 SCTP_STREAM
 -----------------
 
-An SCTP_STREAM test is essentially a *Note TCP_STREAM:: test using the
+An SCTP_STREAM test is essentially a *note TCP_STREAM:: test using the
 SCTP rather than TCP.  The `-D' option will set SCTP_NODELAY, which is
 much like the TCP_NODELAY option for TCP.  The `-C' option is not
 applicable to an SCTP test as there is no corresponding SCTP_CORK
@@ -1440,7 +1521,7 @@ configured with `--enable-sctp=yes'.
 -----------------
 
 A DLPI Connection Oriented Stream (DLCO_STREAM) test is very similar in
-concept to a *Note TCP_STREAM:: test.  Both use reliable,
+concept to a *note TCP_STREAM:: test.  Both use reliable,
 connection-oriented protocols.  The DLPI test differs from the TCP test
 in that its protocol operates only at the link-level and does not
 include TCP-style segmentation and reassembly.  This last difference
@@ -1485,15 +1566,15 @@ configured with `--enable-dlpi=yes'.
 5.2.9 DLCL_STREAM
 -----------------
 
-A DLPI ConnectionLess Stream (DLCL_STREAM) test is analogous to a *Note
+A DLPI ConnectionLess Stream (DLCL_STREAM) test is analogous to a *note
 UDP_STREAM:: test in that both make use of unreliable/best-effort,
 connection-less transports.  The DLCL_STREAM test differs from the
-*Note UDP_STREAM:: test in that the message size (`-m' option) must
+*note UDP_STREAM:: test in that the message size (`-m' option) must
 always be less than the link MTU as there is no IP-like fragmentation
 and reassembly available and netperf does not presume to provide one.
 
    The test-specific command-line options for a DLCL_STREAM test are the
-same as those for a *Note DLCO_STREAM:: test.
+same as those for a *note DLCO_STREAM:: test.
 
    The DLCL_STREAM test is only present if netperf was configured with
 `--enable-dlpi=yes'. The remote netserver must have also been
@@ -1503,7 +1584,7 @@ configured with `--enable-dlpi=yes'.
 --------------------
 
 A Unix Domain Stream Socket Stream test (STREAM_STREAM) is similar in
-concept to a *Note TCP_STREAM:: test, but using Unix Domain sockets.
+concept to a *note TCP_STREAM:: test, but using Unix Domain sockets.
 It is, naturally, limited to intra-machine traffic.  A STREAM_STREAM
 test shares the `-m', `-M', `-s' and `-S' options of the other _STREAM
 tests.  In a STREAM_STREAM test the `-p' option sets the directory in
@@ -1512,23 +1593,23 @@ default is to create the pipes in the system default for the
 `tempnam()' call.
 
    The STREAM_STREAM test is only present if netperf was configured with
-`--enable-unix=yes'. The remote netserver must have also been
-configured with `--enable-unix=yes'.
+`--enable-unixdomain=yes'. The remote netserver must have also been
+configured with `--enable-unixdomain=yes'.
 
 5.2.11 DG_STREAM
 ----------------
 
 A Unix Domain Datagram Socket Stream test (SG_STREAM) is very much like
-a *Note TCP_STREAM:: test except that message boundaries are preserved.
+a *note TCP_STREAM:: test except that message boundaries are preserved.
 In this way, it may also be considered similar to certain flavors of
 SCTP test which can also preserve message boundaries.
 
-   All the options of a *Note STREAM_STREAM:: test are applicable to a
+   All the options of a *note STREAM_STREAM:: test are applicable to a
 DG_STREAM test.
 
    The DG_STREAM test is only present if netperf was configured with
-`--enable-unix=yes'. The remote netserver must have also been
-configured with `--enable-unix=yes'.
+`--enable-unixdomain=yes'. The remote netserver must have also been
+configured with `--enable-unixdomain=yes'.
 
 6 Using Netperf to Measure Request/Response
 *******************************************
@@ -1560,10 +1641,10 @@ symmetry of the connection, the average one-way latency can be taken as
 one-half the average round-trip latency.  Netperf does not do either of
 these on its own but leaves them as exercises to the benchmarker.
 
-6.1 Issues in Reqeust/Response
+6.1 Issues in Request/Response
 ==============================
 
-Most if not all the *Note Issues in Bulk Transfer:: apply to
+Most if not all the *note Issues in Bulk Transfer:: apply to
 request/response.  The issue of round-trip latency is even more
 important as netperf generally only has one transaction outstanding at
 a time.
@@ -1643,7 +1724,7 @@ BSD Sockets or the XTI interface those common options include:
 
 `-s <sizespec>'
      This option sets the local send and receive socket buffer sizes for
-     the control connection to the value(s) specified.  Often, this will
+     the data connection to the value(s) specified.  Often, this will
      affect the advertised and/or effective TCP or other window, but on
      some platforms it may not. By default the units are bytes, but a
      suffix of "G," "M," or "K" will specify the units to be 2^30 (GB),
@@ -1656,12 +1737,14 @@ BSD Sockets or the XTI interface those common options include:
 
      While the historic expectation is that setting the socket buffer
      size has a direct effect on say the TCP window, today that may not
-     hold true for all stacks. [Default: 0 - use the system's default
-     socket buffer sizes]
+     hold true for all stacks.  When running under Windows a value of 0
+     may be used which will be an indication to the stack the user
+     wants to enable a form of copy avoidance. [Default: -1 - use the
+     system's default socket buffer sizes]
 
 `-S <sizespec>'
      This option sets the remote send and/or receive socket buffer sizes
-     for the control connection to the value(s) specified.  Often, this
+     for the data connection to the value(s) specified.  Often, this
      will affect the advertised and/or effective TCP or other window,
      but on some platforms it may not. By default the units are bytes,
      but a suffix of "G," "M," or "K" will specify the units to be 2^30
@@ -1674,8 +1757,10 @@ BSD Sockets or the XTI interface those common options include:
 
      While the historic expectation is that setting the socket buffer
      size has a direct effect on say the TCP window, today that may not
-     hold true for all stacks. [Default: 0 - use the system's default
-     socket buffer sizes]
+     hold true for all stacks.  When running under Windows a value of 0
+     may be used which will be an indication to the stack the user
+     wants to enable a form of copy avoidance.  [Default: -1 - use the
+     system's default socket buffer sizes]
 
 `-4'
      Set the local and remote address family for the data connection to
@@ -1840,7 +1925,7 @@ and did not move around during the test.
 6.2.5 XTI_TCP_RR
 ----------------
 
-An XTI_TCP_RR test is essentially the same as a *Note TCP_RR:: test only
+An XTI_TCP_RR test is essentially the same as a *note TCP_RR:: test only
 using the XTI rather than BSD Sockets interface. It is requested by
 passing a value of "XTI_TCP_RR" to the `-t' global command-line option.
 
@@ -1877,7 +1962,7 @@ to specify the name of the local and/or remote XTI device file(s).
 7 Using Netperf to Measure Aggregate Performance
 ************************************************
 
-*Note Netperf4: Netperf4. is the preferred benchmark to use when one
+*note Netperf4: Netperf4. is the preferred benchmark to use when one
 wants to measure aggregate performance because netperf has no support
 for explicit synchronization of concurrent tests.
 
@@ -1889,7 +1974,7 @@ netperf with `--enable-burst' and is applicable to the TCP_RR test.
 7.1 Running Concurrent Netperf Tests
 ====================================
 
-*Note Netperf4: Netperf4. is the preferred benchmark to use when one
+*note Netperf4: Netperf4. is the preferred benchmark to use when one
 wants to measure aggregate performance because netperf has no support
 for explicit synchronization of concurrent tests.  This leaves netperf2
 results vulnerable to "skew" errors.
@@ -1904,7 +1989,7 @@ multiple tests from the shell using a `for' loop or the like:
      netperf -t TCP_STREAM -H tardy.cup.hp.com -i 10 -P 0 &
      done
 
-   which will run four, concurrent *Note TCP_STREAM: TCP_STREAM. tests
+   which will run four, concurrent *note TCP_STREAM: TCP_STREAM. tests
 from the system on which it is executed to tardy.cup.hp.com.  Each
 concurrent netperf will iterate 10 times thanks to the `-i' option and
 will omit the test banners (option `-P') for brevity.  The output looks
@@ -1977,8 +2062,8 @@ If one configures netperf with `--enable-burst':
 
      configure --enable-burst
 
-   Then a test-specific `-b num' option is added to the *Note TCP_RR:
-TCP_RR. and *Note UDP_RR: UDP_RR. tests. This option causes TCP_RR and
+   Then a test-specific `-b num' option is added to the *note TCP_RR:
+TCP_RR. and *note UDP_RR: UDP_RR. tests. This option causes TCP_RR and
 UDP_RR to quickly work their way up to having at least `num'
 transactions in flight at one time.
 
@@ -2035,7 +2120,7 @@ settings in the driver for the NICs used.
      NOTE: Even if you set the `-D' option that is still not a
      guarantee that each transaction is in its own TCP segments.  You
      should get into the habit of verifying the relationship between the
-     transaction rate and the packet rate via other means
+     transaction rate and the packet rate via other means.
 
    You can also combine `--enable-burst' functionality with concurrent
 netperf tests.  This would then be an "aggregate of aggregates" if you
@@ -2146,7 +2231,7 @@ specified in the test-specific `-b' option.
 There are two ways to use netperf to measure the perfomance of
 bidirectional transfer.  The first is to run concurrent netperf tests
 from the command line.  The second is to configure netperf with
-`--enable-burst' and use a single instance of the *Note TCP_RR: TCP_RR.
+`--enable-burst' and use a single instance of the *note TCP_RR: TCP_RR.
 test.
 
    While neither method is more "correct" than the other, each is doing
@@ -2160,16 +2245,16 @@ on an MP system.
 8.1 Bidirectional Transfer with Concurrent Tests
 ================================================
 
-If we had two hosts Fred and Ethel, we could simply run a netperf *Note
+If we had two hosts Fred and Ethel, we could simply run a netperf *note
 TCP_STREAM: TCP_STREAM. test on Fred pointing at Ethel, and a
 concurrent netperf TCP_STREAM test on Ethel pointing at Fred, but since
 there are no mechanisms to synchronize netperf tests and we would be
 starting tests from two different systems, there is a considerable risk
 of skew error.
 
-   Far better would be to run simultaneous TCP_STREAM and *Note
+   Far better would be to run simultaneous TCP_STREAM and *note
 TCP_MAERTS: TCP_MAERTS. tests from just one system, using the concepts
-and procedures outlined in *Note Running Concurrent Netperf Tests:
+and procedures outlined in *note Running Concurrent Netperf Tests:
 Running Concurrent Netperf Tests. Here then is an example:
 
      for i in 1
@@ -2189,7 +2274,7 @@ the throughput, and the global `-B' option is used to tag each output
 so we know which was inbound and which outbound relative to the system
 on which we were running netperf.  Of course that sense is switched on
 the system running netserver :)  The use of the global `-i' option is
-explained in *Note Running Concurrent Netperf Tests: Running Concurrent
+explained in *note Running Concurrent Netperf Tests: Running Concurrent
 Netperf Tests.
 
 8.2 Bidirectional Transfer with TCP_RR
@@ -2214,7 +2299,7 @@ netperf might attempt to do this automagically, but there are some
 issues to be worked-out.
 
    Here then is an example of a bidirectional transfer test using
-`--enable-burst' and the *Note TCP_RR: TCP_RR. test:
+`--enable-burst' and the *note TCP_RR: TCP_RR. test:
 
      netperf -t TCP_RR -H hpcpc108 -- -b 6 -r 32K -s 256K -S 256K
      TCP REQUEST/RESPONSE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to hpcpc108.cup.hp.com (16.89.84.108) port 0 AF_INET : first burst 6
@@ -2361,8 +2446,8 @@ the changes incorporated :)
 Netperf4 is the shorthand name given to version 4.X.X of netperf.  This
 is really a separate benchmark more than a newer version of netperf,
 but it is a decendant of netperf so the netperf name is kept.  The
-facitious way to describe netperf4 is to say it is the
-egg-laying-wolly-milk-pig version of netperf :)  The more respectful
+facetious way to describe netperf4 is to say it is the
+egg-laying-woolly-milk-pig version of netperf :)  The more respectful
 way to describe it is to say it is the version of netperf with support
 for synchronized, multiple-thread, multiple-test, multiple-system,
 network-oriented benchmarking.
@@ -2373,9 +2458,91 @@ with or on netperf4 are encouraged to join the netperf-dev
 list and/or peruse the current sources
 (http://www.netperf.org/svn/netperf4/trunk).
 
-Index
-*****
+Concept Index
+*************
 
-chapter, Installing Netperf:                   See 2.        (line  186)
-chapter, Introduction:                         See 1.        (line   74)
-chapter, The Design of Netperf:                See 3.        (line  389)
+Aggregate Performance:                         See 7.        (line 1965)
+Bandwidth Limitation:                          See 2.2.      (line  283)
+Connection Latency:                            See 6.2.2.    (line 1826)
+CPU Utilization:                               See 3.1.      (line  423)
+Design of Netperf:                             See 3.        (line  395)
+Installation:                                  See 2.        (line  187)
+Introduction:                                  See 1.        (line   75)
+Latency, Connection Establishment <1>:         See 6.2.7.    (line 1942)
+Latency, Connection Establishment <2>:         See 6.2.6.    (line 1939)
+Latency, Connection Establishment <3>:         See 6.2.3.    (line 1869)
+Latency, Connection Establishment:             See 6.2.2.    (line 1826)
+Latency, Request-Response <1>:                 See 6.2.11.   (line 1962)
+Latency, Request-Response <2>:                 See 6.2.10.   (line 1959)
+Latency, Request-Response <3>:                 See 6.2.9.    (line 1956)
+Latency, Request-Response <4>:                 See 6.2.8.    (line 1945)
+Latency, Request-Response <5>:                 See 6.2.7.    (line 1942)
+Latency, Request-Response <6>:                 See 6.2.5.    (line 1928)
+Latency, Request-Response <7>:                 See 6.2.4.    (line 1889)
+Latency, Request-Response <8>:                 See 6.2.3.    (line 1869)
+Latency, Request-Response:                     See 6.2.1.    (line 1779)
+Limiting Bandwidth <1>:                        See 5.2.4.    (line 1419)
+Limiting Bandwidth:                            See 2.2.      (line  283)
+Measuring Latency:                             See 6.2.1.    (line 1779)
+Packet Loss:                                   See 6.2.4.    (line 1889)
+Port Reuse:                                    See 6.2.2.    (line 1833)
+TIME_WAIT:                                     See 6.2.2.    (line 1833)
+Option Index
+************
+
+--enable-burst, Configure:                     See 7.        (line 1965)
+--enable-cpuutil, Configure:                   See 2.2.      (line  264)
+--enable-dlpi, Configure:                      See 2.2.      (line  270)
+--enable-histogram, Configure:                 See 2.2.      (line  283)
+--enable-intervals, Configure:                 See 2.2.      (line  283)
+--enable-sctp, Configure:                      See 2.2.      (line  270)
+--enable-unixdomain, Configure:                See 2.2.      (line  270)
+--enable-xti, Configure:                       See 2.2.      (line  270)
+-4, Global:                                    See 4.2.      (line 1037)
+-4, Test-specific <1>:                         See 6.2.      (line 1765)
+-4, Test-specific:                             See 5.2.      (line 1257)
+-6 Test-specific:                              See 6.2.      (line 1771)
+-6, Global:                                    See 4.2.      (line 1046)
+-6, Test-specific:                             See 5.2.      (line 1263)
+-A, Global:                                    See 4.2.      (line  631)
+-a, Global:                                    See 4.2.      (line  619)
+-B, Global:                                    See 4.2.      (line  642)
+-b, Global:                                    See 4.2.      (line  635)
+-C, Global:                                    See 4.2.      (line  655)
+-c, Global:                                    See 4.2.      (line  646)
+-D, Global:                                    See 4.2.      (line  669)
+-d, Global:                                    See 4.2.      (line  660)
+-F, Global:                                    See 4.2.      (line  689)
+-f, Global:                                    See 4.2.      (line  680)
+-H, Global:                                    See 4.2.      (line  707)
+-h, Global:                                    See 4.2.      (line  703)
+-H, Test-specific:                             See 6.2.      (line 1694)
+-h, Test-specific <1>:                         See 6.2.      (line 1687)
+-h, Test-specific:                             See 5.2.      (line 1157)
+-i, Global:                                    See 4.2.      (line  791)
+-I, Global:                                    See 4.2.      (line  742)
+-j, Global:                                    See 4.2.      (line  812)
+-L, Global:                                    See 4.2.      (line  854)
+-l, Global:                                    See 4.2.      (line  834)
+-L, Test-specific <1>:                         See 6.2.      (line 1703)
+-L, Test-specific:                             See 5.2.      (line 1172)
+-M, Test-specific:                             See 5.2.      (line 1195)
+-m, Test-specific:                             See 5.2.      (line 1179)
+-N, Global:                                    See 4.2.      (line  884)
+-n, Global:                                    See 4.2.      (line  866)
+-O, Global:                                    See 4.2.      (line  929)
+-o, Global:                                    See 4.2.      (line  920)
+-P, Global:                                    See 4.2.      (line  953)
+-p, Global:                                    See 4.2.      (line  933)
+-P, Test-specific <1>:                         See 6.2.      (line 1710)
+-P, Test-specific:                             See 5.2.      (line 1208)
+-r, Test-specific:                             See 6.2.      (line 1713)
+-S Test-specific:                              See 5.2.      (line 1234)
+-S, Test-specific:                             See 6.2.      (line 1745)
+-s, Test-specific <1>:                         See 6.2.      (line 1725)
+-s, Test-specific:                             See 5.2.      (line 1211)
+-t, Global:                                    See 4.2.      (line  962)
+-V, Global:                                    See 4.2.      (line 1016)
+-v, Global:                                    See 4.2.      (line  994)
+-W, Global:                                    See 4.2.      (line 1028)
+-w, Global:                                    See 4.2.      (line 1021)
