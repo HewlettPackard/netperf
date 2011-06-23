@@ -195,7 +195,7 @@ static struct timeval *temp_demo_ptr = &demo_one;
 	   to the millisecond for compatability with RRD  */ \
         gettimeofday(&now,NULL); \
 	fprintf(where,							\
-		"Interim result: %7.2f %s/s over %.2f seconds ending at %ld.%ld\n", \
+		"Interim result: %7.2f %s/s over %.2f seconds ending at %ld.%.3ld\n", \
 		calc_thruput_interval(units_this_tick,			\
 				      actual_interval/1000000.0),	\
 		format_units(),						\
