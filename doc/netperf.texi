@@ -489,7 +489,7 @@ Those familiar with this option in earlier versions of netperf will
 note the addition of the ``ending at'' text.  This is the time as
 reported by a @code{gettimeofday()} call (or its emulation) with a
 @code{NULL} timezone pointer.  This addition is intended to make it
-easier to insert interim results into an 
+easier to insert interim results into an
 @uref{http://oss.oetiker.ch/rrdtool/doc/rrdtool.en.html,rrdtool}
 Round-Robin Database (RRD).  A likely bug-riddled example of doing so
 can be found in @file{doc/examples/netperf_interim_to_rrd.sh}.  The
