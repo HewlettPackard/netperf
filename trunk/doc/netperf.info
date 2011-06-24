@@ -3329,25 +3329,25 @@ As of version 2.5.0 the output selectors are:
      The vendor ID of the probable egress interface through which
      traffic on the data connection went on the system running netperf.
      Units: Hexadecimal IDs as might be found in a `pci.ids' file or at
-     the PCI ID Repository (http://pciids.soruceforge.net/).
+     the PCI ID Repository (http://pciids.sourceforge.net/).
 
 `LOCAL_INTERFACE_DEVICE'
      The device ID of the probable egress interface through which
      traffic on the data connection went on the system running netperf.
      Units: Hexadecimal IDs as might be found in a `pci.ids' file or at
-     the PCI ID Repository (http://pciids.soruceforge.net/).
+     the PCI ID Repository (http://pciids.sourceforge.net/).
 
 `LOCAL_INTERFACE_SUBVENDOR'
      The sub-vendor ID of the probable egress interface through which
      traffic on the the data connection went on the system running
      netperf. Units: Hexadecimal IDs as might be found in a `pci.ids'
-     file or at the PCI ID Repository (http://pciids.soruceforge.net/).
+     file or at the PCI ID Repository (http://pciids.sourceforge.net/).
 
 `LOCAL_INTERFACE_SUBDEVICE'
      The sub-device ID of the probable egress interface through which
      traffic on the data connection went on the system running netperf.
      Units: Hexadecimal IDs as might be found in a `pci.ids' file or at
-     the PCI ID Repository (http://pciids.soruceforge.net/).
+     the PCI ID Repository (http://pciids.sourceforge.net/).
 
 `LOCAL_DRIVER_NAME'
      The name of the driver used for the probable egress interface
