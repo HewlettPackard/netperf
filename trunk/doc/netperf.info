@@ -288,6 +288,13 @@ that is unsuccessful, you can add a `--enable-omni=no' to the configure
 command and the omni tests will not be compiled-in and the classic
 tests will not be migrated.
 
+   Starting with version 2.5.0, netperf will include the "burst mode"
+functionality in a default compilation of the bits.  If you encounter
+problems with this, please first attempt to obtain help via
+<netperf-talk@netperf.org> or <netperf-feedback@netperf.org>.  If that
+is unsuccessful, you can add a `--enable-burst=no' to the configure
+command and the burst mode functionality will nt be compiled-in.
+
    On some platforms, it may be necessary to precede the configure
 command with a CFLAGS and/or LIBS variable as the netperf configure
 script is not yet smart enough to set them itself.  Whenever possible,
@@ -1503,12 +1510,14 @@ can be easier to DMA to the NIC.  When no copy is performed, there is
 no opportunity to reserve space for headers and so a packet will be
 contained in two or more buffers.
 
-   The *note global `-F' option: Global Options. is required for this
-test and it must specify a file of at least the size of the send ring
-(*Note the global `-W' option: Global Options.) multiplied by the send
-size (*Note the test-specific `-m' option: Options common to TCP UDP
-and SCTP tests.).  All other TCP-specific options are available and
-optional.
+   As of some time before version 2.5.0, the *note global `-F' option:
+Global Options. is no longer required for this test.  If it is not
+specified, netperf will create a temporary file, which it will delete
+at the end of the test.  If the `-F' option is specified it must
+reference a file of at least the size of the send ring (*Note the
+global `-W' option: Global Options.) multiplied by the send size (*Note
+the test-specific `-m' option: Options common to TCP UDP and SCTP
+tests.).  All other TCP-specific options remain available and optional.
 
    In this first example:
      $ netperf -H lag -F ../src/netperf -t TCP_SENDFILE -- -s 128K -S 128K
@@ -1518,7 +1527,7 @@ optional.
 
    we see what happens when the file is too small.  Here:
 
-     $ ../src/netperf -H lag -F /boot/vmlinuz-2.6.8-1-686 -t TCP_SENDFILE -- -s 128K -S 128K
+     $ netperf -H lag -F /boot/vmlinuz-2.6.8-1-686 -t TCP_SENDFILE -- -s 128K -S 128K
      TCP SENDFILE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to lag.hpl.hp.com (15.4.89.214) port 0 AF_INET
      Recv   Send    Send
      Socket Socket  Message  Elapsed
@@ -2674,7 +2683,7 @@ feel" just like a pre-2.5.0 test with one exception - the first line of
 the test banners will include the word "MIGRATED" at the beginning as
 in:
 
-     $ ../src/netperf
+     $ netperf
      MIGRATED TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain (127.0.0.1) port 0 AF_INET : demo
      Recv   Send    Send
      Socket Socket  Message  Elapsed
@@ -2705,12 +2714,12 @@ omni output code will be used. For example if one uses the `-k'
 test-specific option with a value of "MIN_LATENCY,MAX_LATENCY" with a
 migrated TCP_RR test one will see:
 
-     $ ../src/netperf  -t tcp_rr  -- -k THROUGHPUT,THROUGHPUT_UNITS
+     $ netperf -t tcp_rr -- -k THROUGHPUT,THROUGHPUT_UNITS
      MIGRATED TCP REQUEST/RESPONSE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain (127.0.0.1) port 0 AF_INET : demo
      THROUGHPUT=60074.74
      THROUGHPUT_UNITS=Trans/s
    rather than:
-     $ ../src/netperf  -t tcp_rr
+     $ netperf -t tcp_rr
      MIGRATED TCP REQUEST/RESPONSE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain (127.0.0.1) port 0 AF_INET : demo
      Local /Remote
      Socket Size   Request  Resp.   Elapsed  Trans.
@@ -2769,6 +2778,737 @@ reported.  The output selector can take several forms:
      If nothing is given to the `-k', `-o' or `-O' option then the code
      selects a default set of output selectors inspired by classic
      netperf output.
+
+* Menu:
+
+* Omni Output Selectors::
+
+
+File: netperf.info,  Node: Omni Output Selectors,  Prev: Omni Output Selection,  Up: Omni Output Selection
+
+9.3.1 Omni Output Selectors
+---------------------------
+
+As of version 2.5.0 the output selectors are:
+
+`OUTPUT_NONE'
+     This is essentially a null output.  For `-k' output it will simply
+     add a line that reads "OUTPUT_NONE=" to the output. For `-o' it
+     will cause an empty "column" to be included. For `-O' output it
+     will cause extra spaces to separate "real" output.
+
+`SOCKET_TYPE'
+     This will cause the socket type (eg SOCK_STREAM, SOCK_DGRAM) for
+     the data connection to be output.
+
+`PROTOCOL'
+     This will cause the protocol used for the data connection to be
+     displayed.
+
+`DIRECTION'
+     This will display the data flow direction relative to the netperf
+     process. Units: Send or Recv for a unidirectional bulk-transfer
+     test, or Send|Recv for a request/response test.
+
+`ELAPSED_TIME'
+     This will display the elapsed time in seconds for the test.
+
+`THROUGHPUT'
+     This will display the througput for the test. Units: As requested
+     via the global `-f' option and displayed by the THROUGHPUT_UNITS
+     output selector.
+
+`THROUGHPUT_UNITS'
+     This will display the units for what is displayed by the
+     `THROUGHPUT' output selector.
+
+`LSS_SIZE_REQ'
+     This will display the local (netperf) send socket buffer size (aka
+     SO_SNDBUF) requested via the command line. Units: Bytes.
+
+`LSS_SIZE'
+     This will display the local (netperf) send socket buffer size
+     (SO_SNDBUF) immediately after the data connection socket was
+     created.  Peculiarities of different networking stacks may lead to
+     this differing from the size requested via the command line.
+     Units: Bytes.
+
+`LSS_SIZE_END'
+     This will display the local (netperf) send socket buffer size
+     (SO_SNDBUF) immediately before the data connection socket is
+     closed.  Peculiarities of different networking stacks may lead
+     this to differ from the size requested via the command line and/or
+     the size immediately after the data connection socket was created.
+     Units: Bytes.
+
+`LSR_SIZE_REQ'
+     This will display the local (netperf) receive socket buffer size
+     (aka SO_RCVBUF) requested via the command line. Units: Bytes.
+
+`LSR_SIZE'
+     This will display the local (netperf) receive socket buffer size
+     (SO_RCVBUF) immediately after the data connection socket was
+     created.  Peculiarities of different networking stacks may lead to
+     this differing from the size requested via the command line.
+     Units: Bytes.
+
+`LSR_SIZE_END'
+     This will display the local (netperf) receive socket buffer size
+     (SO_RCVBUF) immediately before the data connection socket is
+     closed.  Peculiarities of different networking stacks may lead
+     this to differ from the size requested via the command line and/or
+     the size immediately after the data connection socket was created.
+     Units: Bytes.
+
+`RSS_SIZE_REQ'
+     This will display the remote (netserver) send socket buffer size
+     (aka SO_SNDBUF) requested via the command line. Units: Bytes.
+
+`RSS_SIZE'
+     This will display the remote (netserver) send socket buffer size
+     (SO_SNDBUF) immediately after the data connection socket was
+     created.  Peculiarities of different networking stacks may lead to
+     this differing from the size requested via the command line.
+     Units: Bytes.
+
+`RSS_SIZE_END'
+     This will display the remote (netserver) send socket buffer size
+     (SO_SNDBUF) immediately before the data connection socket is
+     closed.  Peculiarities of different networking stacks may lead
+     this to differ from the size requested via the command line and/or
+     the size immediately after the data connection socket was created.
+     Units: Bytes.
+
+`RSR_SIZE_REQ'
+     This will display the remote (netserver) receive socket buffer
+     size (aka SO_RCVBUF) requested via the command line. Units: Bytes.
+
+`RSR_SIZE'
+     This will display the remote (netserver) receive socket buffer size
+     (SO_RCVBUF) immediately after the data connection socket was
+     created.  Peculiarities of different networking stacks may lead to
+     this differing from the size requested via the command line.
+     Units: Bytes.
+
+`RSR_SIZE_END'
+     This will display the remote (netserver) receive socket buffer size
+     (SO_RCVBUF) immediately before the data connection socket is
+     closed.  Peculiarities of different networking stacks may lead
+     this to differ from the size requested via the command line and/or
+     the size immediately after the data connection socket was created.
+     Units: Bytes.
+
+`LOCAL_SEND_SIZE'
+     This will display the size of the buffers netperf passed in any
+     "send" calls it made on the data connection for a
+     non-request/response test. Units: Bytes.
+
+`LOCAL_RECV_SIZE'
+     This will display the size of the buffers netperf passed in any
+     "receive" calls it made on the data connection for a
+     non-request/response test. Units: Bytes.
+
+`REMOTE_SEND_SIZE'
+     This will display the size of the buffers netserver passed in any
+     "send" calls it made on the data connection for a
+     non-request/response test. Units: Bytes.
+
+`REMOTE_RECV_SIZE'
+     This will display the size of the buffers netserver passed in any
+     "receive" calls it made on the data connection for a
+     non-request/response test. Units: Bytes.
+
+`REQUEST_SIZE'
+     This will display the size of the requests netperf sent in a
+     request-response test. Units: Bytes.
+
+`RESPONSE_SIZE'
+     This will display the size of the responses netserver sent in a
+     request-response test. Units: Bytes.
+
+`LOCAL_CPU_UTIL'
+     This will display the overall CPU utilization during the test as
+     measured by netperf. Units: 0 to 100 percent.
+
+`LOCAL_CPU_METHOD'
+     This will display the method used by netperf to measure CPU
+     utilization. Units: single character denoting method.
+
+`LOCAL_SD'
+     This will display the service demand, or units of CPU consumed per
+     unit of work, as measured by netperf. Units: microsconds of CPU
+     consumed per either KB (K==1024) of data transferred or
+     request/response transaction.
+
+`REMOTE_CPU_UTIL'
+     This will display the overall CPU utilization during the test as
+     measured by netserver. Units 0 to 100 percent.
+
+`REMOTE_CPU_METHOD'
+     This will display the method used by netserver to measure CPU
+     utilization. Units: single character denoting method.
+
+`REMOTE_SD'
+     This will display the service demand, or units of CPU consumed per
+     unit of work, as measured by netserver. Units: microseconds of CPU
+     consumed consumed per either KB (K==1024) of data transferred or
+     request/response transaction.
+
+`SD_UNITS'
+     This will display the units for LOCAL_SD and REMOTE_SD
+
+`CONFIDENCE_LEVEL'
+     This will display the confidence level requested by the user either
+     explicitly via the global `-I' option, or implicitly via the
+     global `-i' option.  The value will be either 95 or 99 if
+     confidence intervals have been requested or 0 if they were not.
+     Units: Percent
+
+`CONFIDENCE_INTERVAL'
+     This will display the width of the confidence interval requested
+     either explicitly via the global `-I' option or implicitly via the
+     global `-i' option.  Units: Width in percent of mean value
+     computed. A value of -1.0 means that confidence intervals were not
+     requested.
+
+`CONFIDENCE_ITERATION'
+     This will display the number of test iterations netperf undertook,
+     perhaps while attempting to achieve the requested confidence
+     interval and level. If confidence intervals were requested via the
+     command line then the value will be between 3 and 30.  If
+     confidence intervals were not requested the value will be 1.
+     Units: Iterations
+
+`THROUGHPUT_CONFID'
+     This will display the width of the confidence interval actually
+     achieved for throughput during the test.  Units: Width of interval
+     as percentage of reported throughput value.
+
+`LOCAL_CPU_CONFID'
+     This will display the width of the confidence interval actually
+     achieved for CPU utilization on the system running netperf during
+     the test, if CPU utilization measurement was enabled.  Units:
+     Width of interval as percentage of reported CPU utilization.
+
+`REMOTE_CPU_CONFID'
+     This will display the width of the confidence interval actually
+     achieved for CPU utilzation on the system running netserver during
+     the test, if CPU utilization measurement was enabled. Units: Width
+     of interval as percentage of reported CPU utilization.
+
+`TRANSACTION_RATE'
+     This will display the transaction rate in transactions per second
+     for a request/response test even if the user has requested a
+     throughput units in number of bits or bytes per second via the
+     global `-f' option. It is undefined for a non-request/response
+     test. Units: Transactions per second.
+
+`RT_LATENCY'
+     This will display the average round-trip latency for a
+     request/response test, accounting for number of transactions in
+     flight at one time. It is undefined for a non-request/response
+     test. Units: Microseconds per transaction
+
+`BURST_SIZE'
+     This will display the "burst size" or added transactions in flight
+     in a request/response test as requested via a test-specific `-b'
+     option.  The number of transactions in flight at one time will be
+     one greater than this value.  It is undefined for a
+     non-request/response test. Units: added Transactions in flight.
+
+`LOCAL_TRANSPORT_RETRANS'
+     This will display the number of retransmissions experienced on the
+     data connection during the test as determined by netperf.  A value
+     of -1 means the attempt to determine the number of retransmissions
+     failed or the concept was not valid for the given protocol or the
+     mechanism is not known for the platform. A value of -2 means it
+     was not attempted. As of version 2.5.0 the meaning of values are
+     in flux and subject to change.  Units: number of retransmissions.
+
+`REMOTE_TRANSPORT_RETRANS'
+     This will display the number of retransmissions experienced on the
+     data connection during the test as determined by netserver.  A
+     value of -1 means the attempt to determine the number of
+     retransmissions failed or the concept was not valid for the given
+     protocol or the mechanism is not known for the platform. A value
+     of -2 means it was not attempted. As of version 2.5.0 the meaning
+     of values are in flux and subject to change.  Units: number of
+     retransmissions.
+
+`TRANSPORT_MSS'
+     This will display the Maximum Segment Size (aka MSS) or its
+     equivalent for the protocol being used during the test.  A value
+     of -1 means either the concept of an MSS did not apply to the
+     protocol being used, or there was an error in retrieving it.
+     Units: Bytes.
+
+`LOCAL_SEND_THROUGHPUT'
+     The throughput as measured by netperf for the successful "send"
+     calls it made on the data connection. Units: as requested via the
+     global `-f' option and displayed via the THROUGHPUT_UNITS output
+     selector.
+
+`LOCAL_RECV_THROUGHPUT'
+     The throughput as measured by netperf for the successful "receive"
+     calls it made on the data connection. Units: as requested via the
+     global `-f' option and displayed via the THROUGHPUT_UNITS output
+     selector.
+
+`REMOTE_SEND_THROUGHPUT'
+     The throughput as measured by netserver for the successful "send"
+     calls it made on the data connection. Units: as requested via the
+     global `-f' option and displayed via the THROUGHPUT_UNITS output
+     selector.
+
+`REMOTE_RECV_THROUGHPUT'
+     The throughput as measured by netserver for the successful
+     "receive" calls it made on the data connection. Units: as
+     requested via the global `-f' option and displayed via the
+     THROUGHPUT_UNITS output selector.
+
+`LOCAL_CPU_BIND'
+     The CPU to which netperf was bound, if at all, during the test. A
+     value of -1 means that netperf was not explicitly bound to a CPU
+     during the test. Units: CPU ID
+
+`LOCAL_CPU_COUNT'
+     The number of CPUs (cores, threads) detected by netperf. Units:
+     CPU count.
+
+`LOCAL_CPU_PEAK_UTIL'
+     The utilization of the CPU most heavily utilized during the test,
+     as measured by netperf. This can be used to see if any one CPU of a
+     multi-CPU system was saturated even though the overall CPU
+     utilization as reported by LOCAL_CPU_UTIL was low. Units: 0 to 100%
+
+`LOCAL_CPU_PEAK_ID'
+     The id of the CPU most heavily utilized during the test as
+     determined by netperf. Units: CPU ID.
+
+`LOCAL_CPU_MODEL'
+     Model information for the processor(s) present on the system
+     running netperf. Assumes all processors in the system (as
+     perceived by netperf) on which netperf is running are the same
+     model. Units: Text
+
+`LOCAL_CPU_FREQUENCY'
+     The frequency of the processor(s) on the system running netperf, at
+     the time netperf made the call.  Assumes that all processors
+     present in the system running netperf are running at the same
+     frequency. Units: MHz
+
+`REMOTE_CPU_BIND'
+     The CPU to which netserver was bound, if at all, during the test. A
+     value of -1 means that netperf was not explicitly bound to a CPU
+     during the test. Units: CPU ID
+
+`REMOTE_CPU_COUNT'
+     The number of CPUs (cores, threads) detected by netserver. Units:
+     CPU count.
+
+`REMOTE_CPU_PEAK_UTIL'
+     The utilization of the CPU most heavily utilized during the test,
+     as measured by netserver. This can be used to see if any one CPU
+     of a multi-CPU system was saturated even though the overall CPU
+     utilization as reported by LOCAL_CPU_UTIL was low. Units: 0 to 100%
+
+`REMOTE_CPU_PEAK_ID'
+     The id of the CPU most heavily utilized during the test as
+     determined by netserver. Units: CPU ID.
+
+`REMOTE_CPU_MODEL'
+     Model information for the processor(s) present on the system
+     running netserver. Assumes all processors in the system (as
+     perceived by netserver) on which netserver is running are the same
+     model. Units: Text
+
+`REMOTE_CPU_FREQUENCY'
+     The frequency of the processor(s) on the system running netserver,
+     at the time netserver made the call.  Assumes that all processors
+     present in the system running netserver are running at the same
+     frequency. Units: MHz
+
+`SOURCE_PORT'
+     The port ID/service name to which the data socket created by
+     netperf was bound.  A value of 0 means the data socket was not
+     explicitly bound to a port number. Units: ASCII text.
+
+`SOURCE_ADDR'
+     The name/address to which the data socket created by netperf was
+     bound. A value of 0.0.0.0 means the data socket was not explicitly
+     bound to an address. Units: ASCII text.
+
+`SOURCE_FAMILY'
+     The address family to which the data socket created by netperf was
+     bound.  A value of 0 means the data socket was not explicitly
+     bound to a given address family. Units: ASCII text.
+
+`DEST_PORT'
+     The port ID to which the data socket created by netserver was
+     bound. A value of 0 means the data socket was not explicitly bound
+     to a port number.  Units: ASCII text.
+
+`DEST_ADDR'
+     The name/address of the data socket created by netserver.  Units:
+     ASCII text.
+
+`DEST_FAMILY'
+     The address family to which the data socket created by netserver
+     was bound. A value of 0 means the data socket was not explicitly
+     bound to a given address family. Units: ASCII text.
+
+`LOCAL_SEND_CALLS'
+     The number of successful "send" calls made by netperf against its
+     data socket. Units: Calls.
+
+`LOCAL_RECV_CALLS'
+     The number of successful "receive" calls made by netperf against
+     its data socket. Units: Calls.
+
+`LOCAL_BYTES_PER_RECV'
+     The average number of bytes per "receive" call made by netperf
+     against its data socket. Units: Bytes.
+
+`LOCAL_BYTES_PER_SEND'
+     The average number of bytes per "send" call made by netperf against
+     its data socket. Units: Bytes.
+
+`LOCAL_BYTES_SENT'
+     The number of bytes successfully sent by netperf through its data
+     socket. Units: Bytes.
+
+`LOCAL_BYTES_RECVD'
+     The number of bytes successfully received by netperf through its
+     data socket. Units: Bytes.
+
+`LOCAL_BYTES_XFERD'
+     The sum of bytes sent and received by netperf through its data
+     socket. Units: Bytes.
+
+`LOCAL_SEND_OFFSET'
+     The offset from the alignment of the buffers passed by netperf in
+     its "send" calls. Specified via the global `-o' option and
+     defaults to 0. Units: Bytes.
+
+`LOCAL_RECV_OFFSET'
+     The offset from the alignment of the buffers passed by netperf in
+     its "receive" calls. Specified via the global `-o' option and
+     defaults to 0. Units: Bytes.
+
+`LOCAL_SEND_ALIGN'
+     The alignment of the buffers passed by netperf in its "send" calls
+     as specified via the global `-a' option. Defaults to 8. Units:
+     Bytes.
+
+`LOCAL_RECV_ALIGN'
+     The alignment of the buffers passed by netperf in its "receive"
+     calls as specified via the global `-a' option. Defaults to 8.
+     Units: Bytes.
+
+`LOCAL_SEND_WIDTH'
+     The "width" of the ring of buffers through which netperf cycles as
+     it makes its "send" calls.  Defaults to one more than the local
+     send socket buffer size divided by the send size as determined at
+     the time the data socket is created. Can be used to make netperf
+     more processor data cache unfiendly. Units: number of buffers.
+
+`LOCAL_RECV_WIDTH'
+     The "width" of the ring of buffers through which netperf cycles as
+     it makes its "receive" calls.  Defaults to one more than the local
+     receive socket buffer size divided by the receive size as
+     determined at the time the data socket is created. Can be used to
+     make netperf more processor data cache unfiendly. Units: number of
+     buffers.
+
+`LOCAL_SEND_DIRTY_COUNT'
+     The number of bytes to "dirty" (write to) before netperf makes a
+     "send" call. Specified via the global `-k' option, which requires
+     that -enable-dirty=yes was specificed with the configure command
+     prior to building netperf. Units: Bytes.
+
+`LOCAL_RECV_DIRTY_COUNT'
+     The number of bytes to "dirty" (write to) before netperf makes a
+     "recv" call. Specified via the global `-k' option which requires
+     that -enable-dirty was specified with the configure command prior
+     to building netperf. Units: Bytes.
+
+`LOCAL_RECV_CLEAN_COUNT'
+     The number of bytes netperf should read "cleanly" before making a
+     "receive" call. Specified via the global `-k' option which
+     requires that -enable-dirty was specified with configure command
+     prior to building netperf.  Clean reads start were dirty writes
+     ended.  Units: Bytes.
+
+`LOCAL_NODELAY'
+     Indicates whether or not setting the test protocol-specific "no
+     delay" (eg TCP_NODELAY) option on the data socket used by netperf
+     was requested by the test-specific `-D' option and successful.
+     Units: 0 means no, 1 means yes.
+
+`LOCAL_CORK'
+     Indicates whether or not TCP_CORK was set on the data socket used
+     by netperf as requested via the test-specific `-C' option. 1 means
+     yes, 0 means no/not applicable.
+
+`REMOTE_SEND_CALLS'
+
+`REMOTE_RECV_CALLS'
+
+`REMOTE_BYTES_PER_RECV'
+
+`REMOTE_BYTES_PER_SEND'
+
+`REMOTE_BYTES_SENT'
+
+`REMOTE_BYTES_RECVD'
+
+`REMOTE_BYTES_XFERD'
+
+`REMOTE_SEND_OFFSET'
+
+`REMOTE_RECV_OFFSET'
+
+`REMOTE_SEND_ALIGN'
+
+`REMOTE_RECV_ALIGN'
+
+`REMOTE_SEND_WIDTH'
+
+`REMOTE_RECV_WIDTH'
+
+`REMOTE_SEND_DIRTY_COUNT'
+
+`REMOTE_RECV_DIRTY_COUNT'
+
+`REMOTE_RECV_CLEAN_COUNT'
+
+`REMOTE_NODELAY'
+
+`REMOTE_CORK'
+     These are all like their "LOCAL_" counterparts only for the
+     netserver rather than netperf.
+
+`LOCAL_SYSNAME'
+     The name of the OS (eg "Linux") running on the system on which
+     netperf was running. Units: ASCII Text
+
+`LOCAL_SYSTEM_MODEL'
+     The model name of the system on which netperf was running. Units:
+     ASCII Text.
+
+`LOCAL_RELEASE'
+     The release name/number of the OS running on the system on which
+     netperf  was running. Units: ASCII Text
+
+`LOCAL_VERSION'
+     The version number of the OS runningon the system on which netperf
+     was running. Units: ASCII Text
+
+`LOCAL_MACHINE'
+     The machine architecture of the machine on which netperf was
+     running. Units: ASCII Text.
+
+`REMOTE_SYSNAME'
+
+`REMOTE_SYSTEM_MODEL'
+
+`REMOTE_RELEASE'
+
+`REMOTE_VERSION'
+
+`REMOTE_MACHINE'
+     These are all like their "LOCAL_" counterparts only for the
+     netserver rather than netperf.
+
+`LOCAL_INTERFACE_NAME'
+     The name of the probable egress interface through which the data
+     connection went on the system running netperf. Example: eth0.
+     Units: ASCII Text.
+
+`LOCAL_INTERFACE_VENDOR'
+     The vendor ID of the probable egress interface through which
+     traffic on the data connection went on the system running netperf.
+     Units: Hexadecimal IDs as might be found in a `pci.ids' file or at
+     the PCI ID Repository (http://pciids.soruceforge.net/).
+
+`LOCAL_INTERFACE_DEVICE'
+     The device ID of the probable egress interface through which
+     traffic on the data connection went on the system running netperf.
+     Units: Hexadecimal IDs as might be found in a `pci.ids' file or at
+     the PCI ID Repository (http://pciids.soruceforge.net/).
+
+`LOCAL_INTERFACE_SUBVENDOR'
+     The sub-vendor ID of the probable egress interface through which
+     traffic on the the data connection went on the system running
+     netperf. Units: Hexadecimal IDs as might be found in a `pci.ids'
+     file or at the PCI ID Repository (http://pciids.soruceforge.net/).
+
+`LOCAL_INTERFACE_SUBDEVICE'
+     The sub-device ID of the probable egress interface through which
+     traffic on the data connection went on the system running netperf.
+     Units: Hexadecimal IDs as might be found in a `pci.ids' file or at
+     the PCI ID Repository (http://pciids.soruceforge.net/).
+
+`LOCAL_DRIVER_NAME'
+     The name of the driver used for the probable egress interface
+     through which traffic on the data connection went on the system
+     running netperf. Units: ASCII Text.
+
+`LOCAL_DRIVER_VERSION'
+     The version string for the driver used for the probable egress
+     interface through which traffic on the data connection went on the
+     system running netperf. Units: ASCII Text.
+
+`LOCAL_DRIVER_FIRMWARE'
+     The firmware version for the driver used for the probable egress
+     interface through which traffic on the data connection went on the
+     system running netperf. Units: ASCII Text.
+
+`LOCAL_DRIVER_BUS'
+     The bus address of the probable egress interface through which
+     traffic on the data connection went on the system running netperf.
+     Units: ASCII Text.
+
+`LOCAL_INTERFACE_SLOT'
+     The slot ID of the probable egress interface through which traffic
+     on the data connection went on the system running netperf. Units:
+     ASCII Text.
+
+`REMOTE_INTERFACE_NAME'
+
+`REMOTE_INTERFACE_VENDOR'
+
+`REMOTE_INTERFACE_DEVICE'
+
+`REMOTE_INTERFACE_SUBVENDOR'
+
+`REMOTE_INTERFACE_SUBDEVICE'
+
+`REMOTE_DRIVER_NAME'
+
+`REMOTE_DRIVER_VERSION'
+
+`REMOTE_DRIVER_FIRMWARE'
+
+`REMOTE_DRIVER_BUS'
+
+`REMOTE_INTERFACE_SLOT'
+     These are all like their "LOCAL_" counterparts only for the
+     netserver rather than netperf.
+
+`LOCAL_INTERVAL_USECS'
+     The interval at which bursts of operations (sends, receives,
+     transactions) were attempted by netperf.  Specified by the global
+     `-w' option which requires -enable-intervals to have been
+     specified with the configure command prior to building netperf.
+     Units: Microseconds (though specified by default in milliseconds
+     on the command line)
+
+`LOCAL_INTERVAL_BURST'
+     The number of operations (sends, receives, transactions depending
+     on the test) which were attempted by netperf each
+     LOCAL_INTERVAL_USECS units of time. Specified by the global `-b'
+     option which requires -enable-intervals to have been specified
+     with the configure command prior to building netperf.  Units:
+     number of operations per burst.
+
+`REMOTE_INTERVAL_USECS'
+     The interval at which bursts of operations (sends, receives,
+     transactions) were attempted by netserver.  Specified by the
+     global `-w' option which requires -enable-intervals to have been
+     specified with the configure command prior to building netperf.
+     Units: Microseconds (though specified by default in milliseconds
+     on the command line)
+
+`REMOTE_INTERVAL_BURST'
+     The number of operations (sends, receives, transactions depending
+     on the test) which were attempted by netperf each
+     LOCAL_INTERVAL_USECS units of time. Specified by the global `-b'
+     option which requires -enable-intervals to have been specified
+     with the configure command prior to building netperf.  Units:
+     number of operations per burst.
+
+`LOCAL_SECURITY_TYPE_ID'
+
+`LOCAL_SECURITY_TYPE'
+
+`LOCAL_SECURITY_ENABLED_NUM'
+
+`LOCAL_SECURITY_ENABLED'
+
+`LOCAL_SECURITY_SPECIFIC'
+
+`REMOTE_SECURITY_TYPE_ID'
+
+`REMOTE_SECURITY_TYPE'
+
+`REMOTE_SECURITY_ENABLED_NUM'
+
+`REMOTE_SECURITY_ENABLED'
+
+`REMOTE_SECURITY_SPECIFIC'
+     A bunch of stuff related to what sort of security mechanisms (eg
+     SELINUX) were enabled on the systems during the test.
+
+`RESULT_BRAND'
+     The string specified by the user with the global `-B' option.
+     Units: ASCII Text.
+
+`UUID'
+     The universally unique identifier associated with this test, either
+     generated automagically by netperf, or passed to netperf via a
+     test-specific `-u' option. Note: Future versions may make this a
+     global command-line option. Units: ASCII Text.
+
+`MIN_LATENCY'
+     The minimum "latency" or operation time (send, receive or
+     request/response exchange depending on the test) as measured on the
+     netperf side when the global `-j' option was specified. Units:
+     Microseconds.
+
+`MAX_LATENCY'
+     The maximum "latency" or operation time (send, receive or
+     request/response exchange depending on the test) as measured on the
+     netperf side when the global `-j' option was specified. Units:
+     Microseconds.
+
+`P50_LATENCY'
+     The 50th percentile value of "latency" or operation time (send,
+     receive or request/response exchange depending on the test) as
+     measured on the netperf side when the global `-j' option was
+     specified. Units: Microseconds.
+
+`P90_LATENCY'
+     The 90th percentile value of "latency" or operation time (send,
+     receive or request/response exchange depending on the test) as
+     measured on the netperf side when the global `-j' option was
+     specified. Units: Microseconds.
+
+`P99_LATENCY'
+     The 99th percentile value of "latency" or operation time (send,
+     receive or request/response exchange depending on the test) as
+     measured on the netperf side when the global `-j' option was
+     specified. Units: Microseconds.
+
+`MEAN_LATENCY'
+     The average "latency" or operation time (send, receive or
+     request/response exchange depending on the test) as measured on the
+     netperf side when the global `-j' option was specified. Units:
+     Microseconds.
+
+`STDDEV_LATENCY'
+     The standard deviation of "latency" or operation time (send,
+     receive or request/response exchange depending on the test) as
+     measured on the netperf side when the global `-j' option was
+     specified. Units: Microseconds.
+
+`COMMAND_LINE'
+     The full command line used when invoking netperf. Units: ASCII
+     Text.
+
+`OUTPUT_END'
+     While emitted with the list of output selectors, it is ignored when
+     specified as an output selector.
 
 
 File: netperf.info,  Node: Other Netperf Tests,  Next: Address Resolution,  Prev: The Omni Tests,  Up: Top
@@ -2938,7 +3678,7 @@ Concept Index
 * Aggregate Performance:                 Using Netperf to Measure Aggregate Performance.
                                                                (line  6)
 * Bandwidth Limitation:                  Installing Netperf Bits.
-                                                               (line 55)
+                                                               (line 62)
 * Connection Latency:                    TCP_CC.               (line  6)
 * CPU Utilization:                       CPU Utilization.      (line  6)
 * Design of Netperf:                     The Design of Netperf.
@@ -2960,7 +3700,7 @@ Concept Index
 * Latency, Request-Response:             TCP_RR.               (line  6)
 * Limiting Bandwidth <1>:                UDP_STREAM.           (line  9)
 * Limiting Bandwidth:                    Installing Netperf Bits.
-                                                               (line 55)
+                                                               (line 62)
 * Measuring Latency:                     TCP_RR.               (line  6)
 * Packet Loss:                           UDP_RR.               (line  6)
 * Port Reuse:                            TCP_CC.               (line 13)
@@ -2982,9 +3722,9 @@ Option Index
 * --enable-dlpi, Configure:              Installing Netperf Bits.
                                                               (line  28)
 * --enable-histogram, Configure:         Installing Netperf Bits.
-                                                              (line  55)
+                                                              (line  62)
 * --enable-intervals, Configure:         Installing Netperf Bits.
-                                                              (line  55)
+                                                              (line  62)
 * --enable-omni, Configure:              Installing Netperf Bits.
                                                               (line  34)
 * --enable-sctp, Configure:              Installing Netperf Bits.
@@ -3075,57 +3815,58 @@ Node: Conventions3936
 Node: Installing Netperf5699
 Node: Getting Netperf Bits7253
 Node: Installing Netperf Bits9071
-Node: Verifying Installation17265
-Node: The Design of Netperf17969
-Node: CPU Utilization19565
-Node: CPU Utilization in a Virtual Guest28280
-Node: Global Command-line Options29291
-Node: Command-line Options Syntax29830
-Node: Global Options31212
-Node: Using Netperf to Measure Bulk Data Transfer51916
-Node: Issues in Bulk Transfer52581
-Node: Options common to TCP UDP and SCTP tests56732
-Node: TCP_STREAM63034
-Node: TCP_MAERTS66802
-Node: TCP_SENDFILE68039
-Node: UDP_STREAM70355
-Node: XTI_TCP_STREAM73791
-Node: XTI_UDP_STREAM74436
-Node: SCTP_STREAM75081
-Node: DLCO_STREAM75781
-Node: DLCL_STREAM77754
-Node: STREAM_STREAM78628
-Node: DG_STREAM79486
-Node: Using Netperf to Measure Request/Response80167
-Node: Issues in Request/Response82088
-Node: Options Common to TCP UDP and SCTP _RR tests84094
-Node: TCP_RR89073
-Node: TCP_CC91417
-Node: TCP_CRR93614
-Node: UDP_RR94660
-Node: XTI_TCP_RR96681
-Node: XTI_TCP_CC97264
-Node: XTI_TCP_CRR97430
-Node: XTI_UDP_RR97598
-Node: DLCL_RR98175
-Node: DLCO_RR98328
-Node: SCTP_RR98480
-Node: Using Netperf to Measure Aggregate Performance98616
-Node: Running Concurrent Netperf Tests99451
-Node: Using --enable-burst103343
-Node: Using Netperf to Measure Bidirectional Transfer109529
-Node: Bidirectional Transfer with Concurrent Tests110597
-Node: Bidirectional Transfer with TCP_RR112463
-Node: The Omni Tests114997
-Node: Native Omni Tests116044
-Node: Migrated Tests118895
-Node: Omni Output Selection121024
-Node: Other Netperf Tests123287
-Node: CPU rate calibration123702
-Node: Address Resolution126045
-Node: Enhancing Netperf128021
-Node: Netperf4129450
-Node: Concept Index130360
-Node: Option Index132686
+Node: Verifying Installation17670
+Node: The Design of Netperf18374
+Node: CPU Utilization19970
+Node: CPU Utilization in a Virtual Guest28685
+Node: Global Command-line Options29696
+Node: Command-line Options Syntax30235
+Node: Global Options31617
+Node: Using Netperf to Measure Bulk Data Transfer52321
+Node: Issues in Bulk Transfer52986
+Node: Options common to TCP UDP and SCTP tests57137
+Node: TCP_STREAM63439
+Node: TCP_MAERTS67207
+Node: TCP_SENDFILE68444
+Node: UDP_STREAM70944
+Node: XTI_TCP_STREAM74380
+Node: XTI_UDP_STREAM75025
+Node: SCTP_STREAM75670
+Node: DLCO_STREAM76370
+Node: DLCL_STREAM78343
+Node: STREAM_STREAM79217
+Node: DG_STREAM80075
+Node: Using Netperf to Measure Request/Response80756
+Node: Issues in Request/Response82677
+Node: Options Common to TCP UDP and SCTP _RR tests84683
+Node: TCP_RR89662
+Node: TCP_CC92006
+Node: TCP_CRR94203
+Node: UDP_RR95249
+Node: XTI_TCP_RR97270
+Node: XTI_TCP_CC97853
+Node: XTI_TCP_CRR98019
+Node: XTI_UDP_RR98187
+Node: DLCL_RR98764
+Node: DLCO_RR98917
+Node: SCTP_RR99069
+Node: Using Netperf to Measure Aggregate Performance99205
+Node: Running Concurrent Netperf Tests100040
+Node: Using --enable-burst103932
+Node: Using Netperf to Measure Bidirectional Transfer110118
+Node: Bidirectional Transfer with Concurrent Tests111186
+Node: Bidirectional Transfer with TCP_RR113052
+Node: The Omni Tests115586
+Node: Native Omni Tests116633
+Node: Migrated Tests119484
+Node: Omni Output Selection121589
+Node: Omni Output Selectors123888
+Node: Other Netperf Tests151515
+Node: CPU rate calibration151930
+Node: Address Resolution154273
+Node: Enhancing Netperf156249
+Node: Netperf4157678
+Node: Concept Index158588
+Node: Option Index160914
 
 End Tag Table
