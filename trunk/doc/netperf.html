@@ -49,6 +49,9 @@ Copyright (C) 2005-2011 Hewlett-Packard Company
 <li><a name="toc_The-Design-of-Netperf" href="#The-Design-of-Netperf">3 The Design of Netperf</a>
 <ul>
 <li><a href="#CPU-Utilization">3.1 CPU Utilization</a>
+<ul>
+<li><a href="#CPU-Utilization-in-a-Virtual-Guest">3.1.1 CPU Utilization in a Virtual Guest</a>
+</li></ul>
 </li></ul>
 <li><a name="toc_Global-Command_002dline-Options" href="#Global-Command_002dline-Options">4 Global Command-line Options</a>
 <ul>
@@ -101,13 +104,19 @@ Copyright (C) 2005-2011 Hewlett-Packard Company
 <li><a href="#Bidirectional-Transfer-with-Concurrent-Tests">8.1 Bidirectional Transfer with Concurrent Tests</a>
 <li><a href="#Bidirectional-Transfer-with-TCP_005fRR">8.2 Bidirectional Transfer with TCP_RR</a>
 </li></ul>
-<li><a name="toc_Other-Netperf-Tests" href="#Other-Netperf-Tests">9 Other Netperf Tests</a>
+<li><a name="toc_The-Omni-Tests" href="#The-Omni-Tests">9 The Omni Tests</a>
 <ul>
-<li><a href="#CPU-rate-calibration">9.1 CPU rate calibration</a>
+<li><a href="#Native-Omni-Tests">9.1 Native Omni Tests</a>
+<li><a href="#Migrated-Tests">9.2 Migrated Tests</a>
+<li><a href="#Omni-Output-Selection">9.3 Omni Output Selection</a>
 </li></ul>
-<li><a name="toc_Address-Resolution" href="#Address-Resolution">10 Address Resolution</a>
-<li><a name="toc_Enhancing-Netperf" href="#Enhancing-Netperf">11 Enhancing Netperf</a>
-<li><a name="toc_Netperf4" href="#Netperf4">12 Netperf4</a>
+<li><a name="toc_Other-Netperf-Tests" href="#Other-Netperf-Tests">10 Other Netperf Tests</a>
+<ul>
+<li><a href="#CPU-rate-calibration">10.1 CPU rate calibration</a>
+</li></ul>
+<li><a name="toc_Address-Resolution" href="#Address-Resolution">11 Address Resolution</a>
+<li><a name="toc_Enhancing-Netperf" href="#Enhancing-Netperf">12 Enhancing Netperf</a>
+<li><a name="toc_Netperf4" href="#Netperf4">13 Netperf4</a>
 <li><a name="toc_Concept-Index" href="#Concept-Index">Concept Index</a>
 <li><a name="toc_Option-Index" href="#Option-Index">Option Index</a>
 </li></ul>
@@ -145,120 +154,14 @@ found in the file <samp><span class="file">COPYING</span></samp> of the basic ne
 <li><a accesskey="6" href="#Using-Netperf-to-Measure-Request_002fResponse">Using Netperf to Measure Request/Response </a>
 <li><a accesskey="7" href="#Using-Netperf-to-Measure-Aggregate-Performance">Using Netperf to Measure Aggregate Performance</a>
 <li><a accesskey="8" href="#Using-Netperf-to-Measure-Bidirectional-Transfer">Using Netperf to Measure Bidirectional Transfer</a>
-<li><a accesskey="9" href="#Other-Netperf-Tests">Other Netperf Tests</a>
+<li><a accesskey="9" href="#The-Omni-Tests">The Omni Tests</a>
+<li><a href="#Other-Netperf-Tests">Other Netperf Tests</a>
 <li><a href="#Address-Resolution">Address Resolution</a>
 <li><a href="#Enhancing-Netperf">Enhancing Netperf</a>
 <li><a href="#Netperf4">Netperf4</a>
 <li><a href="#Concept-Index">Concept Index</a>
 <li><a href="#Option-Index">Option Index</a>
-
-</li></ul>
-<p>--- The Detailed Node Listing ---
-
-<p>Introduction
-
-</p>
-<ul class="menu">
-<li><a href="#Conventions">Conventions</a>
-
-</li></ul>
-<p>Installing Netperf
-
-</p>
-<ul class="menu">
-<li><a href="#Getting-Netperf-Bits">Getting Netperf Bits</a>
-<li><a href="#Installing-Netperf-Bits">Installing Netperf Bits</a>
-<li><a href="#Verifying-Installation">Verifying Installation</a>
-
-</li></ul>
-<p>The Design of Netperf
-
-</p>
-<ul class="menu">
-<li><a href="#CPU-Utilization">CPU Utilization</a>
-
-</li></ul>
-<p>Global Command-line Options
-
-</p>
-<ul class="menu">
-<li><a href="#Command_002dline-Options-Syntax">Command-line Options Syntax</a>
-<li><a href="#Global-Options">Global Options</a>
-
-</li></ul>
-<p>Using Netperf to Measure Bulk Data Transfer
-
-</p>
-<ul class="menu">
-<li><a href="#Issues-in-Bulk-Transfer">Issues in Bulk Transfer</a>
-<li><a href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a>
-
-</li></ul>
-<p>Options common to TCP UDP and SCTP tests
-
-</p>
-<ul class="menu">
-<li><a href="#TCP_005fSTREAM">TCP_STREAM</a>
-<li><a href="#TCP_005fMAERTS">TCP_MAERTS</a>
-<li><a href="#TCP_005fSENDFILE">TCP_SENDFILE</a>
-<li><a href="#UDP_005fSTREAM">UDP_STREAM</a>
-<li><a href="#XTI_005fTCP_005fSTREAM">XTI_TCP_STREAM</a>
-<li><a href="#XTI_005fUDP_005fSTREAM">XTI_UDP_STREAM</a>
-<li><a href="#SCTP_005fSTREAM">SCTP_STREAM</a>
-<li><a href="#DLCO_005fSTREAM">DLCO_STREAM</a>
-<li><a href="#DLCL_005fSTREAM">DLCL_STREAM</a>
-<li><a href="#STREAM_005fSTREAM">STREAM_STREAM</a>
-<li><a href="#DG_005fSTREAM">DG_STREAM</a>
-
-</li></ul>
-<p>Using Netperf to Measure Request/Response
-
-</p>
-<ul class="menu">
-<li><a href="#Issues-in-Request_002fResponse">Issues in Request/Response</a>
-<li><a href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a>
-
-</li></ul>
-<p>Options Common to TCP UDP and SCTP _RR tests
-
-</p>
-<ul class="menu">
-<li><a href="#TCP_005fRR">TCP_RR</a>
-<li><a href="#TCP_005fCC">TCP_CC</a>
-<li><a href="#TCP_005fCRR">TCP_CRR</a>
-<li><a href="#UDP_005fRR">UDP_RR</a>
-<li><a href="#XTI_005fTCP_005fRR">XTI_TCP_RR</a>
-<li><a href="#XTI_005fTCP_005fCC">XTI_TCP_CC</a>
-<li><a href="#XTI_005fTCP_005fCRR">XTI_TCP_CRR</a>
-<li><a href="#XTI_005fUDP_005fRR">XTI_UDP_RR</a>
-<li><a href="#DLCL_005fRR">DLCL_RR</a>
-<li><a href="#DLCO_005fRR">DLCO_RR</a>
-<li><a href="#SCTP_005fRR">SCTP_RR</a>
-
-</li></ul>
-<p>Using Netperf to Measure Aggregate Performance
-
-</p>
-<ul class="menu">
-<li><a href="#Running-Concurrent-Netperf-Tests">Running Concurrent Netperf Tests</a>
-<li><a href="#Using-_002d_002denable_002dburst">Using --enable-burst</a>
-
-</li></ul>
-<p>Using Netperf to Measure Bidirectional Transfer
-
-</p>
-<ul class="menu">
-<li><a href="#Bidirectional-Transfer-with-Concurrent-Tests">Bidirectional Transfer with Concurrent Tests</a>
-<li><a href="#Bidirectional-Transfer-with-TCP_005fRR">Bidirectional Transfer with TCP_RR</a>
-
-</li></ul>
-<p>Other Netperf Tests
-
-</p>
-<ul class="menu">
-<li><a href="#CPU-rate-calibration">CPU rate calibration</a>
-
-   </ul>
+</ul>
 
 <div class="node">
 <a name="Introduction"></a>
@@ -682,13 +585,15 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
 Netperf is designed around a basic client-server model.  There are
 two executables - netperf and netserver.  Generally you will only
 execute the netperf program, with the netserver program being invoked
-by the remote system's inetd or equivalent. 
-When you execute netperf, the first that that will happen is the
-establishment of a control connection to the remote system.  This
-connection will be used to pass test configuration information and
-results to and from the remote system.  Regardless of the type of test
-to be run, the control connection will be a TCP connection using BSD
-sockets.  The control connection can use either IPv4 or IPv6.
+by the remote system's inetd or having been previously started as its
+own standalone daemon.
+
+   <p>When you execute netperf it will establish a &ldquo;control connection&rdquo; to
+the remote system.  This connection will be used to pass test
+configuration information and results to and from the remote system. 
+Regardless of the type of test to be run, the control connection will
+be a TCP connection using BSD sockets.  The control connection can use
+either IPv4 or IPv6.
 
    <p>Once the control connection is up and the configuration information
 has been passed, a separate &ldquo;data&rdquo; connection will be opened for the
@@ -721,9 +626,10 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#The-Design-of-Netperf">The Design of N
 <p><a name="index-CPU-Utilization-14"></a>
 CPU utilization is an important, and alas all-too infrequently
 reported component of networking performance.  Unfortunately, it can
-be one of the most difficult metrics to measure accurately as many
-systems offer mechanisms that are at best il-suited to measuring CPU
-utilization in high interrupt rate (eg networking) situations.
+be one of the most difficult metrics to measure accurately and
+portably.  Netperf will do its level best to report accurate
+CPU utilization figures, but some combinations of processor, OS and
+configuration may make that difficult.
 
    <p>CPU utilization in netperf is reported as a value between 0 and 100%
 regardless of the number of CPUs involved.  In addition to CPU
@@ -737,7 +643,8 @@ better.
 
    <p>Service demand can be particularly useful when trying to gauge the
 effect of a performance change.  It is essentially a measure of
-efficiency, with smaller values being more efficient.
+efficiency, with smaller values being more efficient and thus
+&ldquo;better.&rdquo;
 
    <p>Netperf is coded to be able to use one of several, generally
 platform-specific CPU utilization measurement mechanisms.  Single
@@ -766,20 +673,20 @@ version of the looper <code>L</code> mechanism without the context switch
 overhead. This mechanism required calibration. 
 <br><dt><code>P</code><dd>An HP-UX-specific CPU utilization mechanism whereby the kernel
 keeps-track of time (in the form of CPU cycles) spent in the kernel
-idle loop (HP-UX 10.0 to 11.23 inclusive), or where the kernel keeps
+idle loop (HP-UX 10.0 to 11.31 inclusive), or where the kernel keeps
 track of time spent in idle, user, kernel and interrupt processing
 (HP-UX 11.23 and later).  The former requires calibration, the latter
 does not.  Values in either case are retrieved via one of the pstat(2)
 family of calls, hence the use of the letter <code>P</code>.  The code for
 these mechanisms is found in <samp><span class="file">src/netcpu_pstat.c</span></samp> and
 <samp><span class="file">src/netcpu_pstatnew.c</span></samp> respectively. 
-<br><dt><code>K</code><dd>A Solaris-specific CPU utilization mechanism where by the kernel
-keeps track of ticks (eg HZ) spent in the idle loop.  This method is
+<br><dt><code>K</code><dd>A Solaris-specific CPU utilization mechanism whereby the kernel keeps
+track of ticks (eg HZ) spent in the idle loop.  This method is
 statistical and is known to be inaccurate when the interrupt rate is
 above epsilon as time spent processing interrupts is not subtracted
 from idle.  The value is retrieved via a kstat() call - hence the use
 of the letter <code>K</code>.  Since this mechanism uses units of ticks (HZ)
-the calibration value should invariably match HZ. (Eg 100)  The code
+the calibration value should invariably match HZ. (Eg 100) The code
 for this mechanism is implemented in <samp><span class="file">src/netcpu_kstat.c</span></samp>. 
 <br><dt><code>M</code><dd>A Solaris-specific mechanism available on Solaris 10 and latter which
 uses the new microstate accounting mechanisms.  There are two, alas,
@@ -804,8 +711,8 @@ found in <samp><span class="file">src/netcpu_ntperf.c</span></samp>.  This mecha
 what appears to be a form of micro-state accounting and requires no
 calibration.  On laptops, or other systems which may dynamically alter
 the CPU frequency to minimize power consumtion, it has been suggested
-that this mechanism may become slightly confsed, in which case using
-BIOS settings to disable the power saving would be indicated.
+that this mechanism may become slightly confused, in which case using
+BIOS/uEFI settings to disable the power saving would be indicated.
 
      <br><dt><code>S</code><dd>This mechanism uses <samp><span class="file">/proc/stat</span></samp> on Linux to retrieve time
 (ticks) spent in idle mode.  It is thought but not known to be
@@ -817,7 +724,7 @@ mechanism can be found in <samp><span class="file">src/netcpu_sysctl.c</span></s
 <br><dt><code>Others</code><dd>Other mechanisms included in netperf in the past have included using
 the times() and getrusage() calls.  These calls are actually rather
 poorly suited to the task of measuring CPU overhead for networking as
-they tend to be process-specific and much network-related  processing
+they tend to be process-specific and much network-related processing
 can happen outside the context of a process, in places where it is not
 a given it will be charged to the correct, or even a process.  They
 are mentioned here as a warning to anyone seeing those mechanisms used
@@ -858,6 +765,35 @@ which may also have issues with time spent processing interrupts.
    <p>In summary, be sure to &ldquo;sanity-check&rdquo; the CPU utilization figures
 with other mechanisms.  However, platform tools such as top, vmstat or
 mpstat are often based on the same mechanisms used by netperf.
+
+<ul class="menu">
+<li><a accesskey="1" href="#CPU-Utilization-in-a-Virtual-Guest">CPU Utilization in a Virtual Guest</a>
+</ul>
+
+<div class="node">
+<a name="CPU-Utilization-in-a-Virtual-Guest"></a>
+<p><hr>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#CPU-Utilization">CPU Utilization</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#CPU-Utilization">CPU Utilization</a>
+
+</div>
+
+<h4 class="subsection">3.1.1 CPU Utilization in a Virtual Guest</h4>
+
+<p>The CPU utilization mechanisms used by netperf are &ldquo;inline&rdquo; in that
+they are run by the same netperf or netserver process as is running
+the test itself.  This works just fine for &ldquo;bare iron&rdquo; tests but
+runs into a problem when using virtual machines.
+
+   <p>A virtual guest can be thought of as being similar to a process in a
+bare iron system.  As such, any CPU utilization mechanisms used in the
+virtual guest are similar to &ldquo;process-local&rdquo; mechanisms in a bare
+iron situation.  However, just as with bare iron, much networking
+processing happens outside the context of the virtual guest.  It takes
+place in the hypervisor, and is not visible to mechanisms running in
+the guest(s).  For this reason, one should not really trust CPU
+utilization figures reported by netperf or netserver when running in a
+virtual guest.
 
 <div class="node">
 <a name="Global-Command-line-Options"></a>
@@ -2859,7 +2795,7 @@ specified in the test-specific <samp><span class="option">-b</span></samp> optio
 <div class="node">
 <a name="Using-Netperf-to-Measure-Bidirectional-Transfer"></a>
 <p><hr>
-Next:&nbsp;<a rel="next" accesskey="n" href="#Other-Netperf-Tests">Other Netperf Tests</a>,
+Next:&nbsp;<a rel="next" accesskey="n" href="#The-Omni-Tests">The Omni Tests</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Using-Netperf-to-Measure-Aggregate-Performance">Using Netperf to Measure Aggregate Performance</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
 
@@ -2989,15 +2925,231 @@ the user, but it would likely not emit it unless the user specified a
 verbosity of 2 or more with the global <samp><span class="option">-v</span></samp> option.
 
 <div class="node">
-<a name="Other-Netperf-Tests"></a>
+<a name="The-Omni-Tests"></a>
 <p><hr>
-Next:&nbsp;<a rel="next" accesskey="n" href="#Address-Resolution">Address Resolution</a>,
+Next:&nbsp;<a rel="next" accesskey="n" href="#Other-Netperf-Tests">Other Netperf Tests</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Using-Netperf-to-Measure-Bidirectional-Transfer">Using Netperf to Measure Bidirectional Transfer</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
 
 </div>
 
-<h2 class="chapter">9 Other Netperf Tests</h2>
+<h2 class="chapter">9 The Omni Tests</h2>
+
+<p>Beginning with version 2.5.0, netperf begins a migration to the
+&ldquo;omni&rdquo; tests or &ldquo;Two routines to measure them all.&rdquo;  The code for
+the omni tests can be found in <samp><span class="file">src/nettest_omni.c</span></samp> and the goal
+is to make it easier for netperf to support multiple protocols and
+report a great many additional things about the systems under test. 
+Additionally, a flexible output selection mechanism is present which
+allows the user to chose specifically what values she wishes to have
+reported and in what format.
+
+   <p>The omni tests are included by default in version 2.5.0.  To disable
+them, one must:
+<pre class="example">     ./configure --enable-omni=no ...
+</pre>
+   <p>and remake netperf.  Remaking netserver is optional because even in
+2.5.0 it has &ldquo;unmigrated&rdquo; netserver side routines for the classic
+(eg <samp><span class="file">src/nettest_bsd.c</span></samp>) tests.
+
+<ul class="menu">
+<li><a accesskey="1" href="#Native-Omni-Tests">Native Omni Tests</a>
+<li><a accesskey="2" href="#Migrated-Tests">Migrated Tests</a>
+<li><a accesskey="3" href="#Omni-Output-Selection">Omni Output Selection</a>
+</ul>
+
+<div class="node">
+<a name="Native-Omni-Tests"></a>
+<p><hr>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Migrated-Tests">Migrated Tests</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#The-Omni-Tests">The Omni Tests</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#The-Omni-Tests">The Omni Tests</a>
+
+</div>
+
+<h3 class="section">9.1 Native Omni Tests</h3>
+
+<p>One access the omni tests &ldquo;natively&rdquo; by using a value of &ldquo;OMNI&rdquo;
+with the global <samp><span class="option">-t</span></samp> test-selection option.  This will then
+cause netperf to use the code in <samp><span class="file">src/nettest_omni.c</span></samp> and in
+particular the test-specific options parser for the omni tests.  The
+test-specific options for the omni tests are a superset of those for
+&ldquo;classic&rdquo; tests.  The options added by the omni tests are:
+
+     
+<a name="index-g_t_002dc_002c-Test_002dspecific-84"></a>
+<dl><dt><code>-c</code><dd>This explicitly declares that the test is to include connection
+establishment and tear-down as in either a TCP_CRR or TCP_CC test.
+
+     <p><a name="index-g_t_002dd_002c-Test_002dspecific-85"></a><br><dt><code>-d &lt;direction&gt;</code><dd>This option sets the direction of the test relative to the netperf
+process.  As of version 2.5.0 one can use:
+
+          <dl>
+<dt><code>send, xmit or 2</code><dd>Any of which will cause netperf to send to the netserver. 
+<br><dt><code>recv, receive or 4</code><dd>Any of which will cause netserver to send to netperf. 
+<br><dt><code>rr or 6</code><dd>Either of which will cause a request/response test. 
+</dl>
+
+     <p><a name="index-g_t_002dk_002c-Test_002dspecific-86"></a><br><dt><code>-k &lt;output selector&gt;</code><dd>This option sets the style of output to &ldquo;keyval&rdquo; where each line of
+output has the form:
+     <pre class="example">          key=value
+</pre>
+     <p>For example:
+     <pre class="example">          $ netperf -t omni -- -d rr -k "THROUGHPUT,THROUGHPUT_UNITS"
+          OMNI TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain (127.0.0.1) port 0 AF_INET : demo
+          THROUGHPUT=59092.65
+          THROUGHPUT_UNITS=Trans/s
+</pre>
+     <p>Using the <samp><span class="option">-k</span></samp> option will override any previous, test-specific
+<samp><span class="option">-o</span></samp> or <samp><span class="option">-O</span></samp> option.
+
+     <p><a name="index-g_t_002do_002c-Test_002dspecific-87"></a><br><dt><code>-o &lt;output selector&gt;</code><dd>This option sets the style of output to &ldquo;CSV&rdquo; where there will be
+one line of comma-separated values, preceeded by one line of column
+names unless the global <samp><span class="option">-P</span></samp> option is used with a value of 0:
+     <pre class="example">          $ netperf -t omni -- -d rr -o "THROUGHPUT,THROUGHPUT_UNITS"
+          OMNI TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain (127.0.0.1) port 0 AF_INET : demo
+          Throughput,Throughput Units
+          60999.07,Trans/s
+</pre>
+     <p>Using the <samp><span class="option">-o</span></samp> option will override any previous, test-specific
+<samp><span class="option">-k</span></samp> or <samp><span class="option">-O</span></samp> option.
+
+     <p><a name="index-g_t_002dO_002c-Test_002dspecific-88"></a><br><dt><code>-O &lt;output selector&gt;</code><dd>This option sets the style of output to &ldquo;human readable&rdquo; which will
+look quite similar to classic netperf output:
+     <pre class="example">          $ netperf -t omni -- -d rr -O "THROUGHPUT,THROUGHPUT_UNITS"
+          OMNI TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain (127.0.0.1) port 0 AF_INET : demo
+          Throughput Throughput
+                     Units
+          
+          
+          60492.57   Trans/s
+</pre>
+     <p>Using the <samp><span class="option">-O</span></samp> option will override any previous, test-specific
+<samp><span class="option">-k</span></samp> or <samp><span class="option">-o</span></samp> option.
+
+     <p><a name="index-g_t_002dT_002c-Test_002dspecific-89"></a><br><dt><code>-T &lt;protocol&gt;</code><dd>This option is used to explicitly set the protocol used for the test.
+
+     <p>The default is implicit based on other settings. 
+</dl>
+
+<div class="node">
+<a name="Migrated-Tests"></a>
+<p><hr>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Omni-Output-Selection">Omni Output Selection</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Native-Omni-Tests">Native Omni Tests</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#The-Omni-Tests">The Omni Tests</a>
+
+</div>
+
+<h3 class="section">9.2 Migrated Tests</h3>
+
+<p>As of version 2.5.0 several tests have been migrated to use the omni
+code in <samp><span class="file">src/nettest_omni.c</span></samp> for the core of their testing.  A
+migrated test retains all its previous output code and so should still
+&ldquo;look and feel&rdquo; just like a pre-2.5.0 test with one exception - the
+first line of the test banners will include the word &ldquo;MIGRATED&rdquo; at
+the beginning as in:
+
+<pre class="example">     $ ../src/netperf
+     MIGRATED TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain (127.0.0.1) port 0 AF_INET : demo
+     Recv   Send    Send
+     Socket Socket  Message  Elapsed
+     Size   Size    Size     Time     Throughput
+     bytes  bytes   bytes    secs.    10^6bits/sec
+     
+      87380  16384  16384    10.00    27175.27
+</pre>
+   <p>The tests migrated in version 2.5.0 are:
+     <ul>
+<li>TCP_STREAM
+<li>TCP_MAERTS
+<li>TCP_RR
+<li>TCP_CRR
+<li>UDP_STREAM
+<li>UDP_RR
+</ul>
+
+   <p>It is expected that future releases will have additional tests
+migrated to use the &ldquo;omni&rdquo; functionality.
+
+   <p>If one uses &ldquo;omni-specific&rdquo; test-specific options in conjunction
+with a migrated test, instead of using the classic output code, the
+new omni output code will be used. For example if one uses the
+<samp><span class="option">-k</span></samp> test-specific option with a value of
+&ldquo;MIN_LATENCY,MAX_LATENCY&rdquo; with a migrated TCP_RR test one will see:
+
+<pre class="example">     $ ../src/netperf  -t tcp_rr  -- -k THROUGHPUT,THROUGHPUT_UNITS
+     MIGRATED TCP REQUEST/RESPONSE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain (127.0.0.1) port 0 AF_INET : demo
+     THROUGHPUT=60074.74
+     THROUGHPUT_UNITS=Trans/s
+</pre>
+   <p>rather than:
+<pre class="example">     $ ../src/netperf  -t tcp_rr
+     MIGRATED TCP REQUEST/RESPONSE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain (127.0.0.1) port 0 AF_INET : demo
+     Local /Remote
+     Socket Size   Request  Resp.   Elapsed  Trans.
+     Send   Recv   Size     Size    Time     Rate
+     bytes  Bytes  bytes    bytes   secs.    per sec
+     
+     16384  87380  1        1       10.00    59421.52
+     16384  87380
+</pre>
+   <div class="node">
+<a name="Omni-Output-Selection"></a>
+<p><hr>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Migrated-Tests">Migrated Tests</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#The-Omni-Tests">The Omni Tests</a>
+
+</div>
+
+<h3 class="section">9.3 Omni Output Selection</h3>
+
+<p>The omni test-specific <samp><span class="option">-k</span></samp>, <samp><span class="option">-o</span></samp> and <samp><span class="option">-O</span></samp>
+options take an optional <code>output selector</code> by which the user can
+configure what values are reported.  The output selector can take
+several forms:
+
+     <dl>
+<dt><samp><span class="file">filename</span></samp><dd>The output selections will be read from the named file. Within the
+file there can be up to four lines of comma-separated output
+selectors. This controls how many multi-line blocks of output are emitted
+when the <samp><span class="option">-O</span></samp> option is used.  This output, while not identical to
+&ldquo;classic&rdquo; netperf output, is inspired by it.  Multiple lines have no
+effect for <samp><span class="option">-k</span></samp> and <samp><span class="option">-o</span></samp> options.  Putting output
+selections in a file can be useful when the list of selections is long. 
+<br><dt><code>comma and/or semi-colon-separated list</code><dd>The output selections will be parsed from a comma and/or
+semi-colon-separated list of output selectors. When the list is given
+to a <samp><span class="option">-O</span></samp> option a semi-colon specifies a new output block
+should be started.  Semi-colons have the same meaning as commas when
+used with the <samp><span class="option">-k</span></samp> or <samp><span class="option">-o</span></samp> options.  Depending on the
+command interpreter being used, the semi-colon may have to be escaped
+somehow to keep it from being interpreted by the command interpreter. 
+This can often be done by enclosing the entire list in quotes. 
+<br><dt><code>all</code><dd>If the keyword <b>all</b> is specified it means that all known output
+values should be displayed at the end of the test.  This can be a
+great deal of output.  As of version 2.5.0 there are 157 different
+output selectors. 
+<br><dt><code>?</code><dd>If a &ldquo;?&rdquo; is given as the output selection, the list of all known
+output selectors will be displayed and no test actually run.  When
+passed to the <samp><span class="option">-O</span></samp> option they will be listed one per
+line. Otherwise they will be listed as a comma-separated list.  It may
+be necessary to protect the &ldquo;?&rdquo; from the command interpreter by
+escaping it or enclosing it in quotes. 
+<br><dt><code>no selector</code><dd>If nothing is given to the <samp><span class="option">-k</span></samp>, <samp><span class="option">-o</span></samp> or <samp><span class="option">-O</span></samp>
+option then the code selects a default set of output selectors
+inspired by classic netperf output. 
+</dl>
+
+<div class="node">
+<a name="Other-Netperf-Tests"></a>
+<p><hr>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Address-Resolution">Address Resolution</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#The-Omni-Tests">The Omni Tests</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
+
+</div>
+
+<h2 class="chapter">10 Other Netperf Tests</h2>
 
 <p>Apart from the typical performance tests, netperf contains some tests
 which can be used to streamline measurements and reporting.  These
@@ -3016,7 +3168,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Other-Netperf-Tests">Other Netperf Tes
 
 </div>
 
-<h3 class="section">9.1 CPU rate calibration</h3>
+<h3 class="section">10.1 CPU rate calibration</h3>
 
 <p>Some of the CPU utilization measurement mechanisms of netperf work by
 comparing the rate at which some counter increments when the system is
@@ -3069,7 +3221,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
 </div>
 
 <!-- node-name,  next,  previous,  up -->
-<h2 class="chapter">10 Address Resolution</h2>
+<h2 class="chapter">11 Address Resolution</h2>
 
 <p>Netperf versions 2.4.0 and later have merged IPv4 and IPv6 tests so
 the functionality of the tests in <samp><span class="file">src/nettest_ipv6.c</span></samp> has been
@@ -3117,7 +3269,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
 </div>
 
 <!-- node-name,  next,  previous,  up -->
-<h2 class="chapter">11 Enhancing Netperf</h2>
+<h2 class="chapter">12 Enhancing Netperf</h2>
 
 <p>Netperf is constantly evolving.  If you find you want to make
 enhancements to netperf, by all means do so.  If you wish to add a new
@@ -3132,6 +3284,10 @@ where mumble is replaced with something meaningful for the test-suite.
 required, using #ifdef WANT_MUMBLE. 
 <li>Compile and test
         </ol>
+
+   <p>However, with the addition of the &ldquo;omni&rdquo; tests in version 2.5.0 it
+is preferred that one attempt to make the necessary changes to
+<samp><span class="file">src/nettest_omni.c</span></samp> rather than adding new source files.
 
    <p>If you wish to submit your changes for possible inclusion into the
 mainline sources, please try to base your changes on the latest
@@ -3154,7 +3310,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
 </div>
 
 <!-- node-name,  next,  previous,  up -->
-<h2 class="chapter">12 Netperf4</h2>
+<h2 class="chapter">13 Netperf4</h2>
 
 <p>Netperf4 is the shorthand name given to version 4.X.X of netperf. 
 This is really a separate benchmark more than a newer version of
@@ -3244,8 +3400,10 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
 <li><a href="#index-g_t_002db_002c-Global-17"><code>-b, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002dC_002c-Global-20"><code>-C, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002dc_002c-Global-19"><code>-c, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
+<li><a href="#index-g_t_002dc_002c-Test_002dspecific-84"><code>-c, Test-specific</code></a>: <a href="#Native-Omni-Tests">Native Omni Tests</a></li>
 <li><a href="#index-g_t_002dD_002c-Global-22"><code>-D, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002dd_002c-Global-21"><code>-d, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
+<li><a href="#index-g_t_002dd_002c-Test_002dspecific-85"><code>-d, Test-specific</code></a>: <a href="#Native-Omni-Tests">Native Omni Tests</a></li>
 <li><a href="#index-g_t_002dF_002c-Global-24"><code>-F, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002df_002c-Global-23"><code>-f, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002dH_002c-Global-26"><code>-H, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
@@ -3256,6 +3414,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
 <li><a href="#index-g_t_002di_002c-Global-28"><code>-i, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002dI_002c-Global-27"><code>-I, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002dj_002c-Global-29"><code>-j, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
+<li><a href="#index-g_t_002dk_002c-Test_002dspecific-86"><code>-k, Test-specific</code></a>: <a href="#Native-Omni-Tests">Native Omni Tests</a></li>
 <li><a href="#index-g_t_002dL_002c-Global-31"><code>-L, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002dl_002c-Global-30"><code>-l, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002dL_002c-Test_002dspecific-57"><code>-L, Test-specific</code></a>: <a href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a></li>
@@ -3266,6 +3425,8 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
 <li><a href="#index-g_t_002dn_002c-Global-32"><code>-n, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002dO_002c-Global-35"><code>-O, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002do_002c-Global-34"><code>-o, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
+<li><a href="#index-g_t_002dO_002c-Test_002dspecific-88"><code>-O, Test-specific</code></a>: <a href="#Native-Omni-Tests">Native Omni Tests</a></li>
+<li><a href="#index-g_t_002do_002c-Test_002dspecific-87"><code>-o, Test-specific</code></a>: <a href="#Native-Omni-Tests">Native Omni Tests</a></li>
 <li><a href="#index-g_t_002dP_002c-Global-37"><code>-P, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002dp_002c-Global-36"><code>-p, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002dP_002c-Test_002dspecific-58"><code>-P, Test-specific</code></a>: <a href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a></li>
@@ -3276,6 +3437,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
 <li><a href="#index-g_t_002ds_002c-Test_002dspecific-60"><code>-s, Test-specific</code></a>: <a href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a></li>
 <li><a href="#index-g_t_002ds_002c-Test_002dspecific-50"><code>-s, Test-specific</code></a>: <a href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a></li>
 <li><a href="#index-g_t_002dt_002c-Global-38"><code>-t, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
+<li><a href="#index-g_t_002dT_002c-Test_002dspecific-89"><code>-T, Test-specific</code></a>: <a href="#Native-Omni-Tests">Native Omni Tests</a></li>
 <li><a href="#index-g_t_002dV_002c-Global-40"><code>-V, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002dv_002c-Global-39"><code>-v, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002dW_002c-Global-42"><code>-W, Global</code></a>: <a href="#Global-Options">Global Options</a></li>

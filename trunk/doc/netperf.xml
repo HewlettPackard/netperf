@@ -1,20 +1,21 @@
-<?xml version="1.0"?><!DOCTYPE texinfo PUBLIC "-//GNU//DTD TexinfoML V4.7//EN" "http://www.gnu.org/software/texinfo/dtd/4.7/texinfo.dtd">
+<?xml version="1.0"?>
+<!DOCTYPE texinfo PUBLIC "-//GNU//DTD TexinfoML V4.13//EN" "http://www.gnu.org/software/texinfo/dtd/4.13/texinfo.dtd">
 <texinfo xml:lang="en">
   <setfilename>netperf.xml</setfilename>
-  <settitle>Care and Feeding of Netperf 2.4.X</settitle>
+  <settitle>Care and Feeding of Netperf 2.5.X</settitle>
 <!-- %**end of header -->
   <para>This is Rick Jones' feeble attempt at a Texinfo-based manual for the netperf benchmark.</para>
-  <para>Copyright &copyright; 2005 Hewlett-Packard Company</para>
+  <para>Copyright &copyright; 2005-2011 Hewlett-Packard Company</para>
   <quotation>
     <para>Permission is granted to copy, distribute and/or modify this document per the terms of the netperf source licence, a copy of which can be found in the file <file>COPYING</file> of the basic netperf distribution.</para>
   </quotation>
   <titlepage>
     <booktitle>Care and Feeding of Netperf</booktitle>
-    <booksubtitle>Versions 2.4.0 and Later</booksubtitle>
-    <author>Rick Jones &lt;email>&lt;emailaddress>rick.jones2@hp.com&lt;/emailaddress>&lt;/email></author>
+    <booksubtitle>Versions 2.5.0 and Later</booksubtitle>
+    <author>Rick Jones &lt;email&gt;&lt;emailaddress&gt;rick.jones2@hp.com&lt;/emailaddress&gt;&lt;/email&gt;</author>
 <!-- this is here to start the copyright page -->
     <para>This is Rick Jones' feeble attempt at a Texinfo-based manual for the netperf benchmark.</para>
-    <para>Copyright &copyright; 2005 Hewlett-Packard Company</para>
+    <para>Copyright &copyright; 2005-2011 Hewlett-Packard Company</para>
     <quotation>
       <para>Permission is granted to copy, distribute and/or modify this document per the terms of the netperf source licence, a copy of which can be found in the file <file>COPYING</file> of the basic netperf distribution.</para>
     </quotation>
@@ -29,7 +30,7 @@
     <unnumbered>
       <title>Netperf Manual</title>
       <para>This is Rick Jones' feeble attempt at a Texinfo-based manual for the netperf benchmark.</para>
-      <para>Copyright &copyright; 2005 Hewlett-Packard Company</para>
+      <para>Copyright &copyright; 2005-2011 Hewlett-Packard Company</para>
       <quotation>
         <para>Permission is granted to copy, distribute and/or modify this document per the terms of the netperf source licence, a copy of which can be found in the file <file>COPYING</file> of the basic netperf distribution.</para>
       </quotation>
@@ -65,6 +66,21 @@
           <menucomment></menucomment>
         </menuentry>
         <menuentry>
+          <menunode>Using Netperf to Measure Aggregate Performance</menunode>
+          <menutitle>Using Netperf to Measure Aggregate Performance</menutitle>
+          <menucomment></menucomment>
+        </menuentry>
+        <menuentry>
+          <menunode>Using Netperf to Measure Bidirectional Transfer</menunode>
+          <menutitle>Using Netperf to Measure Bidirectional Transfer</menutitle>
+          <menucomment></menucomment>
+        </menuentry>
+        <menuentry>
+          <menunode>The Omni Tests</menunode>
+          <menutitle>The Omni Tests</menutitle>
+          <menucomment></menucomment>
+        </menuentry>
+        <menuentry>
           <menunode>Other Netperf Tests</menunode>
           <menutitle>Other Netperf Tests</menutitle>
           <menucomment></menucomment>
@@ -80,9 +96,19 @@
           <menucomment></menucomment>
         </menuentry>
         <menuentry>
-          <menunode>Index</menunode>
-          <menutitle>Index</menutitle>
-          <menucomment>Index for this manual.</menucomment>
+          <menunode>Netperf4</menunode>
+          <menutitle>Netperf4</menutitle>
+          <menucomment></menucomment>
+        </menuentry>
+        <menuentry>
+          <menunode>Concept Index</menunode>
+          <menutitle>Concept Index</menutitle>
+          <menucomment></menucomment>
+        </menuentry>
+        <menuentry>
+          <menunode>Option Index</menunode>
+          <menutitle>Option Index</menutitle>
+          <menucomment></menucomment>
         </menuentry>
       </menu>
     </unnumbered>
@@ -94,7 +120,7 @@
     <nodeup>Top</nodeup>
     <chapter>
       <title>Introduction</title>
-      <para><indexterm index="cp">chapter, Introduction</indexterm> Netperf is a benchmark that can be use to measure various aspect of networking performance.  The primary foci are bulk (aka unidirectional) data transfer and request/response performance using either TCP or UDP and the Berkeley Sockets interface.  As of this writing, the tests available either unconditionally or conditionally include:</para>
+      <para><indexterm index="cp">Introduction</indexterm> Netperf is a benchmark that can be use to measure various aspect of networking performance.  The primary foci are bulk (aka unidirectional) data transfer and request/response performance using either TCP or UDP and the Berkeley Sockets interface.  As of this writing, the tests available either unconditionally or conditionally include:</para>
       <itemize>
         <itemfunction>&bullet;</itemfunction>
         <item>
@@ -132,7 +158,8 @@
           <para>Others</para>
         </item>
       </itemize>
-      <para>Netperf is maintained and informally supported primarily by Rick Jones, who can perhaps be best described as Netperf Contributing Editor.  Non-trivial and very appreciated assistance comes from others in the network performance community, who are too numerous to mention here. Netperf is NOT supported via any of the formal Hewlett-Packard support channels.  You should feel free to make enhancements and modifications to netperf to suit your nefarious porpoises, so long as you stay within the guidelines of the netperf copyright.  If you feel so inclined, you can send your changes to <email><emailaddress>netperf-feedback@netperf.org</emailaddress><emailname>netperf-feedback</emailname></email> for possible inclusion into subsequent versions of netperf.</para>
+      <para>Netperf is maintained and informally supported primarily by Rick Jones, who can perhaps be best described as Netperf Contributing Editor.  Non-trivial and very appreciated assistance comes from others in the network performance community, who are too numerous to mention here. While it is often used by them, netperf is NOT supported via any of the formal Hewlett-Packard support channels.  You should feel free to make enhancements and modifications to netperf to suit your nefarious porpoises, so long as you stay within the guidelines of the netperf copyright.  If you feel so inclined, you can send your changes to <email><emailaddress>netperf-feedback@netperf.org</emailaddress><emailname>netperf-feedback</emailname></email> for possible inclusion into subsequent versions of netperf.</para>
+      <para>If you would prefer to make contributions to networking benchmark using certified &ldquo;open source&rdquo; license, please considuer netperf4, which is distributed under the terms of the GPL.</para>
       <para>The <email><emailaddress>netperf-talk@netperf.org</emailaddress><emailname>netperf-talk</emailname></email> mailing list is available to discuss the care and feeding of netperf with others who share your interest in network performance benchmarking. The netperf-talk mailing list is a closed list and you must first subscribe by sending email to <email><emailaddress>netperf-talk-request@netperf.org</emailaddress><emailname>netperf-talk-request</emailname></email>.</para>
       <menu>
         <menuentry>
@@ -174,7 +201,7 @@
     <nodeup>Top</nodeup>
     <chapter>
       <title>Installing Netperf</title>
-      <para><indexterm index="cp">chapter, Installing Netperf</indexterm> Netperf's primary form of distribution is source code.  This allows installation on systems other than those to which the authors have ready access and thus the ability to create binaries.  There are two styles of netperf installation.  The first runs the netperf server program - netserver - as a child of inetd.  This requires the installer to have sufficient privileges to edit the files <file>/etc/services</file> and <file>/etc/inetd.conf</file> or their platform-specific equivalents.</para>
+      <para><indexterm index="cp">Installation</indexterm> Netperf's primary form of distribution is source code.  This allows installation on systems other than those to which the authors have ready access and thus the ability to create binaries.  There are two styles of netperf installation.  The first runs the netperf server program - netserver - as a child of inetd.  This requires the installer to have sufficient privileges to edit the files <file>/etc/services</file> and <file>/etc/inetd.conf</file> or their platform-specific equivalents.</para>
       <para>The second style is to run netserver as a standalone daemon.  This second method does not require edit privileges on <file>/etc/services</file> and <file>/etc/inetd.conf</file> but does mean you must remember to run the netserver program explicitly after every system reboot.</para>
       <para>This manual assumes that those wishing to measure networking performance already know how to use anonymous FTP and/or a web browser. It is also expected that you have at least a passing familiarity with the networking protocols and interfaces involved. In all honesty, if you do not have such familiarity, likely as not you have some experience to gain before attempting network performance measurements.  The excellent texts by authors such as Stevens, Fenner and Rudoff and/or Stallings would be good starting points. There are likely other excellent sources out there as well.</para>
       <menu>
@@ -203,10 +230,11 @@
     <nodeup>Installing Netperf</nodeup>
     <section>
       <title>Getting Netperf Bits</title>
-      <para>Gzipped tar files of netperf sources can be retrieved via <uref><urefurl>ftp://ftp.cup.hp.com/dist/networking/benchmarks/netperf/</urefurl><urefdesc>anonymous FTP</urefdesc></uref> for &ldquo;released&rdquo; versions of the bits.  Pre-release versions of the bits can be retrieved via anonymous FTP from the <uref><urefurl>ftp://ftp.cup.hp.com/dist/networking/benchmarks/netperf/experimental/</urefurl><urefdesc>experimental</urefdesc></uref> subdirectory.</para>
+      <para>Gzipped tar files of netperf sources can be retrieved via <uref><urefurl>ftp://ftp.netperf.org/netperf</urefurl><urefdesc>anonymous FTP</urefdesc></uref> for &ldquo;released&rdquo; versions of the bits.  Pre-release versions of the bits can be retrieved via anonymous FTP from the <uref><urefurl>ftp://ftp.netperf.org/netperf/experimental</urefurl><urefdesc>experimental</urefdesc></uref> subdirectory.</para>
       <para>For convenience and ease of remembering, a link to the download site is provided via the <uref><urefurl>http://www.netperf.org/</urefurl><urefdesc>NetperfPage</urefdesc></uref></para>
+      <para>The bits corresponding to each discrete release of netperf are <uref><urefurl>http://www.netperf.org/svn/netperf2/tags</urefurl><urefdesc>tagged</urefdesc></uref> for retrieval via subversion.  For example, there is a tag for the first version corresponding to this version of the manual - <uref><urefurl>http://www.netperf.org/svn/netperf2/tags/netperf-2.4.3</urefurl><urefdesc>netperf 2.4.3</urefdesc></uref>.  Those wishing to be on the bleeding edge of netperf development can use subversion to grab the <uref><urefurl>http://www.netperf.org/svn/netperf2/trunk</urefurl><urefdesc>top of trunk</urefdesc></uref>.</para>
       <para>There are likely other places around the Internet from which one can download netperf bits.  These may be simple mirrors of the main netperf site, or they may be local variants on netperf.  As with anything one downloads from the Internet, take care to make sure it is what you really wanted and isn't some malicious Trojan or whatnot. Caveat downloader.</para>
-      <para>As a general rule, binaries of netperf and netserver are not distributed from ftp.cup.hp.com.  From time to time a kind soul or souls has packaged netperf as a Debian package available via the apt-get mechanism.  I would be most interested in learning how to enhance the makefiles to make that easier for people, and perhaps to generate RPM's and HP-UX swinstall&ldquo;depots.&rdquo;</para>
+      <para>As a general rule, binaries of netperf and netserver are not distributed from ftp.netperf.org.  From time to time a kind soul or souls has packaged netperf as a Debian package available via the apt-get mechanism or as an RPM.  I would be most interested in learning how to enhance the makefiles to make that easier for people, and perhaps to generate HP-UX swinstall&ldquo;depots.&rdquo;</para>
     </section>
   </node>
   <node>
@@ -225,10 +253,11 @@ make install</example>
       <para>Most of the &ldquo;usual&rdquo; configure script options should be present dealing with where to install binaries and whatnot.</para>
       <example xml:space="preserve">./configure --help</example>
       <para>should list all of those and more.</para>
-      <para>If the netperf configure script does not know how to automagically detect which CPU utilization mechanism to use on your platform you may want to add a <code>--enable-cpuutil=mumble</code> option to the configure command.   If you have knowledge and/or experience to contribute to that area, feel free to contact <email><emailaddress>netperf-feedback@netperf.org</emailaddress></email>.</para>
-      <para>Similarly, if you want tests using the XTI interface, Unix Domain Sockets, DLPI or SCTP it will be necessary to add one or more <code>--enable-[xti|unix|dlpi|sctp]=yes</code> options to the configure command.  As of this writing, the configure script will not include those tests automagically.</para>
+      <para><indexterm index="vr">&ndash;enable-cpuutil, Configure</indexterm>If the netperf configure script does not know how to automagically detect which CPU utilization mechanism to use on your platform you may want to add a <code>--enable-cpuutil=mumble</code> option to the configure command.   If you have knowledge and/or experience to contribute to that area, feel free to contact <email><emailaddress>netperf-feedback@netperf.org</emailaddress></email>.</para>
+      <para><indexterm index="vr">&ndash;enable-xti, Configure</indexterm><indexterm index="vr">&ndash;enable-unixdomain, Configure</indexterm><indexterm index="vr">&ndash;enable-dlpi, Configure</indexterm><indexterm index="vr">&ndash;enable-sctp, Configure</indexterm>Similarly, if you want tests using the XTI interface, Unix Domain Sockets, DLPI or SCTP it will be necessary to add one or more <code>--enable-[xti|unixdomain|dlpi|sctp]=yes</code> options to the configure command.  As of this writing, the configure script will not include those tests automagically.</para>
+      <para><indexterm index="vr">&ndash;enable-omni, Configure</indexterm>Starting with version 2.5.0, netperf is migrating most of the &ldquo;classic&rdquo; netperf tests found in <file>src/nettest_bsd.c</file> to the so-called &ldquo;omni&rdquo; tests (aka &ldquo;two routines to run them all&rdquo;) found in <file>src/nettest_omni.c</file>.  This migration enables a number of new features such as greater control over what output is included, and new things to output.  The &ldquo;omni&rdquo; test is enabled by default in 2.5.0 and a number of the classic tests are migrated - you can tell this from the presence of &ldquo;MIGRATED&rdquo; in the test banner.  If you encounter problems with either the omni or migrated tests, please first attempt to obtain resolution via <email><emailaddress>netperf-talk@netperf.org</emailaddress></email> or <email><emailaddress>netperf-feedback@netperf.org</emailaddress></email>.  If that is unsuccessful, you can add a <code>--enable-omni=no</code> to the configure command and the omni tests will not be compiled-in and the classic tests will not be migrated.</para>
       <para>On some platforms, it may be necessary to precede the configure command with a CFLAGS and/or LIBS variable as the netperf configure script is not yet smart enough to set them itself.  Whenever possible, these requirements will be found in <file>README.<var>platform</var></file> files. Expertise and assistance in making that more automagical in the configure script would be most welcome.</para>
-      <para>Other optional configure-time settings include <code>--enable-intervals=yes</code> to give netperf the ability to &ldquo;pace&rdquo; its _STREAM tests and <code>--enable-histogram=yes</code> to have netperf keep a histogram of interesting times.  Each of these will have some effect on the measured result.  If your system supports <code>gethrtime()</code> the effect of the histogram measurement should be minimized but probably still measurable.  For example, the histogram of a netperf TCP_RR test will be of the individual transaction times:</para>
+      <para><indexterm index="cp">Limiting Bandwidth</indexterm><indexterm index="cp">Bandwidth Limitation</indexterm><indexterm index="vr">&ndash;enable-intervals, Configure</indexterm><indexterm index="vr">&ndash;enable-histogram, Configure</indexterm>Other optional configure-time settings include <code>--enable-intervals=yes</code> to give netperf the ability to &ldquo;pace&rdquo; its _STREAM tests and <code>--enable-histogram=yes</code> to have netperf keep a histogram of interesting times.  Each of these will have some effect on the measured result.  If your system supports <code>gethrtime()</code> the effect of the histogram measurement should be minimized but probably still measurable.  For example, the histogram of a netperf TCP_RR test will be of the individual transaction times:</para>
       <example xml:space="preserve">netperf -t TCP_RR -H lag -v 2
 TCP REQUEST/RESPONSE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to lag.hpl.hp.com (15.4.89.214) port 0 AF_INET : histogram
 Local /Remote
@@ -255,23 +284,24 @@ TEN_SEC       :    0:    0:    0:    0:    0:    0:    0:    0:    0:    0
 HIST_TOTAL:      35391</example>
       <para>Long-time users of netperf will notice the expansion of the main test header.  This stems from the merging-in of IPv6 with the standard IPv4 tests and the addition of code to specify addressing information for both sides of the data connection.</para>
       <para>The histogram you see above is basically a base-10 log histogram where we can see that most of the transaction times were on the order of one hundred to one-hundred, ninety-nine microseconds, but they were occasionally as long as ten to nineteen milliseconds</para>
-      <para>The <option>--enable-demo=yes</option> configure option will cause code to be included to report interim results during a test run.  The rate at which interim results are reported can then be controlled via the global <option>-D</option> option.  Here is an example of &ndash;enable-demo mode output:</para>
-      <example xml:space="preserve">src/netperf -D 1.35 -H lag -f M
-TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to lag.hpl.hp.com (15.4.89.214) port 0 AF_INET : demo
-Interim result:    9.66 MBytes/s over 1.67 seconds
-Interim result:    9.64 MBytes/s over 1.35 seconds
-Interim result:    9.58 MBytes/s over 1.36 seconds
-Interim result:    9.51 MBytes/s over 1.36 seconds
-Interim result:    9.71 MBytes/s over 1.35 seconds
-Interim result:    9.66 MBytes/s over 1.36 seconds
-Interim result:    9.61 MBytes/s over 1.36 seconds
+      <para>The <option>--enable-demo=yes</option> configure option will cause code to be included to report interim results during a test run.  The rate at which interim results are reported can then be controlled via the global <option>-D</option> option.  Here is an example of <option>-D</option> output:</para>
+      <example xml:space="preserve">$ src/netperf -D 1.35 -H tardy.hpl.hp.com -f M
+MIGRATED TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to tardy.hpl.hp.com (15.9.116.144) port 0 AF_INET : demo
+Interim result:    5.41 MBytes/s over 1.35 seconds ending at 1308789765.848
+Interim result:   11.07 MBytes/s over 1.36 seconds ending at 1308789767.206
+Interim result:   16.00 MBytes/s over 1.36 seconds ending at 1308789768.566
+Interim result:   20.66 MBytes/s over 1.36 seconds ending at 1308789769.922
+Interim result:   22.74 MBytes/s over 1.36 seconds ending at 1308789771.285
+Interim result:   23.07 MBytes/s over 1.36 seconds ending at 1308789772.647
+Interim result:   23.77 MBytes/s over 1.37 seconds ending at 1308789774.016
 Recv   Send    Send
 Socket Socket  Message  Elapsed
 Size   Size    Size     Time     Throughput
 bytes  bytes   bytes    secs.    MBytes/sec
 
- 32768  16384  16384    10.00       9.61</example>
-      <para>Notice how the units of the interim result track that requested by the <option>-f</option> option.  Also notice that sometimes the interval will be longer than the value specified in the <option>-D</option> option.  This is normal and stems from how demo mode is implemented without relying on interval timers, but by calculating how many units of work must be performed to take at least the desired interval.</para>
+ 87380  16384  16384    10.06      17.81</example>
+      <para>Notice how the units of the interim result track that requested by the <option>-f</option> option.  Also notice that sometimes the interval will be longer than the value specified in the <option>-D</option> option.  This is normal and stems from how demo mode is implemented not by relying on interval timers or frequent calls to get the current time, but by calculating how many units of work must be performed to take at least the desired interval.</para>
+      <para>Those familiar with this option in earlier versions of netperf will note the addition of the &ldquo;ending at&rdquo; text.  This is the time as reported by a <code>gettimeofday()</code> call (or its emulation) with a <code>NULL</code> timezone pointer.  This addition is intended to make it easier to insert interim results into an <uref><urefurl>http://oss.oetiker.ch/rrdtool/doc/rrdtool.en.html</urefurl><urefdesc>rrdtool</urefdesc></uref> Round-Robin Database (RRD).  A likely bug-riddled example of doing so can be found in <file>doc/examples/netperf_interim_to_rrd.sh</file>.  The time is reported out to milliseconds rather than microseconds because that is the most rrdtool understands as of the time of this writing.</para>
       <para>As of this writing, a <code>make install</code> will not actually update the files <file>/etc/services</file> and/or <file>/etc/inetd.conf</file> or their platform-specific equivalents.  It remains necessary to perform that bit of installation magic by hand.  Patches to the makefile sources to effect an automagic editing of the necessary files to have netperf installed as a child of inetd would be most welcome.</para>
       <para>Starting the netserver as a standalone daemon should be as easy as:</para>
       <example xml:space="preserve">$ netserver
@@ -307,7 +337,8 @@ bytes  bytes   bytes    secs.    10^6bits/sec
     <nodeup>Top</nodeup>
     <chapter>
       <title>The Design of Netperf</title>
-      <para><indexterm index="cp">chapter, The Design of Netperf</indexterm> Netperf is designed around a basic client-server model.  There are two executables - netperf and netserver.  Generally you will only execute the netperf program, with the netserver program being invoked by the remote system's inetd or equivalent. When you execute netperf, the first that that will happen is the establishment of a control connection to the remote system.  This connection will be used to pass test configuration information and results to and from the remote system.  Regardless of the type of test to be run, the control connection will be a TCP connection using BSD sockets.  The control connection can use either IPv4 or IPv6.</para>
+      <para><indexterm index="cp">Design of Netperf</indexterm> Netperf is designed around a basic client-server model.  There are two executables - netperf and netserver.  Generally you will only execute the netperf program, with the netserver program being invoked by the remote system's inetd or having been previously started as its own standalone daemon.</para>
+      <para>When you execute netperf it will establish a &ldquo;control connection&rdquo; to the remote system.  This connection will be used to pass test configuration information and results to and from the remote system. Regardless of the type of test to be run, the control connection will be a TCP connection using BSD sockets.  The control connection can use either IPv4 or IPv6.</para>
       <para>Once the control connection is up and the configuration information has been passed, a separate &ldquo;data&rdquo; connection will be opened for the measurement itself using the API's and protocols appropriate for the specified test.  When the test is completed, the data connection will be torn-down and results from the netserver will be passed-back via the control connection and combined with netperf's result for display to the user.</para>
       <para>Netperf places no traffic on the control connection while a test is in progress.  Certain TCP options, such as SO_KEEPALIVE, if set as your systems' default, may put packets out on the control connection while a test is in progress.  Generally speaking this will have no effect on the results.</para>
       <menu>
@@ -325,9 +356,9 @@ bytes  bytes   bytes    secs.    10^6bits/sec
     <nodeup>The Design of Netperf</nodeup>
     <section>
       <title>CPU Utilization</title>
-      <para>CPU utilization is an important, and alas all-too infrequently reported component of networking performance.  Unfortunately, it can be one of the most difficult metrics to measure accurately as many systems offer mechanisms that are at best il-suited to measuring CPU utilization in high interrupt rate (eg networking) situations.</para>
+      <para><indexterm index="cp">CPU Utilization</indexterm> CPU utilization is an important, and alas all-too infrequently reported component of networking performance.  Unfortunately, it can be one of the most difficult metrics to measure accurately and portably.  Netperf will do its level best to report accurate CPU utilization figures, but some combinations of processor, OS and configuration may make that difficult.</para>
       <para>CPU utilization in netperf is reported as a value between 0 and 100% regardless of the number of CPUs involved.  In addition to CPU utilization, netperf will report a metric called a <dfn>service demand</dfn>.  The service demand is the normalization of CPU utilization and work performed.  For a _STREAM test it is the microseconds of CPU time consumed to transfer on KB (K == 1024) of data.  For a _RR test it is the microseconds of CPU time consumed processing a single transaction.   For both CPU utilization and service demand, lower is better.</para>
-      <para>Service demand can be particularly useful when trying to gauge the effect of a performance change.  It is essentially a measure of efficiency, with smaller values being more efficient.</para>
+      <para>Service demand can be particularly useful when trying to gauge the effect of a performance change.  It is essentially a measure of efficiency, with smaller values being more efficient and thus &ldquo;better.&rdquo;</para>
       <para>Netperf is coded to be able to use one of several, generally platform-specific CPU utilization measurement mechanisms.  Single letter codes will be included in the CPU portion of the test banner to indicate which mechanism was used on each of the local (netperf) and remote (netserver) system.</para>
       <para>As of this writing those codes are:</para>
       <table>
@@ -346,13 +377,13 @@ bytes  bytes   bytes    secs.    10^6bits/sec
         <tableitem>
           <tableterm><code>P</code></tableterm>
           <item>
-            <para>An HP-UX-specific CPU utilization mechanism whereby the kernel keeps-track of time (in the form of CPU cycles) spent in the kernel idle loop (HP-UX 10.0 to 11.23 inclusive), or where the kernel keeps track of time spent in idle, user, kernel and interrupt processing (HP-UX 11.23 and later).  The former requires calibration, the latter does not.  Values in either case are retrieved via one of the pstat(2) family of calls, hence the use of the letter <code>P</code>.  The code for these mechanisms is found in <file>src/netcpu_pstat.c</file> and <file>src/netcpu_pstatnew.c</file> respectively.</para>
+            <para>An HP-UX-specific CPU utilization mechanism whereby the kernel keeps-track of time (in the form of CPU cycles) spent in the kernel idle loop (HP-UX 10.0 to 11.31 inclusive), or where the kernel keeps track of time spent in idle, user, kernel and interrupt processing (HP-UX 11.23 and later).  The former requires calibration, the latter does not.  Values in either case are retrieved via one of the pstat(2) family of calls, hence the use of the letter <code>P</code>.  The code for these mechanisms is found in <file>src/netcpu_pstat.c</file> and <file>src/netcpu_pstatnew.c</file> respectively.</para>
           </item>
         </tableitem>
         <tableitem>
           <tableterm><code>K</code></tableterm>
           <item>
-            <para>A Solaris-specific CPU utilization mechanism where by the kernel keeps track of ticks (eg HZ) spent in the idle loop.  This method is statistical and is known to be inaccurate when the interrupt rate is above epsilon as time spent processing interrupts is not subtracted from idle.  The value is retrieved via a kstat() call - hence the use of the letter <code>K</code>.  Since this mechanism uses units of ticks (HZ) the calibration value should invariably match HZ. (Eg 100)  The code for this mechanism is implemented in <file>src/netcpu_kstat.c</file>.</para>
+            <para>A Solaris-specific CPU utilization mechanism whereby the kernel keeps track of ticks (eg HZ) spent in the idle loop.  This method is statistical and is known to be inaccurate when the interrupt rate is above epsilon as time spent processing interrupts is not subtracted from idle.  The value is retrieved via a kstat() call - hence the use of the letter <code>K</code>.  Since this mechanism uses units of ticks (HZ) the calibration value should invariably match HZ. (Eg 100) The code for this mechanism is implemented in <file>src/netcpu_kstat.c</file>.</para>
           </item>
         </tableitem>
         <tableitem>
@@ -370,7 +401,7 @@ bytes  bytes   bytes    secs.    10^6bits/sec
         <tableitem>
           <tableterm><code>N</code></tableterm>
           <item>
-            <para>A Microsoft Windows-specific mechanism, the code for which can be found in <file>src/netcpu_ntperf.c</file>.  This mechanism too is based on what appears to be a form of micro-state accounting and requires no calibration.  On laptops, or other systems which may dynamically alter the CPU frequency to minimize power consumtion, it has been suggested that this mechanism may become slightly confsed, in which case using BIOS settings to disable the power saving would be indicated.</para>
+            <para>A Microsoft Windows-specific mechanism, the code for which can be found in <file>src/netcpu_ntperf.c</file>.  This mechanism too is based on what appears to be a form of micro-state accounting and requires no calibration.  On laptops, or other systems which may dynamically alter the CPU frequency to minimize power consumtion, it has been suggested that this mechanism may become slightly confused, in which case using BIOS/uEFI settings to disable the power saving would be indicated.</para>
           </item>
         </tableitem>
         <tableitem>
@@ -388,7 +419,7 @@ bytes  bytes   bytes    secs.    10^6bits/sec
         <tableitem>
           <tableterm><code>Others</code></tableterm>
           <item>
-            <para>Other mechanisms included in netperf in the past have included using the times() and getrusage() calls.  These calls are actually rather poorly suited to the task of measuring CPU overhead for networking as they tend to be process-specific and much network-related  processing can happen outside the context of a process, in places where it is not a given it will be charged to the correct, or even a process.  They are mentioned here as a warning to anyone seeing those mechanisms used in other networking benchmarks.  These mechanisms are not available in netperf 2.4.0 and later.</para>
+            <para>Other mechanisms included in netperf in the past have included using the times() and getrusage() calls.  These calls are actually rather poorly suited to the task of measuring CPU overhead for networking as they tend to be process-specific and much network-related processing can happen outside the context of a process, in places where it is not a given it will be charged to the correct, or even a process.  They are mentioned here as a warning to anyone seeing those mechanisms used in other networking benchmarks.  These mechanisms are not available in netperf 2.4.0 and later.</para>
           </item>
         </tableitem>
       </table>
@@ -397,7 +428,24 @@ bytes  bytes   bytes    secs.    10^6bits/sec
       <para>In fact, time spent in the processing of interrupts is a common issue for many CPU utilization mechanisms.  In particular, the &ldquo;PSTAT&rdquo; mechanism was eventually known to have problems accounting for certain interrupt time prior to HP-UX 11.11 (11iv1).  HP-UX 11iv1 and later are known to be good. The &ldquo;KSTAT&rdquo; mechanism is known to have problems on all versions of Solaris up to and including Solaris 10. Even the microstate accounting available via kstat in Solaris 10 has issues, though perhaps not as bad as those of prior versions.</para>
       <para>The /proc/stat mechanism under Linux is in what the author would consider an &ldquo;uncertain&rdquo; category as it appears to be statistical, which may also have issues with time spent processing interrupts.</para>
       <para>In summary, be sure to &ldquo;sanity-check&rdquo; the CPU utilization figures with other mechanisms.  However, platform tools such as top, vmstat or mpstat are often based on the same mechanisms used by netperf.</para>
+      <menu>
+        <menuentry>
+          <menunode>CPU Utilization in a Virtual Guest</menunode>
+          <menutitle>CPU Utilization in a Virtual Guest</menutitle>
+          <menucomment></menucomment>
+        </menuentry>
+      </menu>
     </section>
+  </node>
+  <node>
+    <nodename>CPU Utilization in a Virtual Guest</nodename>
+    <nodeprev>CPU Utilization</nodeprev>
+    <nodeup>CPU Utilization</nodeup>
+    <subsection>
+      <title>CPU Utilization in a Virtual Guest</title>
+      <para>The CPU utilization mechanisms used by netperf are &ldquo;inline&rdquo; in that they are run by the same netperf or netserver process as is running the test itself.  This works just fine for &ldquo;bare iron&rdquo; tests but runs into a problem when using virtual machines.</para>
+      <para>A virtual guest can be thought of as being similar to a process in a bare iron system.  As such, any CPU utilization mechanisms used in the virtual guest are similar to &ldquo;process-local&rdquo; mechanisms in a bare iron situation.  However, just as with bare iron, much networking processing happens outside the context of the virtual guest.  It takes place in the hypervisor, and is not visible to mechanisms running in the guest(s).  For this reason, one should not really trust CPU utilization figures reported by netperf or netserver when running in a virtual guest.</para>
+    </subsection>
   </node>
   <node>
     <nodename>Global Command-line Options</nodename>
@@ -446,53 +494,68 @@ bytes  bytes   bytes    secs.    10^6bits/sec
 <!-- node-name,  next,  previous,  up -->
     <section>
       <title>Global Options</title>
-      <table>
+      <table><indexterm index="vr">-a, Global</indexterm>
         <tableitem>
           <tableterm><code>-a &lt;sizespec&gt;</code></tableterm>
           <item>
             <para>This option allows you to alter the alignment of the buffers used in the sending and receiving calls on the local system.. Changing the alignment of the buffers can force the system to use different copy schemes, which can have a measurable effect on performance.  If the page size for the system were 4096 bytes, and you want to pass page-aligned buffers beginning on page boundaries, you could use <samp>-a 4096</samp>.  By default the units are bytes, but suffix of &ldquo;G,&rdquo; &ldquo;M,&rdquo; or &ldquo;K&rdquo; will specify the units to be 2^30 (GB), 2^20 (MB) or 2^10 (KB) respectively. A suffix of &ldquo;g,&rdquo; &ldquo;m&rdquo; or &ldquo;k&rdquo; will specify units of 10^9, 10^6 or 10^3 bytes respectively. [Default: 8 bytes]</para>
+            <para><indexterm index="vr">-A, Global</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
           <tableterm><code>-A &lt;sizespec&gt;</code></tableterm>
           <item>
             <para>This option is identical to the <option>-a</option> option with the difference being it affects alignments for the remote system.</para>
+            <para><indexterm index="vr">-b, Global</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
           <tableterm><code>-b &lt;size&gt;</code></tableterm>
           <item>
             <para>This option is only present when netperf has been configure with &ndash;enable-intervals=yes prior to compilation.  It sets the size of the burst of send calls in a _STREAM test.  When used in conjunction with the <option>-w</option> option it can cause the rate at which data is sent to be &ldquo;paced.&rdquo;</para>
+            <para><indexterm index="vr">-B, Global</indexterm></para>
+          </item>
+        </tableitem>
+        <tableitem>
+          <tableterm><code>-B &lt;string&gt;</code></tableterm>
+          <item>
+            <para>This option will cause <option>&lt;string&gt;</option> to be appended to the brief (see -P) output of netperf.</para>
+            <para><indexterm index="vr">-c, Global</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
           <tableterm><code>-c [rate]</code></tableterm>
           <item>
             <para>This option will ask that CPU utilization and service demand be calculated for the local system.  For those CPU utilization mechanisms requiring calibration, the options rate parameter may be specified to preclude running another calibration step, saving 40 seconds of time. For those CPU utilization mechanisms requiring no calibration, the optional rate parameter will be utterly and completely ignored. [Default: no CPU measurements]</para>
+            <para><indexterm index="vr">-C, Global</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
           <tableterm><code>-C [rate]</code></tableterm>
           <item>
             <para>This option requests CPU utilization and service demand calculations for the remote system.  It is otherwise identical to the <option>-c</option> option.</para>
+            <para><indexterm index="vr">-d, Global</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
           <tableterm><code>-d</code></tableterm>
           <item>
             <para>Each instance of this option will increase the quantity of debugging output displayed during a test.  If the debugging output level is set high enough, it may have a measurable effect on performance. Debugging information for the local system is printed to stdout. Debugging information for the remote system is sent by default to the file <file>/tmp/netperf.debug</file>. [Default: no debugging output]</para>
+            <para><indexterm index="vr">-D, Global</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
           <tableterm><code>-D [interval,units]</code></tableterm>
           <item>
             <para>This option is only available when netperf is configured with &ndash;enable-demo=yes.  When set, it will cause netperf to emit periodic reports of performance during the run.  [<var>interval</var>,<var>units</var>] follow the semantics of an optionspec. If specified, <var>interval</var> gives the minimum interval in real seconds, it does not have to be whole seconds.  The <var>units</var> value can be used for the first guess as to how many units of work (bytes or transactions) must be done to take at least <var>interval</var> seconds. If omitted, <var>interval</var> defaults to one second and <var>units</var> to values specific to each test type.</para>
+            <para><indexterm index="vr">-f, Global</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
-          <tableterm><code>-f G|M|K|g|m|k</code></tableterm>
+          <tableterm><code>-f G|M|K|g|m|k|x</code></tableterm>
           <item>
-            <para>This option can be used to change the reporting units for _STREAM tests.  Arguments of &ldquo;G,&rdquo; &ldquo;M,&rdquo; or &ldquo;K&rdquo; will set the units to 2^30, 2^20 or 2^10 bytes/s respectively (EG power of two GB, MB or KB).  Arguments of &ldquo;g,&rdquo; &ldquo;,m&rdquo; or &ldquo;k&rdquo; will set the units to 10^9, 10^6 or 10^3 bits/s respectively.  [Default: 'm' or 10^6 bits/s]</para>
+            <para>This option can be used to change the reporting units for _STREAM tests.  Arguments of &ldquo;G,&rdquo; &ldquo;M,&rdquo; or &ldquo;K&rdquo; will set the units to 2^30, 2^20 or 2^10 bytes/s respectively (EG power of two GB, MB or KB).  Arguments of &ldquo;g,&rdquo; &ldquo;,m&rdquo; or &ldquo;k&rdquo; will set the units to 10^9, 10^6 or 10^3 bits/s respectively.  An argument of &ldquo;x&rdquo; requests the units be transactions per second and is only meaninful for a request-response test. [Default: &ldquo;m&rdquo; or 10^6 bits/s]</para>
+            <para><indexterm index="vr">-F, Global</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
@@ -500,12 +563,14 @@ bytes  bytes   bytes    secs.    10^6bits/sec
           <item>
             <para>This option specified the file from which send which buffers will be pre-filled .  While the buffers will contain data from the specified file, the file is not fully transfered to the remote system as the receiving end of the test will not write the contents of what it receives to a file.  This can be used to pre-fill the send buffers with data having different compressibility and so is useful when measuring performance over mechanisms which perform compression.</para>
             <para>While optional for most tests, this option is required for a test utilizing the sendfile() or related calls because sendfile tests need a name of a file to reference.</para>
+            <para><indexterm index="vr">-h, Global</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
           <tableterm><code>-h</code></tableterm>
           <item>
             <para>This option causes netperf to display its usage string and exit to the exclusion of all else.</para>
+            <para><indexterm index="vr">-H, Global</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
@@ -519,16 +584,10 @@ bytes  bytes   bytes    secs.    10^6bits/sec
             <example xml:space="preserve">-H lag</example>
             <para>will set the name of the remote system to &ldquo;lag&rdquo; and leave the address family to AF_UNSPEC which means selection of IPv4 vs IPv6 is left to the system's address resolution.</para>
             <para>A value of &ldquo;inet&rdquo; can be used in place of &ldquo;4&rdquo; to request IPv4 only addressing.  Similarly, a value of &ldquo;inet6&rdquo; can be used in place of &ldquo;6&rdquo; to request IPv6 only addressing.  A value of &ldquo;0&rdquo; can be used to request either IPv4 or IPv6 addressing as name resolution dictates.</para>
-            <para>By default, the options set with the global <option>-H</option> option are inherited by the test for their data connections, unless a test-specific <option>-H</option> option is specified.</para>
+            <para>By default, the options set with the global <option>-H</option> option are inherited by the test for its data connection, unless a test-specific <option>-H</option> option is specified.</para>
             <para>If a <option>-H</option> option follows either the <option>-4</option> or <option>-6</option> options, the family setting specified with the -H option will override the <option>-4</option> or <option>-6</option> options for the remote address family. If no address family is specified, settings from a previous <option>-4</option> or <option>-6</option> option will remain.  In a nutshell, the last explicit global command-line option wins.</para>
             <para>[Default:  &ldquo;localhost&rdquo; for the remote name/IP address and &ldquo;0&rdquo; (eg AF_UNSPEC) for the remote address family.]</para>
-          </item>
-        </tableitem>
-        <tableitem>
-          <tableterm><code>-L &lt;optionspec&gt;</code></tableterm>
-          <item>
-            <para>This option is identical to the <option>-H</option> option with the difference being it sets the _local_ hostname/IP and/or address family information.  This option is generally unnecessary, but can be useful when you wish to make sure that the netperf control and data connections go via different paths.  It can also come-in handy if one is trying to run netperf through those evil, end-to-end breaking things known as firewalls.</para>
-            <para>[Default: 0.0.0.0 (eg INADDR_ANY) for IPv4 and ::0 for IPv6 for the local name.  AF_UNSPEC for the local address family.]</para>
+            <para><indexterm index="vr">-I, Global</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
@@ -555,6 +614,8 @@ bytes  bytes   bytes    secs.    10^6bits/sec
 
  32768  16384  16384    10.01      40.23</example>
             <para>Where we see that netperf did not meet the desired convidence intervals.  Instead of being 99% confident it was within +/- 2.5% of the real mean value of throughput it is only confident it was within +/-3.4%.  In this example, increasing the <option>-i</option> option (described below) and/or increasing the iteration length with the <option>-l</option> option might resolve the situation.</para>
+            <para>In an explicit &ldquo;omni&rdquo; test, failure to meet the confidence intervals will not result in netperf emitting a warning.  To verify the hitting, or not, of the confidence intervals one will need to include them in output specification in the test-specific <option>-o</option>, <option>-O</option> or <option>k</option> output selection options.  The warning about not hitting the confidence intervals will remain in a &ldquo;migrated&rdquo; classic netperf test.</para>
+            <para><indexterm index="vr">-i, Global</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
@@ -563,13 +624,57 @@ bytes  bytes   bytes    secs.    10^6bits/sec
             <para>This option enables the calculation of confidence intervals and sets the minimum and maximum number of iterations to run in attempting to achieve the desired confidence interval.  The first value sets the maximum number of iterations to run, the second, the minimum.  The maximum number of iterations is silently capped at 30 and the minimum is silently floored at 3.  Netperf repeats the measurement the minimum number of iterations and continues until it reaches either the desired confidence interval, or the maximum number of iterations, whichever comes first.</para>
             <para>If the <option>-I</option> option is specified and the <option>-i</option> option omitted the maximum number of iterations is set to 10 and the minimum to three.</para>
             <para>If netperf determines that the desired confidence intervals have not been met, it emits a noticeable warning.</para>
+            <para>The total test time will be somewhere between the minimum and maximum number of iterations multiplied by the test length supplied by the <option>-l</option> option.</para>
+            <para><indexterm index="vr">-j, Global</indexterm></para>
+          </item>
+        </tableitem>
+        <tableitem>
+          <tableterm><code>-j</code></tableterm>
+          <item>
+            <para>This option instructs netperf to keep additional timing statistics when explicitly running an &ldquo;omni&rdquo; test of the request/response variety.  These can be output when the test-specific <option>-o</option>, <option>-O</option> or <option>-k</option> output selectors include one or more of:</para>
+            <itemize>
+              <itemfunction>&bullet;</itemfunction>
+              <item>
+                <para>MIN_LATENCY</para>
+              </item>
+              <item>
+                <para>MAX_LATENCY</para>
+              </item>
+              <item>
+                <para>P50_LATENCY</para>
+              </item>
+              <item>
+                <para>P90_LATENCY</para>
+              </item>
+              <item>
+                <para>P99_LATENCY</para>
+              </item>
+              <item>
+                <para>MEAN_LATENCY</para>
+              </item>
+              <item>
+                <para>STDDEV_LATENCY</para>
+              </item>
+            </itemize>
+            <para>Added for netperf 2.5.0.</para>
+            <para><indexterm index="vr">-l, Global</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
           <tableterm><code>-l testlen</code></tableterm>
           <item>
-            <para>This option controls the length of any one iteration of the requested test.  A positive value for <var>testlen</var> will run each iteration of the test for at least <var>testlen</var> seconds.  A negative value for <var>testlen</var> will run each iteration for the absolute value of <var>testlen</var> transactions for a _RR test or bytes for a _STREAM test. Certain tests, notably those using UDP can only be timed, they cannot be limited by transaction or byte count.</para>
+            <para>This option controls the length of any <b>one</b> iteration of the requested test.  A positive value for <var>testlen</var> will run each iteration of the test for at least <var>testlen</var> seconds.  A negative value for <var>testlen</var> will run each iteration for the absolute value of <var>testlen</var> transactions for a _RR test or bytes for a _STREAM test. Certain tests, notably those using UDP can only be timed, they cannot be limited by transaction or byte count.</para>
             <para>In some situations, individual iterations of a test may run for longer for the number of seconds specified by the <option>-l</option> option.  In particular, this may occur for those tests where the socket buffer size(s) are significantly longer than the bandwidthXdelay product of the link(s) over which the data connection passes, or those tests where there may be non-trivial numbers of retransmissions.</para>
+            <para>If confidence intervals are enabled via either <option>-I</option> or <option>-i</option> the total length of the netperf test will be somewhere between the minimum and maximum iteration count multiplied by <var>testlen</var>.</para>
+            <para><indexterm index="vr">-L, Global</indexterm></para>
+          </item>
+        </tableitem>
+        <tableitem>
+          <tableterm><code>-L &lt;optionspec&gt;</code></tableterm>
+          <item>
+            <para>This option is identical to the <option>-H</option> option with the difference being it sets the _local_ hostname/IP and/or address family information.  This option is generally unnecessary, but can be useful when you wish to make sure that the netperf control and data connections go via different paths.  It can also come-in handy if one is trying to run netperf through those evil, end-to-end breaking things known as firewalls.</para>
+            <para>[Default: 0.0.0.0 (eg INADDR_ANY) for IPv4 and ::0 for IPv6 for the local name.  AF_UNSPEC for the local address family.]</para>
+            <para><indexterm index="vr">-n, Global</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
@@ -577,6 +682,20 @@ bytes  bytes   bytes    secs.    10^6bits/sec
           <item>
             <para>This option tells netperf how many CPUs it should ass-u-me are active on the system running netperf.  In particular, this is used for the <xref><xrefnodename>CPU Utilization</xrefnodename><xrefinfoname>CPU utilization</xrefinfoname></xref> and service demand calculations. On certain systems, netperf is able to determine the number of CPU's automagically. This option will override any number netperf might be able to determine on its own.</para>
             <para>Note that this option does _not_ set the number of CPUs on the system running netserver.  When netperf/netserver cannot automagically determine the number of CPUs that can only be set for netserver via a netserver <option>-n</option> command-line option.</para>
+            <para>As it is almost universally possible for netperf/netserver to determine the number of CPUs on the system automagically, 99 times out of 10 this option should not be necessary and may be removed in a future release of netperf.</para>
+            <para><indexterm index="vr">-N, Global</indexterm></para>
+          </item>
+        </tableitem>
+        <tableitem>
+          <tableterm><code>-N</code></tableterm>
+          <item>
+            <para>This option tells netperf to forego establishing a control connection. This makes it is possible to run some limited netperf tests without a corresponding netserver on the remote system.</para>
+            <para>With this option set, the test to be run is to get all the addressing information it needs to establish its data connection from the command line or internal defaults.  If not otherwise specified by test-specific command line options, the data connection for a &ldquo;STREAM&rdquo; or &ldquo;SENDFILE&rdquo; test will be to the &ldquo;discard&rdquo; port, an &ldquo;RR&rdquo; test will be to the &ldquo;echo&rdquo; port, and a &ldquo;MEARTS&rdquo; test will be to the chargen port.</para>
+            <para>The response size of an &ldquo;RR&rdquo; test will be silently set to be the same as the request size.  Otherwise the test would hang if the response size was larger than the request size, or would report an incorrect, inflated transaction rate if the response size was less than the request size.</para>
+            <para>Since there is no control connection when this option is specified, it is not possible to set &ldquo;remote&rdquo; properties such as socket buffer size and the like via the netperf command line. Nor is it possible to retrieve such interesting remote information as CPU utilization. These items will be set to values which when displayed should make it immediately obvious that was the case.</para>
+            <para>The only way to change remote characteristics such as socket buffer size or to obtain information such as CPU utilization is to employ platform-specific methods on the remote system.  Frankly, if one has access to the remote system to employ those methods one aught to be able to run a netserver there.  However, that ability may not be present in certain &ldquo;support&rdquo; situations, hence the addition of this option.</para>
+            <para>Added in netperf 2.4.3.</para>
+            <para><indexterm index="vr">-o, Global</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
@@ -585,12 +704,14 @@ bytes  bytes   bytes    secs.    10^6bits/sec
             <para>The value(s) passed-in with this option will be used as an offset added to the alignment specified with the <option>-a</option> option.  For example:</para>
             <example xml:space="preserve">-o 3 -a 4096</example>
             <para>will cause the buffers passed to the local send and receive calls to begin three bytes past an address aligned to 4096 bytes. [Default: 0 bytes]</para>
+            <para><indexterm index="vr">-O, Global</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
           <tableterm><code>-O &lt;sizespec&gt;</code></tableterm>
           <item>
-            <para>This option behaves just as the <option>-o</option> option by on the remote system and in conjunction with the <option>-A</option> option. [Default: 0 bytes]</para>
+            <para>This option behaves just as the <option>-o</option> option but on the remote system and in conjunction with the <option>-A</option> option. [Default: 0 bytes]</para>
+            <para><indexterm index="vr">-p, Global</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
@@ -602,12 +723,14 @@ bytes  bytes   bytes    secs.    10^6bits/sec
             <example xml:space="preserve">-p ,32109</example>
             <para>leaves the remote netserver port at the default value of 12865 and causes netperf to bind to the local port number 32109 before connecting to the remote netserver.</para>
             <para>In general, setting the local port number is only necessary when one is looking to run netperf through those evil, end-to-end breaking things known as firewalls.</para>
+            <para><indexterm index="vr">-P, Global</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
           <tableterm><code>-P 0|1</code></tableterm>
           <item>
             <para>A value of &ldquo;1&rdquo; for the <option>-P</option> option will enable display of the test banner.  A value of &ldquo;0&rdquo; will disable display of the test banner. One might want to disable display of the test banner when running the same basic test type (eg TCP_STREAM) multiple times in succession where the test banners would then simply be redundant and unnecessarily clutter the output. [Default: 1 - display test banners]</para>
+            <para><indexterm index="vr">-t, Global</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
@@ -637,9 +760,13 @@ bytes  bytes   bytes    secs.    10^6bits/sec
               <item>
                 <para><xref><xrefnodename>Other Netperf Tests</xrefnodename><xrefinfoname>LOC_CPU</xrefinfoname></xref>, <xref><xrefnodename>Other Netperf Tests</xrefnodename><xrefinfoname>REM_CPU</xrefinfoname></xref></para>
               </item>
+              <item>
+                <para>OMNI</para>
+              </item>
             </itemize>
-            <para>Not all tests are always compiled into netperf.  In particular, the &ldquo;XTI,&rdquo; &ldquo;SCTP,&rdquo; &ldquo;UNIX,&rdquo; and &ldquo;DL*&rdquo; tests are only included in netperf when configured with <option>--enable-[xti|sctp|unix|dlpi]=yes</option>.</para>
+            <para>Not all tests are always compiled into netperf.  In particular, the &ldquo;XTI,&rdquo; &ldquo;SCTP,&rdquo; &ldquo;UNIXDOMAIN,&rdquo; and &ldquo;DL*&rdquo; tests are only included in netperf when configured with <option>--enable-[xti|sctp|unixdomain|dlpi]=yes</option>.</para>
             <para>Netperf only runs one type of test no matter how many <option>-t</option> options may be present on the command-line.  The last <option>-t</option> global command-line option will determine the test to be run. [Default: TCP_STREAM]</para>
+            <para><indexterm index="vr">-v, Global</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
@@ -648,24 +775,36 @@ bytes  bytes   bytes    secs.    10^6bits/sec
             <para>This option controls how verbose netperf will be in its output, and is often used in conjunction with the <option>-P</option> option. If the verbosity is set to a value of &ldquo;0&rdquo; then only the test's SFM (Single Figure of Merit) is displayed.  If local <xref><xrefnodename>CPU Utilization</xrefnodename><xrefinfoname>CPU utilization</xrefinfoname></xref> is requested via the <option>-c</option> option then the SFM is the local service demand.  Othersise, if remote CPU utilization is requested via the <option>-C</option> option then the SFM is the remote service demand.  If neither local nor remote CPU utilization are requested the SFM will be the measured throughput or transaction rate as implied by the test specified with the <option>-t</option> option.</para>
             <para>If the verbosity level is set to &ldquo;1&rdquo; then the &ldquo;normal&rdquo; netperf result output for each test is displayed.</para>
             <para>If the verbosity level is set to &ldquo;2&rdquo; then &ldquo;extra&rdquo; information will be displayed.  This may include, but is not limited to the number of send or recv calls made and the average number of bytes per send or recv call, or a histogram of the time spent in each send() call or for each transaction if netperf was configured with <option>--enable-histogram=yes</option>. [Default: 1 - normal verbosity]</para>
+            <para><indexterm index="vr">-V, Global</indexterm></para>
+          </item>
+        </tableitem>
+        <tableitem>
+          <tableterm><code>-V</code></tableterm>
+          <item>
+            <para>This option displays the netperf version and then exits.</para>
+            <para>Added in netperf 2.4.4.</para>
+            <para><indexterm index="vr">-w, Global</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
           <tableterm><code>-w time</code></tableterm>
           <item>
             <para>If netperf was configured with <option>--enable-intervals=yes</option> then this value will set the inter-burst time to time milliseconds, and the <option>-b</option> option will set the number of sends per burst.  The actual inter-burst time may vary depending on the system's timer resolution.</para>
+            <para><indexterm index="vr">-W, Global</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
           <tableterm><code>-W &lt;sizespec&gt;</code></tableterm>
           <item>
             <para>This option controls the number of buffers in the send (first or only value) and or receive (second or only value) buffer rings.  Unlike some benchmarks, netperf does not continuously send or receive from a single buffer.  Instead it rotates through a ring of buffers. [Default: One more than the size of the send or receive socket buffer sizes (<option>-s</option> and/or <option>-S</option> options) divided by the send <option>-m</option> or receive <option>-M</option> buffer size respectively]</para>
+            <para><indexterm index="vr">-4, Global</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
           <tableterm><code>-4</code></tableterm>
           <item>
             <para>Specifying this option will set both the local and remote address families to AF_INET - that is use only IPv4 addresses on the control connection.  This can be overridden by a subsequent <option>-6</option>, <option>-H</option> or <option>-L</option> option.  Basically, the last option explicitly specifying an address family wins.  Unless overridden by a test-specific option, this will be inherited for the data connection as well.</para>
+            <para><indexterm index="vr">-6, Global</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
@@ -710,7 +849,7 @@ bytes  bytes   bytes    secs.    10^6bits/sec
       <para>There are any number of things which can affect the performance of a bulk transfer test.</para>
       <para>Certainly, absent compression, bulk-transfer tests can be limited by the speed of the slowest link in the path from the source to the destination.  If testing over a gigabit link, you will not see more than a gigabit :) Such situations can be described as being <dfn>network-limited</dfn> or <dfn>NIC-limited</dfn>.</para>
       <para>CPU utilization can also affect the results of a bulk-transfer test. If the networking stack requires a certain number of instructions or CPU cycles per KB of data transferred, and the CPU is limited in the number of instructions or cycles it can provide, then the transfer can be described as being <dfn>CPU-bound</dfn>.</para>
-      <para>A bulk-transfer test can be CPU bound even when netperf reports less than 100% CPU utilization.  This can happen on an MP system where one or more of the CPUs saturate at 100% but other CPU's remain idle. Typically, a single flow of data, such as that from a single instance of a netperf _STREAM test cannot make use of much more than the power of one CPU.</para>
+      <para>A bulk-transfer test can be CPU bound even when netperf reports less than 100% CPU utilization.  This can happen on an MP system where one or more of the CPUs saturate at 100% but other CPU's remain idle. Typically, a single flow of data, such as that from a single instance of a netperf _STREAM test cannot make use of much more than the power of one CPU. Exceptions to this generally occur when netperf and/or netserver run on CPU(s) other than the CPU(s) taking interrupts from the NIC(s).</para>
       <para>Distance and the speed-of-light can affect performance for a bulk-transfer; often this can be mitigated by using larger windows. One common limit to the performance of a transport using window-based flow-control is:</para>
       <example xml:space="preserve">Throughput &lt;= WindowSize/RoundTripTime</example>
       <para>As the sender can only have a window's-worth of data outstanding on the network at any one time, and the soonest the sender can receive a window update from the receiver is one RoundTripTime (RTT).  TCP and SCTP are examples of such protocols.</para>
@@ -726,7 +865,19 @@ netperf -t TCP_mumble...
 netstat -p tcp &gt; after</example>
       <para>is indicated.  The <uref><urefurl>ftp://ftp.cup.hp.com/dist/networking/tools/</urefurl><urefdesc>beforeafter</urefdesc></uref> utility can be used to subtract the statistics in <file>before</file> from the statistics in <file>after</file></para>
       <example xml:space="preserve">beforeafter before after &gt; delta</example>
-      <para>and then one can look at the statistics in <file>delta</file>.  While it was written with HP-UX's netstat in mind, the <uref><urefurl>ftp://ftp.cup.hp.com/dist/networking/briefs/annotated_netstat.txt</urefurl><urefdesc>annotated netstat</urefdesc></uref> writeup may be helpful with other platforms as well.</para>
+      <para>and then one can look at the statistics in <file>delta</file>.  Beforeafter is distributed in source form so one can compile it on the platofrm(s) of interest.</para>
+      <para>If running a version 2.5.0 or later &ldquo;omni&rdquo; test under Linux one can include either or both of:</para>
+      <itemize>
+        <itemfunction>&bullet;</itemfunction>
+        <item>
+          <para>LOCAL_TRANSPORT_RETRANS</para>
+        </item>
+        <item>
+          <para>REMOTE_TRANSPORT_RETRANS</para>
+        </item>
+      </itemize>
+      <para>in the values provided via a test-specific <option>-o</option>, <option>-O</option>, or <option>-k</option> output selction option and netperf will report the retransmissions experienced on the data connection, as reported via a <code>getsockopt(TCP_INFO)</code> call.  If confidence intervals have been requested via the global <option>-I</option> or <option>-i</option> options, the reported value(s) will be for the last iteration.  If the test is over a protocol other than TCP, or on a platform other than Linux, the results are undefined.</para>
+      <para>While it was written with HP-UX's netstat in mind, the <uref><urefurl>ftp://ftp.cup.hp.com/dist/networking/briefs/annotated_netstat.txt</urefurl><urefdesc>annotated netstat</urefdesc></uref> writeup may be helpful with other platforms as well.</para>
     </section>
   </node>
   <node>
@@ -737,7 +888,7 @@ netstat -p tcp &gt; after</example>
     <section>
       <title>Options common to TCP UDP and SCTP tests</title>
       <para>Many &ldquo;test-specific&rdquo; options are actually common across the different tests.  For those tests involving TCP, UDP and SCTP, whether using the BSD Sockets or the XTI interface those common options include:</para>
-      <table>
+      <table><indexterm index="vr">-h, Test-specific</indexterm>
         <tableitem>
           <tableterm><code>-h</code></tableterm>
           <item>
@@ -748,12 +899,14 @@ netstat -p tcp &gt; after</example>
           <tableterm><code>-H &lt;optionspec&gt;</code></tableterm>
           <item>
             <para>Normally, the remote hostname|IP and address family information is inherited from the settings for the control connection (eg global command-line <option>-H</option>, <option>-4</option> and/or <option>-6</option> options). The test-specific <option>-H</option> will override those settings for the data (aka test) connection only.  Settings for the control connection are left unchanged.</para>
+            <para><indexterm index="vr">-L, Test-specific</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
           <tableterm><code>-L &lt;optionspec&gt;</code></tableterm>
           <item>
             <para>The test-specific <option>-L</option> option is identical to the test-specific <option>-H</option> option except it affects the local hostname|IP and address family information.  As with its global command-line counterpart, this is generally only useful when measuring though those evil, end-to-end breaking things called firewalls.</para>
+            <para><indexterm index="vr">-m, Test-specific</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
@@ -762,6 +915,7 @@ netstat -p tcp &gt; after</example>
             <para>Set the size of the buffer passed-in to the &ldquo;send&rdquo; calls of a _STREAM test.  Note that this may have only an indirect effect on the size of the packets sent over the network, and certain Layer 4 protocols do _not_ preserve or enforce message boundaries, so setting <option>-m</option> for the send size does not necessarily mean the receiver will receive that many bytes at any one time. By default the units are bytes, but suffix of &ldquo;G,&rdquo; &ldquo;M,&rdquo; or &ldquo;K&rdquo; will specify the units to be 2^30 (GB), 2^20 (MB) or 2^10 (KB) respectively. A suffix of &ldquo;g,&rdquo; &ldquo;m&rdquo; or &ldquo;k&rdquo; will specify units of 10^9, 10^6 or 10^3 bytes respectively. For example:</para>
             <example xml:space="preserve"><code>-m 32K</code></example>
             <para>will set the size to 32KB or 32768 bytes. [Default: the local send socket buffer size for the connection - either the system's default or the value set via the <option>-s</option> option.]</para>
+            <para><indexterm index="vr">-M, Test-specific</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
@@ -770,36 +924,41 @@ netstat -p tcp &gt; after</example>
             <para>Set the size of the buffer passed-in to the &ldquo;recv&rdquo; calls of a _STREAM test.  This will be an upper bound on the number of bytes received per receive call. By default the units are bytes, but suffix of &ldquo;G,&rdquo; &ldquo;M,&rdquo; or &ldquo;K&rdquo; will specify the units to be 2^30 (GB), 2^20 (MB) or 2^10 (KB) respectively.  A suffix of &ldquo;g,&rdquo; &ldquo;m&rdquo; or &ldquo;k&rdquo; will specify units of 10^9, 10^6 or 10^3 bytes respectively. For example:</para>
             <example xml:space="preserve"><code>-M 32K</code></example>
             <para>will set the size to 32KB or 32768 bytes. [Default: the remote receive socket buffer size for the data connection - either the system's default or the value set via the <option>-S</option> option.]</para>
+            <para><indexterm index="vr">-P, Test-specific</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
           <tableterm><code>-P &lt;optionspec&gt;</code></tableterm>
           <item>
             <para>Set the local and/or remote port numbers for the data connection.</para>
+            <para><indexterm index="vr">-s, Test-specific</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
           <tableterm><code>-s &lt;sizespec&gt;</code></tableterm>
           <item>
-            <para>This option sets the local send and receive socket buffer sizes for the control connection to the value(s) specified.  Often, this will affect the advertised and/or effective TCP or other window, but on some platforms it may not. By default the units are bytes, but suffix of &ldquo;G,&rdquo; &ldquo;M,&rdquo; or &ldquo;K&rdquo; will specify the units to be 2^30 (GB), 2^20 (MB) or 2^10 (KB) respectively.  A suffix of &ldquo;g,&rdquo; &ldquo;m&rdquo; or &ldquo;k&rdquo; will specify units of 10^9, 10^6 or 10^3 bytes respectively. For example:</para>
+            <para>This option sets the local send and receive socket buffer sizes for the data connection to the value(s) specified.  Often, this will affect the advertised and/or effective TCP or other window, but on some platforms it may not. By default the units are bytes, but suffix of &ldquo;G,&rdquo; &ldquo;M,&rdquo; or &ldquo;K&rdquo; will specify the units to be 2^30 (GB), 2^20 (MB) or 2^10 (KB) respectively.  A suffix of &ldquo;g,&rdquo; &ldquo;m&rdquo; or &ldquo;k&rdquo; will specify units of 10^9, 10^6 or 10^3 bytes respectively. For example:</para>
             <example xml:space="preserve"><code>-s 128K</code></example>
             <para>Will request the local send and receive socket buffer sizes to be 128KB or 131072 bytes.</para>
-            <para>While the historic expectation is that setting the socket buffer size has a direct effect on say the TCP window, today that may not hold true for all stacks. Further, while the historic expectation is that the value specified in a setsockopt() call will be the value returned via a getsockopt() call, at least one stack is known to deliberately ignore history. [Default: 0 - use the system's default socket buffer sizes]</para>
+            <para>While the historic expectation is that setting the socket buffer size has a direct effect on say the TCP window, today that may not hold true for all stacks. Further, while the historic expectation is that the value specified in a <code>setsockopt()</code> call will be the value returned via a <code>getsockopt()</code> call, at least one stack is known to deliberately ignore history.  When running under Windows a value of 0 may be used which will be an indication to the stack the user wants to enable a form of copy avoidance. [Default: -1 - use the system's default socket buffer sizes]</para>
+            <para><indexterm index="vr">-S Test-specific</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
           <tableterm><code>-S &lt;sizespec&gt;</code></tableterm>
           <item>
-            <para>This option sets the remote send and/or receive socket buffer sizes for the control connection to the value(s) specified.  Often, this will affect the advertised and/or effective TCP or other window, but on some platforms it may not. By default the units are bytes, but suffix of &ldquo;G,&rdquo; &ldquo;M,&rdquo; or &ldquo;K&rdquo; will specify the units to be 2^30 (GB), 2^20 (MB) or 2^10 (KB) respectively.  A suffix of &ldquo;g,&rdquo; &ldquo;m&rdquo; or &ldquo;k&rdquo; will specify units of 10^9, 10^6 or 10^3 bytes respectively. For example:</para>
+            <para>This option sets the remote send and/or receive socket buffer sizes for the data connection to the value(s) specified.  Often, this will affect the advertised and/or effective TCP or other window, but on some platforms it may not. By default the units are bytes, but suffix of &ldquo;G,&rdquo; &ldquo;M,&rdquo; or &ldquo;K&rdquo; will specify the units to be 2^30 (GB), 2^20 (MB) or 2^10 (KB) respectively.  A suffix of &ldquo;g,&rdquo; &ldquo;m&rdquo; or &ldquo;k&rdquo; will specify units of 10^9, 10^6 or 10^3 bytes respectively. For example:</para>
             <example xml:space="preserve"><code>-s 128K</code></example>
             <para>Will request the local send and receive socket buffer sizes to be 128KB or 131072 bytes.</para>
-            <para>While the historic expectation is that setting the socket buffer size has a direct effect on say the TCP window, today that may not hold true for all stacks.  Further, while the historic expectation is that the value specified in a setsockopt() call will be the value returned via a getsockopt() call, at least one stack is known to deliberately ignore history. [Default: 0 - use the system's default socket buffer sizes]</para>
+            <para>While the historic expectation is that setting the socket buffer size has a direct effect on say the TCP window, today that may not hold true for all stacks.  Further, while the historic expectation is that the value specified in a <code>setsockopt()</code> call will be the value returned via a <code>getsockopt()</code> call, at least one stack is known to deliberately ignore history.  When running under Windows a value of 0 may be used which will be an indication to the stack the user wants to enable a form of copy avoidance. [Default: -1 - use the system's default socket buffer sizes]</para>
+            <para><indexterm index="vr">-4, Test-specific</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
           <tableterm><code>-4</code></tableterm>
           <item>
             <para>Set the local and remote address family for the data connection to AF_INET - ie use IPv4 addressing only.  Just as with their global command-line counterparts the last of the <option>-4</option>, <option>-6</option>, <option>-H</option> or <option>-L</option> option wins for their respective address families.</para>
+            <para><indexterm index="vr">-6, Test-specific</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
@@ -880,7 +1039,7 @@ netstat -p tcp &gt; after</example>
         <tableitem>
           <tableterm><code>-C</code></tableterm>
           <item>
-            <para>This option will set TCP_CORK mode on the data connection on those systems where TCP_CORK is defined (typically Linux).  A full description of TCP_CORK is beyond the scope of this manual, but in a nutshell it forces sub-MSS sends to be buffered so every segment sent is Maximum Segment Size (MSS) unless the application performs an explicit flush operation or the connection is closed.  At present netperf does not perform an explicit flush operations.  Setting TCP_CORK may improve the bitrate of tests where the &ldquo;send size&rdquo; (<option>-m</option> option) is smaller than the MSS.  It should also improve (make smaller) the service demand.</para>
+            <para>This option will set TCP_CORK mode on the data connection on those systems where TCP_CORK is defined (typically Linux).  A full description of TCP_CORK is beyond the scope of this manual, but in a nutshell it forces sub-MSS sends to be buffered so every segment sent is Maximum Segment Size (MSS) unless the application performs an explicit flush operation or the connection is closed.  At present netperf does not perform any explicit flush operations.  Setting TCP_CORK may improve the bitrate of tests where the &ldquo;send size&rdquo; (<option>-m</option> option) is smaller than the MSS.  It should also improve (make smaller) the service demand.</para>
             <para>The Linux tcp(7) manpage states that TCP_CORK cannot be used in conjunction with TCP_NODELAY (set via the <option>-d</option> option), however netperf does not validate command-line options to enforce that.</para>
           </item>
         </tableitem>
@@ -922,7 +1081,7 @@ Size   Size    Size     Time     Throughput
 bytes  bytes   bytes    secs.    10^6bits/sec
 
 221184 131072 131072    10.03      81.14</example>
-      <para>Where we see that Linux, unlike HP-UX, may not return the same value in a getsockopt() as was requested in the prior setsockopt().</para>
+      <para>Where we see that Linux, unlike HP-UX, may not return the same value in a <code>getsockopt()</code> as was requested in the prior <code>setsockopt()</code>.</para>
       <para>This test is included more for benchmarking convenience than anything else.</para>
     </subsection>
   </node>
@@ -934,7 +1093,7 @@ bytes  bytes   bytes    secs.    10^6bits/sec
 <!-- node-name,  next,  previous,  up -->
     <subsection>
       <title>TCP_SENDFILE</title>
-      <para>The TCP_SENDFILE test is &ldquo;just like&rdquo; a <xref><xrefnodename>TCP_STREAM</xrefnodename></xref> test except netperf calls the platform's equivalent to HP-UX's <code>sendfile()</code> instead of calling <code>send()</code>.  Often this results in a <dfn>zero-copy</dfn> operation where data is sent directly from the filesystem buffer cache.  This _should_ result in lower CPU utilization and possibly higher throughput.  If it does not, then you may want to contact your vendor(s) because they have a problem on their hands.</para>
+      <para>The TCP_SENDFILE test is &ldquo;just like&rdquo; a <xref><xrefnodename>TCP_STREAM</xrefnodename></xref> test except netperf the platform's <code>sendfile()</code> call instead of calling <code>send()</code>.  Often this results in a <dfn>zero-copy</dfn> operation where data is sent directly from the filesystem buffer cache.  This _should_ result in lower CPU utilization and possibly higher throughput.  If it does not, then you may want to contact your vendor(s) because they have a problem on their hands.</para>
       <para>Zero-copy mechanisms may also alter the characteristics (size and number of buffers per) of packets passed to the NIC.  In many stacks, when a copy is performed, the stack can &ldquo;reserve&rdquo; space at the beginning of the destination buffer for things like TCP, IP and Link headers.  This then has the packet contained in a single buffer which can be easier to DMA to the NIC.  When no copy is performed, there is no opportunity to reserve space for headers and so a packet will be contained in two or more buffers.</para>
       <para>The <xref><xrefnodename>Global Options</xrefnodename><xrefinfoname>global <option>-F</option> option</xrefinfoname></xref> is required for this test and it must specify a file of at least the size of the send ring (See <xref><xrefnodename>Global Options</xrefnodename><xrefinfoname>the global <option>-W</option> option</xrefinfoname></xref>.) multiplied by the send size (See <xref><xrefnodename>Options common to TCP UDP and SCTP tests</xrefnodename><xrefinfoname>the test-specific <option>-m</option> option</xrefinfoname></xref>.).  All other TCP-specific options are available and optional.</para>
       <para>In this first example:</para>
@@ -962,7 +1121,7 @@ bytes  bytes   bytes    secs.    10^6bits/sec
     <subsection>
       <title>UDP_STREAM</title>
       <para>A UDP_STREAM test is similar to a <xref><xrefnodename>TCP_STREAM</xrefnodename></xref> test except UDP is used as the transport rather than TCP.</para>
-      <para>A UDP_STREAM test has no end-to-end flow control - UDP provides none and neither does netperf.  However, if you wish, you can configure netperf with <code>--enable-intervals=yes</code> to enable the global command-line <option>-b</option> and <option>-w</option> options to pace bursts of traffic onto the network.</para>
+      <para><indexterm index="cp">Limiting Bandwidth</indexterm>A UDP_STREAM test has no end-to-end flow control - UDP provides none and neither does netperf.  However, if you wish, you can configure netperf with <code>--enable-intervals=yes</code> to enable the global command-line <option>-b</option> and <option>-w</option> options to pace bursts of traffic onto the network.</para>
       <para>This has a number of implications.</para>
       <para>The biggest of these implications is the data which is sent might not be received by the remote.  For this reason, the output of a UDP_STREAM test shows both the sending and receiving throughput.  On some platforms, it may be possible for the sending throughput to be reported as a value greater than the maximum rate of the link.  This is common when the CPU(s) are faster than the network and there is no <dfn>intra-stack</dfn> flow-control.</para>
       <para>Here is an example of a UDP_STREAM test between two systems connected by a 10 Gigabit Ethernet link:</para>
@@ -989,6 +1148,7 @@ bytes   bytes    secs            #      #   10^6bits/sec
 
 124928   65000   10.00       53595      0    2786.99
  65536           10.00           0              0.00</example>
+      <para>The example above was between a pair of systems running a &ldquo;Linux&rdquo; kernel. Notice that the remote Linux system returned a value larger than that passed-in to the <option>-S</option> option.  In fact, this value was larger than the message size set with the <option>-m</option> option. That the remote socket buffer size is reported as 65536 bytes would suggest to any sane person that a message of 65000 bytes would fit, but the socket isn't _really_ 65536 bytes, even though Linux is telling us so.  Go figure.</para>
     </subsection>
   </node>
   <node>
@@ -1020,7 +1180,7 @@ bytes   bytes    secs            #      #   10^6bits/sec
     <nodeup>Options common to TCP UDP and SCTP tests</nodeup>
     <subsection>
       <title>SCTP_STREAM</title>
-      <para>An SCTP_STREAM test is essentially a <xref><xrefnodename>TCP_STREAM</xrefnodename></xref> test using the SCTP rather than TCP.  The <option>-D</option> option will set SCTP_NODELAY, which is much like the TCP_NODELAY option for TCP.  The <option>-C</option> option is not applicable to an SCTP test as there is no corresponding SCTP_CORK option.  The author is still figuring-out what the <option>-N</option> option does :)</para>
+      <para>An SCTP_STREAM test is essentially a <xref><xrefnodename>TCP_STREAM</xrefnodename></xref> test using the SCTP rather than TCP.  The <option>-D</option> option will set SCTP_NODELAY, which is much like the TCP_NODELAY option for TCP.  The <option>-C</option> option is not applicable to an SCTP test as there is no corresponding SCTP_CORK option.  The author is still figuring-out what the test-specific <option>-N</option> option does :)</para>
       <para>The SCTP_STREAM test is only present if netperf was configured with <code>--enable-sctp=yes</code>. The remote netserver must have also been configured with <code>--enable-sctp=yes</code>.</para>
     </subsection>
   </node>
@@ -1089,7 +1249,7 @@ bytes   bytes    secs            #      #   10^6bits/sec
     <subsection>
       <title>STREAM_STREAM</title>
       <para>A Unix Domain Stream Socket Stream test (STREAM_STREAM) is similar in concept to a <xref><xrefnodename>TCP_STREAM</xrefnodename></xref> test, but using Unix Domain sockets.  It is, naturally, limited to intra-machine traffic.  A STREAM_STREAM test shares the <option>-m</option>, <option>-M</option>, <option>-s</option> and <option>-S</option> options of the other _STREAM tests.  In a STREAM_STREAM test the <option>-p</option> option sets the directory in which the pipes will be created rather than setting a port number.  The default is to create the pipes in the system default for the <code>tempnam()</code> call.</para>
-      <para>The STREAM_STREAM test is only present if netperf was configured with <code>--enable-unix=yes</code>. The remote netserver must have also been configured with <code>--enable-unix=yes</code>.</para>
+      <para>The STREAM_STREAM test is only present if netperf was configured with <code>--enable-unixdomain=yes</code>. The remote netserver must have also been configured with <code>--enable-unixdomain=yes</code>.</para>
     </subsection>
   </node>
   <node>
@@ -1101,12 +1261,12 @@ bytes   bytes    secs            #      #   10^6bits/sec
       <title>DG_STREAM</title>
       <para>A Unix Domain Datagram Socket Stream test (SG_STREAM) is very much like a <xref><xrefnodename>TCP_STREAM</xrefnodename></xref> test except that message boundaries are preserved. In this way, it may also be considered similar to certain flavors of SCTP test which can also preserve message boundaries.</para>
       <para>All the options of a <xref><xrefnodename>STREAM_STREAM</xrefnodename></xref> test are applicable to a DG_STREAM test.</para>
-      <para>The DG_STREAM test is only present if netperf was configured with <code>--enable-unix=yes</code>. The remote netserver must have also been configured with <code>--enable-unix=yes</code>.</para>
+      <para>The DG_STREAM test is only present if netperf was configured with <code>--enable-unixdomain=yes</code>. The remote netserver must have also been configured with <code>--enable-unixdomain=yes</code>.</para>
     </subsection>
   </node>
   <node>
     <nodename>Using Netperf to Measure Request/Response</nodename>
-    <nodenext>Other Netperf Tests</nodenext>
+    <nodenext>Using Netperf to Measure Aggregate Performance</nodenext>
     <nodeprev>Using Netperf to Measure Bulk Data Transfer</nodeprev>
     <nodeup>Top</nodeup>
     <chapter>
@@ -1135,10 +1295,10 @@ bytes   bytes    secs            #      #   10^6bits/sec
     <nodeup>Using Netperf to Measure Request/Response</nodeup>
 <!-- node-name,  next,  previous,  up -->
     <section>
-      <title>Issues in Reqeust/Response</title>
-      <para>Most if not all the <xref><xrefnodename>Issues in Bulk Transfer</xrefnodename></xref> apply to request/response.  The issue of round-trip latency is even more important as netperf only has one transaction outstanding at a time.</para>
-      <para>A single instance of an _RR test should _never_ completely saturate the CPU of a system.  If testing between otherwise evenly matched systems, the symmetric nature of a _RR test with equal request and response sizes should result in equal CPU loading on both systems.</para>
-      <para>For smaller request and response sizes packet loss is a bigger issue as there is no opportunity for a <dfn>fast retransmit</dfn> or retransmission prior to a retrnamission timer expiring.</para>
+      <title>Issues in Request/Response</title>
+      <para>Most if not all the <xref><xrefnodename>Issues in Bulk Transfer</xrefnodename></xref> apply to request/response.  The issue of round-trip latency is even more important as netperf generally only has one transaction outstanding at a time.</para>
+      <para>A single instance of a one transaction outstanding _RR test should _never_ completely saturate the CPU of a system.  If testing between otherwise evenly matched systems, the symmetric nature of a _RR test with equal request and response sizes should result in equal CPU loading on both systems. However, this may not hold true on MP systems, particularly if one CPU binds the netperf and netserver differently via the global <option>-T</option> option.</para>
+      <para>For smaller request and response sizes packet loss is a bigger issue as there is no opportunity for a <dfn>fast retransmit</dfn> or retransmission prior to a retransmission timer expiring.</para>
       <para>Certain NICs have ways to minimize the number of interrupts sent to the host.  If these are strapped badly they can significantly reduce the performance of something like a single-byte request/response test. Such setups are distinguised by seriously low reported CPU utilization and what seems like a low (even if in the thousands) transaction per second rate.  Also, if you run such an OS/driver combination on faster or slower hardware and do not see a corresponding change in the transaction rate, chances are good that the drvier is strapping the NIC with aggressive interrupt avoidance settings.  Good for bulk throughput, but bad for latency.</para>
       <para>Some drivers may try to automagically adjust the interrupt avoidance settings.  If they are not terribly good at it, you will see considerable run-to-run variation in reported transaction rates. Particularly if you &ldquo;mix-up&rdquo; _STREAM and _RR tests.</para>
     </section>
@@ -1151,29 +1311,33 @@ bytes   bytes    secs            #      #   10^6bits/sec
     <section>
       <title>Options Common to TCP UDP and SCTP _RR tests</title>
       <para>Many &ldquo;test-specific&rdquo; options are actually common across the different tests.  For those tests involving TCP, UDP and SCTP, whether using the BSD Sockets or the XTI interface those common options include:</para>
-      <table>
+      <table><indexterm index="vr">-h, Test-specific</indexterm>
         <tableitem>
           <tableterm><code>-h</code></tableterm>
           <item>
             <para>Display the test-suite-specific usage string and exit.  For a TCP_ or UDP_ test this will be the usage string from the source file <file>nettest_bsd.c</file>.  For an XTI_ test, this will be the usage string from the source file <file>src/nettest_xti.c</file>.  For an SCTP test, this will be the usage string from the source file <file>src/nettest_sctp.c</file>.</para>
+            <para><indexterm index="vr">-H, Test-specific</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
           <tableterm><code>-H &lt;optionspec&gt;</code></tableterm>
           <item>
             <para>Normally, the remote hostname|IP and address family information is inherited from the settings for the control connection (eg global command-line <option>-H</option>, <option>-4</option> and/or <option>-6</option> options. The test-specific <option>-H</option> will override those settings for the data (aka test) connection only.  Settings for the control connection are left unchanged.  This might be used to cause the control and data connections to take different paths through the network.</para>
+            <para><indexterm index="vr">-L, Test-specific</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
           <tableterm><code>-L &lt;optionspec&gt;</code></tableterm>
           <item>
             <para>The test-specific <option>-L</option> option is identical to the test-specific <option>-H</option> option except it affects the local hostname|IP and address family information.  As with its global command-line counterpart, this is generally only useful when measuring though those evil, end-to-end breaking things called firewalls.</para>
+            <para><indexterm index="vr">-P, Test-specific</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
           <tableterm><code>-P &lt;optionspec&gt;</code></tableterm>
           <item>
             <para>Set the local and/or remote port numbers for the data connection.</para>
+            <para><indexterm index="vr">-r, Test-specific</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
@@ -1182,30 +1346,34 @@ bytes   bytes    secs            #      #   10^6bits/sec
             <para>This option sets the request (first value) and/or response (second value) sizes for an _RR test. By default the units are bytes, but a suffix of &ldquo;G,&rdquo; &ldquo;M,&rdquo; or &ldquo;K&rdquo; will specify the units to be 2^30 (GB), 2^20 (MB) or 2^10 (KB) respectively.  A suffix of &ldquo;g,&rdquo; &ldquo;m&rdquo; or &ldquo;k&rdquo; will specify units of 10^9, 10^6 or 10^3 bytes respectively. For example:</para>
             <example xml:space="preserve"><code>-r 128,16K</code></example>
             <para>Will set the request size to 128 bytes and the response size to 16 KB or 16384 bytes. [Default: 1 - a single-byte request and response ]</para>
+            <para><indexterm index="vr">-s, Test-specific</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
           <tableterm><code>-s &lt;sizespec&gt;</code></tableterm>
           <item>
-            <para>This option sets the local send and receive socket buffer sizes for the control connection to the value(s) specified.  Often, this will affect the advertised and/or effective TCP or other window, but on some platforms it may not. By default the units are bytes, but a suffix of &ldquo;G,&rdquo; &ldquo;M,&rdquo; or &ldquo;K&rdquo; will specify the units to be 2^30 (GB), 2^20 (MB) or 2^10 (KB) respectively.  A suffix of &ldquo;g,&rdquo; &ldquo;m&rdquo; or &ldquo;k&rdquo; will specify units of 10^9, 10^6 or 10^3 bytes respectively. For example:</para>
+            <para>This option sets the local send and receive socket buffer sizes for the data connection to the value(s) specified.  Often, this will affect the advertised and/or effective TCP or other window, but on some platforms it may not. By default the units are bytes, but a suffix of &ldquo;G,&rdquo; &ldquo;M,&rdquo; or &ldquo;K&rdquo; will specify the units to be 2^30 (GB), 2^20 (MB) or 2^10 (KB) respectively.  A suffix of &ldquo;g,&rdquo; &ldquo;m&rdquo; or &ldquo;k&rdquo; will specify units of 10^9, 10^6 or 10^3 bytes respectively. For example:</para>
             <example xml:space="preserve"><code>-s 128K</code></example>
             <para>Will request the local send and receive socket buffer sizes to be 128KB or 131072 bytes.</para>
-            <para>While the historic expectation is that setting the socket buffer size has a direct effect on say the TCP window, today that may not hold true for all stacks. [Default: 0 - use the system's default socket buffer sizes]</para>
+            <para>While the historic expectation is that setting the socket buffer size has a direct effect on say the TCP window, today that may not hold true for all stacks.  When running under Windows a value of 0 may be used which will be an indication to the stack the user wants to enable a form of copy avoidance. [Default: -1 - use the system's default socket buffer sizes]</para>
+            <para><indexterm index="vr">-S, Test-specific</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
           <tableterm><code>-S &lt;sizespec&gt;</code></tableterm>
           <item>
-            <para>This option sets the remote send and/or receive socket buffer sizes for the control connection to the value(s) specified.  Often, this will affect the advertised and/or effective TCP or other window, but on some platforms it may not. By default the units are bytes, but a suffix of &ldquo;G,&rdquo; &ldquo;M,&rdquo; or &ldquo;K&rdquo; will specify the units to be 2^30 (GB), 2^20 (MB) or 2^10 (KB) respectively.  A suffix of &ldquo;g,&rdquo; &ldquo;m&rdquo; or &ldquo;k&rdquo; will specify units of 10^9, 10^6 or 10^3 bytes respectively. For example:</para>
+            <para>This option sets the remote send and/or receive socket buffer sizes for the data connection to the value(s) specified.  Often, this will affect the advertised and/or effective TCP or other window, but on some platforms it may not. By default the units are bytes, but a suffix of &ldquo;G,&rdquo; &ldquo;M,&rdquo; or &ldquo;K&rdquo; will specify the units to be 2^30 (GB), 2^20 (MB) or 2^10 (KB) respectively.  A suffix of &ldquo;g,&rdquo; &ldquo;m&rdquo; or &ldquo;k&rdquo; will specify units of 10^9, 10^6 or 10^3 bytes respectively. For example:</para>
             <example xml:space="preserve"><code>-s 128K</code></example>
             <para>Will request the local send and receive socket buffer sizes to be 128KB or 131072 bytes.</para>
-            <para>While the historic expectation is that setting the socket buffer size has a direct effect on say the TCP window, today that may not hold true for all stacks. [Default: 0 - use the system's default socket buffer sizes]</para>
+            <para>While the historic expectation is that setting the socket buffer size has a direct effect on say the TCP window, today that may not hold true for all stacks.  When running under Windows a value of 0 may be used which will be an indication to the stack the user wants to enable a form of copy avoidance.  [Default: -1 - use the system's default socket buffer sizes]</para>
+            <para><indexterm index="vr">-4, Test-specific</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
           <tableterm><code>-4</code></tableterm>
           <item>
             <para>Set the local and remote address family for the data connection to AF_INET - ie use IPv4 addressing only.  Just as with their global command-line counterparts the last of the <option>-4</option>, <option>-6</option>, <option>-H</option> or <option>-L</option> option wins for their respective address families.</para>
+            <para><indexterm index="vr">-6 Test-specific</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
@@ -1281,7 +1449,7 @@ bytes   bytes    secs            #      #   10^6bits/sec
     <nodeup>Options Common to TCP UDP and SCTP _RR tests</nodeup>
     <subsection>
       <title>TCP_RR</title>
-      <para>A TCP_RR (TCP Request/Response) test is requested by passing a value of &ldquo;TCP_RR&rdquo; to the global <option>-t</option> command-line option.  A TCP_RR test can be though-of as a user-space to user-space <code>ping</code> with no think time - it is a synchronous, one transaction at a time, request/response test.</para>
+      <para><indexterm index="cp">Measuring Latency</indexterm><indexterm index="cp">Latency, Request-Response</indexterm> A TCP_RR (TCP Request/Response) test is requested by passing a value of &ldquo;TCP_RR&rdquo; to the global <option>-t</option> command-line option.  A TCP_RR test can be though-of as a user-space to user-space <code>ping</code> with no think time - it is a synchronous, one transaction at a time, request/response test.</para>
       <para>The transaction rate is the number of complete transactions exchanged divided by the length of time it took to perform those transactions.</para>
       <para>If the two Systems Under Test are otherwise identical, a TCP_RR test with the same request and response size should be symmetric - it should not matter which way the test is run, and the CPU utilization measured should be virtually the same on each system.  If not, it suggests that the CPU utilization mechanism being used may have some, well, issues measuring CPU utilization completely and accurately.</para>
       <para>Time to establish the TCP connection is not counted in the result.  If you want connection setup overheads included, you should consider the TCP_CC or TCP_CRR tests.</para>
@@ -1306,8 +1474,8 @@ bytes  Bytes  bytes    bytes   secs.    per sec
     <nodeup>Options Common to TCP UDP and SCTP _RR tests</nodeup>
     <subsection>
       <title>TCP_CC</title>
-      <para>A TCP_CC (TCP Connect/Close) test is requested by passing a value of &ldquo;TCP_CC&rdquo; to the global <option>-t</option> option.  A TCP_CC test simply measures how fast the pair of systems can open and close connections between one another in a synchronous (one at a time) manner.  While this is considered an _RR test, no request or response is exchanged over the connection.</para>
-      <para>The issue of TIME_WAIT reuse is an important one for a TCP_CC test. Basically, TIME_WAIT reuse is when a pair of systems churn through connections fast enough that they wrap the 16-bit port number space in less time than the length of the TIME_WAIT state.  While it is indeed theoretically possible to &ldquo;reuse&rdquo; a connection in TIME_WAIT, the conditions under which such reuse is possible is rather rare.  An attempt to reuse a connection in TIME_WAIT can result in a non-trivial delay in connection establishment.</para>
+      <para><indexterm index="cp">Connection Latency</indexterm><indexterm index="cp">Latency, Connection Establishment</indexterm> A TCP_CC (TCP Connect/Close) test is requested by passing a value of &ldquo;TCP_CC&rdquo; to the global <option>-t</option> option.  A TCP_CC test simply measures how fast the pair of systems can open and close connections between one another in a synchronous (one at a time) manner.  While this is considered an _RR test, no request or response is exchanged over the connection.</para>
+      <para><indexterm index="cp">Port Reuse</indexterm><indexterm index="cp">TIME_WAIT</indexterm>The issue of TIME_WAIT reuse is an important one for a TCP_CC test. Basically, TIME_WAIT reuse is when a pair of systems churn through connections fast enough that they wrap the 16-bit port number space in less time than the length of the TIME_WAIT state.  While it is indeed theoretically possible to &ldquo;reuse&rdquo; a connection in TIME_WAIT, the conditions under which such reuse is possible are rather rare.  An attempt to reuse a connection in TIME_WAIT can result in a non-trivial delay in connection establishment.</para>
       <para>Basically, any time the connection churn rate approaches:</para>
       <para>Sizeof(clientportspace) / Lengthof(TIME_WAIT)</para>
       <para>there is the risk of TIME_WAIT reuse.  To minimize the chances of this happening, netperf will by default select its own client port numbers from the range of 5000 to 65535.  On systems with a 60 second TIME_WAIT state, this should allow roughly 1000 transactions per second.  The size of the client port space used by netperf can be controlled via the test-specific <option>-p</option> option, which takes a <dfn>sizespec</dfn> as a value setting the minimum (first value) and maximum (second value) port numbers used by netperf at the client end.</para>
@@ -1322,7 +1490,7 @@ bytes  Bytes  bytes    bytes   secs.    per sec
     <nodeup>Options Common to TCP UDP and SCTP _RR tests</nodeup>
     <subsection>
       <title>TCP_CRR</title>
-      <para>The TCP Connect/Request/Response (TCP_CRR) test is requested by passing a value of &ldquo;TCP_CRR&rdquo; to the global <option>-t</option> command-line option.  A TCP_RR test is like a merger of a TCP_RR and TCP_CC test which measures the performance of establishing a connection, exchanging a single request/response transaction, and tearing-down that connection.  This is very much like what happens in an HTTP 1.0 or HTTP 1.1 connection when HTTP Keepalives are not used.  In fact, the TCP_CRR test was added to netperf to simulate just that.</para>
+      <para><indexterm index="cp">Latency, Connection Establishment</indexterm><indexterm index="cp">Latency, Request-Response</indexterm> The TCP Connect/Request/Response (TCP_CRR) test is requested by passing a value of &ldquo;TCP_CRR&rdquo; to the global <option>-t</option> command-line option.  A TCP_RR test is like a merger of a TCP_RR and TCP_CC test which measures the performance of establishing a connection, exchanging a single request/response transaction, and tearing-down that connection.  This is very much like what happens in an HTTP 1.0 or HTTP 1.1 connection when HTTP Keepalives are not used.  In fact, the TCP_CRR test was added to netperf to simulate just that.</para>
       <para>Since a request and response are exchanged the <option>-r</option>, <option>-s</option> and <option>-S</option> options can have an effect on the performance.</para>
       <para>The issue of TIME_WAIT reuse exists for the TCP_CRR test just as it does for the TCP_CC test.  Similarly, since connection establishment and tear-down is not symmetric, a TCP_CRR test is not symmetric even when the request and response sizes are the same.</para>
     </subsection>
@@ -1334,7 +1502,7 @@ bytes  Bytes  bytes    bytes   secs.    per sec
     <nodeup>Options Common to TCP UDP and SCTP _RR tests</nodeup>
     <subsection>
       <title>UDP_RR</title>
-      <para>A UDP Request/Response (UDP_RR) test is requested by passing a value of &ldquo;UDP_RR&rdquo; to a global <option>-t</option> option.  It is very much the same as a TCP_RR test except UDP is used rather than TCP.</para>
+      <para><indexterm index="cp">Latency, Request-Response</indexterm><indexterm index="cp">Packet Loss</indexterm> A UDP Request/Response (UDP_RR) test is requested by passing a value of &ldquo;UDP_RR&rdquo; to a global <option>-t</option> option.  It is very much the same as a TCP_RR test except UDP is used rather than TCP.</para>
       <para>UDP does not provide for retransmission of lost UDP datagrams, and netperf does not add anything for that either.  This means that if _any_ request or response is lost, the exchange of requests and responses will stop from that point until the test timer expires. Netperf will not really &ldquo;know&rdquo; this has happened - the only symptom will be a low transaction per second rate.</para>
       <para>The netperf side of a UDP_RR test will call <code>connect()</code> on its data socket and thenceforth use the <code>send()</code> and <code>recv()</code> socket calls.  The netserver side of a UDP_RR test will not call <code>connect()</code> and will use <code>recvfrom()</code> and <code>sendto()</code> calls.  This means that even if the request and response sizes are the same, a UDP_RR test is _not_ symmetric in its loading of the two systems under test.</para>
       <para>Here is an example of a UDP_RR test between two otherwise identical two-CPU systems joined via a 1 Gigabit Ethernet network:</para>
@@ -1357,7 +1525,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  % I    % I    us/Tr   us/Tr
     <nodeup>Options Common to TCP UDP and SCTP _RR tests</nodeup>
     <subsection>
       <title>XTI_TCP_RR</title>
-      <para>An XTI_TCP_RR test is essentially the same as a <xref><xrefnodename>TCP_RR</xrefnodename></xref> test only using the XTI rather than BSD Sockets interface. It is requested by passing a value of &ldquo;XTI_TCP_RR&rdquo; to the <option>-t</option> global command-line option.</para>
+      <para><indexterm index="cp">Latency, Request-Response</indexterm> An XTI_TCP_RR test is essentially the same as a <xref><xrefnodename>TCP_RR</xrefnodename></xref> test only using the XTI rather than BSD Sockets interface. It is requested by passing a value of &ldquo;XTI_TCP_RR&rdquo; to the <option>-t</option> global command-line option.</para>
       <para>The test-specific options for an XTI_TCP_RR test are the same as those for a TCP_RR test with the addition of the <option>-X &lt;devspec&gt;</option> option to specify the names of the local and/or remote XTI device file(s).</para>
     </subsection>
   </node>
@@ -1369,6 +1537,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  % I    % I    us/Tr   us/Tr
 <!-- node-name,  next,  previous,  up -->
     <subsection>
       <title>XTI_TCP_CC</title>
+      <para><indexterm index="cp">Latency, Connection Establishment</indexterm></para>
     </subsection>
   </node>
   <node>
@@ -1379,6 +1548,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  % I    % I    us/Tr   us/Tr
 <!-- node-name,  next,  previous,  up -->
     <subsection>
       <title>XTI_TCP_CRR</title>
+      <para><indexterm index="cp">Latency, Connection Establishment</indexterm><indexterm index="cp">Latency, Request-Response</indexterm></para>
     </subsection>
   </node>
   <node>
@@ -1388,7 +1558,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  % I    % I    us/Tr   us/Tr
     <nodeup>Options Common to TCP UDP and SCTP _RR tests</nodeup>
     <subsection>
       <title>XTI_UDP_RR</title>
-      <para>An XTI_UDP_RR test is essentially the same as a UDP_RR test only using the XTI rather than BSD Sockets interface.  It is requested by passing a value of &ldquo;XTI_UDP_RR&rdquo; to the <option>-t</option> global command-line option.</para>
+      <para><indexterm index="cp">Latency, Request-Response</indexterm> An XTI_UDP_RR test is essentially the same as a UDP_RR test only using the XTI rather than BSD Sockets interface.  It is requested by passing a value of &ldquo;XTI_UDP_RR&rdquo; to the <option>-t</option> global command-line option.</para>
       <para>The test-specific options for an XTI_UDP_RR test are the same as those for a UDP_RR test with the addition of the <option>-X &lt;devspec&gt;</option> option to specify the name of the local and/or remote XTI device file(s).</para>
     </subsection>
   </node>
@@ -1400,6 +1570,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  % I    % I    us/Tr   us/Tr
 <!-- node-name,  next,  previous,  up -->
     <subsection>
       <title>DLCL_RR</title>
+      <para><indexterm index="cp">Latency, Request-Response</indexterm></para>
     </subsection>
   </node>
   <node>
@@ -1410,6 +1581,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  % I    % I    us/Tr   us/Tr
 <!-- node-name,  next,  previous,  up -->
     <subsection>
       <title>DLCO_RR</title>
+      <para><indexterm index="cp">Latency, Request-Response</indexterm></para>
     </subsection>
   </node>
   <node>
@@ -1419,12 +1591,482 @@ bytes  bytes  bytes   bytes  secs.   per sec  % I    % I    us/Tr   us/Tr
 <!-- node-name,  next,  previous,  up -->
     <subsection>
       <title>SCTP_RR</title>
+      <para><indexterm index="cp">Latency, Request-Response</indexterm></para>
     </subsection>
+  </node>
+  <node>
+    <nodename>Using Netperf to Measure Aggregate Performance</nodename>
+    <nodenext>Using Netperf to Measure Bidirectional Transfer</nodenext>
+    <nodeprev>Using Netperf to Measure Request/Response</nodeprev>
+    <nodeup>Top</nodeup>
+<!-- node-name,  next,  previous,  up -->
+    <chapter>
+      <title>Using Netperf to Measure Aggregate Performance</title>
+      <para><indexterm index="cp">Aggregate Performance</indexterm><indexterm index="vr">&ndash;enable-burst, Configure</indexterm> <xref><xrefnodename>Netperf4</xrefnodename><xrefinfoname>Netperf4</xrefinfoname></xref> is the preferred benchmark to use when one wants to measure aggregate performance because netperf has no support for explicit synchronization of concurrent tests.</para>
+      <para>Basically, there are two ways to measure aggregate performance with netperf.  The first is to run multiple, concurrent netperf tests and can be applied to any of the netperf tests.  The second is to configure netperf with <code>--enable-burst</code> and is applicable to the TCP_RR test.</para>
+      <menu>
+        <menuentry>
+          <menunode>Running Concurrent Netperf Tests</menunode>
+          <menutitle>Running Concurrent Netperf Tests</menutitle>
+          <menucomment></menucomment>
+        </menuentry>
+        <menuentry>
+          <menunode>Using --enable-burst</menunode>
+          <menutitle>Using &ndash;enable-burst</menutitle>
+          <menucomment></menucomment>
+        </menuentry>
+      </menu>
+    </chapter>
+  </node>
+  <node>
+    <nodename>Running Concurrent Netperf Tests</nodename>
+    <nodenext>Using --enable-burst</nodenext>
+    <nodeprev>Using Netperf to Measure Aggregate Performance</nodeprev>
+    <nodeup>Using Netperf to Measure Aggregate Performance</nodeup>
+<!-- node-name,  next,  previous,  up -->
+    <section>
+      <title>Running Concurrent Netperf Tests</title>
+      <para><xref><xrefnodename>Netperf4</xrefnodename><xrefinfoname>Netperf4</xrefinfoname></xref> is the preferred benchmark to use when one wants to measure aggregate performance because netperf has no support for explicit synchronization of concurrent tests.  This leaves netperf2 results vulnerable to <dfn>skew</dfn> errors.</para>
+      <para>However, since there are times when netperf4 is unavailable it may be necessary to run netperf. The skew error can be minimized by making use of the confidence interval functionality.  Then one simply launches multiple tests from the shell using a <code>for</code> loop or the like:</para>
+      <example xml:space="preserve">for i in 1 2 3 4
+do
+netperf -t TCP_STREAM -H tardy.cup.hp.com -i 10 -P 0 &amp;
+done</example>
+      <para>which will run four, concurrent <xref><xrefnodename>TCP_STREAM</xrefnodename><xrefinfoname>TCP_STREAM</xrefinfoname></xref> tests from the system on which it is executed to tardy.cup.hp.com.  Each concurrent netperf will iterate 10 times thanks to the <option>-i</option> option and will omit the test banners (option <option>-P</option>) for brevity.  The output looks something like this:</para>
+      <example xml:space="preserve"> 87380  16384  16384    10.03     235.15
+ 87380  16384  16384    10.03     235.09
+ 87380  16384  16384    10.03     235.38
+ 87380  16384  16384    10.03     233.96</example>
+      <para>We can take the sum of the results and be reasonably confident that the aggregate performance was 940 Mbits/s.</para>
+      <para>If you see warnings about netperf not achieving the confidence intervals, the best thing to do is to increase the number of iterations with <option>-i</option> and/or increase the run length of each iteration with <option>-l</option>.</para>
+      <para>You can also enable local (<option>-c</option>) and/or remote (<option>-C</option>) CPU utilization:</para>
+      <example xml:space="preserve">for i in 1 2 3 4
+do
+netperf -t TCP_STREAM -H tardy.cup.hp.com -i 10 -P 0 -c -C &amp;
+done
+
+87380  16384  16384    10.03       235.47   3.67     5.09     10.226  14.180
+87380  16384  16384    10.03       234.73   3.67     5.09     10.260  14.225
+87380  16384  16384    10.03       234.64   3.67     5.10     10.263  14.231
+87380  16384  16384    10.03       234.87   3.67     5.09     10.253  14.215</example>
+      <para>If the CPU utilizations reported for the same system are the same or very very close you can be reasonably confident that skew error is minimized.  Presumeably one could then omit <option>-i</option> but that is not advised, particularly when/if the CPU utilization approaches 100 percent.  In the example above we see that the CPU utilization on the local system remains the same for all four tests, and is only off by 0.01 out of 5.09 on the remote system.</para>
+      <quotation>
+        <para><b>NOTE: It is very important to rememeber that netperf is calculating system-wide CPU utilization.  When calculating the service demand (those last two columns in the output above) each netperf assumes it is the only thing running on the system.  This means that for concurrent tests the service demands reported by netperf will be wrong.  One has to compute service demands for concurrent tests by hand.</b></para>
+      </quotation>
+      <para>If you wish you can add a unique, global <option>-B</option> option to each command line to append the given string to the output:</para>
+      <example xml:space="preserve">for i in 1 2 3 4
+do
+netperf -t TCP_STREAM -H tardy.cup.hp.com -B "this is test $i" -i 10 -P 0 &amp;
+done
+
+87380  16384  16384    10.03     234.90   this is test 4
+87380  16384  16384    10.03     234.41   this is test 2
+87380  16384  16384    10.03     235.26   this is test 1
+87380  16384  16384    10.03     235.09   this is test 3</example>
+      <para>You will notice that the tests completed in an order other than they were started from the shell.  This underscores why there is a threat of skew error and why netperf4 is the preferred tool for aggregate tests.  Even if you see the Netperf Contributing Editor acting to the contrary!-)</para>
+    </section>
+  </node>
+  <node>
+    <nodename>Using --enable-burst</nodename>
+    <nodeprev>Running Concurrent Netperf Tests</nodeprev>
+    <nodeup>Using Netperf to Measure Aggregate Performance</nodeup>
+<!-- node-name,  next,  previous,  up -->
+    <section>
+      <title>Using &ndash;enable-burst</title>
+      <para>If one configures netperf with <code>--enable-burst</code>:</para>
+      <example xml:space="preserve">configure --enable-burst</example>
+      <para>Then a test-specific <option>-b num</option> option is added to the <xref><xrefnodename>TCP_RR</xrefnodename><xrefinfoname>TCP_RR</xrefinfoname></xref> and <xref><xrefnodename>UDP_RR</xrefnodename><xrefinfoname>UDP_RR</xrefinfoname></xref> tests. This option causes TCP_RR and UDP_RR to quickly work their way up to having at least <option>num</option> transactions in flight at one time.</para>
+      <para>This is used as an alternative to or even in conjunction with multiple-concurrent _RR tests.  When run with just a single instance of netperf, increasing the burst size can determine the maximum number of transactions per second can be serviced by a single process:</para>
+      <example xml:space="preserve">for b in 0 1 2 4 8 16 32
+do
+ netperf -v 0 -t TCP_RR -B "-b $b" -H hpcpc108 -P 0 -- -b $b
+done
+
+9457.59 -b 0
+9975.37 -b 1
+10000.61 -b 2
+20084.47 -b 4
+29965.31 -b 8
+71929.27 -b 16
+109718.17 -b 32</example>
+      <para>The global <option>-v</option> and <option>-P</option> options were used to minimize the output to the single figure of merit which in this case the transaction rate.  The global <code>-B</code> option was used to more clearly label the output, and the test-specific <option>-b</option> option enabled by <code>--enable-burst</code> set the number of transactions in flight at one time.</para>
+      <para>Now, since the test-specific <option>-D</option> option was not specified to set TCP_NODELAY, the stack was free to &ldquo;bundle&rdquo; requests and/or responses into TCP segments as it saw fit, and since the default request and response size is one byte, there could have been some considerable bundling.  If one wants to try to achieve a closer to one-to-one correspondence between a request and response and a TCP segment, add the test-specific <option>-D</option> option:</para>
+      <example xml:space="preserve">for b in 0 1 2 4 8 16 32
+do
+ netperf -v 0 -t TCP_RR -B "-b $b -D" -H hpcpc108 -P 0 -- -b $b -D
+done
+
+ 8695.12 -b 0 -D
+ 19966.48 -b 1 -D
+ 20691.07 -b 2 -D
+ 49893.58 -b 4 -D
+ 62057.31 -b 8 -D
+ 108416.88 -b 16 -D
+ 114411.66 -b 32 -D</example>
+      <para>You can see that this has a rather large effect on the reported transaction rate.  In this particular instance, the author believes it relates to interactions between the test and interrupt coalescing settings in the driver for the NICs used.</para>
+      <quotation>
+        <para><b>NOTE: Even if you set the <option>-D</option> option that is still not a guarantee that each transaction is in its own TCP segments.  You should get into the habit of verifying the relationship between the transaction rate and the packet rate via other means.</b></para>
+      </quotation>
+      <para>You can also combine <code>--enable-burst</code> functionality with concurrent netperf tests.  This would then be an &ldquo;aggregate of aggregates&rdquo; if you like:</para>
+      <example xml:space="preserve">
+for i in 1 2 3 4
+do
+ netperf -H hpcpc108 -v 0 -P 0 -i 10 -B "aggregate $i -b 8 -D" -t TCP_RR -- -b 8 -D &amp;
+done
+
+ 46668.38 aggregate 4 -b 8 -D
+ 44890.64 aggregate 2 -b 8 -D
+ 45702.04 aggregate 1 -b 8 -D
+ 46352.48 aggregate 3 -b 8 -D
+</example>
+      <para>Since each netperf did hit the confidence intervals, we can be reasonably certain that the aggregate transaction per second rate was the sum of all four concurrent tests, or something just shy of 184,000 transactions per second.  To get some idea if that was also the packet per second rate, we could bracket that <code>for</code> loop with something to gather statistics and run the results through <uref><urefurl>ftp://ftp.cup.hp.com/dist/networking/tools</urefurl><urefdesc>beforeafter</urefdesc></uref>:</para>
+      <example xml:space="preserve">/usr/sbin/ethtool -S eth2 &gt; before
+for i in 1 2 3 4
+do
+ netperf -H 192.168.2.108 -l 60 -v 0 -P 0 -B "aggregate $i -b 8 -D" -t TCP_RR -- -b 8 -D &amp;
+done
+wait
+/usr/sbin/ethtool -S eth2 &gt; after
+
+ 52312.62 aggregate 2 -b 8 -D
+ 50105.65 aggregate 4 -b 8 -D
+ 50890.82 aggregate 1 -b 8 -D
+ 50869.20 aggregate 3 -b 8 -D
+
+beforeafter before after &gt; delta
+
+grep packets delta
+     rx_packets: 12251544
+     tx_packets: 12251550
+</example>
+      <para>This example uses <code>ethtool</code> because the system being used is running Linux.  Other platforms have other tools - for example HP-UX has lanadmin:</para>
+      <example xml:space="preserve">lanadmin -g mibstats &lt;ppa&gt;</example>
+      <para>and of course one could instead use <code>netstat</code>.</para>
+      <para>The <code>wait</code> is important because we are launching concurrent netperfs in the background.  Without it, the second ethtool command would be run before the tests finished and perhaps even before the last of them got started!</para>
+      <para>The sum of the reported transaction rates is 204178 over 60 seconds, which is a total of 12250680 transactions.  Each transaction is the exchange of a request and a response, so we multiply that by 2 to arrive at 24501360.</para>
+      <para>The sum of the ethtool stats is 24503094 packets which matches what netperf was reporting very well.</para>
+      <para>Had the request or response size differed, we would need to know how it compared with the <dfn>MSS</dfn> for the connection.</para>
+      <para>Just for grins, here is the excercise repeated, using <code>netstat</code> instead of <code>ethtool</code></para>
+      <example xml:space="preserve">netstat -s -t &gt; before
+for i in 1 2 3 4
+do
+ netperf -l 60 -H 192.168.2.108 -v 0 -P 0 -B "aggregate $i -b 8 -D" -t TCP_RR -- -b 8 -D &amp; done
+wait
+netstat -s -t &gt; after
+
+ 51305.88 aggregate 4 -b 8 -D
+ 51847.73 aggregate 2 -b 8 -D
+ 50648.19 aggregate 3 -b 8 -D
+ 53605.86 aggregate 1 -b 8 -D
+
+beforeafter before after &gt; delta
+
+grep segments delta
+    12445708 segments received
+    12445730 segments send out
+    1 segments retransmited
+    0 bad segments received.</example>
+      <para>The sums are left as an excercise to the reader :)</para>
+      <para>Things become considerably more complicated if there are non-trvial packet losses and/or retransmissions.</para>
+      <para>Of course all this checking is unnecessary if the test is a UDP_RR test because UDP &ldquo;never&rdquo; aggregates multiple sends into the same UDP datagram, and there are no ACKnowledgements in UDP.  The loss of a single request or response will not bring a &ldquo;burst&rdquo; UDP_RR test to a screeching halt, but it will reduce the number of transactions outstanding at any one time.  A &ldquo;burst&rdquo; UDP_RR test <b>will</b> come to a halt if the sum of the lost requests and responses reaches the value specified in the test-specific <option>-b</option> option.</para>
+    </section>
+  </node>
+  <node>
+    <nodename>Using Netperf to Measure Bidirectional Transfer</nodename>
+    <nodenext>The Omni Tests</nodenext>
+    <nodeprev>Using Netperf to Measure Aggregate Performance</nodeprev>
+    <nodeup>Top</nodeup>
+<!-- node-name,  next,  previous,  up -->
+    <chapter>
+      <title>Using Netperf to Measure Bidirectional Transfer</title>
+      <para>There are two ways to use netperf to measure the perfomance of bidirectional transfer.  The first is to run concurrent netperf tests from the command line.  The second is to configure netperf with <code>--enable-burst</code> and use a single instance of the <xref><xrefnodename>TCP_RR</xrefnodename><xrefinfoname>TCP_RR</xrefinfoname></xref> test.</para>
+      <para>While neither method is more &ldquo;correct&rdquo; than the other, each is doing so in different ways, and that has possible implications.  For instance, using the concurrent netperf test mechanism means that multiple TCP connections and multiple processes are involved, whereas using the single instance of TCP_RR there is only one TCP connection and one process on each end.  They may behave differently, especially on an MP system.</para>
+      <menu>
+        <menuentry>
+          <menunode>Bidirectional Transfer with Concurrent Tests</menunode>
+          <menutitle>Bidirectional Transfer with Concurrent Tests</menutitle>
+          <menucomment></menucomment>
+        </menuentry>
+        <menuentry>
+          <menunode>Bidirectional Transfer with TCP_RR</menunode>
+          <menutitle>Bidirectional Transfer with TCP_RR</menutitle>
+          <menucomment></menucomment>
+        </menuentry>
+      </menu>
+    </chapter>
+  </node>
+  <node>
+    <nodename>Bidirectional Transfer with Concurrent Tests</nodename>
+    <nodenext>Bidirectional Transfer with TCP_RR</nodenext>
+    <nodeprev>Using Netperf to Measure Bidirectional Transfer</nodeprev>
+    <nodeup>Using Netperf to Measure Bidirectional Transfer</nodeup>
+<!-- node-name,  next,  previous,  up -->
+    <section>
+      <title>Bidirectional Transfer with Concurrent Tests</title>
+      <para>If we had two hosts Fred and Ethel, we could simply run a netperf <xref><xrefnodename>TCP_STREAM</xrefnodename><xrefinfoname>TCP_STREAM</xrefinfoname></xref> test on Fred pointing at Ethel, and a concurrent netperf TCP_STREAM test on Ethel pointing at Fred, but since there are no mechanisms to synchronize netperf tests and we would be starting tests from two different systems, there is a considerable risk of skew error.</para>
+      <para>Far better would be to run simultaneous TCP_STREAM and <xref><xrefnodename>TCP_MAERTS</xrefnodename><xrefinfoname>TCP_MAERTS</xrefinfoname></xref> tests from just <b>one</b> system, using the concepts and procedures outlined in <xref><xrefnodename>Running Concurrent Netperf Tests</xrefnodename><xrefinfoname>Running Concurrent Netperf Tests</xrefinfoname></xref>. Here then is an example:</para>
+      <example xml:space="preserve">for i in 1
+do
+ netperf -H 192.168.2.108 -t TCP_STREAM -B "outbound" -i 10 -P 0 -v 0 -- -s 256K -S 256K &amp;
+ netperf -H 192.168.2.108 -t TCP_MAERTS -B "inbound"  -i 10 -P 0 -v 0 -- -s 256K -S 256K &amp;
+done
+
+ 892.66 outbound
+ 891.34 inbound
+</example>
+      <para>We have used a <code>for</code> loop in the shell with just one iteration because that will be <b>much</b> easier to get both tests started at more or less the same time than doing it by hand.  The global <option>-P</option> and <option>-v</option> options are used because we aren't interested in anything other than the throughput, and the global <option>-B</option> option is used to tag each output so we know which was inbound and which outbound relative to the system on which we were running netperf.  Of course that sense is switched on the system running netserver :)  The use of the global <option>-i</option> option is explained in <xref><xrefnodename>Running Concurrent Netperf Tests</xrefnodename><xrefinfoname>Running Concurrent Netperf Tests</xrefinfoname></xref>.</para>
+    </section>
+  </node>
+  <node>
+    <nodename>Bidirectional Transfer with TCP_RR</nodename>
+    <nodeprev>Bidirectional Transfer with Concurrent Tests</nodeprev>
+    <nodeup>Using Netperf to Measure Bidirectional Transfer</nodeup>
+<!-- node-name,  next,  previous,  up -->
+    <section>
+      <title>Bidirectional Transfer with TCP_RR</title>
+      <para>If one configures netperf with <code>--enable-burst</code> then one can use the test-specific <option>-b</option> option to increase the number of transactions in flight at one time.  If one also uses the -r option to make those transactions larger the test starts to look more and more like a bidirectional transfer than a request/response test.</para>
+      <para>Now, the logic behing <code>--enable-burst</code> is very simple, and there are no calls to <code>poll()</code> or <code>select()</code> which means we want to make sure that the <code>send()</code> calls will never block, or we run the risk of deadlock with each side stuck trying to call <code>send()</code> and neither calling <code>recv()</code>.</para>
+      <para>Fortunately, this is easily accomplished by setting a &ldquo;large enough&rdquo; socket buffer size with the test-specific <option>-s</option> and <option>-S</option> options.  Presently this must be performed by the user.  Future versions of netperf might attempt to do this automagically, but there are some issues to be worked-out.</para>
+      <para>Here then is an example of a bidirectional transfer test using <code>--enable-burst</code> and the <xref><xrefnodename>TCP_RR</xrefnodename><xrefinfoname>TCP_RR</xrefinfoname></xref> test:</para>
+      <example xml:space="preserve">netperf -t TCP_RR -H hpcpc108 -- -b 6 -r 32K -s 256K -S 256K
+TCP REQUEST/RESPONSE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to hpcpc108.cup.hp.com (16.89.84.108) port 0 AF_INET : first burst 6
+Local /Remote
+Socket Size   Request  Resp.   Elapsed  Trans.
+Send   Recv   Size     Size    Time     Rate
+bytes  Bytes  bytes    bytes   secs.    per sec
+
+524288 524288 32768    32768   10.01    3525.97
+524288 524288
+</example>
+      <para>Now, at present netperf does not include a bit or byte rate in the output of an _RR test which means we must calculate it ourselves. Each transaction is the exchange of 32768 bytes of request and 32768 bytes of response, or 65536 bytes.  Multiply that by 8 and we arrive at 524288 bits per transaction.  Multiply that by 3525.97 and we arrive at 1848623759 bits per second.  Since things were uniform, we can divide that by two and arrive at roughly 924311879 bits per second each way.  That corresponds to &ldquo;link-rate&rdquo; for a 1 Gigiabit Ethernet which happens to be the type of netpwrk used in the example.</para>
+      <para>A future version of netperf may perform the calculation on behalf of the user, but it would likely not emit it unless the user specified a verbosity of 2 or more with the global <option>-v</option> option.</para>
+    </section>
+  </node>
+  <node>
+    <nodename>The Omni Tests</nodename>
+    <nodenext>Other Netperf Tests</nodenext>
+    <nodeprev>Using Netperf to Measure Bidirectional Transfer</nodeprev>
+    <nodeup>Top</nodeup>
+    <chapter>
+      <title>The Omni Tests</title>
+      <para>Beginning with version 2.5.0, netperf begins a migration to the &ldquo;omni&rdquo; tests or &ldquo;Two routines to measure them all.&rdquo;  The code for the omni tests can be found in <file>src/nettest_omni.c</file> and the goal is to make it easier for netperf to support multiple protocols and report a great many additional things about the systems under test. Additionally, a flexible output selection mechanism is present which allows the user to chose specifically what values she wishes to have reported and in what format.</para>
+      <para>The omni tests are included by default in version 2.5.0.  To disable them, one must:</para>
+      <example xml:space="preserve">./configure --enable-omni=no ...</example>
+      <para>and remake netperf.  Remaking netserver is optional because even in 2.5.0 it has &ldquo;unmigrated&rdquo; netserver side routines for the classic (eg <file>src/nettest_bsd.c</file>) tests.</para>
+      <menu>
+        <menuentry>
+          <menunode>Native Omni Tests</menunode>
+          <menutitle>Native Omni Tests</menutitle>
+          <menucomment></menucomment>
+        </menuentry>
+        <menuentry>
+          <menunode>Migrated Tests</menunode>
+          <menutitle>Migrated Tests</menutitle>
+          <menucomment></menucomment>
+        </menuentry>
+        <menuentry>
+          <menunode>Omni Output Selection</menunode>
+          <menutitle>Omni Output Selection</menutitle>
+          <menucomment></menucomment>
+        </menuentry>
+      </menu>
+    </chapter>
+  </node>
+  <node>
+    <nodename>Native Omni Tests</nodename>
+    <nodenext>Migrated Tests</nodenext>
+    <nodeprev>The Omni Tests</nodeprev>
+    <nodeup>The Omni Tests</nodeup>
+    <section>
+      <title>Native Omni Tests</title>
+      <para>One access the omni tests &ldquo;natively&rdquo; by using a value of &ldquo;OMNI&rdquo; with the global <option>-t</option> test-selection option.  This will then cause netperf to use the code in <file>src/nettest_omni.c</file> and in particular the test-specific options parser for the omni tests.  The test-specific options for the omni tests are a superset of those for &ldquo;classic&rdquo; tests.  The options added by the omni tests are:</para>
+      <table><indexterm index="vr">-c, Test-specific</indexterm>
+        <tableitem>
+          <tableterm><code>-c</code></tableterm>
+          <item>
+            <para>This explicitly declares that the test is to include connection establishment and tear-down as in either a TCP_CRR or TCP_CC test.</para>
+            <para><indexterm index="vr">-d, Test-specific</indexterm></para>
+          </item>
+        </tableitem>
+        <tableitem>
+          <tableterm><code>-d &lt;direction&gt;</code></tableterm>
+          <item>
+            <para>This option sets the direction of the test relative to the netperf process.  As of version 2.5.0 one can use:</para>
+            <table>
+              <tableitem>
+                <tableterm><code>send, xmit or 2</code></tableterm>
+                <item>
+                  <para>Any of which will cause netperf to send to the netserver.</para>
+                </item>
+              </tableitem>
+              <tableitem>
+                <tableterm><code>recv, receive or 4</code></tableterm>
+                <item>
+                  <para>Any of which will cause netserver to send to netperf.</para>
+                </item>
+              </tableitem>
+              <tableitem>
+                <tableterm><code>rr or 6</code></tableterm>
+                <item>
+                  <para>Either of which will cause a request/response test.</para>
+                </item>
+              </tableitem>
+            </table>
+            <para><indexterm index="vr">-k, Test-specific</indexterm></para>
+          </item>
+        </tableitem>
+        <tableitem>
+          <tableterm><code>-k &lt;output selector&gt;</code></tableterm>
+          <item>
+            <para>This option sets the style of output to &ldquo;keyval&rdquo; where each line of output has the form:</para>
+            <example xml:space="preserve">key=value</example>
+            <para>For example:</para>
+            <example xml:space="preserve">$ netperf -t omni -- -d rr -k "THROUGHPUT,THROUGHPUT_UNITS"
+OMNI TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain (127.0.0.1) port 0 AF_INET : demo
+THROUGHPUT=59092.65
+THROUGHPUT_UNITS=Trans/s</example>
+            <para>Using the <option>-k</option> option will override any previous, test-specific <option>-o</option> or <option>-O</option> option.</para>
+            <para><indexterm index="vr">-o, Test-specific</indexterm></para>
+          </item>
+        </tableitem>
+        <tableitem>
+          <tableterm><code>-o &lt;output selector&gt;</code></tableterm>
+          <item>
+            <para>This option sets the style of output to &ldquo;CSV&rdquo; where there will be one line of comma-separated values, preceeded by one line of column names unless the global <option>-P</option> option is used with a value of 0:</para>
+            <example xml:space="preserve">$ netperf -t omni -- -d rr -o "THROUGHPUT,THROUGHPUT_UNITS"
+OMNI TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain (127.0.0.1) port 0 AF_INET : demo
+Throughput,Throughput Units
+60999.07,Trans/s</example>
+            <para>Using the <option>-o</option> option will override any previous, test-specific <option>-k</option> or <option>-O</option> option.</para>
+            <para><indexterm index="vr">-O, Test-specific</indexterm></para>
+          </item>
+        </tableitem>
+        <tableitem>
+          <tableterm><code>-O &lt;output selector&gt;</code></tableterm>
+          <item>
+            <para>This option sets the style of output to &ldquo;human readable&rdquo; which will look quite similar to classic netperf output:</para>
+            <example xml:space="preserve">$ netperf -t omni -- -d rr -O "THROUGHPUT,THROUGHPUT_UNITS"
+OMNI TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain (127.0.0.1) port 0 AF_INET : demo
+Throughput Throughput
+           Units
+
+
+60492.57   Trans/s</example>
+            <para>Using the <option>-O</option> option will override any previous, test-specific <option>-k</option> or <option>-o</option> option.</para>
+            <para><indexterm index="vr">-T, Test-specific</indexterm></para>
+          </item>
+        </tableitem>
+        <tableitem>
+          <tableterm><code>-T &lt;protocol&gt;</code></tableterm>
+          <item>
+            <para>This option is used to explicitly set the protocol used for the test.</para>
+            <para>The default is implicit based on other settings.</para>
+          </item>
+        </tableitem>
+      </table>
+    </section>
+  </node>
+  <node>
+    <nodename>Migrated Tests</nodename>
+    <nodenext>Omni Output Selection</nodenext>
+    <nodeprev>Native Omni Tests</nodeprev>
+    <nodeup>The Omni Tests</nodeup>
+    <section>
+      <title>Migrated Tests</title>
+      <para>As of version 2.5.0 several tests have been migrated to use the omni code in <file>src/nettest_omni.c</file> for the core of their testing.  A migrated test retains all its previous output code and so should still &ldquo;look and feel&rdquo; just like a pre-2.5.0 test with one exception - the first line of the test banners will include the word &ldquo;MIGRATED&rdquo; at the beginning as in:</para>
+      <example xml:space="preserve">$ ../src/netperf
+MIGRATED TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain (127.0.0.1) port 0 AF_INET : demo
+Recv   Send    Send
+Socket Socket  Message  Elapsed
+Size   Size    Size     Time     Throughput
+bytes  bytes   bytes    secs.    10^6bits/sec
+
+ 87380  16384  16384    10.00    27175.27</example>
+      <para>The tests migrated in version 2.5.0 are:</para>
+      <itemize>
+        <itemfunction>&bullet;</itemfunction>
+        <item>
+          <para>TCP_STREAM</para>
+        </item>
+        <item>
+          <para>TCP_MAERTS</para>
+        </item>
+        <item>
+          <para>TCP_RR</para>
+        </item>
+        <item>
+          <para>TCP_CRR</para>
+        </item>
+        <item>
+          <para>UDP_STREAM</para>
+        </item>
+        <item>
+          <para>UDP_RR</para>
+        </item>
+      </itemize>
+      <para>It is expected that future releases will have additional tests migrated to use the &ldquo;omni&rdquo; functionality.</para>
+      <para>If one uses &ldquo;omni-specific&rdquo; test-specific options in conjunction with a migrated test, instead of using the classic output code, the new omni output code will be used. For example if one uses the <option>-k</option> test-specific option with a value of &ldquo;MIN_LATENCY,MAX_LATENCY&rdquo; with a migrated TCP_RR test one will see:</para>
+      <example xml:space="preserve">$ ../src/netperf  -t tcp_rr  -- -k THROUGHPUT,THROUGHPUT_UNITS
+MIGRATED TCP REQUEST/RESPONSE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain (127.0.0.1) port 0 AF_INET : demo
+THROUGHPUT=60074.74
+THROUGHPUT_UNITS=Trans/s</example>
+      <para>rather than:</para>
+      <example xml:space="preserve">$ ../src/netperf  -t tcp_rr
+MIGRATED TCP REQUEST/RESPONSE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain (127.0.0.1) port 0 AF_INET : demo
+Local /Remote
+Socket Size   Request  Resp.   Elapsed  Trans.
+Send   Recv   Size     Size    Time     Rate
+bytes  Bytes  bytes    bytes   secs.    per sec
+
+16384  87380  1        1       10.00    59421.52
+16384  87380</example>
+    </section>
+  </node>
+  <node>
+    <nodename>Omni Output Selection</nodename>
+    <nodeprev>Migrated Tests</nodeprev>
+    <nodeup>The Omni Tests</nodeup>
+    <section>
+      <title>Omni Output Selection</title>
+      <para>The omni test-specific <option>-k</option>, <option>-o</option> and <option>-O</option> options take an optional <code>output selector</code> by which the user can configure what values are reported.  The output selector can take several forms:</para>
+      <table>
+        <tableitem>
+          <tableterm><code><file>filename</file></code></tableterm>
+          <item>
+            <para>The output selections will be read from the named file. Within the file there can be up to four lines of comma-separated output selectors. This controls how many multi-line blocks of output are emitted when the <option>-O</option> option is used.  This output, while not identical to &ldquo;classic&rdquo; netperf output, is inspired by it.  Multiple lines have no effect for <option>-k</option> and <option>-o</option> options.  Putting output selections in a file can be useful when the list of selections is long.</para>
+          </item>
+        </tableitem>
+        <tableitem>
+          <tableterm><code>comma and/or semi-colon-separated list</code></tableterm>
+          <item>
+            <para>The output selections will be parsed from a comma and/or semi-colon-separated list of output selectors. When the list is given to a <option>-O</option> option a semi-colon specifies a new output block should be started.  Semi-colons have the same meaning as commas when used with the <option>-k</option> or <option>-o</option> options.  Depending on the command interpreter being used, the semi-colon may have to be escaped somehow to keep it from being interpreted by the command interpreter. This can often be done by enclosing the entire list in quotes.</para>
+          </item>
+        </tableitem>
+        <tableitem>
+          <tableterm><code>all</code></tableterm>
+          <item>
+            <para>If the keyword <b>all</b> is specified it means that all known output values should be displayed at the end of the test.  This can be a great deal of output.  As of version 2.5.0 there are 157 different output selectors.</para>
+          </item>
+        </tableitem>
+        <tableitem>
+          <tableterm><code>?</code></tableterm>
+          <item>
+            <para>If a &ldquo;?&rdquo; is given as the output selection, the list of all known output selectors will be displayed and no test actually run.  When passed to the <option>-O</option> option they will be listed one per line. Otherwise they will be listed as a comma-separated list.  It may be necessary to protect the &ldquo;?&rdquo; from the command interpreter by escaping it or enclosing it in quotes.</para>
+          </item>
+        </tableitem>
+        <tableitem>
+          <tableterm><code>no selector</code></tableterm>
+          <item>
+            <para>If nothing is given to the <option>-k</option>, <option>-o</option> or <option>-O</option> option then the code selects a default set of output selectors inspired by classic netperf output.</para>
+          </item>
+        </tableitem>
+      </table>
+    </section>
   </node>
   <node>
     <nodename>Other Netperf Tests</nodename>
     <nodenext>Address Resolution</nodenext>
-    <nodeprev>Using Netperf to Measure Request/Response</nodeprev>
+    <nodeprev>The Omni Tests</nodeprev>
     <nodeup>Top</nodeup>
     <chapter>
       <title>Other Netperf Tests</title>
@@ -1472,7 +2114,7 @@ netperf -H &lt;remote&gt; -c $LOC_RATE -C $REM_RATE ... -- ...</example>
   </node>
   <node>
     <nodename>Enhancing Netperf</nodename>
-    <nodenext>Index</nodenext>
+    <nodenext>Netperf4</nodenext>
     <nodeprev>Address Resolution</nodeprev>
     <nodeup>Top</nodeup>
 <!-- node-name,  next,  previous,  up -->
@@ -1493,17 +2135,40 @@ netperf -H &lt;remote&gt; -c $LOC_RATE -C $REM_RATE ... -- ...</example>
           <para>Compile and test</para>
         </item>
       </enumerate>
+      <para>However, with the addition of the &ldquo;omni&rdquo; tests in version 2.5.0 it is preferred that one attempt to make the necessary changes to <file>src/nettest_omni.c</file> rather than adding new source files.</para>
       <para>If you wish to submit your changes for possible inclusion into the mainline sources, please try to base your changes on the latest available sources. (See <xref><xrefnodename>Getting Netperf Bits</xrefnodename></xref>.) and then send email describing the changes at a high level to <email><emailaddress>netperf-feedback@netperf.org</emailaddress></email> or perhaps <email><emailaddress>netperf-talk@netperf.org</emailaddress></email>.  If the concensus is positive, then sending context <command>diff</command> results to <email><emailaddress>netperf-feedback@netperf.org</emailaddress></email> is the next step.  From that point, it is a matter of pestering the Netperf Contributing Editor until he gets the changes incorporated :)</para>
-      <para>One of these days, it is hoped that some sort of public version control system will be setup - perhaps on netperf.org - to make this whole process easier.</para>
     </chapter>
   </node>
   <node>
-    <nodename>Index</nodename>
+    <nodename>Netperf4</nodename>
+    <nodenext>Concept Index</nodenext>
     <nodeprev>Enhancing Netperf</nodeprev>
     <nodeup>Top</nodeup>
+<!-- node-name,  next,  previous,  up -->
+    <chapter>
+      <title>Netperf4</title>
+      <para>Netperf4 is the shorthand name given to version 4.X.X of netperf. This is really a separate benchmark more than a newer version of netperf, but it is a decendant of netperf so the netperf name is kept.  The facetious way to describe netperf4 is to say it is the egg-laying-woolly-milk-pig version of netperf :)  The more respectful way to describe it is to say it is the version of netperf with support for synchronized, multiple-thread, multiple-test, multiple-system, network-oriented benchmarking.</para>
+      <para>Netperf4 is still undergoing rapid evolution. Those wishing to work with or on netperf4 are encouraged to join the <uref><urefurl>http://www.netperf.org/cgi-bin/mailman/listinfo/netperf-dev</urefurl><urefdesc>netperf-dev</urefdesc></uref> mailing list and/or peruse the <uref><urefurl>http://www.netperf.org/svn/netperf4/trunk</urefurl><urefdesc>current sources</urefdesc></uref>.</para>
+    </chapter>
+  </node>
+  <node>
+    <nodename>Concept Index</nodename>
+    <nodenext>Option Index</nodenext>
+    <nodeprev>Netperf4</nodeprev>
+    <nodeup>Top</nodeup>
     <unnumbered>
-      <title>Index</title>
+      <title>Concept Index</title>
       <printindex>cp</printindex>
+    </unnumbered>
+  </node>
+  <node>
+    <nodename>Option Index</nodename>
+    <nodeprev>Concept Index</nodeprev>
+    <nodeup>Top</nodeup>
+<!-- node-name,  next,  previous,  up -->
+    <unnumbered>
+      <title>Option Index</title>
+      <printindex>vr</printindex>
     </unnumbered>
   </node>
 </texinfo>

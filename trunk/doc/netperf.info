@@ -37,85 +37,13 @@ netperf benchmark.
 * Using Netperf to Measure Request/Response ::
 * Using Netperf to Measure Aggregate Performance::
 * Using Netperf to Measure Bidirectional Transfer::
+* The Omni Tests::
 * Other Netperf Tests::
 * Address Resolution::
 * Enhancing Netperf::
 * Netperf4::
 * Concept Index::
 * Option Index::
-
- --- The Detailed Node Listing ---
-
-Introduction
-
-* Conventions::
-
-Installing Netperf
-
-* Getting Netperf Bits::
-* Installing Netperf Bits::
-* Verifying Installation::
-
-The Design of Netperf
-
-* CPU Utilization::
-
-Global Command-line Options
-
-* Command-line Options Syntax::
-* Global Options::
-
-Using Netperf to Measure Bulk Data Transfer
-
-* Issues in Bulk Transfer::
-* Options common to TCP UDP and SCTP tests::
-
-Options common to TCP UDP and SCTP tests
-
-* TCP_STREAM::
-* TCP_MAERTS::
-* TCP_SENDFILE::
-* UDP_STREAM::
-* XTI_TCP_STREAM::
-* XTI_UDP_STREAM::
-* SCTP_STREAM::
-* DLCO_STREAM::
-* DLCL_STREAM::
-* STREAM_STREAM::
-* DG_STREAM::
-
-Using Netperf to Measure Request/Response
-
-* Issues in Request/Response::
-* Options Common to TCP UDP and SCTP _RR tests::
-
-Options Common to TCP UDP and SCTP _RR tests
-
-* TCP_RR::
-* TCP_CC::
-* TCP_CRR::
-* UDP_RR::
-* XTI_TCP_RR::
-* XTI_TCP_CC::
-* XTI_TCP_CRR::
-* XTI_UDP_RR::
-* DLCL_RR::
-* DLCO_RR::
-* SCTP_RR::
-
-Using Netperf to Measure Aggregate Performance
-
-* Running Concurrent Netperf Tests::
-* Using --enable-burst::
-
-Using Netperf to Measure Bidirectional Transfer
-
-* Bidirectional Transfer with Concurrent Tests::
-* Bidirectional Transfer with TCP_RR::
-
-Other Netperf Tests
-
-* CPU rate calibration::
 
 
 File: netperf.info,  Node: Introduction,  Next: Installing Netperf,  Prev: Top,  Up: Top
@@ -413,30 +341,42 @@ occasionally as long as ten to nineteen milliseconds
    The `--enable-demo=yes' configure option will cause code to be
 included to report interim results during a test run.  The rate at
 which interim results are reported can then be controlled via the
-global `-D' option.  Here is an example of -enable-demo mode output:
+global `-D' option.  Here is an example of `-D' output:
 
-     src/netperf -D 1.35 -H lag -f M
-     TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to lag.hpl.hp.com (15.4.89.214) port 0 AF_INET : demo
-     Interim result:    9.66 MBytes/s over 1.67 seconds
-     Interim result:    9.64 MBytes/s over 1.35 seconds
-     Interim result:    9.58 MBytes/s over 1.36 seconds
-     Interim result:    9.51 MBytes/s over 1.36 seconds
-     Interim result:    9.71 MBytes/s over 1.35 seconds
-     Interim result:    9.66 MBytes/s over 1.36 seconds
-     Interim result:    9.61 MBytes/s over 1.36 seconds
+     $ src/netperf -D 1.35 -H tardy.hpl.hp.com -f M
+     MIGRATED TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to tardy.hpl.hp.com (15.9.116.144) port 0 AF_INET : demo
+     Interim result:    5.41 MBytes/s over 1.35 seconds ending at 1308789765.848
+     Interim result:   11.07 MBytes/s over 1.36 seconds ending at 1308789767.206
+     Interim result:   16.00 MBytes/s over 1.36 seconds ending at 1308789768.566
+     Interim result:   20.66 MBytes/s over 1.36 seconds ending at 1308789769.922
+     Interim result:   22.74 MBytes/s over 1.36 seconds ending at 1308789771.285
+     Interim result:   23.07 MBytes/s over 1.36 seconds ending at 1308789772.647
+     Interim result:   23.77 MBytes/s over 1.37 seconds ending at 1308789774.016
      Recv   Send    Send
      Socket Socket  Message  Elapsed
      Size   Size    Size     Time     Throughput
      bytes  bytes   bytes    secs.    MBytes/sec
 
-      32768  16384  16384    10.00       9.61
+      87380  16384  16384    10.06      17.81
 
    Notice how the units of the interim result track that requested by
 the `-f' option.  Also notice that sometimes the interval will be
 longer than the value specified in the `-D' option.  This is normal and
-stems from how demo mode is implemented without relying on interval
-timers, but by calculating how many units of work must be performed to
-take at least the desired interval.
+stems from how demo mode is implemented not by relying on interval
+timers or frequent calls to get the current time, but by calculating
+how many units of work must be performed to take at least the desired
+interval.
+
+   Those familiar with this option in earlier versions of netperf will
+note the addition of the "ending at" text.  This is the time as
+reported by a `gettimeofday()' call (or its emulation) with a `NULL'
+timezone pointer.  This addition is intended to make it easier to
+insert interim results into an rrdtool
+(http://oss.oetiker.ch/rrdtool/doc/rrdtool.en.html) Round-Robin
+Database (RRD).  A likely bug-riddled example of doing so can be found
+in `doc/examples/netperf_interim_to_rrd.sh'.  The time is reported out
+to milliseconds rather than microseconds because that is the most
+rrdtool understands as of the time of this writing.
 
    As of this writing, a `make install' will not actually update the
 files `/etc/services' and/or `/etc/inetd.conf' or their
@@ -488,13 +428,15 @@ File: netperf.info,  Node: The Design of Netperf,  Next: Global Command-line Opt
 Netperf is designed around a basic client-server model.  There are two
 executables - netperf and netserver.  Generally you will only execute
 the netperf program, with the netserver program being invoked by the
-remote system's inetd or equivalent.  When you execute netperf, the
-first that that will happen is the establishment of a control
-connection to the remote system.  This connection will be used to pass
-test configuration information and results to and from the remote
-system.  Regardless of the type of test to be run, the control
-connection will be a TCP connection using BSD sockets.  The control
-connection can use either IPv4 or IPv6.
+remote system's inetd or having been previously started as its own
+standalone daemon.
+
+   When you execute netperf it will establish a "control connection" to
+the remote system.  This connection will be used to pass test
+configuration information and results to and from the remote system.
+Regardless of the type of test to be run, the control connection will
+be a TCP connection using BSD sockets.  The control connection can use
+either IPv4 or IPv6.
 
    Once the control connection is up and the configuration information
 has been passed, a separate "data" connection will be opened for the
@@ -522,9 +464,10 @@ File: netperf.info,  Node: CPU Utilization,  Prev: The Design of Netperf,  Up: T
 
 CPU utilization is an important, and alas all-too infrequently reported
 component of networking performance.  Unfortunately, it can be one of
-the most difficult metrics to measure accurately as many systems offer
-mechanisms that are at best il-suited to measuring CPU utilization in
-high interrupt rate (eg networking) situations.
+the most difficult metrics to measure accurately and portably.  Netperf
+will do its level best to report accurate CPU utilization figures, but
+some combinations of processor, OS and configuration may make that
+difficult.
 
    CPU utilization in netperf is reported as a value between 0 and 100%
 regardless of the number of CPUs involved.  In addition to CPU
@@ -537,7 +480,7 @@ For both CPU utilization and service demand, lower is better.
 
    Service demand can be particularly useful when trying to gauge the
 effect of a performance change.  It is essentially a measure of
-efficiency, with smaller values being more efficient.
+efficiency, with smaller values being more efficient and thus "better."
 
    Netperf is coded to be able to use one of several, generally
 platform-specific CPU utilization measurement mechanisms.  Single
@@ -571,7 +514,7 @@ remote (netserver) system.
 `P'
      An HP-UX-specific CPU utilization mechanism whereby the kernel
      keeps-track of time (in the form of CPU cycles) spent in the kernel
-     idle loop (HP-UX 10.0 to 11.23 inclusive), or where the kernel
+     idle loop (HP-UX 10.0 to 11.31 inclusive), or where the kernel
      keeps track of time spent in idle, user, kernel and interrupt
      processing (HP-UX 11.23 and later).  The former requires
      calibration, the latter does not.  Values in either case are
@@ -580,14 +523,14 @@ remote (netserver) system.
      `src/netcpu_pstat.c' and `src/netcpu_pstatnew.c' respectively.
 
 `K'
-     A Solaris-specific CPU utilization mechanism where by the kernel
+     A Solaris-specific CPU utilization mechanism whereby the kernel
      keeps track of ticks (eg HZ) spent in the idle loop.  This method
      is statistical and is known to be inaccurate when the interrupt
      rate is above epsilon as time spent processing interrupts is not
      subtracted from idle.  The value is retrieved via a kstat() call -
      hence the use of the letter `K'.  Since this mechanism uses units
      of ticks (HZ) the calibration value should invariably match HZ.
-     (Eg 100)  The code for this mechanism is implemented in
+     (Eg 100) The code for this mechanism is implemented in
      `src/netcpu_kstat.c'.
 
 `M'
@@ -619,9 +562,9 @@ remote (netserver) system.
      what appears to be a form of micro-state accounting and requires no
      calibration.  On laptops, or other systems which may dynamically
      alter the CPU frequency to minimize power consumtion, it has been
-     suggested that this mechanism may become slightly confsed, in
-     which case using BIOS settings to disable the power saving would
-     be indicated.
+     suggested that this mechanism may become slightly confused, in
+     which case using BIOS/uEFI settings to disable the power saving
+     would be indicated.
 
 `S'
      This mechanism uses `/proc/stat' on Linux to retrieve time (ticks)
@@ -639,7 +582,7 @@ remote (netserver) system.
      using the times() and getrusage() calls.  These calls are actually
      rather poorly suited to the task of measuring CPU overhead for
      networking as they tend to be process-specific and much
-     network-related  processing can happen outside the context of a
+     network-related processing can happen outside the context of a
      process, in places where it is not a given it will be charged to
      the correct, or even a process.  They are mentioned here as a
      warning to anyone seeing those mechanisms used in other networking
@@ -679,6 +622,31 @@ may also have issues with time spent processing interrupts.
    In summary, be sure to "sanity-check" the CPU utilization figures
 with other mechanisms.  However, platform tools such as top, vmstat or
 mpstat are often based on the same mechanisms used by netperf.
+
+* Menu:
+
+* CPU Utilization in a Virtual Guest::
+
+
+File: netperf.info,  Node: CPU Utilization in a Virtual Guest,  Prev: CPU Utilization,  Up: CPU Utilization
+
+3.1.1 CPU Utilization in a Virtual Guest
+----------------------------------------
+
+The CPU utilization mechanisms used by netperf are "inline" in that
+they are run by the same netperf or netserver process as is running the
+test itself.  This works just fine for "bare iron" tests but runs into
+a problem when using virtual machines.
+
+   A virtual guest can be thought of as being similar to a process in a
+bare iron system.  As such, any CPU utilization mechanisms used in the
+virtual guest are similar to "process-local" mechanisms in a bare iron
+situation.  However, just as with bare iron, much networking processing
+happens outside the context of the virtual guest.  It takes place in
+the hypervisor, and is not visible to mechanisms running in the
+guest(s).  For this reason, one should not really trust CPU utilization
+figures reported by netperf or netserver when running in a virtual
+guest.
 
 
 File: netperf.info,  Node: Global Command-line Options,  Next: Using Netperf to Measure Bulk Data Transfer,  Prev: The Design of Netperf,  Up: Top
@@ -2476,7 +2444,7 @@ if the sum of the lost requests and responses reaches the value
 specified in the test-specific `-b' option.
 
 
-File: netperf.info,  Node: Using Netperf to Measure Bidirectional Transfer,  Next: Other Netperf Tests,  Prev: Using Netperf to Measure Aggregate Performance,  Up: Top
+File: netperf.info,  Node: Using Netperf to Measure Bidirectional Transfer,  Next: The Omni Tests,  Prev: Using Netperf to Measure Aggregate Performance,  Up: Top
 
 8 Using Netperf to Measure Bidirectional Transfer
 *************************************************
@@ -2590,10 +2558,223 @@ the user, but it would likely not emit it unless the user specified a
 verbosity of 2 or more with the global `-v' option.
 
 
-File: netperf.info,  Node: Other Netperf Tests,  Next: Address Resolution,  Prev: Using Netperf to Measure Bidirectional Transfer,  Up: Top
+File: netperf.info,  Node: The Omni Tests,  Next: Other Netperf Tests,  Prev: Using Netperf to Measure Bidirectional Transfer,  Up: Top
 
-9 Other Netperf Tests
-*********************
+9 The Omni Tests
+****************
+
+Beginning with version 2.5.0, netperf begins a migration to the "omni"
+tests or "Two routines to measure them all."  The code for the omni
+tests can be found in `src/nettest_omni.c' and the goal is to make it
+easier for netperf to support multiple protocols and report a great
+many additional things about the systems under test.  Additionally, a
+flexible output selection mechanism is present which allows the user to
+chose specifically what values she wishes to have reported and in what
+format.
+
+   The omni tests are included by default in version 2.5.0.  To disable
+them, one must:
+     ./configure --enable-omni=no ...
+
+   and remake netperf.  Remaking netserver is optional because even in
+2.5.0 it has "unmigrated" netserver side routines for the classic (eg
+`src/nettest_bsd.c') tests.
+
+* Menu:
+
+* Native Omni Tests::
+* Migrated Tests::
+* Omni Output Selection::
+
+
+File: netperf.info,  Node: Native Omni Tests,  Next: Migrated Tests,  Prev: The Omni Tests,  Up: The Omni Tests
+
+9.1 Native Omni Tests
+=====================
+
+One access the omni tests "natively" by using a value of "OMNI" with
+the global `-t' test-selection option.  This will then cause netperf to
+use the code in `src/nettest_omni.c' and in particular the
+test-specific options parser for the omni tests.  The test-specific
+options for the omni tests are a superset of those for "classic" tests.
+The options added by the omni tests are:
+
+`-c'
+     This explicitly declares that the test is to include connection
+     establishment and tear-down as in either a TCP_CRR or TCP_CC test.
+
+`-d <direction>'
+     This option sets the direction of the test relative to the netperf
+     process.  As of version 2.5.0 one can use:
+
+    `send, xmit or 2'
+          Any of which will cause netperf to send to the netserver.
+
+    `recv, receive or 4'
+          Any of which will cause netserver to send to netperf.
+
+    `rr or 6'
+          Either of which will cause a request/response test.
+
+`-k <output selector>'
+     This option sets the style of output to "keyval" where each line of
+     output has the form:
+          key=value
+     For example:
+          $ netperf -t omni -- -d rr -k "THROUGHPUT,THROUGHPUT_UNITS"
+          OMNI TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain (127.0.0.1) port 0 AF_INET : demo
+          THROUGHPUT=59092.65
+          THROUGHPUT_UNITS=Trans/s
+
+     Using the `-k' option will override any previous, test-specific
+     `-o' or `-O' option.
+
+`-o <output selector>'
+     This option sets the style of output to "CSV" where there will be
+     one line of comma-separated values, preceeded by one line of column
+     names unless the global `-P' option is used with a value of 0:
+          $ netperf -t omni -- -d rr -o "THROUGHPUT,THROUGHPUT_UNITS"
+          OMNI TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain (127.0.0.1) port 0 AF_INET : demo
+          Throughput,Throughput Units
+          60999.07,Trans/s
+
+     Using the `-o' option will override any previous, test-specific
+     `-k' or `-O' option.
+
+`-O <output selector>'
+     This option sets the style of output to "human readable" which will
+     look quite similar to classic netperf output:
+          $ netperf -t omni -- -d rr -O "THROUGHPUT,THROUGHPUT_UNITS"
+          OMNI TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain (127.0.0.1) port 0 AF_INET : demo
+          Throughput Throughput
+                     Units
+
+
+          60492.57   Trans/s
+
+     Using the `-O' option will override any previous, test-specific
+     `-k' or `-o' option.
+
+`-T <protocol>'
+     This option is used to explicitly set the protocol used for the
+     test.
+
+     The default is implicit based on other settings.
+
+
+File: netperf.info,  Node: Migrated Tests,  Next: Omni Output Selection,  Prev: Native Omni Tests,  Up: The Omni Tests
+
+9.2 Migrated Tests
+==================
+
+As of version 2.5.0 several tests have been migrated to use the omni
+code in `src/nettest_omni.c' for the core of their testing.  A migrated
+test retains all its previous output code and so should still "look and
+feel" just like a pre-2.5.0 test with one exception - the first line of
+the test banners will include the word "MIGRATED" at the beginning as
+in:
+
+     $ ../src/netperf
+     MIGRATED TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain (127.0.0.1) port 0 AF_INET : demo
+     Recv   Send    Send
+     Socket Socket  Message  Elapsed
+     Size   Size    Size     Time     Throughput
+     bytes  bytes   bytes    secs.    10^6bits/sec
+
+      87380  16384  16384    10.00    27175.27
+
+   The tests migrated in version 2.5.0 are:
+   * TCP_STREAM
+
+   * TCP_MAERTS
+
+   * TCP_RR
+
+   * TCP_CRR
+
+   * UDP_STREAM
+
+   * UDP_RR
+
+   It is expected that future releases will have additional tests
+migrated to use the "omni" functionality.
+
+   If one uses "omni-specific" test-specific options in conjunction
+with a migrated test, instead of using the classic output code, the new
+omni output code will be used. For example if one uses the `-k'
+test-specific option with a value of "MIN_LATENCY,MAX_LATENCY" with a
+migrated TCP_RR test one will see:
+
+     $ ../src/netperf  -t tcp_rr  -- -k THROUGHPUT,THROUGHPUT_UNITS
+     MIGRATED TCP REQUEST/RESPONSE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain (127.0.0.1) port 0 AF_INET : demo
+     THROUGHPUT=60074.74
+     THROUGHPUT_UNITS=Trans/s
+   rather than:
+     $ ../src/netperf  -t tcp_rr
+     MIGRATED TCP REQUEST/RESPONSE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain (127.0.0.1) port 0 AF_INET : demo
+     Local /Remote
+     Socket Size   Request  Resp.   Elapsed  Trans.
+     Send   Recv   Size     Size    Time     Rate
+     bytes  Bytes  bytes    bytes   secs.    per sec
+
+     16384  87380  1        1       10.00    59421.52
+     16384  87380
+
+
+File: netperf.info,  Node: Omni Output Selection,  Prev: Migrated Tests,  Up: The Omni Tests
+
+9.3 Omni Output Selection
+=========================
+
+The omni test-specific `-k', `-o' and `-O' options take an optional
+`output selector' by which the user can configure what values are
+reported.  The output selector can take several forms:
+
+``filename''
+     The output selections will be read from the named file. Within the
+     file there can be up to four lines of comma-separated output
+     selectors. This controls how many multi-line blocks of output are
+     emitted when the `-O' option is used.  This output, while not
+     identical to "classic" netperf output, is inspired by it.
+     Multiple lines have no effect for `-k' and `-o' options.  Putting
+     output selections in a file can be useful when the list of
+     selections is long.
+
+`comma and/or semi-colon-separated list'
+     The output selections will be parsed from a comma and/or
+     semi-colon-separated list of output selectors. When the list is
+     given to a `-O' option a semi-colon specifies a new output block
+     should be started.  Semi-colons have the same meaning as commas
+     when used with the `-k' or `-o' options.  Depending on the command
+     interpreter being used, the semi-colon may have to be escaped
+     somehow to keep it from being interpreted by the command
+     interpreter.  This can often be done by enclosing the entire list
+     in quotes.
+
+`all'
+     If the keyword all is specified it means that all known output
+     values should be displayed at the end of the test.  This can be a
+     great deal of output.  As of version 2.5.0 there are 157 different
+     output selectors.
+
+`?'
+     If a "?" is given as the output selection, the list of all known
+     output selectors will be displayed and no test actually run.  When
+     passed to the `-O' option they will be listed one per line.
+     Otherwise they will be listed as a comma-separated list.  It may
+     be necessary to protect the "?" from the command interpreter by
+     escaping it or enclosing it in quotes.
+
+`no selector'
+     If nothing is given to the `-k', `-o' or `-O' option then the code
+     selects a default set of output selectors inspired by classic
+     netperf output.
+
+
+File: netperf.info,  Node: Other Netperf Tests,  Next: Address Resolution,  Prev: The Omni Tests,  Up: Top
+
+10 Other Netperf Tests
+**********************
 
 Apart from the typical performance tests, netperf contains some tests
 which can be used to streamline measurements and reporting.  These
@@ -2607,8 +2788,8 @@ enhancement).
 
 File: netperf.info,  Node: CPU rate calibration,  Prev: Other Netperf Tests,  Up: Other Netperf Tests
 
-9.1 CPU rate calibration
-========================
+10.1 CPU rate calibration
+=========================
 
 Some of the CPU utilization measurement mechanisms of netperf work by
 comparing the rate at which some counter increments when the system is
@@ -2653,7 +2834,7 @@ by hand.
 
 File: netperf.info,  Node: Address Resolution,  Next: Enhancing Netperf,  Prev: Other Netperf Tests,  Up: Top
 
-10 Address Resolution
+11 Address Resolution
 *********************
 
 Netperf versions 2.4.0 and later have merged IPv4 and IPv6 tests so the
@@ -2692,7 +2873,7 @@ elsewhere.
 
 File: netperf.info,  Node: Enhancing Netperf,  Next: Netperf4,  Prev: Address Resolution,  Up: Top
 
-11 Enhancing Netperf
+12 Enhancing Netperf
 ********************
 
 Netperf is constantly evolving.  If you find you want to make
@@ -2710,6 +2891,10 @@ enhancements to netperf, by all means do so.  If you wish to add a new
 
   4. Compile and test
 
+   However, with the addition of the "omni" tests in version 2.5.0 it
+is preferred that one attempt to make the necessary changes to
+`src/nettest_omni.c' rather than adding new source files.
+
    If you wish to submit your changes for possible inclusion into the
 mainline sources, please try to base your changes on the latest
 available sources. (*Note Getting Netperf Bits::.) and then send email
@@ -2723,7 +2908,7 @@ the changes incorporated :)
 
 File: netperf.info,  Node: Netperf4,  Next: Concept Index,  Prev: Enhancing Netperf,  Up: Top
 
-12 Netperf4
+13 Netperf4
 ***********
 
 Netperf4 is the shorthand name given to version 4.X.X of netperf.  This
@@ -2824,8 +3009,10 @@ Option Index
 * -b, Global:                            Global Options.      (line  22)
 * -C, Global:                            Global Options.      (line  42)
 * -c, Global:                            Global Options.      (line  33)
+* -c, Test-specific:                     Native Omni Tests.   (line  13)
 * -D, Global:                            Global Options.      (line  56)
 * -d, Global:                            Global Options.      (line  47)
+* -d, Test-specific:                     Native Omni Tests.   (line  17)
 * -F, Global:                            Global Options.      (line  76)
 * -f, Global:                            Global Options.      (line  67)
 * -H, Global:                            Global Options.      (line  94)
@@ -2839,6 +3026,7 @@ Option Index
 * -i, Global:                            Global Options.      (line 178)
 * -I, Global:                            Global Options.      (line 129)
 * -j, Global:                            Global Options.      (line 199)
+* -k, Test-specific:                     Native Omni Tests.   (line  30)
 * -L, Global:                            Global Options.      (line 241)
 * -l, Global:                            Global Options.      (line 221)
 * -L, Test-specific <1>:                 Options Common to TCP UDP and SCTP _RR tests.
@@ -2853,6 +3041,8 @@ Option Index
 * -n, Global:                            Global Options.      (line 253)
 * -O, Global:                            Global Options.      (line 316)
 * -o, Global:                            Global Options.      (line 307)
+* -O, Test-specific:                     Native Omni Tests.   (line  55)
+* -o, Test-specific:                     Native Omni Tests.   (line  43)
 * -P, Global:                            Global Options.      (line 340)
 * -p, Global:                            Global Options.      (line 320)
 * -P, Test-specific <1>:                 Options Common to TCP UDP and SCTP _RR tests.
@@ -2870,6 +3060,7 @@ Option Index
 * -s, Test-specific:                     Options common to TCP UDP and SCTP tests.
                                                               (line  64)
 * -t, Global:                            Global Options.      (line 349)
+* -T, Test-specific:                     Native Omni Tests.   (line  69)
 * -V, Global:                            Global Options.      (line 403)
 * -v, Global:                            Global Options.      (line 381)
 * -W, Global:                            Global Options.      (line 415)
@@ -2879,57 +3070,62 @@ Option Index
 
 Tag Table:
 Node: Top439
-Node: Introduction2700
-Node: Conventions5161
-Node: Installing Netperf6924
-Node: Getting Netperf Bits8478
-Node: Installing Netperf Bits10296
-Node: Verifying Installation17626
-Node: The Design of Netperf18330
-Node: CPU Utilization19912
-Node: Global Command-line Options28525
-Node: Command-line Options Syntax29064
-Node: Global Options30446
-Node: Using Netperf to Measure Bulk Data Transfer51150
-Node: Issues in Bulk Transfer51815
-Node: Options common to TCP UDP and SCTP tests55966
-Node: TCP_STREAM62268
-Node: TCP_MAERTS66036
-Node: TCP_SENDFILE67273
-Node: UDP_STREAM69589
-Node: XTI_TCP_STREAM73025
-Node: XTI_UDP_STREAM73670
-Node: SCTP_STREAM74315
-Node: DLCO_STREAM75015
-Node: DLCL_STREAM76988
-Node: STREAM_STREAM77862
-Node: DG_STREAM78720
-Node: Using Netperf to Measure Request/Response79401
-Node: Issues in Request/Response81322
-Node: Options Common to TCP UDP and SCTP _RR tests83328
-Node: TCP_RR88307
-Node: TCP_CC90651
-Node: TCP_CRR92848
-Node: UDP_RR93894
-Node: XTI_TCP_RR95915
-Node: XTI_TCP_CC96498
-Node: XTI_TCP_CRR96664
-Node: XTI_UDP_RR96832
-Node: DLCL_RR97409
-Node: DLCO_RR97562
-Node: SCTP_RR97714
-Node: Using Netperf to Measure Aggregate Performance97850
-Node: Running Concurrent Netperf Tests98685
-Node: Using --enable-burst102577
-Node: Using Netperf to Measure Bidirectional Transfer108763
-Node: Bidirectional Transfer with Concurrent Tests109836
-Node: Bidirectional Transfer with TCP_RR111702
-Node: Other Netperf Tests114236
-Node: CPU rate calibration114682
-Node: Address Resolution117023
-Node: Enhancing Netperf118999
-Node: Netperf4120236
-Node: Concept Index121146
-Node: Option Index123472
+Node: Introduction1475
+Node: Conventions3936
+Node: Installing Netperf5699
+Node: Getting Netperf Bits7253
+Node: Installing Netperf Bits9071
+Node: Verifying Installation17265
+Node: The Design of Netperf17969
+Node: CPU Utilization19565
+Node: CPU Utilization in a Virtual Guest28280
+Node: Global Command-line Options29291
+Node: Command-line Options Syntax29830
+Node: Global Options31212
+Node: Using Netperf to Measure Bulk Data Transfer51916
+Node: Issues in Bulk Transfer52581
+Node: Options common to TCP UDP and SCTP tests56732
+Node: TCP_STREAM63034
+Node: TCP_MAERTS66802
+Node: TCP_SENDFILE68039
+Node: UDP_STREAM70355
+Node: XTI_TCP_STREAM73791
+Node: XTI_UDP_STREAM74436
+Node: SCTP_STREAM75081
+Node: DLCO_STREAM75781
+Node: DLCL_STREAM77754
+Node: STREAM_STREAM78628
+Node: DG_STREAM79486
+Node: Using Netperf to Measure Request/Response80167
+Node: Issues in Request/Response82088
+Node: Options Common to TCP UDP and SCTP _RR tests84094
+Node: TCP_RR89073
+Node: TCP_CC91417
+Node: TCP_CRR93614
+Node: UDP_RR94660
+Node: XTI_TCP_RR96681
+Node: XTI_TCP_CC97264
+Node: XTI_TCP_CRR97430
+Node: XTI_UDP_RR97598
+Node: DLCL_RR98175
+Node: DLCO_RR98328
+Node: SCTP_RR98480
+Node: Using Netperf to Measure Aggregate Performance98616
+Node: Running Concurrent Netperf Tests99451
+Node: Using --enable-burst103343
+Node: Using Netperf to Measure Bidirectional Transfer109529
+Node: Bidirectional Transfer with Concurrent Tests110597
+Node: Bidirectional Transfer with TCP_RR112463
+Node: The Omni Tests114997
+Node: Native Omni Tests116044
+Node: Migrated Tests118895
+Node: Omni Output Selection121024
+Node: Other Netperf Tests123287
+Node: CPU rate calibration123702
+Node: Address Resolution126045
+Node: Enhancing Netperf128021
+Node: Netperf4129450
+Node: Concept Index130360
+Node: Option Index132686
 
 End Tag Table
