@@ -2608,6 +2608,7 @@ on an MP system.
 @menu
 * Bidirectional Transfer with Concurrent Tests::  
 * Bidirectional Transfer with TCP_RR::  
+* Implications of Concurrent Tests vs Burst Request/Response::  
 @end menu
 
 @node  Bidirectional Transfer with Concurrent Tests, Bidirectional Transfer with TCP_RR, Using Netperf to Measure Bidirectional Transfer, Using Netperf to Measure Bidirectional Transfer
@@ -2635,7 +2636,6 @@ done
 
  892.66 outbound
  891.34 inbound
-
 @end example
 
 We have used a @code{for} loop in the shell with just one iteration
@@ -2649,21 +2649,63 @@ that sense is switched on the system running netserver :)  The use of
 the global @option{-i} option is explained in @ref{Running Concurrent
 Netperf Tests,Running Concurrent Netperf Tests}.
 
-@node  Bidirectional Transfer with TCP_RR,  , Bidirectional Transfer with Concurrent Tests, Using Netperf to Measure Bidirectional Transfer
+Beginning with version 2.5.0 we can accomplish a similar result with
+the @ref{The Omni Tests,the omni tests} and @ref{Omni Output
+Selectors,output selectors}:
+
+@example
+for i in 1
+do
+  netperf -H 192.168.1.3 -t omni -l 10 -P 0 -- -d stream -s 256K -S 256K -o throughput,direction &
+  netperf -H 192.168.1.3 -t omni -l 10 -P 0 -- -d maerts -s 256K -S 256K -o throughput,direction &
+done
+
+805.26,Receive
+828.54,Send
+@end example
+
+@node  Bidirectional Transfer with TCP_RR, Implications of Concurrent Tests vs Burst Request/Response, Bidirectional Transfer with Concurrent Tests, Using Netperf to Measure Bidirectional Transfer
 @comment  node-name,  next,  previous,  up
 @section Bidirectional Transfer with TCP_RR
 
-If one configures netperf with @code{--enable-burst} then one can use
-the test-specific @option{-b} option to increase the number of
-transactions in flight at one time.  If one also uses the -r option to
-make those transactions larger the test starts to look more and more
-like a bidirectional transfer than a request/response test.
+Starting with version 2.5.0 the @code{--enable-burst} configure option
+defaults to @code{yes}, and starting some time before version 2.5.0
+but after 2.4.0 the global @option{-f} option would affect the
+``throughput'' reported by request/response tests.  If one uses the
+test-specific @option{-b} option to have several ``transactions'' in
+flight at one time and the test-specific @option{-r} option to
+increase their size, the test looks more and more like a
+single-connection bidirectional transfer than a simple
+request/response test.
 
-Now, the logic behing @code{--enable-burst} is very simple, and there
+So, putting it all together one can do something like:
+
+@example
+netperf -f m -t TCP_RR -H 192.168.1.3 -v 2 -- -b 6 -r 32K -S 256K -S 256K
+MIGRATED TCP REQUEST/RESPONSE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to 192.168.1.3 (192.168.1.3) port 0 AF_INET : interval : first burst 6
+Local /Remote
+Socket Size   Request  Resp.   Elapsed  
+Send   Recv   Size     Size    Time     Throughput 
+bytes  Bytes  bytes    bytes   secs.    10^6bits/sec   
+
+16384  87380  32768    32768   10.00    1821.30   
+524288 524288
+Alignment      Offset         RoundTrip  Trans    Throughput
+Local  Remote  Local  Remote  Latency    Rate     10^6bits/s
+Send   Recv    Send   Recv    usec/Tran  per sec  Outbound   Inbound
+    8      0       0      0   2015.402   3473.252 910.492    910.492
+@end example
+
+to get a bidirectional bulk-throughput result. As one can see, the -v
+2 output will include a number of interesting, related values.
+
+@quotation
+@b{NOTE: The logic behind @code{--enable-burst} is very simple, and there
 are no calls to @code{poll()} or @code{select()} which means we want
 to make sure that the @code{send()} calls will never block, or we run
 the risk of deadlock with each side stuck trying to call @code{send()}
-and neither calling @code{recv()}.  
+and neither calling @code{recv()}.}
+@end quotation
 
 Fortunately, this is easily accomplished by setting a ``large enough''
 socket buffer size with the test-specific @option{-s} and @option{-S}
@@ -2671,35 +2713,37 @@ options.  Presently this must be performed by the user.  Future
 versions of netperf might attempt to do this automagically, but there
 are some issues to be worked-out. 
 
-Here then is an example of a bidirectional transfer test using
-@code{--enable-burst} and the @ref{TCP_RR,TCP_RR} test:
+@node Implications of Concurrent Tests vs Burst Request/Response,  , Bidirectional Transfer with TCP_RR, Using Netperf to Measure Bidirectional Transfer
+@section Implications of Concurrent Tests vs Burst Request/Response
 
-@example
-netperf -t TCP_RR -H hpcpc108 -- -b 6 -r 32K -s 256K -S 256K
-TCP REQUEST/RESPONSE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to hpcpc108.cup.hp.com (16.89.84.108) port 0 AF_INET : first burst 6
-Local /Remote
-Socket Size   Request  Resp.   Elapsed  Trans.
-Send   Recv   Size     Size    Time     Rate         
-bytes  Bytes  bytes    bytes   secs.    per sec   
+There are perhaps subtle but important differences between using
+concurrent unidirectional tests vs a burst-mode request to measure
+bidirectional performance.
 
-524288 524288 32768    32768   10.01    3525.97   
-524288 524288
+Broadly speaking, a single ``connection'' or ``flow'' of traffic
+cannot make use of the services of more than one or two CPUs at either
+end.  Whether one or two CPUs will be used processing a flow will
+depend on the specifics of the stack(s) involved and whether or not
+the global @option{-T} option has been used to bind netperf/netserver
+to specific CPUs.
 
-@end example
+When using concurrent tests there will be two concurrent connections
+or flows, which means that upwards of four CPUs will be employed
+processing the packets, however, with just a single, bidirectional
+request/response test no more than two CPUs will be employed.
 
-Now, at present netperf does not include a bit or byte rate in the
-output of an _RR test which means we must calculate it ourselves. Each
-transaction is the exchange of 32768 bytes of request and 32768 bytes
-of response, or 65536 bytes.  Multiply that by 8 and we arrive at
-524288 bits per transaction.  Multiply that by 3525.97 and we arrive
-at 1848623759 bits per second.  Since things were uniform, we can
-divide that by two and arrive at roughly 924311879 bits per second
-each way.  That corresponds to ``link-rate'' for a 1 Gigiabit Ethernet
-which happens to be the type of netpwrk used in the example.
+If there is a CPU bottleneck on either system this may result in
+rather different results between the two methods.
 
-A future version of netperf may perform the calculation on behalf of
-the user, but it would likely not emit it unless the user specified a
-verbosity of 2 or more with the global @option{-v} option.
+Also, with a bidirectional request/response test there is something of
+a natural balance or synchronization between inbound and outbound - a
+response will not be sent until a request is received, and (once the
+burst level is reached) a subseqent request will not be sent until a
+response is received.  This may mask favoritism in the NIC between
+inbound and outbound processing.
+
+With two concurrent unidirectional tests there is no such
+synchronization or balance and any favoritism in the NIC may be exposed.
 
 @node The Omni Tests, Other Netperf Tests, Using Netperf to Measure Bidirectional Transfer, Top
 @chapter The Omni Tests
@@ -2748,19 +2792,26 @@ establishment and tear-down as in either a TCP_CRR or TCP_CC test.
 @vindex -d, Test-specific
 @item -d <direction>
 This option sets the direction of the test relative to the netperf
-process.  As of version 2.5.0 one can use:
+process.  As of version 2.5.0 one can use the following in a
+case-insenstive manner:
 
 @table @code
-@item send, xmit or 2 
+@item send, stream, transmit, xmit or 2 
 Any of which will cause netperf to send to the netserver.
-@item recv, receive or 4
+@item recv, receive, maerts or 4
 Any of which will cause netserver to send to netperf.
 @item rr or 6
 Either of which will cause a request/response test.
 @end table
 
+Additionally, one can specify two directions separated by a '|'
+character and they will be OR'ed together.  In this way one can use
+the ''Send|Recv'' that will be emitted by the @ref{Omni Output
+Selectors,DIRECTION} @ref{Omni Output Selection,output selector} when
+used with a request/reponse test.
+
 @vindex -k, Test-specific
-@item -k <output selector>
+@item -k <@ref{Omni Output Selection,output selector}>
 This option sets the style of output to ``keyval'' where each line of
 output has the form:
 @example
@@ -2778,7 +2829,7 @@ Using the @option{-k} option will override any previous, test-specific
 @option{-o} or @option{-O} option.
 
 @vindex -o, Test-specific
-@item -o <output selector>
+@item -o <@ref{Omni Output Selection,output selector}>
 This option sets the style of output to ``CSV'' where there will be
 one line of comma-separated values, preceeded by one line of column
 names unless the global @option{-P} option is used with a value of 0:
@@ -2793,7 +2844,7 @@ Using the @option{-o} option will override any previous, test-specific
 @option{-k} or @option{-O} option.
 
 @vindex -O, Test-specific
-@item -O <output selector>
+@item -O <@ref{Omni Output Selection,output selector}>
 This option sets the style of output to ``human readable'' which will
 look quite similar to classic netperf output:
 @example
@@ -2809,9 +2860,31 @@ Throughput Throughput
 Using the @option{-O} option will override any previous, test-specific
 @option{-k} or @option{-o} option.
 
+@vindex -t, Test-specific
+@item -t
+This option explicitly sets the socket type for the test's data
+connection. As of version 2.5.0 the known socket types include
+``stream'' and ``dgram'' for SOCK_STREAM and SOCK_DGRAM respectively.
+
 @vindex -T, Test-specific
 @item -T <protocol>
-This option is used to explicitly set the protocol used for the test.
+This option is used to explicitly set the protocol used for the
+test. It is case-insensitive. As of version 2.5.0 the protocols known
+to netperf include:
+@table @code
+@item TCP
+Select the Transmission Control Protocol
+@item UDP
+Select the User Datagram Procotol
+@item SDP
+Select the Sockets Direct Protocol
+@item DCCP
+Select the Datagram Congestion Control Protocol
+@item SCTP
+Select the Stream Control Transport Protocol
+@item udplite
+Select UDP Lite
+@end table
 
 The default is implicit based on other settings.
 @end table
@@ -3487,9 +3560,10 @@ enhancement).
 
 @menu
 * CPU rate calibration::        
+* UUID Generation::             
 @end menu
 
-@node CPU rate calibration,  , Other Netperf Tests, Other Netperf Tests
+@node CPU rate calibration, UUID Generation, Other Netperf Tests, Other Netperf Tests
 @section CPU rate calibration
 
 Some of the CPU utilization measurement mechanisms of netperf work by
@@ -3534,6 +3608,24 @@ utilization and will calculate service demand believing it was the
 only thing causing that CPU utilization.  So, you can use the CPU
 utilization reported by netperf in an aggregate test, but you have to
 calculate service demands by hand.
+
+@node UUID Generation,  , CPU rate calibration, Other Netperf Tests
+@section UUID Generation
+
+Beginning with version 2.5.0 netperf can generate Universally Unique
+IDentifiers (UUIDs).  This can be done explicitly via the ``UUID''
+test:
+@example
+$ netperf -t UUID
+2c8561ae-9ebd-11e0-a297-0f5bfa0349d0
+@end example
+
+In and of itself, this is not terribly useful, but used in conjuction
+with the test-specific @option{-u} option of an ``omni'' test to set
+the UUID emitted by the @ref{Omni Output Selectors,UUID} output
+selector, it can be used to tie-together the separate instances of an
+aggregate netperf test.  Say, for instance if they were inserted into
+a database of some sort.
 
 @node Address Resolution, Enhancing Netperf, Other Netperf Tests, Top
 @comment  node-name,  next,  previous,  up

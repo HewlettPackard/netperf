@@ -6789,7 +6789,7 @@ case "$enable_burst" in
 		use_burst=false
 		;;
 	'')
-		use_burst=false
+		use_burst=true
 		;;
 	*)
 		as_fn_error $? "--enable-burst takes yes or no" "$LINENO" 5

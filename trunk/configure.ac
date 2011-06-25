@@ -589,7 +589,7 @@ case "$enable_burst" in
 		use_burst=false
 		;;
 	'')
-		use_burst=false
+		use_burst=true
 		;;
 	*)
 		AC_MSG_ERROR([--enable-burst takes yes or no])

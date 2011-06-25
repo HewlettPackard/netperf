@@ -2515,6 +2515,19 @@ the system running netserver :)  The use of the global `-i' option is
 explained in *note Running Concurrent Netperf Tests: Running Concurrent
 Netperf Tests.
 
+   Beginning with version 2.5.0 we can accomplish a similar result with
+the *note the omni tests: The Omni Tests. and *note output selectors:
+Omni Output Selectors.:
+
+     for i in 1
+     do
+       netperf -H 192.168.1.3 -t omni -l 10 -P 0 -- -d stream -s 256K -S 256K -o throughput,direction &
+       netperf -H 192.168.1.3 -t omni -l 10 -P 0 -- -d maerts -s 256K -S 256K -o throughput,direction &
+     done
+
+     805.26,Receive
+     828.54,Send
+
 
 File: netperf.info,  Node: Bidirectional Transfer with TCP_RR,  Prev: Bidirectional Transfer with Concurrent Tests,  Up: Using Netperf to Measure Bidirectional Transfer
 
@@ -2614,18 +2627,25 @@ The options added by the omni tests are:
 
 `-d <direction>'
      This option sets the direction of the test relative to the netperf
-     process.  As of version 2.5.0 one can use:
+     process.  As of version 2.5.0 one can use the following in a
+     case-insenstive manner:
 
-    `send, xmit or 2'
+    `send, stream, transmit, xmit or 2'
           Any of which will cause netperf to send to the netserver.
 
-    `recv, receive or 4'
+    `recv, receive, maerts or 4'
           Any of which will cause netserver to send to netperf.
 
     `rr or 6'
           Either of which will cause a request/response test.
 
-`-k <output selector>'
+     Additionally, one can specify two directions separated by a '|'
+     character and they will be OR'ed together.  In this way one can use
+     the "Send|Recv" that will be emitted by the *note DIRECTION: Omni
+     Output Selectors. *note output selector: Omni Output Selection.
+     when used with a request/reponse test.
+
+`-k <*note output selector: Omni Output Selection.>'
      This option sets the style of output to "keyval" where each line of
      output has the form:
           key=value
@@ -2638,7 +2658,7 @@ The options added by the omni tests are:
      Using the `-k' option will override any previous, test-specific
      `-o' or `-O' option.
 
-`-o <output selector>'
+`-o <*note output selector: Omni Output Selection.>'
      This option sets the style of output to "CSV" where there will be
      one line of comma-separated values, preceeded by one line of column
      names unless the global `-P' option is used with a value of 0:
@@ -2650,7 +2670,7 @@ The options added by the omni tests are:
      Using the `-o' option will override any previous, test-specific
      `-k' or `-O' option.
 
-`-O <output selector>'
+`-O <*note output selector: Omni Output Selection.>'
      This option sets the style of output to "human readable" which will
      look quite similar to classic netperf output:
           $ netperf -t omni -- -d rr -O "THROUGHPUT,THROUGHPUT_UNITS"
@@ -2664,9 +2684,32 @@ The options added by the omni tests are:
      Using the `-O' option will override any previous, test-specific
      `-k' or `-o' option.
 
+`-t'
+     This option explicitly sets the socket type for the test's data
+     connection. As of version 2.5.0 the known socket types include
+     "stream" and "dgram" for SOCK_STREAM and SOCK_DGRAM respectively.
+
 `-T <protocol>'
      This option is used to explicitly set the protocol used for the
-     test.
+     test. It is case-insensitive. As of version 2.5.0 the protocols
+     known to netperf include:
+    `TCP'
+          Select the Transmission Control Protocol
+
+    `UDP'
+          Select the User Datagram Procotol
+
+    `SDP'
+          Select the Sockets Direct Protocol
+
+    `DCCP'
+          Select the Datagram Congestion Control Protocol
+
+    `SCTP'
+          Select the Stream Control Transport Protocol
+
+    `udplite'
+          Select UDP Lite
 
      The default is implicit based on other settings.
 
@@ -3524,9 +3567,10 @@ enhancement).
 * Menu:
 
 * CPU rate calibration::
+* UUID Generation::
 
 
-File: netperf.info,  Node: CPU rate calibration,  Prev: Other Netperf Tests,  Up: Other Netperf Tests
+File: netperf.info,  Node: CPU rate calibration,  Next: UUID Generation,  Prev: Other Netperf Tests,  Up: Other Netperf Tests
 
 10.1 CPU rate calibration
 =========================
@@ -3570,6 +3614,24 @@ calculate service demand believing it was the only thing causing that
 CPU utilization.  So, you can use the CPU utilization reported by
 netperf in an aggregate test, but you have to calculate service demands
 by hand.
+
+
+File: netperf.info,  Node: UUID Generation,  Prev: CPU rate calibration,  Up: Other Netperf Tests
+
+10.2 UUID Generation
+====================
+
+Beginning with version 2.5.0 netperf can generate Universally Unique
+IDentifiers (UUIDs).  This can be done explicitly via the "UUID" test:
+     $ netperf -t UUID
+     2c8561ae-9ebd-11e0-a297-0f5bfa0349d0
+
+   In and of itself, this is not terribly useful, but used in conjuction
+with the test-specific `-u' option of an "omni" test to set the UUID
+emitted by the *note UUID: Omni Output Selectors. output selector, it
+can be used to tie-together the separate instances of an aggregate
+netperf test.  Say, for instance if they were inserted into a database
+of some sort.
 
 
 File: netperf.info,  Node: Address Resolution,  Next: Enhancing Netperf,  Prev: Other Netperf Tests,  Up: Top
@@ -3766,7 +3828,7 @@ Option Index
 * -i, Global:                            Global Options.      (line 178)
 * -I, Global:                            Global Options.      (line 129)
 * -j, Global:                            Global Options.      (line 199)
-* -k, Test-specific:                     Native Omni Tests.   (line  30)
+* -k, Test-specific:                     Native Omni Tests.   (line  37)
 * -L, Global:                            Global Options.      (line 241)
 * -l, Global:                            Global Options.      (line 221)
 * -L, Test-specific <1>:                 Options Common to TCP UDP and SCTP _RR tests.
@@ -3781,8 +3843,8 @@ Option Index
 * -n, Global:                            Global Options.      (line 253)
 * -O, Global:                            Global Options.      (line 316)
 * -o, Global:                            Global Options.      (line 307)
-* -O, Test-specific:                     Native Omni Tests.   (line  55)
-* -o, Test-specific:                     Native Omni Tests.   (line  43)
+* -O, Test-specific:                     Native Omni Tests.   (line  62)
+* -o, Test-specific:                     Native Omni Tests.   (line  50)
 * -P, Global:                            Global Options.      (line 340)
 * -p, Global:                            Global Options.      (line 320)
 * -P, Test-specific <1>:                 Options Common to TCP UDP and SCTP _RR tests.
@@ -3800,7 +3862,8 @@ Option Index
 * -s, Test-specific:                     Options common to TCP UDP and SCTP tests.
                                                               (line  64)
 * -t, Global:                            Global Options.      (line 349)
-* -T, Test-specific:                     Native Omni Tests.   (line  69)
+* -T, Test-specific:                     Native Omni Tests.   (line  81)
+* -t, Test-specific:                     Native Omni Tests.   (line  76)
 * -V, Global:                            Global Options.      (line 403)
 * -v, Global:                            Global Options.      (line 381)
 * -W, Global:                            Global Options.      (line 415)
@@ -3855,18 +3918,19 @@ Node: Running Concurrent Netperf Tests100040
 Node: Using --enable-burst103932
 Node: Using Netperf to Measure Bidirectional Transfer110118
 Node: Bidirectional Transfer with Concurrent Tests111186
-Node: Bidirectional Transfer with TCP_RR113052
-Node: The Omni Tests115586
-Node: Native Omni Tests116633
-Node: Migrated Tests119484
-Node: Omni Output Selection121589
-Node: Omni Output Selectors123888
-Node: Other Netperf Tests151515
-Node: CPU rate calibration151930
-Node: Address Resolution154273
-Node: Enhancing Netperf156249
-Node: Netperf4157678
-Node: Concept Index158588
-Node: Option Index160914
+Node: Bidirectional Transfer with TCP_RR113500
+Node: The Omni Tests116034
+Node: Native Omni Tests117081
+Node: Migrated Tests121075
+Node: Omni Output Selection123180
+Node: Omni Output Selectors125479
+Node: Other Netperf Tests153106
+Node: CPU rate calibration153541
+Node: UUID Generation155908
+Node: Address Resolution156623
+Node: Enhancing Netperf158599
+Node: Netperf4160028
+Node: Concept Index160938
+Node: Option Index163264
 
 End Tag Table
