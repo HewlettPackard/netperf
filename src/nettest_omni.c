@@ -7003,9 +7003,7 @@ Send   Recv    Send   Recv    usec/Tran  per sec  Outbound   Inbound\n\
 		   calc_thruput_interval_omni with an elapsed time of
 		   1.0 s to get it converted to [kmg]bits/s or
 		   [KMG]Bytes/s */
-		('x' == libfmt) ?  thruput : 
-		calc_thruput_interval_omni(thruput * (req_size+rsp_size),
-					   1.0),
+		thruput,
 		((print_headers) || 
 		 (result_brand == NULL)) ? "" : result_brand);
 	fprintf(where,
@@ -7054,11 +7052,13 @@ Send   Recv    Send   Recv    usec/Tran  per sec  Outbound   Inbound\n\
 		 outstanding at any one time. otherwise we will
 		 underreport the latency of individual
 		 transactions. learned from saf by raj 2007-06-08  */
-	      (((double)1.0/thruput)*(double)1000000.0) * 
+	      (((double)1.0/transaction_rate)*(double)1000000.0) * 
 	      (double) (1 + ((first_burst_size > 0) ? first_burst_size : 0)),
-	      thruput,
-	      calc_thruput_interval_omni(thruput * (double)req_size,1.0),
-	      calc_thruput_interval_omni(thruput * (double)rsp_size,1.0));
+	      transaction_rate,
+	      calc_thruput_interval_omni(transaction_rate * (double)req_size,
+					 1.0),
+	      calc_thruput_interval_omni(transaction_rate * (double)rsp_size,
+					 1.0));
 
 #ifdef WANT_HISTOGRAM
       fprintf(where,"\nHistogram of request/response times\n");

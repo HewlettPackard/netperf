@@ -1,5 +1,10 @@
 These are the Release Notes for post-revision 2.4.5 of netperf:
 
+*) Base on the frequency at which the author has used the
+   functionality, the default for --enable-burst is yes.  To disable
+   support for burst mode one must now include a --enable-burst=no
+   when performing the ./configure prior to compiling the bits.
+
 *) The output of the -D global command line option (./configure
    --enable-demo) has been enhanced to include seconds and
    milliseconds since the epoch as returned by a gettimeofday() call
