@@ -151,7 +151,8 @@ found in the file <samp><span class="file">COPYING</span></samp> of the basic ne
 </blockquote>
 
 <ul class="menu">
-<li><a accesskey="1" href="#Introduction">Introduction</a>:                 An introduction to netperf - what it is and whatit is not. 
+<li><a accesskey="1" href="#Introduction">Introduction</a>:                 An introduction to netperf - what it
+is and what it is not. 
 <li><a accesskey="2" href="#Installing-Netperf">Installing Netperf</a>:           How to go about installing netperf. 
 <li><a accesskey="3" href="#The-Design-of-Netperf">The Design of Netperf</a>
 <li><a accesskey="4" href="#Global-Command_002dline-Options">Global Command-line Options</a>
@@ -207,7 +208,6 @@ work on the following platforms:
 <li>Unix - at least all the major variants. 
 <li>Linux
 <li>Windows
-<li>OpenVMS
 <li>Others
 </ul>
 
@@ -224,15 +224,18 @@ to
 <a href="mailto:netperf-feedback@netperf.org">netperf-feedback</a> for possible
 inclusion into subsequent versions of netperf.
 
-   <p>If you would prefer to make contributions to networking benchmark
-using certified &ldquo;open source&rdquo; license, please considuer netperf4,
-which is distributed under the terms of the GPL.
+   <p>It is the Contributing Editor's belief that the netperf license walks
+like open source and talks like open source. However, the license was
+never submitted for &ldquo;certification&rdquo; as an open source license.  If
+you would prefer to make contributions to a networking benchmark using
+a certified open source license, please consider netperf4, which is
+distributed under the terms of the GPLv2.
 
    <p>The <a href="mailto:netperf-talk@netperf.org">netperf-talk</a> mailing list is
 available to discuss the care and feeding of netperf with others who
 share your interest in network performance benchmarking. The
-netperf-talk mailing list is a closed list and you must first
-subscribe by sending email to
+netperf-talk mailing list is a closed list (to deal with spam) and you
+must first subscribe by sending email to
 <a href="mailto:netperf-talk-request@netperf.org">netperf-talk-request</a>.
 
 <ul class="menu">
@@ -365,9 +368,11 @@ is provided via the
 <a href="http://www.netperf.org/svn/netperf2/tags">tagged</a> for retrieval
 via subversion.  For example, there is a tag for the first version
 corresponding to this version of the manual -
-<a href="http://www.netperf.org/svn/netperf2/tags/netperf-2.4.3">netperf 2.4.3</a>.  Those wishing to be on the bleeding edge of netperf
+<a href="http://www.netperf.org/svn/netperf2/tags/netperf-2.5.0">netperf 2.5.0</a>.  Those wishing to be on the bleeding edge of netperf
 development can use subversion to grab the
-<a href="http://www.netperf.org/svn/netperf2/trunk">top of trunk</a>.
+<a href="http://www.netperf.org/svn/netperf2/trunk">top of trunk</a>.  When
+fixing bugs or making enhancements, patches against the top-of-trunk
+are preferred.
 
    <p>There are likely other places around the Internet from which one can
 download netperf bits.  These may be simple mirrors of the main
@@ -380,8 +385,7 @@ Caveat downloader.
 distributed from ftp.netperf.org.  From time to time a kind soul or
 souls has packaged netperf as a Debian package available via the
 apt-get mechanism or as an RPM.  I would be most interested in
-learning how to enhance the makefiles to make that easier for people,
-and perhaps to generate HP-UX swinstall&ldquo;depots.&rdquo;
+learning how to enhance the makefiles to make that easier for people.
 
 <div class="node">
 <a name="Installing-Netperf-Bits"></a>
@@ -399,8 +403,8 @@ system(s), it is necessary to unpack the tar file, cd to the netperf
 directory, run configure and then make.  Most of the time it should be
 sufficient to just:
 
-<pre class="example">     gzcat &lt;netperf-version&gt;.tar.gz | tar xf -
-     cd &lt;netperf-version&gt;
+<pre class="example">     gzcat netperf-&lt;version&gt;.tar.gz | tar xf -
+     cd netperf-&lt;version&gt;
      ./configure
      make
      make install
@@ -409,7 +413,9 @@ sufficient to just:
 dealing with where to install binaries and whatnot.
 <pre class="example">     ./configure --help
 </pre>
-   <p>should list all of those and more.
+   <p>should list all of those and more.  You may find the <code>--prefix</code>
+option helpful in deciding where the binaries and such will be put
+during the <code>make install</code>.
 
    <p><a name="index-g_t_002d_002denable_002dcpuutil_002c-Configure-3"></a>If the netperf configure script does not know how to automagically
 detect which CPU utilization mechanism to use on your platform you may
@@ -429,8 +435,9 @@ so-called &ldquo;omni&rdquo; tests (aka &ldquo;two routines to run them all&rdqu
 in <samp><span class="file">src/nettest_omni.c</span></samp>.  This migration enables a number of new
 features such as greater control over what output is included, and new
 things to output.  The &ldquo;omni&rdquo; test is enabled by default in 2.5.0
-and a number of the classic tests are migrated - you can tell this
-from the presence of &ldquo;MIGRATED&rdquo; in the test banner.  If you
+and a number of the classic tests are migrated - you can tell if a
+test has been migrated
+from the presence of <code>MIGRATED</code> in the test banner.  If you
 encounter problems with either the omni or migrated tests, please
 first attempt to obtain resolution via
 <a href="mailto:netperf-talk@netperf.org">netperf-talk@netperf.org</a> or
@@ -487,11 +494,6 @@ of a netperf TCP_RR test will be of the individual transaction times:
      &gt;100_SECS: 0
      HIST_TOTAL:      35391
 </pre>
-   <p>Long-time users of netperf will notice the expansion of the main test
-header.  This stems from the merging-in of IPv6 with the standard IPv4
-tests and the addition of code to specify addressing information for
-both sides of the data connection.
-
    <p>The histogram you see above is basically a base-10 log histogram where
 we can see that most of the transaction times were on the order of one
 hundred to one-hundred, ninety-nine microseconds, but they were
@@ -765,11 +767,11 @@ charged to a or the correct process.
    <p>In fact, time spent in the processing of interrupts is a common issue
 for many CPU utilization mechanisms.  In particular, the &ldquo;PSTAT&rdquo;
 mechanism was eventually known to have problems accounting for certain
-interrupt time prior to HP-UX 11.11 (11iv1).  HP-UX 11iv1 and later
-are known to be good. The &ldquo;KSTAT&rdquo; mechanism is known to have
-problems on all versions of Solaris up to and including Solaris 10. 
-Even the microstate accounting available via kstat in Solaris 10 has
-issues, though perhaps not as bad as those of prior versions.
+interrupt time prior to HP-UX 11.11 (11iv1).  HP-UX 11iv2 and later
+are known/presumed to be good. The &ldquo;KSTAT&rdquo; mechanism is known to
+have problems on all versions of Solaris up to and including Solaris
+10.  Even the microstate accounting available via kstat in Solaris 10
+has issues, though perhaps not as bad as those of prior versions.
 
    <p>The /proc/stat mechanism under Linux is in what the author would
 consider an &ldquo;uncertain&rdquo; category as it appears to be statistical,
@@ -798,15 +800,24 @@ they are run by the same netperf or netserver process as is running
 the test itself.  This works just fine for &ldquo;bare iron&rdquo; tests but
 runs into a problem when using virtual machines.
 
-   <p>A virtual guest can be thought of as being similar to a process in a
-bare iron system.  As such, any CPU utilization mechanisms used in the
+   <p>The relationship between virtual guest and hypervisor can be thought
+of as being similar to that between a process and kernel in a bare
+iron system.  As such, (m)any CPU utilization mechanisms used in the
 virtual guest are similar to &ldquo;process-local&rdquo; mechanisms in a bare
-iron situation.  However, just as with bare iron, much networking
-processing happens outside the context of the virtual guest.  It takes
-place in the hypervisor, and is not visible to mechanisms running in
-the guest(s).  For this reason, one should not really trust CPU
-utilization figures reported by netperf or netserver when running in a
-virtual guest.
+iron situation.  However, just as with bare iron and process-local
+mechanisms, much networking processing happens outside the context of
+the virtual guest.  It takes place in the hypervisor, and is not
+visible to mechanisms running in the guest(s).  For this reason, one
+should not really trust CPU utilization figures reported by netperf or
+netserver when running in a virtual guest.
+
+   <p>If one is looking to measure the added overhead of a virtualization
+mechanism, rather than rely on CPU utilization, one can rely instead
+on netperf _RR tests - path-lengths and overheads can be a significant
+fraction of the latency, so increases in overhead should appear as
+decreases in transaction rate.  Whatever you do, <b>DO NOT</b> rely on
+the throughput of a _STREAM test.  Achieving link-rate can be done via
+a multitude of options that mask overhead rather than eliminate it.
 
 <div class="node">
 <a name="Global-Command-line-Options"></a>
@@ -847,7 +858,8 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Global-Command_002dline-Options">Globa
 <p>Revision 1.8 of netperf introduced enough new functionality to overrun
 the English alphabet for mnemonic command-line option names, and the
 author was not and is not quite ready to switch to the contemporary
-<samp><span class="option">--mumble</span></samp> style of command-line options. (Call him a Luddite).
+<samp><span class="option">--mumble</span></samp> style of command-line options. (Call him a Luddite
+if you wish :).
 
    <p>For this reason, the command-line options were split into two parts -
 the first are the global command-line options.  They are options that
@@ -951,18 +963,19 @@ receives to a file.  This can be used to pre-fill the send buffers
 with data having different compressibility and so is useful when
 measuring performance over mechanisms which perform compression.
 
-     <p>While optional for most tests, this option is required for a test
-utilizing the sendfile() or related calls because sendfile tests need
-a name of a file to reference.
+     <p>While previously required for a TCP_SENDFILE test, later versions of
+netperf removed that restriction, creating a temporary file as
+needed.  While the author cannot recall exactly when that took place,
+it is known to be unnecessary in version 2.5.0 and later.
 
-     <p><a name="index-g_t_002dh_002c-Global-25"></a><br><dt><code>-h</code><dd>This option causes netperf to display its usage string and exit to the
-exclusion of all else.
+     <p><a name="index-g_t_002dh_002c-Global-25"></a><br><dt><code>-h</code><dd>This option causes netperf to display its &ldquo;global&rdquo; usage string and
+exit to the exclusion of all else.
 
      <p><a name="index-g_t_002dH_002c-Global-26"></a><br><dt><code>-H &lt;optionspec&gt;</code><dd>This option will set the name of the remote system and or the address
 family used for the control connection.  For example:
      <pre class="example">          -H linger,4
 </pre>
-     <p>will set the name of the remote system to &ldquo;tardy&rdquo; and tells netperf to
+     <p>will set the name of the remote system to &ldquo;linger&rdquo; and tells netperf to
 use IPv4 addressing only.
      <pre class="example">          -H ,6
 </pre>
@@ -994,7 +1007,7 @@ last explicit global command-line option wins.
 AF_UNSPEC) for the remote address family.]
 
      <p><a name="index-g_t_002dI_002c-Global-27"></a><br><dt><code>-I &lt;optionspec&gt;</code><dd>This option enables the calculation of confidence intervals and sets
-the confidence and width parameters with the first have of the
+the confidence and width parameters with the first half of the
 optionspec being either 99 or 95 for 99% or 95% confidence
 respectively.  The second value of the optionspec specifies the width
 of the desired confidence interval.  For example
@@ -1006,9 +1019,9 @@ mean values.  If the <samp><span class="option">-i</span></samp> option is speci
 <samp><span class="option">-I</span></samp> option is omitted, the confidence defaults to 99% and the
 width to 5% (giving +/- 2.5%)
 
-     <p>If netperf calculates that the desired confidence intervals have not
-been met, it emits a noticeable warning that cannot be suppressed with
-the <samp><span class="option">-P</span></samp> or <samp><span class="option">-v</span></samp> options:
+     <p>If classic netperf test calculates that the desired confidence
+intervals have not been met, it emits a noticeable warning that cannot
+be suppressed with the <samp><span class="option">-P</span></samp> or <samp><span class="option">-v</span></samp> options:
 
      <pre class="example">          netperf -H tardy.cup -i 3 -I 99,5
           TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to tardy.cup.hp.com (15.244.44.58) port 0 AF_INET : +/-2.5%  99% conf.
@@ -1027,20 +1040,20 @@ the <samp><span class="option">-P</span></samp> or <samp><span class="option">-v
           
            32768  16384  16384    10.01      40.23
 </pre>
-     <p>Where we see that netperf did not meet the desired convidence
-intervals.  Instead of being 99% confident it was within +/- 2.5% of
-the real mean value of throughput it is only confident it was within
-+/-3.4%.  In this example, increasing the <samp><span class="option">-i</span></samp> option
-(described below) and/or increasing the iteration length with the
-<samp><span class="option">-l</span></samp> option might resolve the situation.
+     <p>In the example above we see that netperf did not meet the desired
+convidence intervals.  Instead of being 99% confident it was within
++/- 2.5% of the real mean value of throughput it is only confident it
+was within +/-3.4%.  In this example, increasing the <samp><span class="option">-i</span></samp>
+option (described below) and/or increasing the iteration length with
+the <samp><span class="option">-l</span></samp> option might resolve the situation.
 
      <p>In an explicit &ldquo;omni&rdquo; test, failure to meet the confidence intervals
 will not result in netperf emitting a warning.  To verify the hitting,
-or not, of the confidence intervals one will need to include them in
-output specification in the test-specific <samp><span class="option">-o</span></samp>, <samp><span class="option">-O</span></samp> or
-<samp><span class="option">k</span></samp> output selection options.  The warning about not hitting
-the confidence intervals will remain in a &ldquo;migrated&rdquo; classic netperf
-test.
+or not, of the confidence intervals one will need to include them as
+part of an an <a href="#Omni-Output-Selection">output selection</a> in the
+test-specific <samp><span class="option">-o</span></samp>, <samp><span class="option">-O</span></samp> or <samp><span class="option">k</span></samp> output selection
+options.  The warning about not hitting the confidence intervals will
+remain in a &ldquo;migrated&rdquo; classic netperf test.
 
      <p><a name="index-g_t_002di_002c-Global-28"></a><br><dt><code>-i &lt;sizespec&gt;</code><dd>This option enables the calculation of confidence intervals and sets
 the minimum and maximum number of iterations to run in attempting to
@@ -1050,23 +1063,27 @@ maximum number of iterations is silently capped at 30 and the minimum
 is silently floored at 3.  Netperf repeats the measurement the minimum
 number of iterations and continues until it reaches either the
 desired confidence interval, or the maximum number of iterations,
-whichever comes first.
+whichever comes first.  A classic or migrated netperf test will not
+display the actual number of iterations run. An <a href="#The-Omni-Tests">omni test</a> will emit the number of iterations run if the
+<code>CONFIDENCE_ITERATION</code> output selector is included in the
+<a href="#Omni-Output-Selection">output selection</a>.
 
      <p>If the <samp><span class="option">-I</span></samp> option is specified and the <samp><span class="option">-i</span></samp> option
 omitted the maximum number of iterations is set to 10 and the minimum
 to three.
 
-     <p>If netperf determines that the desired confidence intervals have not
-been met, it emits a noticeable warning.
+     <p>Output of a warning upon not hitting the desired confidence intervals
+follows the description provided for the <samp><span class="option">-I</span></samp> option.
 
      <p>The total test time will be somewhere between the minimum and maximum
 number of iterations multiplied by the test length supplied by the
 <samp><span class="option">-l</span></samp> option.
 
      <p><a name="index-g_t_002dj_002c-Global-29"></a><br><dt><code>-j</code><dd>This option instructs netperf to keep additional timing statistics
-when explicitly running an &ldquo;omni&rdquo; test of the request/response
-variety.  These can be output when the test-specific <samp><span class="option">-o</span></samp>,
-<samp><span class="option">-O</span></samp> or <samp><span class="option">-k</span></samp> output selectors include one or more of:
+when explicitly running an <a href="#The-Omni-Tests">omni test</a>.  These can
+be output when the test-specific <samp><span class="option">-o</span></samp>, <samp><span class="option">-O</span></samp> or
+<samp><span class="option">-k</span></samp> <a href="#Omni-Output-Selectors">output selectors</a> include one
+or more of:
 
           <ul>
 <li>MIN_LATENCY
@@ -1078,7 +1095,11 @@ variety.  These can be output when the test-specific <samp><span class="option">
 <li>STDDEV_LATENCY
 </ul>
 
-     <p>Added for netperf 2.5.0.
+     <p>In the case of a request/response test the latencies will be
+transaction latencies.  In the case of a receive-only test they will
+be time spent in the receive call.  In the case of a send-only test
+they will be tim spent in the send call. The units will be
+microseconds. Added in netperf 2.5.0.
 
      <p><a name="index-g_t_002dl_002c-Global-30"></a><br><dt><code>-l testlen</code><dd>This option controls the length of any <b>one</b> iteration of the requested
 test.  A positive value for <var>testlen</var> will run each iteration of
@@ -1086,7 +1107,8 @@ the test for at least <var>testlen</var> seconds.  A negative value for
 <var>testlen</var> will run each iteration for the absolute value of
 <var>testlen</var> transactions for a _RR test or bytes for a _STREAM test. 
 Certain tests, notably those using UDP can only be timed, they cannot
-be limited by transaction or byte count.
+be limited by transaction or byte count.  This limitation may be
+relaxed in an <a href="#The-Omni-Tests">omni</a> test.
 
      <p>In some situations, individual iterations of a test may run for longer
 for the number of seconds specified by the <samp><span class="option">-l</span></samp> option.  In
@@ -1150,7 +1172,7 @@ than the request size.
 is not possible to set &ldquo;remote&rdquo; properties such as socket buffer
 size and the like via the netperf command line. Nor is it possible to
 retrieve such interesting remote information as CPU utilization. 
-These items will be set to values which when displayed should make it
+These items will be displayed as values which should make it
 immediately obvious that was the case.
 
      <p>The only way to change remote characteristics such as socket buffer
@@ -1168,13 +1190,13 @@ added to the alignment specified with the <samp><span class="option">-a</span></
 example:
      <pre class="example">          -o 3 -a 4096
 </pre>
-     <p>will cause the buffers passed to the local send and receive calls to
-begin three bytes past an address aligned to 4096 bytes. [Default: 0
-bytes]
+     <p>will cause the buffers passed to the local (netperf) send and receive
+calls to begin three bytes past an address aligned to 4096
+bytes. [Default: 0 bytes]
 
      <p><a name="index-g_t_002dO_002c-Global-35"></a><br><dt><code>-O &lt;sizespec&gt;</code><dd>This option behaves just as the <samp><span class="option">-o</span></samp> option but on the remote
-system and in conjunction with the <samp><span class="option">-A</span></samp> option. [Default: 0
-bytes]
+(netserver) system and in conjunction with the <samp><span class="option">-A</span></samp>
+option. [Default: 0 bytes]
 
      <p><a name="index-g_t_002dp_002c-Global-36"></a><br><dt><code>-p &lt;optionspec&gt;</code><dd>The first value of the optionspec passed-in with this option tells
 netperf the port number at which it should expect the remote netserver
@@ -1213,7 +1235,7 @@ this writing, valid values for <var>testname</var> include:
 <li><a href="#SCTP_005fSTREAM">SCTP_STREAM</a>, <a href="#SCTP_005fRR">SCTP_RR</a>
 <li><a href="#DLCO_005fSTREAM">DLCO_STREAM</a>, <a href="#DLCO_005fRR">DLCO_RR</a>,  <a href="#DLCL_005fSTREAM">DLCL_STREAM</a>, <a href="#DLCL_005fRR">DLCL_RR</a>
 <li><a href="#Other-Netperf-Tests">LOC_CPU</a>, <a href="#Other-Netperf-Tests">REM_CPU</a>
-<li>OMNI
+<li><a href="#The-Omni-Tests">OMNI</a>
 </ul>
      Not all tests are always compiled into netperf.  In particular, the
 &ldquo;XTI,&rdquo; &ldquo;SCTP,&rdquo; &ldquo;UNIXDOMAIN,&rdquo; and &ldquo;DL*&rdquo; tests are only included in
@@ -1244,6 +1266,11 @@ send or recv calls made and the average number of bytes per send or
 recv call, or a histogram of the time spent in each send() call or for
 each transaction if netperf was configured with
 <samp><span class="option">--enable-histogram=yes</span></samp>. [Default: 1 - normal verbosity]
+
+     <p>In an <a href="#The-Omni-Tests">omni</a> test the verbosity setting is largely
+ignored, save for when asking for the time histogram to be displayed. 
+In version 2.5.0 there is no <a href="#Omni-Output-Selectors">output selector</a> for the histogram and so it remains displayed only when the
+verbosity level is set to 2.
 
      <p><a name="index-g_t_002dV_002c-Global-40"></a><br><dt><code>-V</code><dd>This option displays the netperf version and then exits.
 

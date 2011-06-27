@@ -6863,7 +6863,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 Local /Remote\n\
 Socket Size   Request Resp.  Elapsed Tput     CPU    CPU    S.dem   S.dem\n\
 Send   Recv   Size    Size   Time    %-8.8s local  remote local   remote\n\
-bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\n";
+bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/KB   us/KB\n\n";
 
   char *cpu_title_latency = "\
 Local /Remote\n\
@@ -6951,9 +6951,7 @@ Send   Recv    Send   Recv    usec/Tran  per sec  Outbound   Inbound\n\
 		req_size,		/* how large were the requests */
 		rsp_size,		/* guess */
 		elapsed_time,		/* how long was the test */
-		('x' == libfmt) ? thruput : 
-		calc_thruput_interval_omni(thruput * (req_size+rsp_size),
-					   1.0),
+		thruput,
 		local_cpu_utilization,	/* local cpu */
 		remote_cpu_utilization,	/* remote cpu */
 		local_service_demand,	/* local service demand */
@@ -6974,9 +6972,7 @@ Send   Recv    Send   Recv    usec/Tran  per sec  Outbound   Inbound\n\
       case 0:
 	fprintf(where,
 		tput_fmt_0,
-		('x' == libfmt) ? thruput :
-		calc_thruput_interval_omni(thruput * (req_size+rsp_size),
-					   1.0),
+		thruput,
 		((print_headers) || 
 		 (result_brand == NULL)) ? "" : result_brand);
 	break;
@@ -7416,7 +7412,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 Local /Remote\n\
 Socket Size   Request Resp.  Elapsed Tput     CPU    CPU    S.dem   S.dem\n\
 Send   Recv   Size    Size   Time    %-8.8s local  remote local   remote\n\
-bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\n";
+bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/KB   us/KB\n\n";
   
   char *cpu_fmt_0 =
     "%6.3f %c %s\n";
@@ -7494,9 +7490,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 		req_size,		/* how large were the requests */
 		rsp_size,		/* guess */
 		elapsed_time,		/* how long was the test */
-		('x' == libfmt) ? thruput : 
-		calc_thruput_interval_omni(thruput * (req_size+rsp_size),
-					   1.0),
+		thruput,
 		local_cpu_utilization,	/* local cpu */
 		remote_cpu_utilization,	/* remote cpu */
 		local_service_demand,	/* local service demand */
@@ -7516,9 +7510,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
       case 0:
 	fprintf(where,
 		tput_fmt_0,
-		('x' == libfmt) ? thruput :
-		calc_thruput_interval_omni(thruput * (req_size+rsp_size),
-					   1.0),
+		thruput,
 		((print_headers) || 
 		 (result_brand == NULL)) ? "" : result_brand);
 	break;
@@ -7537,9 +7529,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 		req_size,		/* how large were the requests */
 		rsp_size,		/* how large were the responses */
 		elapsed_time, 		/* how long did it take */
-		('x' == libfmt) ?  thruput : 
-		calc_thruput_interval_omni(thruput * (req_size+rsp_size),
-					   1.0),
+		thruput,
 		((print_headers) || 
 		 (result_brand == NULL)) ? "" : result_brand);
 	fprintf(where,
