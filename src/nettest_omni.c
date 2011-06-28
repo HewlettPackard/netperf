@@ -6500,7 +6500,7 @@ bytes  bytes   bytes    secs.    %-8.8s/s  %% %c      %% %c      us/KB   us/KB\n
 Alignment      Offset         %-8.8s %-8.8s    Sends   %-8.8s Recvs\n\
 Local  Remote  Local  Remote  Xfered   Per                 Per\n\
 Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
-%5d   %5d  %5d   %5d %6.4g  %6.2f    %6d   %6.2f %6d\n";
+%5d   %5d  %5d   %5d %6"PRId64"  %6.2f    %6"PRId64"   %6.2f %6"PRId64"\n";
 
   char *ksink_fmt2 = "\n\
 Maximum\n\
@@ -6556,7 +6556,7 @@ Size (bytes)\n\
 	if (print_headers) {
 	  fprintf(where,
 		  cpu_title,
-		  sd_str,
+		  format_units(),
 		  local_cpu_method,
 		  remote_cpu_method);
 	}
@@ -6565,7 +6565,7 @@ Size (bytes)\n\
 		cpu_fmt_1,		/* the format string */
 		rsr_size,		/* remote recvbuf size */
 		lss_size,		/* local sendbuf size */
-		send_size,		/* how large were the sends */
+		send_size,	        /* how large were the sends */
 		elapsed_time,		/* how long was the test */
 		thruput, 		/* what was the xfer rate */
 		local_cpu_utilization,	/* local cpu */
@@ -6597,9 +6597,9 @@ Size (bytes)\n\
 		tput_fmt_1,		/* the format string */
 		rsr_size, 		/* remote recvbuf size */
 		lss_size, 		/* local sendbuf size */
-		send_size,		/* how large were the sends */
+		send_size,	        /* how large were the sends */
 		elapsed_time, 		/* how long did it take */
-		thruput,                  /* how fast did it go */
+		thruput,                /* how fast did it go */
 		((print_headers) || 
 		 (result_brand == NULL)) ? "" : result_brand);
 	break;
@@ -6638,12 +6638,11 @@ Size (bytes)\n\
       fprintf(where,
 	      ksink_fmt2,
 	      transport_mss);
-      fflush(where);
 #ifdef WANT_HISTOGRAM
       fprintf(where,"\n\nHistogram of time spent in send() call.\n");
-      fflush(where);
       HIST_report(time_hist);
 #endif /* WANT_HISTOGRAM */
+      fflush(where);
     }
   
   }
@@ -6681,7 +6680,7 @@ bytes  bytes   bytes    secs.    %-8.8s/s  %% %c      %% %c      us/KB   us/KB\n
 Alignment      Offset         %-8.8s %-8.8s    Recvs   %-8.8s Sends\n\
 Local  Remote  Local  Remote  Xfered   Per                 Per\n\
 Recv   Send    Recv   Send             Recv (avg)          Send (avg)\n\
-%5d   %5d  %5d   %5d %6.4g  %6.2f    %6d   %6.2f %6d\n";
+%5d   %5d  %5d   %5d %6"PRId64"  %6.2f    %6d   %6.2f %6d\n";
 
   char *ksink_fmt2 = "\n\
 Maximum\n\
@@ -6689,7 +6688,7 @@ Segment\n\
 Size (bytes)\n\
 %6d\n";
 
-  send_omni_inner(remote_host, legacy, "MIGRATED TCP STREAM TEST");
+  send_omni_inner(remote_host, legacy, "MIGRATED TCP MAERTS TEST");
 
 
   /* We are now ready to print all the information, but only if we are
@@ -6744,11 +6743,11 @@ Size (bytes)\n\
     
 	fprintf(where,
 		cpu_fmt_1,		/* the format string */
-		rsr_size,		        /* remote recvbuf size */
-		lss_size,		        /* local sendbuf size */
+		rsr_size,		/* remote recvbuf size */
+		lss_size,		/* local sendbuf size */
 		send_size,		/* how large were the recvs */
 		elapsed_time,		/* how long was the test */
-		thruput, 		        /* what was the xfer rate */
+		thruput, 		/* what was the xfer rate */
 		local_cpu_utilization,	/* local cpu */
 		remote_cpu_utilization,	/* remote cpu */
 		local_service_demand,	/* local service demand */
