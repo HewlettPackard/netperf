@@ -673,8 +673,8 @@ scan_cmd_line(int argc, char *argv[])
   
   program = (char *)malloc(strlen(argv[0]) + 1);
   if (program == NULL) {
-    printf("malloc(%d) failed!\n", strlen(argv[0]) + 1);
-    exit(1);
+    printf("malloc() to store program name failed!\n");
+    exit(-1);
   }
   strcpy(program, argv[0]);
 
@@ -813,7 +813,7 @@ scan_cmd_line(int argc, char *argv[])
       }
       if((confidence_level != 95) && (confidence_level != 99)){
 	printf("Only 95%% and 99%% confidence level is supported\n");
-	exit(1);
+	exit(-1);
       }
       if (arg2[0] ) {
 	/* it doesn't make much sense to use convert() here so just

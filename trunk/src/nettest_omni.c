@@ -4491,6 +4491,30 @@ get_transport_info(SOCKET socket, int *mss, int protocol)
 
 }
 
+/* choosing the default send size is a trifle more complicated than it
+   used to be as we have to account for different protocol limits */
+
+#define UDP_LENGTH_MAX (0xFFFF - 28)
+
+static int
+choose_send_size(int lss, int protocol) {
+
+  int send_size;
+
+  if (lss > 0) {
+    send_size = lss_size;
+
+#ifdef IPPROTO_UDP
+    if ((protocol == IPPROTO_UDP) && (send_size > UDP_LENGTH_MAX))
+      send_size = UDP_LENGTH_MAX;
+#endif
+  }
+  else {
+    send_size = 4096;
+  }
+  return send_size;
+}
+
 /* brain dead simple way to get netperf to emit a uuid. sadly, by this
    point we will have already established the control connection but
    those are the breaks. we do _NOT_ include a trailing newline
@@ -4696,12 +4720,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	else {
 	  /* stream test */
 	  if (send_size == 0) {
-	    if (lss_size > 0) {
-	      send_size = lss_size;
-	    }
-	    else {
-	      send_size = 4096;
-	    }
+	    send_size = choose_send_size(lss_size,protocol);
 	  }
 	  if (send_width == 0) 
 	    send_width = (lss_size/send_size) + 1;
@@ -5742,8 +5761,8 @@ p       based.  having said that, we rely entirely on other code to
       }
     }
     fprintf(where," times\n");
-    fflush(where);
     HIST_report(time_hist);
+    fflush(where);
 #endif /* WANT_HISTOGRAM */
 
   }
@@ -5927,8 +5946,7 @@ recv_omni()
     }
     else {
       if (omni_request->send_size == -1) {
-	if (lss_size > 0) bytes_to_send = lss_size;
-	else bytes_to_send = 4096;
+	bytes_to_send = choose_send_size(lss_size,omni_request->protocol);
       }
       else bytes_to_send = omni_request->send_size;
       /* set the send_width */
@@ -6828,12 +6846,12 @@ Size (bytes)\n\
       fprintf(where,
 	      ksink_fmt2,
 	      transport_mss);
-      fflush(where);
+
 #ifdef WANT_HISTOGRAM
       fprintf(where,"\n\nHistogram of time spent in recv() call.\n");
-      fflush(where);
       HIST_report(time_hist);
 #endif /* WANT_HISTOGRAM */
+      fflush(where);
     }
   }
 }
@@ -7067,10 +7085,9 @@ Send   Recv    Send   Recv    usec/Tran  per sec  Outbound   Inbound\n\
 
 #ifdef WANT_HISTOGRAM
       fprintf(where,"\nHistogram of request/response times\n");
-      fflush(where);
       HIST_report(time_hist);
 #endif /* WANT_HISTOGRAM */
-
+      fflush(where);
     }
   }  
 }
@@ -7163,7 +7180,7 @@ Send   Recv    Send   Recv\n\
 	}
 
 	fprintf(where,
-		cpu_fmt_1_line_1,		/* the format string */
+		cpu_fmt_1_line_1,	/* the format string */
 		lss_size,		/* local sendbuf size */
 		lsr_size,
 		req_size,		/* how large were the requests */
@@ -7230,18 +7247,16 @@ Send   Recv    Send   Recv\n\
       fprintf(where,
 	      ksink_fmt,
 	      local_send_align,
-	      remote_recv_offset,
+	      remote_recv_align,
 	      local_send_offset,
 	      remote_recv_offset);
 
 #ifdef WANT_HISTOGRAM
       fprintf(where,"\nHistogram of request/response times\n");
-      fflush(where);
       HIST_report(time_hist);
 #endif /* WANT_HISTOGRAM */
-
+      fflush(where);
     }
-  
   }
 }
 
@@ -7375,14 +7390,13 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
       }
     }
 
-    fflush(where);
 #ifdef WANT_HISTOGRAM
     if (verbosity > 1) {
       fprintf(where,"\nHistogram of time spent in send() call\n");
-      fflush(where);
       HIST_report(time_hist);
     }
 #endif /* WANT_HISTOGRAM */
+    fflush(where);
   }
 }
 
@@ -7549,7 +7563,6 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/KB   us/KB\n\
 	break;
       }
     }
-    fflush(where);
 
     /* it would be a good thing to include information about some of the */
     /* other parameters that may have been set for this test, but at the */
@@ -7568,10 +7581,10 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/KB   us/KB\n\
     
 #ifdef WANT_HISTOGRAM
       fprintf(where,"\nHistogram of request/reponse times.\n");
-      fflush(where);
       HIST_report(time_hist);
 #endif /* WANT_HISTOGRAM */
     }
+    fflush(where);
   }
 }
 
