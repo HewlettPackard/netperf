@@ -377,6 +377,7 @@ double bytes_per_recv;
 int null_message_ok = 0;
 int human = 0;
 int legacy = 0;
+int implicit_direction = 0;
 int csv = 0;
 int keyword = 0;
 uint64_t      trans_completed = 0;
@@ -680,9 +681,9 @@ typedef struct netperf_output_elt {
   int max_line_len; /* length of the longest of the "lines" */
   int tot_line_len; /* total length of all lines, including spaces */
   char *line[4];
-  char *brief;           /* the brief name of the value */
-  char *format;          /* format to apply to value */
-  void *display_value;   /* where to find the value */
+  char *brief;         /* the brief name of the value */
+  char *format;        /* format to apply to value */
+  void *display_value; /* where to find the value */
   int  output_default; /* is it included in the default output */
 } netperf_output_elt_t;
 
@@ -700,6 +701,9 @@ char *direction_to_str(int direction) {
   if (NETPERF_RECV_ONLY(direction)) return "Receive";
   if (NETPERF_XMIT_ONLY(direction)) return "Send";
   if (NETPERF_CC(direction)) return "Connection";
+  else if (connection_test) {
+    return "Connect|Send|Recv";
+  }
   else return "Send|Recv";
 }
 
@@ -1656,6 +1660,10 @@ set_output_list_by_test() {
       parse_output_selection_direct(maerts_cpu);
   }
   else if (NETPERF_CC(direction)) {
+    if (!(local_cpu_usage || remote_cpu_usage))
+      parse_output_selection_direct(rr_no_cpu);
+    else
+      parse_output_selection_direct(rr_cpu);
   }
   else if (NETPERF_IS_RR(direction)) {
     if (!(local_cpu_usage || remote_cpu_usage))
@@ -5745,7 +5753,9 @@ p       based.  having said that, we rely entirely on other code to
 void
 send_omni(char remote_host[])
 {
-  send_omni_inner(remote_host, 0, "OMNI TEST");
+  char name_buf[32];
+  snprintf(name_buf,sizeof(name_buf),"OMNI %s TEST",direction_str);
+  send_omni_inner(remote_host, 0, name_buf);
 }
 
 static void
@@ -7580,6 +7590,8 @@ set_omni_defaults_by_legacy_testname() {
   connection_test = 0;
   req_size = rsp_size = -1;
   legacy = 1;
+  implicit_direction = 0;  /* do we allow certain options to
+			      implicitly affect the test direction? */
   if (strcasecmp(test_name,"TCP_STREAM") == 0) {
     direction = NETPERF_XMIT;
   }
@@ -7618,6 +7630,7 @@ set_omni_defaults_by_legacy_testname() {
   else if (strcasecmp(test_name,"omni") == 0) {
     /* there is not much to do here but clear the legacy flag */
     legacy = 0;
+    implicit_direction = 1;
   }
   socket_type_str = hst_to_str(socket_type);
 }
@@ -7847,11 +7860,13 @@ scan_omni_args(int argc, char *argv[])
       break_args_explicit(optarg,arg1,arg2);
       if (arg1[0]) {
 	send_size = convert(arg1);
-	direction |= NETPERF_XMIT;
+	if (implicit_direction) 
+	  direction |= NETPERF_XMIT;
       }
       if (arg2[0]) {
 	remote_send_size_req = convert(arg2);
-	direction |= NETPERF_RECV;
+	if (implicit_direction)
+	  direction |= NETPERF_RECV;
       }
       break;
     case 'M':
@@ -7861,11 +7876,13 @@ scan_omni_args(int argc, char *argv[])
       break_args_explicit(optarg,arg1,arg2);
       if (arg1[0]) {
 	remote_recv_size_req = convert(arg1);
-	direction |= NETPERF_XMIT;
+	if (implicit_direction)
+	  direction |= NETPERF_XMIT;
       }
       if (arg2[0]) {
 	recv_size = convert(arg2);
-	direction |= NETPERF_RECV;
+	if (implicit_direction)
+	  direction |= NETPERF_RECV;
       }
       break;
     case 'n':
@@ -7946,8 +7963,10 @@ scan_omni_args(int argc, char *argv[])
     case 'r':
       /* set the request/response sizes. setting request/response
 	 sizes implicitly sets direction to XMIT and RECV */ 
-      direction |= NETPERF_XMIT;
-      direction |= NETPERF_RECV;
+      if (implicit_direction) {
+	direction |= NETPERF_XMIT;
+	direction |= NETPERF_RECV;
+      }
       break_args(optarg,arg1,arg2);
       if (arg1[0])
 	req_size = convert(arg1);
