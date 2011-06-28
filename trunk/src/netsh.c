@@ -535,7 +535,7 @@ parse_protocol(char protocol_string[])
     return IPPROTO_SDP;
   }
 #endif
-#ifdef IPPROTO_DCCP
+#if defined(IPPROTO_DCCP) && defined(SOCK_DCCP)
   if (!strcasecmp(temp,"dccp")) {
     socket_type = SOCK_DCCP;
     return IPPROTO_DCCP;

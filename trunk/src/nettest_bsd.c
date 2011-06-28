@@ -739,7 +739,7 @@ complete_addrinfo(char *controlhost, char *data_address, char *port, int family,
 	 that we did this so the code for the Solaris kludge can do
 	 the fix-up for us.  also flip error over to EAI_AGAIN and
 	 make sure we don't "count" this time around the loop. */
-#if defined(IPPROTO_DCCP)
+#if defined(IPPROTO_DCCP) && defined(SOCK_DCCP)
       /* only tweak on this one the second time around, after we've
 	 kludged the ai_protocol field */
       if ((hints.ai_socktype == SOCK_DCCP) &&

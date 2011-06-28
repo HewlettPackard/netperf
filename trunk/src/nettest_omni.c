@@ -4530,10 +4530,7 @@ print_uuid(char remote_host[])
     BSDish sockets.  it comes about as part of a desire to shrink the
     code footprint of netperf and to avoid having so many blessed
     routines to alter as time goes by.  the downside is there will be
-    more "ifs" than there were before. there may be some other
-    "complications" for things like demo mode or perhaps histograms if
-    we ever want to track individual RTTs when burst mode is in use
-    etc etc... raj 2008-01-07 */
+    more "ifs" than there were before. raj 2008-01-07 */
 
 void
 send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[])
@@ -4935,7 +4932,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 		netperf_response.content.serv_errno);
 	perror("");
 	fflush(where);
-	exit(1);
+	exit(-1);
       }
     
     }
@@ -5532,7 +5529,7 @@ p       based.  having said that, we rely entirely on other code to
 	perror("");
 	fflush(where);
       
-	exit(1);
+	exit(-1);
       }
     }
     else {
@@ -5908,7 +5905,7 @@ recv_omni()
       fprintf(where,"could not create data socket\n");
       fflush(where);
     }
-    exit(1);
+    exit(-1);
   }
 
   /* We now alter the message_ptr variables to be at the desired */
@@ -6172,11 +6169,13 @@ recv_omni()
 	  timed_out = 1;
 	  break;
 	}
+	netperf_response.content.serv_errno = errno;
+	send_response();
 	fprintf(where,"recv_omni: accept: errno = %d\n",errno);
 	fflush(where);
 	close(s_listen);
 	
-	exit(1);
+	exit(-1);
       }
       
       if (debug) {
@@ -6277,7 +6276,9 @@ recv_omni()
 	/* presently at least, -2 and -3 are equally bad on recv */
 	/* we need a response message here for the control connection
 	   before we exit! */
-	exit(1);
+	netperf_response.content.serv_errno = errno;
+	send_response();
+	exit(-1);
       }
       recv_ring = recv_ring->next;
     }
@@ -6332,7 +6333,9 @@ recv_omni()
 	/* we need a response message back to netperf here before we
 	   exit */
 	/* NEED RESPONSE; */
-	exit(1);
+	netperf_response.content.serv_errno = errno;
+	send_response();
+	exit(-1);
       }
 
     }
@@ -6367,9 +6370,11 @@ recv_omni()
 	break;
       }
       else if (ret < 0) {
+	netperf_response.content.serv_errno = errno;
+	send_response();
 	perror("netperf: recv_omni: close_data_socket failed");
 	fflush(where);
-	exit(1);
+	exit(-1);
       }
       /* we will need a new connection to be established */
       need_to_accept = 1;
@@ -7790,7 +7795,8 @@ scan_omni_args(int argc, char *argv[])
       break;
     case 'd':
       /* arbitrarily set the direction variable */
-      direction = parse_direction(optarg);
+      if (implicit_direction)
+	direction = parse_direction(optarg);
       break;
     case 'D':
       /* set the TCP nodelay flag */
@@ -8008,11 +8014,13 @@ scan_omni_args(int argc, char *argv[])
       break;
     case 't':
       /* set the socket type */
-      socket_type = parse_socket_type(optarg);
+      if (implicit_direction)
+	socket_type = parse_socket_type(optarg);
       break;
     case 'T':
       /* set the protocol - aka "Transport" */
-      protocol = parse_protocol(optarg);
+      if (implicit_direction)
+	protocol = parse_protocol(optarg);
       break;
     case 'u':
       /* use the supplied string as the UUID for this test. at some
