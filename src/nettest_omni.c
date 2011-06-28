@@ -5788,7 +5788,7 @@ set_hostname_and_port_2(void *addr, char *hostname, char *portstr, int family, i
 
 /* the name is something of a misnomer since this test could send, or
    receive, or both, but it matches the historical netperf routine
-   naming. */
+   naming convention for what runs in the netserver context. */
 void
 recv_omni()
 {
@@ -5798,6 +5798,7 @@ recv_omni()
   char port_buffer[PORTBUFSIZE];
 
   struct sockaddr_storage myaddr_in, peeraddr_in;
+  int peeraddr_set = 0;
   SOCKET s_listen, data_socket;
   netperf_socklen_t 	addrlen;
 
@@ -5880,6 +5881,7 @@ recv_omni()
      pulled, and it is probably all wrong for IPv6 :( */
   for (ret=0; ret < 4; ret++) {
     omni_request->netserver_ip[ret] = htonl(omni_request->netserver_ip[ret]);
+    omni_request->netperf_ip[ret] = htonl(omni_request->netperf_ip[ret]);
   }
 
   set_hostname_and_port_2(omni_request->netserver_ip,
@@ -6041,7 +6043,7 @@ recv_omni()
       fprintf(where,"could not getsockname\n");
       fflush(where);
     }
-    exit(1);
+    exit(-1);
   }
   
   /* Now myaddr_in contains the port and the internet address this is
@@ -6199,8 +6201,10 @@ recv_omni()
       /* I wonder if duping would be better here? we also need to set
 	 peeraddr_in so we can send to netperf if this isn't a
 	 request/response test or if we are going to connect() the
-	 socket */
-      if (omni_request->protocol == IPPROTO_UDP) {
+	 socket, but we only need to do it once. */
+      if ((omni_request->protocol == IPPROTO_UDP) &&
+	  (!peeraddr_set)) {
+	peeraddr_set = 1;
 	data_socket = s_listen;
 	set_sockaddr_family_addr_port(&peeraddr_in,
 				      nf_to_af(omni_request->ipfamily),
