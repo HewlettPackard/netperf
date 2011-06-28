@@ -880,16 +880,16 @@ main(int argc, char *argv[])
 
 	/* Initialize the winsock lib ( version 2.2 ) */
 	if ( WSAStartup(MAKEWORD(2,2), &wsa_data) == SOCKET_ERROR ){
-		printf("WSAStartup() failed : %lu\n", GetLastError()) ;
-		return 1 ;
+	  printf("WSAStartup() failed : %lu\n", GetLastError()) ;
+	  return -1 ;
 	}
 #endif /* WIN32 */
 
 	/* Save away the program name */
 	program = (char *)malloc(strlen(argv[0]) + 1);
 	if (program == NULL) {
-		printf("malloc(%d) failed!\n", strlen(argv[0]) + 1);
-		return 1 ;
+	  printf("malloc for program name failed!\n");
+	  return -1 ;
 	}
 	strcpy(program, argv[0]);
 

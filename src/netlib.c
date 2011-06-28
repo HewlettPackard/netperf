@@ -3892,23 +3892,21 @@ HIST_add(register HIST h, int time_delta){
    }
 }
 
-#define RB_printf printf
-
 void 
 output_row(FILE *fd, char *title, int *row){
   register int i;
   register int j;
   register int base =  HIST_NUM_OF_BUCKET / 10;
   register int sum;
-  RB_printf("%s", title);
+  fprintf(where,"%s", title);
   for(i = 0; i < 10; i++){
     sum = 0;
     for (j = i * base; j <  (i + 1) * base; j++) {
       sum += row[j];
     }
-    RB_printf(": %4d", sum);
+    fprintf(where,": %4d", sum);
   }
-  RB_printf("\n");
+  fprintf(where,"\n");
 }
 
 int
@@ -3935,8 +3933,8 @@ HIST_report(HIST h){
    output_row(stdout, "HUNDRED_MSEC  ", h->hundred_msec);
    output_row(stdout, "UNIT_SEC      ", h->unit_sec);
    output_row(stdout, "TEN_SEC       ", h->ten_sec);
-   RB_printf(">100_SECS: %d\n", h->ridiculous);
-   RB_printf("HIST_TOTAL:      %d\n", h->total);
+   fprintf(where,">100_SECS: %d\n", h->ridiculous);
+   fprintf(where,"HIST_TOTAL:      %d\n", h->total);
 }
 
 /* search buckets for each unit */
