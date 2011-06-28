@@ -988,6 +988,16 @@ or more of:
 @item STDDEV_LATENCY
 @end itemize
 
+These statistics will be based on an expanded (100 buckets per row
+rather than 10) histogram of times rather than a terribly long list of
+individual times.  As such, there will be some slight error thanks to
+the bucketing. However, the reduction in storage and processing
+overheads is well worth it.  When running a request/response test, one
+might get some idea of the error by comparing the @ref{Omni Output
+Selectors,@code{MEAN_LATENCY}} calculated from the histogram with the
+@code{RT_LATENCY} calculated from the number of request/response
+transactions and the test run time.
+
 In the case of a request/response test the latencies will be
 transaction latencies.  In the case of a receive-only test they will
 be time spent in the receive call.  In the case of a send-only test
@@ -1169,6 +1179,32 @@ options may be present on the command-line.  The last @option{-t}
 global command-line option will determine the test to be
 run. [Default: TCP_STREAM]
 
+@vindex -T, Global
+@item -T <optionspec>
+This option controls the CPU, and probably by extension memory,
+affinity of netperf and/or netserver.
+@example
+netperf -T 1
+@end example
+will bind both netperf and netserver to ``CPU 1'' on their respective
+systems.
+@example
+netperf -T 1,
+@end example
+will bind just netperf to ``CPU 1'' and will leave netserver unbound.
+@example
+netperf -T ,2
+@end example
+will leave netperf unbound and will bind netserver to ``CPU 2.''
+@example
+netperf -T 1,2
+@end example
+will bind netperf to ``CPU 1'' and netserver to ``CPU 2.''
+
+This can be particularly useful when investigating performance issues
+involving where processes run relative to where NIC interrupts are
+processed or where NICs allocate their DMA buffers.
+
 @vindex -v, Global
 @item -v verbosity
 This option controls how verbose netperf will be in its output, and is
@@ -1250,8 +1286,8 @@ option, this will be inherited for the data connection as well.
 The most commonly measured aspect of networked system performance is
 that of bulk or unidirectional transfer performance.  Everyone wants
 to know how many bits or bytes per second they can push across the
-network. The netperf convention for a bulk data transfer test name is
-to tack a ``_STREAM'' suffix to a test name.
+network. The classic netperf convention for a bulk data transfer test
+name is to tack a ``_STREAM'' suffix to a test name.
 
 @menu
 * Issues in Bulk Transfer::     
@@ -1284,7 +1320,8 @@ Typically, a single flow of data, such as that from a single instance
 of a netperf _STREAM test cannot make use of much more than the power
 of one CPU. Exceptions to this generally occur when netperf and/or
 netserver run on CPU(s) other than the CPU(s) taking interrupts from
-the NIC(s).
+the NIC(s). In that case, one might see as much as two CPUs' worth of
+processing being used to service the flow of data.
 
 Distance and the speed-of-light can affect performance for a
 bulk-transfer; often this can be mitigated by using larger windows.
@@ -1329,12 +1366,12 @@ netstat -p tcp > after
 is indicated.  The
 @uref{ftp://ftp.cup.hp.com/dist/networking/tools/,beforeafter} utility
 can be used to subtract the statistics in @file{before} from the
-statistics in @file{after}
+statistics in @file{after}:
 @example
 beforeafter before after > delta
 @end example
 and then one can look at the statistics in @file{delta}.  Beforeafter
-is distributed in source form so one can compile it on the platofrm(s)
+is distributed in source form so one can compile it on the platform(s)
 of interest. 
 
 If running a version 2.5.0 or later ``omni'' test under Linux one can
@@ -1432,14 +1469,14 @@ Set the local and/or remote port numbers for the data connection.
 
 @vindex -s, Test-specific
 @item -s <sizespec>
-This option sets the local send and receive socket buffer sizes for
-the data connection to the value(s) specified.  Often, this will
-affect the advertised and/or effective TCP or other window, but on
-some platforms it may not. By default the units are bytes, but suffix
-of ``G,'' ``M,'' or ``K'' will specify the units to be 2^30 (GB), 2^20
-(MB) or 2^10 (KB) respectively.  A suffix of ``g,'' ``m'' or ``k''
-will specify units of 10^9, 10^6 or 10^3 bytes respectively. For
-example:
+This option sets the local (netperf) send and receive socket buffer
+sizes for the data connection to the value(s) specified.  Often, this
+will affect the advertised and/or effective TCP or other window, but
+on some platforms it may not. By default the units are bytes, but
+suffix of ``G,'' ``M,'' or ``K'' will specify the units to be 2^30
+(GB), 2^20 (MB) or 2^10 (KB) respectively.  A suffix of ``g,'' ``m''
+or ``k'' will specify units of 10^9, 10^6 or 10^3 bytes
+respectively. For example:
 @example
 @code{-s 128K}
 @end example
@@ -1458,18 +1495,18 @@ buffer sizes]
 
 @vindex -S Test-specific
 @item -S <sizespec>
-This option sets the remote send and/or receive socket buffer sizes
-for the data connection to the value(s) specified.  Often, this
-will affect the advertised and/or effective TCP or other window, but
-on some platforms it may not. By default the units are bytes, but
-suffix of ``G,'' ``M,'' or ``K'' will specify the units to be 2^30
-(GB), 2^20 (MB) or 2^10 (KB) respectively.  A suffix of ``g,'' ``m''
-or ``k'' will specify units of 10^9, 10^6 or 10^3 bytes respectively.
-For example:
+This option sets the remote (netserver) send and/or receive socket
+buffer sizes for the data connection to the value(s) specified.
+Often, this will affect the advertised and/or effective TCP or other
+window, but on some platforms it may not. By default the units are
+bytes, but suffix of ``G,'' ``M,'' or ``K'' will specify the units to
+be 2^30 (GB), 2^20 (MB) or 2^10 (KB) respectively.  A suffix of ``g,''
+``m'' or ``k'' will specify units of 10^9, 10^6 or 10^3 bytes
+respectively.  For example:
 @example
 @code{-s 128K}
 @end example
-Will request the local send and receive socket buffer sizes to be
+Will request the remote send and receive socket buffer sizes to be
 128KB or 131072 bytes. 
 
 While the historic expectation is that setting the socket buffer size
@@ -1583,9 +1620,14 @@ bytes  bytes   bytes    secs.    10^6bits/sec
 
 We see that the default receive socket buffer size for the receiver
 (lag - HP-UX 11.23) is 32768 bytes, and the default socket send buffer
-size for the sender (Debian 2.6 kernel) is 16384 bytes.  Througput is
-expressed as 10^6 (aka Mega) bits per second, and the test ran for 10
-seconds.  IPv4 addresses (AF_INET) were used.
+size for the sender (Debian 2.6 kernel) is 16384 bytes, however Linux
+does ``auto tuning'' of socket buffer and TCP window sizes, which
+means the send socket buffer size may be different at the end of the
+test than it was at the beginning.  This is addressed in the @ref{The
+Omni Tests,omni tests} added in version 2.5.0 and @ref{Omni Output
+Selection,output selection}.  Througput is expressed as 10^6 (aka
+Mega) bits per second, and the test ran for 10 seconds.  IPv4
+addresses (AF_INET) were used.
 
 @node TCP_MAERTS, TCP_SENDFILE, TCP_STREAM, Options common to TCP UDP and SCTP tests
 @comment  node-name,  next,  previous,  up
@@ -1888,31 +1930,36 @@ configured with @code{--enable-unixdomain=yes}.
 
 Request/response performance is often overlooked, yet it is just as
 important as bulk-transfer performance.  While things like larger
-socket buffers and TCP windows can cover a multitude of latency and
-even path-length sins, they cannot easily hide from a request/response
-test.  The convention for a request/response test is to have a _RR
-suffix.  There are however a few ``request/response'' tests that have
-other suffixes.
+socket buffers and TCP windows, and stateless offloads like TSO and
+LRO can cover a multitude of latency and even path-length sins, those
+sins cannot easily hide from a request/response test.  The convention
+for a request/response test is to have a _RR suffix.  There are
+however a few ``request/response'' tests that have other suffixes.
 
 A request/response test, particularly synchronous, one transaction at
-at time test such as those found in netperf, is particularly sensitive
-to the path-length of the networking stack.  An _RR test can also
-uncover those platforms where the NIC's are strapped by default with
-overbearing interrupt avoidance settings in an attempt to increase the
-bulk-transfer performance (or rather, decrease the CPU utilization of
-a bulk-transfer test).  This sensitivity is most acute for small
-request and response sizes, such as the single-byte default for a
-netperf _RR test.
+at time test such as those found by default in netperf, is
+particularly sensitive to the path-length of the networking stack.  An
+_RR test can also uncover those platforms where the NIC's are strapped
+by default with overbearing interrupt avoidance settings in an attempt
+to increase the bulk-transfer performance (or rather, decrease the CPU
+utilization of a bulk-transfer test).  This sensitivity is most acute
+for small request and response sizes, such as the single-byte default
+for a netperf _RR test.
 
 While a bulk-transfer test reports its results in units of bits or
-bytes transfered per second, a mumble_RR test reports transactions per
-second where a transaction is defined as the completed exchange of a
-request and a response.  One can invert the transaction rate to arrive
-at the average round-trip latency.  If one is confident about the
-symmetry of the connection, the average one-way latency can be taken
-as one-half the average round-trip latency.  Netperf does not do
-either of these on its own but leaves them as exercises to the
-benchmarker.
+bytes transfered per second, by default a mumble_RR test reports
+transactions per second where a transaction is defined as the
+completed exchange of a request and a response.  One can invert the
+transaction rate to arrive at the average round-trip latency.  If one
+is confident about the symmetry of the connection, the average one-way
+latency can be taken as one-half the average round-trip latency. As of
+version 2.5.0 (actually slightly before) netperf still does not do the
+latter, but will do the former if one sets the verbosity to 2 for a
+classic netperf test, or includes the apropriate @ref{Omni Output
+Selectors,output selector} in an @ref{The Omni Tests,omni test}.  It
+will also allow the user to switch the throughput units from
+transactions per secont to bits or bytes per second with the global
+@option{-f} option.
 
 @menu
 * Issues in Request/Response::  
@@ -1939,6 +1986,13 @@ differently via the global @option{-T} option.
 For smaller request and response sizes packet loss is a bigger issue
 as there is no opportunity for a @dfn{fast retransmit} or
 retransmission prior to a retransmission timer expiring.
+
+Virtualization may considerably increase the effective path length of
+a networking stack.  While this may not preclude achieving link-rate
+on a comparatively slow link (eg 1 Gigabit Ethernet) on a _STREAM
+test, it can show-up as measurably fewer transactions per second on an
+_RR test.  However, this may still be masked by interrupt coalescing
+in the NIC/driver.
 
 Certain NICs have ways to minimize the number of interrupts sent to
 the host.  If these are strapped badly they can significantly reduce
@@ -2014,10 +2068,10 @@ or 16384 bytes. [Default: 1 - a single-byte request and response ]
 
 @vindex -s, Test-specific
 @item -s <sizespec>
-This option sets the local send and receive socket buffer sizes for
-the data connection to the value(s) specified.  Often, this will
-affect the advertised and/or effective TCP or other window, but on
-some platforms it may not. By default the units are bytes, but a
+This option sets the local (netperf) send and receive socket buffer
+sizes for the data connection to the value(s) specified.  Often, this
+will affect the advertised and/or effective TCP or other window, but
+on some platforms it may not. By default the units are bytes, but a
 suffix of ``G,'' ``M,'' or ``K'' will specify the units to be 2^30
 (GB), 2^20 (MB) or 2^10 (KB) respectively.  A suffix of ``g,'' ``m''
 or ``k'' will specify units of 10^9, 10^6 or 10^3 bytes
@@ -2025,8 +2079,8 @@ respectively. For example:
 @example
 @code{-s 128K}
 @end example
-Will request the local send and receive socket buffer sizes to be
-128KB or 131072 bytes. 
+Will request the local send (netperf) and receive socket buffer sizes
+to be 128KB or 131072 bytes.
 
 While the historic expectation is that setting the socket buffer size
 has a direct effect on say the TCP window, today that may not hold
@@ -2037,19 +2091,19 @@ socket buffer sizes]
 
 @vindex -S, Test-specific
 @item -S <sizespec>
-This option sets the remote send and/or receive socket buffer sizes
-for the data connection to the value(s) specified.  Often, this
-will affect the advertised and/or effective TCP or other window, but
-on some platforms it may not. By default the units are bytes, but a
-suffix of ``G,'' ``M,'' or ``K'' will specify the units to be 2^30
-(GB), 2^20 (MB) or 2^10 (KB) respectively.  A suffix of ``g,'' ``m''
-or ``k'' will specify units of 10^9, 10^6 or 10^3 bytes respectively.
-For example:
+This option sets the remote (netserver) send and/or receive socket
+buffer sizes for the data connection to the value(s) specified.
+Often, this will affect the advertised and/or effective TCP or other
+window, but on some platforms it may not. By default the units are
+bytes, but a suffix of ``G,'' ``M,'' or ``K'' will specify the units
+to be 2^30 (GB), 2^20 (MB) or 2^10 (KB) respectively.  A suffix of
+``g,'' ``m'' or ``k'' will specify units of 10^9, 10^6 or 10^3 bytes
+respectively.  For example:
 @example
 @code{-s 128K}
 @end example
-Will request the local send and receive socket buffer sizes to be
-128KB or 131072 bytes. 
+Will request the remote (netserver) send and receive socket buffer
+sizes to be 128KB or 131072 bytes.
 
 While the historic expectation is that setting the socket buffer size
 has a direct effect on say the TCP window, today that may not hold
@@ -2094,9 +2148,9 @@ addresses for the local and remote ends of the data connection.
 
 A TCP_RR (TCP Request/Response) test is requested by passing a value
 of ``TCP_RR'' to the global @option{-t} command-line option.  A TCP_RR
-test can be though-of as a user-space to user-space @code{ping} with
-no think time - it is a synchronous, one transaction at a time,
-request/response test.
+test can be thought-of as a user-space to user-space @code{ping} with
+no think time - it is by default a synchronous, one transaction at a
+time, request/response test.
 
 The transaction rate is the number of complete transactions exchanged
 divided by the length of time it took to perform those transactions.
@@ -2110,7 +2164,7 @@ well, issues measuring CPU utilization completely and accurately.
 
 Time to establish the TCP connection is not counted in the result.  If
 you want connection setup overheads included, you should consider the
-TCP_CC or TCP_CRR tests.
+@ref{TCP_CC,TPC_CC} or @ref{TCP_CRR,TCP_CRR} tests.
 
 If specifying the @option{-D} option to set TCP_NODELAY and disable
 the Nagle Algorithm increases the transaction rate reported by a
@@ -2137,7 +2191,8 @@ bytes  Bytes  bytes    bytes   secs.    per sec
 
 In this example the request and response sizes were one byte, the
 socket buffers were left at their defaults, and the test ran for all
-of 10 seconds.  The transaction per second rate was rather good :)
+of 10 seconds.  The transaction per second rate was rather good for
+the time :)
 
 @node TCP_CC, TCP_CRR, TCP_RR, Options Common to TCP UDP and SCTP _RR tests
 @subsection TCP_CC
@@ -2180,8 +2235,8 @@ only the @option{-H}, @option{-L}, @option{-4} and @option{-6} of the
 ``common'' test-specific options are likely to have an effect, if any,
 on the results.  The @option{-s} and @option{-S} options _may_ have
 some effect if they alter the number and/or type of options carried in
-the TCP SYNchronize segments.  The @option{-P}  and @option{-r}
-options are utterly ignored.
+the TCP SYNchronize segments, such as Window Scaling or Timestamps.
+The @option{-P} and @option{-r} options are utterly ignored.
 
 Since connection establishment and tear-down for TCP is not symmetric,
 a TCP_CC test is not symmetric in its loading of the two systems under
@@ -2194,12 +2249,12 @@ test.
 
 The TCP Connect/Request/Response (TCP_CRR) test is requested by
 passing a value of ``TCP_CRR'' to the global @option{-t} command-line
-option.  A TCP_RR test is like a merger of a TCP_RR and TCP_CC test
-which measures the performance of establishing a connection, exchanging
-a single request/response transaction, and tearing-down that
-connection.  This is very much like what happens in an HTTP 1.0 or
-HTTP 1.1 connection when HTTP Keepalives are not used.  In fact, the
-TCP_CRR test was added to netperf to simulate just that.
+option.  A TCP_CRR test is like a merger of a @ref{TCP_RR} and
+@ref{TCP_CC} test which measures the performance of establishing a
+connection, exchanging a single request/response transaction, and
+tearing-down that connection.  This is very much like what happens in
+an HTTP 1.0 or HTTP 1.1 connection when HTTP Keepalives are not used.
+In fact, the TCP_CRR test was added to netperf to simulate just that.
 
 Since a request and response are exchanged the @option{-r},
 @option{-s} and @option{-S} options can have an effect on the
@@ -2224,7 +2279,12 @@ netperf does not add anything for that either.  This means that if
 _any_ request or response is lost, the exchange of requests and
 responses will stop from that point until the test timer expires.
 Netperf will not really ``know'' this has happened - the only symptom
-will be a low transaction per second rate.
+will be a low transaction per second rate.  If @option{--enable-burst}
+was included in the @code{configure} command and a test-specific
+@option{-b} option used, the UDP_RR test will ``survive'' the loss of
+requests and responses until the sum is one more than the value passed
+via the @option{-b} option. It will though almost certainly run more
+slowly.
 
 The netperf side of a UDP_RR test will call @code{connect()} on its
 data socket and thenceforth use the @code{send()} and @code{recv()}
@@ -2272,11 +2332,26 @@ specify the names of the local and/or remote XTI device file(s).
 @subsection XTI_TCP_CC
 @cindex Latency, Connection Establishment
 
+An XTI_TCP_CC test is essentially the same as a @ref{TCP_CC,TCP_CC}
+test, only using the XTI rather than BSD Sockets interface.
+
+The test-specific options for an XTI_TCP_CC test are the same as those
+for a TCP_CC test with the addition of the @option{-X <devspec>} option to
+specify the names of the local and/or remote XTI device file(s).
+
 @node XTI_TCP_CRR, XTI_UDP_RR, XTI_TCP_CC, Options Common to TCP UDP and SCTP _RR tests
 @comment  node-name,  next,  previous,  up
 @subsection XTI_TCP_CRR
 @cindex Latency, Connection Establishment
 @cindex Latency, Request-Response
+
+The XTI_TCP_CRR test is essentially the same as a
+@ref{TCP_CRR,TCP_CRR} test, only using the XTI rather than BSD Sockets
+interface.
+
+The test-specific options for an XTI_TCP_CRR test are the same as those
+for a TCP_RR test with the addition of the @option{-X <devspec>} option to
+specify the names of the local and/or remote XTI device file(s).
 
 @node XTI_UDP_RR, DLCL_RR, XTI_TCP_CRR, Options Common to TCP UDP and SCTP _RR tests
 @subsection XTI_UDP_RR
@@ -2313,9 +2388,11 @@ file(s).
 @cindex Aggregate Performance
 @vindex --enable-burst, Configure
 
-@ref{Netperf4,Netperf4} is the preferred benchmark to use when one
-wants to measure aggregate performance because netperf has no support
-for explicit synchronization of concurrent tests.
+Ultimately, @ref{Netperf4,Netperf4} will be the preferred benchmark to
+use when one wants to measure aggregate performance because netperf
+has no support for explicit synchronization of concurrent tests. Until
+netperf4 is ready for prime time, one can make use of the heuristics
+and procedures mentioned here for the 85% solution.
 
 Basically, there are two ways to measure aggregate performance with
 netperf.  The first is to run multiple, concurrent netperf tests and
@@ -2392,7 +2469,12 @@ minimized.  Presumeably one could then omit @option{-i} but that is
 not advised, particularly when/if the CPU utilization approaches 100
 percent.  In the example above we see that the CPU utilization on the
 local system remains the same for all four tests, and is only off by
-0.01 out of 5.09 on the remote system.
+0.01 out of 5.09 on the remote system.  As the number of CPUs in the
+system increases, and so too the odds of saturating a single CPU, the
+accuracy of similar CPU utilization implying little skew error is
+diminished.  This is also the case for those increasingly rare single
+CPU systems if the utilization is reported as 100% or very close to
+it.
 
 @quotation
 @b{NOTE: It is very important to rememeber that netperf is calculating
@@ -2425,25 +2507,59 @@ of skew error and why netperf4 is the preferred tool for aggregate
 tests.  Even if you see the Netperf Contributing Editor acting to the
 contrary!-)
 
+@menu
+* Issues in Running Concurrent Tests::  
+@end menu
+
+@node Issues in Running Concurrent Tests,  , Running Concurrent Netperf Tests, Running Concurrent Netperf Tests
+@subsection Issues in Running Concurrent Tests
+
+In addition to the aforementioned issue of skew error, there can be
+other issues to consider when running concurrent netperf tests.
+
+For example, when running concurrent tests over multiple interfaces,
+one is not always assured that the traffic one thinks went over a
+given interface actually did so.  In particular, the Linux networking
+stack takes a particularly strong stance on its following the so
+called @samp{weak end system model}.  As such, it is willing to answer
+ARP requests for any of its local IP addresses on any of its
+interfaces.  If multiple interfaces are connected to the same
+broadcast domain, then even if they are configured into separate IP
+subnets there is no a priori way of knowing which interface was
+actually used for which connection(s).  This can be addressed by
+setting the @samp{arp_ignore} sysctl before configuring interfaces.
+
+As it is quite important, we will repeat that it is very important to
+rememeber that each concurrent netperf instance is calculating
+system-wide CPU utilization.  When calculating the service demand each
+netperf assumes it is the only thing running on the system.  This
+means that for concurrent tests the service demands reported by
+netperf @b{will be wrong}.  One has to compute service demands for
+concurrent tests by hand
+
 @node  Using --enable-burst,  , Running Concurrent Netperf Tests, Using Netperf to Measure Aggregate Performance
 @comment  node-name,  next,  previous,  up
 @section Using --enable-burst
 
-If one configures netperf with @code{--enable-burst}:
+Starting in version 2.5.0 @code{--enable-burst=yes} is the default,
+which means one no longer must:
 
 @example
 configure --enable-burst
 @end example
 
-Then a test-specific @option{-b num} option is added to the
-@ref{TCP_RR,TCP_RR} and @ref{UDP_RR,UDP_RR} tests. This option causes
-TCP_RR and UDP_RR to quickly work their way up to having at least
-@option{num} transactions in flight at one time.
+To have burst-mode functionality present in netperf.  This enables a
+test-specific @option{-b num} option in @ref{TCP_RR,TCP_RR},
+@ref{UDP_RR,UDP_RR} and @ref{The Omni Tests,omni} tests. This option
+causes those tests to quickly work their way up to having at least
+@option{num} plus one transactions in flight at one time.
 
 This is used as an alternative to or even in conjunction with
-multiple-concurrent _RR tests.  When run with just a single instance
-of netperf, increasing the burst size can determine the maximum number
-of transactions per second can be serviced by a single process:
+multiple-concurrent _RR tests and as a way to implement a
+single-connection, bidirectional bulk-transfer test.  When run with
+just a single instance of netperf, increasing the burst size can
+determine the maximum number of transactions per second which can be
+serviced by a single process:
 
 @example
 for b in 0 1 2 4 8 16 32
@@ -2464,8 +2580,8 @@ The global @option{-v} and @option{-P} options were used to minimize
 the output to the single figure of merit which in this case the
 transaction rate.  The global @code{-B} option was used to more
 clearly label the output, and the test-specific @option{-b} option
-enabled by @code{--enable-burst} set the number of transactions in
-flight at one time.
+enabled by @code{--enable-burst} increase the number of transactions
+in flight at one time.
 
 Now, since the test-specific @option{-D} option was not specified to
 set TCP_NODELAY, the stack was free to ``bundle'' requests and/or
@@ -2659,8 +2775,10 @@ Tests,Running Concurrent Netperf Tests}. Here then is an example:
 @example
 for i in 1
 do
- netperf -H 192.168.2.108 -t TCP_STREAM -B "outbound" -i 10 -P 0 -v 0 -- -s 256K -S 256K &
- netperf -H 192.168.2.108 -t TCP_MAERTS -B "inbound"  -i 10 -P 0 -v 0 -- -s 256K -S 256K &
+ netperf -H 192.168.2.108 -t TCP_STREAM -B "outbound" -i 10 -P 0 -v 0 \
+   -- -s 256K -S 256K &
+ netperf -H 192.168.2.108 -t TCP_MAERTS -B "inbound"  -i 10 -P 0 -v 0 \
+   -- -s 256K -S 256K &
 done
 
  892.66 outbound
@@ -2685,8 +2803,10 @@ Selectors,output selectors}:
 @example
 for i in 1
 do
-  netperf -H 192.168.1.3 -t omni -l 10 -P 0 -- -d stream -s 256K -S 256K -o throughput,direction &
-  netperf -H 192.168.1.3 -t omni -l 10 -P 0 -- -d maerts -s 256K -S 256K -o throughput,direction &
+  netperf -H 192.168.1.3 -t omni -l 10 -P 0 -- \
+    -d stream -s 256K -S 256K -o throughput,direction &
+  netperf -H 192.168.1.3 -t omni -l 10 -P 0 -- \
+    -d maerts -s 256K -S 256K -o throughput,direction &
 done
 
 805.26,Receive
@@ -2758,8 +2878,10 @@ to specific CPUs.
 
 When using concurrent tests there will be two concurrent connections
 or flows, which means that upwards of four CPUs will be employed
-processing the packets, however, with just a single, bidirectional
-request/response test no more than two CPUs will be employed.
+processing the packets (global @option{-T} used, no more than two if
+not), however, with just a single, bidirectional request/response test
+no more than two CPUs will be employed (only one if the global
+@option{-T} is not used).
 
 If there is a CPU bottleneck on either system this may result in
 rather different results between the two methods.
@@ -2778,7 +2900,7 @@ synchronization or balance and any favoritism in the NIC may be exposed.
 @chapter The Omni Tests
 
 Beginning with version 2.5.0, netperf begins a migration to the
-``omni'' tests or ``Two routines to measure them all.''  The code for
+@samp{omni} tests or ``Two routines to measure them all.''  The code for
 the omni tests can be found in @file{src/nettest_omni.c} and the goal
 is to make it easier for netperf to support multiple protocols and
 report a great many additional things about the systems under test.
@@ -2840,7 +2962,7 @@ Selectors,DIRECTION} @ref{Omni Output Selection,output selector} when
 used with a request/reponse test.
 
 @vindex -k, Test-specific
-@item -k <@ref{Omni Output Selection,output selector}>
+@item -k [@ref{Omni Output Selection,output selector}]
 This option sets the style of output to ``keyval'' where each line of
 output has the form:
 @example
@@ -2858,7 +2980,7 @@ Using the @option{-k} option will override any previous, test-specific
 @option{-o} or @option{-O} option.
 
 @vindex -o, Test-specific
-@item -o <@ref{Omni Output Selection,output selector}>
+@item -o [@ref{Omni Output Selection,output selector}]
 This option sets the style of output to ``CSV'' where there will be
 one line of comma-separated values, preceeded by one line of column
 names unless the global @option{-P} option is used with a value of 0:
@@ -2873,7 +2995,7 @@ Using the @option{-o} option will override any previous, test-specific
 @option{-k} or @option{-O} option.
 
 @vindex -O, Test-specific
-@item -O <@ref{Omni Output Selection,output selector}>
+@item -O [@ref{Omni Output Selection,output selector}]
 This option sets the style of output to ``human readable'' which will
 look quite similar to classic netperf output:
 @example
@@ -2918,6 +3040,48 @@ Select UDP Lite
 The default is implicit based on other settings.
 @end table
 
+The omni tests also extend the interpretation of some of the classic,
+test-specific options for the BSD Sockets tests:
+
+@table @code
+@item -m <optionspec>
+This can set the send size for either or both of the netperf and
+netserver sides of the test:
+@example
+-m 32K
+@end example
+sets only the netperf-side send size to 32768 bytes, and or's-in
+transmit for the direction. This is effectively the same behaviour as
+for the classic tests.
+@example
+-m ,32K
+@end example
+sets only the netserver side send size to 32768 bytes and or's-in
+receive for the direction.
+@example
+-m 16K,32K
+sets the netperf side send size to 16284 bytes, the netserver side
+send size to 32768 bytes and the direction will be "Send|Recv."
+@end example
+@item -M <optionspec>
+This can set the receive size for either or both of the netperf and
+netserver sides of the test:
+@example
+-M 32K
+@end example
+sets only the netserver side receive size to 32768 bytes and or's-in
+send for the test direction.
+@example
+-M ,32K
+@end example
+sets only the netperf side receive size to 32768 bytes and or's-in
+receive for the test direction.
+@example
+-M 16K,32K
+@end example
+sets the netserver side receive size to 16384 bytes and the netperf
+side receive size to 32768 bytes and the direction will be "Send|Recv."
+@end table
 
 @node Migrated Tests, Omni Output Selection, Native Omni Tests, The Omni Tests
 @section Migrated Tests
@@ -3019,8 +3183,20 @@ escaping it or enclosing it in quotes.
 @item no selector
 If nothing is given to the @option{-k}, @option{-o} or @option{-O}
 option then the code selects a default set of output selectors
-inspired by classic netperf output.
+inspired by classic netperf output. The format will be the @samp{human
+readable} format emitted by the test-specific @option{-O} option.
 @end table
+
+The order of evaluation will first check for an output selection.  If
+none is specified with the @option{-k}, @option{-o} or @option{-O}
+option netperf will select a default based on the characterists of the
+test.  If there is an output selection, the code will first check for
+@samp{?}, then check to see if it is the magic @samp{all} keyword.
+After that it will check for either @samp{,} or @samp{;} in the
+selection and take that to mean it is a comma and/or
+semi-colon-separated list. If none of those checks match, netperf will then
+assume the output specification is a filename and attempt to open and
+parse the file.
 
 @menu
 * Omni Output Selectors::       
@@ -3176,22 +3352,24 @@ then the value will be between 3 and 30.  If confidence intervals were
 not requested the value will be 1.  Units: Iterations
 @item THROUGHPUT_CONFID
 This will display the width of the confidence interval actually
-achieved for throughput during the test.  Units: Width of interval as
-percentage of reported throughput value.
+achieved for @code{THROUGHPUT} during the test.  Units: Width of
+interval as percentage of reported throughput value.
 @item LOCAL_CPU_CONFID
 This will display the width of the confidence interval actually
-achieved for CPU utilization on the system running netperf during the
-test, if CPU utilization measurement was enabled.  Units: Width of
-interval as percentage of reported CPU utilization.
+achieved for overall CPU utilization on the system running netperf
+(@code{LOCAL_CPU_UTIL}) during the test, if CPU utilization measurement
+was enabled.  Units: Width of interval as percentage of reported CPU
+utilization.
 @item REMOTE_CPU_CONFID
 This will display the width of the confidence interval actually
-achieved for CPU utilzation on the system running netserver during the
-test, if CPU utilization measurement was enabled. Units: Width of
-interval as percentage of reported CPU utilization.
+achieved for overall CPU utilization on the system running netserver
+(@code{REMOTE_CPU_UTIL}) during the test, if CPU utilization
+measurement was enabled. Units: Width of interval as percentage of
+reported CPU utilization.
 @item TRANSACTION_RATE
 This will display the transaction rate in transactions per second for
-a request/response test even if the user has requested a throughput
-units in number of bits or bytes per second via the global @option{-f}
+a request/response test even if the user has requested a throughput in
+units of bits or bytes per second via the global @option{-f}
 option. It is undefined for a non-request/response test. Units:
 Transactions per second.
 @item RT_LATENCY
@@ -3229,22 +3407,22 @@ or there was an error in retrieving it. Units: Bytes.
 @item LOCAL_SEND_THROUGHPUT
 The throughput as measured by netperf for the successful ``send''
 calls it made on the data connection. Units: as requested via the
-global @option{-f} option and displayed via the THROUGHPUT_UNITS
+global @option{-f} option and displayed via the @code{THROUGHPUT_UNITS}
 output selector.
 @item LOCAL_RECV_THROUGHPUT
 The throughput as measured by netperf for the successful ``receive''
 calls it made on the data connection. Units: as requested via the
-global @option{-f} option and displayed via the THROUGHPUT_UNITS
+global @option{-f} option and displayed via the @code{THROUGHPUT_UNITS}
 output selector.
 @item REMOTE_SEND_THROUGHPUT
 The throughput as measured by netserver for the successful ``send''
 calls it made on the data connection. Units: as requested via the
-global @option{-f} option and displayed via the THROUGHPUT_UNITS
+global @option{-f} option and displayed via the @code{THROUGHPUT_UNITS}
 output selector.
 @item REMOTE_RECV_THROUGHPUT
 The throughput as measured by netserver for the successful ``receive''
 calls it made on the data connection. Units: as requested via the
-global @option{-f} option and displayed via the THROUGHPUT_UNITS
+global @option{-f} option and displayed via the @code{THROUGHPUT_UNITS}
 output selector.
 @item LOCAL_CPU_BIND
 The CPU to which netperf was bound, if at all, during the test. A
@@ -3256,7 +3434,7 @@ The number of CPUs (cores, threads) detected by netperf. Units: CPU count.
 The utilization of the CPU most heavily utilized during the test, as
 measured by netperf. This can be used to see if any one CPU of a
 multi-CPU system was saturated even though the overall CPU utilization
-as reported by LOCAL_CPU_UTIL was low. Units: 0 to 100% 
+as reported by @code{LOCAL_CPU_UTIL} was low. Units: 0 to 100% 
 @item LOCAL_CPU_PEAK_ID
 The id of the CPU most heavily utilized during the test as determined
 by netperf. Units: CPU ID.
@@ -3280,7 +3458,7 @@ count.
 The utilization of the CPU most heavily utilized during the test, as
 measured by netserver. This can be used to see if any one CPU of a
 multi-CPU system was saturated even though the overall CPU utilization
-as reported by LOCAL_CPU_UTIL was low. Units: 0 to 100%
+as reported by @code{REMOTE_CPU_UTIL} was low. Units: 0 to 100%
 @item REMOTE_CPU_PEAK_ID
 The id of the CPU most heavily utilized during the test as determined
 by netserver. Units: CPU ID.
@@ -3421,8 +3599,8 @@ ASCII Text.
 The release name/number of the OS running on the system on which
 netperf  was running. Units: ASCII Text
 @item LOCAL_VERSION
-The version number of the OS runningon the system on which netperf was
-running. Units: ASCII Text
+The version number of the OS running on the system on which netperf
+was running. Units: ASCII Text
 @item LOCAL_MACHINE
 The machine architecture of the machine on which netperf was
 running. Units: ASCII Text.
@@ -3534,7 +3712,7 @@ The string specified by the user with the global @option{-B}
 option. Units: ASCII Text.
 @item UUID
 The universally unique identifier associated with this test, either
-generated automagically by netperf, or passed to netperf via a
+generated automagically by netperf, or passed to netperf via an omni
 test-specific @option{-u} option. Note: Future versions may make this
 a global command-line option. Units: ASCII Text.
 @item MIN_LATENCY
@@ -3702,7 +3880,7 @@ run elsewhere.
 
 Netperf is constantly evolving.  If you find you want to make
 enhancements to netperf, by all means do so.  If you wish to add a new
-``suite'' of tests to netperf the general idea is to
+``suite'' of tests to netperf the general idea is to:
 
 @enumerate
 @item
@@ -3720,7 +3898,8 @@ Compile and test
 
 However, with the addition of the ``omni'' tests in version 2.5.0 it
 is preferred that one attempt to make the necessary changes to
-@file{src/nettest_omni.c} rather than adding new source files.
+@file{src/nettest_omni.c} rather than adding new source files, unless
+this would make the omni tests entirely too complicated.
 
 If you wish to submit your changes for possible inclusion into the
 mainline sources, please try to base your changes on the latest
@@ -3746,8 +3925,8 @@ way to describe it is to say it is the version of netperf with support
 for synchronized, multiple-thread, multiple-test, multiple-system,
 network-oriented benchmarking.
 
-Netperf4 is still undergoing rapid evolution. Those wishing to work
-with or on netperf4 are encouraged to join the
+Netperf4 is still undergoing evolution. Those wishing to work with or
+on netperf4 are encouraged to join the
 @uref{http://www.netperf.org/cgi-bin/mailman/listinfo/netperf-dev,netperf-dev}
 mailing list and/or peruse the
 @uref{http://www.netperf.org/svn/netperf4/trunk,current sources}.
