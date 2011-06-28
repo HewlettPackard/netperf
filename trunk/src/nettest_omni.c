@@ -4266,11 +4266,22 @@ recv_data(SOCKET data_socket, struct ring_elt *recv_ring, uint32_t bytes_to_recv
 
 
 int
-close_data_socket(SOCKET data_socket, struct sockaddr *peer, int peerlen)
+close_data_socket(SOCKET data_socket, struct sockaddr *peer, int peerlen, int protocol)
 {
 
   int ret;
   char buffer[4];
+
+  if (debug) {
+    fprintf(where,
+	    "%s sock %d peer %p peerlen %d protocol %d\n",
+	    __FUNCTION__,
+	    data_socket,
+	    peer,
+	    peerlen,
+	    protocol);
+    fflush(where);
+  }
 
   if (protocol == IPPROTO_UDP) {
     /* try to give the remote a signal. what this means if we ever
@@ -6367,7 +6378,7 @@ recv_omni()
       lsr_size_end = lsr_size;
       lss_size_end = lss_size;
 #endif
-      ret = close_data_socket(data_socket,NULL,0);
+      ret = close_data_socket(data_socket,NULL,0,omni_request->protocol);
       if (ret == -1) {
 	times_up = 1;
 	timed_out = 1;
@@ -6436,10 +6447,10 @@ recv_omni()
     lsr_size_end = lsr_size;
     lss_size_end = lss_size;
 #endif
-    close_data_socket(data_socket,NULL,0);
+    close_data_socket(data_socket,NULL,0,omni_request->protocol);
   }
   else {
-    close_data_socket(data_socket,(struct sockaddr *)&peeraddr_in,addrlen);
+    close_data_socket(data_socket,(struct sockaddr *)&peeraddr_in,addrlen,omni_request->protocol);
     lsr_size_end = lsr_size;
     lss_size_end = lss_size;
   }
