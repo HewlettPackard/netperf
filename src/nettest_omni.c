@@ -1441,26 +1441,34 @@ set_output_list_all() {
   /* Line One SOCKET_TYPE to RESPONSE_SIZE */
   i = 0;
   j = 0;
-  for (k = SOCKET_TYPE; k <= RESPONSE_SIZE; k++)
+  for (k = SOCKET_TYPE; k <= RESPONSE_SIZE; k++) {
     output_list[i][j++] = k;
+    desired_output_groups |= netperf_output_source[k].output_group;
+  }
 
   /* Line Two LOCAL_CPU_UTIL to TRANSPORT_MSS */
   i = 1;
   j = 0;
-  for (k = LOCAL_CPU_UTIL; k <= TRANSPORT_MSS; k++)
+  for (k = LOCAL_CPU_UTIL; k <= TRANSPORT_MSS; k++) {
     output_list[i][j++] = k;
+    desired_output_groups |= netperf_output_source[k].output_group;
+  }
 
   /* Line Three LOCAL_SEND_THROUGHPUT throught REMOTE_CORK */
   i = 2;
   j = 0;
-  for (k = LOCAL_SEND_THROUGHPUT; k <= REMOTE_CORK; k++)
+  for (k = LOCAL_SEND_THROUGHPUT; k <= REMOTE_CORK; k++) {
     output_list[i][j++] = k;
+    desired_output_groups |= netperf_output_source[k].output_group;
+  }
 
   /* Line Four LOCAL_SYSNAME through COMMAND_LINE */
   i = 3;
   j = 0;
-  for (k = LOCAL_SYSNAME; k <= COMMAND_LINE; k++)
+  for (k = LOCAL_SYSNAME; k <= COMMAND_LINE; k++) {
     output_list[i][j++] = k;
+    desired_output_groups |= netperf_output_source[k].output_group;
+  }
 
 }
 
@@ -1649,7 +1657,7 @@ parse_output_selection_direct(char *output_selection) {
 #define NETPERF_TPUT "ELAPSED_TIME,THROUGHPUT,THROUGHPUT_UNITS"
 #define NETPERF_OUTPUT_STREAM "LSS_SIZE_END,LSS_SIZE_END,LOCAL_SEND_SIZE"
 #define NETPERF_OUTPUT_MAERTS "RSS_SIZE_END,LSR_SIZE_END,REMOTE_SEND_SIZE"
-#define NETPERF_CPU "LOCAL_CPU,LOCAL_CPU_METHOD,REMOTE_CPU_UTIL,REMOTE_CPU_METHOD,LOCAL_SD,REMOTE_SD,SD_UNITS"
+#define NETPERF_CPU "LOCAL_CPU_UTIL,LOCAL_CPU_METHOD,REMOTE_CPU_UTIL,REMOTE_CPU_METHOD,LOCAL_SD,REMOTE_SD,SD_UNITS"
 #define NETPERF_RR "LSS_SIZE_END,LSR_SIZE_END,RSR_SIZE_END,RSS_SIZE_END,REQUEST_SIZE,RESPONSE_SIZE"
 
 void
@@ -1662,6 +1670,11 @@ set_output_list_by_test() {
   char *rr_no_cpu = NETPERF_RR "," NETPERF_TPUT;
   char *rr_cpu = NETPERF_RR "," NETPERF_TPUT "," NETPERF_CPU;
 
+  if (debug) {
+    fprintf(where,"%s setting the output list by test\n",
+	    __FUNCTION__);
+    fflush(where);
+  }
 
   if (NETPERF_XMIT_ONLY(direction)) {
     if (!(local_cpu_usage || remote_cpu_usage))
@@ -1700,6 +1713,13 @@ set_output_list_by_test() {
 void
 parse_output_selection(char *output_selection) {
 
+  if (debug) {
+    fprintf(where,"%s is parsing the output selection '%s'\n",
+	    __FUNCTION__,
+	    output_selection);
+    fflush(where);
+  }
+
   /* is it the magic keyword? */
   if (strcasecmp(output_selection,"all") == 0) {
     set_output_list_all();
@@ -1725,6 +1745,11 @@ void
 print_omni_init_list() {
 
   int i;
+
+  if (debug) {
+    fprintf(where,"%s called\n",
+	    __FUNCTION__);
+  }
 
   /* belts and suspenders everyone... */
   for (i = NETPERF_OUTPUT_UNKNOWN; i < NETPERF_OUTPUT_MAX; i++) {
@@ -3731,11 +3756,25 @@ print_omni_init() {
 
   int i,j;
 
+  if (debug) {
+    fprintf(where,"%s entered\n",
+	    __FUNCTION__);
+    fflush(where);
+  }
+
+  /* why is this before the if you ask? because some of the output
+     specifiers are char * rather than char[] and when I wanted to
+     start setting output_group flags I was needing to call
+     print_omni_init() before the char * 's were malloced, which meant
+     the netperf_output_source got NULL pointers.  there is
+     undoubtedly a cleaner way to do all this. raj 20110629 */
+
+  print_omni_init_list();
+
   if (printing_initialized) return;
 
   printing_initialized = 1;
 
-  print_omni_init_list();
 
   /* belts and suspenders */
   for (j = 0; j < NETPERF_MAX_BLOCKS; j++)
@@ -4891,6 +4930,18 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
       if (routing_allowed)
 	omni_request->flags |= OMNI_ROUTING_ALLOWED;
 
+      if (desired_output_groups & OMNI_WANT_REM_IFNAME)
+	omni_request->flags |= OMNI_WANT_IFNAME;
+
+      if (desired_output_groups & OMNI_WANT_REM_IFSLOT)
+	omni_request->flags |= OMNI_WANT_IFSLOT;
+
+      if (desired_output_groups & OMNI_WANT_REM_IFIDS)
+	omni_request->flags |= OMNI_WANT_IFIDS;
+      
+      if (desired_output_groups & OMNI_WANT_REM_DRVINFO)
+	omni_request->flags |= OMNI_WANT_DRVINFO;
+
       omni_request->cpu_rate	           = remote_cpu_rate;
       if (test_time)
 	omni_request->test_length	   = test_time;
@@ -5496,24 +5547,56 @@ p       based.  having said that, we rely entirely on other code to
     /* if this is a legacy test, there is not much point to finding
        all these things since they will not be emitted. */
     if (!legacy) {
+      /* and even if this is not a legacy test, there is still not
+	 much point to finding these things if they will not be
+	 emitted */
       find_system_info(&local_system_model,
 		       &local_cpu_model,
 		       &local_cpu_frequency);
 
-      local_interface_name = 
-	find_egress_interface(local_res->ai_addr,remote_res->ai_addr);
+      if ((desired_output_groups & OMNI_WANT_LOC_IFNAME) ||
+	  (desired_output_groups & OMNI_WANT_LOC_DRVINFO) ||
+	  (desired_output_groups & OMNI_WANT_LOC_IFSLOT) ||
+	  (desired_output_groups & OMNI_WANT_LOC_IFIDS)) {
+	local_interface_name = 
+	  find_egress_interface(local_res->ai_addr,remote_res->ai_addr);
+      }
+      else {
+	local_interface_name = strdup("Bug If Seen IFNAME");
+      }
 
-      find_driver_info(local_interface_name,local_driver_name,
-		       local_driver_version,local_driver_firmware,
-		       local_driver_bus,32);
+      if (desired_output_groups & OMNI_WANT_LOC_DRVINFO) {
+	find_driver_info(local_interface_name,local_driver_name,
+			 local_driver_version,local_driver_firmware,
+			 local_driver_bus,32);
+      }
+      else {
+	strncpy(local_driver_name,"Bug If Seen DRVINFO",32);
+	strncpy(local_driver_version, "Bug If Seen DRVINFO",32);
+	strncpy(local_driver_firmware,"Bug If Seen DRVINFO",32);
+	strncpy(local_driver_bus,"Bug If Seen DRVINFO",32);
+      }
 
-      local_interface_slot = find_interface_slot(local_interface_name);
+      if (desired_output_groups & OMNI_WANT_LOC_IFSLOT) {
+	local_interface_slot = find_interface_slot(local_interface_name);
+      }
+      else {
+	local_interface_slot = strdup("Bug If Seen IFSLOT");
+      }
 
-      find_interface_ids(local_interface_name,
-			 &local_interface_vendor,
-			 &local_interface_device,
-			 &local_interface_subvendor,
-			 &local_interface_subdevice);
+      if (desired_output_groups & OMNI_WANT_LOC_IFIDS) {
+	find_interface_ids(local_interface_name,
+			   &local_interface_vendor,
+			   &local_interface_device,
+			   &local_interface_subvendor,
+			   &local_interface_subdevice);
+      }
+      else {
+	local_interface_vendor = -2;
+	local_interface_device = -2;
+	local_interface_subvendor = -2;
+	local_interface_subdevice = -2;
+      }
     }
 
     /* if we timed-out, and had padded the timer, we need to subtract
@@ -6528,24 +6611,54 @@ recv_omni()
   }
   omni_results->peak_cpu_util   = (float)lib_local_peak_cpu_util;
   omni_results->peak_cpu_id     = lib_local_peak_cpu_id;
-  local_interface_name = 
-    find_egress_interface(local_res->ai_addr,(struct sockaddr *)&peeraddr_in);
-  strncpy(omni_results->ifname,local_interface_name,16);
-  omni_results->ifname[15] = 0;
-  local_interface_slot = find_interface_slot(local_interface_name);
-  strncpy(omni_results->ifslot,local_interface_slot,16);
-  omni_results->ifslot[15] = 0;
-  find_interface_ids(local_interface_name,
-		     &omni_results->vendor,
-		     &omni_results->device,
-		     &omni_results->subvendor,
-		     &omni_results->subdevice);
-  find_driver_info(local_interface_name,
-		   omni_results->driver,
-		   omni_results->version,
-		   omni_results->firmware,
-		   omni_results->bus,
-		   32);
+  if ((omni_request->flags & OMNI_WANT_IFNAME) ||
+      (omni_request->flags & OMNI_WANT_IFSLOT) ||
+      (omni_request->flags & OMNI_WANT_IFIDS) ||
+      (omni_request->flags & OMNI_WANT_DRVINFO)) {
+    local_interface_name = 
+      find_egress_interface(local_res->ai_addr,(struct sockaddr *)&peeraddr_in);
+    strncpy(omni_results->ifname,local_interface_name,16);
+    omni_results->ifname[15] = 0;
+  }
+  else {
+    strncpy(omni_results->ifname,"Bug If Seen IFNAME",16);
+  }
+  if (omni_request->flags & OMNI_WANT_IFSLOT) {
+    local_interface_slot = find_interface_slot(local_interface_name);
+    strncpy(omni_results->ifslot,local_interface_slot,16);
+    omni_results->ifslot[15] = 0;
+  }
+  else {
+    strncpy(omni_results->ifslot,"Bug If Seen IFSLOT",16);
+  }
+  if (omni_request->flags & OMNI_WANT_IFIDS) {
+    find_interface_ids(local_interface_name,
+		       &omni_results->vendor,
+		       &omni_results->device,
+		       &omni_results->subvendor,
+		       &omni_results->subdevice);
+  }
+  else {
+    omni_results->vendor = -2;
+    omni_results->device = -2;
+    omni_results->subvendor = -2;
+    omni_results->subdevice = -2;
+  }
+  if (omni_request->flags & OMNI_WANT_DRVINFO) {
+    find_driver_info(local_interface_name,
+		     omni_results->driver,
+		     omni_results->version,
+		     omni_results->firmware,
+		     omni_results->bus,
+		     32);
+  }
+  else {
+    strncpy(omni_results->driver,"Bug If Seen DRVINFO",32);
+    strncpy(omni_results->version,"Bug If Seen DRVINFO",32);
+    strncpy(omni_results->firmware,"Bug If Seen DRVINFO",32);
+    strncpy(omni_results->bus,"Bug If Seen DRVINFO",32);
+  }
+
   if (debug) {
     fprintf(where,
 	    "recv_omni: test complete, sending results.\n");
@@ -8220,6 +8333,9 @@ scan_omni_args(int argc, char *argv[])
     rem_nodelay = -1;
 
   }
+  if (!legacy) 
+    print_omni_init();
+
 }
 
 #endif /* WANT_OMNI */
