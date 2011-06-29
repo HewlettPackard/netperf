@@ -4942,6 +4942,9 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
       if (desired_output_groups & OMNI_WANT_REM_DRVINFO)
 	omni_request->flags |= OMNI_WANT_DRVINFO;
 
+      if (want_keepalive)
+	omni_request->flags |= OMNI_WANT_KEEPALIVE;
+
       omni_request->cpu_rate	           = remote_cpu_rate;
       if (test_time)
 	omni_request->test_length	   = test_time;
@@ -6004,12 +6007,13 @@ recv_omni()
      variables, so set the globals based on the values in the request.
      once the socket has been created, we will set the response values
      based on the updated value of those globals. raj 7/94 */
-  lss_size_req = omni_request->send_buf_size;
-  lsr_size_req = omni_request->recv_buf_size;
-  loc_nodelay = (omni_request->flags) & OMNI_NO_DELAY;
-  loc_rcvavoid = omni_request->so_rcvavoid;
-  loc_sndavoid = omni_request->so_sndavoid;
+  lss_size_req    = omni_request->send_buf_size;
+  lsr_size_req    = omni_request->recv_buf_size;
+  loc_nodelay     = (omni_request->flags) & OMNI_NO_DELAY;
+  loc_rcvavoid    = omni_request->so_rcvavoid;
+  loc_sndavoid    = omni_request->so_sndavoid;
   routing_allowed = (omni_request->flags) & OMNI_ROUTING_ALLOWED;
+  want_keepalive  = (omni_request->flags) & OMNI_WANT_KEEPALIVE;
 
 #ifdef WANT_INTERVALS
   interval_usecs = omni_request->interval_usecs;

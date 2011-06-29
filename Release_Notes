@@ -1,9 +1,25 @@
 These are the Release Notes for post-revision 2.4.5 of netperf:
 
+*) A new global command line option - -S - has been added to enable
+   setting of SO_KEEPALIVE on the data socket.  This will affect the
+   netperf side of the "classic" netperf tests, and will also affect
+   the netserver side of an "omni" or migrated classic test as only
+   the control message for the omni tests has the requisite flags
+   field to communicate the desire to set SO_KEEPALIVE.
+
+   Ostensibly, this may help when netperf is (ab)used in functional
+   testing situations and netservers end-up orphaned and out in the
+   cold because their corresponding netperfs went away and the
+   notification was lost amid the roar of traffic over-saturating the
+   interconnect(s).
+
+   The default is to behave as before - SO_KEEPALIVE not set.
+
 *) Base on the frequency at which the author has used the
-   functionality, the default for --enable-burst is yes.  To disable
-   support for burst mode one must now include a --enable-burst=no
-   when performing the ./configure prior to compiling the bits.
+   functionality, the default for --enable-burst is now "yes."  To
+   disable support for burst mode one must now include a
+   --enable-burst=no when performing the ./configure prior to
+   compiling the bits.
 
 *) The output of the -D global command line option (./configure
    --enable-demo) has been enhanced to include seconds and

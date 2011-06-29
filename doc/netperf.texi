@@ -1147,6 +1147,27 @@ running the same basic test type (eg TCP_STREAM) multiple times in
 succession where the test banners would then simply be redundant and
 unnecessarily clutter the output. [Default: 1 - display test banners]
 
+@vindex -s, Global
+@item -s <seconds>
+This option will cause netperf to sleep @samp{<seconds>} before
+actually transferring data over the data connection.  This may be
+useful in situations where one wishes to start a great many netperf
+instances and do not want the earlier ones affecting the ability of
+the later ones to get established.
+
+Added somewhere between versions 2.4.3 and 2.5.0.
+
+@vindex -S, Global
+@item -S
+This option will cause an attempt to be made to set SO_KEEPALIVE on
+the data socket of a test using the BSD sockets interface.  The
+attempt will be made on the netperf side of all tests, and will be
+made on the netserver side of an @ref{The Omni Tests,omni} or
+@ref{Migrated Tests,migrated} test.  No indication of failure is given
+unless debug output is enabled with the global @option{-d} option.
+
+Added in version 2.5.0.
+
 @vindex -t, Global
 @item -t testname
 This option is used to tell netperf which test you wish to run.  As of

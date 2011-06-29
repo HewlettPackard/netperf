@@ -100,7 +100,7 @@ double atof(const char *);
  /* Some of the args take optional parameters. Since we are using */
  /* getopt to parse the command line, we will tell getopt that they do */
  /* not take parms, and then look for them ourselves */
-#define GLOBAL_CMD_LINE_ARGS "A:a:b:B:CcdDf:F:H:hi:I:jk:K:l:L:n:NO:o:P:p:rs:t:T:v:VW:w:46"
+#define GLOBAL_CMD_LINE_ARGS "A:a:b:B:CcdDf:F:H:hi:I:jk:K:l:L:n:NO:o:P:p:rSs:t:T:v:VW:w:46"
 
 /************************************************************************/
 /*									*/
@@ -287,6 +287,7 @@ Global options:\n\
     -P 0|1            Don't/Do display test headers\n\
     -r                Allow confidence to be hit on result only\n\
     -s seconds        Wait seconds between test setup and test start\n\
+    -S                Set SO_KEEPALIVE on the data connection\n\
     -t testname       Specify test to perform\n\
     -T lcpu,rcpu      Request netperf/netserver be bound to local/remote cpu\n\
     -v verbosity      Specify the verbosity level\n\
@@ -894,6 +895,10 @@ scan_cmd_line(int argc, char *argv[])
 	 result even if not yet reached on CPU utilization.  only
 	 meaningful if cpu util is enabled */
       result_confidence_only = 1;
+      break;
+    case 'S':
+      /* the user wishes us to set SO_KEEPALIVE */
+      want_keepalive = 1;
       break;
     case 's':
       /* the user wishes us to sleep/pause some length of time before

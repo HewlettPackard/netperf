@@ -221,6 +221,8 @@ int
 
 int multicast_ttl = -1; /* should we set the multicast TTL to a value? */
 
+int want_keepalive = 0;
+
 #ifdef WANT_HISTOGRAM
 #ifdef HAVE_GETHRTIME
 static hrtime_t time_one;
@@ -1317,24 +1319,52 @@ create_data_socket(struct addrinfo *res)
 
 #if defined(TCP_CORK)
     
-    if (loc_tcpcork > 0) {
-      /* the user wishes for us to set TCP_CORK on the socket */
-      int one = 1;
-      if (setsockopt(temp_socket,
-		     getprotobyname("tcp")->p_proto,
-		     TCP_CORK,
-		     (char *)&one,
-		     sizeof(one)) == SOCKET_ERROR) {
-	perror("netperf: create_data_socket: tcp_cork");
-	exit(1);
-      }
-      if (debug) {
-	fprintf(where,"create_data_socket: tcp_cork...\n");
-      }
+  if (loc_tcpcork > 0) {
+    /* the user wishes for us to set TCP_CORK on the socket */
+    int one = 1;
+    if (setsockopt(temp_socket,
+		   getprotobyname("tcp")->p_proto,
+		   TCP_CORK,
+		   (char *)&one,
+		   sizeof(one)) == SOCKET_ERROR) {
+      perror("netperf: create_data_socket: tcp_cork");
+      exit(1);
     }
-    
+    if (debug) {
+      fprintf(where,"create_data_socket: tcp_cork...\n");
+    }
+  }
+  
 #endif /* TCP_CORK */    
 
+  /* well, after Knuth only knows how many years, I have finally
+    decided to enable setting SO_KEEPALIVE on the data socket.  99
+    times out of 10 this should not be necessary, but that 100th time,
+    perhaps when netperf is being (ab)used by functional testers, may
+    benefit from it.  And it may help clean-up some lingering
+    netservers from time to time.  raj 2011-06-29 */
+
+#if defined(SO_KEEPALIVE)
+
+  if (want_keepalive) {
+    if (setsockopt(temp_socket,
+		   SOL_SOCKET,
+		   SO_KEEPALIVE,
+		   (const char *)&on,
+		   sizeof(on)) < 0) {
+      if (debug) {
+	fprintf(where,
+		"%s: unable to set SO_KEEPALIVE on data socket: %s (errno %d)\n",
+		__FUNCTION__,
+		strerror(errno),
+		errno);
+	fflush(where);
+      }
+    }
+  }
+
+#endif /* SO_KEEPALIVE */
+    
   /* since some of the UDP tests do not do anything to cause an
      implicit bind() call, we need to be rather explicit about our
      bind() call here. even if the address and/or the port are zero

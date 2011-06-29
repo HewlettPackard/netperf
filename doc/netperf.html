@@ -1237,7 +1237,24 @@ running the same basic test type (eg TCP_STREAM) multiple times in
 succession where the test banners would then simply be redundant and
 unnecessarily clutter the output. [Default: 1 - display test banners]
 
-     <p><a name="index-g_t_002dt_002c-Global-38"></a><br><dt><code>-t testname</code><dd>This option is used to tell netperf which test you wish to run.  As of
+     <p><a name="index-g_t_002ds_002c-Global-38"></a><br><dt><code>-s &lt;seconds&gt;</code><dd>This option will cause netperf to sleep &lsquo;<samp><span class="samp">&lt;seconds&gt;</span></samp>&rsquo; before
+actually transferring data over the data connection.  This may be
+useful in situations where one wishes to start a great many netperf
+instances and do not want the earlier ones affecting the ability of
+the later ones to get established.
+
+     <p>Added somewhere between versions 2.4.3 and 2.5.0.
+
+     <p><a name="index-g_t_002dS_002c-Global-39"></a><br><dt><code>-S</code><dd>This option will cause an attempt to be made to set SO_KEEPALIVE on
+the data socket of a test using the BSD sockets interface.  The
+attempt will be made on the netperf side of all tests, and will be
+made on the netserver side of an <a href="#The-Omni-Tests">omni</a> or
+<a href="#Migrated-Tests">migrated</a> test.  No indication of failure is given
+unless debug output is enabled with the global <samp><span class="option">-d</span></samp> option.
+
+     <p>Added in version 2.5.0.
+
+     <p><a name="index-g_t_002dt_002c-Global-40"></a><br><dt><code>-t testname</code><dd>This option is used to tell netperf which test you wish to run.  As of
 this writing, valid values for <var>testname</var> include:
           <ul>
 <li><a href="#TCP_005fSTREAM">TCP_STREAM</a>, <a href="#TCP_005fMAERTS">TCP_MAERTS</a>, <a href="#TCP_005fSENDFILE">TCP_SENDFILE</a>, <a href="#TCP_005fRR">TCP_RR</a>, <a href="#TCP_005fCRR">TCP_CRR</a>, <a href="#TCP_005fCC">TCP_CC</a>
@@ -1259,7 +1276,7 @@ options may be present on the command-line.  The last <samp><span class="option"
 global command-line option will determine the test to be
 run. [Default: TCP_STREAM]
 
-     <p><a name="index-g_t_002dT_002c-Global-39"></a><br><dt><code>-T &lt;optionspec&gt;</code><dd>This option controls the CPU, and probably by extension memory,
+     <p><a name="index-g_t_002dT_002c-Global-41"></a><br><dt><code>-T &lt;optionspec&gt;</code><dd>This option controls the CPU, and probably by extension memory,
 affinity of netperf and/or netserver.
      <pre class="example">          netperf -T 1
 </pre>
@@ -1279,7 +1296,7 @@ systems.
 involving where processes run relative to where NIC interrupts are
 processed or where NICs allocate their DMA buffers.
 
-     <p><a name="index-g_t_002dv_002c-Global-40"></a><br><dt><code>-v verbosity</code><dd>This option controls how verbose netperf will be in its output, and is
+     <p><a name="index-g_t_002dv_002c-Global-42"></a><br><dt><code>-v verbosity</code><dd>This option controls how verbose netperf will be in its output, and is
 often used in conjunction with the <samp><span class="option">-P</span></samp> option. If the
 verbosity is set to a value of &ldquo;0&rdquo; then only the test's SFM (Single
 Figure of Merit) is displayed.  If local <a href="#CPU-Utilization">CPU utilization</a> is requested via the <samp><span class="option">-c</span></samp> option then the SFM is
@@ -1304,16 +1321,16 @@ ignored, save for when asking for the time histogram to be displayed.
 In version 2.5.0 there is no <a href="#Omni-Output-Selectors">output selector</a> for the histogram and so it remains displayed only when the
 verbosity level is set to 2.
 
-     <p><a name="index-g_t_002dV_002c-Global-41"></a><br><dt><code>-V</code><dd>This option displays the netperf version and then exits.
+     <p><a name="index-g_t_002dV_002c-Global-43"></a><br><dt><code>-V</code><dd>This option displays the netperf version and then exits.
 
      <p>Added in netperf 2.4.4.
 
-     <p><a name="index-g_t_002dw_002c-Global-42"></a><br><dt><code>-w time</code><dd>If netperf was configured with <samp><span class="option">--enable-intervals=yes</span></samp> then
+     <p><a name="index-g_t_002dw_002c-Global-44"></a><br><dt><code>-w time</code><dd>If netperf was configured with <samp><span class="option">--enable-intervals=yes</span></samp> then
 this value will set the inter-burst time to time milliseconds, and the
 <samp><span class="option">-b</span></samp> option will set the number of sends per burst.  The actual
 inter-burst time may vary depending on the system's timer resolution.
 
-     <p><a name="index-g_t_002dW_002c-Global-43"></a><br><dt><code>-W &lt;sizespec&gt;</code><dd>This option controls the number of buffers in the send (first or only
+     <p><a name="index-g_t_002dW_002c-Global-45"></a><br><dt><code>-W &lt;sizespec&gt;</code><dd>This option controls the number of buffers in the send (first or only
 value) and or receive (second or only value) buffer rings.  Unlike
 some benchmarks, netperf does not continuously send or receive from a
 single buffer.  Instead it rotates through a ring of
@@ -1322,7 +1339,7 @@ socket buffer sizes (<samp><span class="option">-s</span></samp> and/or <samp><s
 by the send <samp><span class="option">-m</span></samp> or receive <samp><span class="option">-M</span></samp> buffer size
 respectively]
 
-     <p><a name="index-g_t_002d4_002c-Global-44"></a><br><dt><code>-4</code><dd>Specifying this option will set both the local and remote address
+     <p><a name="index-g_t_002d4_002c-Global-46"></a><br><dt><code>-4</code><dd>Specifying this option will set both the local and remote address
 families to AF_INET - that is use only IPv4 addresses on the control
 connection.  This can be overridden by a subsequent <samp><span class="option">-6</span></samp>,
 <samp><span class="option">-H</span></samp> or <samp><span class="option">-L</span></samp> option.  Basically, the last option
@@ -1330,7 +1347,7 @@ explicitly specifying an address family wins.  Unless overridden by a
 test-specific option, this will be inherited for the data connection
 as well.
 
-     <p><a name="index-g_t_002d6_002c-Global-45"></a><br><dt><code>-6</code><dd>Specifying this option will set both local and and remote address
+     <p><a name="index-g_t_002d6_002c-Global-47"></a><br><dt><code>-6</code><dd>Specifying this option will set both local and and remote address
 families to AF_INET6 - that is use only IPv6 addresses on the control
 connection.  This can be overridden by a subsequent <samp><span class="option">-4</span></samp>,
 <samp><span class="option">-H</span></samp> or <samp><span class="option">-L</span></samp> option.  Basically, the last address family
@@ -1480,7 +1497,7 @@ using the BSD Sockets or the XTI interface those common options
 include:
 
      
-<a name="index-g_t_002dh_002c-Test_002dspecific-46"></a>
+<a name="index-g_t_002dh_002c-Test_002dspecific-48"></a>
 <dl><dt><code>-h</code><dd>Display the test-suite-specific usage string and exit.  For a TCP_ or
 UDP_ test this will be the usage string from the source file
 nettest_bsd.c.  For an XTI_ test, this will be the usage string from
@@ -1494,13 +1511,13 @@ The test-specific <samp><span class="option">-H</span></samp> will override thos
 data (aka test) connection only.  Settings for the control connection
 are left unchanged.
 
-     <p><a name="index-g_t_002dL_002c-Test_002dspecific-47"></a><br><dt><code>-L &lt;optionspec&gt;</code><dd>The test-specific <samp><span class="option">-L</span></samp> option is identical to the test-specific
+     <p><a name="index-g_t_002dL_002c-Test_002dspecific-49"></a><br><dt><code>-L &lt;optionspec&gt;</code><dd>The test-specific <samp><span class="option">-L</span></samp> option is identical to the test-specific
 <samp><span class="option">-H</span></samp> option except it affects the local hostname|IP and address
 family information.  As with its global command-line counterpart, this
 is generally only useful when measuring though those evil, end-to-end
 breaking things called firewalls.
 
-     <p><a name="index-g_t_002dm_002c-Test_002dspecific-48"></a><br><dt><code>-m bytes</code><dd>Set the size of the buffer passed-in to the &ldquo;send&rdquo; calls of a
+     <p><a name="index-g_t_002dm_002c-Test_002dspecific-50"></a><br><dt><code>-m bytes</code><dd>Set the size of the buffer passed-in to the &ldquo;send&rdquo; calls of a
 _STREAM test.  Note that this may have only an indirect effect on the
 size of the packets sent over the network, and certain Layer 4
 protocols do _not_ preserve or enforce message boundaries, so setting
@@ -1516,7 +1533,7 @@ respectively. For example:
 socket buffer size for the connection - either the system's default or
 the value set via the <samp><span class="option">-s</span></samp> option.]
 
-     <p><a name="index-g_t_002dM_002c-Test_002dspecific-49"></a><br><dt><code>-M bytes</code><dd>Set the size of the buffer passed-in to the &ldquo;recv&rdquo; calls of a
+     <p><a name="index-g_t_002dM_002c-Test_002dspecific-51"></a><br><dt><code>-M bytes</code><dd>Set the size of the buffer passed-in to the &ldquo;recv&rdquo; calls of a
 _STREAM test.  This will be an upper bound on the number of bytes
 received per receive call. By default the units are bytes, but suffix
 of &ldquo;G,&rdquo; &ldquo;M,&rdquo; or &ldquo;K&rdquo; will specify the units to be 2^30 (GB), 2^20
@@ -1529,9 +1546,9 @@ example:
 socket buffer size for the data connection - either the system's
 default or the value set via the <samp><span class="option">-S</span></samp> option.]
 
-     <p><a name="index-g_t_002dP_002c-Test_002dspecific-50"></a><br><dt><code>-P &lt;optionspec&gt;</code><dd>Set the local and/or remote port numbers for the data connection.
+     <p><a name="index-g_t_002dP_002c-Test_002dspecific-52"></a><br><dt><code>-P &lt;optionspec&gt;</code><dd>Set the local and/or remote port numbers for the data connection.
 
-     <p><a name="index-g_t_002ds_002c-Test_002dspecific-51"></a><br><dt><code>-s &lt;sizespec&gt;</code><dd>This option sets the local (netperf) send and receive socket buffer
+     <p><a name="index-g_t_002ds_002c-Test_002dspecific-53"></a><br><dt><code>-s &lt;sizespec&gt;</code><dd>This option sets the local (netperf) send and receive socket buffer
 sizes for the data connection to the value(s) specified.  Often, this
 will affect the advertised and/or effective TCP or other window, but
 on some platforms it may not. By default the units are bytes, but
@@ -1554,7 +1571,7 @@ which will be an indication to the stack the user wants to enable a
 form of copy avoidance. [Default: -1 - use the system's default socket
 buffer sizes]
 
-     <p><a name="index-g_t_002dS-Test_002dspecific-52"></a><br><dt><code>-S &lt;sizespec&gt;</code><dd>This option sets the remote (netserver) send and/or receive socket
+     <p><a name="index-g_t_002dS-Test_002dspecific-54"></a><br><dt><code>-S &lt;sizespec&gt;</code><dd>This option sets the remote (netserver) send and/or receive socket
 buffer sizes for the data connection to the value(s) specified. 
 Often, this will affect the advertised and/or effective TCP or other
 window, but on some platforms it may not. By default the units are
@@ -1577,13 +1594,13 @@ which will be an indication to the stack the user wants to enable a
 form of copy avoidance. [Default: -1 - use the system's default socket
 buffer sizes]
 
-     <p><a name="index-g_t_002d4_002c-Test_002dspecific-53"></a><br><dt><code>-4</code><dd>Set the local and remote address family for the data connection to
+     <p><a name="index-g_t_002d4_002c-Test_002dspecific-55"></a><br><dt><code>-4</code><dd>Set the local and remote address family for the data connection to
 AF_INET - ie use IPv4 addressing only.  Just as with their global
 command-line counterparts the last of the <samp><span class="option">-4</span></samp>, <samp><span class="option">-6</span></samp>,
 <samp><span class="option">-H</span></samp> or <samp><span class="option">-L</span></samp> option wins for their respective address
 families.
 
-     <p><a name="index-g_t_002d6_002c-Test_002dspecific-54"></a><br><dt><code>-6</code><dd>This option is identical to its <samp><span class="option">-4</span></samp> cousin, but requests IPv6
+     <p><a name="index-g_t_002d6_002c-Test_002dspecific-56"></a><br><dt><code>-6</code><dd>This option is identical to its <samp><span class="option">-4</span></samp> cousin, but requests IPv6
 addresses for the local and remote ends of the data connection.
 
    </dl>
@@ -1794,7 +1811,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Options-common-to-TCP-UDP-and-SCTP-tes
 <p>A UDP_STREAM test is similar to a <a href="#TCP_005fSTREAM">TCP_STREAM</a> test except UDP is
 used as the transport rather than TCP.
 
-   <p><a name="index-Limiting-Bandwidth-55"></a>A UDP_STREAM test has no end-to-end flow control - UDP provides none
+   <p><a name="index-Limiting-Bandwidth-57"></a>A UDP_STREAM test has no end-to-end flow control - UDP provides none
 and neither does netperf.  However, if you wish, you can configure
 netperf with <code>--enable-intervals=yes</code> to enable the global
 command-line <samp><span class="option">-b</span></samp> and <samp><span class="option">-w</span></samp> options to pace bursts of
@@ -2166,7 +2183,7 @@ using the BSD Sockets or the XTI interface those common options
 include:
 
      
-<a name="index-g_t_002dh_002c-Test_002dspecific-56"></a>
+<a name="index-g_t_002dh_002c-Test_002dspecific-58"></a>
 <dl><dt><code>-h</code><dd>Display the test-suite-specific usage string and exit.  For a TCP_ or
 UDP_ test this will be the usage string from the source file
 <samp><span class="file">nettest_bsd.c</span></samp>.  For an XTI_ test, this will be the usage string
@@ -2174,7 +2191,7 @@ from the source file <samp><span class="file">src/nettest_xti.c</span></samp>.  
 will be the usage string from the source file
 <samp><span class="file">src/nettest_sctp.c</span></samp>.
 
-     <p><a name="index-g_t_002dH_002c-Test_002dspecific-57"></a><br><dt><code>-H &lt;optionspec&gt;</code><dd>Normally, the remote hostname|IP and address family information is
+     <p><a name="index-g_t_002dH_002c-Test_002dspecific-59"></a><br><dt><code>-H &lt;optionspec&gt;</code><dd>Normally, the remote hostname|IP and address family information is
 inherited from the settings for the control connection (eg global
 command-line <samp><span class="option">-H</span></samp>, <samp><span class="option">-4</span></samp> and/or <samp><span class="option">-6</span></samp> options. 
 The test-specific <samp><span class="option">-H</span></samp> will override those settings for the
@@ -2182,15 +2199,15 @@ data (aka test) connection only.  Settings for the control connection
 are left unchanged.  This might be used to cause the control and data
 connections to take different paths through the network.
 
-     <p><a name="index-g_t_002dL_002c-Test_002dspecific-58"></a><br><dt><code>-L &lt;optionspec&gt;</code><dd>The test-specific <samp><span class="option">-L</span></samp> option is identical to the test-specific
+     <p><a name="index-g_t_002dL_002c-Test_002dspecific-60"></a><br><dt><code>-L &lt;optionspec&gt;</code><dd>The test-specific <samp><span class="option">-L</span></samp> option is identical to the test-specific
 <samp><span class="option">-H</span></samp> option except it affects the local hostname|IP and address
 family information.  As with its global command-line counterpart, this
 is generally only useful when measuring though those evil, end-to-end
 breaking things called firewalls.
 
-     <p><a name="index-g_t_002dP_002c-Test_002dspecific-59"></a><br><dt><code>-P &lt;optionspec&gt;</code><dd>Set the local and/or remote port numbers for the data connection.
+     <p><a name="index-g_t_002dP_002c-Test_002dspecific-61"></a><br><dt><code>-P &lt;optionspec&gt;</code><dd>Set the local and/or remote port numbers for the data connection.
 
-     <p><a name="index-g_t_002dr_002c-Test_002dspecific-60"></a><br><dt><code>-r &lt;sizespec&gt;</code><dd>This option sets the request (first value) and/or response (second
+     <p><a name="index-g_t_002dr_002c-Test_002dspecific-62"></a><br><dt><code>-r &lt;sizespec&gt;</code><dd>This option sets the request (first value) and/or response (second
 value) sizes for an _RR test. By default the units are bytes, but a
 suffix of &ldquo;G,&rdquo; &ldquo;M,&rdquo; or &ldquo;K&rdquo; will specify the units to be 2^30
 (GB), 2^20 (MB) or 2^10 (KB) respectively.  A suffix of &ldquo;g,&rdquo; &ldquo;m&rdquo;
@@ -2201,7 +2218,7 @@ respectively. For example:
      <p>Will set the request size to 128 bytes and the response size to 16 KB
 or 16384 bytes. [Default: 1 - a single-byte request and response ]
 
-     <p><a name="index-g_t_002ds_002c-Test_002dspecific-61"></a><br><dt><code>-s &lt;sizespec&gt;</code><dd>This option sets the local (netperf) send and receive socket buffer
+     <p><a name="index-g_t_002ds_002c-Test_002dspecific-63"></a><br><dt><code>-s &lt;sizespec&gt;</code><dd>This option sets the local (netperf) send and receive socket buffer
 sizes for the data connection to the value(s) specified.  Often, this
 will affect the advertised and/or effective TCP or other window, but
 on some platforms it may not. By default the units are bytes, but a
@@ -2221,7 +2238,7 @@ used which will be an indication to the stack the user wants to enable
 a form of copy avoidance. [Default: -1 - use the system's default
 socket buffer sizes]
 
-     <p><a name="index-g_t_002dS_002c-Test_002dspecific-62"></a><br><dt><code>-S &lt;sizespec&gt;</code><dd>This option sets the remote (netserver) send and/or receive socket
+     <p><a name="index-g_t_002dS_002c-Test_002dspecific-64"></a><br><dt><code>-S &lt;sizespec&gt;</code><dd>This option sets the remote (netserver) send and/or receive socket
 buffer sizes for the data connection to the value(s) specified. 
 Often, this will affect the advertised and/or effective TCP or other
 window, but on some platforms it may not. By default the units are
@@ -2241,13 +2258,13 @@ used which will be an indication to the stack the user wants to enable
 a form of copy avoidance.  [Default: -1 - use the system's default
 socket buffer sizes]
 
-     <p><a name="index-g_t_002d4_002c-Test_002dspecific-63"></a><br><dt><code>-4</code><dd>Set the local and remote address family for the data connection to
+     <p><a name="index-g_t_002d4_002c-Test_002dspecific-65"></a><br><dt><code>-4</code><dd>Set the local and remote address family for the data connection to
 AF_INET - ie use IPv4 addressing only.  Just as with their global
 command-line counterparts the last of the <samp><span class="option">-4</span></samp>, <samp><span class="option">-6</span></samp>,
 <samp><span class="option">-H</span></samp> or <samp><span class="option">-L</span></samp> option wins for their respective address
 families.
 
-     <p><a name="index-g_t_002d6-Test_002dspecific-64"></a><br><dt><code>-6</code><dd>This option is identical to its <samp><span class="option">-4</span></samp> cousin, but requests IPv6
+     <p><a name="index-g_t_002d6-Test_002dspecific-66"></a><br><dt><code>-6</code><dd>This option is identical to its <samp><span class="option">-4</span></samp> cousin, but requests IPv6
 addresses for the local and remote ends of the data connection.
 
    </dl>
@@ -2278,7 +2295,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Options-Common-to-TCP-UDP-and-SCTP-_00
 
 <h4 class="subsection">6.2.1 TCP_RR</h4>
 
-<p><a name="index-Measuring-Latency-65"></a><a name="index-Latency_002c-Request_002dResponse-66"></a>
+<p><a name="index-Measuring-Latency-67"></a><a name="index-Latency_002c-Request_002dResponse-68"></a>
 A TCP_RR (TCP Request/Response) test is requested by passing a value
 of &ldquo;TCP_RR&rdquo; to the global <samp><span class="option">-t</span></samp> command-line option.  A TCP_RR
 test can be thought-of as a user-space to user-space <code>ping</code> with
@@ -2337,7 +2354,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Options-Common-to-TCP-UDP-and-SCTP-_00
 
 <h4 class="subsection">6.2.2 TCP_CC</h4>
 
-<p><a name="index-Connection-Latency-67"></a><a name="index-Latency_002c-Connection-Establishment-68"></a>
+<p><a name="index-Connection-Latency-69"></a><a name="index-Latency_002c-Connection-Establishment-70"></a>
 A TCP_CC (TCP Connect/Close) test is requested by passing a value of
 &ldquo;TCP_CC&rdquo; to the global <samp><span class="option">-t</span></samp> option.  A TCP_CC test simply
 measures how fast the pair of systems can open and close connections
@@ -2345,7 +2362,7 @@ between one another in a synchronous (one at a time) manner.  While
 this is considered an _RR test, no request or response is exchanged
 over the connection.
 
-   <p><a name="index-Port-Reuse-69"></a><a name="index-TIME_005fWAIT-70"></a>The issue of TIME_WAIT reuse is an important one for a TCP_CC test. 
+   <p><a name="index-Port-Reuse-71"></a><a name="index-TIME_005fWAIT-72"></a>The issue of TIME_WAIT reuse is an important one for a TCP_CC test. 
 Basically, TIME_WAIT reuse is when a pair of systems churn through
 connections fast enough that they wrap the 16-bit port number space in
 less time than the length of the TIME_WAIT state.  While it is indeed
@@ -2391,7 +2408,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Options-Common-to-TCP-UDP-and-SCTP-_00
 
 <h4 class="subsection">6.2.3 TCP_CRR</h4>
 
-<p><a name="index-Latency_002c-Connection-Establishment-71"></a><a name="index-Latency_002c-Request_002dResponse-72"></a>
+<p><a name="index-Latency_002c-Connection-Establishment-73"></a><a name="index-Latency_002c-Request_002dResponse-74"></a>
 The TCP Connect/Request/Response (TCP_CRR) test is requested by
 passing a value of &ldquo;TCP_CRR&rdquo; to the global <samp><span class="option">-t</span></samp> command-line
 option.  A TCP_CRR test is like a merger of a <a href="#TCP_005fRR">TCP_RR</a> and
@@ -2422,7 +2439,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Options-Common-to-TCP-UDP-and-SCTP-_00
 
 <h4 class="subsection">6.2.4 UDP_RR</h4>
 
-<p><a name="index-Latency_002c-Request_002dResponse-73"></a><a name="index-Packet-Loss-74"></a>
+<p><a name="index-Latency_002c-Request_002dResponse-75"></a><a name="index-Packet-Loss-76"></a>
 A UDP Request/Response (UDP_RR) test is requested by passing a value
 of &ldquo;UDP_RR&rdquo; to a global <samp><span class="option">-t</span></samp> option.  It is very much the
 same as a TCP_RR test except UDP is used rather than TCP.
@@ -2477,7 +2494,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Options-Common-to-TCP-UDP-and-SCTP-_00
 
 <h4 class="subsection">6.2.5 XTI_TCP_RR</h4>
 
-<p><a name="index-Latency_002c-Request_002dResponse-75"></a>
+<p><a name="index-Latency_002c-Request_002dResponse-77"></a>
 An XTI_TCP_RR test is essentially the same as a <a href="#TCP_005fRR">TCP_RR</a> test only
 using the XTI rather than BSD Sockets interface. It is requested by
 passing a value of &ldquo;XTI_TCP_RR&rdquo; to the <samp><span class="option">-t</span></samp> global
@@ -2500,7 +2517,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Options-Common-to-TCP-UDP-and-SCTP-_00
 <!-- node-name,  next,  previous,  up -->
 <h4 class="subsection">6.2.6 XTI_TCP_CC</h4>
 
-<p><a name="index-Latency_002c-Connection-Establishment-76"></a>
+<p><a name="index-Latency_002c-Connection-Establishment-78"></a>
 An XTI_TCP_CC test is essentially the same as a <a href="#TCP_005fCC">TCP_CC</a>
 test, only using the XTI rather than BSD Sockets interface.
 
@@ -2521,7 +2538,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Options-Common-to-TCP-UDP-and-SCTP-_00
 <!-- node-name,  next,  previous,  up -->
 <h4 class="subsection">6.2.7 XTI_TCP_CRR</h4>
 
-<p><a name="index-Latency_002c-Connection-Establishment-77"></a><a name="index-Latency_002c-Request_002dResponse-78"></a>
+<p><a name="index-Latency_002c-Connection-Establishment-79"></a><a name="index-Latency_002c-Request_002dResponse-80"></a>
 The XTI_TCP_CRR test is essentially the same as a
 <a href="#TCP_005fCRR">TCP_CRR</a> test, only using the XTI rather than BSD Sockets
 interface.
@@ -2542,7 +2559,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Options-Common-to-TCP-UDP-and-SCTP-_00
 
 <h4 class="subsection">6.2.8 XTI_UDP_RR</h4>
 
-<p><a name="index-Latency_002c-Request_002dResponse-79"></a>
+<p><a name="index-Latency_002c-Request_002dResponse-81"></a>
 An XTI_UDP_RR test is essentially the same as a UDP_RR test only using
 the XTI rather than BSD Sockets interface.  It is requested by passing
 a value of &ldquo;XTI_UDP_RR&rdquo; to the <samp><span class="option">-t</span></samp> global command-line
@@ -2566,7 +2583,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Options-Common-to-TCP-UDP-and-SCTP-_00
 <!-- node-name,  next,  previous,  up -->
 <h4 class="subsection">6.2.9 DLCL_RR</h4>
 
-<p><a name="index-Latency_002c-Request_002dResponse-80"></a>
+<p><a name="index-Latency_002c-Request_002dResponse-82"></a>
 <div class="node">
 <a name="DLCO_RR"></a>
 <a name="DLCO_005fRR"></a>
@@ -2580,7 +2597,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Options-Common-to-TCP-UDP-and-SCTP-_00
 <!-- node-name,  next,  previous,  up -->
 <h4 class="subsection">6.2.10 DLCO_RR</h4>
 
-<p><a name="index-Latency_002c-Request_002dResponse-81"></a>
+<p><a name="index-Latency_002c-Request_002dResponse-83"></a>
 <div class="node">
 <a name="SCTP_RR"></a>
 <a name="SCTP_005fRR"></a>
@@ -2593,7 +2610,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Options-Common-to-TCP-UDP-and-SCTP-_00
 <!-- node-name,  next,  previous,  up -->
 <h4 class="subsection">6.2.11 SCTP_RR</h4>
 
-<p><a name="index-Latency_002c-Request_002dResponse-82"></a>
+<p><a name="index-Latency_002c-Request_002dResponse-84"></a>
 <div class="node">
 <a name="Using-Netperf-to-Measure-Aggregate-Performance"></a>
 <p><hr>
@@ -2606,7 +2623,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
 <!-- node-name,  next,  previous,  up -->
 <h2 class="chapter">7 Using Netperf to Measure Aggregate Performance</h2>
 
-<p><a name="index-Aggregate-Performance-83"></a><a name="index-g_t_002d_002denable_002dburst_002c-Configure-84"></a>
+<p><a name="index-Aggregate-Performance-85"></a><a name="index-g_t_002d_002denable_002dburst_002c-Configure-86"></a>
 Ultimately, <a href="#Netperf4">Netperf4</a> will be the preferred benchmark to
 use when one wants to measure aggregate performance because netperf
 has no support for explicit synchronization of concurrent tests. Until
@@ -3192,11 +3209,11 @@ test-specific options for the omni tests are a superset of those for
 &ldquo;classic&rdquo; tests.  The options added by the omni tests are:
 
      
-<a name="index-g_t_002dc_002c-Test_002dspecific-85"></a>
+<a name="index-g_t_002dc_002c-Test_002dspecific-87"></a>
 <dl><dt><code>-c</code><dd>This explicitly declares that the test is to include connection
 establishment and tear-down as in either a TCP_CRR or TCP_CC test.
 
-     <p><a name="index-g_t_002dd_002c-Test_002dspecific-86"></a><br><dt><code>-d &lt;direction&gt;</code><dd>This option sets the direction of the test relative to the netperf
+     <p><a name="index-g_t_002dd_002c-Test_002dspecific-88"></a><br><dt><code>-d &lt;direction&gt;</code><dd>This option sets the direction of the test relative to the netperf
 process.  As of version 2.5.0 one can use the following in a
 case-insenstive manner:
 
@@ -3211,7 +3228,7 @@ character and they will be OR'ed together.  In this way one can use
 the &rdquo;Send|Recv&rdquo; that will be emitted by the <a href="#Omni-Output-Selectors">DIRECTION</a> <a href="#Omni-Output-Selection">output selector</a> when
 used with a request/reponse test.
 
-     <p><a name="index-g_t_002dk_002c-Test_002dspecific-87"></a><br><dt><code>-k [<a href="#Omni-Output-Selection">output selector</a>]</code><dd>This option sets the style of output to &ldquo;keyval&rdquo; where each line of
+     <p><a name="index-g_t_002dk_002c-Test_002dspecific-89"></a><br><dt><code>-k [<a href="#Omni-Output-Selection">output selector</a>]</code><dd>This option sets the style of output to &ldquo;keyval&rdquo; where each line of
 output has the form:
      <pre class="example">          key=value
 </pre>
@@ -3224,7 +3241,7 @@ output has the form:
      <p>Using the <samp><span class="option">-k</span></samp> option will override any previous, test-specific
 <samp><span class="option">-o</span></samp> or <samp><span class="option">-O</span></samp> option.
 
-     <p><a name="index-g_t_002do_002c-Test_002dspecific-88"></a><br><dt><code>-o [<a href="#Omni-Output-Selection">output selector</a>]</code><dd>This option sets the style of output to &ldquo;CSV&rdquo; where there will be
+     <p><a name="index-g_t_002do_002c-Test_002dspecific-90"></a><br><dt><code>-o [<a href="#Omni-Output-Selection">output selector</a>]</code><dd>This option sets the style of output to &ldquo;CSV&rdquo; where there will be
 one line of comma-separated values, preceeded by one line of column
 names unless the global <samp><span class="option">-P</span></samp> option is used with a value of 0:
      <pre class="example">          $ netperf -t omni -- -d rr -o "THROUGHPUT,THROUGHPUT_UNITS"
@@ -3235,7 +3252,7 @@ names unless the global <samp><span class="option">-P</span></samp> option is us
      <p>Using the <samp><span class="option">-o</span></samp> option will override any previous, test-specific
 <samp><span class="option">-k</span></samp> or <samp><span class="option">-O</span></samp> option.
 
-     <p><a name="index-g_t_002dO_002c-Test_002dspecific-89"></a><br><dt><code>-O [<a href="#Omni-Output-Selection">output selector</a>]</code><dd>This option sets the style of output to &ldquo;human readable&rdquo; which will
+     <p><a name="index-g_t_002dO_002c-Test_002dspecific-91"></a><br><dt><code>-O [<a href="#Omni-Output-Selection">output selector</a>]</code><dd>This option sets the style of output to &ldquo;human readable&rdquo; which will
 look quite similar to classic netperf output:
      <pre class="example">          $ netperf -t omni -- -d rr -O "THROUGHPUT,THROUGHPUT_UNITS"
           OMNI TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain (127.0.0.1) port 0 AF_INET : demo
@@ -3248,11 +3265,11 @@ look quite similar to classic netperf output:
      <p>Using the <samp><span class="option">-O</span></samp> option will override any previous, test-specific
 <samp><span class="option">-k</span></samp> or <samp><span class="option">-o</span></samp> option.
 
-     <p><a name="index-g_t_002dt_002c-Test_002dspecific-90"></a><br><dt><code>-t</code><dd>This option explicitly sets the socket type for the test's data
+     <p><a name="index-g_t_002dt_002c-Test_002dspecific-92"></a><br><dt><code>-t</code><dd>This option explicitly sets the socket type for the test's data
 connection. As of version 2.5.0 the known socket types include
 &ldquo;stream&rdquo; and &ldquo;dgram&rdquo; for SOCK_STREAM and SOCK_DGRAM respectively.
 
-     <p><a name="index-g_t_002dT_002c-Test_002dspecific-91"></a><br><dt><code>-T &lt;protocol&gt;</code><dd>This option is used to explicitly set the protocol used for the
+     <p><a name="index-g_t_002dT_002c-Test_002dspecific-93"></a><br><dt><code>-T &lt;protocol&gt;</code><dd>This option is used to explicitly set the protocol used for the
 test. It is case-insensitive. As of version 2.5.0 the protocols known
 to netperf include:
           <dl>
@@ -4054,32 +4071,32 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
 <h2 class="unnumbered">Concept Index</h2>
 
 <ul class="index-cp" compact>
-<li><a href="#index-Aggregate-Performance-83">Aggregate Performance</a>: <a href="#Using-Netperf-to-Measure-Aggregate-Performance">Using Netperf to Measure Aggregate Performance</a></li>
+<li><a href="#index-Aggregate-Performance-85">Aggregate Performance</a>: <a href="#Using-Netperf-to-Measure-Aggregate-Performance">Using Netperf to Measure Aggregate Performance</a></li>
 <li><a href="#index-Bandwidth-Limitation-10">Bandwidth Limitation</a>: <a href="#Installing-Netperf-Bits">Installing Netperf Bits</a></li>
-<li><a href="#index-Connection-Latency-67">Connection Latency</a>: <a href="#TCP_005fCC">TCP_CC</a></li>
+<li><a href="#index-Connection-Latency-69">Connection Latency</a>: <a href="#TCP_005fCC">TCP_CC</a></li>
 <li><a href="#index-CPU-Utilization-14">CPU Utilization</a>: <a href="#CPU-Utilization">CPU Utilization</a></li>
 <li><a href="#index-Design-of-Netperf-13">Design of Netperf</a>: <a href="#The-Design-of-Netperf">The Design of Netperf</a></li>
 <li><a href="#index-Installation-2">Installation</a>: <a href="#Installing-Netperf">Installing Netperf</a></li>
 <li><a href="#index-Introduction-1">Introduction</a>: <a href="#Introduction">Introduction</a></li>
-<li><a href="#index-Latency_002c-Connection-Establishment-77">Latency, Connection Establishment</a>: <a href="#XTI_005fTCP_005fCRR">XTI_TCP_CRR</a></li>
-<li><a href="#index-Latency_002c-Connection-Establishment-76">Latency, Connection Establishment</a>: <a href="#XTI_005fTCP_005fCC">XTI_TCP_CC</a></li>
-<li><a href="#index-Latency_002c-Connection-Establishment-71">Latency, Connection Establishment</a>: <a href="#TCP_005fCRR">TCP_CRR</a></li>
-<li><a href="#index-Latency_002c-Connection-Establishment-68">Latency, Connection Establishment</a>: <a href="#TCP_005fCC">TCP_CC</a></li>
-<li><a href="#index-Latency_002c-Request_002dResponse-82">Latency, Request-Response</a>: <a href="#SCTP_005fRR">SCTP_RR</a></li>
-<li><a href="#index-Latency_002c-Request_002dResponse-81">Latency, Request-Response</a>: <a href="#DLCO_005fRR">DLCO_RR</a></li>
-<li><a href="#index-Latency_002c-Request_002dResponse-80">Latency, Request-Response</a>: <a href="#DLCL_005fRR">DLCL_RR</a></li>
-<li><a href="#index-Latency_002c-Request_002dResponse-79">Latency, Request-Response</a>: <a href="#XTI_005fUDP_005fRR">XTI_UDP_RR</a></li>
-<li><a href="#index-Latency_002c-Request_002dResponse-78">Latency, Request-Response</a>: <a href="#XTI_005fTCP_005fCRR">XTI_TCP_CRR</a></li>
-<li><a href="#index-Latency_002c-Request_002dResponse-75">Latency, Request-Response</a>: <a href="#XTI_005fTCP_005fRR">XTI_TCP_RR</a></li>
-<li><a href="#index-Latency_002c-Request_002dResponse-73">Latency, Request-Response</a>: <a href="#UDP_005fRR">UDP_RR</a></li>
-<li><a href="#index-Latency_002c-Request_002dResponse-72">Latency, Request-Response</a>: <a href="#TCP_005fCRR">TCP_CRR</a></li>
-<li><a href="#index-Latency_002c-Request_002dResponse-66">Latency, Request-Response</a>: <a href="#TCP_005fRR">TCP_RR</a></li>
-<li><a href="#index-Limiting-Bandwidth-55">Limiting Bandwidth</a>: <a href="#UDP_005fSTREAM">UDP_STREAM</a></li>
+<li><a href="#index-Latency_002c-Connection-Establishment-79">Latency, Connection Establishment</a>: <a href="#XTI_005fTCP_005fCRR">XTI_TCP_CRR</a></li>
+<li><a href="#index-Latency_002c-Connection-Establishment-78">Latency, Connection Establishment</a>: <a href="#XTI_005fTCP_005fCC">XTI_TCP_CC</a></li>
+<li><a href="#index-Latency_002c-Connection-Establishment-73">Latency, Connection Establishment</a>: <a href="#TCP_005fCRR">TCP_CRR</a></li>
+<li><a href="#index-Latency_002c-Connection-Establishment-70">Latency, Connection Establishment</a>: <a href="#TCP_005fCC">TCP_CC</a></li>
+<li><a href="#index-Latency_002c-Request_002dResponse-84">Latency, Request-Response</a>: <a href="#SCTP_005fRR">SCTP_RR</a></li>
+<li><a href="#index-Latency_002c-Request_002dResponse-83">Latency, Request-Response</a>: <a href="#DLCO_005fRR">DLCO_RR</a></li>
+<li><a href="#index-Latency_002c-Request_002dResponse-82">Latency, Request-Response</a>: <a href="#DLCL_005fRR">DLCL_RR</a></li>
+<li><a href="#index-Latency_002c-Request_002dResponse-81">Latency, Request-Response</a>: <a href="#XTI_005fUDP_005fRR">XTI_UDP_RR</a></li>
+<li><a href="#index-Latency_002c-Request_002dResponse-80">Latency, Request-Response</a>: <a href="#XTI_005fTCP_005fCRR">XTI_TCP_CRR</a></li>
+<li><a href="#index-Latency_002c-Request_002dResponse-77">Latency, Request-Response</a>: <a href="#XTI_005fTCP_005fRR">XTI_TCP_RR</a></li>
+<li><a href="#index-Latency_002c-Request_002dResponse-75">Latency, Request-Response</a>: <a href="#UDP_005fRR">UDP_RR</a></li>
+<li><a href="#index-Latency_002c-Request_002dResponse-74">Latency, Request-Response</a>: <a href="#TCP_005fCRR">TCP_CRR</a></li>
+<li><a href="#index-Latency_002c-Request_002dResponse-68">Latency, Request-Response</a>: <a href="#TCP_005fRR">TCP_RR</a></li>
+<li><a href="#index-Limiting-Bandwidth-57">Limiting Bandwidth</a>: <a href="#UDP_005fSTREAM">UDP_STREAM</a></li>
 <li><a href="#index-Limiting-Bandwidth-9">Limiting Bandwidth</a>: <a href="#Installing-Netperf-Bits">Installing Netperf Bits</a></li>
-<li><a href="#index-Measuring-Latency-65">Measuring Latency</a>: <a href="#TCP_005fRR">TCP_RR</a></li>
-<li><a href="#index-Packet-Loss-74">Packet Loss</a>: <a href="#UDP_005fRR">UDP_RR</a></li>
-<li><a href="#index-Port-Reuse-69">Port Reuse</a>: <a href="#TCP_005fCC">TCP_CC</a></li>
-<li><a href="#index-TIME_005fWAIT-70">TIME_WAIT</a>: <a href="#TCP_005fCC">TCP_CC</a></li>
+<li><a href="#index-Measuring-Latency-67">Measuring Latency</a>: <a href="#TCP_005fRR">TCP_RR</a></li>
+<li><a href="#index-Packet-Loss-76">Packet Loss</a>: <a href="#UDP_005fRR">UDP_RR</a></li>
+<li><a href="#index-Port-Reuse-71">Port Reuse</a>: <a href="#TCP_005fCC">TCP_CC</a></li>
+<li><a href="#index-TIME_005fWAIT-72">TIME_WAIT</a>: <a href="#TCP_005fCC">TCP_CC</a></li>
    </ul><div class="node">
 <a name="Option-Index"></a>
 <p><hr>
@@ -4094,7 +4111,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
 
 
 <ul class="index-vr" compact>
-<li><a href="#index-g_t_002d_002denable_002dburst_002c-Configure-84"><code>--enable-burst, Configure</code></a>: <a href="#Using-Netperf-to-Measure-Aggregate-Performance">Using Netperf to Measure Aggregate Performance</a></li>
+<li><a href="#index-g_t_002d_002denable_002dburst_002c-Configure-86"><code>--enable-burst, Configure</code></a>: <a href="#Using-Netperf-to-Measure-Aggregate-Performance">Using Netperf to Measure Aggregate Performance</a></li>
 <li><a href="#index-g_t_002d_002denable_002dcpuutil_002c-Configure-3"><code>--enable-cpuutil, Configure</code></a>: <a href="#Installing-Netperf-Bits">Installing Netperf Bits</a></li>
 <li><a href="#index-g_t_002d_002denable_002ddlpi_002c-Configure-6"><code>--enable-dlpi, Configure</code></a>: <a href="#Installing-Netperf-Bits">Installing Netperf Bits</a></li>
 <li><a href="#index-g_t_002d_002denable_002dhistogram_002c-Configure-12"><code>--enable-histogram, Configure</code></a>: <a href="#Installing-Netperf-Bits">Installing Netperf Bits</a></li>
@@ -4103,61 +4120,63 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
 <li><a href="#index-g_t_002d_002denable_002dsctp_002c-Configure-7"><code>--enable-sctp, Configure</code></a>: <a href="#Installing-Netperf-Bits">Installing Netperf Bits</a></li>
 <li><a href="#index-g_t_002d_002denable_002dunixdomain_002c-Configure-5"><code>--enable-unixdomain, Configure</code></a>: <a href="#Installing-Netperf-Bits">Installing Netperf Bits</a></li>
 <li><a href="#index-g_t_002d_002denable_002dxti_002c-Configure-4"><code>--enable-xti, Configure</code></a>: <a href="#Installing-Netperf-Bits">Installing Netperf Bits</a></li>
-<li><a href="#index-g_t_002d4_002c-Global-44"><code>-4, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
-<li><a href="#index-g_t_002d4_002c-Test_002dspecific-63"><code>-4, Test-specific</code></a>: <a href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a></li>
-<li><a href="#index-g_t_002d4_002c-Test_002dspecific-53"><code>-4, Test-specific</code></a>: <a href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a></li>
-<li><a href="#index-g_t_002d6-Test_002dspecific-64"><code>-6 Test-specific</code></a>: <a href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a></li>
-<li><a href="#index-g_t_002d6_002c-Global-45"><code>-6, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
-<li><a href="#index-g_t_002d6_002c-Test_002dspecific-54"><code>-6, Test-specific</code></a>: <a href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a></li>
+<li><a href="#index-g_t_002d4_002c-Global-46"><code>-4, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
+<li><a href="#index-g_t_002d4_002c-Test_002dspecific-65"><code>-4, Test-specific</code></a>: <a href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a></li>
+<li><a href="#index-g_t_002d4_002c-Test_002dspecific-55"><code>-4, Test-specific</code></a>: <a href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a></li>
+<li><a href="#index-g_t_002d6-Test_002dspecific-66"><code>-6 Test-specific</code></a>: <a href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a></li>
+<li><a href="#index-g_t_002d6_002c-Global-47"><code>-6, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
+<li><a href="#index-g_t_002d6_002c-Test_002dspecific-56"><code>-6, Test-specific</code></a>: <a href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a></li>
 <li><a href="#index-g_t_002dA_002c-Global-16"><code>-A, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002da_002c-Global-15"><code>-a, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002dB_002c-Global-18"><code>-B, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002db_002c-Global-17"><code>-b, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002dC_002c-Global-20"><code>-C, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002dc_002c-Global-19"><code>-c, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
-<li><a href="#index-g_t_002dc_002c-Test_002dspecific-85"><code>-c, Test-specific</code></a>: <a href="#Native-Omni-Tests">Native Omni Tests</a></li>
+<li><a href="#index-g_t_002dc_002c-Test_002dspecific-87"><code>-c, Test-specific</code></a>: <a href="#Native-Omni-Tests">Native Omni Tests</a></li>
 <li><a href="#index-g_t_002dD_002c-Global-22"><code>-D, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002dd_002c-Global-21"><code>-d, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
-<li><a href="#index-g_t_002dd_002c-Test_002dspecific-86"><code>-d, Test-specific</code></a>: <a href="#Native-Omni-Tests">Native Omni Tests</a></li>
+<li><a href="#index-g_t_002dd_002c-Test_002dspecific-88"><code>-d, Test-specific</code></a>: <a href="#Native-Omni-Tests">Native Omni Tests</a></li>
 <li><a href="#index-g_t_002dF_002c-Global-24"><code>-F, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002df_002c-Global-23"><code>-f, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002dH_002c-Global-26"><code>-H, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002dh_002c-Global-25"><code>-h, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
-<li><a href="#index-g_t_002dH_002c-Test_002dspecific-57"><code>-H, Test-specific</code></a>: <a href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a></li>
-<li><a href="#index-g_t_002dh_002c-Test_002dspecific-56"><code>-h, Test-specific</code></a>: <a href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a></li>
-<li><a href="#index-g_t_002dh_002c-Test_002dspecific-46"><code>-h, Test-specific</code></a>: <a href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a></li>
+<li><a href="#index-g_t_002dH_002c-Test_002dspecific-59"><code>-H, Test-specific</code></a>: <a href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a></li>
+<li><a href="#index-g_t_002dh_002c-Test_002dspecific-58"><code>-h, Test-specific</code></a>: <a href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a></li>
+<li><a href="#index-g_t_002dh_002c-Test_002dspecific-48"><code>-h, Test-specific</code></a>: <a href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a></li>
 <li><a href="#index-g_t_002di_002c-Global-28"><code>-i, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002dI_002c-Global-27"><code>-I, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002dj_002c-Global-29"><code>-j, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
-<li><a href="#index-g_t_002dk_002c-Test_002dspecific-87"><code>-k, Test-specific</code></a>: <a href="#Native-Omni-Tests">Native Omni Tests</a></li>
+<li><a href="#index-g_t_002dk_002c-Test_002dspecific-89"><code>-k, Test-specific</code></a>: <a href="#Native-Omni-Tests">Native Omni Tests</a></li>
 <li><a href="#index-g_t_002dL_002c-Global-31"><code>-L, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002dl_002c-Global-30"><code>-l, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
-<li><a href="#index-g_t_002dL_002c-Test_002dspecific-58"><code>-L, Test-specific</code></a>: <a href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a></li>
-<li><a href="#index-g_t_002dL_002c-Test_002dspecific-47"><code>-L, Test-specific</code></a>: <a href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a></li>
-<li><a href="#index-g_t_002dM_002c-Test_002dspecific-49"><code>-M, Test-specific</code></a>: <a href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a></li>
-<li><a href="#index-g_t_002dm_002c-Test_002dspecific-48"><code>-m, Test-specific</code></a>: <a href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a></li>
+<li><a href="#index-g_t_002dL_002c-Test_002dspecific-60"><code>-L, Test-specific</code></a>: <a href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a></li>
+<li><a href="#index-g_t_002dL_002c-Test_002dspecific-49"><code>-L, Test-specific</code></a>: <a href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a></li>
+<li><a href="#index-g_t_002dM_002c-Test_002dspecific-51"><code>-M, Test-specific</code></a>: <a href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a></li>
+<li><a href="#index-g_t_002dm_002c-Test_002dspecific-50"><code>-m, Test-specific</code></a>: <a href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a></li>
 <li><a href="#index-g_t_002dN_002c-Global-33"><code>-N, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002dn_002c-Global-32"><code>-n, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002dO_002c-Global-35"><code>-O, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002do_002c-Global-34"><code>-o, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
-<li><a href="#index-g_t_002dO_002c-Test_002dspecific-89"><code>-O, Test-specific</code></a>: <a href="#Native-Omni-Tests">Native Omni Tests</a></li>
-<li><a href="#index-g_t_002do_002c-Test_002dspecific-88"><code>-o, Test-specific</code></a>: <a href="#Native-Omni-Tests">Native Omni Tests</a></li>
+<li><a href="#index-g_t_002dO_002c-Test_002dspecific-91"><code>-O, Test-specific</code></a>: <a href="#Native-Omni-Tests">Native Omni Tests</a></li>
+<li><a href="#index-g_t_002do_002c-Test_002dspecific-90"><code>-o, Test-specific</code></a>: <a href="#Native-Omni-Tests">Native Omni Tests</a></li>
 <li><a href="#index-g_t_002dP_002c-Global-37"><code>-P, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
 <li><a href="#index-g_t_002dp_002c-Global-36"><code>-p, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
-<li><a href="#index-g_t_002dP_002c-Test_002dspecific-59"><code>-P, Test-specific</code></a>: <a href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a></li>
-<li><a href="#index-g_t_002dP_002c-Test_002dspecific-50"><code>-P, Test-specific</code></a>: <a href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a></li>
-<li><a href="#index-g_t_002dr_002c-Test_002dspecific-60"><code>-r, Test-specific</code></a>: <a href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a></li>
-<li><a href="#index-g_t_002dS-Test_002dspecific-52"><code>-S Test-specific</code></a>: <a href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a></li>
-<li><a href="#index-g_t_002dS_002c-Test_002dspecific-62"><code>-S, Test-specific</code></a>: <a href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a></li>
-<li><a href="#index-g_t_002ds_002c-Test_002dspecific-61"><code>-s, Test-specific</code></a>: <a href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a></li>
-<li><a href="#index-g_t_002ds_002c-Test_002dspecific-51"><code>-s, Test-specific</code></a>: <a href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a></li>
-<li><a href="#index-g_t_002dT_002c-Global-39"><code>-T, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
-<li><a href="#index-g_t_002dt_002c-Global-38"><code>-t, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
-<li><a href="#index-g_t_002dT_002c-Test_002dspecific-91"><code>-T, Test-specific</code></a>: <a href="#Native-Omni-Tests">Native Omni Tests</a></li>
-<li><a href="#index-g_t_002dt_002c-Test_002dspecific-90"><code>-t, Test-specific</code></a>: <a href="#Native-Omni-Tests">Native Omni Tests</a></li>
-<li><a href="#index-g_t_002dV_002c-Global-41"><code>-V, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
-<li><a href="#index-g_t_002dv_002c-Global-40"><code>-v, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
-<li><a href="#index-g_t_002dW_002c-Global-43"><code>-W, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
-<li><a href="#index-g_t_002dw_002c-Global-42"><code>-w, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
+<li><a href="#index-g_t_002dP_002c-Test_002dspecific-61"><code>-P, Test-specific</code></a>: <a href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a></li>
+<li><a href="#index-g_t_002dP_002c-Test_002dspecific-52"><code>-P, Test-specific</code></a>: <a href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a></li>
+<li><a href="#index-g_t_002dr_002c-Test_002dspecific-62"><code>-r, Test-specific</code></a>: <a href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a></li>
+<li><a href="#index-g_t_002dS-Test_002dspecific-54"><code>-S Test-specific</code></a>: <a href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a></li>
+<li><a href="#index-g_t_002dS_002c-Global-39"><code>-S, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
+<li><a href="#index-g_t_002ds_002c-Global-38"><code>-s, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
+<li><a href="#index-g_t_002dS_002c-Test_002dspecific-64"><code>-S, Test-specific</code></a>: <a href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a></li>
+<li><a href="#index-g_t_002ds_002c-Test_002dspecific-63"><code>-s, Test-specific</code></a>: <a href="#Options-Common-to-TCP-UDP-and-SCTP-_005fRR-tests">Options Common to TCP UDP and SCTP _RR tests</a></li>
+<li><a href="#index-g_t_002ds_002c-Test_002dspecific-53"><code>-s, Test-specific</code></a>: <a href="#Options-common-to-TCP-UDP-and-SCTP-tests">Options common to TCP UDP and SCTP tests</a></li>
+<li><a href="#index-g_t_002dT_002c-Global-41"><code>-T, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
+<li><a href="#index-g_t_002dt_002c-Global-40"><code>-t, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
+<li><a href="#index-g_t_002dT_002c-Test_002dspecific-93"><code>-T, Test-specific</code></a>: <a href="#Native-Omni-Tests">Native Omni Tests</a></li>
+<li><a href="#index-g_t_002dt_002c-Test_002dspecific-92"><code>-t, Test-specific</code></a>: <a href="#Native-Omni-Tests">Native Omni Tests</a></li>
+<li><a href="#index-g_t_002dV_002c-Global-43"><code>-V, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
+<li><a href="#index-g_t_002dv_002c-Global-42"><code>-v, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
+<li><a href="#index-g_t_002dW_002c-Global-45"><code>-W, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
+<li><a href="#index-g_t_002dw_002c-Global-44"><code>-w, Global</code></a>: <a href="#Global-Options">Global Options</a></li>
    </ul></body></html>
 
