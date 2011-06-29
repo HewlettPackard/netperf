@@ -676,6 +676,20 @@ enum netperf_output_name {
   NETPERF_OUTPUT_MAX
 };
 
+/* flags for the output groups, lower 16 bits for remote, upper 16
+   bits for local */
+
+#define OMNI_WANT_REM_IFNAME  0X00000001
+#define OMNI_WANT_LOC_IFNAME  0X00010000
+#define OMNI_WANT_REM_IFSLOT  0X00000002
+#define OMNI_WANT_LOC_IFSLOT  0X00020000
+#define OMNI_WANT_REM_IFIDS   0X00000004
+#define OMNI_WANT_LOC_IFIDS   0X00040000
+#define OMNI_WANT_REM_DRVINFO 0X00000008
+#define OMNI_WANT_LOC_DRVINFO 0X00080000
+
+unsigned int desired_output_groups = 0;
+
 typedef struct netperf_output_elt {
   enum netperf_output_name output_name;  /* belt and suspenders */
   int max_line_len; /* length of the longest of the "lines" */
@@ -685,6 +699,7 @@ typedef struct netperf_output_elt {
   char *format;        /* format to apply to value */
   void *display_value; /* where to find the value */
   int  output_default; /* is it included in the default output */
+  unsigned int output_group; /* used to avoid some lookups */
 } netperf_output_elt_t;
 
 netperf_output_elt_t netperf_output_source[NETPERF_OUTPUT_MAX];
@@ -1564,6 +1579,7 @@ parse_output_selection_line(int line, char *list) {
     }
     else {
       output_list[line][j] = name;
+      desired_output_groups |= netperf_output_source[name].output_group;
       j++;
     }
 	      
@@ -1723,6 +1739,7 @@ print_omni_init_list() {
     netperf_output_source[i].format = "";
     netperf_output_source[i].display_value = NULL;
     netperf_output_source[i].output_default = 1;
+    netperf_output_source[i].output_group = 0;
   }
 
   netperf_output_source[OUTPUT_NONE].output_name = OUTPUT_NONE;
@@ -2930,6 +2947,8 @@ print_omni_init_list() {
     NETPERF_LINE_MAX(LOCAL_DRIVER_NAME);
   netperf_output_source[LOCAL_DRIVER_NAME].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_DRIVER_NAME);
+  netperf_output_source[LOCAL_DRIVER_NAME].output_group =
+    OMNI_WANT_LOC_DRVINFO;
 
   netperf_output_source[LOCAL_DRIVER_VERSION].output_name =
     LOCAL_DRIVER_VERSION;
@@ -2944,6 +2963,8 @@ print_omni_init_list() {
     NETPERF_LINE_MAX(LOCAL_DRIVER_VERSION);
   netperf_output_source[LOCAL_DRIVER_VERSION].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_DRIVER_VERSION);
+  netperf_output_source[LOCAL_DRIVER_VERSION].output_group = 
+    OMNI_WANT_LOC_DRVINFO;
 
   netperf_output_source[LOCAL_DRIVER_FIRMWARE].output_name =
     LOCAL_DRIVER_FIRMWARE;
@@ -2958,6 +2979,8 @@ print_omni_init_list() {
     NETPERF_LINE_MAX(LOCAL_DRIVER_FIRMWARE);
   netperf_output_source[LOCAL_DRIVER_FIRMWARE].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_DRIVER_FIRMWARE);
+  netperf_output_source[LOCAL_DRIVER_FIRMWARE].output_group =
+    OMNI_WANT_LOC_DRVINFO;
 
   netperf_output_source[LOCAL_DRIVER_BUS].output_name = LOCAL_DRIVER_BUS;
   netperf_output_source[LOCAL_DRIVER_BUS].line[0] = "Local";
@@ -2970,6 +2993,8 @@ print_omni_init_list() {
     NETPERF_LINE_MAX(LOCAL_DRIVER_BUS);
   netperf_output_source[LOCAL_DRIVER_BUS].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_DRIVER_BUS);
+  netperf_output_source[LOCAL_DRIVER_BUS].output_group =
+    OMNI_WANT_LOC_DRVINFO;
 
   netperf_output_source[REMOTE_DRIVER_NAME].output_name = REMOTE_DRIVER_NAME;
   netperf_output_source[REMOTE_DRIVER_NAME].line[0] = "Remote";
@@ -2982,6 +3007,8 @@ print_omni_init_list() {
     NETPERF_LINE_MAX(REMOTE_DRIVER_NAME);
   netperf_output_source[REMOTE_DRIVER_NAME].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_DRIVER_NAME);
+  netperf_output_source[REMOTE_DRIVER_NAME].output_group =
+    OMNI_WANT_REM_DRVINFO;
 
   netperf_output_source[REMOTE_DRIVER_VERSION].output_name =
     REMOTE_DRIVER_VERSION;
@@ -2996,6 +3023,8 @@ print_omni_init_list() {
     NETPERF_LINE_MAX(REMOTE_DRIVER_VERSION);
   netperf_output_source[REMOTE_DRIVER_VERSION].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_DRIVER_VERSION);
+  netperf_output_source[REMOTE_DRIVER_VERSION].output_group =
+    OMNI_WANT_REM_DRVINFO;
 
   netperf_output_source[REMOTE_DRIVER_FIRMWARE].output_name =
     REMOTE_DRIVER_FIRMWARE;
@@ -3010,6 +3039,8 @@ print_omni_init_list() {
     NETPERF_LINE_MAX(REMOTE_DRIVER_FIRMWARE);
   netperf_output_source[REMOTE_DRIVER_FIRMWARE].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_DRIVER_FIRMWARE);
+  netperf_output_source[REMOTE_DRIVER_FIRMWARE].output_group =
+    OMNI_WANT_REM_DRVINFO;
 
   netperf_output_source[REMOTE_DRIVER_BUS].output_name = REMOTE_DRIVER_BUS;
   netperf_output_source[REMOTE_DRIVER_BUS].line[0] = "Remote";
@@ -3022,6 +3053,8 @@ print_omni_init_list() {
     NETPERF_LINE_MAX(REMOTE_DRIVER_BUS);
   netperf_output_source[REMOTE_DRIVER_BUS].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_DRIVER_BUS);
+  netperf_output_source[REMOTE_DRIVER_BUS].output_group =
+    OMNI_WANT_REM_DRVINFO;
 
   netperf_output_source[LOCAL_INTERFACE_SUBDEVICE].output_name =
     LOCAL_INTERFACE_SUBDEVICE;
@@ -3036,6 +3069,8 @@ print_omni_init_list() {
     NETPERF_LINE_MAX(LOCAL_INTERFACE_SUBDEVICE);
   netperf_output_source[LOCAL_INTERFACE_SUBDEVICE].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_INTERFACE_SUBDEVICE);
+  netperf_output_source[LOCAL_INTERFACE_SUBDEVICE].output_group =
+    OMNI_WANT_LOC_IFIDS;
 
   netperf_output_source[LOCAL_INTERFACE_DEVICE].output_name =
     LOCAL_INTERFACE_DEVICE;
@@ -3050,6 +3085,8 @@ print_omni_init_list() {
     NETPERF_LINE_MAX(LOCAL_INTERFACE_DEVICE);
   netperf_output_source[LOCAL_INTERFACE_DEVICE].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_INTERFACE_DEVICE);
+  netperf_output_source[LOCAL_INTERFACE_DEVICE].output_group =
+    OMNI_WANT_LOC_IFIDS;
 
   netperf_output_source[LOCAL_INTERFACE_SUBVENDOR].output_name =
     LOCAL_INTERFACE_SUBVENDOR;
@@ -3064,6 +3101,8 @@ print_omni_init_list() {
     NETPERF_LINE_MAX(LOCAL_INTERFACE_SUBVENDOR);
   netperf_output_source[LOCAL_INTERFACE_SUBVENDOR].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_INTERFACE_SUBVENDOR);
+  netperf_output_source[LOCAL_INTERFACE_SUBVENDOR].output_group =
+    OMNI_WANT_LOC_IFIDS;
 
   netperf_output_source[LOCAL_INTERFACE_VENDOR].output_name =
     LOCAL_INTERFACE_VENDOR;
@@ -3078,6 +3117,8 @@ print_omni_init_list() {
     NETPERF_LINE_MAX(LOCAL_INTERFACE_VENDOR);
   netperf_output_source[LOCAL_INTERFACE_VENDOR].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_INTERFACE_VENDOR);
+  netperf_output_source[LOCAL_INTERFACE_VENDOR].output_group =
+    OMNI_WANT_LOC_IFIDS;
 
   netperf_output_source[REMOTE_INTERFACE_SUBDEVICE].output_name =
     REMOTE_INTERFACE_SUBDEVICE;
@@ -3092,6 +3133,8 @@ print_omni_init_list() {
     NETPERF_LINE_MAX(REMOTE_INTERFACE_SUBDEVICE);
   netperf_output_source[REMOTE_INTERFACE_SUBDEVICE].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_INTERFACE_SUBDEVICE);
+  netperf_output_source[REMOTE_INTERFACE_SUBDEVICE].output_group =
+    OMNI_WANT_REM_IFIDS;
 
   netperf_output_source[REMOTE_INTERFACE_DEVICE].output_name =
     REMOTE_INTERFACE_DEVICE;
@@ -3106,6 +3149,8 @@ print_omni_init_list() {
     NETPERF_LINE_MAX(REMOTE_INTERFACE_DEVICE);
   netperf_output_source[REMOTE_INTERFACE_DEVICE].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_INTERFACE_DEVICE);
+  netperf_output_source[REMOTE_INTERFACE_DEVICE].output_group =
+    OMNI_WANT_REM_IFIDS;
 
   netperf_output_source[REMOTE_INTERFACE_SUBVENDOR].output_name =
     REMOTE_INTERFACE_SUBVENDOR;
@@ -3120,6 +3165,8 @@ print_omni_init_list() {
     NETPERF_LINE_MAX(REMOTE_INTERFACE_SUBVENDOR);
   netperf_output_source[REMOTE_INTERFACE_SUBVENDOR].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_INTERFACE_SUBVENDOR);
+  netperf_output_source[REMOTE_INTERFACE_SUBVENDOR].output_group =
+    OMNI_WANT_REM_IFIDS;
 
   netperf_output_source[REMOTE_INTERFACE_VENDOR].output_name =
     REMOTE_INTERFACE_VENDOR;
@@ -3134,6 +3181,8 @@ print_omni_init_list() {
     NETPERF_LINE_MAX(REMOTE_INTERFACE_VENDOR);
   netperf_output_source[REMOTE_INTERFACE_VENDOR].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_INTERFACE_VENDOR);
+  netperf_output_source[REMOTE_INTERFACE_VENDOR].output_group =
+    OMNI_WANT_REM_IFIDS;
 
   netperf_output_source[LOCAL_INTERFACE_NAME].output_name =
     LOCAL_INTERFACE_NAME;
@@ -3148,6 +3197,8 @@ print_omni_init_list() {
     NETPERF_LINE_MAX(LOCAL_INTERFACE_NAME);
   netperf_output_source[LOCAL_INTERFACE_NAME].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_INTERFACE_NAME);
+  netperf_output_source[LOCAL_INTERFACE_NAME].output_group =
+    OMNI_WANT_LOC_IFNAME;
 
   netperf_output_source[REMOTE_INTERFACE_NAME].output_name =
     REMOTE_INTERFACE_NAME;
@@ -3162,6 +3213,8 @@ print_omni_init_list() {
     NETPERF_LINE_MAX(REMOTE_INTERFACE_NAME);
   netperf_output_source[REMOTE_INTERFACE_NAME].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_INTERFACE_NAME);
+  netperf_output_source[REMOTE_INTERFACE_NAME].output_group =
+    OMNI_WANT_REM_IFNAME;
 
   netperf_output_source[LOCAL_INTERFACE_SLOT].output_name =
     LOCAL_INTERFACE_SLOT;
@@ -3176,6 +3229,8 @@ print_omni_init_list() {
     NETPERF_LINE_MAX(LOCAL_INTERFACE_SLOT);
   netperf_output_source[LOCAL_INTERFACE_SLOT].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_INTERFACE_SLOT);
+  netperf_output_source[LOCAL_INTERFACE_SLOT].output_group =
+    OMNI_WANT_LOC_IFSLOT;
 
   netperf_output_source[REMOTE_INTERFACE_SLOT].output_name =
     REMOTE_INTERFACE_SLOT;
@@ -3190,6 +3245,8 @@ print_omni_init_list() {
     NETPERF_LINE_MAX(REMOTE_INTERFACE_SLOT);
   netperf_output_source[REMOTE_INTERFACE_SLOT].tot_line_len = 
     NETPERF_LINE_TOT(REMOTE_INTERFACE_SLOT);
+  netperf_output_source[REMOTE_INTERFACE_SLOT].output_group =
+    OMNI_WANT_REM_IFSLOT;
 
   netperf_output_source[REMOTE_MACHINE].output_name = REMOTE_MACHINE;
   netperf_output_source[REMOTE_MACHINE].line[0] = "Remote";
@@ -3668,7 +3725,7 @@ print_omni_init_list() {
     NETPERF_LINE_TOT(OUTPUT_END);
 
 }
-/* lots of boring, repetitive code */
+
 void 
 print_omni_init() {
 
@@ -3685,9 +3742,6 @@ print_omni_init() {
     for (i = 0; i < NETPERF_OUTPUT_MAX; i++)
       output_list[j][i] = OUTPUT_END;
 
-
-  /* the default for csv is the kitchen-sink.  ultimately it will be
-     possible to override by providing one's own list in a file */
 
   if (output_selection_spec) {
       parse_output_selection(output_selection_spec);
@@ -6500,18 +6554,6 @@ recv_omni()
   
   send_response_n(OMNI_RESULTS_CONF_CUTOFF);
 
-  /* when we implement this, it will look a little strange, but we do
-     it to avoid certain overheads when running aggregates and using
-     confidence intervals.  we will post a recv_request() call to get
-     the next message or EOF on the control connection.  either the
-     netperf will close the control connection, which will tell us we
-     are done, or the netperf will send us another "DO_OMNI" message,
-     which by definition should be identical to the first DO_OMNI
-     message we received.
-
-     in this way we can avoid overheads like allocating the buffer
-     rings and the listen socket and the like */
-  
 }
 
 
