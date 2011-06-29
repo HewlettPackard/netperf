@@ -1080,6 +1080,25 @@ File: netperf.info,  Node: Global Options,  Prev: Command-line Options Syntax,  
      and unnecessarily clutter the output. [Default: 1 - display test
      banners]
 
+`-s <seconds>'
+     This option will cause netperf to sleep `<seconds>' before
+     actually transferring data over the data connection.  This may be
+     useful in situations where one wishes to start a great many netperf
+     instances and do not want the earlier ones affecting the ability of
+     the later ones to get established.
+
+     Added somewhere between versions 2.4.3 and 2.5.0.
+
+`-S'
+     This option will cause an attempt to be made to set SO_KEEPALIVE on
+     the data socket of a test using the BSD sockets interface.  The
+     attempt will be made on the netperf side of all tests, and will be
+     made on the netserver side of an *note omni: The Omni Tests. or
+     *note migrated: Migrated Tests. test.  No indication of failure is
+     given unless debug output is enabled with the global `-d' option.
+
+     Added in version 2.5.0.
+
 `-t testname'
      This option is used to tell netperf which test you wish to run.
      As of this writing, valid values for TESTNAME include:
@@ -4014,14 +4033,14 @@ Option Index
                                                               (line  30)
 * --enable-xti, Configure:               Installing Netperf Bits.
                                                               (line  30)
-* -4, Global:                            Global Options.      (line 470)
+* -4, Global:                            Global Options.      (line 489)
 * -4, Test-specific <1>:                 Options Common to TCP UDP and SCTP _RR tests.
                                                               (line  88)
 * -4, Test-specific:                     Options common to TCP UDP and SCTP tests.
                                                               (line 110)
 * -6 Test-specific:                      Options Common to TCP UDP and SCTP _RR tests.
                                                               (line  94)
-* -6, Global:                            Global Options.      (line 479)
+* -6, Global:                            Global Options.      (line 498)
 * -6, Test-specific:                     Options common to TCP UDP and SCTP tests.
                                                               (line 116)
 * -A, Global:                            Global Options.      (line  18)
@@ -4074,20 +4093,22 @@ Option Index
                                                               (line  36)
 * -S Test-specific:                      Options common to TCP UDP and SCTP tests.
                                                               (line  87)
+* -S, Global:                            Global Options.      (line 381)
+* -s, Global:                            Global Options.      (line 372)
 * -S, Test-specific:                     Options Common to TCP UDP and SCTP _RR tests.
                                                               (line  68)
 * -s, Test-specific <1>:                 Options Common to TCP UDP and SCTP _RR tests.
                                                               (line  48)
 * -s, Test-specific:                     Options common to TCP UDP and SCTP tests.
                                                               (line  64)
-* -T, Global:                            Global Options.      (line 404)
-* -t, Global:                            Global Options.      (line 372)
+* -T, Global:                            Global Options.      (line 423)
+* -t, Global:                            Global Options.      (line 391)
 * -T, Test-specific:                     Native Omni Tests.   (line  81)
 * -t, Test-specific:                     Native Omni Tests.   (line  76)
-* -V, Global:                            Global Options.      (line 449)
-* -v, Global:                            Global Options.      (line 421)
-* -W, Global:                            Global Options.      (line 461)
-* -w, Global:                            Global Options.      (line 454)
+* -V, Global:                            Global Options.      (line 468)
+* -v, Global:                            Global Options.      (line 440)
+* -W, Global:                            Global Options.      (line 480)
+* -w, Global:                            Global Options.      (line 473)
 
 
 
@@ -4105,54 +4126,54 @@ Node: CPU Utilization in a Virtual Guest28845
 Node: Global Command-line Options30432
 Node: Command-line Options Syntax30971
 Node: Global Options32367
-Node: Using Netperf to Measure Bulk Data Transfer55666
-Node: Issues in Bulk Transfer56339
-Node: Options common to TCP UDP and SCTP tests60600
-Node: TCP_STREAM66925
-Node: TCP_MAERTS71009
-Node: TCP_SENDFILE72246
-Node: UDP_STREAM74746
-Node: XTI_TCP_STREAM78182
-Node: XTI_UDP_STREAM78827
-Node: SCTP_STREAM79472
-Node: DLCO_STREAM80172
-Node: DLCL_STREAM82145
-Node: STREAM_STREAM83019
-Node: DG_STREAM83877
-Node: Using Netperf to Measure Request/Response84558
-Node: Issues in Request/Response86876
-Node: Options Common to TCP UDP and SCTP _RR tests89249
-Node: TCP_RR94273
-Node: TCP_CC96673
-Node: TCP_CRR98907
-Node: UDP_RR99969
-Node: XTI_TCP_RR102273
-Node: XTI_TCP_CC102856
-Node: XTI_TCP_CRR103361
-Node: XTI_UDP_RR103873
-Node: DLCL_RR104450
-Node: DLCO_RR104603
-Node: SCTP_RR104755
-Node: Using Netperf to Measure Aggregate Performance104891
-Node: Running Concurrent Netperf Tests105870
-Node: Issues in Running Concurrent Tests110119
-Node: Using --enable-burst111628
-Node: Using Netperf to Measure Bidirectional Transfer118031
-Node: Bidirectional Transfer with Concurrent Tests119162
-Node: Bidirectional Transfer with TCP_RR121518
-Node: Implications of Concurrent Tests vs Burst Request/Response123902
-Node: The Omni Tests125715
-Node: Native Omni Tests126762
-Node: Migrated Tests132039
-Node: Omni Output Selection134144
-Node: Omni Output Selectors137125
-Node: Other Netperf Tests164843
-Node: CPU rate calibration165278
-Node: UUID Generation167645
-Node: Address Resolution168360
-Node: Enhancing Netperf170336
-Node: Netperf4171830
-Node: Concept Index172734
-Node: Option Index175060
+Node: Using Netperf to Measure Bulk Data Transfer56521
+Node: Issues in Bulk Transfer57194
+Node: Options common to TCP UDP and SCTP tests61455
+Node: TCP_STREAM67780
+Node: TCP_MAERTS71864
+Node: TCP_SENDFILE73101
+Node: UDP_STREAM75601
+Node: XTI_TCP_STREAM79037
+Node: XTI_UDP_STREAM79682
+Node: SCTP_STREAM80327
+Node: DLCO_STREAM81027
+Node: DLCL_STREAM83000
+Node: STREAM_STREAM83874
+Node: DG_STREAM84732
+Node: Using Netperf to Measure Request/Response85413
+Node: Issues in Request/Response87731
+Node: Options Common to TCP UDP and SCTP _RR tests90104
+Node: TCP_RR95128
+Node: TCP_CC97528
+Node: TCP_CRR99762
+Node: UDP_RR100824
+Node: XTI_TCP_RR103128
+Node: XTI_TCP_CC103711
+Node: XTI_TCP_CRR104216
+Node: XTI_UDP_RR104728
+Node: DLCL_RR105305
+Node: DLCO_RR105458
+Node: SCTP_RR105610
+Node: Using Netperf to Measure Aggregate Performance105746
+Node: Running Concurrent Netperf Tests106725
+Node: Issues in Running Concurrent Tests110974
+Node: Using --enable-burst112483
+Node: Using Netperf to Measure Bidirectional Transfer118886
+Node: Bidirectional Transfer with Concurrent Tests120017
+Node: Bidirectional Transfer with TCP_RR122373
+Node: Implications of Concurrent Tests vs Burst Request/Response124757
+Node: The Omni Tests126570
+Node: Native Omni Tests127617
+Node: Migrated Tests132894
+Node: Omni Output Selection134999
+Node: Omni Output Selectors137980
+Node: Other Netperf Tests165698
+Node: CPU rate calibration166133
+Node: UUID Generation168500
+Node: Address Resolution169215
+Node: Enhancing Netperf171191
+Node: Netperf4172685
+Node: Concept Index173589
+Node: Option Index175915
 
 End Tag Table
