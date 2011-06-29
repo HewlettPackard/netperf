@@ -36,6 +36,10 @@
 #define OMNI_MEASURE_CPU 0x8
 #define OMNI_CHECKSUM_OFF 0x10
 #define OMNI_ROUTING_ALLOWED 0x20
+#define OMNI_WANT_IFNAME 0x40
+#define OMNI_WANT_IFSLOT 0x80
+#define OMNI_WANT_IFIDS  0x100
+#define OMNI_WANT_DRVINFO 0x200
 
 struct  omni_request_struct {
   int32_t    send_buf_size;         /* SO_SNDBUF */
