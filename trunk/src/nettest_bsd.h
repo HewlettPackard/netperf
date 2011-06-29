@@ -30,16 +30,18 @@
 #define NST_SEQPACKET 4
 
 #ifdef WANT_OMNI
-#define OMNI_NO_DELAY 0x1
-#define OMNI_USE_SENDFILE 0x2
-#define OMNI_CONNECT_TEST 0x4
-#define OMNI_MEASURE_CPU 0x8
-#define OMNI_CHECKSUM_OFF 0x10
-#define OMNI_ROUTING_ALLOWED 0x20
-#define OMNI_WANT_IFNAME 0x40
-#define OMNI_WANT_IFSLOT 0x80
-#define OMNI_WANT_IFIDS  0x100
-#define OMNI_WANT_DRVINFO 0x200
+#define OMNI_NO_DELAY        0x00000001
+#define OMNI_USE_SENDFILE    0x00000002
+#define OMNI_CONNECT_TEST    0x00000004
+#define OMNI_MEASURE_CPU     0x00000008
+#define OMNI_CHECKSUM_OFF    0x00000010
+#define OMNI_ROUTING_ALLOWED 0x00000020
+#define OMNI_WANT_IFNAME     0x00000040
+#define OMNI_WANT_IFSLOT     0x00000080
+#define OMNI_WANT_IFIDS      0x00000100
+#define OMNI_WANT_DRVINFO    0x00000200
+/* room in the middle */
+#define OMNI_WANT_KEEPALIVE  0x80000000
 
 struct  omni_request_struct {
   int32_t    send_buf_size;         /* SO_SNDBUF */
@@ -534,36 +536,37 @@ struct tcp_cc_results_struct {
   float	        elapsed_time;	/* how long the test ran */
   float	        cpu_util;	/* -1 if not measured */
   float	        serv_dem;	/* -1 if not measured */
-  int           cpu_method;    /* how was cpu util measured? */
-  int           num_cpus;      /* how many CPUs had the remote? */
+  int           cpu_method;     /* how was cpu util measured? */
+  int           num_cpus;       /* how many CPUs had the remote? */
 };
 
 extern int
   socket_type,      /* initially used by the "omni" tests */
   rss_size_req,     /* requested remote socket send buffer size */
   rsr_size_req,     /* requested remote socket recv buffer size */
-  rss_size,         /* remote socket send buffer size       */
-  rsr_size,         /* remote socket recv buffer size       */
+  rss_size,         /* remote socket send buffer size */
+  rsr_size,         /* remote socket recv buffer size */
   rsr_size_end,
   rss_size_end,
   lss_size_req,     /* requested local socket send buffer size */
   lsr_size_req,     /* requested local socket recv buffer size */
-  lss_size,         /* local  socket send buffer size       */
-  lsr_size,         /* local  socket recv buffer size       */
+  lss_size,         /* local  socket send buffer size */
+  lsr_size,         /* local  socket recv buffer size */
   lss_size_end,
   lsr_size_end,
-  req_size,         /* request size                         */
-  rsp_size,         /* response size                        */
-  send_size,        /* how big are individual sends         */
-  recv_size,        /* how big are individual receives      */
-  loc_nodelay,          /* don't/do use NODELAY locally         */
-  rem_nodelay,          /* don't/do use NODELAY remotely        */
-  loc_sndavoid,         /* avoid send copies locally            */
-  loc_rcvavoid,         /* avoid recv copies locally            */
-  rem_sndavoid,         /* avoid send copies remotely           */
-  rem_rcvavoid,         /* avoid recv_copies remotely           */
-  routing_allowed,    /* do we set/clear SO_DONTROUTE on data sock */
-  multicast_ttl;    /* what should the TTL be on mcast dgrams */
+  req_size,         /* request size */
+  rsp_size,         /* response size */
+  send_size,        /* how big are individual sends */
+  recv_size,        /* how big are individual receives */
+  loc_nodelay,      /* don't/do use NODELAY locally */
+  rem_nodelay,      /* don't/do use NODELAY remotely */
+  loc_sndavoid,     /* avoid send copies locally */
+  loc_rcvavoid,     /* avoid recv copies locally */
+  rem_sndavoid,     /* avoid send copies remotely */
+  rem_rcvavoid,     /* avoid recv_copies remotely */
+  routing_allowed,  /* do we set/clear SO_DONTROUTE on data sock */
+  multicast_ttl,    /* what should the TTL be on mcast dgrams */
+  want_keepalive;   /* do we bother setting SO_KEEPALIVE? */
 
 #ifdef WANT_OMNI
 extern void scan_omni_args(int argc, char *argv[]);
