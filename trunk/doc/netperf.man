@@ -81,6 +81,13 @@ by a -4 -r -6 command line option.
 Set the maximum and minimum number of iterations when trying to reach
 certain confidence levels.
 .TP
+.B \-j
+Instruct netperf to calculate additional statistics on timing when
+running an omni test.  Display of said statistics will depend on the
+presence of the corresponding output selectors in the output
+selection. These are MIN_LATENCY, MAX_LATENCY, P50_LATENCY,
+P90_LATENCY, P99_LATENCY, MEAN_LATENCY and STDDEV_LATENCY.
+.TP
 .B \-I lvl,[,intvl]
 Specify the confidence level (either 95 or 99 - 99 is the default) and
 the width of the confidence interval as a percentage (default 10)
@@ -124,6 +131,16 @@ port number selection to the stack.
 .TP
 .B \-P 0|1
 Show (1) or suppress (0) the test banner.
+.TP
+.B \-S
+This option will cause an attempt to set SO_KEEPALIVE on the ends of
+the data connection for tests using BSD Sockets.  It will be made on
+the netperf side of classic tests, and both netperf and netserver side
+of an omni or migrated test.
+.TP
+.B \-s seconds
+This will cause netperf to sleep "seconds" seconds before transferring
+data over the data connection.
 .TP
 .B \-t testname
 Specify the test to perform.
@@ -174,9 +191,9 @@ Display a usage string based on the test name set with -t, and exit.
 
 Please consult the netperf manual
 .I 
-Netperf: A Network Performance Benchmark 
-(netperf.ps) for more information. Or you can join and mail to 
-netperf-talk@netperf.org.
+Care and Feeding of Netperf 2.5.X
+(doc/netperf.[pdf|html|txt]) for more information. Or you can join and
+send email to netperf-talk@netperf.org.
 
 .SH NOTE
 For those options taking two parms, at least one must be specified;
@@ -187,7 +204,7 @@ set each parm to unique values, specify both and separate them with a
 comma.
 
 * For these options taking two parms, specifying one value with no
-comma will only set the first parms and will leave the second at the
+comma will only set the first parm and will leave the second at the
 default value. To set the second value it must be preceded with a
 comma or be a comma-separated pair. This is to retain previous netperf
 behaviour.
@@ -204,7 +221,7 @@ else fails send email to netperf-feedback@netperf.org.
 .BR netserver (1)
 .br
 .I
-Netperf: A Network Performance Benchmark
+Care and Feeding of Netperf 2.5.X
 .br
 http://www.netperf.org/
 
