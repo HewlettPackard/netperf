@@ -376,6 +376,7 @@ int bytes_to_recv;
 double bytes_per_recv;
 int null_message_ok = 0;
 int human = 0;
+int was_legacy = 0;
 int legacy = 0;
 int implicit_direction = 0;
 int csv = 0;
@@ -7781,6 +7782,7 @@ set_omni_defaults_by_legacy_testname() {
   socket_type = SOCK_STREAM;
   connection_test = 0;
   req_size = rsp_size = -1;
+  was_legacy = 1;
   legacy = 1;
   implicit_direction = 0;  /* do we allow certain options to
 			      implicitly affect the test direction? */
@@ -7821,6 +7823,7 @@ set_omni_defaults_by_legacy_testname() {
   }
   else if (strcasecmp(test_name,"omni") == 0) {
     /* there is not much to do here but clear the legacy flag */
+    was_legacy = 0;
     legacy = 0;
     implicit_direction = 1;
   }
@@ -7968,9 +7971,13 @@ scan_omni_args(int argc, char *argv[])
 #endif /* TCP_CORK */
       break;
     case 'd':
-      /* arbitrarily set the direction variable */
-      if (implicit_direction)
+      /* arbitrarily set the direction variable, but only for an
+	 actual omni test and then disable implicit setting of
+	 direction */
+      if (!was_legacy) {
 	direction = parse_direction(optarg);
+	implicit_direction = 0;
+      }
       break;
     case 'D':
       /* set the TCP nodelay flag */
