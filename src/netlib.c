@@ -819,11 +819,10 @@ get_num_cpus()
 
   if (temp_cpus > MAXCPUS) {
     fprintf(where,
-            "Sorry, this system has more CPUs (%d) than I can handle (%d).\n",
+            "Sorry, this system has more CPUs (%d) than I can handle (%d).\n"
+            "Please alter MAXCPUS in netlib.h and recompile.\n",
             temp_cpus,
             MAXCPUS);
-    fprintf(where,
-            "Please alter MAXCPUS in netlib.h and recompile.\n");
     fflush(where);
     exit(1);
   }
@@ -1118,10 +1117,11 @@ if (debug) {
 #endif /* SA_INTERRUPT */
 
   if (sigaction(SIGALRM, &action, NULL) < 0) {
-    fprintf(where,"start_timer: error installing alarm handler ");
-    fprintf(where,"errno %d\n",errno);
+    fprintf(where,
+	    "start_timer: error installing alarm handler errno %d\n",
+	    errno);
     fflush(where);
-    exit(1);
+    exit(-1);
   }
 
   /* this is the easy case - just set the timer for so many seconds */ 
@@ -1132,6 +1132,7 @@ if (debug) {
 	    ret,
             errno);
     fflush(where);
+    exit(-1);
   }
 #endif /* WIN32 */
 
@@ -1197,10 +1198,10 @@ start_itimer(unsigned int interval_len_msec )
   }
 
   if (debug) {
-    fprintf(where,"setting the interval timer to %d sec %d usec ",
+    fprintf(where,
+	    "setting the interval timer to %d sec %d usec test len %d ticks\n",
             usec_per_itvl / 1000000,
-            usec_per_itvl % 1000000);
-    fprintf(where,"test len %d ticks\n",
+            usec_per_itvl % 1000000,
             test_len_ticks);
     fflush(where);
   }
@@ -1326,12 +1327,10 @@ netlib_init()
 
   if (debug) {
     fprintf(where,
-            "netlib_init: request_array at %p\n",
-            request_array);
-    fprintf(where,
+            "netlib_init: request_array at %p\n"
             "netlib_init: response_array at %p\n",
+            request_array,
             response_array);
-
     fflush(where);
   }
 
@@ -1457,8 +1456,10 @@ allocate_buffer_ring(int width, int buffer_size, int alignment, int offset)
     /* get the ring element */
     temp_link = (struct ring_elt *)malloc(sizeof(struct ring_elt));
     if (temp_link == NULL) {
-      printf("malloc(%u) failed!\n", (unsigned int)sizeof(struct ring_elt));
-      exit(1);
+      fprintf(where,
+	      "malloc(%u) failed!\n",
+	      (unsigned int)sizeof(struct ring_elt));
+      exit(-1);
     }
     /* remember the first one so we can close the ring at the end */
     if (i == 1) {
@@ -1466,9 +1467,11 @@ allocate_buffer_ring(int width, int buffer_size, int alignment, int offset)
     }
     temp_link->buffer_base = (char *)malloc(malloc_size);
     if (temp_link == NULL) {
-      printf("malloc(%d) failed!\n", malloc_size);
-      exit(1);
-	}
+      fprintf(where,
+	      "malloc(%d) failed!\n",
+	      malloc_size);
+      exit(-1);
+    }
 
 #ifndef WIN32
     temp_link->buffer_ptr = (char *)(( (long)(temp_link->buffer_base) + 
@@ -1614,7 +1617,8 @@ allocate_exs_buffer_ring (int width, int buffer_size, int alignment, int offset,
     assert (width >= 1);
 
     if (debug) {
-        fprintf (where, "allocate_exs_buffer_ring: "
+        fprintf (where,
+		 "allocate_exs_buffer_ring: "
                  "width=%d buffer_size=%d alignment=%d offset=%d\n",
                  width, buffer_size, alignment, offset);
     }
@@ -1630,7 +1634,8 @@ allocate_exs_buffer_ring (int width, int buffer_size, int alignment, int offset,
     }
     mmap_buffer_aligned = (char *) ((uintptr_t)mmap_buffer & ~(NBPG-1));
     if (debug) {
-        fprintf (where, "allocate_exs_buffer_ring: "
+        fprintf (where,
+		 "allocate_exs_buffer_ring: "
                  "mmap buffer size=%d address=0x%p aligned=0x%p\n",
                  mmap_size, mmap_buffer, mmap_buffer_aligned);
     }
@@ -1696,7 +1701,7 @@ allocate_exs_buffer_ring (int width, int buffer_size, int alignment, int offset,
         prev_link = temp_link;
     }
 
-    return (first_link);        /* it's a circle, doesn't matter which we return */
+    return (first_link);  /* it is a circle, doesn't matter which we return */
 }
 
 #endif /* HAVE_ICSC_EXS */
@@ -1805,8 +1810,9 @@ alloc_sendfile_buf_ring(int width,
     }
     if (statbuf.st_size < (width * buffer_size)) {
       /* the file is too short */
-      fprintf(stderr,"alloc_sendfile_buf_ring: specified file too small.\n");
-      fprintf(stderr,"file must be larger than send_width * send_size\n");
+      fprintf(stderr,
+	      "alloc_sendfile_buf_ring: specified file too small.\n"
+	      "file must be larger than send_width * send_size\n");
       fflush(stderr);
       exit(1);
     }
@@ -1825,9 +1831,11 @@ alloc_sendfile_buf_ring(int width,
     temp_link = (struct sendfile_ring_elt *)
       malloc(sizeof(struct sendfile_ring_elt));
     if (temp_link == NULL) {
-      printf("malloc(%u) failed!\n",(unsigned int) sizeof(struct sendfile_ring_elt));
+      fprintf(where,
+	      "malloc(%u) failed!\n",
+	      (unsigned int) sizeof(struct sendfile_ring_elt));
       exit(1);
-	}
+    }
 
     /* remember the first one so we can close the ring at the end */
 
@@ -2943,25 +2951,23 @@ dump_addrinfo(FILE *dumploc, struct addrinfo *info,
   struct addrinfo *temp;
   temp=info;
 
-  fprintf(dumploc, "getaddrinfo returned the following for host '%s' ", host);
-  fprintf(dumploc, "port '%s' ", port);
-  fprintf(dumploc, "family %s\n", inet_ftos(family));
+  fprintf(dumploc,
+	  "getaddrinfo returned the following for host '%s' port '%s' "
+	  " family %s\n",
+	  host,
+	  port,
+	  inet_ftos(family));
+
   while (temp) {
     /* seems that Solaris 10 GA bits will not give a canonical name
        for ::0 or 0.0.0.0, and their fprintf() cannot deal with a null
        pointer, so we have to check for a null pointer.  probably a
        safe thing to do anyway, eventhough it was not necessary on
        linux or hp-ux. raj 2005-02-09 */
-    if (temp->ai_canonname) {
-      fprintf(dumploc,
-	      "\tcannonical name: '%s'\n",temp->ai_canonname);
-    }
-    else {
-      fprintf(dumploc,
-	      "\tcannonical name: '%s'\n","(nil)");
-    }
     fprintf(dumploc,
+	    "\tcannonical name: '%s'\n"
             "\tflags: %x family: %s: socktype: %s protocol %s addrlen %d\n",
+	    (temp->ai_canonname) ? temp->ai_canonname : "(nil)",
             temp->ai_flags,
             inet_ftos(temp->ai_family),
             inet_ttos(temp->ai_socktype),
@@ -3025,11 +3031,11 @@ resolve_host(char *hostname,
   } while ((error == EAI_AGAIN) && (count <= 5));
 
   if (error) {
-    printf("establish control: could not resolve host '%s' port '%s' af %s",
+    printf("establish control: could not resolve host '%s' port '%s' af %s"
+	   "\n\tgetaddrinfo returned %d %s\n",
            hostname,
            port,
-           inet_ftos(family));
-    printf("\n\tgetaddrinfo returned %d %s\n",
+           inet_ftos(family),
            error,
            gai_strerror(error));
     return(NULL);
@@ -3090,12 +3096,11 @@ establish_control_internal(char *hostname,
 
   if (debug) {
     fprintf(where,
-            "establish_control called with host '%s' port '%s' remfam %s\n",
+            "establish_control called with host '%s' port '%s' remfam %s\n"
+            "\t\tlocal '%s' port '%s' locfam %s\n",
             hostname,
             port,
-            inet_ftos(remfam));
-    fprintf(where,
-            "\t\tlocal '%s' port '%s' locfam %s\n",
+            inet_ftos(remfam),
             localhost,
             localport,
             inet_ftos(locfam));
@@ -3160,10 +3165,10 @@ establish_control_internal(char *hostname,
 	/* the connect call failed */
 	if (debug) {
 	  fprintf(where,
-		  "establish_control: connect failed, errno %d %s\n",
+		  "establish_control: connect failed, errno %d %s\n"
+		  "    trying next address combination\n",
 		  errno,
 		  strerror(errno));
-	  fprintf(where, "    trying next address combination\n");
 	  fflush(where);
 	}
       }
@@ -3172,10 +3177,10 @@ establish_control_internal(char *hostname,
       /* the bind failed */
       if (debug) {
 	fprintf(where,
-		"establish_control: bind failed, errno %d %s\n",
+		"establish_control: bind failed, errno %d %s\n"
+		"    trying next address combination\n",
 		errno,
 		strerror(errno));
-	fprintf(where, "    trying next address combination\n");
 	fflush(where);
       }
     }
@@ -3201,7 +3206,11 @@ establish_control_internal(char *hostname,
 
   /* so, we are either connected or not */
   if (not_connected) {
-    fprintf(where, "establish control: are you sure there is a netserver listening on %s at port %s?\n",hostname,port);
+    fprintf(where,
+	    "establish control: are you sure there is a netserver "
+	    "listening on %s at port %s?\n",
+	    hostname,
+	    port);
     fflush(where);
     return(INVALID_SOCKET);
   }
@@ -3228,7 +3237,9 @@ establish_control(char *hostname,
 					      locfam);
   if (netlib_control == INVALID_SOCKET) {
     fprintf(where,
-	    "establish_control could not establish the control connection from %s port %s address family %s to %s port %s address family %s\n",
+	    "establish_control could not establish the control"
+	    " connection from %s port %s address family %s to %s"
+	    " port %s address family %s\n",
 	    localhost,localport,inet_ftos(locfam),
 	    hostname,port,inet_ftos(remfam));
     fflush(where);
@@ -3546,13 +3557,14 @@ calc_service_demand_internal(double unit_divisor,
   double thruput;
 
   if (debug) {
-    fprintf(where,"calc_service_demand called:  units_sent = %f\n",
-            units_sent);
-    fprintf(where,"                             elapsed_time = %f\n",
-            elapsed_time);
-    fprintf(where,"                             cpu_util = %f\n",
-            cpu_utilization);
-    fprintf(where,"                             num cpu = %d\n",
+    fprintf(where,
+	    "calc_service_demand called:  units_sent = %f\n"
+	    "                             elapsed_time = %f\n"
+	    "                             cpu_util = %f\n"
+	    "                             num cpu = %d\n",
+            units_sent,
+            elapsed_time,
+            cpu_utilization,
             num_cpus);
     fflush(where);
   }
@@ -3584,17 +3596,18 @@ calc_service_demand_internal(double unit_divisor,
     (float) num_cpus;
   
   if (debug) {
-    fprintf(where,"calc_service_demand using:   units_sent = %f\n",
-            units_sent);
-    fprintf(where,"                             elapsed_time = %f\n",
-            elapsed_time);
-    fprintf(where,"                             cpu_util = %f\n",
-            cpu_utilization);
-    fprintf(where,"                             num cpu = %d\n",
-            num_cpus);
-    fprintf(where,"calc_service_demand got:     thruput = %f\n",
-            thruput);
-    fprintf(where,"                             servdem = %f\n",
+    fprintf(where,
+	    "calc_service_demand using:   units_sent = %f\n"
+	    "                             elapsed_time = %f\n"
+	    "                             cpu_util = %f\n"
+	    "                             num cpu = %d\n"
+	    "calc_service_demand got:     thruput = %f\n"
+	    "                             servdem = %f\n",
+            units_sent,
+            elapsed_time,
+            cpu_utilization,
+            num_cpus,
+            thruput,
             service_demand);
     fflush(where);
   }
@@ -4354,16 +4367,14 @@ calculate_confidence(int confidence_iterations,
 
   if (debug) {
     fprintf(where,
-            "calculate_confidence: itr  %d; time %f; res  %f\n",
+            "calculate_confidence: itr  %d; time %f; res  %f\n"
+            "                               lcpu %f; rcpu %f\n"
+            "                               lsdm %f; rsdm %f\n",
             confidence_iterations,
             time,
-            result);
-    fprintf(where,
-            "                               lcpu %f; rcpu %f\n",
+            result,
             loc_cpu,
-            rem_cpu);
-    fprintf(where,
-            "                               lsdm %f; rsdm %f\n",
+            rem_cpu,
             loc_sd,
             rem_sd);
     fflush(where);
@@ -4516,25 +4527,17 @@ display_confidence()
 
 {
   fprintf(where,
-          "!!! WARNING\n");
-  fprintf(where,
-          "!!! Desired confidence was not achieved within ");
-  fprintf(where,
-          "the specified iterations.\n");
-  fprintf(where,
-          "!!! This implies that there was variability in ");
-  fprintf(where,
-          "the test environment that\n");
-  fprintf(where,
-          "!!! must be investigated before going further.\n");
-  fprintf(where,
-          "!!! Confidence intervals: Throughput      : %4.3f%%\n",
-          100.0 * (interval - result_confid));
-  fprintf(where,
-          "!!!                       Local CPU util  : %4.3f%%\n",
-          100.0 * (interval - loc_cpu_confid));
-  fprintf(where,
+          "!!! WARNING\n"
+          "!!! Desired confidence was not achieved within "
+          "the specified iterations.\n"
+          "!!! This implies that there was variability in "
+          "the test environment that\n"
+          "!!! must be investigated before going further.\n"
+          "!!! Confidence intervals: Throughput      : %4.3f%%\n"
+          "!!!                       Local CPU util  : %4.3f%%\n"
           "!!!                       Remote CPU util : %4.3f%%\n\n",
+          100.0 * (interval - result_confid),
+          100.0 * (interval - loc_cpu_confid),
           100.0 * (interval - rem_cpu_confid));
 }
 

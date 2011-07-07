@@ -775,12 +775,11 @@ complete_addrinfo(char *controlhost, char *data_address, char *port, int family,
 
   if (error) {
     fprintf(where,
-	    "complete_addrinfo: could not resolve '%s' port '%s' af %d",
+	    "complete_addrinfo: could not resolve '%s' port '%s' af %d"
+	    "\n\tgetaddrinfo returned %d %s\n",
 	    hostname,
 	    port,
-	    family);
-    fprintf(where,
-	    "\n\tgetaddrinfo returned %d %s\n",
+	    family,
 	    error,
 	    gai_strerror(error));
     fflush(where);
@@ -831,10 +830,8 @@ complete_addrinfo(char *controlhost, char *data_address, char *port, int family,
       !(change_warning_displayed & CHANGED_SOCK_TYPE)) {
     change_warning_displayed |= CHANGED_SOCK_TYPE;
     fprintf(where,
-	    "WARNING! getaddrinfo returned a socket type which did not\n");
-    fprintf(where,
-	    "match the requested type.  Please contact your vendor for\n");
-    fprintf(where,
+	    "WARNING! getaddrinfo returned a socket type which did not\n"
+	    "match the requested type.  Please contact your vendor for\n"
 	    "a fix to this bug in getaddrinfo()\n");
     fflush(where);
   }
@@ -846,18 +843,17 @@ complete_addrinfo(char *controlhost, char *data_address, char *port, int family,
      this behaviour we will only emit this warning if debug is set
      under Solaris and will continue to emit it under any circumstance
      on other platforms should it arise. raj 2009-06-03 */
+  /* since it has now been two years since that bug was filed, it
+     should be resolved by now, so the "out" given to Sun should no
+     longer be necessary.  either folks are running with the fix or
+     they need to get the fix. raj 2011-07-06 */
   if ((change_info & CHANGED_PROTOCOL) &&
       !(change_warning_displayed & CHANGED_PROTOCOL) &&
-#ifdef __sun
-      (debug) &&
-#endif
       (hints.ai_protocol != 0)) {
     change_warning_displayed |= CHANGED_PROTOCOL;
     fprintf(where,
-	    "WARNING! getaddrinfo returned a protocol other than the\n");
-    fprintf(where,
-	    "requested protocol.  Please contact your vendor for\n");
-    fprintf(where,
+	    "WARNING! getaddrinfo returned a protocol other than the\n"
+	    "requested protocol.  Please contact your vendor for\n"
 	    "a fix to this bug in getaddrinfo()\n");
     fflush(where);
   }
@@ -866,8 +862,7 @@ complete_addrinfo(char *controlhost, char *data_address, char *port, int family,
       !(change_warning_displayed & CHANGED_SCTP)) {
     change_warning_displayed |= CHANGED_SCTP;
     fprintf(where,
-	    "WARNING! getaddrinfo on this platform does not accept IPPROTO_SCTP!\n");
-    fprintf(where,
+	    "WARNING! getaddrinfo on this platform does not accept IPPROTO_SCTP!\n"
 	    "Please contact your vendor for a fix to this bug in getaddrinfo().\n");
     fflush(where);
   }
@@ -876,8 +871,7 @@ complete_addrinfo(char *controlhost, char *data_address, char *port, int family,
       !(change_warning_displayed & CHANGED_DCCP)) {
     change_warning_displayed |= CHANGED_DCCP;
     fprintf(where,
-	    "WARNING! getaddrinfo on this platform does not accept IPPROTO_DCCP!\n");
-    fprintf(where,
+	    "WARNING! getaddrinfo on this platform does not accept IPPROTO_DCCP!\n"
 	    "Please contact your vendor for a fix to this bug in getaddrinfo().\n");
     fflush(where);
   }
