@@ -412,10 +412,9 @@ parse_address_family(char family_string[])
     return(AF_UNSPEC);
   }
   fprintf(where,
-	  "WARNING! %s not recognized as an address family, using AF_UNPSEC\n",
+	  "WARNING! %s not recognized as an address family, using AF_UNPSEC\n"
+	  "Are you sure netperf was configured for that address family?\n",
 	  family_string);
-  fprintf(where,
-	  "Are you sure netperf was configured for that address family?\n");
   fflush(where);
   return(AF_UNSPEC);
 }
@@ -772,9 +771,9 @@ scan_cmd_line(int argc, char *argv[])
 	}
       }
 #else 
-      printf("Sorry, Demo Mode not configured into this netperf.\n");
-      printf("please consider reconfiguring netperf with\n");
-      printf("--enable-demo=yes and recompiling\n");
+      printf("Sorry, Demo Mode not configured into this netperf.\n"
+	     "Please consider reconfiguring netperf with\n"
+	     "--enable-demo=yes and recompiling\n");
 #endif 
       break;
     case 'f':

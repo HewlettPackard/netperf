@@ -189,10 +189,10 @@ open_debug_file()
 #endif
 
 }
- /* This routine implements the "main event loop" of the netperf	*/
- /* server code. Code above it will have set-up the control connection	*/
- /* so it can just merrily go about its business, which is to		*/
- /* "schedule" performance tests on the server.				*/
+/* This routine implements the "main event loop" of the netperf server
+   code. Code above it will have set-up the control connection so it
+   can just merrily go about its business, which is to "schedule"
+   performance tests on the server.  */
 
 void 
 process_requests()
@@ -229,8 +229,8 @@ process_requests()
       {
 	fclose(where);
 #if !defined(WIN32) && !defined(MPE) && !defined(__VMS) && !defined(MSDOS)
-	/* For Unix: reopen the debug write file descriptor to "/dev/null" */
-	/* and redirect stdout to it.					   */
+	/* For Unix: reopen the debug write file descriptor to
+	   "/dev/null" and redirect stdout to it.*/
 	fflush (stdout);
 	where = fopen ("/dev/null", "w");
 	if (where == NULL)
@@ -282,8 +282,8 @@ process_requests()
 	  }
 	}
 	if (i == 4) {
-	  /* none of the delimiters were unique, use the last one */
-	  /* of course, the last one is not i but i-1 */
+	  /* none of the delimiters were unique, use the last one of
+	     course, the last one is not i but i-1 */
 	  i -= 1;
 	  snprintf((char *)netperf_response.content.test_specific_data,
 		   sizeof(netperf_response.content.test_specific_data),
@@ -310,13 +310,15 @@ process_requests()
 	    (char *)netperf_response.content.test_specific_data + sizeof(temp_rate),
 	    sizeof(lib_num_loc_cpus));
       if (debug) {
-	fprintf(where,"netserver: sending CPU information:");
-	fprintf(where,"rate is %g num cpu %d\n",temp_rate,lib_num_loc_cpus);
+	fprintf(where,
+		"netserver: sending CPU information: rate is %g num cpu %d\n"
+		,temp_rate,
+		lib_num_loc_cpus);
 	fflush(where);
       }
       
-      /* we need the cpu_start, cpu_stop in the looper case to kill the */
-      /* child proceses raj 7/95 */
+      /* we need the cpu_start, cpu_stop in the looper case to kill
+         the child proceses raj 7/95 */
       
 #ifdef USE_LOOPER
       cpu_start(1);
@@ -478,7 +480,7 @@ process_requests()
 /*	
  set_up_server()
 
- set-up the server listen socket. we only call this routine if the 
+ set-up the server listen socket. we only call this routine if the
  user has specified a port number on the command line or we believe we
  are not a child of inetd or its platform-specific equivalent */
 
@@ -539,11 +541,11 @@ set_up_server(char hostname[], char port[], int af)
 
   if (error) {
     fprintf(stderr,
-	    "set_up_server: could not resolve remote '%s' port '%s' af %d",
+	    "set_up_server: could not resolve remote '%s' port '%s' af %d"
+	    "\n\tgetaddrinfo returned %d %s\n",
 	    hostname,
 	    port,
-	    af);
-    fprintf(stderr,"\n\tgetaddrinfo returned %d %s\n",
+	    af,
 	    error,
 	    gai_strerror(error));
     exit(-1);
@@ -601,7 +603,8 @@ set_up_server(char hostname[], char port[], int af)
 
   if (not_listening) {
     fprintf(stderr,
-	    "set_up_server could not establish a listen endpoint for %s port %s with family %s\n",
+	    "set_up_server could not establish a listen endpoint for "
+	    "%s port %s with family %s\n",
 	    host_name,
 	    port,
 	    inet_ftos(af));
@@ -708,11 +711,9 @@ set_up_server(char hostname[], char port[], int af)
 	      exit(1);
 	    }
 #if defined(MPE) || defined(__VMS) || defined(VMWARE_UW) || defined(MSDOS)
-	  /*
-	   * Since we cannot fork this process , we cant fire any threads
-	   * as they all share the same global data . So we better allow
-	   * one request at at time 
-	   */
+	  /* Since we cannot fork this process , we cant fire any
+	     threads as they all share the same global data . So we
+	     better allow one request at at time */
 	  process_requests() ;
 #elif WIN32
 	  {
@@ -801,12 +802,12 @@ set_up_server(char hostname[], char port[], int af)
 	    default:
 	      /* we are the parent process */
 	      close(server_sock);
-	      /* we should try to "reap" some of our children. on some */
-	      /* systems they are being left as defunct processes. we */
-	      /* will call waitpid, looking for any child process, */
-	      /* with the WNOHANG feature. when waitpid return a zero, */
-	      /* we have reaped all the children there are to reap at */
-	      /* the moment, so it is time to move on. raj 12/94 */
+	      /* we should try to "reap" some of our children. on some
+	       systems they are being left as defunct processes. we
+	       will call waitpid, looking for any child process, with
+	       the WNOHANG feature. when waitpid return a zero, we
+	       have reaped all the children there are to reap at the
+	       moment, so it is time to move on. raj 12/94 */
 #ifndef DONT_WAIT
 #ifdef NO_SETSID
 	      /* Only call "waitpid()" if "setsid()" is not used. */
@@ -826,35 +827,6 @@ set_up_server(char hostname[], char port[], int af)
     }
 #endif /* !WIN32 !MPE !__VMS !MSDOS */
 }
-
-#ifdef WIN32
-
-  /* With Win2003, WinNT's POSIX subsystem is gone and hence so is */
-  /* fork. */
-
-  /* But hopefully the kernel support will continue to exist for some */
-  /* time. */
-
-  /* We are not counting on the child address space copy_on_write */
-  /* support, since it isn't exposed except through the NT native APIs */
-  /* (which is not public). */
-
-  /* We will try to use the InheritHandles flag in CreateProcess.  It */
-  /* is in the public API, though it is documented as "must be FALSE". */
-
-  /* So where we would have forked, we will now create a new process. */
-  /* I have added a set of command line switches to specify a list of */
-  /* handles that the child should close since they shouldn't have */
-  /* been inherited ("-i#"), and a single switch to specify the handle */
-  /* for the server_sock ("I#"). */
-
-  /* A better alternative would be to re-write NetPerf to be */
-  /* multi-threaded; i.e., move all of the various NetPerf global */
-  /* variables in to thread specific structures.  But this is a bigger */
-  /* effort than I want to tackle at this time.  (And I doubt that the */
-  /* HP-UX author sees value in this effort). */
-
-#endif
 
 int _cdecl
 main(int argc, char *argv[])
@@ -895,8 +867,8 @@ main(int argc, char *argv[])
 
   netlib_init();
   
-  /* Scan the command line to see if we are supposed to set-up our own */
-  /* listen socket instead of relying on inetd. */
+  /* Scan the command line to see if we are supposed to set-up our own
+     listen socket instead of relying on inetd. */
 
   /* first set a copy of initial values */
   strncpy(local_host_name,"0.0.0.0",sizeof(local_host_name));
@@ -939,17 +911,15 @@ main(int argc, char *argv[])
       shell_num_cpus = atoi(optarg);
       if (shell_num_cpus > MAXCPUS) {
 	fprintf(stderr,
-		"netserver: This version can only support %d CPUs. Please",
+		"netserver: This version can only support %d CPUs. Please"
+		"           increase MAXCPUS in netlib.h and recompile.\n",
 		MAXCPUS);
-	fprintf(stderr,
-		"           increase MAXCPUS in netlib.h and recompile.\n");
 	fflush(stderr);
 	exit(1);
       }
       break;
     case 'p':
-      /* we want to open a listen socket at a */
-      /* specified port number */
+      /* we want to open a listen socket at a specified port number */
       strncpy(listen_port,optarg,sizeof(listen_port));
       not_inetd = 1;
       break;
@@ -1037,27 +1007,27 @@ main(int argc, char *argv[])
 #endif
 
   /* if we are not a child of an inetd or the like, then we should
-   open a socket and hang listens off of it. otherwise, we should go
-   straight into processing requests. the do_listen() routine will sit
-   in an infinite loop accepting connections and forking child
-   processes. the child processes will call process_requests */
+     open a socket and hang listens off of it. otherwise, we should go
+     straight into processing requests. the do_listen() routine will
+     sit in an infinite loop accepting connections and forking child
+     processes. the child processes will call process_requests */
   
-  /* If fd 0 is not a socket then assume we're not being called */
-  /* from inetd and start server socket on the default port. */
-  /* this enhancement comes from vwelch@ncsa.uiuc.edu (Von Welch) */
+  /* If fd 0 is not a socket then assume we're not being called from
+     inetd and start server socket on the default port.  this
+     enhancement comes from vwelch@ncsa.uiuc.edu (Von Welch) */
   if (not_inetd) {
     /* the user specified a port number on the command line */
     set_up_server(local_host_name,listen_port,local_address_family);
   }
 #ifdef WIN32
-  /* OK, with Win2003 WinNT's POSIX subsystem is gone, and hence so is */
-  /* fork.  But hopefully the kernel support will continue to exist */
-  /* for some time.  We are not counting on the address space */
-  /* copy_on_write support, since it isn't exposed except through the */
-  /* NT native APIs (which are not public).  We will try to use the */
-  /* InheritHandles flag in CreateProcess though since this is public */
-  /* and is used for more than just POSIX so hopefully it won't go */
-  /* away. */
+  /* OK, with Win2003 WinNT's POSIX subsystem is gone, and hence so is
+     fork.  But hopefully the kernel support will continue to exist
+     for some time.  We are not counting on the address space
+     copy_on_write support, since it isn't exposed except through the
+     NT native APIs (which are not public).  We will try to use the
+     InheritHandles flag in CreateProcess though since this is public
+     and is used for more than just POSIX so hopefully it won't go
+     away. */
   else if (TRUE) {
     if (child) {
       process_requests();
