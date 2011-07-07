@@ -1,5 +1,5 @@
 char    netlib_id[]="\
-@(#)netlib.c (c) Copyright 1993-2007 Hewlett-Packard Company. Version 2.4.3";
+@(#)netlib.c (c) Copyright 1993-2011 Hewlett-Packard Company. Version 2.5.0";
 
 
 /****************************************************************/
@@ -57,10 +57,11 @@ char    netlib_id[]="\
 #include <config.h>
 #endif
 
- /* It would seem that most of the includes being done here from */
- /* "sys/" actually have higher-level wrappers at just /usr/include. */
- /* This is based on a spot-check of a couple systems at my disposal. */
- /* If you have trouble compiling you may want to add "sys/" raj 10/95 */
+ /* It would seem that most of the includes being done here from
+    "sys/" actually have higher-level wrappers at just /usr/include.
+    This is based on a spot-check of a couple systems at my disposal.
+    If you have trouble compiling you may want to add "sys/" raj
+    10/95 */
 #include <limits.h>
 #include <signal.h>
 #ifdef HAVE_SYSCALL_H
@@ -82,10 +83,10 @@ char    netlib_id[]="\
 
 
 #ifndef WIN32
- /* at some point, I would like to get rid of all these "sys/" */
- /* includes where appropriate. if you have a system that requires */
- /* them, speak now, or your system may not compile later revisions of */
- /* netperf. raj 1/96 */
+ /* at some point, I would like to get rid of all these "sys/"
+    includes where appropriate. if you have a system that requires/
+    them, speak now, or your system may not compile later revisions of
+    netperf. raj 1/96 */
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/times.h>
@@ -186,10 +187,10 @@ SOCKET     win_kludge_socket2 = INVALID_SOCKET;
 #define LONG_LONG_MAX 9223372036854775807LL
 #endif /* LONG_LONG_MAX */
 
- /* older versions of netperf knew about the HP kernel IDLE counter. */
- /* this is now obsolete - in favor of either pstat(), times, or a */
- /* process-level looper process. we also now require support for the */
- /* "long" integer type. raj 4/95.  */
+ /* older versions of netperf knew about the HP kernel IDLE counter.
+    this is now obsolete - in favor of either pstat(), times, or a
+    process-level looper process. we also now require support for the
+    "long" integer type. raj 4/95.  */
 
 int 
   lib_num_loc_cpus,    /* the number of cpus in the system */
@@ -244,11 +245,11 @@ char *local_machine, *remote_machine;
 int local_data_family=AF_UNSPEC;
 int remote_data_family=AF_UNSPEC;
 
- /* in the past, I was overlaying a structure on an array of ints. now */
- /* I am going to have a "real" structure, and point an array of ints */
- /* at it. the real structure will be forced to the same alignment as */
- /* the type "double." this change will mean that pre-2.1 netperfs */
- /* cannot be mixed with 2.1 and later. raj 11/95 */
+/* in the past, I was overlaying a structure on an array of ints. now
+   I am going to have a "real" structure, and point an array of ints
+   at it. the real structure will be forced to the same alignment as
+   the type "double." this change will mean that pre-2.1 netperfs
+   cannot be mixed with 2.1 and later. raj 11/95 */
 
 union   netperf_request_struct  netperf_request;
 union   netperf_response_struct netperf_response;
@@ -604,8 +605,8 @@ ntohd(double net_double)
   unsigned char scratch;
   int i;
 
-  /* on those systems where ntohl is a no-op, we want to return the */
-  /* original value, unchanged */
+  /* on those systems where ntohl is a no-op, we want to return the
+     original value, unchanged */
 
   if (ntohl(1L) == 1L) {
     return(net_double);
@@ -613,9 +614,9 @@ ntohd(double net_double)
 
   conv_rec.whole_thing = net_double;
 
-  /* we know that in the message passing routines that ntohl will have */
-  /* been called on the 32 bit quantities. we need to put those back */
-  /* the way they belong before we swap */
+  /* we know that in the message passing routines that ntohl will have
+     been called on the 32 bit quantities. we need to put those back
+     the way they belong before we swap */
   conv_rec.words[0] = htonl(conv_rec.words[0]);
   conv_rec.words[1] = htonl(conv_rec.words[1]);
   
@@ -653,8 +654,8 @@ htond(double host_double)
   unsigned char scratch;
   int i;
 
-  /* on those systems where ntohl is a no-op, we want to return the */
-  /* original value, unchanged */
+  /* on those systems where ntohl is a no-op, we want to return the
+     original value, unchanged */
 
   if (ntohl(1L) == 1L) {
     return(host_double);
@@ -678,10 +679,9 @@ htond(double host_double)
   }
 #endif
 
-  /* we know that in the message passing routines htonl will */
-  /* be called on the 32 bit quantities. we need to set things up so */
-  /* that when this happens, the proper order will go out on the */
-  /* network */
+  /* we know that in the message passing routines htonl will be called
+     on the 32 bit quantities. we need to set things up so that when
+     this happens, the proper order will go out on the network */
   conv_rec.words[0] = htonl(conv_rec.words[0]);
   conv_rec.words[1] = htonl(conv_rec.words[1]);
   
@@ -810,8 +810,8 @@ get_num_cpus()
   
   temp_cpus = SystemInfo.dwNumberOfProcessors;
 #else
-  /* we need to know some other ways to do this, or just fall-back on */
-  /* a global command line option - raj 4/95 */
+  /* we need to know some other ways to do this, or just fall-back on
+     a global command line option - raj 4/95 */
   temp_cpus = shell_num_cpus;
 #endif  /* WIN32 */
 #endif /* _SC_NPROCESSORS_ONLN */
@@ -921,12 +921,12 @@ catcher(int sig)
     else {
 #ifdef WANT_INTERVALS
 #ifdef __hpux
-      /* the test is not over yet and we must have been using the */
-      /* interval timer. if we were in SYS_SIGSUSPEND we want to */
-      /* re-start the system call. Otherwise, we want to get out of */
-      /* the sigsuspend call. I NEED TO KNOW HOW TO DO THIS FOR OTHER */
-      /* OPERATING SYSTEMS. If you know how, please let me know. rick */
-      /* jones <raj@cup.hp.com> */
+      /* the test is not over yet and we must have been using the
+	 interval timer. if we were in SYS_SIGSUSPEND we want to
+	 re-start the system call. Otherwise, we want to get out of
+	 the sigsuspend call. I NEED TO KNOW HOW TO DO THIS FOR OTHER
+	 OPERATING SYSTEMS. If you know how, please let me know. rick
+	 jones <rick.jones2@hp.com> */
       if (scp->sc_syscall != SYS_SIGSUSPEND) {
         if (debug > 2) {
           fprintf(where,
@@ -1159,10 +1159,10 @@ stop_timer()
 
 
 #ifdef WANT_INTERVALS
- /* this routine will enable the interval timer and set things up so */
- /* that for a timed test the test will end at the proper time. it */
- /* should detect the presence of POSIX.4 timer_* routines one of */
- /* these days */
+/* this routine will enable the interval timer and set things up so
+   that for a timed test the test will end at the proper time. it
+   should detect the presence of POSIX.4 timer_* routines one of these
+   days */
 void
 start_itimer(unsigned int interval_len_msec )
 {
@@ -1172,12 +1172,12 @@ start_itimer(unsigned int interval_len_msec )
   struct itimerval new_interval;
   struct itimerval old_interval;
 
-  /* if -DWANT_INTERVALS was used, we will use the ticking of the itimer to */
-  /* tell us when the test is over. while the user will be specifying */
-  /* some number of milliseconds, we know that the interval timer is */
-  /* really in units of 1/HZ. so, to prevent the test from running */
-  /* "long" it would be necessary to keep this in mind when calculating */
-  /* the number of itimer events */
+  /* if -DWANT_INTERVALS was used, we will use the ticking of the
+     itimer to tell us when the test is over. while the user will be
+     specifying some number of milliseconds, we know that the interval
+     timer is really in units of 1/HZ. so, to prevent the test from
+     running "long" it would be necessary to keep this in mind when
+     calculating the number of itimer events */
 
   ticks_per_itvl = ((interval_wate * sysconf(_SC_CLK_TCK) * 1000) / 
                     1000000);
@@ -1206,8 +1206,8 @@ start_itimer(unsigned int interval_len_msec )
     fflush(where);
   }
 
-  /* if this was not a timed test, then we really aught to enable the */
-  /* signal catcher raj 2/95 */
+  /* if this was not a timed test, then we really aught to enable the
+     signal catcher raj 2/95 */
 
   new_interval.it_interval.tv_sec = usec_per_itvl / 1000000;
   new_interval.it_interval.tv_usec = usec_per_itvl % 1000000;  
@@ -1340,12 +1340,11 @@ netlib_init()
 
 }
 
- /* this routine will conver the string into an unsigned integer. it */
- /* is used primarily for the command-line options taking a number */
- /* (such as the socket size) which could be rather large. If someone */
- /* enters 32M, then the number will be converted to 32 * 1024 * 1024. */
- /* If they inter 32m, the number will be converted to 32 * 1000 * */
- /* 1000 */
+/* this routine will conver the string into an unsigned integer. it is
+   used primarily for the command-line options taking a number (such
+   as the socket size) which could be rather large. If someone enters
+   32M, then the number will be converted to 32 * 1024 * 1024.  If
+   they inter 32m, the number will be converted to 32 * 1000 * 1000 */
 unsigned int
 convert(char *string)
 
@@ -1406,13 +1405,13 @@ convert_timespec(char *string) {
 }
 
 
- /* this routine will allocate a circular list of buffers for either */
- /* send or receive operations. each of these buffers will be aligned */
- /* and offset as per the users request. the circumference of this */
- /* ring will be controlled by the setting of send_width. the buffers */
- /* will be filled with data from the file specified in fill_file. if */
- /* fill_file is an empty string, the buffers will not be filled with */
- /* any particular data */
+/* this routine will allocate a circular list of buffers for either
+   send or receive operations. each of these buffers will be aligned
+   and offset as per the users request. the circumference of this ring
+   will be controlled by the setting of send_width. the buffers will
+   be filled with data from the file specified in fill_file. if
+   fill_file is an empty string, the buffers will not be filled with
+   any particular data */
 
 struct ring_elt *
 allocate_buffer_ring(int width, int buffer_size, int alignment, int offset)
@@ -1571,13 +1570,13 @@ access_buffer(char *buffer_ptr,int length, int dirty_count, int clean_count) {
 #include <sys/mman.h>
 #include <sys/exs.h>
 
- /* this routine will allocate a circular list of buffers for either */
- /* send or receive operations. each of these buffers will be aligned */
- /* and offset as per the users request. the circumference of this */
- /* ring will be controlled by the setting of send_width. the buffers */
- /* will be filled with data from the file specified in fill_file. if */
- /* fill_file is an empty string, the buffers will not be filled with */
- /* any particular data */
+/* this routine will allocate a circular list of buffers for either
+   send or receive operations. each of these buffers will be aligned
+   and offset as per the users request. the circumference of this ring
+   will be controlled by the setting of send_width. the buffers will
+   be filled with data from the file specified in fill_file. if
+   fill_file is an empty string, the buffers will not be filled with
+   any particular data */
 
 struct ring_elt *
 allocate_exs_buffer_ring (int width, int buffer_size, int alignment, int offset, exs_mhandle_t *mhandlep)
@@ -1824,9 +1823,9 @@ alloc_sendfile_buf_ring(int width,
 
   prev_link = NULL;
   for (i = 1; i <= width; i++) {
-    /* get the ring element. we should probably make sure the malloc() 
-     was successful, but for now we'll just let the code bomb
-     mysteriously. 08/2000 */
+    /* get the ring element. we should probably make sure the malloc()
+       was successful, but for now we'll just let the code bomb
+       mysteriously. 08/2000 */
 
     temp_link = (struct sendfile_ring_elt *)
       malloc(sizeof(struct sendfile_ring_elt));
@@ -2109,21 +2108,21 @@ shutdown_control()
     exit(1);
   }
 
-  /* Now, we hang on a select waiting for the socket to become */
-  /* readable to receive the shutdown indication from the remote. this */
-  /* will be "just" like the recv_response() code */
+  /* Now, we hang on a select waiting for the socket to become
+     readable to receive the shutdown indication from the remote. this
+     will be "just" like the recv_response() code
 
-  /* we only select once. it is assumed that if the response is split */
-  /* (which should not be happening, that we will receive the whole */
-  /* thing and not have a problem ;-) */
+     we only select once. it is assumed that if the response is split
+     (which should not be happening, that we will receive the whole
+     thing and not have a problem ;-) */
 
   FD_ZERO(&readfds);
   FD_SET(netlib_control,&readfds);
   timeout.tv_sec  = 60; /* wait one minute then punt */
   timeout.tv_usec = 0;
 
-  /* select had better return one, or there was either a problem or a */
-  /* timeout... */
+  /* select had better return one, or there was either a problem or a
+     timeout... */
   if (select(FD_SETSIZE,
              &readfds,
              0,
@@ -2334,8 +2333,8 @@ send_request_n(int n)
     count = sizeof(netperf_request)/4;
   }
   
-  /* display the contents of the request if the debug level is high */
-  /* enough. otherwise, just send the darned thing ;-) */
+  /* display the contents of the request if the debug level is high
+     enough. otherwise, just send the darned thing ;-) */
   
   if (debug > 1) {
     fprintf(where,
@@ -2345,18 +2344,17 @@ send_request_n(int n)
   }
 
   /* pass the processor affinity request value to netserver this is a
-  kludge and I know it.  sgb 8/11/04. we keep this here to deal with
-  there being two paths to this place - direct and via
-  send_request()  */
+     kludge and I know it.  sgb 8/11/04. we keep this here to deal
+     with there being two paths to this place - direct and via
+     send_request()  */
 
   netperf_request.content.dummy = remote_proc_affinity;
 
-  /* put the entire request array into network order. We do this */
-  /* arbitrarily rather than trying to figure-out just how much */
-  /* of the request array contains real information. this should */
-  /* be simpler, and at any rate, the performance of sending */
-  /* control messages for this benchmark is not of any real */
-  /* concern. */ 
+  /* put the entire request array into network order. We do this
+     arbitrarily rather than trying to figure-out just how much of the
+     request array contains real information. this should be simpler,
+     and at any rate, the performance of sending control messages for
+     this benchmark is not of any real concern. */ 
   
   for (counter = 0;counter < count; counter++) {
     request_array[counter] = htonl(request_array[counter]);
@@ -2400,8 +2398,8 @@ void
 send_request()
 {
   
-  /* pass the processor affinity request value to netserver */
-  /* this is a kludge and I know it.  sgb 8/11/04           */
+  /* pass the processor affinity request value to netserver this is a
+     kludge and I know it.  sgb 8/11/04  */
 
   netperf_request.content.dummy = remote_proc_affinity;
 
@@ -2447,11 +2445,11 @@ send_response_n(int n)
     dump_response();
   }
 
-  /* put the entire response_array into network order. We do this */
-  /* arbitrarily rather than trying to figure-out just how much of the */
-  /* request array contains real information. this should be simpler, */
-  /* and at any rate, the performance of sending control messages for */
-  /* this benchmark is not of any real concern. */
+  /* put the entire response_array into network order. We do this
+     arbitrarily rather than trying to figure-out just how much of the
+     request array contains real information. this should be simpler,
+     and at any rate, the performance of sending control messages for
+     this benchmark is not of any real concern. */
   
   for (counter = 0; counter < count; counter++) {
     response_array[counter] = htonl(response_array[counter]);
@@ -2561,7 +2559,7 @@ int     counter,count;
   
   if (bytes_recvd == 0) {
     /* the remote has shutdown the control connection, we should shut
-       it  down as well and exit */
+       it down as well and exit */
     if (debug) {
       fprintf(where,
 	      "recv_request: remote requested shutdown of control\n");
@@ -2589,8 +2587,8 @@ int     counter,count;
     dump_request();
   } 
 
-  /* get the processor affinity request value from netperf */
-  /* this is a kludge and I know it.  sgb 8/11/04          */
+  /* get the processor affinity request value from netperf this is a
+     kludge and I know it.  sgb 8/11/04  */
   
   local_proc_affinity = netperf_request.content.dummy;
   
@@ -2660,9 +2658,9 @@ recv_response_timed_n(int addl_time, int n)
     response_array[counter] = 0;
   }
   
-  /* we only select once. it is assumed that if the response is split */
-  /* (which should not be happening, that we will receive the whole */
-  /* thing and not have a problem ;-) */
+  /* we only select once. it is assumed that if the response is split
+     (which should not be happening, that we will receive the whole
+     thing and not have a problem ;-) */
   
   FD_ZERO(&readfds);
   FD_SET(netlib_control,&readfds);
@@ -2728,31 +2726,32 @@ recv_response_timed_n(int addl_time, int n)
   }
 }
 
- /*
+/*
 
-      recv_response_timed()                                           
+  recv_response_timed()                                           
                                                                     
- receive the remote's response on the control socket. we will put the
- entire response into host order before giving it to the calling
- routine. hopefully, this will go most of the way to insuring
- intervendor interoperability. if there are any problems, we will just
- punt the entire situation.
+  receive the remote's response on the control socket. we will put the
+  entire response into host order before giving it to the calling
+  routine. hopefully, this will go most of the way to insuring
+  intervendor interoperability. if there are any problems, we will
+  just punt the entire situation.
                                                                     
- The call to select at the beginning is to get us out of hang
- situations where the remote gives-up but we don't find-out about
- it. This seems to happen only rarely, but it would be nice to be
- somewhat robust ;-)
+  The call to select at the beginning is to get us out of hang
+  situations where the remote gives-up but we don't find-out about
+  it. This seems to happen only rarely, but it would be nice to be
+  somewhat robust ;-)
 
- The "_timed" part is to allow the caller to add (or I suppose
- subtract) from the length of timeout on the select call. this was
- added since not all the CPU utilization mechanisms require a 40
- second calibration, and we used to have an aribtrary 40 second sleep
- in "calibrate_remote_cpu" - since we don't _always_ need that, we
- want to simply add 40 seconds to the select() timeout from that call,
- but don't want to change all the "recv_response" calls in the code
- right away.  sooo, we push the functionality of the old
- recv_response() into a new recv_response_timed(addl_timout) call, and
- have recv_response() call recv_response_timed(0).  raj 2005-05-16
+  The "_timed" part is to allow the caller to add (or I suppose
+  subtract) from the length of timeout on the select call. this was
+  added since not all the CPU utilization mechanisms require a 40
+  second calibration, and we used to have an aribtrary 40 second sleep
+  in "calibrate_remote_cpu" - since we don't _always_ need that, we
+  want to simply add 40 seconds to the select() timeout from that
+  call, but don't want to change all the "recv_response" calls in the
+  code right away.  sooo, we push the functionality of the old
+  recv_response() into a new recv_response_timed(addl_timout) call,
+  and have recv_response() call recv_response_timed(0).  raj
+  2005-05-16
 
  */
 
@@ -2832,8 +2831,8 @@ hi_32(big_int)
   } *overlay;
 
   overlay = (union overlay_u *)big_int;
-  /* on those systems which are byte swapped, we really wish to */
-  /* return words[1] - at least I think so - raj 4/95 */
+  /* on those systems which are byte swapped, we really wish to return
+     words[1] - at least I think so - raj 4/95 */
   if (htonl(1L) == 1L) {
     /* we are a "normal" :) machine */
     return(overlay->words[0]);
@@ -2853,8 +2852,8 @@ lo_32(big_int)
   } *overlay;
 
   overlay = (union overlay_u *)big_int;
-  /* on those systems which are byte swapped, we really wish to */
-  /* return words[0] - at least I think so - raj 4/95 */
+  /* on those systems which are byte swapped, we really wish to return
+     words[0] - at least I think so - raj 4/95 */
   if (htonl(1L) == 1L) {
     /* we are a "normal" :) machine */
     return(overlay->words[1]);
@@ -2912,7 +2911,7 @@ set_sock_buffer (SOCKET sd, enum sock_buffer which, int requested_size, int *eff
      tells the stack you wish to enable copy-avoidance. Knuth only
      knows what it will do on other stacks, but it might be
      interesting to find-out, so we won't bother #ifdef'ing the change
-     to allow asking for 0 bytes. Courtesy of SAF, 2007-05  raj
+     to allow asking for 0 bytes. Courtesy of SAF, 2007-05 raj
      2007-05-31 */
   if (requested_size >= 0) {
     if (setsockopt(sd, SOL_SOCKET, optname,
@@ -3051,24 +3050,24 @@ resolve_host(char *hostname,
 /*
   establish_control()
 
-set-up the control connection between netperf and the netserver so we
-can actually run some tests. if we cannot establish the control
-connection, that may or may not be a good thing, so we will let the
-caller decide what to do.
+  set-up the control connection between netperf and the netserver so
+  we can actually run some tests. if we cannot establish the control
+  connection, that may or may not be a good thing, so we will let the
+  caller decide what to do.
 
-to assist with pesky end-to-end-unfriendly things like firewalls, we
-allow the caller to specify both the remote hostname and port, and the
-local addressing info.  i believe that in theory it is possible to
-have an IPv4 endpoint and an IPv6 endpoint communicate with one
-another, but for the time being, we are only going to take-in one
-requested address family parameter. this means that the only way
-(iirc) that we might get a mixed-mode connection would be if the
-address family is specified as AF_UNSPEC, and getaddrinfo() returns
-different families for the local and server names.
+  to assist with pesky end-to-end-unfriendly things like firewalls, we
+  allow the caller to specify both the remote hostname and port, and
+  the local addressing info.  i believe that in theory it is possible
+  to have an IPv4 endpoint and an IPv6 endpoint communicate with one
+  another, but for the time being, we are only going to take-in one
+  requested address family parameter. this means that the only way
+  (iirc) that we might get a mixed-mode connection would be if the
+  address family is specified as AF_UNSPEC, and getaddrinfo() returns
+  different families for the local and server names.
+  
+  the "names" can also be IP addresses in ASCII string form.
 
-the "names" can also be IP addresses in ASCII string form.
-
-raj 2003-02-27 */
+  raj 2003-02-27 */
 
 SOCKET
 establish_control_internal(char *hostname,
@@ -3113,14 +3112,15 @@ establish_control_internal(char *hostname,
   /* we want to loop through all the possibilities. looping on the
      local addresses will be handled within the while loop.  I suppose
      these is some more "C-expert" way to code this, but it has not
-     lept to mind just yet :)  raj 2003-02024 */
+     lept to mind just yet :) raj 2003-02024 */
 
   while (remote_res_temp != NULL) {
 
     /* I am guessing that we should use the address family of the
        local endpoint, and we will not worry about mixed family types
        - presumeably the stack or other transition mechanisms will be
-       able to deal with that for us. famous last words :)  raj 2003-02-26 */
+       able to deal with that for us. famous last words :) raj
+       2003-02-26 */
     control_sock = socket(local_res_temp->ai_family,
                           SOCK_STREAM,
                           0);
@@ -3128,7 +3128,8 @@ establish_control_internal(char *hostname,
       /* at some point we'll need a more generic "display error"
          message for when/if we use GUIs and the like. unlike a bind
          or connect failure, failure to allocate a socket is
-         "immediately fatal" and so we return to the caller. raj 2003-02-24 */
+         "immediately fatal" and so we return to the caller. raj
+         2003-02-24 */
       if (debug) {
         perror("establish_control: unable to allocate control socket");
       }
@@ -3582,16 +3583,16 @@ calc_service_demand_internal(double unit_divisor,
              (double) unit_divisor / 
              (double) elapsed_time);
 
-  /* on MP systems, it is necessary to multiply the service demand by */
-  /* the number of CPU's. at least, I believe that to be the case:) */
-  /* raj 10/95 */
+  /* on MP systems, it is necessary to multiply the service demand by
+     the number of CPU's. at least, I believe that to be the case:)
+     raj 10/95 */
 
-  /* thruput has a "per second" component. if we were using 100% ( */
-  /* 100.0) of the CPU in a second, that would be 1 second, or 1 */
-  /* millisecond, so we multiply cpu_utilization by 10 to go to */
-  /* milliseconds, or 10,000 to go to micro seconds. With revision */
-  /* 2.1, the service demand measure goes to microseconds per unit. */
-  /* raj 12/95 */ 
+  /* thruput has a "per second" component. if we were using 100% (
+     100.0) of the CPU in a second, that would be 1 second, or 1
+     millisecond, so we multiply cpu_utilization by 10 to go to
+     milliseconds, or 10,000 to go to micro seconds. With revision
+     2.1, the service demand measure goes to microseconds per unit.
+     raj 12/95 */ 
   service_demand = (cpu_utilization*10000.0/thruput) * 
     (float) num_cpus;
   
@@ -3664,17 +3665,17 @@ calibrate_local_cpu(float local_cpu_rate)
 #endif /* USE_LOOPER */
 
   if (local_cpu_rate > 0) {
-    /* The user think that he knows what the cpu rate is. We assume */
-    /* that all the processors of an MP system are essentially the */
-    /* same - for this reason we do not have a per processor maxrate. */
-    /* if the machine has processors which are different in */
-    /* performance, the CPU utilization will be skewed. raj 4/95 */
+    /* The user think that he knows what the cpu rate is. We assume
+       that all the processors of an MP system are essentially the
+       same - for this reason we do not have a per processor maxrate.
+       if the machine has processors which are different in
+       performance, the CPU utilization will be skewed. raj 4/95 */
     lib_local_maxrate = local_cpu_rate;
   }
   else {
-    /* if neither USE_LOOPER nor USE_PSTAT are defined, we return a */
-    /* 0.0 to indicate that times or getrusage should be used. raj */
-    /* 4/95 */
+    /* if neither USE_LOOPER nor USE_PSTAT are defined, we return a
+       0.0 to indicate that times or getrusage should be used. raj
+       4/95 */
     lib_local_maxrate = (float)0.0;
 #if defined(USE_PROC_STAT) || defined(USE_LOOPER) || defined(USE_PSTAT) || defined(USE_KSTAT) || defined(USE_PERFSTAT) || defined(USE_SYSCTL)
     lib_local_maxrate = calibrate_idle_rate(4,10);
@@ -3691,9 +3692,9 @@ calibrate_remote_cpu()
 
   netperf_request.content.request_type = CPU_CALIBRATE;
   send_request();
-  /* we know that calibration will last at least 40 seconds, so go to */
-  /* sleep for that long so the 60 second select in recv_response will */
-  /* not pop. raj 7/95 */
+  /* we know that calibration will last at least 40 seconds, so go to
+     sleep for that long so the 60 second select in recv_response will
+     not pop. raj 7/95 */
 
   /* we know that CPU calibration may last as long as 40 seconds, so
      make sure we "select" for at least that long while looking for
@@ -3701,9 +3702,9 @@ calibrate_remote_cpu()
   recv_response_timed(40);
 
   if (netperf_response.content.serv_errno) {
-    /* initially, silently ignore remote errors and pass */
-    /* back a zero to the caller this should allow us to */
-    /* mix rev 1.0 and rev 1.1 netperfs... */
+    /* initially, silently ignore remote errors and pass back a zero
+       to the caller this should allow us to mix rev 1.0 and rev 1.1
+       netperfs... */
     return((float)0.0);
   }
   else {
@@ -3722,9 +3723,9 @@ calibrate_remote_cpu()
 
 
 #ifndef WIN32
-/* WIN32 requires that at least one of the file sets to select be non-null. */
-/* Since msec_sleep routine is only called by nettest_dlpi & nettest_unix,  */
-/* let's duck this issue. */
+/* WIN32 requires that at least one of the file sets to select be
+   non-null.  Since msec_sleep routine is only called by nettest_dlpi
+   & nettest_unix, let's duck this issue. */
 
 int
 msec_sleep( int msecs )
@@ -3766,7 +3767,7 @@ msec_sleep( int msecs )
    > 100 secs
    
    This will allow any time to be recorded to within an accuracy of
-   10%, and provides a compact  representation for capturing the
+   10%, and provides a compact representation for capturing the
    distribution of a large number of time differences (e.g.
    request-response latencies).
    
@@ -4182,11 +4183,11 @@ HIST_timestamp_stop_add(HIST h) {
 
 
 
- /* these routines for confidence intervals are courtesy of IBM. They */
- /* have been modified slightly for more general usage beyond TCP/UDP */
- /* tests. raj 11/94 I would suspect that this code carries an IBM */
- /* copyright that is much the same as that for the original HP */
- /* netperf code */
+/* these routines for confidence intervals are courtesy of IBM. They
+   have been modified slightly for more general usage beyond TCP/UDP
+   tests. raj 11/94 I would suspect that this code carries an IBM
+   copyright that is much the same as that for the original HP netperf
+   code */
 int     confidence_iterations; /* for iterations */
 
 double  
@@ -4276,9 +4277,9 @@ init_stat()
         confidence=-10.0;
 }
 
- /* this routine does a simple table lookup for some statistical */
- /* function that I would remember if I stayed awake in my probstats */
- /* class... raj 11/94 */
+/* this routine does a simple table lookup for some statistical
+   function that I would remember if I stayed awake in my probstats
+   class... raj 11/94 */
 double 
 confid(int level, int freedom)
 {
@@ -4519,9 +4520,9 @@ get_rem_cpu_confid()
   return (double) (100.0 * (interval - rem_cpu_confid));
 }
 
- /* display_confidence() is called when we could not achieve the */
- /* desirec confidence in the results. it will print the achieved */
- /* confidence to "where" raj 11/94 */
+/* display_confidence() is called when we could not achieve the
+   desired confidence in the results. it will print the achieved
+   confidence to "where" raj 11/94 */
 void
 display_confidence()
 

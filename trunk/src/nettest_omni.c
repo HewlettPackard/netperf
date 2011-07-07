@@ -4,7 +4,7 @@
 
 #ifdef WANT_OMNI
 char nettest_omni_id[]="\
-@(#)nettest_omni.c (c) Copyright 2008 Hewlett-Packard Co. Version 2.5.0pre";
+@(#)nettest_omni.c (c) Copyright 2008-2011 Hewlett-Packard Co. Version 2.5.0";
 
 #include <stdio.h>
 #if HAVE_SYS_TYPES_H

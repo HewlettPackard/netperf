@@ -1,5 +1,5 @@
 char   netcpu_pstatnew_id[]="\
-@(#)netcpu_pstatnew.c (c) Copyright 2005, Hewlett-Packard Company, Version 2.4.1";
+@(#)netcpu_pstatnew.c (c) Copyright 2005-2011 Hewlett-Packard Company, Version 2.5.0";
 
 /* since we "know" that this interface is available only on 11.23 and
    later, and that 11.23 and later are strictly 64-bit kernels, we can
@@ -191,15 +191,17 @@ calibrate_idle_rate(int iterations, int interval)
 static void
 print_cpu_time_counters(char *name, int instance, cpu_time_counters_t *counters) 
 {
-  fprintf(where,"%s[%d]:\n",name,instance);
   fprintf(where,
-	  "\t idle %llu\n",counters[instance].idle);
-  fprintf(where,
-	  "\t user %llu\n",counters[instance].user);
-  fprintf(where,
-	  "\t kernel %llu\n",counters[instance].kernel);
-  fprintf(where,
-	  "\t interrupt %llu\n",counters[instance].interrupt);
+	  "%s[%d]:\n"
+	  "\t idle %llu\n"
+	  "\t user %llu\n"
+	  "\t kernel %llu\n"
+	  "\t interrupt %llu\n",
+	  name,instance,
+	  counters[instance].idle,
+	  counters[instance].user,
+	  counters[instance].kernel,
+	  counters[instance].interrupt);
 }
 
 float
@@ -309,7 +311,8 @@ calc_cpu_util_internal(float elapsed_time)
 
     if (debug) {
       fprintf(where,
-	      "total_cpu_cycles %"PRIu64" sanity_cpu_cycles %"PRIu64" missing %"PRIu64"\n",
+	      "total_cpu_cycles %"PRIu64" sanity_cpu_cycles %"PRIu64
+	      " missing %"PRIu64"\n",
 	      total_cpu_cycles,
 	      sanity_cpu_cycles,
 	      sanity_cpu_cycles - total_cpu_cycles);
@@ -343,11 +346,16 @@ calc_cpu_util_internal(float elapsed_time)
       (double)sanity_cpu_cycles;
 
     if (debug) {
-      fprintf(where,"\tfraction_idle %g\n",fraction_idle);
-      fprintf(where,"\tfraction_user %g\n",fraction_user);
-      fprintf(where,"\tfraction_kernel %g\n",fraction_kernel);
-      fprintf(where,"\tfraction_interrupt %g WARNING, possibly under-counted!\n",fraction_interrupt);
-      fprintf(where,"\testimated_fraction_interrupt %g\n",
+      fprintf(where,
+	      "\tfraction_idle %g\n"
+	      "\tfraction_user %g\n"
+	      "\tfraction_kernel %g\n"
+	      "\tfraction_interrupt %g WARNING, possibly under-counted!\n"
+	      "\testimated_fraction_interrupt %g\n",
+	      fraction_idle,
+	      fraction_user,
+	      fraction_kernel,
+	      fraction_interrupt,
 	      estimated_fraction_interrupt);
     }
 
@@ -387,11 +395,16 @@ calc_cpu_util_internal(float elapsed_time)
        CALC_ACCURACY) / sanity_cpu_cycles;
 
     if (debug) {
-      fprintf(where,"\tfraction_idle %"PRIu64"\n",fraction_idle);
-      fprintf(where,"\tfraction_user %"PRIu64"\n",fraction_user);
-      fprintf(where,"\tfraction_kernel %"PRIu64"\n",fraction_kernel);
-      fprintf(where,"\tfraction_interrupt %"PRIu64"WARNING, possibly under-counted!\n",fraction_interrupt);
-      fprintf(where,"\testimated_fraction_interrupt %"PRIu64"\n",
+      fprintf(where,
+	      "\tfraction_idle %"PRIu64"\n"
+	      "\tfraction_user %"PRIu64"\n"
+	      "\tfraction_kernel %"PRIu64"\n"
+	      "\tfraction_interrupt %"PRIu64"WARNING, possibly under-counted!\n"
+	      "\testimated_fraction_interrupt %"PRIu64"\n",
+	      fraction_idle,
+	      fraction_user,
+	      fraction_kernel,
+	      fraction_interrupt,
 	      estimated_fraction_interrupt);
     }
 
@@ -414,7 +427,8 @@ calc_cpu_util_internal(float elapsed_time)
 
   if (debug) {
     fprintf(where,
-	    "calc_cpu_util: returning %g\n",lib_local_cpu_util);
+	    "calc_cpu_util: returning %g\n",
+	    lib_local_cpu_util);
   }
 
   return lib_local_cpu_util;

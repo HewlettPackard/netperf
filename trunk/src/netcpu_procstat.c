@@ -1,5 +1,5 @@
 char   netcpu_procstat_id[]="\
-@(#)netcpu_procstat.c (c) Copyright 2005-2007 Version 2.4.3";
+@(#)netcpu_procstat.c (c) Copyright 2005-2011 Version 2.5.0";
 
 /* netcpu_procstat.c
   
@@ -188,17 +188,18 @@ get_cpu (cpu_states_t *res)
 	   (unsigned long long *)&res[i].steal,
 	   (unsigned long long *)&res[i].guest);
     if (debug) {
-      fprintf(where,"res[%d] is %llu %llu %llu %llu %llu %llu %llu %llu %llu\n",
-           i,
-	   (unsigned long long)res[i].user,
-	   (unsigned long long)res[i].nice,
-	   (unsigned long long)res[i].sys,
-	   (unsigned long long)res[i].idle,
-	   (unsigned long long)res[i].iowait,
-	   (unsigned long long)res[i].hard_irq,
-	   (unsigned long long)res[i].soft_irq,
-	   (unsigned long long)res[i].steal,
-	   (unsigned long long)res[i].guest);
+      fprintf(where,
+	      "res[%d] is %llu %llu %llu %llu %llu %llu %llu %llu %llu\n",
+	      i,
+	      (unsigned long long)res[i].user,
+	      (unsigned long long)res[i].nice,
+	      (unsigned long long)res[i].sys,
+	      (unsigned long long)res[i].idle,
+	      (unsigned long long)res[i].iowait,
+	      (unsigned long long)res[i].hard_irq,
+	      (unsigned long long)res[i].soft_irq,
+	      (unsigned long long)res[i].steal,
+	      (unsigned long long)res[i].guest);
       fflush(where);
     }
     p = strchr (p, '\n');
@@ -314,7 +315,8 @@ calc_cpu_util_internal(float elapsed_time)
     lib_local_per_cpu_util[i] *= correction_factor;
     if (debug) {
       fprintf(where,
-              "calc_cpu_util: util on processor %d, diff = %llu %llu %llu %llu %llu %llu %llu %llu %llu util %f cf %f\n",
+              "calc_cpu_util: util on processor %d, diff = %llu %llu %llu "
+	      "%llu %llu %llu %llu %llu %llu util %f cf %f\n",
               i,
 	      (unsigned long long)diff.user,
 	      (unsigned long long)diff.nice,

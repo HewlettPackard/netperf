@@ -1,5 +1,5 @@
 char   netcpu_perfstat_id[]="\
-@(#)netcpu_perfstat.c Version 2.4.0";
+@(#)netcpu_perfstat.c Version 2.5.0";
 
 #if HAVE_CONFIG_H
 # include <config.h>
@@ -222,17 +222,21 @@ calibrate_idle_rate(int iterations, int interval)
     per_cpu_pointer = perfstat_buffer;
     
     if(debug) {
-      fprintf(where, "Calibration for perfstat counter run: %d\n",i);
-      fprintf(where,"\tsec = %ld usec = %ld\n",sec,usec);
-      fprintf(where,"\telapsed time = %g\n",elapsed);
+      fprintf(where,
+	      "Calibration for perfstat counter run: %d\n"
+	      "\tsec = %ld usec = %ld\n"
+	      "\telapsed time = %g\n",
+	      i,
+	      sec,usec,
+	      elapsed);
     }
 
     for (j = 0; j < lib_num_loc_cpus; j++) {
       secondcnt[j] = per_cpu_pointer->idle;
       per_cpu_pointer++;
       if(debug) {
-        /* I know that there are situations where compilers know about */
-        /* long long, but the library functions do not... raj 4/95 */
+        /* I know that there are situations where compilers know about
+           long long, but the library functions do not... raj 4/95 */
         fprintf(where,
                 "\tfirstcnt[%d] = 0x%8.8lx%8.8lx secondcnt[%d] = 0x%8.8lx%8.8lx\n",
                 j,
@@ -242,8 +246,8 @@ calibrate_idle_rate(int iterations, int interval)
                 secondcnt[j],
                 secondcnt[j]);
       }
-      /* we assume that it would wrap no more than once. we also */
-      /* assume that the result of subtracting will "fit" raj 4/95 */
+      /* we assume that it would wrap no more than once. we also
+	 assume that the result of subtracting will "fit" raj 4/95 */
       temp_rate = (secondcnt[j] >= firstcnt[j]) ?
         (float)(secondcnt[j] - firstcnt[j])/elapsed : 
           (float)(secondcnt[j]-firstcnt[j]+MAXLONG)/elapsed;
@@ -272,11 +276,11 @@ calc_cpu_util_internal(float elapsed_time)
   float correction_factor;
 
   lib_local_cpu_util = (float)0.0;
-  /* It is possible that the library measured a time other than */
-  /* the one that the user want for the cpu utilization */
-  /* calculations - for example, tests that were ended by */
-  /* watchdog timers such as the udp stream test. We let these */
-  /* tests tell up what the elapsed time should be. */
+  /* It is possible that the library measured a time other than the
+     one that the user want for the cpu utilization calculations - for
+     example, tests that were ended by watchdog timers such as the udp
+     stream test. We let these tests tell up what the elapsed time
+     should be. */
 
   if (elapsed_time != 0.0) {
     correction_factor = (float) 1.0 +
@@ -286,14 +290,13 @@ calc_cpu_util_internal(float elapsed_time)
     correction_factor = (float) 1.0;
   }
 
-  /* this looks just like the looper case. at least I think it */
-  /* should :) raj 4/95 */
+  /* this looks just like the looper case. at least I think it should
+     :) raj 4/95 */
   for (i = 0; i < lib_num_loc_cpus; i++) {
 
-    /* we assume that the two are not more than a long apart. I */
-    /* know that this is bad, but trying to go from long longs to */
-    /* a float (perhaps a double) is boggling my mind right now. */
-    /* raj 4/95 */
+    /* we assume that the two are not more than a long apart. I know
+       that this is bad, but trying to go from long longs to a float
+       (perhaps a double) is boggling my mind right now.  raj 4/95 */
 
     long long
       diff;

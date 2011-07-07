@@ -1,7 +1,7 @@
 #include "netperf_version.h"
 
 char	netsh_id[]="\
-@(#)netsh.c (c) Copyright 1993-2007 Hewlett-Packard Company. Version 2.4.3pre";
+@(#)netsh.c (c) Copyright 1993-2011 Hewlett-Packard Company. Version 2.5.0";
 
 
 /****************************************************************/
@@ -97,9 +97,10 @@ double atof(const char *);
 /*									*/
 /************************************************************************/
 
- /* Some of the args take optional parameters. Since we are using */
- /* getopt to parse the command line, we will tell getopt that they do */
- /* not take parms, and then look for them ourselves */
+/* Some of the args take optional parameters. Since we are using
+   getopt to parse the command line, we will tell getopt that they do
+   not take parms, and then look for them ourselves */
+
 #define GLOBAL_CMD_LINE_ARGS "A:a:b:B:CcdDf:F:H:hi:I:jk:K:l:L:n:NO:o:P:p:rSs:t:T:v:VW:w:46"
 
 /************************************************************************/
@@ -225,8 +226,8 @@ int  result_confidence_only = 0;
 
 double interval;
 
- /* stuff to control the "width" of the buffer rings for sending and */
- /* receiving data */
+ /* stuff to control the "width" of the buffer rings for sending and
+    receiving data */
 int	send_width;
 int     recv_width;
 
@@ -309,11 +310,11 @@ value. To set the second value it must be preceded with a comma or be a\n\
 comma-separated pair. This is to retain previous netperf behaviour.\n"; 
 
 
-/* This routine will return the two arguments to the calling routine. */
-/* If the second argument is not specified, and there is no comma, */
-/* then the value of the second argument will be the same as the */
-/* value of the first. If there is a comma, then the value of the */
-/* second argument will be the value of the second argument ;-) */
+/* This routine will return the two arguments to the calling routine.
+   If the second argument is not specified, and there is no comma,
+   then the value of the second argument will be the same as the value
+   of the first. If there is a comma, then the value of the second
+   argument will be the value of the second argument ;-) */
 void
 break_args(char *s, char *arg1, char *arg2)
 
@@ -555,40 +556,42 @@ void
 set_defaults()
 {
   
-  /* stuff to say where this test is going                              */
+  /* stuff to say where this test is going  */
   strcpy(host_name,"");	      /* remote host name or ip addr  */
   strcpy(local_host_name,""); /* we want it to be INADDR_ANY */
-  strcpy(test_name,"TCP_STREAM");	/* which test to run 		*/
-  strncpy(test_port,"12865",PORTBUFSIZE); /* where is the test waiting    */
+  strcpy(test_name,"TCP_STREAM");	/* which test to run  */
+  strncpy(test_port,"12865",PORTBUFSIZE); /* where is the test
+					     waiting  */
   strncpy(local_test_port,"0",PORTBUFSIZE);/* INPORT_ANY as it were */
   address_family = AF_UNSPEC;
   local_address_family = AF_UNSPEC;
 
-  /* output controlling variables                               */
-  debug			= 0;/* debugging level			*/
-  print_headers		= 1;/* do print test headers		*/
-  verbosity		= 1;/* verbosity level			*/
+  /* output controlling variables  */
+  debug			= 0;/* debugging  */
+  print_headers		= 1;/* do print test headers  */
+  verbosity		= 1;/* verbosity level  */
   keep_histogram        = 0;
   keep_statistics       = 0;
 
   /* cpu variables */
-  local_cpu_usage	= 0;/* measure local cpu		*/
-  remote_cpu_usage	= 0;/* what do you think ;-)		*/
+  local_cpu_usage	= 0;/* measure local cpu  */
+  remote_cpu_usage	= 0;/* what do you think ;-)  */
   
   local_cpu_rate	= (float)0.0;
   remote_cpu_rate	= (float)0.0;
   
-  /* the end-test conditions for the tests - either transactions, bytes,  */
-  /* or time. different vars used for clarity - space is cheap ;-)        */
-  test_time	= 10;	/* test ends by time			*/
-  test_bytes	= 0;	/* test ends on byte count		*/
-  test_trans	= 0;	/* test ends on tran count		*/
+  /* the end-test conditions for the tests - either transactions,
+     bytes, or time. different vars used for clarity - space is cheap
+     ;-)  */
+  test_time	= 10;	/* test ends by time  */
+  test_bytes	= 0;	/* test ends on byte count  */
+  test_trans	= 0;	/* test ends on tran count  */
   
-  /* the alignment conditions for the tests				*/
-  local_recv_align	= 8;	/* alignment for local receives	*/
-  local_send_align	= 8;	/* alignment for local sends	*/
+  /* the alignment conditions for the tests  */
+  local_recv_align	= 8;	/* alignment for local receives */
+  local_send_align	= 8;	/* alignment for local sends  */
   remote_recv_align	= 8;	/* alignment for remote receives*/
-  remote_send_align	= 8;	/* alignment for remote sends	*/
+  remote_send_align	= 8;	/* alignment for remote sends  */
   
   /* rate controlling stuff, taken out of the #ifdef for omni */
   interval_usecs  = 0;
@@ -700,11 +703,11 @@ scan_cmd_line(int argc, char *argv[])
   }
   *--p = 0;
 
-  /* Go through all the command line arguments and break them */
-  /* out. For those options that take two parms, specifying only */
-  /* the first will set both to that value. Specifying only the */
-  /* second will leave the first untouched. To change only the */
-  /* first, use the form first, (see the routine break_args.. */
+  /* Go through all the command line arguments and break them out. For
+     those options that take two parms, specifying only the first will
+     set both to that value. Specifying only the second will leave the
+     first untouched. To change only the first, use the form first,
+     (see the routine break_args.. */
   
   while ((c= getopt(argc, argv, GLOBAL_CMD_LINE_ARGS)) != EOF) {
     switch (c) {
@@ -731,9 +734,8 @@ scan_cmd_line(int argc, char *argv[])
 	remote_recv_align = convert(arg2);
       break;
     case 'c':
-      /* measure local cpu usage please. the user */
-      /* may have specified the cpu rate as an */
-      /* optional parm */
+      /* measure local cpu usage please. the user may have specified
+         the cpu rate as an optional parm */
       if (argv[optind] && isdigit((unsigned char)argv[optind][0])){
 	/* there was an optional parm */
 	local_cpu_rate = (float)atof(argv[optind]);
@@ -911,8 +913,8 @@ scan_cmd_line(int argc, char *argv[])
       convert_to_upper(test_name);
       break;
     case 'T':
-      /* We want to set the processor on which netserver or netperf */
-      /* will run */
+      /* We want to set the processor on which netserver or netperf
+         will run */
       break_args(optarg,arg1,arg2);
       if (arg1[0]) {
 	local_proc_affinity = convert(arg1);
@@ -924,8 +926,8 @@ scan_cmd_line(int argc, char *argv[])
       cpu_binding_requested = 1;
       break;
     case 'W':
-      /* set the "width" of the user space data buffer ring. This will */
-      /* be the number of send_size buffers malloc'd in the tests */  
+      /* set the "width" of the user space data buffer ring. This will
+	 be the number of send_size buffers malloc'd in the tests */  
       break_args(optarg,arg1,arg2);
       if (arg1[0]) 
 	send_width = convert(arg1);
@@ -980,10 +982,10 @@ scan_cmd_line(int argc, char *argv[])
       break;
     case 'w':
       /* We want to send requests at a certain wate.  Remember that
-      there are 1000000 usecs in a second, and that the packet rate is
-      expressed in packets per millisecond. shuffle the #ifdef around
-      a bit to deal with both netperf and netserver possibly doing
-      intervals with omni tests */
+         there are 1000000 usecs in a second, and that the packet rate
+         is expressed in packets per millisecond. shuffle the #ifdef
+         around a bit to deal with both netperf and netserver possibly
+         doing intervals with omni tests */
       break_args_explicit(optarg,arg1,arg2);
       if (arg1[0]) {
 #ifdef WANT_INTERVALS
@@ -1008,7 +1010,8 @@ scan_cmd_line(int argc, char *argv[])
       if (arg1[0]) {
 #ifdef WANT_INTERVALS
 	interval_burst = convert(arg1);
-	/* set a default in case the user does not include the -w option */
+	/* set a default in case the user does not include the -w
+	   option */
 	if (interval_usecs == 0) {
 	  interval_wate = 1;
 	  interval_usecs = 1000;
@@ -1102,7 +1105,8 @@ scan_cmd_line(int argc, char *argv[])
       exit(-1);
     }
   } else {
-    /* resolve the hostname and pull the address family from the addrinfo */
+    /* resolve the hostname and pull the address family from the
+       addrinfo */
     struct addrinfo *ai;
 
     ai = resolve_host(host_name, NULL, address_family);
