@@ -1327,35 +1327,28 @@ dump_netperf_output_source(FILE *where)
   /* belts and suspenders everyone... */
   for (i = OUTPUT_NONE; i < NETPERF_OUTPUT_MAX; i++) {
     fprintf(where,
-	    "Output Name: %s\n",
-	    netperf_output_enum_to_str(netperf_output_source[i].output_name));
-    fprintf(where,
-	    "\tmax_line_len %d tot_line_len %d display_value %p\n",
+	    "Output Name: %s\n"
+	    "\tmax_line_len %d tot_line_len %d display_value %p\n"
+	    "\tline[0]: |%s|\n"
+	    "\tline[1]: |%s|\n"
+	    "\tline[2]: |%s|\n"
+	    "\tline[3]: |%s|\n"
+	    "\tbrief: |%s|\n"
+	    "\tformat: |%s|\n",
+	    netperf_output_enum_to_str(netperf_output_source[i].output_name),
 	    netperf_output_source[i].max_line_len,
 	    netperf_output_source[i].tot_line_len,
-	    netperf_output_source[i].display_value);
-    fprintf(where,
-	    "\tline[0]: |%s|\n",
+	    netperf_output_source[i].display_value,
 	    (netperf_output_source[i].line[0] == NULL) ? "" : 
-	    netperf_output_source[i].line[0]);
-    fprintf(where,
-	    "\tline[1]: |%s|\n",
+	    netperf_output_source[i].line[0],
 	    (netperf_output_source[i].line[1] == NULL) ? "" : 
-	    netperf_output_source[i].line[1]);
-    fprintf(where,
-	    "\tline[2]: |%s|\n",
+	    netperf_output_source[i].line[1],
 	    (netperf_output_source[i].line[2] == NULL) ? "" : 
-	    netperf_output_source[i].line[2]);
-    fprintf(where,
-	    "\tline[3]: |%s|\n",
+	    netperf_output_source[i].line[2],
 	    (netperf_output_source[i].line[3] == NULL) ? "" : 
-	    netperf_output_source[i].line[3]);
-    fprintf(where,
-	    "\tbrief: |%s|\n",
+	    netperf_output_source[i].line[3],
 	    (netperf_output_source[i].brief == NULL) ? "" : 
-	    netperf_output_source[i].brief);
-    fprintf(where,
-	    "\tformat: |%s|\n",
+	    netperf_output_source[i].brief,
 	    (netperf_output_source[i].format == NULL) ? "" : 
 	    netperf_output_source[i].format);
   }
@@ -1563,7 +1556,8 @@ parse_output_selection_line(int line, char *list) {
   if (line >= NETPERF_MAX_BLOCKS) {
     if (debug) {
       fprintf(where,
-	      "There can be no more than %d output selection lines. Ignoring output selection line %d |%s|\n",
+	      "There can be no more than %d output selection lines." 
+	      " Ignoring output selection line %d |%s|\n",
 	      NETPERF_MAX_BLOCKS,
 	      line + 1,
 	      list);
@@ -1595,7 +1589,10 @@ parse_output_selection_line(int line, char *list) {
     token = strtok(NULL," ,");
   }
   if ((token) && (debug)) {
-    fprintf(where,"There can be no more than %d output selectors per line. Ignoring remaining selectors on line %d\n",NETPERF_OUTPUT_MAX,line +1);
+    fprintf(where,
+	    "There can be no more than %d output selectors per line. "
+	    "Ignoring remaining selectors on line %d\n",
+	    NETPERF_OUTPUT_MAX,line +1);
     fflush(where);
   }
 }
@@ -4499,17 +4496,17 @@ static void
 dump_tcp_info(struct tcp_info *tcp_info) 
 {
 
-  printf("tcpi_rto %d tcpi_ato %d tcpi_pmtu %d tcpi_rcv_ssthresh %d\n",
+  printf("tcpi_rto %d tcpi_ato %d tcpi_pmtu %d tcpi_rcv_ssthresh %d\n"
+	 "tcpi_rtt %d tcpi_rttvar %d tcpi_snd_ssthresh %d tpci_snd_cwnd %d\n"
+	 "tcpi_reordering %d tcpi_total_retrans %d\n",
 	 tcp_info->tcpi_rto,
 	 tcp_info->tcpi_ato,
 	 tcp_info->tcpi_pmtu,
-	 tcp_info->tcpi_rcv_ssthresh);
-  printf("tcpi_rtt %d tcpi_rttvar %d tcpi_snd_ssthresh %d tpci_snd_cwnd %d\n",
+	 tcp_info->tcpi_rcv_ssthresh,
 	 tcp_info->tcpi_rtt,
 	 tcp_info->tcpi_rttvar,
 	 tcp_info->tcpi_snd_ssthresh,
-	 tcp_info->tcpi_snd_cwnd);
-  printf("tcpi_reordering %d tcpi_total_retrans %d\n",
+	 tcp_info->tcpi_snd_cwnd,
 	 tcp_info->tcpi_reordering,
 	 tcp_info->tcpi_total_retrans);
 
@@ -6068,11 +6065,10 @@ recv_omni()
   
   if (debug) {
     fprintf(where,
-	    "recv_omni: requested recv alignment of %d offset %d\n",
-	    omni_request->recv_alignment,
-	    omni_request->recv_offset);
-    fprintf(where,
+	    "recv_omni: requested recv alignment of %d offset %d\n"
 	    "recv_omni: requested send alignment of %d offset %d\n",
+	    omni_request->recv_alignment,
+	    omni_request->recv_offset,
 	    omni_request->send_alignment,
 	    omni_request->send_offset);
     fflush(where);
