@@ -1,5 +1,5 @@
 char   netcpu_sysctl_id[]="\
-@(#)netcpu_osx.c  Version 2.4.3";
+@(#)netcpu_osx.c  Version 2.5.0";
 
 #if HAVE_CONFIG_H
 # include <config.h>
@@ -112,11 +112,11 @@ calc_cpu_util_internal(float elapsed_time)
   natural_t	userticks, systicks, idleticks, totalticks;
 
   lib_local_cpu_util = (float)0.0;
-  /* It is possible that the library measured a time other than */
-  /* the one that the user want for the cpu utilization */
-  /* calculations - for example, tests that were ended by */
-  /* watchdog timers such as the udp stream test. We let these */
-  /* tests tell up what the elapsed time should be. */
+  /* It is possible that the library measured a time other than the
+     one that the user want for the cpu utilization calculations - for
+     example, tests that were ended by watchdog timers such as the udp
+     stream test. We let these tests tell up what the elapsed time
+     should be. */
   
   if (elapsed_time != 0.0) {
     correction_factor = (float) 1.0 + 

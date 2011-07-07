@@ -1,5 +1,5 @@
 char   netcpu_kstat10_id[]="\
-@(#)netcpu_kstat10.c (c) Copyright 2005-2007, Hewlett-Packard Company Version 2.4.3";
+@(#)netcpu_kstat10.c (c) Copyright 2005-2011, Hewlett-Packard Company Version 2.5.0";
 
 #if HAVE_CONFIG_H
 # include <config.h>
@@ -56,15 +56,17 @@ static cpu_time_counters_t corrected_cpu_counters[MAXCPUS];
 static void
 print_cpu_time_counters(char *name, int instance, cpu_time_counters_t *counters) 
 {
-  fprintf(where,"%s[%d]:\n",name,instance);
   fprintf(where,
-	  "\t idle %llu\n",counters[instance].idle);
-  fprintf(where,
-	  "\t user %llu\n",counters[instance].user);
-  fprintf(where,
-	  "\t kernel %llu\n",counters[instance].kernel);
-  fprintf(where,
-	  "\t interrupt %llu\n",counters[instance].interrupt);
+	  "%s[%d]:\n"
+	  "\t idle %llu\n"
+	  "\t user %llu\n"
+	  "\t kernel %llu\n"
+	  "\t interrupt %llu\n",
+	  name,instance,
+	  counters[instance].idle,
+	  counters[instance].user,
+	  counters[instance].kernel,
+	  counters[instance].interrupt);
 }
 
 void
@@ -104,11 +106,10 @@ cpu_util_init(void)
 
   if (MAXCPUS == i) {
     fprintf(where,
-            "Sorry, this system has more CPUs (%d) than netperf can handle (%d).\n",
+            "Sorry, this system has more CPUs (%d) than netperf can handle (%d).\n"
+            "Please alter MAXCPUS in netlib.h and recompile.\n",
             i,
             MAXCPUS);
-    fprintf(where,
-            "Please alter MAXCPUS in netlib.h and recompile.\n");
     fflush(where);
     exit(1);
   }
@@ -134,8 +135,7 @@ print_unexpected_statistic_warning(char *who, char *what, char *why)
 {
   if (why) {
     fprintf(where,
-	    "WARNING! WARNING! WARNING! WARNING!\n");
-    fprintf(where,
+	    "WARNING! WARNING! WARNING! WARNING!\n"
 	    "%s found an unexpected %s statistic %.16s\n",
 	    who,
 	    why,
@@ -202,8 +202,7 @@ get_cpu_counters(int cpu_num, cpu_time_counters_t *counters)
 
 	  /* might want to tell people about what we are skipping.
 	     however, only display other names debug >=2. raj
-	     2005-01-28
-	  */
+	     2005-01-28  */
 
 	  print_unexpected_statistic_warning("get_cpu_counters",
 					     knp->name,
@@ -374,11 +373,11 @@ calc_cpu_util_internal(float elapsed_time)
 
   lib_local_cpu_util = (float)0.0;
 
-  /* It is possible that the library measured a time other than */
-  /* the one that the user want for the cpu utilization */
-  /* calculations - for example, tests that were ended by */
-  /* watchdog timers such as the udp stream test. We let these */
-  /* tests tell up what the elapsed time should be. */
+  /* It is possible that the library measured a time other than the
+     one that the user want for the cpu utilization calculations - for
+     example, tests that were ended by watchdog timers such as the udp
+     stream test. We let these tests tell up what the elapsed time
+     should be. */
   
   if (elapsed_time != 0.0) {
     correction_factor = (float) 1.0 + 
@@ -416,7 +415,7 @@ calc_cpu_util_internal(float elapsed_time)
        more interrupt time than the sum of user, kernel and idle.
        that is a theoretical possibility I suppose, but for the
        time-being, one that we will blythly ignore, except perhaps for
-       a quick check. raj 2005-01-31 
+       a quick check. raj 2005-01-31
     */
     
     /* we ass-u-me that these counters will never wrap during a
@@ -450,19 +449,17 @@ calc_cpu_util_internal(float elapsed_time)
 	 the best way to get our tails out of here so let us just
 	 punt. raj 2005-01-31 */
       fprintf(where,
-	      "WARNING! WARNING! WARNING! WARNING! WARNING! \n");
-      fprintf(where,
-	      "calc_cpu_util_internal: more interrupt time than others combined!\n");
-      fprintf(where,
-	      "\tso CPU util cannot be estimated\n");
-      fprintf(where,
-	      "\t delta[%d].interrupt %llu\n",i,delta_cpu_counters[i].interrupt);
-      fprintf(where,
-	      "\t delta[%d].idle %llu\n",i,delta_cpu_counters[i].idle);
-      fprintf(where,
-	      "\t delta[%d].user %llu\n",i,delta_cpu_counters[i].user);
-      fprintf(where,
-	      "\t delta[%d].kernel %llu\n",i,delta_cpu_counters[i].kernel);
+	      "WARNING! WARNING! WARNING! WARNING! WARNING! \n"
+	      "calc_cpu_util_internal: more interrupt time than others combined!\n"
+	      "\tso CPU util cannot be estimated\n"
+	      "\t delta[%d].interrupt %llu\n"
+	      "\t delta[%d].idle %llu\n"
+	      "\t delta[%d].user %llu\n"
+	      "\t delta[%d].kernel %llu\n",
+	      i,delta_cpu_counters[i].interrupt,
+	      i,delta_cpu_counters[i].idle,
+	      i,delta_cpu_counters[i].user,
+	      i,delta_cpu_counters[i].kernel);
       fflush(where);
       
       lib_local_cpu_util = -1.0;
@@ -497,14 +494,13 @@ calc_cpu_util_internal(float elapsed_time)
 
     if (debug) {
       fprintf(where,
-	      "\tfraction_idle %llu interrupt_idle %llu\n",
+	      "\tfraction_idle %llu interrupt_idle %llu\n"
+	      "\tfraction_user %llu interrupt_user %llu\n"
+	      "\tfraction_kernel %llu interrupt_kernel %llu\n",
 	      fraction_idle,
-	      interrupt_idle);
-      fprintf(where,
-	      "\tfraction_user %llu interrupt_user %llu\n",
+	      interrupt_idle,
 	      fraction_user,
-	      interrupt_user);
-      fprintf(where,"\tfraction_kernel %llu interrupt_kernel %llu\n",
+	      interrupt_user,
 	      fraction_kernel,
 	      interrupt_kernel);
     }
@@ -526,9 +522,9 @@ calc_cpu_util_internal(float elapsed_time)
 			      corrected_cpu_counters);
     }
 
-    /* I was going to checkfor going less than zero, but since all the
-       calculations are in unsigned quantities that would seem to be a
-       triffle silly... raj 2005-01-28 */
+    /* I was going to check for going less than zero, but since all
+       the calculations are in unsigned quantities that would seem to
+       be a triffle silly... raj 2005-01-28 */
 
     /* ok, now we sum the numbers again, this time including interrupt
        */

@@ -1,6 +1,6 @@
 #ifndef lint
 char	nettest_id[]="\
-@(#)nettest_bsd.c (c) Copyright 1993-2008 Hewlett-Packard Co. Version 2.4.5";
+@(#)nettest_bsd.c (c) Copyright 1993-2011 Hewlett-Packard Co. Version 2.5.0";
 #endif /* lint */
 
 
