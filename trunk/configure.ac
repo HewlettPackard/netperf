@@ -36,7 +36,9 @@ AC_HAVE_LIBRARY(m)
 # Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([arpa/inet.h endian.h errno.h fcntl.h limits.h malloc.h netdb.h netinet/in.h signal.h stdlib.h string.h strings.h sys/ioctl.h sys/mman.h sys/param.h sys/socket.h sys/time.h unistd.h ifaddrs.h sys/ipc.h sys/sockio.h sys/sysinfo.h syscall.h netinet/sctp.h linux/tcp.h])
+
+# lets keep this in some semblence of alphabetical order
+AC_CHECK_HEADERS([arpa/inet.h endian.h errno.h fcntl.h ifaddrs.h limits.h linux/tcp.h malloc.h netdb.h netinet/in.h netinet/sctp.h signal.h stdlib.h string.h strings.h syscall.h sys/ioctl.h sys/mman.h sys/param.h sys/socket.h sys/stat.h sys/time.h sys/wait.h sys/ipc.h sys/sockio.h sys/sysinfo.h stdlib.h unistd.h])
 
 # Some platforms require these.  There may be a better way.
 AC_HAVE_LIBRARY(socket)
@@ -75,7 +77,7 @@ AC_TYPE_SIGNAL
 # AC_FUNC_STAT
 # remove pstat_getdynamic (at least for now) since we don't do
 # anything conditional with the check anyway...
-AC_CHECK_FUNCS([alarm bzero gethostbyname gethrtime gettimeofday inet_ntoa memset memcpy munmap select socket sqrt strcasecmp strchr strstr strtoul uname toupper])
+AC_CHECK_FUNCS([alarm bzero daemon gethostbyname gethrtime gettimeofday inet_ntoa memset memcpy munmap select setsid socket sqrt strcasecmp strchr strstr strtoul uname toupper])
 
 #AC_CONFIG_SUBDIRS(src/missing)
 

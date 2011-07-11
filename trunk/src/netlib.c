@@ -1149,10 +1149,9 @@ stop_timer()
   alarm(0);
 #else
   /* at some point we may need some win32 equivalent */
-  	if (hAlarm != (HANDLE) INVALID_HANDLE_VALUE)
-	{
-		SetEvent(hAlarm);
-	}
+  if (hAlarm != (HANDLE) INVALID_HANDLE_VALUE) {
+    SetEvent(hAlarm);
+  }
 #endif /* WIN32 */
 
 }
@@ -1298,7 +1297,7 @@ netlib_init()
 {
   int i;
 
-  where            = stdout;
+  where = stdout;
 
   request_array = (int *)(&netperf_request);
   response_array = (int *)(&netperf_response);
@@ -2503,7 +2502,7 @@ send_response()
    connection. the first two ints, which are before the test-specific
    portion are always converted. raj 2008-02-05 */
 
-void
+int
 recv_request_n(int n)
 {
 int     tot_bytes_recvd,
@@ -2559,17 +2558,15 @@ int     counter,count;
   
   if (bytes_recvd == 0) {
     /* the remote has shutdown the control connection, we should shut
-       it down as well and exit */
+       it down as well and return */
     if (debug) {
       fprintf(where,
 	      "recv_request: remote requested shutdown of control\n");
       fflush(where);
     }
     
-    if (netlib_control != INVALID_SOCKET) {
-      shutdown_control();
-    }
-    exit(0);
+    close(server_sock);
+    return 0;
   }
 
   if (tot_bytes_recvd < buflen) {
@@ -2610,11 +2607,11 @@ int     counter,count;
  /*                                                                     */
  /***********************************************************************/
 
-void
+int
 recv_request()
 {
 
-  recv_request_n(-1);
+  return recv_request_n(-1);
 
 }
 
