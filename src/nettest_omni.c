@@ -4560,7 +4560,6 @@ get_transport_info(SOCKET socket, int *mss, int protocol)
   netperf_socklen_t sock_opt_len;
   int option;
   sock_opt_len = sizeof(netperf_socklen_t);
-  struct tcp_info tcp_info;
 
   switch (protocol) {
 #if defined(IPPROTO_TCP) && defined(TCP_MAXSEG)
