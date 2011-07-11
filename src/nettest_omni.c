@@ -6551,9 +6551,10 @@ recv_omni()
 
   /* The current iteration loop now exits due to timeout or unit count
      being  reached */
-  
+  stop_timer();
   cpu_stop(omni_request->flags & OMNI_MEASURE_CPU,&elapsed_time);
-  
+  close(s_listen);
+
   if (timed_out) {
     /* we ended the test by time, which may have been PAD_TIME seconds
        longer than we wanted to run. so, we want to subtract pad_time

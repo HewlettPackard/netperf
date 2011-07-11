@@ -39,11 +39,13 @@ find_cpu_model(char **cpu_model) {
 	target[strlen(target)-1] = 0;
 	/* and four to go! */
 	*cpu_model = strdup(target+1);
+	fclose(proccpu);
 	return;
       }
     }
   } while (!feof(proccpu));
   *cpu_model = strdup("model_name");
+  fclose(proccpu);
 }
 
 static int
@@ -67,10 +69,12 @@ find_cpu_freq() {
       if (strstr(linebuf,"cpu MHz") != NULL) {
 	target = strtok(linebuf,":");
 	target = strtok(NULL,":");
+	fclose(proccpu);
 	return rint(strtod(target+1,NULL));
       }
     }
   } while (!feof(proccpu));
+  fclose(proccpu);
   return -1;
 }
 

@@ -245,7 +245,9 @@ Usage: netserver [options] \n\
 \n\
 Options:\n\
     -h                Display this text\n\
+    -D                Do not daemonize\n\
     -d                Increase debugging output\n\
+    -f                Do not spawn chilren for each test, run serially\n\
     -L name,family    Use name to pick listen address and family for family\n\
     -p portnum        Listen for connect requests on portnum.\n\
     -4                Do IPv4\n\
