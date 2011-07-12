@@ -225,6 +225,7 @@ int     *response_array;
 /* INVALID_SOCKET == INVALID_HANDLE_VALUE == (unsigned int)(~0) == -1 */
 SOCKET  netlib_control = INVALID_SOCKET;  
 SOCKET  server_sock = INVALID_SOCKET;
+int     control_family = AF_UNSPEC;
 
 /* global variables to hold the value for processor affinity */
 int     local_proc_affinity = -1,remote_proc_affinity = -1;
@@ -3027,8 +3028,9 @@ resolve_host(char *hostname,
   } while ((error == EAI_AGAIN) && (count <= 5));
 
   if (error) {
-    printf("establish control: could not resolve host '%s' port '%s' af %s"
+    printf("%s: could not resolve host '%s' port '%s' af %s"
 	   "\n\tgetaddrinfo returned %d %s\n",
+	   __FUNCTION__,
            hostname,
            port,
            inet_ftos(family),
@@ -3198,6 +3200,8 @@ establish_control_internal(char *hostname,
     close(control_sock);
   }
 
+  control_family = local_res_temp->ai_family;
+
   /* we no longer need the addrinfo stuff */
   freeaddrinfo(local_res);
   freeaddrinfo(remote_res);
@@ -3210,6 +3214,7 @@ establish_control_internal(char *hostname,
 	    hostname,
 	    port);
     fflush(where);
+    control_family = AF_UNSPEC;
     return(INVALID_SOCKET);
   }
   /* at this point, we are connected.  we probably want some sort of

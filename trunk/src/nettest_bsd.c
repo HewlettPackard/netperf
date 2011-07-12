@@ -887,6 +887,10 @@ complete_addrinfo(char *controlhost, char *data_address, char *port, int family,
 void
 complete_addrinfos(struct addrinfo **remote,struct addrinfo **local, char remote_host[], int type, int protocol, int flags) {
 
+  if (remote_data_family == AF_UNSPEC) {
+    remote_data_family = control_family;
+  }
+  
   *remote = complete_addrinfo(remote_host,
 			      remote_data_address,
 			      remote_data_port,

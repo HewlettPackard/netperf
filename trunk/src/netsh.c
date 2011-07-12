@@ -1065,6 +1065,7 @@ scan_cmd_line(int argc, char *argv[])
   }
   /* ok, what should our default hostname and local binding info be?
    */
+
   if ('\0' == host_name[0]) {
     /* host_name was not set */
     switch (address_family) {
@@ -1119,7 +1120,8 @@ scan_cmd_line(int argc, char *argv[])
     address_family = ai->ai_family;
     freeaddrinfo(ai);
   }
-  
+
+
   /* now, having established the name to which the control will
      connect, from what should it come? */
   if ('\0' == local_host_name[0]) {
