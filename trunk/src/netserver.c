@@ -107,6 +107,12 @@ char	netserver_id[]="\
 #include <signal.h>
 #endif
 
+#if !defined(HAVE_SETSID)
+#if HAVE_SYS_WAIT_H>
+#include <sys/wait.h>
+#endif
+#endif
+
 #ifdef WIN32
 #include <time.h>
 #include <winsock2.h>
