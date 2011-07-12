@@ -105,6 +105,11 @@ char	netserver_id[]="\
 
 #if HAVE_SIGNAL_H
 #include <signal.h>
+/* some OS's have SIGCLD defined as SIGCHLD */
+#ifndef SIGCLD
+#define SIGCLD SIGCHLD
+#endif /* SIGCLD */
+      
 #endif
 
 #if !defined(HAVE_SETSID)
@@ -897,13 +902,14 @@ spawn_child() {
   }
 
 #if defined(HAVE_FORK)
-  FILE *rd_null_fp;    /* Used to redirect from "/dev/null". */
 
   /* flush the usual suspects */
   fflush(stdin);
   fflush(stdout);
   fflush(stderr);
   fflush(where);
+
+  signal(SIGCLD,SIG_IGN);
 
   switch (fork()) {
   case -1:
@@ -934,7 +940,13 @@ spawn_child() {
        want to reap some children */
 #if !defined(HAVE_SETSID)
     /* Only call "waitpid()" if "setsid()" is not used. */
-    while(waitpid(-1, NULL, WNOHANG) > 0) { }
+    while(waitpid(-1, NULL, WNOHANG) > 0) {
+      if (debug) {
+	fprintf(where,
+		"%s: reaped a child process\n",
+		__FUNCTION__);
+      }
+    }
 #endif
     break;
   }
@@ -1274,11 +1286,6 @@ daemonize() {
       setpgrp();
 #endif /* HAVE_SETSID */
 
-      /* some OS's have SIGCLD defined as SIGCHLD */
-#ifndef SIGCLD
-#define SIGCLD SIGCHLD
-#endif /* SIGCLD */
-      
       signal(SIGCLD, SIG_IGN);
 
       /* ok, we can start accepting control connections now */
