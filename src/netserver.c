@@ -1138,6 +1138,8 @@ accept_connections() {
     while ((num_ready) && (candidate <= high_fd)) {
       if (FD_ISSET(candidate,&read_fds)) {
 	accept_connection(candidate);
+	FD_CLR(candidate,&read_fds);
+	num_ready--;
       }
       else {
 	candidate++;

@@ -456,6 +456,7 @@ extern char *local_machine, *remote_machine;
 
 extern int local_data_family;
 extern int remote_data_family;
+extern int control_family;
 
 extern  union netperf_request_struct netperf_request;
 extern  union netperf_response_struct netperf_response;
