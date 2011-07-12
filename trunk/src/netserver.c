@@ -349,7 +349,7 @@ create_listens(char hostname[], char port[], int af) {
   struct addrinfo hints;
   struct addrinfo *local_res;
   struct addrinfo *local_res_temp;
-  int count, error, not_listening;
+  int count, error;
   int on = 1;
   SOCKET temp_socket;
   struct listen_elt *temp_elt;
@@ -1253,8 +1253,6 @@ scan_netserver_args(int argc, char *argv[]) {
 void
 daemonize() {
 #if defined(HAVE_FORK)
-
-  FILE *rd_null_fp;    /* Used to redirect from "/dev/null". */
 
   if (debug) {
     fprintf(where,

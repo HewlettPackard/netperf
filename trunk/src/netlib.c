@@ -2593,7 +2593,8 @@ int     counter,count;
   if (local_proc_affinity != -1) {
     bind_to_specific_processor(local_proc_affinity,0);
   } 
-  
+
+  return buflen;
 }
 
  /***********************************************************************/
@@ -3784,8 +3785,6 @@ msec_sleep( int msecs )
 HIST
 HIST_new_n(int max_outstanding) {
   HIST h;
-  int bytes;
-  void *buf;
   if((h = (HIST) malloc(sizeof(struct histogram_struct))) == NULL) {
     perror("HIST_new_n - histogram_struct malloc failed");
     exit(1);

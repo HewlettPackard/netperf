@@ -382,7 +382,7 @@ int implicit_direction = 0;
 int csv = 0;
 int keyword = 0;
 uint64_t      trans_completed = 0;
-uint64_t      units_remaining;
+int64_t      units_remaining;
 uint64_t      bytes_sent = 0;
 uint64_t      bytes_received = 0;
 uint64_t      local_send_calls = 0;
@@ -797,7 +797,7 @@ set_multicast_ttl(SOCKET sock) {
 		 IPPROTO_IP,
 		 IP_TTL,
 		 &multicast_ttl,
-		 &optlen) < 0) {
+		 (netperf_socklen_t *)&optlen) < 0) {
     fprintf(where,
 	    "getsockopt(IP_TTL) failed errno %d\n",
 	    errno);
@@ -853,7 +853,7 @@ join_multicast_addr(SOCKET sock, struct addrinfo *res) {
 		     IPPROTO_IP,
 		     IP_TTL,
 		     &multicast_ttl,
-		     &optlen) < 0) {
+		     (netperf_socklen_t *)&optlen) < 0) {
 	fprintf(where,
 		"getsockopt(IP_TTL) failed errno %d\n",
 		errno);
@@ -4648,7 +4648,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
   struct sockaddr_storage remote_addr;
   struct sockaddr_storage my_addr;
   int                     remote_addr_len = sizeof(remote_addr);
-  int                     my_addr_len = sizeof(my_addr);
+  netperf_socklen_t       my_addr_len = sizeof(my_addr);
 
   SOCKET	data_socket;
   int           need_socket;
@@ -6382,7 +6382,7 @@ recv_omni()
        is why there are two routines to rule them all rather than just
        one :) */
     if ((omni_request->direction & NETPERF_RECV) &&
-	!times_up) {
+	((!times_up) || (units_remaining > 0))) {
       ret = recv_data(data_socket,
 		      recv_ring,
 		      bytes_to_recv,
@@ -6438,7 +6438,7 @@ recv_omni()
     /* if we should try to send something, then by all means, let us
        try to send something. */
     if ((omni_request->direction & NETPERF_XMIT) &&
-	!times_up) {
+	((!times_up) || (units_remaining > 0))) {
       ret = send_data(data_socket,
 		      send_ring,
 		      bytes_to_send,
