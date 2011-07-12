@@ -388,17 +388,21 @@ create_listens(char hostname[], char port[], int af) {
     }
   } while ((error == EAI_AGAIN) && (count <= 5));
 
-  if ((error) && (debug)) {
-    fprintf(stderr,
-	    "%s: could not resolve remote '%s' port '%s' af %d\n"
-	    "\tgetaddrinfo returned %s (%d)\n",
-	    __FUNCTION__,
-	    hostname,
-	    port,
-	    af,
-	    gai_strerror(error),
-	    error);
-
+  if (error) {
+    if (debug) {
+      
+      fprintf(stderr,
+	      "%s: could not resolve remote '%s' port '%s' af %d\n"
+	      "\tgetaddrinfo returned %s (%d)\n",
+	      __FUNCTION__,
+	      hostname,
+	      port,
+	      af,
+	      gai_strerror(error),
+	      error);
+      
+    }
+    return;
   }
 
   if (debug) {
@@ -412,13 +416,16 @@ create_listens(char hostname[], char port[], int af) {
     temp_socket = socket(local_res_temp->ai_family,SOCK_STREAM,0);
 
     if (temp_socket == INVALID_SOCKET) {
-      fprintf(stderr,
-	      "%s could not allocate a socket: %s (errno %d)\n",
-	      __FUNCTION__,
-	      strerror(errno),
-	      errno);
-      fflush(stderr);
-      exit(-1);
+      if (debug) {
+	fprintf(stderr,
+		"%s could not allocate a socket: %s (errno %d)\n",
+		__FUNCTION__,
+		strerror(errno),
+		errno);
+	fflush(stderr);
+      }
+      local_res_temp = local_res_temp->ai_next;
+      continue;
     }
 
     /* happiness and joy, keep going */
@@ -1378,7 +1385,6 @@ main(int argc, char *argv[]) {
   }
 #endif /* WIN32 */
 
-  fprintf(stderr,"ASD Save program\n");
   /* Save away the program name */
   program = (char *)malloc(strlen(argv[0]) + 1);
   if (program == NULL) {
