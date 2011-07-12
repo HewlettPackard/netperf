@@ -1333,8 +1333,13 @@ check_if_inetd() {
     namelen = sizeof(name);
     if (getsockname(0,
 		    (struct sockaddr *)&name,
-		    &namelen) == SOCKET_ERROR)
+		    &namelen) == SOCKET_ERROR) {
       not_inetd = 1;
+    }
+    else {
+      not_inetd = 0;
+      child = 1;
+    }
 #endif
   }
 }
