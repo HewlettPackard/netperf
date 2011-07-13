@@ -458,9 +458,9 @@ create_listens(char hostname[], char port[], int af) {
 	  temp_elt->next = listen_list;
 	}
 	else {
-	  listen_list = temp_elt;
 	  temp_elt->next = NULL;
 	}
+	listen_list = temp_elt;
       }
       else {
 	fprintf(stderr,
@@ -469,8 +469,6 @@ create_listens(char hostname[], char port[], int af) {
 	fflush(stderr);
 	exit(1);
       }
-	  
-      break;
     }
     else {
       /* we consider a bind() or listen() failure a transient and try
@@ -483,9 +481,8 @@ create_listens(char hostname[], char port[], int af) {
 		errno);
 	fflush(stderr);
       }
-      local_res_temp = local_res_temp->ai_next;
-      continue;
     }
+    local_res_temp = local_res_temp->ai_next;
   }
 
 }
