@@ -481,6 +481,7 @@ create_listens(char hostname[], char port[], int af) {
 		errno);
 	fflush(stderr);
       }
+      close(temp_socket);
     }
     local_res_temp = local_res_temp->ai_next;
   }
