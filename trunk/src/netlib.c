@@ -2973,15 +2973,17 @@ dump_addrinfo(FILE *dumploc, struct addrinfo *info,
             temp->ai_addrlen);
     ai_addr = temp->ai_addr;
     if (ai_addr != NULL) {
+      int i;
       fprintf(dumploc,
-              "\tsa_family: %s sadata: %d %d %d %d %d %d\n",
-              inet_ftos(ai_addr->sa_family),
-              (u_char)ai_addr->sa_data[0],
-              (u_char)ai_addr->sa_data[1],
-              (u_char)ai_addr->sa_data[2],
-              (u_char)ai_addr->sa_data[3],
-              (u_char)ai_addr->sa_data[4],
-              (u_char)ai_addr->sa_data[5]);
+              "\tsa_family: %s sadata:",
+              inet_ftos(ai_addr->sa_family));
+      for (i = 0; i < temp->ai_addrlen; i++) {
+	fprintf(dumploc,
+		(temp->ai_family == AF_INET) ? " %d" : " %.2x",
+		(u_char)ai_addr->sa_data[i],
+		(u_char)ai_addr->sa_data[i]);
+      }
+      fprintf(dumploc,"\n");
     }
     temp = temp->ai_next;
   }
