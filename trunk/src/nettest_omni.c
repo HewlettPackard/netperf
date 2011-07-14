@@ -688,6 +688,7 @@ enum netperf_output_name {
 #define OMNI_WANT_LOC_IFIDS   0X00040000
 #define OMNI_WANT_REM_DRVINFO 0X00000008
 #define OMNI_WANT_LOC_DRVINFO 0X00080000
+#define OMNI_WANT_STATS       0X00100010
 
 unsigned int desired_output_groups = 0;
 
@@ -3637,103 +3638,96 @@ print_omni_init_list() {
   netperf_output_source[LOCAL_CPU_FREQUENCY].tot_line_len = 
     NETPERF_LINE_TOT(LOCAL_CPU_FREQUENCY);
 
-  netperf_output_source[MIN_LATENCY].output_name = MIN_LATENCY;
-  netperf_output_source[MIN_LATENCY].line[0] = "Minimum";
-  netperf_output_source[MIN_LATENCY].line[1] = "Latency";
-  netperf_output_source[MIN_LATENCY].line[2] = "Microseconds";
-  netperf_output_source[MIN_LATENCY].line[3] = "";
-  netperf_output_source[MIN_LATENCY].format = "%d";
-  netperf_output_source[MIN_LATENCY].display_value =
-    &min_latency;
-  netperf_output_source[MIN_LATENCY].max_line_len = 
-    NETPERF_LINE_MAX(MIN_LATENCY);
-  netperf_output_source[MIN_LATENCY].tot_line_len = 
-    NETPERF_LINE_TOT(MIN_LATENCY);
-  netperf_output_source[MIN_LATENCY].output_default = 0;
+  i = MIN_LATENCY;
+  netperf_output_source[i].output_name = MIN_LATENCY;
+  netperf_output_source[i].line[0] = "Minimum";
+  netperf_output_source[i].line[1] = "Latency";
+  netperf_output_source[i].line[2] = "Microseconds";
+  netperf_output_source[i].line[3] = "";
+  netperf_output_source[i].format = "%d";
+  netperf_output_source[i].display_value = &min_latency;
+  netperf_output_source[i].max_line_len =  NETPERF_LINE_MAX(i);
+  netperf_output_source[i].tot_line_len =  NETPERF_LINE_TOT(i);
+  netperf_output_source[i].output_default = 0;
+  netperf_output_source[i].output_group = OMNI_WANT_STATS;
 
-  netperf_output_source[MAX_LATENCY].output_name = MAX_LATENCY;
-  netperf_output_source[MAX_LATENCY].line[0] = "Maximum";
-  netperf_output_source[MAX_LATENCY].line[1] = "Latency";
-  netperf_output_source[MAX_LATENCY].line[2] = "Microseconds";
-  netperf_output_source[MAX_LATENCY].line[3] = "";
-  netperf_output_source[MAX_LATENCY].format = "%d";
-  netperf_output_source[MAX_LATENCY].display_value =
-    &max_latency;
-  netperf_output_source[MAX_LATENCY].max_line_len = 
-    NETPERF_LINE_MAX(MAX_LATENCY);
-  netperf_output_source[MAX_LATENCY].tot_line_len = 
-    NETPERF_LINE_TOT(MAX_LATENCY);
-  netperf_output_source[MAX_LATENCY].output_default = 0;
+  i = MAX_LATENCY;
+  netperf_output_source[i].output_name = MAX_LATENCY;
+  netperf_output_source[i].line[0] = "Maximum";
+  netperf_output_source[i].line[1] = "Latency";
+  netperf_output_source[i].line[2] = "Microseconds";
+  netperf_output_source[i].line[3] = "";
+  netperf_output_source[i].format = "%d";
+  netperf_output_source[i].display_value = &max_latency;
+  netperf_output_source[i].max_line_len = NETPERF_LINE_MAX(i);
+  netperf_output_source[i].tot_line_len = NETPERF_LINE_TOT(i);
+  netperf_output_source[i].output_default = 0;
+  netperf_output_source[i].output_group = OMNI_WANT_STATS;
 
-  netperf_output_source[P50_LATENCY].output_name = P50_LATENCY;
-  netperf_output_source[P50_LATENCY].line[0] = "50th";
-  netperf_output_source[P50_LATENCY].line[1] = "Percentile";
-  netperf_output_source[P50_LATENCY].line[2] = "Latency";
-  netperf_output_source[P50_LATENCY].line[3] = "Microseconds";
-  netperf_output_source[P50_LATENCY].format = "%d";
-  netperf_output_source[P50_LATENCY].display_value =
-    &p50_latency;
-  netperf_output_source[P50_LATENCY].max_line_len = 
-    NETPERF_LINE_MAX(P50_LATENCY);
-  netperf_output_source[P50_LATENCY].tot_line_len = 
-    NETPERF_LINE_TOT(P50_LATENCY);
-  netperf_output_source[P50_LATENCY].output_default = 0;
+  i = P50_LATENCY;
+  netperf_output_source[i].output_name = P50_LATENCY;
+  netperf_output_source[i].line[0] = "50th";
+  netperf_output_source[i].line[1] = "Percentile";
+  netperf_output_source[i].line[2] = "Latency";
+  netperf_output_source[i].line[3] = "Microseconds";
+  netperf_output_source[i].format = "%d";
+  netperf_output_source[i].display_value = &p50_latency;
+  netperf_output_source[i].max_line_len = NETPERF_LINE_MAX(i);
+  netperf_output_source[i].tot_line_len = NETPERF_LINE_TOT(i);
+  netperf_output_source[i].output_default = 0;
+  netperf_output_source[i].output_group = OMNI_WANT_STATS;
 
-  netperf_output_source[P90_LATENCY].output_name = P90_LATENCY;
-  netperf_output_source[P90_LATENCY].line[0] = "90th";
-  netperf_output_source[P90_LATENCY].line[1] = "Percentile";
-  netperf_output_source[P90_LATENCY].line[2] = "Latency";
-  netperf_output_source[P90_LATENCY].line[3] = "Microseconds";
-  netperf_output_source[P90_LATENCY].format = "%d";
-  netperf_output_source[P90_LATENCY].display_value =
-    &p90_latency;
-  netperf_output_source[P90_LATENCY].max_line_len = 
-    NETPERF_LINE_MAX(P90_LATENCY);
-  netperf_output_source[P90_LATENCY].tot_line_len = 
-    NETPERF_LINE_TOT(P90_LATENCY);
-  netperf_output_source[P90_LATENCY].output_default = 0;
+  i = P90_LATENCY;
+  netperf_output_source[i].output_name = P90_LATENCY;
+  netperf_output_source[i].line[0] = "90th";
+  netperf_output_source[i].line[1] = "Percentile";
+  netperf_output_source[i].line[2] = "Latency";
+  netperf_output_source[i].line[3] = "Microseconds";
+  netperf_output_source[i].format = "%d";
+  netperf_output_source[i].display_value = &p90_latency;
+  netperf_output_source[i].max_line_len = NETPERF_LINE_MAX(i);
+  netperf_output_source[i].tot_line_len = NETPERF_LINE_TOT(i);
+  netperf_output_source[i].output_default = 0;
+  netperf_output_source[i].output_group = OMNI_WANT_STATS;
 
-  netperf_output_source[P99_LATENCY].output_name = P99_LATENCY;
-  netperf_output_source[P99_LATENCY].line[0] = "99th";
-  netperf_output_source[P99_LATENCY].line[1] = "Percentile";
-  netperf_output_source[P99_LATENCY].line[2] = "Latency";
-  netperf_output_source[P99_LATENCY].line[3] = "Microseconds";
-  netperf_output_source[P99_LATENCY].format = "%d";
-  netperf_output_source[P99_LATENCY].display_value =
-    &p99_latency;
-  netperf_output_source[P99_LATENCY].max_line_len = 
-    NETPERF_LINE_MAX(P99_LATENCY);
-  netperf_output_source[P99_LATENCY].tot_line_len = 
-    NETPERF_LINE_TOT(P99_LATENCY);
-  netperf_output_source[P99_LATENCY].output_default = 0;
+  i = P99_LATENCY;
+  netperf_output_source[i].output_name = P99_LATENCY;
+  netperf_output_source[i].line[0] = "99th";
+  netperf_output_source[i].line[1] = "Percentile";
+  netperf_output_source[i].line[2] = "Latency";
+  netperf_output_source[i].line[3] = "Microseconds";
+  netperf_output_source[i].format = "%d";
+  netperf_output_source[i].display_value = &p99_latency;
+  netperf_output_source[i].max_line_len = NETPERF_LINE_MAX(i);
+  netperf_output_source[i].tot_line_len = NETPERF_LINE_TOT(i);
+  netperf_output_source[i].output_default = 0;
+  netperf_output_source[i].output_group = OMNI_WANT_STATS;
 
-  netperf_output_source[MEAN_LATENCY].output_name = MEAN_LATENCY;
-  netperf_output_source[MEAN_LATENCY].line[0] = "Mean";
-  netperf_output_source[MEAN_LATENCY].line[1] = "Latency";
-  netperf_output_source[MEAN_LATENCY].line[2] = "Microseconds";
-  netperf_output_source[MEAN_LATENCY].line[3] = "";
-  netperf_output_source[MEAN_LATENCY].format = "%.2f";
-  netperf_output_source[MEAN_LATENCY].display_value =
-    &mean_latency;
-  netperf_output_source[MEAN_LATENCY].max_line_len = 
-    NETPERF_LINE_MAX(MEAN_LATENCY);
-  netperf_output_source[MEAN_LATENCY].tot_line_len = 
-    NETPERF_LINE_TOT(MEAN_LATENCY);
-  netperf_output_source[MEAN_LATENCY].output_default = 0;
+  i = MEAN_LATENCY;
+  netperf_output_source[i].output_name = MEAN_LATENCY;
+  netperf_output_source[i].line[0] = "Mean";
+  netperf_output_source[i].line[1] = "Latency";
+  netperf_output_source[i].line[2] = "Microseconds";
+  netperf_output_source[i].line[3] = "";
+  netperf_output_source[i].format = "%.2f";
+  netperf_output_source[i].display_value = &mean_latency;
+  netperf_output_source[i].max_line_len = NETPERF_LINE_MAX(i);
+  netperf_output_source[i].tot_line_len = NETPERF_LINE_TOT(i);
+  netperf_output_source[i].output_default = 0;
+  netperf_output_source[i].output_group = OMNI_WANT_STATS;
 
-  netperf_output_source[STDDEV_LATENCY].output_name = STDDEV_LATENCY;
-  netperf_output_source[STDDEV_LATENCY].line[0] = "Stddev";
-  netperf_output_source[STDDEV_LATENCY].line[1] = "Latency";
-  netperf_output_source[STDDEV_LATENCY].line[2] = "Microseconds";
-  netperf_output_source[STDDEV_LATENCY].line[3] = "";
-  netperf_output_source[STDDEV_LATENCY].format = "%.2f";
-  netperf_output_source[STDDEV_LATENCY].display_value =
-    &stddev_latency;
-  netperf_output_source[STDDEV_LATENCY].max_line_len = 
-    NETPERF_LINE_MAX(STDDEV_LATENCY);
-  netperf_output_source[STDDEV_LATENCY].tot_line_len = 
-    NETPERF_LINE_TOT(STDDEV_LATENCY);
-  netperf_output_source[STDDEV_LATENCY].output_default = 0;
+  i = STDDEV_LATENCY;
+  netperf_output_source[i].output_name = STDDEV_LATENCY;
+  netperf_output_source[i].line[0] = "Stddev";
+  netperf_output_source[i].line[1] = "Latency";
+  netperf_output_source[i].line[2] = "Microseconds";
+  netperf_output_source[i].line[3] = "";
+  netperf_output_source[i].format = "%.2f";
+  netperf_output_source[i].display_value = &stddev_latency;
+  netperf_output_source[i].max_line_len = NETPERF_LINE_MAX(i);
+  netperf_output_source[i].tot_line_len = NETPERF_LINE_TOT(i);
+  netperf_output_source[i].output_default = 0;
+  netperf_output_source[i].output_group = OMNI_WANT_STATS;
 
   netperf_output_source[OUTPUT_END].output_name = OUTPUT_END;
   netperf_output_source[OUTPUT_END].line[0] = "This";
@@ -8340,8 +8334,14 @@ scan_omni_args(int argc, char *argv[])
     rem_nodelay = -1;
 
   }
+  /* so, did the user request a few things implicitly via output selection? */
   if (!legacy) 
     print_omni_init();
+
+  if (desired_output_groups & OMNI_WANT_STATS) {
+    keep_statistics = 1;
+    keep_histogram = 1;
+  }
 
 }
 

@@ -230,6 +230,7 @@ open_debug_file()
 #define NETPERF_NULL "nul"
 #endif
 
+  FILE *rd_null_fp;
   char FileName[PATH_MAX];   /* for opening the debug log file */
   int  fp;
 
@@ -244,22 +245,16 @@ open_debug_file()
     perror("netserver: debug file");
     exit(1);
   }
-#ifndef WIN32
+
+#if !defined(WIN32)
+
   chmod(FileName,0644);
-#endif
 
-  /* we want to redirect the io streams accordingly and we certainly
-     rely on file descriptors ending-up in the correct place. this
-     may look a little odd, but I believe it is the amalgam of what
-     was being done under both *nix and Windows and I am looking to
-     minimize the #ifdefs. raj 2011-07-11 */
-
-  fp = fileno(stdin);
-  fclose(stdin);
-  close(fp);
-  if ((stdin = fopen(NETPERF_NULL,"r")) == NULL) {
+  /* redirect stdin to "/dev/null" */
+  rd_null_fp = fopen(NETPERF_NULL,"r");
+  if (NULL == rd_null_fp) {
     fprintf(where,
-	    "%s: reopening of stdin pointed at %s failed: %s (errno %d)\n",
+	    "%s: opening of %s failed: %s (errno %d)\n",
 	    __FUNCTION__,
 	    NETPERF_NULL,
 	    strerror(errno),
@@ -268,34 +263,88 @@ open_debug_file()
     exit(1);
   }
 
-  fp = fileno(stdout);
+  if (close(STDIN_FILENO) == -1) {
+    fprintf(where,
+	    "%s: close of STDIN_FILENO failed: %s (errno %d)\n",
+	    __FUNCTION__,
+	    strerror(errno),
+	    errno);
+    fflush(where);
+    exit(1);
+  }
+
+  if (dup(fileno(rd_null_fp)) == -1) {
+    fprintf(where,
+	    "%s: dup of rd_null_fp to stdin failed: %s (errno %d)\n",
+	    __FUNCTION__,
+	    strerror(errno),
+	    errno);
+    fflush(where);
+    exit(1);
+  }
+
+  /* redirect stdout to "where" */
+  if (close(STDOUT_FILENO) == -1) {
+    fprintf(where,
+	    "%s: close of STDOUT_FILENO failed: %s (errno %d)\n",
+	    __FUNCTION__,
+	    strerror(errno),
+	    errno);
+    fflush(where);
+    exit(1);
+  }
+
+  if (dup(fileno(where)) == -1) {
+    fprintf(where,
+	    "%s: dup of where to stdout failed: %s (errno %d)\n",
+	    __FUNCTION__,
+	    strerror(errno),
+	    errno);
+    fflush(where);
+    exit(1);
+  }
+
+  /* redirect stderr to "where" */
+  if (close(STDERR_FILENO) == -1) {
+    fprintf(where,
+	    "%s: close of STDERR_FILENO failed: %s (errno %d)\n",
+	    __FUNCTION__,
+	    strerror(errno),
+	    errno);
+    fflush(where);
+    exit(1);
+  }
+
+  if (dup(fileno(where)) == -1) {
+    fprintf(where,
+	    "%s: dup of where to stderr failed: %s (errno %d)\n",
+	    __FUNCTION__,
+	    strerror(errno),
+	    errno);
+    fflush(where);
+    exit(1);
+  }
+
+#else
+
+  /* Hopefully, by closing stdout & stderr, the subsequent fopen calls
+     will get mapped to the correct std handles. */
   fclose(stdout);
-  close(fp);
-  if ((stdin = fopen(FileName, "w")) == NULL) {
-    fprintf(where,
-	    "%s: redirecting stdout to %s failed: %s (errno %d)\n",
-	    __FUNCTION__,
-	    FileName,
-	    strerror(errno),
-	    errno);
-    fflush(where);
+  
+  if ((where = fopen(FileName, "w")) == NULL) {
+    perror("netserver: fopen of debug file as new stdout failed!");
     exit(1);
   }
-
-
-  fp = fileno(stderr);
+  
   fclose(stderr);
-  close(fp);
-  if ((stdin = fopen(FileName, "w")) == NULL) {
-    fprintf(where,
-	    "%s: redirecting stderr to %s failed: %s (errno %d)\n",
-	    __FUNCTION__,
-	    FileName,
-	    strerror(errno),
-	    errno);
-    fflush(where);
+  
+  if ((where = fopen(FileName, "w")) == NULL) {
+    fprintf(stdout, "fopen of debug file as new stderr failed!\n");
     exit(1);
   }
+  
+#endif
+
 }
 
 /* so, either we are a child of inetd in which case server_sock should
