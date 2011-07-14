@@ -166,6 +166,7 @@ char    netlib_id[]="\
 #include "netlib.h"
 #include "netsh.h"
 #include "netcpu.h"
+#include "netperf_version.h"
 
 /****************************************************************/
 /*                                                              */
@@ -245,6 +246,8 @@ char *local_machine, *remote_machine;
 
 int local_data_family=AF_UNSPEC;
 int remote_data_family=AF_UNSPEC;
+
+char *netperf_version;
 
 /* in the past, I was overlaying a structure on an array of ints. now
    I am going to have a "real" structure, and point an array of ints
@@ -1311,6 +1314,8 @@ netlib_init()
   lib_local_peak_cpu_util = -1.0;
   lib_remote_peak_cpu_id = -1;
   lib_remote_peak_cpu_util = -1.0;
+
+  netperf_version = strdup(NETPERF_VERSION);
 
   /* retrieve the local system information */
   get_local_system_info();
