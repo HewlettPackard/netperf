@@ -4669,6 +4669,8 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
      happen that frankly, we cannot guarantee with the specification
      of TCP.  ain't that grand?-)  raj 2006-01-30 */
   int requests_outstanding = 0;
+  int requests_this_cwnd = 0;
+  int request_cwnd_initial = REQUEST_CWND_INITIAL;
   int request_cwnd = REQUEST_CWND_INITIAL;  /* we ass-u-me that having
 					       three requests
 					       outstanding at the
@@ -4680,6 +4682,18 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 					       the third from our
 					       regularly scheduled
 					       send */
+
+  /* if the user has specified a negative value for first_burst_size
+     via the test-specific -b option, we forgo the nicities of ramping
+     up the request_cwnd and go straight to burst size. raj 20110715 */
+  if (first_burst_size < 0) {
+    first_burst_size = first_burst_size * -1;
+    request_cwnd_initial = first_burst_size;
+  }
+  else {
+    request_cwnd_initial = REQUEST_CWND_INITIAL;
+  }
+
 #endif
 
   omni_request = 
@@ -4698,7 +4712,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
   if (!no_control) {
     get_remote_system_info();
   }
-  
+
   if (keep_histogram) {
     if (first_burst_size > 0)
       time_hist = HIST_new_n(first_burst_size + 1);
@@ -4772,9 +4786,10 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 #ifdef WANT_FIRST_BURST
     /* we have to remember to reset the number of transactions
        outstanding and the "congestion window for each new
-       iteration. raj 2006-01-31 */
+       iteration. raj 2006-01-31. */
     requests_outstanding = 0;
-    request_cwnd = REQUEST_CWND_INITIAL;
+    requests_this_cwnd = 0;
+    request_cwnd = request_cwnd_initial;
 #endif
 
     /* if the command-line included requests to randomize the IP
@@ -5360,17 +5375,21 @@ p       based.  having said that, we rely entirely on other code to
 #ifdef WANT_FIRST_BURST
 	/* so, since we've gotten a response back, update the
 	   bookkeeping accordingly.  there is one less request
-	   outstanding and we can put one more out there than before. */
+	   outstanding and we can put one more out there than
+	   before. */
 	requests_outstanding -= 1;
 	if ((request_cwnd < first_burst_size) &&
-	    (NETPERF_IS_RR(direction))) {
+	    (NETPERF_IS_RR(direction)) &&
+	    (++requests_this_cwnd == request_cwnd)) {
 	  request_cwnd += 1;
+	  requests_this_cwnd = 0;
 	  if (debug) {
 	    fprintf(where,
-		    "incr req_cwnd to %d first_burst %d reqs_outstndng %d\n",
+		    "incr req_cwnd to %d first_burst %d reqs_outstndng %di trans %lu\n",
 		    request_cwnd,
 		    first_burst_size,
-		    requests_outstanding);
+		    requests_outstanding,
+		    trans_completed + 1);
 	  }
 	}
 #endif
