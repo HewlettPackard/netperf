@@ -2799,12 +2799,19 @@ which means one no longer must:
 </pre>
    <p>To have burst-mode functionality present in netperf.  This enables a
 test-specific <samp><span class="option">-b num</span></samp> option in <a href="#TCP_005fRR">TCP_RR</a>,
-<a href="#UDP_005fRR">UDP_RR</a> and <a href="#The-Omni-Tests">omni</a> tests. This option
-causes those tests to quickly work their way up to having at least
-<samp><span class="option">num</span></samp> plus one transactions in flight at one time.
+<a href="#UDP_005fRR">UDP_RR</a> and <a href="#The-Omni-Tests">omni</a> tests.
 
-   <p>This is used as an alternative to or even in conjunction with
-multiple-concurrent _RR tests and as a way to implement a
+   <p>Normally, netperf will attempt to ramp-up the number of outstanding
+requests to <samp><span class="option">num</span></samp> plus one transactions in flight at one time. 
+The ramp-up is to avoid transactions being smashed together into a
+smaller number of segments when the transport's congestion window (if
+any) is smaller at the time than what netperf wants to have
+outstanding at one time. If, however, the user specifies a negative
+value for <samp><span class="option">num</span></samp> this ramp-up is bypassed and the burst of sends
+is made without consideration of transport congestion window.
+
+   <p>This burst-mode is used as an alternative to or even in conjunction
+with multiple-concurrent _RR tests and as a way to implement a
 single-connection, bidirectional bulk-transfer test.  When run with
 just a single instance of netperf, increasing the burst size can
 determine the maximum number of transactions per second which can be
@@ -2834,7 +2841,8 @@ in flight at one time.
 set TCP_NODELAY, the stack was free to &ldquo;bundle&rdquo; requests and/or
 responses into TCP segments as it saw fit, and since the default
 request and response size is one byte, there could have been some
-considerable bundling.  If one wants to try to achieve a closer to
+considerable bundling even in the absense of transport congestion
+window issues.  If one wants to try to achieve a closer to
 one-to-one correspondence between a request and response and a TCP
 segment, add the test-specific <samp><span class="option">-D</span></samp> option:
 
