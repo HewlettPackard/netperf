@@ -2273,12 +2273,19 @@ means one no longer must:
 
    To have burst-mode functionality present in netperf.  This enables a
 test-specific `-b num' option in *note TCP_RR: TCP_RR, *note UDP_RR:
-UDP_RR. and *note omni: The Omni Tests. tests. This option causes those
-tests to quickly work their way up to having at least `num' plus one
-transactions in flight at one time.
+UDP_RR. and *note omni: The Omni Tests. tests.
 
-   This is used as an alternative to or even in conjunction with
-multiple-concurrent _RR tests and as a way to implement a
+   Normally, netperf will attempt to ramp-up the number of outstanding
+requests to `num' plus one transactions in flight at one time.  The
+ramp-up is to avoid transactions being smashed together into a smaller
+number of segments when the transport's congestion window (if any) is
+smaller at the time than what netperf wants to have outstanding at one
+time. If, however, the user specifies a negative value for `num' this
+ramp-up is bypassed and the burst of sends is made without
+consideration of transport congestion window.
+
+   This burst-mode is used as an alternative to or even in conjunction
+with multiple-concurrent _RR tests and as a way to implement a
 single-connection, bidirectional bulk-transfer test.  When run with
 just a single instance of netperf, increasing the burst size can
 determine the maximum number of transactions per second which can be
@@ -2307,9 +2314,10 @@ number of transactions in flight at one time.
 TCP_NODELAY, the stack was free to "bundle" requests and/or responses
 into TCP segments as it saw fit, and since the default request and
 response size is one byte, there could have been some considerable
-bundling.  If one wants to try to achieve a closer to one-to-one
-correspondence between a request and response and a TCP segment, add
-the test-specific `-D' option:
+bundling even in the absense of transport congestion window issues.  If
+one wants to try to achieve a closer to one-to-one correspondence
+between a request and response and a TCP segment, add the test-specific
+`-D' option:
 
      for b in 0 1 2 4 8 16 32
      do
@@ -3783,10 +3791,10 @@ Option Index
 -b, Global:                                    See 4.2.      (line  706)
 -C, Global:                                    See 4.2.      (line  726)
 -c, Global:                                    See 4.2.      (line  717)
--c, Test-specific:                             See 9.1.      (line 2615)
+-c, Test-specific:                             See 9.1.      (line 2623)
 -D, Global:                                    See 4.2.      (line  740)
 -d, Global:                                    See 4.2.      (line  731)
--d, Test-specific:                             See 9.1.      (line 2619)
+-d, Test-specific:                             See 9.1.      (line 2627)
 -F, Global:                                    See 4.2.      (line  760)
 -f, Global:                                    See 4.2.      (line  751)
 -H, Global:                                    See 4.2.      (line  779)
@@ -3797,7 +3805,7 @@ Option Index
 -i, Global:                                    See 4.2.      (line  863)
 -I, Global:                                    See 4.2.      (line  814)
 -j, Global:                                    See 4.2.      (line  889)
--k, Test-specific:                             See 9.1.      (line 2639)
+-k, Test-specific:                             See 9.1.      (line 2647)
 -L, Global:                                    See 4.2.      (line  947)
 -l, Global:                                    See 4.2.      (line  926)
 -L, Test-specific <1>:                         See 6.2.      (line 1859)
@@ -3808,8 +3816,8 @@ Option Index
 -n, Global:                                    See 4.2.      (line  959)
 -O, Global:                                    See 4.2.      (line 1022)
 -o, Global:                                    See 4.2.      (line 1013)
--O, Test-specific:                             See 9.1.      (line 2664)
--o, Test-specific:                             See 9.1.      (line 2652)
+-O, Test-specific:                             See 9.1.      (line 2672)
+-o, Test-specific:                             See 9.1.      (line 2660)
 -P, Global:                                    See 4.2.      (line 1047)
 -p, Global:                                    See 4.2.      (line 1027)
 -P, Test-specific <1>:                         See 6.2.      (line 1866)
@@ -3823,8 +3831,8 @@ Option Index
 -s, Test-specific:                             See 5.2.      (line 1348)
 -T, Global:                                    See 4.2.      (line 1107)
 -t, Global:                                    See 4.2.      (line 1075)
--T, Test-specific:                             See 9.1.      (line 2683)
--t, Test-specific:                             See 9.1.      (line 2678)
+-T, Test-specific:                             See 9.1.      (line 2691)
+-t, Test-specific:                             See 9.1.      (line 2686)
 -V, Global:                                    See 4.2.      (line 1152)
 -v, Global:                                    See 4.2.      (line 1124)
 -W, Global:                                    See 4.2.      (line 1164)

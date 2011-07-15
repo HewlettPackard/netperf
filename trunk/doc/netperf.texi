@@ -2571,12 +2571,19 @@ configure --enable-burst
 
 To have burst-mode functionality present in netperf.  This enables a
 test-specific @option{-b num} option in @ref{TCP_RR,TCP_RR},
-@ref{UDP_RR,UDP_RR} and @ref{The Omni Tests,omni} tests. This option
-causes those tests to quickly work their way up to having at least
-@option{num} plus one transactions in flight at one time.
+@ref{UDP_RR,UDP_RR} and @ref{The Omni Tests,omni} tests.
 
-This is used as an alternative to or even in conjunction with
-multiple-concurrent _RR tests and as a way to implement a
+Normally, netperf will attempt to ramp-up the number of outstanding
+requests to @option{num} plus one transactions in flight at one time.
+The ramp-up is to avoid transactions being smashed together into a
+smaller number of segments when the transport's congestion window (if
+any) is smaller at the time than what netperf wants to have
+outstanding at one time. If, however, the user specifies a negative
+value for @option{num} this ramp-up is bypassed and the burst of sends
+is made without consideration of transport congestion window.
+
+This burst-mode is used as an alternative to or even in conjunction
+with multiple-concurrent _RR tests and as a way to implement a
 single-connection, bidirectional bulk-transfer test.  When run with
 just a single instance of netperf, increasing the burst size can
 determine the maximum number of transactions per second which can be
@@ -2608,7 +2615,8 @@ Now, since the test-specific @option{-D} option was not specified to
 set TCP_NODELAY, the stack was free to ``bundle'' requests and/or
 responses into TCP segments as it saw fit, and since the default
 request and response size is one byte, there could have been some
-considerable bundling.  If one wants to try to achieve a closer to
+considerable bundling even in the absense of transport congestion
+window issues.  If one wants to try to achieve a closer to
 one-to-one correspondence between a request and response and a TCP
 segment, add the test-specific @option{-D} option:
 

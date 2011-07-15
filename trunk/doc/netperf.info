@@ -2443,12 +2443,19 @@ means one no longer must:
 
    To have burst-mode functionality present in netperf.  This enables a
 test-specific `-b num' option in *note TCP_RR: TCP_RR, *note UDP_RR:
-UDP_RR. and *note omni: The Omni Tests. tests. This option causes those
-tests to quickly work their way up to having at least `num' plus one
-transactions in flight at one time.
+UDP_RR. and *note omni: The Omni Tests. tests.
 
-   This is used as an alternative to or even in conjunction with
-multiple-concurrent _RR tests and as a way to implement a
+   Normally, netperf will attempt to ramp-up the number of outstanding
+requests to `num' plus one transactions in flight at one time.  The
+ramp-up is to avoid transactions being smashed together into a smaller
+number of segments when the transport's congestion window (if any) is
+smaller at the time than what netperf wants to have outstanding at one
+time. If, however, the user specifies a negative value for `num' this
+ramp-up is bypassed and the burst of sends is made without
+consideration of transport congestion window.
+
+   This burst-mode is used as an alternative to or even in conjunction
+with multiple-concurrent _RR tests and as a way to implement a
 single-connection, bidirectional bulk-transfer test.  When run with
 just a single instance of netperf, increasing the burst size can
 determine the maximum number of transactions per second which can be
@@ -2477,9 +2484,10 @@ number of transactions in flight at one time.
 TCP_NODELAY, the stack was free to "bundle" requests and/or responses
 into TCP segments as it saw fit, and since the default request and
 response size is one byte, there could have been some considerable
-bundling.  If one wants to try to achieve a closer to one-to-one
-correspondence between a request and response and a TCP segment, add
-the test-specific `-D' option:
+bundling even in the absense of transport congestion window issues.  If
+one wants to try to achieve a closer to one-to-one correspondence
+between a request and response and a TCP segment, add the test-specific
+`-D' option:
 
      for b in 0 1 2 4 8 16 32
      do
@@ -4158,22 +4166,22 @@ Node: Using Netperf to Measure Aggregate Performance105746
 Node: Running Concurrent Netperf Tests106725
 Node: Issues in Running Concurrent Tests110974
 Node: Using --enable-burst112483
-Node: Using Netperf to Measure Bidirectional Transfer118886
-Node: Bidirectional Transfer with Concurrent Tests120017
-Node: Bidirectional Transfer with TCP_RR122373
-Node: Implications of Concurrent Tests vs Burst Request/Response124757
-Node: The Omni Tests126570
-Node: Native Omni Tests127617
-Node: Migrated Tests132894
-Node: Omni Output Selection134999
-Node: Omni Output Selectors137980
-Node: Other Netperf Tests165698
-Node: CPU rate calibration166133
-Node: UUID Generation168500
-Node: Address Resolution169215
-Node: Enhancing Netperf171191
-Node: Netperf4172685
-Node: Concept Index173589
-Node: Option Index175915
+Node: Using Netperf to Measure Bidirectional Transfer119352
+Node: Bidirectional Transfer with Concurrent Tests120483
+Node: Bidirectional Transfer with TCP_RR122839
+Node: Implications of Concurrent Tests vs Burst Request/Response125223
+Node: The Omni Tests127036
+Node: Native Omni Tests128083
+Node: Migrated Tests133360
+Node: Omni Output Selection135465
+Node: Omni Output Selectors138446
+Node: Other Netperf Tests166164
+Node: CPU rate calibration166599
+Node: UUID Generation168966
+Node: Address Resolution169681
+Node: Enhancing Netperf171657
+Node: Netperf4173151
+Node: Concept Index174055
+Node: Option Index176381
 
 End Tag Table
