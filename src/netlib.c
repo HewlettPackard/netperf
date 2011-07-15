@@ -919,6 +919,10 @@ catcher(int sig)
       times_up = 1;
 #if defined(WANT_INTERVALS) && !defined(WANT_SPIN)
       stop_itimer();
+      /* we should also stop the normal test timer lest it fire at an
+	 inopportune moment - we do not know if we got here off the
+	 interval timer or the test timer... */
+      stop_timer();
 #endif /* WANT_INTERVALS */
       break;
     }
@@ -3364,28 +3368,28 @@ void
 identify_remote()
 {
 
-char    *remote_id="";
-
-/* send a request for node info to the remote */
-netperf_request.content.request_type = NODE_IDENTIFY;
-
-send_request();
-
-/* and now wait for the reply to come back */
-
-recv_response();
-
-if (netperf_response.content.serv_errno) {
-        Set_errno(netperf_response.content.serv_errno);
-        perror("identify_remote: on remote");
-        exit(1);
-}
-
-fprintf(where,"Remote Information \n\
+  char    *remote_id="";
+  
+  /* send a request for node info to the remote */
+  netperf_request.content.request_type = NODE_IDENTIFY;
+  
+  send_request();
+  
+  /* and now wait for the reply to come back */
+  
+  recv_response();
+  
+  if (netperf_response.content.serv_errno) {
+    Set_errno(netperf_response.content.serv_errno);
+    perror("identify_remote: on remote");
+    exit(1);
+  }
+  
+  fprintf(where,"Remote Information \n\
 Sysname       Nodename       Release        Version        Machine\n");
-
-fprintf(where,"%s",
-       remote_id);
+  
+  fprintf(where,"%s",
+	  remote_id);
 }
 
 void
