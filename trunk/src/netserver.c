@@ -256,7 +256,8 @@ open_debug_file()
 	   "%s_%d",
 	   DEBUG_LOG_FILE,
 	   getpid());
-  if ((where = fopen(FileName, "w")) == NULL) {
+  if ((where = fopen((suppress_debug) ? NETPERF_NULL : FileName,
+		     "w")) == NULL) {
     perror("netserver: debug file");
     exit(1);
   }
@@ -708,14 +709,16 @@ process_requests()
       
     case DEBUG_ON:
       netperf_response.content.response_type = DEBUG_OK;
-      debug++;
+      if (!suppress_debug) {
+	debug++;
 
-      if (debug == 1) {
-	/* we just flipped-on debugging, dump the request because
-	   recv_request/recv_request_n will not have dumped it as its
-	   dump_request() call is conditional on debug being set. raj
-	   2011-07-08 */
-	dump_request();
+	if (debug == 1) {
+	  /* we just flipped-on debugging, dump the request because
+	     recv_request/recv_request_n will not have dumped it as its
+	     dump_request() call is conditional on debug being set. raj
+	     2011-07-08 */
+	  dump_request();
+	}
       }
 
       send_response();
@@ -1221,9 +1224,9 @@ accept_connections() {
 }
 
 #ifndef WIN32
-#define SERVER_ARGS "DdfhL:n:p:v:V46"
+#define SERVER_ARGS "DdfhL:n:Np:v:V46"
 #else
-#define SERVER_ARGS "DdfhL:n:p:v:V46I:i:"
+#define SERVER_ARGS "DdfhL:n:Np:v:V46I:i:"
 #endif
 void
 scan_netserver_args(int argc, char *argv[]) {
@@ -1246,6 +1249,7 @@ scan_netserver_args(int argc, char *argv[]) {
       exit(1);
     case 'd':
       debug++;
+      suppress_debug = 0;
       break;
     case 'D':
       /* perhaps one of these days we'll take an argument */
@@ -1283,6 +1287,10 @@ scan_netserver_args(int argc, char *argv[]) {
 	fflush(stderr);
 	exit(1);
       }
+      break;
+    case 'N':
+      suppress_debug = 1;
+      debug = 0;
       break;
     case 'p':
       /* we want to open a listen socket at a specified port number */
