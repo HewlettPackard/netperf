@@ -2989,7 +2989,6 @@ dump_addrinfo(FILE *dumploc, struct addrinfo *info,
       for (i = 0; i < temp->ai_addrlen; i++) {
 	fprintf(dumploc,
 		(temp->ai_family == AF_INET) ? " %d" : " %.2x",
-		(u_char)ai_addr->sa_data[i],
 		(u_char)ai_addr->sa_data[i]);
       }
       fprintf(dumploc,"\n");
@@ -4038,7 +4037,7 @@ HIST_get_stats(HIST h, int *min, int *max, double *mean, double *stddev){
   *min = h->hmin;
   *max = h->hmax;
   if (h->total){
-    *mean = h->sum / h->total;
+    *mean = (double)h->sum / (double)h->total;
     *stddev = (h->sumsquare * h->total - pow(h->sum, 2)) / pow(h->total, 2);
     *stddev = sqrt(*stddev);
   }
