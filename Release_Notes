@@ -1,5 +1,11 @@
 These are the Release Notes for post-revision 2.4.5 of netperf:
 
+*) As it has been two years since the defect in Solaris getaddrinfo()
+   was submitted, it should be the case that a fix is available, so it
+   should no longer be necessary to "hide" the "Hey your platform's
+   getaddrinfo() call is buggy" warning.  Consequently, it is no
+   longer being suppressed.
+
 *) A new global command line option - -S - has been added to enable
    setting of SO_KEEPALIVE on the data socket.  This will affect the
    netperf side of the "classic" netperf tests, and will also affect

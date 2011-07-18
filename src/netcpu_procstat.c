@@ -62,7 +62,7 @@ static cpu_states_t  lib_end_count[MAXCPUS];
 
 
 /* The max. length of one line of /proc/stat cpu output */
-#define CPU_LINE_LENGTH ((CPU_STATES * sizeof (long) / 3 + 1) * 4 + 8)
+#define CPU_LINE_LENGTH (int)((CPU_STATES * sizeof (long) / 3 + 1) * 4 + 8)
 #define PROC_STAT_FILE_NAME "/proc/stat"
 #define N_CPU_LINES(nr) (nr == 1 ? 1 : 1 + nr)
 
@@ -93,7 +93,7 @@ cpu_util_init(void)
     proc_stat_buflen = N_CPU_LINES (lib_num_loc_cpus) * CPU_LINE_LENGTH;
     if (debug) {
       fprintf(where,
-	      "lib_num_loc_cpus %d lines %d CPU_LINE_LENGTH %lu proc_stat_buflen %d\n",
+	      "lib_num_loc_cpus %d lines %d CPU_LINE_LENGTH %d proc_stat_buflen %d\n",
 	      lib_num_loc_cpus,
 	      N_CPU_LINES(lib_num_loc_cpus),
 	      CPU_LINE_LENGTH,
@@ -140,7 +140,7 @@ calibrate_idle_rate (int iterations, int interval)
     proc_stat_buflen = N_CPU_LINES (lib_num_loc_cpus) * CPU_LINE_LENGTH;
     if (debug) {
       fprintf(where,
-	      "calibrate: lib_num_loc_cpus %d lines %d CPU_LINE_LENGTH %lu proc_stat_buflen %d\n",
+	      "calibrate: lib_num_loc_cpus %d lines %d CPU_LINE_LENGTH %d proc_stat_buflen %d\n",
 	      lib_num_loc_cpus,
 	      N_CPU_LINES(lib_num_loc_cpus),
 	      CPU_LINE_LENGTH,

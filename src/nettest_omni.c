@@ -4263,7 +4263,7 @@ send_data(SOCKET data_socket, struct ring_elt *send_ring, uint32_t bytes_to_send
 }
 
 int
-recv_data(SOCKET data_socket, struct ring_elt *recv_ring, uint32_t bytes_to_recv, struct sockaddr *source, int *sourcelen, uint32_t flags, uint32_t *num_receives) {
+recv_data(SOCKET data_socket, struct ring_elt *recv_ring, uint32_t bytes_to_recv, struct sockaddr *source, netperf_socklen_t *sourcelen, uint32_t flags, uint32_t *num_receives) {
 
   char *temp_message_ptr;
   int bytes_left;
@@ -4515,14 +4515,15 @@ get_transport_retrans(SOCKET socket, int protocol) {
 #ifdef HAVE_LINUX_TCP_H
   struct tcp_info tcp_info;
 
-  int ret, infosize;
+  int ret;
+  netperf_socklen_t infosize;
 
   if (protocol != IPPROTO_TCP)
     return -1;
 
   infosize = sizeof(struct tcp_info);
 
-  if (ret = getsockopt(socket,protocol,TCP_INFO,&tcp_info,&infosize)) {
+  if ((ret = getsockopt(socket,protocol,TCP_INFO,&tcp_info,&infosize)) == 0) {
     if (debug) {
       fprintf(where,
 	      "get_tcp_retrans:getsockopt errno %d %s\n",
@@ -4647,7 +4648,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
   SOCKET	data_socket;
   int           need_socket;
 
-  int   temp_recvs;
+  uint32_t   temp_recvs;
   char  tmpfmt;
   
   struct addrinfo *local_res;
@@ -5385,7 +5386,7 @@ p       based.  having said that, we rely entirely on other code to
 	  requests_this_cwnd = 0;
 	  if (debug) {
 	    fprintf(where,
-		    "incr req_cwnd to %d first_burst %d reqs_outstndng %di trans %lu\n",
+		    "incr req_cwnd to %d first_burst %d reqs_outstndng %di trans %"PRIu64"\n",
 		    request_cwnd,
 		    first_burst_size,
 		    requests_outstanding,
@@ -5972,7 +5973,7 @@ recv_omni()
   int   need_to_accept;
   int   connected;
   int   ret;
-  int   temp_recvs;
+  uint32_t   temp_recvs;
   
   struct	omni_request_struct	*omni_request;
   struct	omni_response_struct	*omni_response;
@@ -6418,9 +6419,6 @@ recv_omni()
 	   something else? that is an exceedingly good question and
 	   one for which I don't presently have a good answer, but
 	   that won't stop me from guessing :) raj 2008-01-09 */
-	fprintf(where,"read zero conn_test %d null_message_ok %d\n",
-		connection_test,null_message_ok);
-	fflush(where);
 	if (!((connection_test) || (null_message_ok))) {
 	  /* if it is neither a connection_test nor null_message_ok it
 	     must be the end of the test */

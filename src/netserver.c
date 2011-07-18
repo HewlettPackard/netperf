@@ -170,6 +170,12 @@ char	netserver_id[]="\
 #define DEBUG_LOG_FILE DEBUG_LOG_FILE_DIR"netserver.debug"
 #endif
 
+#if !defined(PATH_MAX)
+#define PATH_MAX MAX_PATH
+#endif
+char     FileName[PATH_MAX];
+
+
 
 char     listen_port[10];
 
@@ -189,6 +195,7 @@ int      daemon_parent = 0;
 int      not_inetd;
 int      want_daemonize;
 int      spawn_on_accept;
+int      suppress_debug = 0;
 
 extern	char	*optarg;
 extern	int	optind, opterr;
@@ -214,16 +221,26 @@ init_netserver_globals() {
   netperf_daemon = 0;
 }
 
+void
+unlink_empty_debug_file() {
+
+#if !defined(WIN32)
+  struct stat buf;
+
+  if (stat(FileName,&buf)== 0) {
+
+    if (buf.st_size == 0) 
+      unlink(FileName);
+  }
+#endif
+}
+
 /* it is important that set_server_sock() be called before this
    routine as we depend on the control socket being dup()ed out of the
    way when we go messing about with the streams. */
 void
 open_debug_file() 
 {
-#if !defined(PATH_MAX)
-#define PATH_MAX MAX_PATH
-#endif
-
 #if !defined WIN32
 #define NETPERF_NULL "/dev/null"
 #else
@@ -231,8 +248,6 @@ open_debug_file()
 #endif
 
   FILE *rd_null_fp;
-  char FileName[PATH_MAX];   /* for opening the debug log file */
-  int  fp;
 
   if (where != NULL) fflush(where);
 
@@ -1482,6 +1497,8 @@ main(int argc, char *argv[]) {
     }
     accept_connections();
   }
+
+  unlink_empty_debug_file();
 
 #ifdef WIN32
   WSACleanup();
