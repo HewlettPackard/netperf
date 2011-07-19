@@ -249,6 +249,7 @@ Options:\n\
     -d                Increase debugging output\n\
     -f                Do not spawn chilren for each test, run serially\n\
     -L name,family    Use name to pick listen address and family for family\n\
+    -N                No debugging output, even if netperf asks\n\
     -p portnum        Listen for connect requests on portnum.\n\
     -4                Do IPv4\n\
     -6                Do IPv6\n\

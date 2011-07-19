@@ -1,4 +1,19 @@
-These are the Release Notes for post-revision 2.4.5 of netperf:
+These are the Release Notes for Revision 2.5.0 of netperf:
+
+*) Add a new -N option to netserver which will suppress all creation
+   of debug files and so debugging output.  While this would put a
+   serious crimp in debugging a problem in netserver, it will enable
+   folks using small embedded systems to avoid soaking-up their /tmp
+   filesystem with clutter.
+
+*) A refactoring and partial re-write of the src/netserver.c code to
+   untangle years of accumulated spaghetti code.  Included is the
+   ability to not daemonize netserver when launched from the
+   command-line (-D) and also to not fork/spawn child processes upon
+   the acceptance of a control connection (-f).  Combined, the two
+   options will cause netserver to remain in the forground and not
+   spawn children - in effect netserver will handle only one test at a
+   time.
 
 *) As it has been two years since the defect in Solaris getaddrinfo()
    was submitted, it should be the case that a fix is available, so it
