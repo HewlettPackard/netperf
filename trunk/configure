@@ -2922,7 +2922,7 @@ ac_config_headers="$ac_config_headers config.h"
 
 
 # make sure we build netperf_version.h
-touch src/netperf_version.h.in
+touch  ${ac_top_srcdir}src/netperf_version.h.in
 
 # Checks for programs.
 ac_ext=c
