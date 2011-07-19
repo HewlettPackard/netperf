@@ -1,0 +1,106 @@
+# User-world netperf Makefile.
+# Copyright 2008, VMware, Inc.
+# Portions Copyright 2008, Hewlett-Packard Company.
+#
+# Assume we're building in a DDK universe.
+#
+BORA_ROOT = /build/toolchain/lin32
+
+#
+# userworld library paths, relative to bora-root
+#
+UWGCC_ROOT       = $(BORA_ROOT)/gcc-3.3.3
+UWGLIBC_TOP_DIR  = $(BORA_ROOT)/uwglibc-2.2.5
+UWGLIBC_LIB_DIR  = $(UWGLIBC_TOP_DIR)/lib
+UWGLIBC_USR_DIR  = $(UWGLIBC_TOP_DIR)/usr/lib
+UWGLIBC_DEST_DIR = /usr/lib/vmware/lib
+
+#
+# userworld include paths
+#
+GCC_INCLUDES   = -isystem $(UWGCC_ROOT)/lib/gcc-lib/i686-linux/3.3.3/include
+GLIBC_INCLUDES = -isystem $(BORA_ROOT)/glibc-2.2.5-44/usr/include 
+
+#
+# userworld compiler environment
+#
+CC = GCC_EXEC_PREFIX="$(UWGCC_ROOT)/lib/gcc-lib/" \
+	KROOT=$(BORA_ROOT) \
+	PATH="$(UWGCC_ROOT)/bin:$(BORA_ROOT)/binutils-2.16.1-vt/bin:/bin:/sbin:/usr/sbin:/usr/bin" \
+	$(UWGCC_ROOT)/bin/i686-linux-gcc
+
+CC_INCLUDES = -nostdinc $(GCC_INCLUDES) $(GLIBC_INCLUDES) $(UWVER_INCLUDES)
+
+#
+# userworld shared libraries
+#
+UWGLIBC_LDLINUX_SO = ld-linux.so.2
+
+UWGLIBC_LINK_OPTS = -nostdlib -nostartfiles \
+	-Xlinker --dynamic-linker=$(UWGLIBC_DEST_DIR)/$(UWGLIBC_LDLINUX_SO) \
+	-Xlinker -z -Xlinker nodefaultlib \
+	-Xlinker -rpath -Xlinker $(UWGLIBC_DEST_DIR) \
+	-L$(UWGLIBC_USR_DIR) \
+	-L$(UWGLIBC_LIB_DIR)
+
+UWGLIBC_LINK_CRTS = \
+	${UWGLIBC_TOP_DIR}/usr/lib/crt1.o \
+	${UWGLIBC_TOP_DIR}/usr/lib/crti.o \
+	${UWGCC_ROOT}/lib/gcc-lib/i686-linux/3.3.3/crtbegin.o \
+	${UWGCC_ROOT}/lib/gcc-lib/i686-linux/3.3.3/crtend.o \
+	${UWGLIBC_TOP_DIR}/usr/lib/crtn.o
+
+CFLAGS  = -DVMWARE_UW $(CC_INCLUDES) -g -O -mcpu=pentiumpro
+CFLAGS += -DDEBUG_LOG_FILE=\"/dev/null\" -DDO_FIRST_BURST -DDO_UNIX
+
+UWGLIBC_LINK_LIBS = -lm -ldl -lpthread -lresolv -lnss_nis -lnss_nisplus \
+	-lnss_files -lnss_compat -lnss_dns -lnsl -lc -lc_nonshared -lgcc
+LDFLAGS = $(UWGLIBC_LINK_OPTS) $(UWGLIBC_LINK_CRTS) \
+	$(UWGLIBC_LINK_LIBS) ${UWGLIBC_LIB_DIR}/${UWGLIBC_LDLINUX_SO}
+
+NETSERVER_OBJS = netserver.o nettest_bsd.o nettest_dlpi.o \
+	nettest_unix.o netlib.o netsh.o \
+	nettest_xti.o nettest_ipv6.o \
+	netcpu_none.c \
+	nettest_dns.o
+
+NETPERF_OBJS = netperf.o netsh.o netlib.o nettest_bsd.o \
+	nettest_dlpi.o nettest_unix.o \
+	nettest_xti.o nettest_ipv6.o \
+	netcpu_none.c \
+	nettest_dns.o
+
+all: netperf-uw netserver-uw
+
+netperf-uw: $(NETPERF_OBJS)
+	$(CC) -o $@ $(NETPERF_OBJS) $(LDFLAGS)
+	strip $@
+
+netserver-uw: $(NETSERVER_OBJS)
+	$(CC) -o $@ $(NETSERVER_OBJS) $(LDFLAGS)
+	strip $@
+
+netperf.o: netperf.c netsh.h Makefile.uw
+
+netsh.o: netsh.c netsh.h nettest_bsd.h netlib.h Makefile.uw
+
+netlib.o: netlib.c netlib.h netsh.h Makefile.uw
+
+nettest_bsd.o: nettest_bsd.c nettest_bsd.h netlib.h netsh.h Makefile.uw
+
+nettest_dlpi.o: nettest_dlpi.c nettest_dlpi.h netlib.h netsh.h Makefile.uw
+
+nettest_unix.o: nettest_unix.c nettest_unix.h netlib.h netsh.h Makefile.uw
+
+nettest_xti.o: nettest_xti.c nettest_xti.h netlib.h netsh.h Makefile.uw
+
+nettest_ipv6.o: nettest_ipv6.c nettest_ipv6.h netlib.h netsh.h Makefile.uw
+
+nettest_dns.o: nettest_dns.c nettest_dns.h netlib.h netsh.h Makefile.uw
+
+netcpu_none.o: netcpu_none.c netsh.h netlib.h
+
+netserver.o: netserver.c nettest_bsd.h netlib.h Makefile.uw
+
+clean:
+	rm -f *.o netperf-uw netserver-uw

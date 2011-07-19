@@ -1,0 +1,4 @@
+If you are reading this, it suggests you are using a version of
+netperf in which the issue of file/directory name case insensitivity
+in OSX has been worked-around by renaming the NetPerf and NetServer
+directories to NetPerfDir and NetServerDir respectively.

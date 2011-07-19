@@ -1,0 +1,237 @@
+.TH netperf 1 ""
+.SH NAME
+
+netperf \- a network performance benchmark
+
+.SH SYNOPSIS
+
+.B netperf
+[global options] -- [test specific options]
+
+.SH DESCRIPTION
+.B Netperf
+is a benchmark that can be used to measure various aspects of
+networking performance.
+Currently, its focus is on bulk data transfer and request/response
+performance using either TCP or UDP, and the Berkeley Sockets
+interface. In addition, tests for DLPI, and Unix Domain
+Sockets, tests for IPv6 may be conditionally compiled-in.
+
+.SS GLOBAL OPTIONS
+
+.TP
+.B \-4
+Use AF_INET (aka IPv4) addressing for the control and possibly data
+connections. 
+.TP
+.B \-6
+Use AF_INET6 (aka IPv6) addressing for the control and possibly data
+connections.
+.TP
+.B \-a sizespec
+Alter the send and receive buffer alignments on the local system.
+This defaults to 8 bytes.
+.TP
+.B \-A sizespec
+As -a, but for the remote system.
+.TP
+.B \-B brandstr
+Add brandstr to the output of a test with banners disabled.
+.TP
+.B \-c [rate]
+Request CPU utilization and service demand calculations for the
+local system. If the optional rate parameter is specified,
+.B netperf
+will use that instead of calculating the rate itself.
+.TP
+.B \-C [rate]
+As -c, but for the remote system.
+.TP
+.B \-d
+Increase the quantity of debugging output displayed during
+a test (possibly at the expense of performance).
+.TP
+.B \-D [secs,units] (*)
+Display interim results at least every secs seconds uning units as the
+initial guess for units per second. This is only available when
+netperf has been configured with --enable-demo.
+.TP
+.B \-f GMKgmk
+Change the units of measure for *_STREAM tests. Capital letters are
+powers of two, lowercase are powers of ten.
+.TP
+.B \-F fill_file
+Pre-fill the send buffers with data from the named file. This is
+intended to provide a means for avoiding buffers that are filled with
+data which is trivially easy to compress. A good choice for a file
+that should be present on any system is this manpage - netperf.man.
+Other files may be provided as part of the distribution.
+.TP
+.B \-h
+Display a usage string, and exit.
+.TP
+.B \-H name|ip,family (*)
+Set the hostname (or IP address) and address family to use to
+establish the control connection to the remote system. Passing a
+single name with no comma will only set remote_host and will leave
+selection of address family for the control connection to the stack or
+by a -4 -r -6 command line option.
+.TP
+.B \-i max,min
+Set the maximum and minimum number of iterations when trying to reach
+certain confidence levels.
+.TP
+.B \-j
+Instruct netperf to calculate additional statistics on timing when
+running an omni test.  Display of said statistics will depend on the
+presence of the corresponding output selectors in the output
+selection. These are MIN_LATENCY, MAX_LATENCY, P50_LATENCY,
+P90_LATENCY, P99_LATENCY, MEAN_LATENCY and STDDEV_LATENCY.
+.TP
+.B \-I lvl,[,intvl]
+Specify the confidence level (either 95 or 99 - 99 is the default) and
+the width of the confidence interval as a percentage (default 10)
+.TP
+.B \-l testlen
+Specify the length of the test (default 10 seconds).
+A negative value sets the number of request/response transactions,
+or the number of bytes for a stream test.
+.TP
+.B \-L name|ip,fam (*)
+Set the local name|IP and/or address family for the socket used for
+the control connection to the remote netserver.
+.TP
+.B \-n numcpus
+Specify the number of CPU's in the system on those systems for which
+netperf has no way to find the number of CPU's programatically. 
+.TP
+.B \-N
+This option will tell netperf to not establish a control connection to
+a remote  netserver.  Instead it will try to establish a data
+connection directly, using only the information supplied by the
+command line parameters and/or internal defaults.  Unless other ports
+are provided by the command line, by default the data connection will
+be to the "discard" port for a "STREAM" or "SENDFILE" test, the "echo"
+port for an "RR" test or the "chargen" port for a "MAERTS" test.
+.TP
+.B \-o sizespec
+Set an offset from the alignment specified with -a.
+.TP
+.B \-O sizespec
+As -o, but for the remote system.
+.TP
+.B \-p portnum,locport (*)
+Direct the control connection to a netserver listening on the
+specified port, rather than using a "netperf" entry in
+/etc/services or the internal default (port 12865). If ",locport" is
+specified the control connection will be established from that local
+port number.  Specifying a single port number with no comma will
+specify only the remote netserver port number and will leave local
+port number selection to the stack.  
+.TP
+.B \-P 0|1
+Show (1) or suppress (0) the test banner.
+.TP
+.B \-S
+This option will cause an attempt to set SO_KEEPALIVE on the ends of
+the data connection for tests using BSD Sockets.  It will be made on
+the netperf side of classic tests, and both netperf and netserver side
+of an omni or migrated test.
+.TP
+.B \-s seconds
+This will cause netperf to sleep "seconds" seconds before transferring
+data over the data connection.
+.TP
+.B \-t testname
+Specify the test to perform.
+Valid testnames include, but are not limited to, nor always compiled-in:
+.RS
+.RS
+.nf
+.I TCP_STREAM
+.I TCP_SENDFILE
+.I TCP_MAERTS
+.I TCP_RR
+.I TCP_CRR
+.I UDP_STREAM
+.I UDP_RR
+.I DLCO_STREAM
+.I DLCO_RR
+.I DLCL_STREAM
+.I DLCL_RR
+.I STREAM_STREAM
+.I STREAM_RR
+.I DG_STREAM
+.I DG_RR
+.I SCTP_STREAM
+.I SCTP_STREAM_MANY
+.I SCTP_RR
+.I SCTP_RR_MANY
+.I LOC_CPU
+.I REM_CPU
+.fi
+.RE
+.RE
+.TP
+.B \-T lcpu,remcpu
+Request that netperf be bound to CPU lcpu and/or netserver be bound to
+CPU rcpu.
+.TP
+.B \-v verbosity
+Set the verbosity level for the test (only with -P).
+.TP
+.B \-V
+Display the netperf version and exit.
+
+.SS TEST SPECIFIC OPTIONS
+
+.TP
+.B \-h
+Display a usage string based on the test name set with -t, and exit.
+
+Please consult the netperf manual
+.I 
+Care and Feeding of Netperf 2.5.X
+(doc/netperf.[pdf|html|txt]) for more information. Or you can join and
+send email to netperf-talk@netperf.org.
+
+.SH NOTE
+For those options taking two parms, at least one must be specified;
+specifying one value without a comma will set both parms to that
+value, specifying a value with a leading comma will set just the
+second parm, a value with a trailing comma will set just the first. To
+set each parm to unique values, specify both and separate them with a
+comma.
+
+* For these options taking two parms, specifying one value with no
+comma will only set the first parm and will leave the second at the
+default value. To set the second value it must be preceded with a
+comma or be a comma-separated pair. This is to retain previous netperf
+behaviour.
+
+
+.SH BUGS 
+There are bound to be bugs. If you think you have found a bug, please
+mention it in netperf-talk@netperf.org.  List membership is required
+to send email to the list.  See
+http://www.netperf.org/cgi-bin/mailman/listinfo/netperf-talk . If all
+else fails send email to netperf-feedback@netperf.org.
+
+.SH SEE ALSO
+.BR netserver (1)
+.br
+.I
+Care and Feeding of Netperf 2.5.X
+.br
+http://www.netperf.org/
+
+.SH AUTHORS
+HP Information Networks Division - Networking Performance Team.
+.br
+Rick Jones	<rick.jones2@hp.com>
+.br
+Karen Choy	HP IND
+.br
+Dave Shield	<daves@csc.liv.ac.uk>	(man pages)
+.br
+Others too numerous to mention here - see the AUTHORS file

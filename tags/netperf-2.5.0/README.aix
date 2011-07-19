@@ -1,0 +1,24 @@
+Pseudo-random things about netperf on AIX:
+
+While it _should_ not be necessary in the release bits, the rc bits
+for netperf 2.4.0 required:
+
+    configure _may_ need:
+
+    CFLAGS="-qcpluscmt -lperfstat"
+
+    until such time as Rick Jones can figure-out or be told how to
+    automagically add those using the configure script (hint hint :)
+
+The release bits should be OK without the above.  Depending on the
+name used to invoke the compiler, the -qmumble option may be implicit.
+
+AIX include files have a VERY unfortuneate set of #define's in them
+for phrases network oriented programs are QUITE likely to have in
+their source - "rem_addr" and "rem_size" A "cousin" of the Netperf
+Contributing Editor reports this interferes with --enable-dlpi
+compilation and that it was also a problem for MySQL compiltion.
+While we await IBM's APAR with bated breath, netperf has been kludged
+to workaround this bug in IBM's include files.  It has been reported
+that a "PMR" 34940,212,848 has been submitted to IBM in relation to
+this bug in their header files.

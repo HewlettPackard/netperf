@@ -1,0 +1,80 @@
+.TH netserver 1 ""
+.SH NAME
+
+netserver \- a network performance benchmark server
+
+.SH SYNOPSIS
+
+.B netserver
+[-4]
+[-6]
+[-d]
+[-h]
+[-L name,family]
+[-p portnum]
+[-v verbosity]
+[-V]
+
+.SH DESCRIPTION
+.B Netserver
+listens for connections from a
+.C netperf
+benchmark, and responds accordingly.
+It can either be run from
+.C inetd
+or as a standalone daemon (with the -p flag). If run from
+.C inetd
+the -p option should not be used.
+
+.SS OPTIONS
+.TP
+.B \-4
+Use AF_INET (aka IPv4) addressing for the control and possibly data
+connections.
+.TP
+.B \-6
+Use AF_INET6 (aka IPv6) addressing for the control and possibly data
+connections.
+.TP
+.B \-d
+Increase the quantity of debugging output displayed during
+a test (possibly at the expense of performance).
+.TP
+.B \-h
+Display a usage string, and exit.
+.TP
+.B \-L name,family
+Set the local name and/or address family for the socket used for
+the control connection.
+.TP
+.B \-p portnum
+Listen on the specified port.
+This is used when running as a standalone daemon.
+.TP
+.B \-v verbosity
+Set the verbosity level for the test.
+.TP
+.B \-V
+Display the netperf version and exit.
+
+.SH BUGS
+No known bugs at this time. If you think you have found a bug, please report it to either netperf-talk@netperf.org or netperf-feedback@netperf.org.
+
+.SH SEE ALSO
+.BR netperf (1)
+.br
+.I
+Netperf: A Network Performance Benchmark
+.br
+http://www.netperf.org/
+
+.SH AUTHORS
+HP Information Networks Division - Networking Performance Team.
+.br
+Rick Jones	<rick.jones2@hp.com>
+.br
+Karen Choy	HP IND
+.br
+Dave Shield	<daves@csc.liv.ac.uk>	(man pages)
+.br
+Others too numerous to mention here - see the AUTHORS file
