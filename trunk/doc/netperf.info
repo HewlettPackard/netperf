@@ -7,7 +7,7 @@ netperf benchmark.
    Copyright (C) 2005-2011 Hewlett-Packard Company
 
      Permission is granted to copy, distribute and/or modify this
-     document per the terms of the netperf source licence, a copy of
+     document per the terms of the netperf source license, a copy of
      which can be found in the file `COPYING' of the basic netperf
      distribution.
 
@@ -23,7 +23,7 @@ netperf benchmark.
    Copyright (C) 2005-2011 Hewlett-Packard Company
 
      Permission is granted to copy, distribute and/or modify this
-     document per the terms of the netperf source licence, a copy of
+     document per the terms of the netperf source license, a copy of
      which can be found in the file `COPYING' of the basic netperf
      distribution.
 
@@ -297,13 +297,13 @@ functionality in a default compilation of the bits.  If you encounter
 problems with this, please first attempt to obtain help via
 <netperf-talk@netperf.org> or <netperf-feedback@netperf.org>.  If that
 is unsuccessful, you can add a `--enable-burst=no' to the configure
-command and the burst mode functionality will nt be compiled-in.
+command and the burst mode functionality will not be compiled-in.
 
    On some platforms, it may be necessary to precede the configure
 command with a CFLAGS and/or LIBS variable as the netperf configure
 script is not yet smart enough to set them itself.  Whenever possible,
 these requirements will be found in `README.PLATFORM' files.  Expertise
-and assistance in making that more automagical in the configure script
+and assistance in making that more automagic in the configure script
 would be most welcome.
 
    Other optional configure-time settings include
@@ -567,7 +567,7 @@ remote (netserver) system.
      found in `src/netcpu_ntperf.c'.  This mechanism too is based on
      what appears to be a form of micro-state accounting and requires no
      calibration.  On laptops, or other systems which may dynamically
-     alter the CPU frequency to minimize power consumtion, it has been
+     alter the CPU frequency to minimize power consumption, it has been
      suggested that this mechanism may become slightly confused, in
      which case using BIOS/uEFI settings to disable the power saving
      would be indicated.
@@ -781,13 +781,13 @@ File: netperf.info,  Node: Global Options,  Prev: Command-line Options Syntax,  
      2^20 or 2^10 bytes/s respectively (EG power of two GB, MB or KB).
      Arguments of "g," ",m" or "k" will set the units to 10^9, 10^6 or
      10^3 bits/s respectively.  An argument of "x" requests the units
-     be transactions per second and is only meaninful for a
+     be transactions per second and is only meaningful for a
      request-response test. [Default: "m" or 10^6 bits/s]
 
 `-F <fillfile>'
      This option specified the file from which send which buffers will
      be pre-filled .  While the buffers will contain data from the
-     specified file, the file is not fully transfered to the remote
+     specified file, the file is not fully transferred to the remote
      system as the receiving end of the test will not write the
      contents of what it receives to a file.  This can be used to
      pre-fill the send buffers with data having different
@@ -873,7 +873,7 @@ File: netperf.info,  Node: Global Options,  Prev: Command-line Options Syntax,  
            32768  16384  16384    10.01      40.23
 
      In the example above we see that netperf did not meet the desired
-     convidence intervals.  Instead of being 99% confident it was within
+     confidence intervals.  Instead of being 99% confident it was within
      +/- 2.5% of the real mean value of throughput it is only confident
      it was within +/-3.4%.  In this example, increasing the `-i'
      option (described below) and/or increasing the iteration length
@@ -882,7 +882,7 @@ File: netperf.info,  Node: Global Options,  Prev: Command-line Options Syntax,  
      In an explicit "omni" test, failure to meet the confidence
      intervals will not result in netperf emitting a warning.  To
      verify the hitting, or not, of the confidence intervals one will
-     need to include them as part of an an *note output selection: Omni
+     need to include them as part of an *note output selection: Omni
      Output Selection. in the test-specific `-o', `-O' or `k' output
      selection options.  The warning about not hitting the confidence
      intervals will remain in a "migrated" classic netperf test.
@@ -947,7 +947,7 @@ File: netperf.info,  Node: Global Options,  Prev: Command-line Options Syntax,  
      In the case of a request/response test the latencies will be
      transaction latencies.  In the case of a receive-only test they
      will be time spent in the receive call.  In the case of a
-     send-only test they will be tim spent in the send call. The units
+     send-only test they will be time spent in the send call. The units
      will be microseconds. Added in netperf 2.5.0.
 
 `-l testlen'
@@ -1002,7 +1002,7 @@ File: netperf.info,  Node: Global Options,  Prev: Command-line Options Syntax,  
      in a future release of netperf.
 
 `-N'
-     This option tells netperf to forego establishing a control
+     This option tells netperf to forgo establishing a control
      connection. This makes it is possible to run some limited netperf
      tests without a corresponding netserver on the remote system.
 
@@ -1532,7 +1532,7 @@ does "auto tuning" of socket buffer and TCP window sizes, which means
 the send socket buffer size may be different at the end of the test
 than it was at the beginning.  This is addressed in the *note omni
 tests: The Omni Tests. added in version 2.5.0 and *note output
-selection: Omni Output Selection.  Througput is expressed as 10^6 (aka
+selection: Omni Output Selection.  Throughput is expressed as 10^6 (aka
 Mega) bits per second, and the test ran for 10 seconds.  IPv4 addresses
 (AF_INET) were used.
 
@@ -1756,7 +1756,7 @@ their TCP/UDP/SCTP counterparts.
 
 `-D <devspec>'
      This option is used to provide the fully-qualified names for the
-     local and/or remote DPLI device files.  The syntax is otherwise
+     local and/or remote DLPI device files.  The syntax is otherwise
      identical to that of a "sizespec".
 
 `-p <ppaspec>'
@@ -1858,9 +1858,9 @@ request/response test is to have a _RR suffix.  There are however a few
 "request/response" tests that have other suffixes.
 
    A request/response test, particularly synchronous, one transaction at
-at time test such as those found by default in netperf, is particularly
+a time test such as those found by default in netperf, is particularly
 sensitive to the path-length of the networking stack.  An _RR test can
-also uncover those platforms where the NIC's are strapped by default
+also uncover those platforms where the NICs are strapped by default
 with overbearing interrupt avoidance settings in an attempt to increase
 the bulk-transfer performance (or rather, decrease the CPU utilization
 of a bulk-transfer test).  This sensitivity is most acute for small
@@ -1868,7 +1868,7 @@ request and response sizes, such as the single-byte default for a
 netperf _RR test.
 
    While a bulk-transfer test reports its results in units of bits or
-bytes transfered per second, by default a mumble_RR test reports
+bytes transferred per second, by default a mumble_RR test reports
 transactions per second where a transaction is defined as the completed
 exchange of a request and a response.  One can invert the transaction
 rate to arrive at the average round-trip latency.  If one is confident
@@ -1876,10 +1876,10 @@ about the symmetry of the connection, the average one-way latency can
 be taken as one-half the average round-trip latency. As of version
 2.5.0 (actually slightly before) netperf still does not do the latter,
 but will do the former if one sets the verbosity to 2 for a classic
-netperf test, or includes the apropriate *note output selector: Omni
+netperf test, or includes the appropriate *note output selector: Omni
 Output Selectors. in an *note omni test: The Omni Tests.  It will also
 allow the user to switch the throughput units from transactions per
-secont to bits or bytes per second with the global `-f' option.
+second to bits or bytes per second with the global `-f' option.
 
 * Menu:
 
@@ -1919,11 +1919,11 @@ NIC/driver.
    Certain NICs have ways to minimize the number of interrupts sent to
 the host.  If these are strapped badly they can significantly reduce
 the performance of something like a single-byte request/response test.
-Such setups are distinguised by seriously low reported CPU utilization
+Such setups are distinguished by seriously low reported CPU utilization
 and what seems like a low (even if in the thousands) transaction per
 second rate.  Also, if you run such an OS/driver combination on faster
 or slower hardware and do not see a corresponding change in the
-transaction rate, chances are good that the drvier is strapping the NIC
+transaction rate, chances are good that the driver is strapping the NIC
 with aggressive interrupt avoidance settings.  Good for bulk
 throughput, but bad for latency.
 
@@ -2360,7 +2360,7 @@ utilization:
 
    If the CPU utilizations reported for the same system are the same or
 very very close you can be reasonably confident that skew error is
-minimized.  Presumeably one could then omit `-i' but that is not
+minimized.  Presumably one could then omit `-i' but that is not
 advised, particularly when/if the CPU utilization approaches 100
 percent.  In the example above we see that the CPU utilization on the
 local system remains the same for all four tests, and is only off by
@@ -2370,7 +2370,7 @@ accuracy of similar CPU utilization implying little skew error is
 diminished.  This is also the case for those increasingly rare single
 CPU systems if the utilization is reported as 100% or very close to it.
 
-     NOTE: It is very important to rememeber that netperf is calculating
+     NOTE: It is very important to remember that netperf is calculating
      system-wide CPU utilization.  When calculating the service demand
      (those last two columns in the output above) each netperf assumes
      it is the only thing running on the system.  This means that for
@@ -2423,7 +2423,7 @@ This can be addressed by setting the `arp_ignore' sysctl before
 configuring interfaces.
 
    As it is quite important, we will repeat that it is very important to
-rememeber that each concurrent netperf instance is calculating
+remember that each concurrent netperf instance is calculating
 system-wide CPU utilization.  When calculating the service demand each
 netperf assumes it is the only thing running on the system.  This means
 that for concurrent tests the service demands reported by netperf will
@@ -2484,7 +2484,7 @@ number of transactions in flight at one time.
 TCP_NODELAY, the stack was free to "bundle" requests and/or responses
 into TCP segments as it saw fit, and since the default request and
 response size is one byte, there could have been some considerable
-bundling even in the absense of transport congestion window issues.  If
+bundling even in the absence of transport congestion window issues.  If
 one wants to try to achieve a closer to one-to-one correspondence
 between a request and response and a TCP segment, add the test-specific
 `-D' option:
@@ -2578,7 +2578,7 @@ netperf was reporting very well.
    Had the request or response size differed, we would need to know how
 it compared with the "MSS" for the connection.
 
-   Just for grins, here is the excercise repeated, using `netstat'
+   Just for grins, here is the exercise repeated, using `netstat'
 instead of `ethtool'
 
      netstat -s -t > before
@@ -2601,7 +2601,7 @@ instead of `ethtool'
          1 segments retransmited
          0 bad segments received.
 
-   The sums are left as an excercise to the reader :)
+   The sums are left as an exercise to the reader :)
 
    Things become considerably more complicated if there are non-trvial
 packet losses and/or retransmissions.
@@ -2621,7 +2621,7 @@ File: netperf.info,  Node: Using Netperf to Measure Bidirectional Transfer,  Nex
 8 Using Netperf to Measure Bidirectional Transfer
 *************************************************
 
-There are two ways to use netperf to measure the perfomance of
+There are two ways to use netperf to measure the performance of
 bidirectional transfer.  The first is to run concurrent netperf tests
 from the command line.  The second is to configure netperf with
 `--enable-burst' and use a single instance of the *note TCP_RR: TCP_RR.
@@ -2771,7 +2771,7 @@ rather different results between the two methods.
    Also, with a bidirectional request/response test there is something
 of a natural balance or synchronization between inbound and outbound - a
 response will not be sent until a request is received, and (once the
-burst level is reached) a subseqent request will not be sent until a
+burst level is reached) a subsequent request will not be sent until a
 response is received.  This may mask favoritism in the NIC between
 inbound and outbound processing.
 
@@ -2827,7 +2827,7 @@ The options added by the omni tests are:
 `-d <direction>'
      This option sets the direction of the test relative to the netperf
      process.  As of version 2.5.0 one can use the following in a
-     case-insenstive manner:
+     case-insensitive manner:
 
     `send, stream, transmit, xmit or 2'
           Any of which will cause netperf to send to the netserver.
@@ -2842,7 +2842,7 @@ The options added by the omni tests are:
      character and they will be OR'ed together.  In this way one can use
      the "Send|Recv" that will be emitted by the *note DIRECTION: Omni
      Output Selectors. *note output selector: Omni Output Selection.
-     when used with a request/reponse test.
+     when used with a request/response test.
 
 `-k [*note output selector: Omni Output Selection.]'
      This option sets the style of output to "keyval" where each line of
@@ -2859,7 +2859,7 @@ The options added by the omni tests are:
 
 `-o [*note output selector: Omni Output Selection.]'
      This option sets the style of output to "CSV" where there will be
-     one line of comma-separated values, preceeded by one line of column
+     one line of comma-separated values, preceded by one line of column
      names unless the global `-P' option is used with a value of 0:
           $ netperf -t omni -- -d rr -o "THROUGHPUT,THROUGHPUT_UNITS"
           OMNI TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain (127.0.0.1) port 0 AF_INET : demo
@@ -2896,7 +2896,7 @@ The options added by the omni tests are:
           Select the Transmission Control Protocol
 
     `UDP'
-          Select the User Datagram Procotol
+          Select the User Datagram Protocol
 
     `SDP'
           Select the Sockets Direct Protocol
@@ -3055,7 +3055,7 @@ reported.  The output selector can take several forms:
 
    The order of evaluation will first check for an output selection.  If
 none is specified with the `-k', `-o' or `-O' option netperf will
-select a default based on the characterists of the test.  If there is
+select a default based on the characteristics of the test.  If there is
 an output selection, the code will first check for `?', then check to
 see if it is the magic `all' keyword.  After that it will check for
 either `,' or `;' in the selection and take that to mean it is a comma
@@ -3098,7 +3098,7 @@ As of version 2.5.0 the output selectors are:
      This will display the elapsed time in seconds for the test.
 
 `THROUGHPUT'
-     This will display the througput for the test. Units: As requested
+     This will display the throughput for the test. Units: As requested
      via the global `-f' option and displayed by the THROUGHPUT_UNITS
      output selector.
 
@@ -3220,7 +3220,7 @@ As of version 2.5.0 the output selectors are:
 
 `LOCAL_SD'
      This will display the service demand, or units of CPU consumed per
-     unit of work, as measured by netperf. Units: microsconds of CPU
+     unit of work, as measured by netperf. Units: microseconds of CPU
      consumed per either KB (K==1024) of data transferred or
      request/response transaction.
 
@@ -3235,7 +3235,7 @@ As of version 2.5.0 the output selectors are:
 `REMOTE_SD'
      This will display the service demand, or units of CPU consumed per
      unit of work, as measured by netserver. Units: microseconds of CPU
-     consumed consumed per either KB (K==1024) of data transferred or
+     consumed per either KB (K==1024) of data transferred or
      request/response transaction.
 
 `SD_UNITS'
@@ -3498,20 +3498,20 @@ As of version 2.5.0 the output selectors are:
      it makes its "send" calls.  Defaults to one more than the local
      send socket buffer size divided by the send size as determined at
      the time the data socket is created. Can be used to make netperf
-     more processor data cache unfiendly. Units: number of buffers.
+     more processor data cache unfriendly. Units: number of buffers.
 
 `LOCAL_RECV_WIDTH'
      The "width" of the ring of buffers through which netperf cycles as
      it makes its "receive" calls.  Defaults to one more than the local
      receive socket buffer size divided by the receive size as
      determined at the time the data socket is created. Can be used to
-     make netperf more processor data cache unfiendly. Units: number of
-     buffers.
+     make netperf more processor data cache unfriendly. Units: number
+     of buffers.
 
 `LOCAL_SEND_DIRTY_COUNT'
      The number of bytes to "dirty" (write to) before netperf makes a
      "send" call. Specified via the global `-k' option, which requires
-     that -enable-dirty=yes was specificed with the configure command
+     that -enable-dirty=yes was specified with the configure command
      prior to building netperf. Units: Bytes.
 
 `LOCAL_RECV_DIRTY_COUNT'
@@ -3627,9 +3627,9 @@ As of version 2.5.0 the output selectors are:
 
 `LOCAL_INTERFACE_SUBVENDOR'
      The sub-vendor ID of the probable egress interface through which
-     traffic on the the data connection went on the system running
-     netperf. Units: Hexadecimal IDs as might be found in a `pci.ids'
-     file or at the PCI ID Repository (http://pciids.sourceforge.net/).
+     traffic on the data connection went on the system running netperf.
+     Units: Hexadecimal IDs as might be found in a `pci.ids' file or at
+     the PCI ID Repository (http://pciids.sourceforge.net/).
 
 `LOCAL_INTERFACE_SUBDEVICE'
      The sub-device ID of the probable egress interface through which
@@ -3830,7 +3830,7 @@ arrive at a CPU utilization percentage.
 increments when the system is presumed to be "idle."  If it does not
 know the rate, netperf will measure it before starting a data transfer
 test.  This calibration step takes 40 seconds for each of the local or
-remote ystems, and if repeated for each netperf test would make taking
+remote systems, and if repeated for each netperf test would make taking
 repeated measurements rather slow.
 
    Thus, the netperf CPU utilization options `-c' and and `-C' can take
@@ -3871,12 +3871,12 @@ IDentifiers (UUIDs).  This can be done explicitly via the "UUID" test:
      $ netperf -t UUID
      2c8561ae-9ebd-11e0-a297-0f5bfa0349d0
 
-   In and of itself, this is not terribly useful, but used in conjuction
-with the test-specific `-u' option of an "omni" test to set the UUID
-emitted by the *note UUID: Omni Output Selectors. output selector, it
-can be used to tie-together the separate instances of an aggregate
-netperf test.  Say, for instance if they were inserted into a database
-of some sort.
+   In and of itself, this is not terribly useful, but used in
+conjunction with the test-specific `-u' option of an "omni" test to set
+the UUID emitted by the *note UUID: Omni Output Selectors. output
+selector, it can be used to tie-together the separate instances of an
+aggregate netperf test.  Say, for instance if they were inserted into a
+database of some sort.
 
 
 File: netperf.info,  Node: Address Resolution,  Next: Enhancing Netperf,  Prev: Other Netperf Tests,  Up: Top
@@ -3930,7 +3930,7 @@ enhancements to netperf, by all means do so.  If you wish to add a new
   1. Add files `src/nettest_mumble.c' and `src/nettest_mumble.h' where
      mumble is replaced with something meaningful for the test-suite.
 
-  2. Add support for an apropriate `--enable-mumble' option in
+  2. Add support for an appropriate `--enable-mumble' option in
      `configure.ac'.
 
   3. Edit `src/netperf.c', `netsh.c', and `netserver.c' as required,
@@ -3948,7 +3948,7 @@ mainline sources, please try to base your changes on the latest
 available sources. (*Note Getting Netperf Bits::.) and then send email
 describing the changes at a high level to
 <netperf-feedback@netperf.org> or perhaps <netperf-talk@netperf.org>.
-If the concensus is positive, then sending context `diff' results to
+If the consensus is positive, then sending context `diff' results to
 <netperf-feedback@netperf.org> is the next step.  From that point, it
 is a matter of pestering the Netperf Contributing Editor until he gets
 the changes incorporated :)
@@ -3961,7 +3961,7 @@ File: netperf.info,  Node: Netperf4,  Next: Concept Index,  Prev: Enhancing Netp
 
 Netperf4 is the shorthand name given to version 4.X.X of netperf.  This
 is really a separate benchmark more than a newer version of netperf,
-but it is a decendant of netperf so the netperf name is kept.  The
+but it is a descendant of netperf so the netperf name is kept.  The
 facetious way to describe netperf4 is to say it is the
 egg-laying-woolly-milk-pig version of netperf :)  The more respectful
 way to describe it is to say it is the version of netperf with support
@@ -4127,17 +4127,17 @@ Node: Conventions4150
 Node: Installing Netperf5913
 Node: Getting Netperf Bits7467
 Node: Installing Netperf Bits9326
-Node: Verifying Installation17822
-Node: The Design of Netperf18526
-Node: CPU Utilization20122
+Node: Verifying Installation17821
+Node: The Design of Netperf18525
+Node: CPU Utilization20121
 Node: CPU Utilization in a Virtual Guest28845
 Node: Global Command-line Options30432
 Node: Command-line Options Syntax30971
 Node: Global Options32367
-Node: Using Netperf to Measure Bulk Data Transfer56521
-Node: Issues in Bulk Transfer57194
-Node: Options common to TCP UDP and SCTP tests61455
-Node: TCP_STREAM67780
+Node: Using Netperf to Measure Bulk Data Transfer56520
+Node: Issues in Bulk Transfer57193
+Node: Options common to TCP UDP and SCTP tests61454
+Node: TCP_STREAM67779
 Node: TCP_MAERTS71864
 Node: TCP_SENDFILE73101
 Node: UDP_STREAM75601
@@ -4150,38 +4150,38 @@ Node: STREAM_STREAM83874
 Node: DG_STREAM84732
 Node: Using Netperf to Measure Request/Response85413
 Node: Issues in Request/Response87731
-Node: Options Common to TCP UDP and SCTP _RR tests90104
-Node: TCP_RR95128
-Node: TCP_CC97528
-Node: TCP_CRR99762
-Node: UDP_RR100824
-Node: XTI_TCP_RR103128
-Node: XTI_TCP_CC103711
-Node: XTI_TCP_CRR104216
-Node: XTI_UDP_RR104728
-Node: DLCL_RR105305
-Node: DLCO_RR105458
-Node: SCTP_RR105610
-Node: Using Netperf to Measure Aggregate Performance105746
-Node: Running Concurrent Netperf Tests106725
-Node: Issues in Running Concurrent Tests110974
-Node: Using --enable-burst112483
-Node: Using Netperf to Measure Bidirectional Transfer119352
-Node: Bidirectional Transfer with Concurrent Tests120483
-Node: Bidirectional Transfer with TCP_RR122839
-Node: Implications of Concurrent Tests vs Burst Request/Response125223
-Node: The Omni Tests127036
-Node: Native Omni Tests128083
-Node: Migrated Tests133360
-Node: Omni Output Selection135465
-Node: Omni Output Selectors138446
-Node: Other Netperf Tests166164
-Node: CPU rate calibration166599
-Node: UUID Generation168966
-Node: Address Resolution169681
-Node: Enhancing Netperf171657
-Node: Netperf4173151
-Node: Concept Index174055
-Node: Option Index176381
+Node: Options Common to TCP UDP and SCTP _RR tests90105
+Node: TCP_RR95129
+Node: TCP_CC97529
+Node: TCP_CRR99763
+Node: UDP_RR100825
+Node: XTI_TCP_RR103129
+Node: XTI_TCP_CC103712
+Node: XTI_TCP_CRR104217
+Node: XTI_UDP_RR104729
+Node: DLCL_RR105306
+Node: DLCO_RR105459
+Node: SCTP_RR105611
+Node: Using Netperf to Measure Aggregate Performance105747
+Node: Running Concurrent Netperf Tests106726
+Node: Issues in Running Concurrent Tests110973
+Node: Using --enable-burst112481
+Node: Using Netperf to Measure Bidirectional Transfer119348
+Node: Bidirectional Transfer with Concurrent Tests120480
+Node: Bidirectional Transfer with TCP_RR122836
+Node: Implications of Concurrent Tests vs Burst Request/Response125220
+Node: The Omni Tests127034
+Node: Native Omni Tests128081
+Node: Migrated Tests133359
+Node: Omni Output Selection135464
+Node: Omni Output Selectors138447
+Node: Other Netperf Tests166155
+Node: CPU rate calibration166590
+Node: UUID Generation168958
+Node: Address Resolution169674
+Node: Enhancing Netperf171650
+Node: Netperf4173145
+Node: Concept Index174050
+Node: Option Index176376
 
 End Tag Table
