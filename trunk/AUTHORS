@@ -262,6 +262,7 @@ Fix to actually run SCTP_RR_MANY when requested
 
 David MacMahon davidm@astro.berkeley.edu
 Fix to allow configure in a build directory.
+Remove duplicate htonl in recv_udp_stream().
 
 Masanari Iida
 Cleanups for the manual.
