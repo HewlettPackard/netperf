@@ -262,3 +262,6 @@ Fix to actually run SCTP_RR_MANY when requested
 
 David MacMahon davidm@astro.berkeley.edu
 Fix to allow configure in a build directory.
+
+Masanari Iida
+Cleanups for the manual.
