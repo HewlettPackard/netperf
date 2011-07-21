@@ -7296,7 +7296,7 @@ recv_udp_stream()
   }
   
   netperf_response.content.response_type	= UDP_STREAM_RESULTS;
-  udp_stream_results->bytes_received	= htonl(bytes_received);
+  udp_stream_results->bytes_received	= bytes_received;
   udp_stream_results->messages_recvd	= messages_recvd;
   udp_stream_results->elapsed_time	= elapsed_time;
   udp_stream_results->cpu_method        = cpu_method;
