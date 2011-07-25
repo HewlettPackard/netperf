@@ -113,7 +113,7 @@ char	netserver_id[]="\
 #endif
 
 #if !defined(HAVE_SETSID)
-#if HAVE_SYS_WAIT_H>
+#if HAVE_SYS_WAIT_H
 #include <sys/wait.h>
 #endif
 #endif
