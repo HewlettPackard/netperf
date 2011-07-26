@@ -2054,7 +2054,7 @@ Size (bytes)\n\
       get_tcp_info(send_socket,&tcp_mss);
     }
     
-    if (shutdown(send_socket,SHUT_WR) == SOCKET_ERROR) {
+    if (shutdown(send_socket,SHUT_WR) == SOCKET_ERROR && !times_up) {
       perror("netperf: cannot shutdown tcp stream socket");
       exit(1);
     }
@@ -5122,8 +5122,10 @@ recv_tcp_stream()
   receive_calls  = 0;
 
   while (!times_up && ((len = recv(s_data, recv_ring->buffer_ptr, recv_size, 0)) != 0)) {
-    if (len == SOCKET_ERROR )
-	{
+    if (len == SOCKET_ERROR ) {
+      if (times_up) {
+	break;
+      }
       netperf_response.content.serv_errno = errno;
       send_response();
       exit(1);
@@ -5157,7 +5159,7 @@ recv_tcp_stream()
   /* perform a shutdown to signal the sender that */
   /* we have received all the data sent. raj 4/93 */
 
-  if (shutdown(s_data,SHUT_WR) == SOCKET_ERROR) {
+  if (shutdown(s_data,SHUT_WR) == SOCKET_ERROR && !times_up) {
       netperf_response.content.serv_errno = errno;
       send_response();
       exit(1);
