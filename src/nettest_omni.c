@@ -1523,7 +1523,7 @@ parse_output_selection_file(char *selection_file) {
       j = 0;
     }
     else if (isprint(c)) {
-      name[namepos++] = c;
+      name[namepos++] = (char)c;
     }
     column++;
   }
