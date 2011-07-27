@@ -7,14 +7,6 @@ char   netcpu_ntperf_id[]="\
 
 #include <stdio.h>
 
-#if HAVE_INTTYPES_H
-# include <inttypes.h>
-#else
-# if HAVE_STDINT_H
-#  include <stdint.h>
-# endif
-#endif
-
 #include <process.h>
 #include <time.h>
 
