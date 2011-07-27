@@ -1,4 +1,5 @@
 #include <string.h>
+#define strdup _strdup
 
 void
 find_security_info(int *enabled, int *type, char **specific){
