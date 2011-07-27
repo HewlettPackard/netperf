@@ -3979,7 +3979,8 @@ HIST_search_bucket(int *unit, int num, int *last, int *current, double scale){
 /* get percentile from histogram */
 int
 HIST_get_percentile(HIST h, const double percentile){
-  int num = (int) h->total * percentile;
+  double win_kludge = percentile * (double) h->total;
+  int num = (int) win_kludge;
   int last = 0;
   int current = 0;
   int result;
