@@ -121,8 +121,6 @@ char    netlib_id[]="\
 
 #include <windows.h>
 
-#define strdup _strdup
-
 #define SIGALRM (14)
 #define sleep(x) Sleep((x)*1000)
 
