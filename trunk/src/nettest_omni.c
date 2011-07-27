@@ -5972,7 +5972,7 @@ recv_omni()
 
   int	timed_out = 0;
   int   pad_time = 0;
-  int   need_to_connect;
+  int   need_to_connect = 0;
   int   need_to_accept;
   int   connected;
   int   ret;
