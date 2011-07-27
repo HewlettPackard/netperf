@@ -626,7 +626,7 @@ setup_listens(char name[], char port[], int af) {
   }
 }
 
-int
+SOCKET
 set_fdset(struct listen_elt *list, fd_set *fdset) {
 
   struct listen_elt *temp;
@@ -1188,7 +1188,8 @@ void
 accept_connections() {
 
   fd_set read_fds, write_fds, except_fds;
-  int high_fd, num_ready, candidate;
+  SOCKET high_fd, candidate;
+  int num_ready;
 
   if (debug) {
     fprintf(where,
