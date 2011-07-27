@@ -10,6 +10,10 @@
 #include <string.h>
 #endif
 
+#ifdef WIN32
+#define strdup _strdup
+#endif
+
 char *
 find_egress_interface(struct sockaddr *source, struct sockaddr *dest) {
   return strdup("InterfaceUnavailable");

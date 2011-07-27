@@ -10,6 +10,10 @@
 #include <stdio.h>
 #endif
 
+#ifdef WIN32
+#define strdup _strdup
+#endif
+
 char *
 find_interface_slot(char *interface_name) {
   return strdup("Not Implemented");
