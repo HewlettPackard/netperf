@@ -560,7 +560,8 @@ extern char     *find_interface_slot(char *interface_name);
 extern void     find_interface_ids(char *interface_name, int *vendor, int *device, int *sub_vend, int *sub_dev);
 extern void     find_driver_info(char *ifname, char *driver, char *version, char *firmware, char *bus, int len);
 extern void     find_system_info(char **system_model, char **cpu_model, int *cpu_frequency);
-
+extern int      HIST_get_percentile();
+extern void     HIST_get_stats();
 #ifndef WIN32
 
 /* WIN32 requires that at least one of the file sets to select be
