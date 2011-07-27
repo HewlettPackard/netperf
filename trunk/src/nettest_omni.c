@@ -929,8 +929,8 @@ pick_next_port_number(struct addrinfo *local_res, struct addrinfo *remote_res) {
     myport_init = 1;
   }
     
- newport:
-    /* pick a new port number */
+  /* newport: */
+  /* pick a new port number */
   myport++;
     
   /* check to see if we are using the port number on which the
@@ -5658,7 +5658,8 @@ p       based.  having said that, we rely entirely on other code to
 	remote_bytes_received = (uint64_t)omni_result->bytes_received_hi << 32;
 	remote_bytes_received += omni_result->bytes_received_lo;
 	remote_receive_calls = omni_result->recv_calls;
-	remote_bytes_xferd = remote_bytes_received + remote_bytes_sent;
+	remote_bytes_xferd = (double) remote_bytes_received +
+	                              remote_bytes_sent;
 	if (omni_result->recv_calls > 0)
 	  remote_bytes_per_recv = (double) remote_bytes_received /
 	    (double) omni_result->recv_calls;
@@ -5700,7 +5701,7 @@ p       based.  having said that, we rely entirely on other code to
       /* when we are sending, in a no_control test, we have to
 	 ass-u-me that everything we sent was received, otherwise, we
 	 will report a transfer rate of zero. */
-      remote_bytes_xferd = bytes_sent;
+      remote_bytes_xferd = (double) bytes_sent;
     }
 
     /* so, what was the end result? */
@@ -5715,7 +5716,7 @@ p       based.  having said that, we rely entirely on other code to
     else
       bytes_per_recv = 0.0;
     
-    bytes_xferd  = bytes_sent + bytes_received;
+    bytes_xferd  = (double) bytes_sent + bytes_received;
 
     /* if the output format is 'x' we know the test was
        request/response.  if the libfmt is something else, it could be
@@ -5859,10 +5860,10 @@ p       based.  having said that, we rely entirely on other code to
   if ('x' == libfmt) {
     libfmt = 'm';
   }
-  local_send_thruput = calc_thruput(bytes_sent);
-  local_recv_thruput = calc_thruput(bytes_received);
-  remote_send_thruput = calc_thruput(remote_bytes_sent);
-  remote_recv_thruput = calc_thruput(remote_bytes_received);
+  local_send_thruput = calc_thruput((double)bytes_sent);
+  local_recv_thruput = calc_thruput((double)bytes_received);
+  remote_send_thruput = calc_thruput((double)remote_bytes_sent);
+  remote_recv_thruput = calc_thruput((double)remote_bytes_received);
 
   libfmt = tmpfmt;
 
@@ -6608,15 +6609,15 @@ recv_omni()
 
   /* send the results to the sender  */
   
-  omni_results->send_calls      = local_send_calls;
+  omni_results->send_calls      = (uint32_t) local_send_calls;
   omni_results->bytes_received_lo = bytes_received & 0x00000000FFFFFFFFULL;
   omni_results->bytes_received_hi = (bytes_received & 0xFFFFFFFF00000000ULL) >> 32;
   omni_results->recv_buf_size   = lsr_size_end;
-  omni_results->recv_calls      = local_receive_calls;
+  omni_results->recv_calls      = (uint32_t) local_receive_calls;
   omni_results->bytes_sent_lo   = bytes_sent & 0x00000000FFFFFFFFULL;
   omni_results->bytes_sent_hi   = (bytes_sent & 0xFFFFFFFF00000000ULL) >> 32;
   omni_results->send_buf_size   = lss_size_end;
-  omni_results->trans_received	= trans_completed;
+  omni_results->trans_received	= (uint32_t) trans_completed;
   omni_results->elapsed_time	= elapsed_time;
   omni_results->cpu_method      = cpu_method;
   omni_results->num_cpus        = lib_num_loc_cpus;
