@@ -129,7 +129,7 @@ char	netserver_id[]="\
 #include <windows.h>
 
 #define strdup _strdup
-#define sleep(x) SLEEP((x)*1000)
+#define sleep(x) Sleep((x)*1000)
 #endif /* WIN32 */
 
 /* unconditional system includes */
