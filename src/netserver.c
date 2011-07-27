@@ -128,7 +128,7 @@ char	netserver_id[]="\
 
 #include <windows.h>
 
-#include "missing/stdint.h"
+#include "missing\stdint.h"
 
 #define strdup _strdup
 #define sleep(x) Sleep((x)*1000)
