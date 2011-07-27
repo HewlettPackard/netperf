@@ -637,6 +637,7 @@ extern int lib_cpu_map[];
 #endif
 
 #define snprintf _snprintf
+#define strdup StrDup
 #endif
 
 /* Define a macro to align a buffer with an offset from a power of 2
