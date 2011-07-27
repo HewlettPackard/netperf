@@ -562,6 +562,7 @@ extern void     find_driver_info(char *ifname, char *driver, char *version, char
 extern void     find_system_info(char **system_model, char **cpu_model, int *cpu_frequency);
 extern int      HIST_get_percentile();
 extern void     HIST_get_stats();
+extern void     find_security_info(int *enabled, int *type, char **specific);
 #ifndef WIN32
 
 /* WIN32 requires that at least one of the file sets to select be
