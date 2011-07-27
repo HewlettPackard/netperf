@@ -1472,7 +1472,7 @@ parse_output_selection_file(char *selection_file) {
   FILE *selections;
   char name[81]; /* best be more than enough */
   int namepos;
-  char c;
+  int c;
   int j;
   int line,column;
 
@@ -5727,7 +5727,7 @@ p       based.  having said that, we rely entirely on other code to
        unreliable then we want what was actually received */
     if ('x' == libfmt)
       /* it was a request/response test */
-      thruput = calc_thruput(trans_completed);
+      thruput = calc_thruput((double)trans_completed);
     else if (NETPERF_RECV_ONLY(direction))
       thruput      = calc_thruput(bytes_xferd);
     else 
@@ -5765,7 +5765,7 @@ p       based.  having said that, we rely entirely on other code to
       }
       tmpfmt = libfmt;
       libfmt = 'x';
-      transaction_rate = calc_thruput(trans_completed);
+      transaction_rate = calc_thruput((double)trans_completed);
       libfmt = tmpfmt;
     }
 
