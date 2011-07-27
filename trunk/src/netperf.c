@@ -67,6 +67,7 @@ char	netperf_id[]="\
 #ifdef WIN32
 #include <winsock2.h>
 #include <windows.h>
+#include "missing\stdint.h"
 #endif /* WIN32 */
 
 #include "netsh.h"
