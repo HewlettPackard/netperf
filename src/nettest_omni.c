@@ -91,7 +91,6 @@ char nettest_omni_id[]="\
 #include <process.h>
 #define netperf_socklen_t socklen_t
 #include <winsock2.h>
-
 /* while it is unlikely that anyone running Windows 2000 or NT 4 is
    going to be trying to compile this, if they are they will want to
    define DONT_IPV6 in the sources file */
@@ -102,7 +101,7 @@ char nettest_omni_id[]="\
 
 #define sleep(x) Sleep((x)*1000)
 
-#define __func__ __FUNCTION__
+#include "missing/stdint.h"
 #endif /* WIN32 */
 
 /* We don't want to use bare constants in the shutdown() call.  In the
@@ -272,7 +271,7 @@ sigset_t signal_set;
     if (sigprocmask(SIG_BLOCK, (sigset_t *)NULL, &signal_set) != 0) { \
       fprintf(where, \
 	      "%s: unable to get sigmask errno %d\n", \
-	      __func__, \
+	      __FUNCTION__, \
 	      errno); \
       fflush(where); \
       exit(1); \
@@ -292,7 +291,7 @@ sigset_t signal_set;
 	if (sigsuspend(&signal_set) == EFAULT) { \
 	  fprintf(where, \
 		  "%s: fault with sigsuspend.\n", \
-                  __func__); \
+                  __FUNCTION__); \
 	  fflush(where); \
 	  exit(1); \
 	} \
@@ -7917,7 +7916,7 @@ scan_omni_args(int argc, char *argv[])
   if (debug) {
     int i;
     printf("%s called with the following argument vector\n",
-	   __func__);
+	   __FUNCTION__);
     for (i = 0; i< argc; i++) {
       printf("%s ",argv[i]);
     }
