@@ -786,8 +786,8 @@ set_multicast_ttl(SOCKET sock) {
     if (setsockopt(sock,
 		   IPPROTO_IP,
 		   IP_TTL,
-		   &multicast_ttl,
-		   sizeof(multicast_ttl)) < 0) {
+		   (const char *)&multicast_ttl,
+		   sizeof(multicast_ttl)) == SOCKET_ERROR) {
       fprintf(where,
 	      "setsockopt(IP_TTL) failed errno %d\n",
 	      errno);
@@ -796,7 +796,7 @@ set_multicast_ttl(SOCKET sock) {
   if (getsockopt(sock,
 		 IPPROTO_IP,
 		 IP_TTL,
-		 &multicast_ttl,
+		 (char *)&multicast_ttl,
 		 (netperf_socklen_t *)&optlen) < 0) {
     fprintf(where,
 	    "getsockopt(IP_TTL) failed errno %d\n",
@@ -821,14 +821,15 @@ join_multicast_addr(SOCKET sock, struct addrinfo *res) {
     if (setsockopt(sock,
 		   IPPROTO_IP,
 		   IP_ADD_MEMBERSHIP,
-		   &mreq,sizeof(mreq)) == 0) {
+		   (const char *)&mreq,
+		   sizeof(mreq)) == 0) {
 
       /* let others do the same */
       if (setsockopt(sock,
 		     SOL_SOCKET,
 		     SO_REUSEADDR,
-		     &one,
-		     sizeof(one)) < 0) {
+		     (const char *)&one,
+		     sizeof(one)) == SOCKET_ERROR) {
 	if (debug) {
 	  fprintf(where,
 		  "join_multicast_addr SO_REUSADDR failed errno %d\n",
@@ -842,8 +843,8 @@ join_multicast_addr(SOCKET sock, struct addrinfo *res) {
 	if (setsockopt(sock,
 		       IPPROTO_IP,
 		       IP_TTL,
-		       &multicast_ttl,
-		       sizeof(multicast_ttl)) < 0) {
+		       (const char *)&multicast_ttl,
+		       sizeof(multicast_ttl)) == SOCKET_ERROR) {
 	  fprintf(where,
 		  "setsockopt(IP_TTL) failed errno %d\n",
 		  errno);
@@ -852,8 +853,8 @@ join_multicast_addr(SOCKET sock, struct addrinfo *res) {
       if (getsockopt(sock,
 		     IPPROTO_IP,
 		     IP_TTL,
-		     &multicast_ttl,
-		     (netperf_socklen_t *)&optlen) < 0) {
+		     (char *)&multicast_ttl,
+		     (netperf_socklen_t *)&optlen) == SOCKET_ERROR) {
 	fprintf(where,
 		"getsockopt(IP_TTL) failed errno %d\n",
 		errno);
@@ -921,7 +922,7 @@ pick_next_port_number(struct addrinfo *local_res, struct addrinfo *remote_res) {
 	(rand() % (client_port_max - client_port_min));
     }
     else {
-      myport = client_port_min;
+      myport = (unsigned short)client_port_min;
     }
     /* there will be a ++ before the first call to bind, so subtract one */
     myport--;
@@ -948,7 +949,7 @@ pick_next_port_number(struct addrinfo *local_res, struct addrinfo *remote_res) {
      signed 16 bit quantities.  we make no effort here to support
      such stacks. raj 2008-01-08 */
   if (myport >= client_port_max) {
-    myport = client_port_min;
+    myport = (unsigned short)client_port_min;
   }
   
   /* set up the data socket */
@@ -3862,6 +3863,8 @@ print_omni_csv()
 
   char *hdr1 = NULL;
   char *val1 = NULL;
+  char *h1 = NULL;
+  char *v1 = NULL;
   char tmpval[1024];
 
   buflen = 0;
@@ -3912,8 +3915,8 @@ print_omni_csv()
 
   /* ostensibly, we now "know" that we have enough space in all our
      strings, and we have spaces where we want them etc */
-  char *h1 = hdr1;
-  char *v1 = val1;
+  h1 = hdr1;
+  v1 = val1;
   for (i = 0; i < NETPERF_MAX_BLOCKS; i++) {
     for (j = 0; 
 	 ((j < NETPERF_OUTPUT_MAX) && 
