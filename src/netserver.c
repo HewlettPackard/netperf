@@ -130,6 +130,7 @@ char	netserver_id[]="\
 
 #define strdup _strdup
 #define sleep(x) Sleep((x)*1000)
+#define netperf_socklen_t socklen_t
 #endif /* WIN32 */
 
 /* unconditional system includes */
