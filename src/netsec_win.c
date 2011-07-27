@@ -1,3 +1,4 @@
+#include <string.h>
 
 void
 find_security_info(int *enabled, int *type, char **specific){
