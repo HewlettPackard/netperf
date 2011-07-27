@@ -101,7 +101,7 @@ char nettest_omni_id[]="\
 
 #define sleep(x) Sleep((x)*1000)
 
-#include "missing/stdint.h"
+#include "missing\stdint.h"
 #endif /* WIN32 */
 
 /* We don't want to use bare constants in the shutdown() call.  In the
