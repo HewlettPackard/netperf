@@ -628,9 +628,10 @@ setup_listens(char name[], char port[], int af) {
 int
 set_fdset(struct listen_elt *list, fd_set *fdset) {
 
-  FD_ZERO(fdset);
   struct listen_elt *temp;
   int max = -1;
+
+  FD_ZERO(fdset);
 
   temp = list;
 
