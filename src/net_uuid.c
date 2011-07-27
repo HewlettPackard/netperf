@@ -27,7 +27,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#if defined(HAVE_INTTYPES_H)
 #include <inttypes.h>
+#endif
 
 /* set the following to the number of 100ns ticks of the actual
    resolution of your system's clock */
@@ -35,6 +38,7 @@
 
 #ifdef WIN32
 #include <windows.h>
+#include "missing\stdint.h"
 #else
 
 #if HAVE_SYS_TYPES_H
