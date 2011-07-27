@@ -122,7 +122,7 @@ char	netserver_id[]="\
 #include <time.h>
 #include <winsock2.h>
 
-#if HAVE_WS2TCPIP.h
+#if HAVE_WS2TCPIP_H
 #include <ws2tcpip.h>
 #endif
 
