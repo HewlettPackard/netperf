@@ -39,10 +39,15 @@
 #ifdef WIN32
 #include <windows.h>
 #include "missing\stdint.h"
+#define snprintf _snprintf
 #else
 
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#else
+# if HAVE_STDINT_H
+#  include <stdint.h>
+# endif
 #endif
 
 #if HAVE_SYS_TIME_H
@@ -182,7 +187,7 @@ static uint16_t true_random(void)
     inited = 1;
   }
 
-  return rand();
+  return (uint16_t)rand();
 }
 
 /* puid -- print a UUID */
