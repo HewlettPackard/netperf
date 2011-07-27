@@ -1204,7 +1204,11 @@ accept_connections() {
     FD_ZERO(&except_fds);
     high_fd = set_fdset(listen_list,&read_fds);
 
+#if !defined(WIN32)
     num_ready = select(high_fd + 1,
+#else
+    num_ready = select(1,
+#endif
 		       &read_fds,
 		       &write_fds,
 		       &except_fds,
