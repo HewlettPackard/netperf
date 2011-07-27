@@ -39,7 +39,7 @@ char	netsh_id[]="\
 #else
 #include <time.h>
 #include <winsock2.h>
-#include <missing\stdint.h>
+#include "missing\stdint.h"
 /* while it is unlikely that anyone running Windows 2000 or NT 4 is
    going to be trying to compile this, if they are they will want to
    define DONT_IPV6 in the sources file */
