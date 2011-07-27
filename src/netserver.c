@@ -629,7 +629,7 @@ int
 set_fdset(struct listen_elt *list, fd_set *fdset) {
 
   struct listen_elt *temp;
-  int max = -1;
+  SOCKET max = INVALID_SOCKET;
 
   FD_ZERO(fdset);
 
@@ -967,6 +967,8 @@ process_requests()
 void
 spawn_child() {
 
+#if defined(HAVE_FORK)
+
   if (debug) {
     fprintf(where,
 	    "%s: enter\n",
@@ -974,7 +976,6 @@ spawn_child() {
     fflush(where);
   }
 
-#if defined(HAVE_FORK)
 
   /* flush the usual suspects */
   fflush(stdin);
@@ -1033,6 +1034,14 @@ spawn_child() {
   PROCESS_INFORMATION pi;
   STARTUPINFO si;
   int i;
+
+  if (debug) {
+    fprintf(where,
+	    "%s: enter\n",
+	    __FUNCTION__);
+    fflush(where);
+  }
+
 	    
   /* create the cmdline array based on strlen(program) + 80 chars */
   cmdline_length = strlen(program) + 80;
