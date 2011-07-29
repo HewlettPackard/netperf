@@ -271,13 +271,6 @@ calc_cpu_util_internal(float elapsed_time)
   }
   for (i = 0; i < lib_num_loc_cpus; i++) {
 
-    /* it would appear that on some systems, in loopback, nice is
-     *very* effective, causing the looper process to stop dead in its
-     tracks. if this happens, we need to ensure that the calculation
-     does not go south. raj 6/95 and if we run completely out of idle,
-     the same thing could in theory happen to the USE_KSTAT path. raj
-     8/2000 */ 
-
     /* Find the difference in all CPU stat fields */
     diff.user = 
       tick_subtract(lib_start_count[i].user, lib_end_count[i].user);
@@ -302,7 +295,9 @@ calc_cpu_util_internal(float elapsed_time)
 
     /* calculate idle time as a percentage of all CPU states */
     if (total_ticks == 0) {
-      fprintf(stderr, "Total ticks 0 on CPU %d, charging nothing!\n", i);
+      if (debug) {
+	fprintf(where, "Total ticks 0 on CPU %d, charging nothing!\n", i);
+      }
       lib_local_per_cpu_util[i] = 100.0;
     } else {
       lib_local_per_cpu_util[i] = 100.0 * 

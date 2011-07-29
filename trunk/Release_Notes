@@ -1,3 +1,20 @@
+These are the Release Notes for post Revision 2.5.0 top-of-trunk netperf:
+
+*) If the time delta between two events is negative, do not bother
+   doing any math with it in the histogram/statistics code, just
+   increment the ridiculous count and move-on.
+
+*) Fixed a bug which caused local transport retransmissions to be
+   reported as -1 even though the getsockopt() call was
+   successful. (Linux)
+
+*) The src/nettest_omni.c and re-written src/netserver.c code are now
+   known to have compiled under Windows 7 x64 with the Microsoft
+   WDK. There remains a timing issue with confidence intervals which
+   is yet to be addressed, and may have been there for ages. Netserver
+   has been run as a non-spawning (-f) server, netperf has been run,
+   both have run "classic" and "omni" tests.
+
 These are the Release Notes for Revision 2.5.0 of netperf:
 
 *) Add a new -N option to netserver which will suppress all creation

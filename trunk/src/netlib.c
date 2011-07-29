@@ -3866,6 +3866,17 @@ void
 HIST_add(register HIST h, int time_delta){
    register float val;
    register int base = HIST_NUM_OF_BUCKET / 10;
+
+   /* check for < 0 added via VMware ESX patches. */
+
+   /* hoisted up to the top because we do not want to count any
+      ridiculous values in the actual statistics. right? raj
+      2011-07-28 */
+   if (time_delta < 0) {
+     h->ridiculous++;
+     return;
+   }
+
    if (!h->total)
       h->hmin = h->hmax = time_delta;
    h->total++;
@@ -3879,10 +3890,6 @@ HIST_add(register HIST h, int time_delta){
    h->hmin = ((h->hmin < time_delta) ? h->hmin : time_delta);
    h->hmax = ((h->hmax > time_delta) ? h->hmax : time_delta);
    val = (float) time_delta;
-   /* check for < 0 added via VMware ESX patches */
-   if (val < 0) {
-     h->ridiculous++;
-   }
    if(val < 10) h->unit_usec[(int)(val * base)]++;
    else {
      val /= 10;
