@@ -1007,55 +1007,55 @@ install_signal_catchers()
 void
 emulate_alarm( int seconds )
 {
-	DWORD ErrorCode;
-	DWORD HandlesClosedFlags = 0;
-
-	/* Wait on this event for parm seconds. */
-
-	ErrorCode = WaitForSingleObject(hAlarm, seconds*1000);
-	if (ErrorCode == WAIT_FAILED)
-	{
-		perror("WaitForSingleObject failed");
-		exit(1);
+  DWORD ErrorCode;
+  DWORD HandlesClosedFlags = 0;
+  
+  /* Wait on this event for parm seconds. */
+  
+  ErrorCode = WaitForSingleObject(hAlarm, seconds*1000);
+  if (ErrorCode == WAIT_FAILED)
+    {
+      perror("WaitForSingleObject failed");
+      exit(1);
+    }
+  
+  if (ErrorCode == WAIT_TIMEOUT)
+    {
+      /* WaitForSingleObject timed out; this means the timer
+	 wasn't canceled. */
+      
+      times_up = 1;
+      
+      /* Give the other threads time to notice that times_up has
+	 changed state before taking the harsh step of closing the
+	 sockets. */
+      
+      if (WaitForSingleObject(hAlarm, PAD_TIME/2*1000) ==
+	  WAIT_TIMEOUT) {
+	/* We have yet to find a good way to fully emulate
+	   the effects of signals and getting EINTR from
+	   system calls under winsock, so what we do here is
+	   close the socket out from under the other thread.
+	   It is rather kludgy, but should be sufficient to
+	   get this puppy shipped.  The concept can be
+	   attributed/blamed :) on Robin raj 1/96 */
+	
+	if (win_kludge_socket != INVALID_SOCKET) {
+	  HandlesClosedFlags |= 1;
+	  closesocket(win_kludge_socket);
 	}
-
-	if (ErrorCode == WAIT_TIMEOUT)
-	{
-	  /* WaitForSingleObject timed out; this means the timer
-	     wasn't canceled. */
-
-        times_up = 1;
-
-	/* Give the other threads time to notice that times_up has
-	   changed state before taking the harsh step of closing the
-	   sockets. */
-
-		if (WaitForSingleObject(hAlarm, PAD_TIME/2*1000) ==
-		    WAIT_TIMEOUT) {
-		  /* We have yet to find a good way to fully emulate
-		     the effects of signals and getting EINTR from
-		     system calls under winsock, so what we do here is
-		     close the socket out from under the other thread.
-		     It is rather kludgy, but should be sufficient to
-		     get this puppy shipped.  The concept can be
-		     attributed/blamed :) on Robin raj 1/96 */
-
-		  if (win_kludge_socket != INVALID_SOCKET) {
-		    HandlesClosedFlags |= 1;
-		    closesocket(win_kludge_socket);
-		  }
-		  if (win_kludge_socket2 != INVALID_SOCKET) {
-		    HandlesClosedFlags |= 2;
-		    closesocket(win_kludge_socket2);
-		  }
-		}
-		if(debug) {
-		  fprintf(where,
-			  "emulate_alarm - HandlesClosedFlags: %x\n",
-			  HandlesClosedFlags);
-		  fflush(where);
-		}
+	if (win_kludge_socket2 != INVALID_SOCKET) {
+	  HandlesClosedFlags |= 2;
+	  closesocket(win_kludge_socket2);
 	}
+      }
+      if(debug) {
+	fprintf(where,
+		"emulate_alarm - HandlesClosedFlags: %x\n",
+		HandlesClosedFlags);
+	fflush(where);
+      }
+    }
 }
 
 
@@ -1066,40 +1066,40 @@ start_timer(int time)
 {
 
 #ifdef WIN32
-	/*+*+SAF What if StartTimer is called twice without the first timer */
-	/*+*+SAF expiring? */
+  /*+*+SAF What if StartTimer is called twice without the first timer */
+  /*+*+SAF expiring? */
 
-	DWORD  thread_id ;
-	HANDLE tHandle;
-
-	if (hAlarm == (HANDLE) INVALID_HANDLE_VALUE)
+  DWORD  thread_id ;
+  HANDLE tHandle;
+  
+  if (hAlarm == (HANDLE) INVALID_HANDLE_VALUE)
+    {
+      /* Create the Alarm event object */
+      hAlarm = CreateEvent( 
+			   (LPSECURITY_ATTRIBUTES) NULL, /* no security */
+			   FALSE,	 /* auto reset event */
+			   FALSE,   /* init. state = reset */
+			   (void *)NULL);  /* unnamed event object */
+      if (hAlarm == (HANDLE) INVALID_HANDLE_VALUE)
 	{
-		/* Create the Alarm event object */
-		hAlarm = CreateEvent( 
-			(LPSECURITY_ATTRIBUTES) NULL,	  /* no security */
-			FALSE,	 /* auto reset event */
-			FALSE,   /* init. state = reset */
-			(void *)NULL);  /* unnamed event object */
-		if (hAlarm == (HANDLE) INVALID_HANDLE_VALUE)
-		{
-			perror("CreateEvent failure");
-			exit(1);
-		}
+	  perror("CreateEvent failure");
+	  exit(1);
 	}
-	else
-	{
-		ResetEvent(hAlarm);
-	}
-
-
-	tHandle = CreateThread(0,
-					       0,
-						   (LPTHREAD_START_ROUTINE)emulate_alarm,
-						   (LPVOID)(ULONG_PTR)time,
-						   0,		
-						   &thread_id ) ;
-	CloseHandle(tHandle);
-
+    }
+  else
+    {
+      ResetEvent(hAlarm);
+    }
+  
+  
+  tHandle = CreateThread(0,
+			 0,
+			 (LPTHREAD_START_ROUTINE)emulate_alarm,
+			 (LPVOID)(ULONG_PTR)time,
+			 0,		
+			 &thread_id ) ;
+  CloseHandle(tHandle);
+  
 #else /* not WIN32 */
 
 struct sigaction action;

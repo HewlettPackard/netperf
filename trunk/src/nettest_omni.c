@@ -4525,7 +4525,7 @@ get_transport_retrans(SOCKET socket, int protocol) {
 
   infosize = sizeof(struct tcp_info);
 
-  if ((ret = getsockopt(socket,protocol,TCP_INFO,&tcp_info,&infosize)) == 0) {
+  if ((ret = getsockopt(socket,protocol,TCP_INFO,&tcp_info,&infosize)) < 0) {
     if (debug) {
       fprintf(where,
 	      "get_tcp_retrans:getsockopt errno %d %s\n",
