@@ -5738,7 +5738,7 @@ p       based.  having said that, we rely entirely on other code to
 
 #ifdef WANT_INTERVALS
       /* if the test was paced, we need to subtract the time we were
-	 sitting paced from the time we use to calculate the averate
+	 sitting paced from the time we use to calculate the average
 	 rtt_latency. Of course, won't really know how long we were
 	 sitting unless we bracket the sit with timing calls, which
 	 will be additional overhead affecting CPU utilization.  but,
