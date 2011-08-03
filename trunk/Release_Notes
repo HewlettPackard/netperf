@@ -1,12 +1,18 @@
 These are the Release Notes for post Revision 2.5.0 top-of-trunk netperf:
 
+*) Make the "sum" field of the histogram structure a 64 bit int to
+   avoid having it wrap-around on tests where the sum of all the
+   measured latencies was larger than 31 bits. This was causing
+   statistics like stddev to go negative in some cases.
+
 *) If the time delta between two events is negative, do not bother
    doing any math with it in the histogram/statistics code, just
    increment the ridiculous count and move-on.
 
 *) Fixed a bug which caused local transport retransmissions to be
    reported as -1 even though the getsockopt() call was
-   successful. (Linux)
+   successful. (Linux).  Later included remote transport
+   retransmissions.
 
 *) The src/nettest_omni.c and re-written src/netserver.c code are now
    known to have compiled under Windows 7 x64 with the Microsoft

@@ -152,7 +152,8 @@ struct omni_results_struct {
 			       interface */ 
   int32_t    subvendor;
   int32_t    subdevice;
-  #define OMNI_RESULTS_CONF_CUTOFF 21
+  int32_t    transport_retrans;
+  #define OMNI_RESULTS_CONV_CUTOFF 22
   /* this is the 22dn 32-bit word and we have 248-(17*4) bytes
      available from here */
   char       ifname[16];    /* the probable egress interface */
@@ -161,7 +162,7 @@ struct omni_results_struct {
   char       firmware[32];  
   char       bus[32];
   char       ifslot[16];    /* slot id of the probable egress interface */
-  /* only 4 bytes left... */
+  /* 0 bytes left... */
 };
 
 #endif /* WANT_OMNI */

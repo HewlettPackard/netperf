@@ -58,7 +58,7 @@ struct histogram_struct {
   int ten_sec[HIST_NUM_OF_BUCKET];
   int ridiculous;
   int total;
-  int sum;
+  int64_t sum;
   double sumsquare;
   int hmin;
   int hmax;

@@ -5386,9 +5386,9 @@ p       based.  having said that, we rely entirely on other code to
 	    (++requests_this_cwnd == request_cwnd)) {
 	  request_cwnd += 1;
 	  requests_this_cwnd = 0;
-	  if (debug) {
+	  if (debug > 1) {
 	    fprintf(where,
-		    "incr req_cwnd to %d first_burst %d reqs_outstndng %di trans %"PRIu64"\n",
+		    "incr req_cwnd to %d first_burst %d reqs_outstanding %d trans %"PRIu64"\n",
 		    request_cwnd,
 		    first_burst_size,
 		    requests_outstanding,
@@ -5637,19 +5637,19 @@ p       based.  having said that, we rely entirely on other code to
 	 calculated service demand and all those interesting things. If
 	 it wasn't supposed to care, it will return obvious values. */
   
-      recv_response_n(OMNI_RESULTS_CONF_CUTOFF);
+      recv_response_n(OMNI_RESULTS_CONV_CUTOFF);
       if (!netperf_response.content.serv_errno) {
 	if (debug)
 	  fprintf(where,"remote results obtained\n");
 	remote_cpu_method = format_cpu_method(omni_result->cpu_method);
+	lib_num_rem_cpus = omni_result->num_cpus;
+	lib_remote_peak_cpu_util = (double)omni_result->peak_cpu_util;
+	lib_remote_peak_cpu_id = omni_result->peak_cpu_id;
 	/* why?  because some stacks want to be clever and autotune their
 	   socket buffer sizes, which means that if we accept the defaults,
 	   the size we get from getsockopt() at the beginning of a
 	   connection may not be what we would get at the end of the
 	   connection... */
-	lib_num_rem_cpus = omni_result->num_cpus;
-	lib_remote_peak_cpu_util = (double)omni_result->peak_cpu_util;
-	lib_remote_peak_cpu_id = omni_result->peak_cpu_id;
 	rsr_size_end = omni_result->recv_buf_size;
 	rss_size_end = omni_result->send_buf_size;
 	remote_bytes_sent = (uint64_t)omni_result->bytes_sent_hi << 32;
@@ -5685,6 +5685,7 @@ p       based.  having said that, we rely entirely on other code to
 	remote_interface_device = omni_result->device;
 	remote_interface_subvendor = omni_result->subvendor;
 	remote_interface_subdevice = omni_result->subdevice;
+	remote_transport_retrans = omni_result->transport_retrans;
       }
       else {
 	Set_errno(netperf_response.content.serv_errno);
@@ -6580,6 +6581,9 @@ recv_omni()
     elapsed_time -= pad_time;
   }
 
+  remote_transport_retrans = get_transport_retrans(data_socket,
+						   omni_request->protocol);
+
   if (connected) {
 #ifdef __linux
     /* so, "Linux" with autotuning likes to alter the socket buffer
@@ -6619,6 +6623,7 @@ recv_omni()
   omni_results->send_buf_size   = lss_size_end;
   omni_results->trans_received	= (uint32_t) trans_completed;
   omni_results->elapsed_time	= elapsed_time;
+  omni_results->transport_retrans = remote_transport_retrans;
   omni_results->cpu_method      = cpu_method;
   omni_results->num_cpus        = lib_num_loc_cpus;
   if (omni_request->flags & OMNI_MEASURE_CPU) {
@@ -6680,7 +6685,7 @@ recv_omni()
     fflush(where);
   }
   
-  send_response_n(OMNI_RESULTS_CONF_CUTOFF);
+  send_response_n(OMNI_RESULTS_CONV_CUTOFF);
 
 }
 

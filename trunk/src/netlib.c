@@ -3965,6 +3965,14 @@ HIST_report(HIST h){
    output_row(stdout, "TEN_SEC       ", h->ten_sec);
    fprintf(where,">100_SECS: %d\n", h->ridiculous);
    fprintf(where,"HIST_TOTAL:      %d\n", h->total);
+   if (debug) {
+     fprintf(where,
+	     "sum %"PRIi64", sumsquare %f, limit %d count %d\n",
+	     h->sum,
+	     h->sumsquare,
+	     h->limit,
+	     h->count);
+   }
 }
 
 /* search buckets for each unit */
