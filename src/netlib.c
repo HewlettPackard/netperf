@@ -867,6 +867,22 @@ gettimeofday( struct timeval *tv , struct timezone *not_used )
 }
 #endif /* WIN32 */
 
+
+ /* this routine will disable any running timer */
+void
+stop_timer()
+{
+#ifndef WIN32
+  alarm(0);
+#else
+  /* at some point we may need some win32 equivalent */
+  if (hAlarm != (HANDLE) INVALID_HANDLE_VALUE) {
+    SetEvent(hAlarm);
+  }
+#endif /* WIN32 */
+
+}
+
      
 
 /************************************************************************/
@@ -1146,21 +1162,6 @@ if (debug) {
 
 } 
 
-
- /* this routine will disable any running timer */
-void
-stop_timer()
-{
-#ifndef WIN32
-  alarm(0);
-#else
-  /* at some point we may need some win32 equivalent */
-  if (hAlarm != (HANDLE) INVALID_HANDLE_VALUE) {
-    SetEvent(hAlarm);
-  }
-#endif /* WIN32 */
-
-}
 
 
 #ifdef WANT_INTERVALS

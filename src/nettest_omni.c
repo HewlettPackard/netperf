@@ -321,7 +321,7 @@ sigset_t signal_set;
 	} \
         \
         HIST_timestamp(&intvl_wait_start); \
-        do {
+        do { \
           HIST_timestamp(intvl_two_ptr); } \
         while(delta_micro(intvl_one_ptr,intvl_two_ptr) < interval_usecs); \
         interval_wait_microseconds += \
