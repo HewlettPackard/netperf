@@ -35,10 +35,6 @@
 #ifndef _HIST_INCLUDED
 #define _HIST_INCLUDED
 
-#ifdef IRIX
-#include <sys/time.h>
-#endif /* IRIX */
-
 #if defined(HAVE_GET_HRT)
 #include "hrt.h"
 #endif
