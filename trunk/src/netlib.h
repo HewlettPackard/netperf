@@ -18,7 +18,7 @@
 
 #define PAD_TIME 4
 /* library routine specifc defines                                      */
-#define         MAXSPECDATA     62      /* how many ints worth of data  */
+#define         MAXSPECDATA     162     /* how many ints worth of data  */
                                         /* can tests send...            */
 #define         MAXTIMES        4       /* how many times may we loop   */
                                         /* to calibrate                 */
