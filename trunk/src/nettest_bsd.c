@@ -1455,6 +1455,8 @@ create_data_socket(struct addrinfo *res)
 		 &sock_opt_len);	       
     }
   }
+#else
+  local_socket_prio = -3;
 #endif
 
   return(temp_socket);
