@@ -164,14 +164,18 @@ extern double interval_pct;
 
 extern int cpu_binding_requested;
 
-/* stuff to controll the bufferspace "width" */
+/* stuff to control the bufferspace "width" */
 extern int	send_width;
 extern int      recv_width;
+
+/* control the socket priority */
+extern int local_socket_prio;
+extern int remote_socket_prio;
 
 /* address family */
 extern int	af;
 
-/* different options for other things					*/
+/* different options for other things */
 extern int
   local_cpu_usage,
   remote_cpu_usage;

@@ -1434,6 +1434,22 @@ create_data_socket(struct addrinfo *res)
   }
 #endif
 
+#if defined(HAS_SO_PRIORITY)
+  if (local_socket_prio > 0) {
+    if (setsockopt(temp_socket,
+                  SOL_SOCKET,
+                  SO_PRIORITY,
+                  &local_socket_prio,
+                  sizeof(int)) == SOCKET_ERROR) {
+      fprintf(where,
+             "netperf: create_data_socket: so_priority: errno %d\n",
+             errno);
+      fflush(where);
+      local_socket_prio = -2;
+    }
+  }
+#endif
+
   return(temp_socket);
 
 }

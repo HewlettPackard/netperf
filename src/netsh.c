@@ -102,7 +102,7 @@ double atof(const char *);
    getopt to parse the command line, we will tell getopt that they do
    not take parms, and then look for them ourselves */
 
-#define GLOBAL_CMD_LINE_ARGS "A:a:b:B:CcdDf:F:H:hi:I:jk:K:l:L:n:NO:o:P:p:rSs:t:T:v:VW:w:46"
+#define GLOBAL_CMD_LINE_ARGS "A:a:b:B:CcdDf:F:H:hi:I:jk:K:l:L:n:NO:o:P:p:rSs:t:T:v:VW:w:y:46"
 
 /************************************************************************/
 /*									*/
@@ -235,6 +235,10 @@ int     recv_width;
 /* address family */
 int	af = AF_INET;
 
+/* socket priority via SO_PRIORITY */
+int local_socket_prio = -1;
+int remote_socket_prio = -1;
+
 /* did someone request processor affinity? */
 int cpu_binding_requested = 0;
 
@@ -298,7 +302,8 @@ Global options:\n\
     -v verbosity      Specify the verbosity level\n\
     -W send,recv      Set the number of send,recv buffers\n\
     -v level          Set the verbosity level (default 1, min 0)\n\
-    -V                Display the netperf version and exit\n";
+    -V                Display the netperf version and exit\n\
+    -y local,remote   Set the socket priority\n";
 
 char netperf_usage2[] = "\n\
 For those options taking two parms, at least one must be specified;\n\
@@ -938,6 +943,19 @@ scan_cmd_line(int argc, char *argv[])
       if (arg2[0])
 	recv_width = convert(arg2);
       break;
+    case 'y':
+#if defined(SO_PRIORITY)
+      break_args(optarg, arg1, arg2);
+      if (arg1[0])
+	local_socket_prio = convert(arg1);
+      if (arg2[0])
+	remote_socket_prio = convert(arg2);
+#else
+      fprintf(where,"Setting SO_PRIORITY is not supported on this platform\n");
+      fflush(where);
+      exit(-1);
+#endif
+      break;
     case 'l':
       /* determine test end conditions */
       /* assume a timed test */
@@ -1170,6 +1188,7 @@ scan_cmd_line(int argc, char *argv[])
      should set certain "remote" settings to reflect this, regardless
      of what else may have been set on the command line */
   if (no_control) {
+    remote_socket_prio = -1;
     remote_recv_align = -1;
     remote_send_align = -1;
     remote_send_offset = -1;
@@ -1321,6 +1340,8 @@ dump_globals()
   printf("Local recv alignment: %d\n",local_recv_align);
   printf("Remote send alignment: %d\n",remote_send_align);
   printf("Remote recv alignment: %d\n",remote_recv_align);
+  printf("Local socket priority: %d\n", local_socket_prio);
+  printf("Remote socket priority: %d\n", remote_socket_prio);
   printf("Report local CPU %d\n",local_cpu_usage);
   printf("Report remote CPU %d\n",remote_cpu_usage);
   printf("Verbosity: %d\n",verbosity);

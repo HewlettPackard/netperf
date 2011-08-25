@@ -82,6 +82,7 @@ struct  omni_request_struct {
   uint32_t   interval_usecs;/* how long each interval should be */
   uint32_t   netperf_ip[4]; /* when netserver needs netperf's data IP */
   uint32_t   netserver_ip[4]; /* when netperf tells netserver his IP */
+  int32_t    socket_prio; /* what netserver should use for socket prio */
 };
 
 struct  omni_response_struct {
@@ -111,9 +112,9 @@ struct  omni_response_struct {
      full */
   uint32_t   cpu_frequency;  /* this should be megahertz */
   uint32_t   security_info;
-  /* there are 16 ints above here, and we have 248 - (16*4) or 184 bytes
-     remaining */
-#define OMNI_RESPONSE_CONV_CUTOFF 16
+  int32_t    socket_prio;
+  /* there are 17 ints above here */
+#define OMNI_RESPONSE_CONV_CUTOFF 17
   char       system_model[33];
   char       cpu_model[80];  /* seems like an awful lot doesn't
 				it. some clever person at Intel
@@ -121,7 +122,6 @@ struct  omni_response_struct {
 				name that long - and still didn't
 				include the 9NNN model number! */
   char       security_string[16];
-  /* 48 bytes left */
   
 };
 
@@ -162,7 +162,7 @@ struct omni_results_struct {
   char       firmware[32];  
   char       bus[32];
   char       ifslot[16];    /* slot id of the probable egress interface */
-  /* 0 bytes left... */
+
 };
 
 #endif /* WANT_OMNI */
