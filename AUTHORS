@@ -266,3 +266,6 @@ Remove duplicate htonl in recv_udp_stream().
 
 Masanari Iida
 Cleanups for the manual.
+
+Amir Vidai
+Patch from which changes to set SO_PRIORITY were based.

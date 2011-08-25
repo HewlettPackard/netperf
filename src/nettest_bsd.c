@@ -1161,9 +1161,9 @@ create_data_socket(struct addrinfo *res)
 {
 
   SOCKET temp_socket;
-  int one;
-  int    on  = 1;
-  
+  int one = 1;
+  int on  = 1;
+  netperf_socklen_t sock_opt_len;
 
   /*set up the data socket                        */
   temp_socket = socket(res->ai_family,
@@ -1319,7 +1319,6 @@ create_data_socket(struct addrinfo *res)
     
   if (loc_tcpcork > 0) {
     /* the user wishes for us to set TCP_CORK on the socket */
-    int one = 1;
     if (setsockopt(temp_socket,
 		   getprotobyname("tcp")->p_proto,
 		   TCP_CORK,
@@ -1434,7 +1433,7 @@ create_data_socket(struct addrinfo *res)
   }
 #endif
 
-#if defined(HAS_SO_PRIORITY)
+#if defined(SO_PRIORITY)
   if (local_socket_prio > 0) {
     if (setsockopt(temp_socket,
                   SOL_SOCKET,
@@ -1446,6 +1445,14 @@ create_data_socket(struct addrinfo *res)
              errno);
       fflush(where);
       local_socket_prio = -2;
+    }
+    else {
+      sock_opt_len = 4;
+      getsockopt(temp_socket,
+		 SOL_SOCKET,
+		 SO_PRIORITY,
+		 &local_socket_prio,
+		 &sock_opt_len);	       
     }
   }
 #endif
