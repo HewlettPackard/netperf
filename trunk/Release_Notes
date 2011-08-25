@@ -1,5 +1,10 @@
 These are the Release Notes for post Revision 2.5.0 top-of-trunk netperf:
 
+*) The control message size has been increased from 256 bytes to 512
+    bytes. THIS WILL BREAK COMPATABILITY WITH PREVIOUS VERSIONS OF
+    NETPERF. However, we need more room on the pinhead on which the
+    angels dance.
+
 *) Make the "sum" field of the histogram structure a 64 bit int to
    avoid having it wrap-around on tests where the sum of all the
    measured latencies was larger than 31 bits. This was causing
