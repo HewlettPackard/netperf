@@ -944,17 +944,20 @@ scan_cmd_line(int argc, char *argv[])
 	recv_width = convert(arg2);
       break;
     case 'y':
-#if defined(SO_PRIORITY)
       break_args(optarg, arg1, arg2);
+#if defined(SO_PRIORITY)
       if (arg1[0])
 	local_socket_prio = convert(arg1);
+#else
+      if (debug) {
+	fprintf(where,
+		"Setting SO_PRIORITY is not supported on this platform, request to set SO_PRIORITY locally ignored.\n");
+	fflush(where);
+      }
+      local_socket_prio = -3;
+#endif
       if (arg2[0])
 	remote_socket_prio = convert(arg2);
-#else
-      fprintf(where,"Setting SO_PRIORITY is not supported on this platform\n");
-      fflush(where);
-      exit(-1);
-#endif
       break;
     case 'l':
       /* determine test end conditions */
