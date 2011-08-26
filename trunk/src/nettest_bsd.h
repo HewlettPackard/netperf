@@ -83,6 +83,7 @@ struct  omni_request_struct {
   uint32_t   netperf_ip[4]; /* when netserver needs netperf's data IP */
   uint32_t   netserver_ip[4]; /* when netperf tells netserver his IP */
   int32_t    socket_prio; /* what netserver should use for socket prio */
+  int32_t    socket_tos;  /* what netserver should use for socket tos */
 };
 
 struct  omni_response_struct {
@@ -113,8 +114,10 @@ struct  omni_response_struct {
   uint32_t   cpu_frequency;  /* this should be megahertz */
   uint32_t   security_info;
   int32_t    socket_prio;
-  /* there are 17 ints above here */
-#define OMNI_RESPONSE_CONV_CUTOFF 17
+  int32_t    socket_tos;
+  /* there are 18 ints above here, add another and you need to adjust
+     the define below */
+#define OMNI_RESPONSE_CONV_CUTOFF 18
   char       system_model[33];
   char       cpu_model[80];  /* seems like an awful lot doesn't
 				it. some clever person at Intel

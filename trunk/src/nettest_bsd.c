@@ -1434,7 +1434,7 @@ create_data_socket(struct addrinfo *res)
 #endif
 
 #if defined(SO_PRIORITY)
-  if (local_socket_prio > 0) {
+  if (local_socket_prio >= 0) {
     if (setsockopt(temp_socket,
                   SOL_SOCKET,
                   SO_PRIORITY,
@@ -1459,6 +1459,34 @@ create_data_socket(struct addrinfo *res)
   local_socket_prio = -3;
 #endif
 
+#if defined(IP_TOS)
+  if (local_socket_tos >= 0) {
+    unsigned char my_tos = (unsigned char) (local_socket_tos & 0xFF);
+    if (setsockopt(temp_socket,
+		   (res->ai_family == AF_INET6) ? IPPROTO_IPV6 : IPPROTO_IP,
+		   IP_TOS,
+		   &my_tos,
+		   sizeof(my_tos)) == SOCKET_ERROR) {
+      fprintf(where,
+             "netperf: create_data_socket: ip_tos: errno %d\n",
+             errno);
+      fflush(where);
+      local_socket_tos = -2;
+    }
+    else {
+      sock_opt_len = 1;
+      /* I wonder if some error checking might be indicated */
+      getsockopt(temp_socket,
+		 (res->ai_family == AF_INET6) ? IPPROTO_IPV6 : IPPROTO_IP,
+		 IP_TOS,
+		 &my_tos,
+		 &sock_opt_len);	       
+      local_socket_tos = my_tos;
+    }
+  }
+#else
+  local_socket_tos = -3;
+#endif
   return(temp_socket);
 
 }

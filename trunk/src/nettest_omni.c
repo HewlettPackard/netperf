@@ -673,6 +673,8 @@ enum netperf_output_name {
   STDDEV_LATENCY,
   LOCAL_SOCKET_PRIO,
   REMOTE_SOCKET_PRIO,
+  LOCAL_SOCKET_TOS,
+  REMOTE_SOCKET_TOS,
   COMMAND_LINE,    /* COMMAND_LINE should always be "last" */
   OUTPUT_END,
   NETPERF_OUTPUT_MAX
@@ -1279,6 +1281,10 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "LOCAL_SOCKET_PRIO";
   case REMOTE_SOCKET_PRIO:
     return "REMOTE_SOCKET_PRIO";
+  case LOCAL_SOCKET_TOS:
+    return "LOCAL_SOCKET_TOS";
+  case REMOTE_SOCKET_TOS:
+    return "REMOTE_SOCKET_TOS";
   case OUTPUT_END:
     return "OUTPUT_END";
   default:
@@ -3755,6 +3761,26 @@ print_omni_init_list() {
   netperf_output_source[i].max_line_len =  NETPERF_LINE_MAX(i);
   netperf_output_source[i].tot_line_len =  NETPERF_LINE_TOT(i);
 
+  i = LOCAL_SOCKET_TOS;
+  netperf_output_source[i].output_name = LOCAL_SOCKET_TOS;
+  netperf_output_source[i].line[0] = "Local";
+  netperf_output_source[i].line[1] = "Socket";
+  netperf_output_source[i].line[2] = "TOS";
+  netperf_output_source[i].format = "0x%.2x";
+  netperf_output_source[i].display_value = &local_socket_tos;
+  netperf_output_source[i].max_line_len = NETPERF_LINE_MAX(i);
+  netperf_output_source[i].tot_line_len = NETPERF_LINE_TOT(i);
+
+  i = REMOTE_SOCKET_TOS;
+  netperf_output_source[i].output_name = REMOTE_SOCKET_TOS;
+  netperf_output_source[i].line[0] = "Remote";
+  netperf_output_source[i].line[1] = "Socket";
+  netperf_output_source[i].line[2] = "TOS";
+  netperf_output_source[i].format = "0x%.2x";
+  netperf_output_source[i].display_value = &remote_socket_tos;
+  netperf_output_source[i].max_line_len =  NETPERF_LINE_MAX(i);
+  netperf_output_source[i].tot_line_len =  NETPERF_LINE_TOT(i);
+
   netperf_output_source[OUTPUT_END].output_name = OUTPUT_END;
   netperf_output_source[OUTPUT_END].line[0] = "This";
   netperf_output_source[OUTPUT_END].line[1] = "Is";
@@ -4945,6 +4971,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
       omni_request->recv_width             = recv_width;
       omni_request->response_size	   = rsp_size;
       omni_request->socket_prio            = remote_socket_prio;
+      omni_request->socket_tos             = remote_socket_tos;
 
       /* we have no else clauses here because we previously set flags
 	 to zero above raj 20090803 */
@@ -5048,6 +5075,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	remote_send_width   = omni_response->send_width;
 	remote_recv_width   = omni_response->recv_width;
 	remote_socket_prio  = omni_response->socket_prio;
+	remote_socket_tos   = omni_response->socket_tos;
 
 	/* make sure that port numbers are in network order because
 	   recv_response will have put everything into host order */
@@ -6059,6 +6087,7 @@ recv_omni()
   routing_allowed = (omni_request->flags) & OMNI_ROUTING_ALLOWED;
   want_keepalive  = (omni_request->flags) & OMNI_WANT_KEEPALIVE;
   local_socket_prio = omni_request->socket_prio;
+  local_socket_tos  = omni_request->socket_tos;
 
 #ifdef WANT_INTERVALS
   interval_usecs = omni_request->interval_usecs;
@@ -6124,6 +6153,7 @@ recv_omni()
   omni_response->send_size = omni_request->send_size;
   omni_response->send_width = omni_request->send_width;
   omni_response->socket_prio = local_socket_prio;
+  omni_response->socket_tos = local_socket_tos;
 
   if (omni_request->direction & NETPERF_XMIT) {
 #ifdef fo

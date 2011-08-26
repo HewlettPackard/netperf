@@ -102,7 +102,7 @@ double atof(const char *);
    getopt to parse the command line, we will tell getopt that they do
    not take parms, and then look for them ourselves */
 
-#define GLOBAL_CMD_LINE_ARGS "A:a:b:B:CcdDf:F:H:hi:I:jk:K:l:L:n:NO:o:P:p:rSs:t:T:v:VW:w:y:46"
+#define GLOBAL_CMD_LINE_ARGS "A:a:b:B:CcdDf:F:H:hi:I:jk:K:l:L:n:NO:o:P:p:rSs:t:T:v:VW:w:y:Y:46"
 
 /************************************************************************/
 /*									*/
@@ -239,6 +239,10 @@ int	af = AF_INET;
 int local_socket_prio = -1;
 int remote_socket_prio = -1;
 
+/* and IP_TOS */
+int local_socket_tos = -1;
+int remote_socket_tos = -1;
+
 /* did someone request processor affinity? */
 int cpu_binding_requested = 0;
 
@@ -303,7 +307,8 @@ Global options:\n\
     -W send,recv      Set the number of send,recv buffers\n\
     -v level          Set the verbosity level (default 1, min 0)\n\
     -V                Display the netperf version and exit\n\
-    -y local,remote   Set the socket priority\n";
+    -y local,remote   Set the socket priority\n\
+    -Y local,remote   Set the IP_TOS. Use hexadecimal.\n";
 
 char netperf_usage2[] = "\n\
 For those options taking two parms, at least one must be specified;\n\
@@ -959,6 +964,22 @@ scan_cmd_line(int argc, char *argv[])
       if (arg2[0])
 	remote_socket_prio = convert(arg2);
       break;
+    case 'Y':
+      break_args(optarg, arg1, arg2);
+#if defined(IP_TOS)
+      if (arg1[0])
+	local_socket_tos = strtol(arg1,NULL,0);
+#else
+      if (debug) {
+	fprintf(where,
+		"Setting IP_TOS is not supported on this platform, request to set IP_TOS locally ignored.\n");
+	fflush(where);
+      }
+      local_socket_tos = -1;
+#endif
+      if (arg2[0])
+	remote_socket_tos = strtol(arg2,NULL,0);
+      break;
     case 'l':
       /* determine test end conditions */
       /* assume a timed test */
@@ -1192,6 +1213,7 @@ scan_cmd_line(int argc, char *argv[])
      of what else may have been set on the command line */
   if (no_control) {
     remote_socket_prio = -1;
+    remote_socket_tos = -1;
     remote_recv_align = -1;
     remote_send_align = -1;
     remote_send_offset = -1;
@@ -1345,6 +1367,8 @@ dump_globals()
   printf("Remote recv alignment: %d\n",remote_recv_align);
   printf("Local socket priority: %d\n", local_socket_prio);
   printf("Remote socket priority: %d\n", remote_socket_prio);
+  printf("Local socket TOS: %x\n", local_socket_tos);
+  printf("Remote socket TOS: %x\n", remote_socket_tos);
   printf("Report local CPU %d\n",local_cpu_usage);
   printf("Report remote CPU %d\n",remote_cpu_usage);
   printf("Verbosity: %d\n",verbosity);
