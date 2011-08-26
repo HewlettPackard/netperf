@@ -172,6 +172,9 @@ extern int      recv_width;
 extern int local_socket_prio;
 extern int remote_socket_prio;
 
+extern int local_socket_tos;
+extern int remote_socket_tos;
+
 /* address family */
 extern int	af;
 

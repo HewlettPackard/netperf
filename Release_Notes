@@ -1,9 +1,18 @@
 These are the Release Notes for post Revision 2.5.0 top-of-trunk netperf:
 
+*) The global -Y option can be used to set IP_TOS on those platforms
+   which support it.  Since this is specific to IP (v4 or v6) it may
+   move to a test-specific otion in the future.  It is presently
+   global for foolish consistency with the -y option to set
+   SO_PRIORITY.
+
+*) The global -y option can be used to set SO_PRIORITY on those
+   platforms which support it.  Based on patches from Amir Vidai.
+
 *) The control message size has been increased from 256 bytes to 512
-    bytes. THIS WILL BREAK COMPATABILITY WITH PREVIOUS VERSIONS OF
-    NETPERF. However, we need more room on the pinhead on which the
-    angels dance.
+   bytes. THIS WILL BREAK COMPATABILITY WITH PREVIOUS VERSIONS OF
+   NETPERF. However, we need more room on the pinhead on which the
+   angels dance.
 
 *) Make the "sum" field of the histogram structure a 64 bit int to
    avoid having it wrap-around on tests where the sum of all the
