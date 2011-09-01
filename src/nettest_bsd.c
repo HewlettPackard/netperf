@@ -12911,11 +12911,12 @@ recv_tcp_cc()
     fflush(where);
   }
   
-  tcp_cc_results->bytes_received	= (trans_received * 
-					   (tcp_cc_request->request_size + 
-					    tcp_cc_request->response_size));
-  tcp_cc_results->trans_received	= trans_received;
-  tcp_cc_results->elapsed_time	= elapsed_time;
+  tcp_cc_results->bytes_received = (trans_received * 
+				    (tcp_cc_request->request_size + 
+				     tcp_cc_request->response_size));
+  tcp_cc_results->trans_received = trans_received;
+  tcp_cc_results->elapsed_time	 = elapsed_time;
+  tcp_cc_results->num_cpus       = lib_num_loc_cpus;
   if (tcp_cc_request->measure_cpu) {
     tcp_cc_results->cpu_util	= calc_cpu_util(elapsed_time);
   }
