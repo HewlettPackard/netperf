@@ -92,12 +92,14 @@ find_egress_interface(struct sockaddr *source, struct sockaddr *dest) {
       memcpy(RTA_DATA(rtap), &(in6->sin6_addr), sizeof(in6->sin6_addr));
     }
     else {
+      close(s);
       return strdup("UnknownAddressFamily");
     }
   }
   else {
     /* there must always be a destination */
     printf("No destination specified.\n");
+    close(s);
     return strdup("NoDestination");
   }
 
@@ -126,6 +128,7 @@ find_egress_interface(struct sockaddr *source, struct sockaddr *dest) {
       memcpy(RTA_DATA(rtap), &(in6->sin6_addr), sizeof(in6->sin6_addr));
     }
     else {
+      close(s);
       return strdup("UnknownAddressFamily");
     }
      
@@ -154,6 +157,7 @@ find_egress_interface(struct sockaddr *source, struct sockaddr *dest) {
   ret = sendmsg(s, &msg, 0);
 
   if (ret < 0) {
+    close(s);
     return strdup("SendmsgFailure");
   }
 
@@ -161,6 +165,7 @@ find_egress_interface(struct sockaddr *source, struct sockaddr *dest) {
   ret = recv(s, reply, sizeof(reply), 0);
   
   if (ret < 0) {
+    close(s);
     return strdup("RecvmsgFailure");
   }
 
@@ -194,7 +199,7 @@ find_egress_interface(struct sockaddr *source, struct sockaddr *dest) {
 	  interface_index = *((int *) RTA_DATA(rtap));
 	}
 	else {
-	  printf("Found a second interface index, which was not expected!\n");
+	  close(s);
 	  return strdup("MultipleInterfacesFound");
 	}
       }
@@ -207,9 +212,11 @@ find_egress_interface(struct sockaddr *source, struct sockaddr *dest) {
   }
   else {
     if (NULL == if_indextoname(interface_index,interface_name)) {
+      close(s);
       return strdup("IfIndexToNameFailure");
     }
     else {
+      close(s);
       return strdup(interface_name);
     }
   }
