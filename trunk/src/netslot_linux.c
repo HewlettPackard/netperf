@@ -122,10 +122,14 @@ get_val_from_file(char *valsource) {
   if (valfile == NULL) return -1;
 
   ret = fread(buffer,1,sizeof(buffer), valfile);
-  if (ret != sizeof(buffer)) return -1;
+  if (ret != sizeof(buffer)) {
+    fclose(valfile);
+    return -1;
+  }
 
   ret = (int)strtol(buffer,NULL,0);
 
+  fclose(valfile);
   return ret;
   
 }
