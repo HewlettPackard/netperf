@@ -59,6 +59,7 @@ find_slot(const char *fpath, const struct stat *sb,
 	fclose(address_file);
 	return 1;
     }
+    fclose(address_file);
   }
   return 0;
 }
