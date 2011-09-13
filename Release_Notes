@@ -1,5 +1,8 @@
 These are the Release Notes for post Revision 2.5.0 top-of-trunk netperf:
 
+*) Stop leaking file descriptors when looking-up probable egress
+   interface names and I/O slot numbers.
+
 *) The global -Y option can be used to set IP_TOS on those platforms
    which support it.  Since this is specific to IP (v4 or v6) it may
    move to a test-specific otion in the future.  It is presently

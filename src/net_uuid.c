@@ -155,6 +155,7 @@ static void get_random_info(char seed[16])
 
   if (NULL != fp) {
     fread(seed,sizeof(seed),1,fp);
+    fclose(fp);
     return;
   }
 

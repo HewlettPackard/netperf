@@ -81,6 +81,7 @@ find_driver_info(char *ifname, char *driver, char *version, char *firmware, char
     version[len-1] = 0;
     firmware[len-1] = 0;
     bus[len-1] = 0;
+    close(s);
     return;
   }
   strncpy(driver,drvinfo.driver,len);
@@ -91,7 +92,9 @@ find_driver_info(char *ifname, char *driver, char *version, char *firmware, char
   version[len-1] = 0;
   firmware[len-1] = 0;
   bus[len-1] = 0;
-  
+
+  close(s);
+
   return;
 }
 
@@ -108,7 +111,7 @@ main(int argc, char *argv[]) {
     fprintf(stderr,"%s <interface>\n",argv[0]);
     return -1;
   }
-
+p
   find_driver_info(argv[1],driver, version, firmware, businfo, 32);
 
   printf("For %s driver %s version %s firmware %s businfo %s\n",
