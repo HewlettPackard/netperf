@@ -1401,7 +1401,8 @@ create_data_socket(struct addrinfo *res)
 	   res->ai_addrlen) < 0) {
     if (debug) {
       fprintf(where,
-	      "netperf: create_data_socket: data socket bind failed errno %d\n",
+	      "netperf: create_data_socket: data socket bind failed: %s (errno %d)\n",
+	      strerror(errno),
 	      errno);
       fprintf(where," port: %d\n",get_port_number(res));
       fflush(where);
