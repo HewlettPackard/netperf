@@ -378,6 +378,8 @@ int human = 0;
 int was_legacy = 0;
 int legacy = 0;
 int implicit_direction = 0;
+int implicit_socket = 0;
+int explicit_data_address = 0;
 int csv = 0;
 int keyword = 0;
 uint64_t      trans_completed = 0;
@@ -5048,7 +5050,16 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 					  nf_to_af(omni_request->ipfamily),
 					  omni_request->netserver_ip,
 					  &(omni_request->data_port));
-      
+      /* if the user didn't explicitly set the remote data address we
+	 don't want to pass along the one we picked implicitly, or a
+	 netserver sitting behind a (BLETCH) NAT will be asked to try
+	 to bind to the "public" IP. */
+      if (!explicit_data_address) {
+	omni_request->netserver_ip[0] = 0;
+	omni_request->netserver_ip[1] = 0;
+	omni_request->netserver_ip[2] = 0;
+	omni_request->netserver_ip[3] = 0;
+      }
       if (debug > 1) {
 	fprintf(where,"netperf: send_omni: requesting OMNI test\n");
       }
@@ -7863,6 +7874,7 @@ set_omni_defaults_by_legacy_testname() {
   legacy = 1;
   implicit_direction = 0;  /* do we allow certain options to
 			      implicitly affect the test direction? */
+  implicit_socket = 0;
   if (strcasecmp(test_name,"TCP_STREAM") == 0) {
     direction = NETPERF_XMIT;
   }
@@ -7903,6 +7915,7 @@ set_omni_defaults_by_legacy_testname() {
     was_legacy = 0;
     legacy = 0;
     implicit_direction = 1;
+    implicit_socket = 0;
   }
   socket_type_str = hst_to_str(socket_type);
 }
@@ -8073,6 +8086,7 @@ scan_omni_args(int argc, char *argv[])
 	if (arg1[0]) {
 	  remote_data_address = malloc(strlen(arg1)+1);
 	  strcpy(remote_data_address,arg1);
+	  explicit_data_address = 1;
 	}
 	if (arg3[0]) {
 	  remote_mask_len = convert(arg3);
@@ -8272,12 +8286,12 @@ scan_omni_args(int argc, char *argv[])
       break;
     case 't':
       /* set the socket type */
-      if (implicit_direction)
+      if (implicit_socket)
 	socket_type = parse_socket_type(optarg);
       break;
     case 'T':
       /* set the protocol - aka "Transport" */
-      if (implicit_direction)
+      if (implicit_socket)
 	protocol = parse_protocol(optarg);
       break;
     case 'u':

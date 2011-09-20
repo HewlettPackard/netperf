@@ -161,7 +161,7 @@ char	netserver_id[]="\
 
 #ifndef DEBUG_LOG_FILE_DIR
 #if defined(WIN32)
-#define DEBUG_LOG_FILE_DIR "c:\\temp\\"
+#define DEBUG_LOG_FILE_DIR ""
 #elif defined(ANDROID)
 #define DEBUG_LOG_FILE_DIR "/data/local/tmp/"
 #else
@@ -256,7 +256,12 @@ open_debug_file()
 
   snprintf(FileName,
 	   sizeof(FileName),
+#if defined(WIN32)
+	   "%s\\%s_%d",
+	   getenv("TEMP"),
+#else
 	   "%s_%d",
+#endif
 	   DEBUG_LOG_FILE,
 	   getpid());
   if ((where = fopen((suppress_debug) ? NETPERF_NULL : FileName,
