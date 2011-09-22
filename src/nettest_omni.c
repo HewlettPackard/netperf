@@ -383,7 +383,7 @@ int explicit_data_address = 0;
 int csv = 0;
 int keyword = 0;
 uint64_t      trans_completed = 0;
-int64_t      units_remaining;
+int64_t       units_remaining;
 uint64_t      bytes_sent = 0;
 uint64_t      bytes_received = 0;
 uint64_t      local_send_calls = 0;
@@ -7984,7 +7984,7 @@ scan_omni_args(int argc, char *argv[])
 
 {
 
-#define OMNI_ARGS "b:cCd:DhH:kl:L:m:M:nNoOp:P:r:R:s:S:t:T:u:Vw:W:46"
+#define OMNI_ARGS "b:cCd:DG:hH:kl:L:m:M:nNoOp:P:r:R:s:S:t:T:u:Vw:W:46"
 
   extern char	*optarg;	  /* pointer to option string	*/
   
@@ -8073,6 +8073,10 @@ scan_omni_args(int argc, char *argv[])
       /* set the TCP nodelay flag */
       loc_nodelay = 1;
       rem_nodelay = 1;
+      break;
+    case 'G':
+      /* set the value for a tcp_maxseG call*/
+      transport_mss_req = atoi(optarg);
       break;
     case 'H':
       break_args_explicit_sep(optarg,',',arg1,arg2);
