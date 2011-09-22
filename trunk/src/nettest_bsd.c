@@ -188,7 +188,8 @@ int
   req_size = 1,		/* request size                   	*/
   rsp_size = 1,		/* response size			*/
   send_size,		/* how big are individual sends		*/
-  recv_size;		/* how big are individual receives	*/
+  recv_size,		/* how big are individual receives	*/
+  transport_mss_req = -1; /* what maximum segment size is wanted */
 
 static  int confidence_iteration;
 static  char  local_cpu_method;
@@ -638,7 +639,7 @@ get_tcp_info(SOCKET socket, int *mss)
 #ifdef TCP_MAXSEG
   netperf_socklen_t sock_opt_len;
 
-  sock_opt_len = sizeof(netperf_socklen_t);
+  sock_opt_len = sizeof(int);
   if (getsockopt(socket,
 		 getprotobyname("tcp")->p_proto,	
 		 TCP_MAXSEG,
@@ -654,6 +655,37 @@ get_tcp_info(SOCKET socket, int *mss)
   *mss = -1;
 #endif /* TCP_MAXSEG */
 }
+
+static
+void
+set_tcp_mss(SOCKET socket, int mss) {
+#ifdef TCP_MAXSEG
+  netperf_socklen_t sock_opt_len;
+
+  sock_opt_len = sizeof(int);
+  if ((setsockopt(socket,
+		  getprotobyname("tcp")->p_proto,	
+		  TCP_MAXSEG,
+		  &mss,
+		  sock_opt_len) == SOCKET_ERROR) && (debug)) {
+    fprintf(where,
+	    "netperf: %s: setsockopt TCP_MAXSEG: %s (errno %d)\n",
+	    __FUNCTION__,
+	    strerror(errno),
+	    errno);
+    fflush(where);
+  }
+#else
+  if (debug) {
+    fprintf(where,
+	    "netperf: %s platform does not know how to set TCP segment size\n",
+	    __FUNCTION);
+    fflush(where);
+  }
+
+#endif /* TCP_MAXSEG */
+}
+
 
 
 /* return a pointer to a completed addrinfo chain - prefer
@@ -1314,6 +1346,10 @@ create_data_socket(struct addrinfo *res)
   loc_nodelay = 0;
   
 #endif /* TCP_NODELAY */
+
+  if ((transport_mss_req != -1) && (IPPROTO_TCP == res->ai_protocol)) {
+    set_tcp_mss(temp_socket,transport_mss_req);
+  }
 
 #if defined(TCP_CORK)
     

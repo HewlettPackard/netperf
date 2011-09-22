@@ -570,7 +570,8 @@ extern int
   rem_rcvavoid,     /* avoid recv_copies remotely */
   routing_allowed,  /* do we set/clear SO_DONTROUTE on data sock */
   multicast_ttl,    /* what should the TTL be on mcast dgrams */
-  want_keepalive;   /* do we bother setting SO_KEEPALIVE? */
+  want_keepalive,   /* do we bother setting SO_KEEPALIVE? */
+  transport_mss_req;
 
 #ifdef WANT_OMNI
 extern void scan_omni_args(int argc, char *argv[]);
