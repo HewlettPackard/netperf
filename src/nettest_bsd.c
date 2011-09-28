@@ -1175,6 +1175,70 @@ get_sockaddr_family_addr_port(struct sockaddr_storage *sockaddr, int family, voi
   }
   return ret;
 }
+
+
+int
+set_socket_tos(SOCKET sock, int family, int socket_tos) {
+
+  int my_tos = -3;
+  netperf_socklen_t sock_opt_len;
+
+  switch (family) {
+#if defined(IP_TOS)
+  case AF_INET:
+    /* should I mask-away anything above the byte? */
+    my_tos = socket_tos;
+    if (setsockopt(sock,
+		   IPPROTO_IP,
+		   IP_TOS,
+		   &my_tos,sizeof(my_tos)) == SOCKET_ERROR) {
+      fprintf(where,
+	      "%s ip_tos failed with %s (errno %d)\n",
+	      __FUNCTION__,
+	      strerror(errno),
+	      errno);
+      fflush(where);
+      my_tos = -2;
+    }
+    else {
+      sock_opt_len = sizeof(my_tos);
+      getsockopt(sock,
+		 IPPROTO_IP,
+		 IP_TOS,
+		 &my_tos,
+		 &sock_opt_len);
+    }
+    break;
+#endif
+#if defined(IPV6_TCLASS)
+  case AF_INET6:
+    /* should I mask-away anything above the byte? */
+    my_tos = socket_tos;
+    if (setsockopt(sock,
+		   IPPROTO_IPV6,
+		   IPV6_TCLASS,
+		   &my_tos,sizeof(my_tos)) == SOCKET_ERROR) {
+      fprintf(where,
+	      "%s ip_tos failed with %s (errno %d)\n",
+	      __FUNCTION__,
+	      strerror(errno),
+	      errno);
+      fflush(where);
+      my_tos = -2;
+    }
+    else {
+      sock_opt_len = sizeof(my_tos);
+      getsockopt(sock,
+		 IPPROTO_IPV6,
+		 IPV6_TCLASS,
+		 &my_tos,
+		 &sock_opt_len);
+    }
+    break;
+#endif
+  }
+  return my_tos;
+}
 
 
  /* This routine will create a data (listen) socket with the
@@ -1496,36 +1560,12 @@ create_data_socket(struct addrinfo *res)
   local_socket_prio = -3;
 #endif
 
-#if defined(IP_TOS)
-  if (local_socket_tos >= 0) {
-    unsigned char my_tos = (unsigned char) (local_socket_tos & 0xFF);
-    if (setsockopt(temp_socket,
-		   (res->ai_family == AF_INET6) ? IPPROTO_IPV6 : IPPROTO_IP,
-		   IP_TOS,
-		   &my_tos,
-		   sizeof(my_tos)) == SOCKET_ERROR) {
-      fprintf(where,
-             "netperf: create_data_socket: ip_tos: errno %d\n",
-             errno);
-      fflush(where);
-      local_socket_tos = -2;
-    }
-    else {
-      sock_opt_len = 1;
-      /* I wonder if some error checking might be indicated */
-      getsockopt(temp_socket,
-		 (res->ai_family == AF_INET6) ? IPPROTO_IPV6 : IPPROTO_IP,
-		 IP_TOS,
-		 &my_tos,
-		 &sock_opt_len);	       
-      local_socket_tos = my_tos;
-    }
-  }
-#else
-  local_socket_tos = -3;
+#if defined (IP_TOS) || defined(IPV6_TCLASS)
+  if (local_socket_tos > 0) 
+    local_socket_tos = set_socket_tos(temp_socket,res->ai_family, local_socket_tos);
 #endif
-  return(temp_socket);
 
+  return temp_socket;
 }
 
 #ifdef KLUDGE_SOCKET_OPTIONS
