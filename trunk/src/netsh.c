@@ -966,13 +966,13 @@ scan_cmd_line(int argc, char *argv[])
       break;
     case 'Y':
       break_args(optarg, arg1, arg2);
-#if defined(IP_TOS)
+#if defined(IP_TOS) || defined(IPV6_TCLASS)
       if (arg1[0])
 	local_socket_tos = strtol(arg1,NULL,0);
 #else
       if (debug) {
 	fprintf(where,
-		"Setting IP_TOS is not supported on this platform, request to set IP_TOS locally ignored.\n");
+		"Setting IP type-of-service is not supported on this platform, request to set it locally ignored.\n");
 	fflush(where);
       }
       local_socket_tos = -1;
