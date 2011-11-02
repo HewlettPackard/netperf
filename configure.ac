@@ -678,7 +678,7 @@ case "$enable_cpuutil" in
 			enable_cpuutil="pstat - auto"
 			NETCPU_SOURCE="pstat"
 			;;
-		     *-*-aix5.*)
+		     *-*-aix5.* | *-*-aix6.*)
 			use_puutil=true
 			AC_DEFINE([USE_PERFSTAT],,[Use AIX's perfstat interface to measure CPU util.])
 			AC_HAVE_LIBRARY(perfstat)
