@@ -200,7 +200,7 @@ static struct timeval *temp_demo_ptr = &demo_one;
 		format_units(),						\
 		actual_interval/1000000.0, \
 		now.tv_sec, \
-		now.tv_usec/1000);	    \
+		(long) now.tv_usec/1000);	\
 	fflush(where);		    \
 	units_this_tick = 0.0;					     \
 	/* now get a new starting timestamp.  we could be clever     \
