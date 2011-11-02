@@ -7025,7 +7025,7 @@ $as_echo "#define USE_PSTAT /**/" >>confdefs.h
 			enable_cpuutil="pstat - auto"
 			NETCPU_SOURCE="pstat"
 			;;
-		     *-*-aix5.*)
+		     *-*-aix5.* | *-*-aix6.*)
 			use_puutil=true
 
 $as_echo "#define USE_PERFSTAT /**/" >>confdefs.h
