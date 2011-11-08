@@ -120,7 +120,8 @@ main(int argc, char *argv[])
 #endif /* WIN32 */
   
   netlib_init();
-  set_defaults();
+  /* the call to set_defaults() is gone because we can initialize in
+     declarations (or is that definitions) unlike the old days */
   scan_cmd_line(argc,argv);
   
   if (debug) {

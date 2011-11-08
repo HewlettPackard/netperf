@@ -14,23 +14,19 @@ char	netsh_id[]="\
 #include "config.h"
 #endif
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
 #include <sys/types.h>
+#include <fcntl.h>
+
 #ifndef WIN32
 #include <unistd.h>
 #if !defined(__VMS) && !defined(MSDOS)
 #include <sys/ipc.h>
 #endif /* __VMS/MSDOS */
-#endif /* WIN32 */
-#include <fcntl.h>
-#ifndef WIN32
 #include <errno.h>
 #include <signal.h>
-#endif  /* !WIN32 */
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
- /* the following four includes should not be needed ?*/
-#ifndef WIN32
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -47,19 +43,15 @@ char	netsh_id[]="\
 #include <ws2tcpip.h>
 #endif
 #define netperf_socklen_t socklen_t
+extern	int	getopt(int , char **, char *) ;
 #endif
+
 
 #ifndef STRINGS
 #include <string.h>
 #else /* STRINGS */
 #include <strings.h>
 #endif /* STRINGS */
-
-#ifdef WIN32
-extern	int	getopt(int , char **, char *) ;
-#else
-double atof(const char *);
-#endif /* WIN32 */
 
 /**********************************************************************/
 /*                                                                    */
@@ -74,9 +66,6 @@ double atof(const char *);
 
 #ifdef WANT_UNIX
 #include "nettest_unix.h"
-#ifndef WIN32
-#include "sys/socket.h"
-#endif  /* !WIN32 */
 #endif /* WANT_UNIX */
 
 #ifdef WANT_XTI
@@ -90,7 +79,6 @@ double atof(const char *);
 #ifdef WANT_SCTP
 #include "nettest_sctp.h"
 #endif
-
 
 /************************************************************************/
 /*									*/
@@ -106,47 +94,33 @@ double atof(const char *);
 
 /************************************************************************/
 /*									*/
-/*	Extern variables 						*/
-/*									*/
-/************************************************************************/
-
-/*
-extern int errno;
-extern char *sys_errlist[ ];
-extern int sys_nerr;
-*/
-
-/************************************************************************/
-/*									*/
 /*	Global variables 						*/
 /*									*/
 /************************************************************************/
 
-/* some names and such                                                  */
-char	*program;		/* program invocation name		*/
-char    *command_line;          /* a copy of the entire command line    */
-char	username[BUFSIZ];	/* login name of user			*/
-char	cmd_file[BUFSIZ];	/* name of the commands file		*/
+/* some names and such */
+char	*program;		/* program invocation name */
+char    *command_line;          /* a copy of the entire command line */
 
-/* stuff to say where this test is going                                */
-char	host_name[HOSTNAMESIZE];	/* remote host name or ip addr  */
-char    local_host_name[HOSTNAMESIZE];  /* local hostname or ip */
-char    test_name[BUFSIZ];		/* which test to run 		*/
-char	test_port[PORTBUFSIZE];		/* where is the test waiting    */
-char    local_test_port[PORTBUFSIZE];   /* from whence we should start */
-int     address_family;                 /* which address family remote */
-int     local_address_family;           /* which address family local */
+/* stuff to say where this test is going */
+char	host_name[HOSTNAMESIZE] = "";	/* remote host name or ip addr */
+char    local_host_name[HOSTNAMESIZE] = "";  /* local hostname or ip */
+char    test_name[BUFSIZ] = "TCP_STREAM"; /* which test to run 		*/
+char	test_port[PORTBUFSIZE] = "12865"; /* where is the test waiting */
+char    local_test_port[PORTBUFSIZE] = "0"; /* from whence we should start */
+int     address_family = AF_UNSPEC;     /* which address family remote */
+int     local_address_family = AF_UNSPEC; /* which address family local */
 
 /* the source of data for filling the buffers */
-char    fill_file[BUFSIZ];
+char    fill_file[BUFSIZ] = "";
 
-/* output controlling variables                                         */
+/* output controlling variables */
 int
-  debug,			/* debugging level */
-  print_headers,		/* do/don't display headers */
-  verbosity,		/* verbosity level */
-  keep_histogram,
-  keep_statistics;
+  debug = 0,			/* debugging level */
+  print_headers = 1,		/* do/don't display headers */
+  verbosity = 1,		/* verbosity level */
+  keep_histogram = 0,
+  keep_statistics = 0;
 
 /* When specified with -B, this will be displayed at the end of the line
    for output that does not include the test header.  mostly this is
@@ -156,33 +130,33 @@ char *result_brand = NULL;
 
 /* cpu variables */
 int
-  local_cpu_usage,	/* you guessed it			*/
-  remote_cpu_usage;	/* still right !			*/
+  local_cpu_usage = 0,	/* you guessed it */
+  remote_cpu_usage = 0;	/* still right ! */
 
 float			       
-  local_cpu_rate,
-  remote_cpu_rate;
+  local_cpu_rate = 0.0F,
+  remote_cpu_rate = 0.0F;
 
 int
   shell_num_cpus=1;
 
-/* the end-test conditions for the tests - either transactions, bytes,  */
-/* or time. different vars used for clarity - space is cheap ;-)        */
+/* the end-test conditions for the tests - either transactions, bytes, */
+/* or time. different vars used for clarity - space is cheap ;-) */
 int	
-  test_time,		/* test ends by time			*/
+  test_time = 10,	/* test ends by time */
   test_len_ticks,       /* how many times will the timer go off before */
 			/* the test is over? */
-  test_bytes,		/* test ends on byte count		*/
-  test_trans;		/* test ends on tran count		*/
+  test_bytes = 0,	/* test ends on byte count */
+  test_trans = 0;	/* test ends on tran count */
 
-/* the alignment conditions for the tests				*/
+/* the alignment conditions for the tests */
 int
-  local_recv_align,	/* alignment for local receives		*/
-  local_send_align,	/* alignment for local sends		*/
+  local_recv_align = 8,	/* alignment for local receives */
+  local_send_align = 8,	/* alignment for local sends */
   local_send_offset = 0,
   local_recv_offset = 0,
-  remote_recv_align,	/* alignment for remote receives	*/
-  remote_send_align,	/* alignment for remote sends		*/
+  remote_recv_align = 8, /* alignment for remote receives */
+  remote_send_align = 8, /* alignment for remote sends */
   remote_send_offset = 0,
   remote_recv_offset = 0,
   remote_send_width = 0,
@@ -190,13 +164,15 @@ int
 
 /* hoist above the if for omni */
 int
-  interval_usecs,
-  interval_wate,
-  interval_burst,
-  remote_interval_usecs,
-  remote_interval_burst;
+  interval_usecs = 0,
+  interval_wate = 0,
+  interval_burst = 0,
+  remote_interval_usecs = 0,
+  remote_interval_burst = 0;
 
-int wait_time_secs;
+/* wait time between control/data connection establishment and start
+   of data traffic */
+int wait_time_secs = 0;
 
 #if defined(WANT_INTERVALS) || defined(WANT_DEMO)
 
@@ -213,19 +189,25 @@ double demo_units = 0.0;          /* what is our current best guess as
 double units_this_tick;
 #endif
 
-int	loc_dirty_count;
-int	loc_clean_count;
-int	rem_dirty_count;
-int	rem_clean_count;
+#ifdef DIRTY
+int loc_dirty_count = 0,
+    loc_clean_count = 0,
+    rem_dirty_count = 0,
+    rem_clean_count = 0;
+#else
+int loc_dirty_count = -1,
+    loc_clean_count = -1,
+    rem_dirty_count = -1,
+    rem_clean_count = -1;
+#endif /* DIRTY */
 
  /* some of the vairables for confidence intervals... */
 
-int  confidence_level;
-int  iteration_min;
-int  iteration_max;
+int  confidence_level = 0;
+int  iteration_min = 1;
+int  iteration_max = 1;
 int  result_confidence_only = 0;
-
-double interval;
+double interval = 0.0;
 
  /* stuff to control the "width" of the buffer rings for sending and
     receiving data */
@@ -268,7 +250,7 @@ Options:\n\
 
 /* netperf_usage done as two concatenated strings to make the MS
    compiler happy when compiling for x86_32.  fix from Spencer
-   Frink.  */
+   Frink. */
 
 char netperf_usage1[] = "\n\
 Usage: netperf [global options] -- [test options] \n\
@@ -503,7 +485,7 @@ parse_direction(char direction_string[])
   }
   else {
     /* we now "ass-u-me" it is a number that can be parsed by strtol()
-     */
+ */
     left = strtol(arg1,NULL,0);
   }
 
@@ -565,84 +547,6 @@ parse_protocol(char protocol_string[])
   return IPPROTO_IP;
 }
 
-
-void
-set_defaults()
-{
-  
-  /* stuff to say where this test is going  */
-  strcpy(host_name,"");	      /* remote host name or ip addr  */
-  strcpy(local_host_name,""); /* we want it to be INADDR_ANY */
-  strcpy(test_name,"TCP_STREAM");	/* which test to run  */
-  strncpy(test_port,"12865",PORTBUFSIZE); /* where is the test
-					     waiting  */
-  strncpy(local_test_port,"0",PORTBUFSIZE);/* INPORT_ANY as it were */
-  address_family = AF_UNSPEC;
-  local_address_family = AF_UNSPEC;
-
-  /* output controlling variables  */
-  debug			= 0;/* debugging  */
-  print_headers		= 1;/* do print test headers  */
-  verbosity		= 1;/* verbosity level  */
-  keep_histogram        = 0;
-  keep_statistics       = 0;
-
-  /* cpu variables */
-  local_cpu_usage	= 0;/* measure local cpu  */
-  remote_cpu_usage	= 0;/* what do you think ;-)  */
-  
-  local_cpu_rate	= (float)0.0;
-  remote_cpu_rate	= (float)0.0;
-  
-  /* the end-test conditions for the tests - either transactions,
-     bytes, or time. different vars used for clarity - space is cheap
-     ;-)  */
-  test_time	= 10;	/* test ends by time  */
-  test_bytes	= 0;	/* test ends on byte count  */
-  test_trans	= 0;	/* test ends on tran count  */
-  
-  /* the alignment conditions for the tests  */
-  local_recv_align	= 8;	/* alignment for local receives */
-  local_send_align	= 8;	/* alignment for local sends  */
-  remote_recv_align	= 8;	/* alignment for remote receives*/
-  remote_send_align	= 8;	/* alignment for remote sends  */
-  
-  /* rate controlling stuff, taken out of the #ifdef for omni */
-  interval_usecs  = 0;
-  interval_wate   = 0;
-  interval_burst  = 0;
-  remote_interval_usecs = 0;
-  remote_interval_burst = 0;
-
-/* wait time between control/data connection establishment and start
-   of data traffic  */
-  wait_time_secs = 0;
-
-#ifdef DIRTY
-  /* dirty and clean cache stuff */
-  loc_dirty_count = 0;
-  loc_clean_count = 0;
-  rem_dirty_count = 0;
-  rem_clean_count = 0;
-#else
-  loc_dirty_count = -1;
-  loc_clean_count = -1;
-  rem_dirty_count = -1;
-  rem_clean_count = -1;
-#endif /* DIRTY */
-
- /* some of the vairables for confidence intervals... defaults will be
-    set as apropriate in the parsing of the command line  */
-
-  confidence_level = 0;
-  iteration_min = 1;
-  iteration_max = 1;
-  interval = 0.0;
-
-  no_control = 0;
-  strcpy(fill_file,"");
-}
-     
 
 void
 print_netserver_usage()
