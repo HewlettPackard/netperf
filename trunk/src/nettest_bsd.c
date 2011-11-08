@@ -98,9 +98,9 @@ char	nettest_id[]="\
 
 
 #ifndef WIN32
-#if !defined(__VMS) && !defined(MSDOS)
+#if !defined(__VMS)
 #include <sys/ipc.h>
-#endif /* !__VMS && !MSDOS */
+#endif /* !__VMS */
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
