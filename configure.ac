@@ -699,7 +699,7 @@ case "$enable_cpuutil" in
 			enable_cpuutil="kstat - auto"
 			NETCPU_SOURCE="kstat"
 			;;
-                     *-*-freebsd[[4-7]].* | *-*-netbsd[[1-9]].* )
+                     *-*-freebsd[[4-8]].* | *-*-netbsd[[1-9]].* )
 			use_cpuutil=true
 			AC_DEFINE([USE_SYSCTL],,[Use MumbleBSD's sysctl interface to measure CPU util.])
 			enable_cpuutil="sysctl - auto"
@@ -759,7 +759,7 @@ case "$enable_rtlookup" in
 			enable_rtlookup="rtmget - auto"
 			NETRTLKUP_SOURCE="rtmget"
 			;;
-                     *-*-freebsd[[4-7]].* | *-*-darwin*)
+                     *-*-freebsd[[4-8]].* | *-*-darwin*)
 			use_rtlookup=true
 			enable_rtlookup="rtmget - auto"
 			NETRTLKUP_SOURCE="rtmget"
