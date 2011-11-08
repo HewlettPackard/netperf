@@ -59,11 +59,6 @@ char	netperf_id[]="\
 # include <sys/types.h>
 #endif
 
-#ifndef WIN32
-/* this should only be temporary */
-#include <sys/socket.h>
-#endif
-
 #ifdef WIN32
 #include <winsock2.h>
 #include <windows.h>
@@ -101,8 +96,8 @@ char	netperf_id[]="\
 #include "nettest_sctp.h"
 #endif
 
- /* this file contains the main for the netperf program. all the other */
- /* routines can be found in the file netsh.c */
+ /* this file contains the main for the netperf program. all the other
+    routines can be found in the file netsh.c */
 
 
 int _cdecl
@@ -276,9 +271,10 @@ main(int argc, char *argv[])
   }
 #endif
   else {
-    printf("The test you requested is unknown to this netperf.\n");
-    printf("Please verify that you have the correct test name, \n");
-    printf("and that test family has been compiled into this netperf.\n");
+    printf("The test you requested (%s) is unknown to this netperf.\n"
+	   "Please verify that you have the correct test name, \n"
+	   "and that test family has been compiled into this netperf.\n",
+	   test_name);
     exit(1);
   }
   

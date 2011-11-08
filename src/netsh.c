@@ -22,9 +22,9 @@ char	netsh_id[]="\
 
 #ifndef WIN32
 #include <unistd.h>
-#if !defined(__VMS) && !defined(MSDOS)
+#if !defined(__VMS)
 #include <sys/ipc.h>
-#endif /* __VMS/MSDOS */
+#endif /* __VMS */
 #include <errno.h>
 #include <signal.h>
 #include <sys/time.h>
@@ -99,17 +99,20 @@ extern	int	getopt(int , char **, char *) ;
 /************************************************************************/
 
 /* some names and such */
-char	*program;		/* program invocation name */
-char    *command_line;          /* a copy of the entire command line */
+char *program;		/* program invocation name */
+char *command_line;     /* a copy of the entire command line */
 
 /* stuff to say where this test is going */
-char	host_name[HOSTNAMESIZE] = "";	/* remote host name or ip addr */
-char    local_host_name[HOSTNAMESIZE] = "";  /* local hostname or ip */
-char    test_name[BUFSIZ] = "TCP_STREAM"; /* which test to run 		*/
-char	test_port[PORTBUFSIZE] = "12865"; /* where is the test waiting */
-char    local_test_port[PORTBUFSIZE] = "0"; /* from whence we should start */
-int     address_family = AF_UNSPEC;     /* which address family remote */
-int     local_address_family = AF_UNSPEC; /* which address family local */
+char
+  host_name[HOSTNAMESIZE] = "",	      /* remote host name or ip addr */
+  local_host_name[HOSTNAMESIZE] = "", /* local hostname or ip */
+  test_name[BUFSIZ] = "TCP_STREAM",   /* which test to run */
+  test_port[PORTBUFSIZE] = "12865",   /* where is the test waiting */
+  local_test_port[PORTBUFSIZE] = "0"; /* from whence we should start */
+
+int
+  address_family = AF_UNSPEC,       /* which address family remote */
+  local_address_family = AF_UNSPEC; /* which address family local */
 
 /* the source of data for filling the buffers */
 char    fill_file[BUFSIZ] = "";
@@ -140,14 +143,15 @@ float
 int
   shell_num_cpus=1;
 
-/* the end-test conditions for the tests - either transactions, bytes, */
-/* or time. different vars used for clarity - space is cheap ;-) */
+/* the end-test conditions for the tests - either transactions, bytes,
+   or time. different vars used for clarity - space is cheap ;-) */
+
 int	
-  test_time = 10,	/* test ends by time */
-  test_len_ticks,       /* how many times will the timer go off before */
-			/* the test is over? */
-  test_bytes = 0,	/* test ends on byte count */
-  test_trans = 0;	/* test ends on tran count */
+  test_time = 10, /* test ends by time */
+  test_len_ticks, /* how many times will the timer go off before the
+		     test is over? */
+  test_bytes = 0, /* test ends on byte count */
+  test_trans = 0; /* test ends on tran count */
 
 /* the alignment conditions for the tests */
 int
@@ -672,9 +676,6 @@ scan_cmd_line(int argc, char *argv[])
       break;
     case 'd':
       debug++;
-#ifdef MSDOS
-      dbug_init();
-#endif
       break;
     case 'D':
 #if (defined WANT_DEMO)
