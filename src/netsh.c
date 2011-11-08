@@ -22,9 +22,6 @@ char	netsh_id[]="\
 
 #ifndef WIN32
 #include <unistd.h>
-#if !defined(__VMS)
-#include <sys/ipc.h>
-#endif /* __VMS */
 #include <errno.h>
 #include <signal.h>
 #include <sys/time.h>
