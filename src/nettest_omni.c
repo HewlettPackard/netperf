@@ -466,8 +466,8 @@ int         p50_latency = -1, p90_latency = -1, p99_latency = -1;
 double      mean_latency = -1.0, stddev_latency = -1.0;
 
 /* default to zero to avoid randomizing */
-int local_mask_len=0;
-int remote_mask_len=0;
+int local_mask_len = 0;
+int remote_mask_len = 0;
 
 int printing_initialized = 0;
 
@@ -1800,331 +1800,482 @@ print_omni_init_list() {
 
   set_output_elt(OUTPUT_NONE, " ", "", "", "", "%s", &" ",1, 0);
 
-  set_output_elt(COMMAND_LINE, "Command","Line","","","\"%s\"",command_line,1, 0);
+  set_output_elt(COMMAND_LINE, "Command","Line","","","\"%s\"",
+		 command_line,1, 0);
 
   set_output_elt(UUID, "Test", "i", "", "", "%s", test_uuid, 1, 0);
 
-  set_output_elt(RESULT_BRAND, "Result", "Tag", "", "", "\"%s\"", result_brand, 1, 0);
+  set_output_elt(RESULT_BRAND, "Result", "Tag", "", "", "\"%s\"",
+		 result_brand, 1, 0);
 
-  set_output_elt(SOCKET_TYPE, "Socket", "Type", "", "", "%s", socket_type_str, 1, 0);
+  set_output_elt(SOCKET_TYPE, "Socket", "Type", "", "", "%s",
+		 socket_type_str, 1, 0);
 
-  set_output_elt(DIRECTION, "Direction", "", "", "", "%s", direction_str, 1, 0);
+  set_output_elt(DIRECTION, "Direction", "", "", "", "%s",
+		 direction_str, 1, 0);
 
   set_output_elt(PROTOCOL, "Protocol", "", "", "", "%s", protocol_str, 1, 0);
 
-  set_output_elt(ELAPSED_TIME, "Elapsed", "Time", "(sec)", "", "%.2f", &elapsed_time_double, 1, 0);
+  set_output_elt(ELAPSED_TIME, "Elapsed", "Time", "(sec)", "", "%.2f",
+		 &elapsed_time_double, 1, 0);
 
-  set_output_elt(SOURCE_PORT, "Source", "Port", "", "", "%s", local_data_port, 1, 0);
-  set_output_elt(SOURCE_ADDR, "Source", "Address", "", "", "%s", local_data_address, 1, 0);
+  set_output_elt(SOURCE_PORT, "Source", "Port", "", "", "%s",
+		 local_data_port, 1, 0);
 
-  set_output_elt(SOURCE_FAMILY, "Source", "Family", "", "", "%d", &local_data_family, 1, 0);
+  set_output_elt(SOURCE_ADDR, "Source", "Address", "", "", "%s",
+		 local_data_address, 1, 0);
 
-  set_output_elt(DEST_PORT, "Destination", "Port", "", "", "%s", remote_data_port, 1, 0);
+  set_output_elt(SOURCE_FAMILY, "Source", "Family", "", "", "%d",
+		 &local_data_family, 1, 0);
 
-  set_output_elt(DEST_ADDR, "Destination", "Address", "", "", "%s", remote_data_address, 1, 0);
+  set_output_elt(DEST_PORT, "Destination", "Port", "", "", "%s",
+		 remote_data_port, 1, 0);
 
-  set_output_elt(DEST_FAMILY, "Destination", "Family", "", "", "%d", &remote_data_family, 1, 0);
+  set_output_elt(DEST_ADDR, "Destination", "Address", "", "", "%s",
+		 remote_data_address, 1, 0);
+
+  set_output_elt(DEST_FAMILY, "Destination", "Family", "", "", "%d",
+		 &remote_data_family, 1, 0);
 
   set_output_elt(THROUGHPUT, "Throughput", "", "", "", "%.2f", &thruput, 1, 0);
 
-  set_output_elt(LOCAL_SEND_THROUGHPUT, "Local", "Send", "Throughput", "", "%.2f", &local_send_thruput, 1, 0);
+  set_output_elt(LOCAL_SEND_THROUGHPUT, "Local", "Send", "Throughput", "",
+		 "%.2f", &local_send_thruput, 1, 0);
 
-  set_output_elt(LOCAL_RECV_THROUGHPUT, "Local", "Recv", "Throughput", "", "%.2f", &local_recv_thruput, 1, 0);
+  set_output_elt(LOCAL_RECV_THROUGHPUT, "Local", "Recv", "Throughput", "",
+		 "%.2f", &local_recv_thruput, 1, 0);
 
+  set_output_elt(REMOTE_SEND_THROUGHPUT, "Remote", "Send", "Throughput", "",
+		 "%.2f", &remote_send_thruput, 1, 0);
 
-  set_output_elt(REMOTE_SEND_THROUGHPUT, "Remote", "Send", "Throughput", "", "%.2f", &remote_send_thruput, 1, 0);
+  set_output_elt(REMOTE_RECV_THROUGHPUT, "Remote", "Recv", "Throughput", "", 
+		 "%.2f", &remote_recv_thruput, 1, 0);
 
+  set_output_elt(THROUGHPUT_UNITS, "Throughput", "Units", "", "", "%s/s",
+		 thruput_format_str, 1, 0);
 
+  set_output_elt(CONFIDENCE_LEVEL, "Confidence", "Level", "Percent", "", "%d",
+		 &confidence_level, 1, 0);
 
-  set_output_elt(REMOTE_RECV_THROUGHPUT, "Remote", "Recv", "Throughput", "", "%.2f", &remote_recv_thruput, 1, 0);
+  set_output_elt(CONFIDENCE_INTERVAL, "Confidence", "Width", "Target", "", 
+		 "%f", &interval_pct, 1, 0);
 
+  set_output_elt(CONFIDENCE_ITERATION, "Confidence", "Iterations", "Run", "",
+		 "%d", &confidence_iteration, 1, 0);
 
+  set_output_elt(THROUGHPUT_CONFID, "Throughput", "Confidence", "Width (%)", 
+		 "", "%.3f", &result_confid_pct, 1, 0);
 
-  set_output_elt(THROUGHPUT_UNITS, "Throughput", "Units", "", "", "%s/s", thruput_format_str, 1, 0);
+  set_output_elt(LOCAL_CPU_CONFID, "Local", "CPU", "Confidence", "Width (%)",
+		 "%.3f", &loc_cpu_confid_pct, 1, 0);
 
+  set_output_elt(REMOTE_CPU_CONFID, "Remote", "CPU", "Confidence", "Width (%)",
+		 "%.3f", &rem_cpu_confid_pct, 1, 0);
 
+  set_output_elt(RT_LATENCY, "Round", "Trip", "Latency", "usec/tran", "%.3f",
+		 &rtt_latency, 1, 0);
 
-  set_output_elt(CONFIDENCE_LEVEL, "Confidence", "Level", "Percent", "", "%d", &confidence_level, 1, 0);
+  set_output_elt(TRANSACTION_RATE, "Transaction", "Rate", "Tran/s", "", "%.3f",
+		 &transaction_rate, 1, 0);
 
-  set_output_elt(CONFIDENCE_INTERVAL, "Confidence", "Width", "Target", "", "%f", &interval_pct, 1, 0);
+  set_output_elt(TRANSPORT_MSS, "Transport", "MSS", "bytes", "", "%d",
+		 &transport_mss, 1, 0);
 
+  set_output_elt(LOCAL_TRANSPORT_RETRANS, "Local", "Transport",
+		 "Retransmissions", "", "%d", &local_transport_retrans, 1, 0);
 
+  set_output_elt(REMOTE_TRANSPORT_RETRANS, "Remote", "Transport",
+		 "Retransmissions", "", "%d", &remote_transport_retrans, 1, 0);
 
-  set_output_elt(CONFIDENCE_ITERATION, "Confidence", "Iterations", "Run", "", "%d", &confidence_iteration, 1, 0);
+  set_output_elt(REQUEST_SIZE, "Request", "Size", "Bytes", "", "%d",
+		 &req_size, 1, 0);
 
-  set_output_elt(THROUGHPUT_CONFID, "Throughput", "Confidence", "Width (%)", "", "%.3f", &result_confid_pct, 1, 0);
+  set_output_elt(RESPONSE_SIZE, "Response", "Size", "Bytes", "", "%d",
+		 &rsp_size, 1, 0);
 
-  set_output_elt(LOCAL_CPU_CONFID, "Local", "CPU", "Confidence", "Width (%)", "%.3f", &loc_cpu_confid_pct, 1, 0);
+  set_output_elt(BURST_SIZE, "Initial", "Burst", "Requests", "", "%d",
+		 &first_burst_size, 1, 0);
 
-  set_output_elt(REMOTE_CPU_CONFID, "Remote", "CPU", "Confidence", "Width (%)", "%.3f", &rem_cpu_confid_pct, 1, 0);
+  set_output_elt(LSS_SIZE_REQ, "Local", "Send Socket", "Size", "Requested",
+		 "%d", &lss_size_req, 1, 0);
 
-  set_output_elt(RT_LATENCY, "Round", "Trip", "Latency", "usec/tran", "%.3f", &rtt_latency, 1, 0);
+  set_output_elt(LSS_SIZE, "Local", "Send Socket", "Size", "Initial", "%d",
+		 &lss_size, 1, 0);
 
-  set_output_elt(TRANSACTION_RATE, "Transaction", "Rate", "Tran/s", "", "%.3f", &transaction_rate, 1, 0);
+  set_output_elt(LSS_SIZE_END, "Local", "Send Socket", "Size", "Final", "%d",
+		 &lss_size_end, 1, 0);
 
-  set_output_elt(TRANSPORT_MSS, "Transport", "MSS", "bytes", "", "%d", &transport_mss, 1, 0);
+  set_output_elt(LSR_SIZE_REQ, "Local", "Recv Socket", "Size", "Requested",
+		 "%d", &lsr_size_req, 1, 0);
 
-  set_output_elt(LOCAL_TRANSPORT_RETRANS, "Local", "Transport", "Retransmissions", "", "%d", &local_transport_retrans, 1, 0);
+  set_output_elt(LSR_SIZE, "Local", "Recv Socket", "Size", "Initial", "%d",
+		 &lsr_size, 1, 0);
 
-  set_output_elt(REMOTE_TRANSPORT_RETRANS, "Remote", "Transport", "Retransmissions", "", "%d", &remote_transport_retrans, 1, 0);
+  set_output_elt(LSR_SIZE_END, "Local", "Recv Socket", "Size", "Final", "%d",
+		 &lsr_size_end, 1, 0);
 
-  set_output_elt(REQUEST_SIZE, "Request", "Size", "Bytes", "", "%d", &req_size, 1, 0);
+  set_output_elt(LOCAL_SEND_SIZE, "Local", "Send", "Size", "", "%d",
+		 &send_size, 1, 0);
 
-  set_output_elt(RESPONSE_SIZE, "Response", "Size", "Bytes", "", "%d", &rsp_size, 1, 0);
+  set_output_elt(LOCAL_RECV_SIZE, "Local", "Recv", "Size", "", "%d",
+		 &recv_size, 1, 0);
 
-  set_output_elt(BURST_SIZE, "Initial", "Burst", "Requests", "", "%d", &first_burst_size, 1, 0);
+  set_output_elt(LOCAL_SEND_CALLS, "Local", "Send", "Calls", "", "%d",
+		 &local_send_calls, 1, 0);
 
-  set_output_elt(LSS_SIZE_REQ, "Local", "Send Socket", "Size", "Requested", "%d", &lss_size_req, 1, 0);
+  set_output_elt(LOCAL_RECV_CALLS, "Local", "Recv", "Calls", "", "%d",
+		 &local_receive_calls, 1, 0);
 
-  set_output_elt(LSS_SIZE, "Local", "Send Socket", "Size", "Initial", "%d", &lss_size, 1, 0);
+  set_output_elt(LOCAL_BYTES_PER_RECV, "Local", "Bytes", "Per", "Recv", "%.2f",
+		 &bytes_per_recv, 1, 0);
 
-  set_output_elt(LSS_SIZE_END, "Local", "Send Socket", "Size", "Final", "%d", &lss_size_end, 1, 0);
+  set_output_elt(LOCAL_BYTES_PER_SEND, "Local", "Bytes", "Per", "Send", "%.2f",
+		 &bytes_per_send, 1, 0);
 
-  set_output_elt(LSR_SIZE_REQ, "Local", "Recv Socket", "Size", "Requested", "%d", &lsr_size_req, 1, 0);
+  set_output_elt(LOCAL_BYTES_RECVD, "Local", "Bytes", "Received", "", "%lld",
+		 &bytes_received, 1, 0);
 
-  set_output_elt(LSR_SIZE, "Local", "Recv Socket", "Size", "Initial", "%d", &lsr_size, 1, 0);
+  set_output_elt(LOCAL_BYTES_SENT, "Local", "Bytes", "Sent", "", "%lld",
+		 &bytes_sent, 1, 0);
 
-  set_output_elt(LSR_SIZE_END, "Local", "Recv Socket", "Size", "Final", "%d", &lsr_size_end, 1, 0);
+  set_output_elt(LOCAL_BYTES_XFERD, "Local", "Bytes", "Xferred", "", "%.0f",
+		 &bytes_xferd, 1, 0);
 
-  set_output_elt(LOCAL_SEND_SIZE, "Local", "Send", "Size", "", "%d", &send_size, 1, 0);
+  set_output_elt(LOCAL_SEND_WIDTH, "Local", "Send", "Width", "", "%d",
+		 &send_width, 1, 0);
 
-  set_output_elt(LOCAL_RECV_SIZE, "Local", "Recv", "Size", "", "%d", &recv_size, 1, 0);
+  set_output_elt(LOCAL_RECV_WIDTH, "Local", "Recv", "Width", "", "%d",
+		 &recv_width, 1, 0);
 
-  set_output_elt(LOCAL_SEND_CALLS, "Local", "Send", "Calls", "", "%d", &local_send_calls, 1, 0);
+  set_output_elt(LOCAL_SEND_OFFSET, "Local", "Send", "Offset", "", "%d",
+		 &local_send_offset, 1, 0);
 
-  set_output_elt(LOCAL_RECV_CALLS, "Local", "Recv", "Calls", "", "%d", &local_receive_calls, 1, 0);
+  set_output_elt(LOCAL_RECV_OFFSET, "Local", "Recv", "Offset", "", "%d",
+		 &local_recv_offset, 1, 0);
 
-  set_output_elt(LOCAL_BYTES_PER_RECV, "Local", "Bytes", "Per", "Recv", "%.2f", &bytes_per_recv, 1, 0);
+  set_output_elt(LOCAL_RECV_ALIGN, "Local", "Recv", "Alignment", "", "%d",
+		 &local_recv_align, 1, 0);
 
-  set_output_elt(LOCAL_BYTES_PER_SEND, "Local", "Bytes", "Per", "Send", "%.2f", &bytes_per_send, 1, 0);
+  set_output_elt(LOCAL_SEND_ALIGN, "Local", "Send", "Alignment", "", "%d",
+		 &local_send_align, 1, 0);
 
-  set_output_elt(LOCAL_BYTES_RECVD, "Local", "Bytes", "Received", "", "%lld", &bytes_received, 1, 0);
+  set_output_elt(LOCAL_SEND_DIRTY_COUNT, "Local", "Send", "Dirty", "Count",
+		 "%d", &loc_dirty_count, 1, 0);
 
-  set_output_elt(LOCAL_BYTES_SENT, "Local", "Bytes", "Sent", "", "%lld", &bytes_sent, 1, 0);
+  set_output_elt(LOCAL_RECV_DIRTY_COUNT, "Local", "Recv", "Dirty", "Count",
+		 "%d", &loc_dirty_count, 1, 0);
 
-  set_output_elt(LOCAL_BYTES_XFERD, "Local", "Bytes", "Xferred", "", "%.0f", &bytes_xferd, 1, 0);
+  set_output_elt(LOCAL_RECV_CLEAN_COUNT, "Local", "Recv", "Clean", "Count",
+		 "%d", &loc_clean_count, 1, 0);
 
-  set_output_elt(LOCAL_SEND_WIDTH, "Local", "Send", "Width", "", "%d", &send_width, 1, 0);
+  set_output_elt(LOCAL_CPU_UTIL, "Local", "CPU", "Util", "%", "%.2f",
+		 &local_cpu_utilization_double, 1, 0);
 
-  set_output_elt(LOCAL_RECV_WIDTH, "Local", "Recv", "Width", "", "%d", &recv_width, 1, 0);
+  set_output_elt(LOCAL_CPU_PEAK_UTIL, "Local", "Peak", "Per CPU", "Util %",
+		 "%.2f", &lib_local_peak_cpu_util, 1, 0);
 
-  set_output_elt(LOCAL_SEND_OFFSET, "Local", "Send", "Offset", "", "%d", &local_send_offset, 1, 0);
+  set_output_elt(LOCAL_CPU_PEAK_ID, "Local", "Peak", "Per CPU", "ID", "%d",
+		 &lib_local_peak_cpu_id, 1, 0);
 
-  set_output_elt(LOCAL_RECV_OFFSET, "Local", "Recv", "Offset", "", "%d", &local_recv_offset, 1, 0);
+  set_output_elt(LOCAL_CPU_BIND, "Local", "CPU", "Bind", "", "%d",
+		 &local_proc_affinity, 1, 0);
 
-  set_output_elt(LOCAL_RECV_ALIGN, "Local", "Recv", "Alignment", "", "%d", &local_recv_align, 1, 0);
+  set_output_elt(LOCAL_SD, "Local", "Service", "Demand", "", "%.3f",
+		 &local_service_demand_double, 1, 0);
 
-  set_output_elt(LOCAL_SEND_ALIGN, "Local", "Send", "Alignment", "", "%d", &local_send_align, 1, 0);
+  set_output_elt(SD_UNITS, "Service", "Demand", "Units", "", "%s",
+		 sd_str, 1, 0);
 
-  set_output_elt(LOCAL_SEND_DIRTY_COUNT, "Local", "Send", "Dirty", "Count", "%d", &loc_dirty_count, 1, 0);
+  set_output_elt(LOCAL_CPU_METHOD, "Local", "CPU", "Util", "Method", "%c",
+		 &local_cpu_method, 1, 0);
 
-  set_output_elt(LOCAL_RECV_DIRTY_COUNT, "Local", "Recv", "Dirty", "Count", "%d", &loc_dirty_count, 1, 0);
+  set_output_elt(LOCAL_CPU_COUNT, "Local", "CPU", "Count", "", "%d",
+		 &lib_num_loc_cpus, 1, 0);
 
-  set_output_elt(LOCAL_RECV_CLEAN_COUNT, "Local", "Recv", "Clean", "Count", "%d", &loc_clean_count, 1, 0);
-
-  set_output_elt(LOCAL_CPU_UTIL, "Local", "CPU", "Util", "%", "%.2f", &local_cpu_utilization_double, 1, 0);
-
-  set_output_elt(LOCAL_CPU_PEAK_UTIL, "Local", "Peak", "Per CPU", "Util %", "%.2f", &lib_local_peak_cpu_util, 1, 0);
-
-  set_output_elt(LOCAL_CPU_PEAK_ID, "Local", "Peak", "Per CPU", "ID", "%d", &lib_local_peak_cpu_id, 1, 0);
-
-  set_output_elt(LOCAL_CPU_BIND, "Local", "CPU", "Bind", "", "%d", &local_proc_affinity, 1, 0);
-
-  set_output_elt(LOCAL_SD, "Local", "Service", "Demand", "", "%.3f", &local_service_demand_double, 1, 0);
-
-  set_output_elt(SD_UNITS, "Service", "Demand", "Units", "", "%s", sd_str, 1, 0);
-
-  set_output_elt(LOCAL_CPU_METHOD, "Local", "CPU", "Util", "Method", "%c", &local_cpu_method, 1, 0);
-
-  set_output_elt(LOCAL_CPU_COUNT, "Local", "CPU", "Count", "", "%d", &lib_num_loc_cpus, 1, 0);
-
-  set_output_elt(LOCAL_NODELAY, "Local", "NODELAY", "", "", "%d", &loc_nodelay, 1, 0);
+  set_output_elt(LOCAL_NODELAY, "Local", "NODELAY", "", "", "%d",
+		 &loc_nodelay, 1, 0);
 
   set_output_elt(LOCAL_CORK, "Local", "Cork", "", "", "%d", &loc_tcpcork, 1, 0);
 
-  set_output_elt(RSS_SIZE_REQ, "Remote", "Send Socket", "Size", "Requested", "%d", &rss_size_req, 1, 0);
+  set_output_elt(RSS_SIZE_REQ, "Remote", "Send Socket", "Size", "Requested",
+		 "%d", &rss_size_req, 1, 0);
 
-  set_output_elt(RSS_SIZE, "Remote", "Send Socket", "Size", "Initial", "%d", &rss_size, 1, 0);
+  set_output_elt(RSS_SIZE, "Remote", "Send Socket", "Size", "Initial", "%d",
+		 &rss_size, 1, 0);
 
-  set_output_elt(RSS_SIZE_END, "Remote", "Send Socket", "Size", "Final", "%d", &rss_size_end, 1, 0);
+  set_output_elt(RSS_SIZE_END, "Remote", "Send Socket", "Size", "Final", "%d",
+		 &rss_size_end, 1, 0);
 
-  set_output_elt(RSR_SIZE_REQ, "Remote", "Recv Socket", "Size", "Requested", "%d", &rsr_size_req, 1, 0);
+  set_output_elt(RSR_SIZE_REQ, "Remote", "Recv Socket", "Size", "Requested",
+		 "%d", &rsr_size_req, 1, 0);
 
-  set_output_elt(RSR_SIZE, "Remote", "Recv Socket", "Size", "Initial", "%d", &rsr_size, 1, 0);
+  set_output_elt(RSR_SIZE, "Remote", "Recv Socket", "Size", "Initial", "%d",
+		 &rsr_size, 1, 0);
 
-  set_output_elt(RSR_SIZE_END, "Remote", "Recv Socket", "Size", "Final", "%d", &rsr_size_end, 1, 0);
+  set_output_elt(RSR_SIZE_END, "Remote", "Recv Socket", "Size", "Final", "%d",
+		 &rsr_size_end, 1, 0);
 
-  set_output_elt(REMOTE_SEND_SIZE, "Remote", "Send", "Size", "", "%d", &remote_send_size, 1, 0);
+  set_output_elt(REMOTE_SEND_SIZE, "Remote", "Send", "Size", "", "%d",
+		 &remote_send_size, 1, 0);
 
-  set_output_elt(REMOTE_RECV_SIZE, "Remote", "Recv", "Size", "", "%d", &remote_recv_size, 1, 0);
+  set_output_elt(REMOTE_RECV_SIZE, "Remote", "Recv", "Size", "", "%d",
+		 &remote_recv_size, 1, 0);
 
-  set_output_elt(REMOTE_SEND_CALLS, "Remote", "Send", "Calls", "", "%lld", &remote_send_calls, 1, 0);
+  set_output_elt(REMOTE_SEND_CALLS, "Remote", "Send", "Calls", "", "%lld",
+		 &remote_send_calls, 1, 0);
 
-  set_output_elt(REMOTE_RECV_CALLS, "Remote", "Recv", "Calls", "", "%lld", &remote_receive_calls, 1, 0);
+  set_output_elt(REMOTE_RECV_CALLS, "Remote", "Recv", "Calls", "", "%lld",
+		 &remote_receive_calls, 1, 0);
 
-  set_output_elt(REMOTE_BYTES_PER_RECV, "Remote", "Bytes", "Per", "Recv", "%.2f", &remote_bytes_per_recv, 1, 0);
+  set_output_elt(REMOTE_BYTES_PER_RECV, "Remote", "Bytes", "Per", "Recv",
+		 "%.2f", &remote_bytes_per_recv, 1, 0);
 
-  set_output_elt(REMOTE_BYTES_PER_SEND, "Remote", "Bytes", "Per", "Send", "%.2f", &remote_bytes_per_send, 1, 0);
+  set_output_elt(REMOTE_BYTES_PER_SEND, "Remote", "Bytes", "Per", "Send",
+		 "%.2f", &remote_bytes_per_send, 1, 0);
 
-  set_output_elt(REMOTE_BYTES_RECVD, "Remote", "Bytes", "Received", "", "%lld", &remote_bytes_received, 1, 0);
+  set_output_elt(REMOTE_BYTES_RECVD, "Remote", "Bytes", "Received", "", "%lld",
+		 &remote_bytes_received, 1, 0);
 
-  set_output_elt(REMOTE_BYTES_SENT, "Remote", "Bytes", "Sent", "", "%lld", &remote_bytes_sent, 1, 0);
+  set_output_elt(REMOTE_BYTES_SENT, "Remote", "Bytes", "Sent", "", "%lld",
+		 &remote_bytes_sent, 1, 0);
 
-  set_output_elt(REMOTE_BYTES_XFERD, "Remote", "Bytes", "Xferred", "", "%.0f", &remote_bytes_xferd, 1, 0);
+  set_output_elt(REMOTE_BYTES_XFERD, "Remote", "Bytes", "Xferred", "", "%.0f",
+		 &remote_bytes_xferd, 1, 0);
 
-  set_output_elt(REMOTE_SEND_WIDTH, "Remote", "Send", "Width", "", "%d", &remote_send_width, 1, 0);
+  set_output_elt(REMOTE_SEND_WIDTH, "Remote", "Send", "Width", "", "%d",
+		 &remote_send_width, 1, 0);
 
-  set_output_elt(REMOTE_RECV_WIDTH, "Remote", "Recv", "Width", "", "%d", &remote_recv_width, 1, 0);
+  set_output_elt(REMOTE_RECV_WIDTH, "Remote", "Recv", "Width", "", "%d",
+		 &remote_recv_width, 1, 0);
 
-  set_output_elt(REMOTE_SEND_OFFSET, "Remote", "Send", "Offset", "", "%d", &remote_send_offset, 1, 0);
+  set_output_elt(REMOTE_SEND_OFFSET, "Remote", "Send", "Offset", "", "%d",
+		 &remote_send_offset, 1, 0);
 
-  set_output_elt(REMOTE_RECV_OFFSET, "Remote", "Recv", "Offset", "", "%d", &remote_recv_offset, 1, 0);
+  set_output_elt(REMOTE_RECV_OFFSET, "Remote", "Recv", "Offset", "", "%d",
+		 &remote_recv_offset, 1, 0);
 
-  set_output_elt(REMOTE_RECV_ALIGN, "Remote", "Recv", "Alignment", "", "%d", &remote_recv_align, 1, 0);
+  set_output_elt(REMOTE_RECV_ALIGN, "Remote", "Recv", "Alignment", "", "%d",
+		 &remote_recv_align, 1, 0);
 
-  set_output_elt(REMOTE_SEND_ALIGN, "Remote", "Send", "Alignment", "", "%d", &remote_send_align, 1, 0);
+  set_output_elt(REMOTE_SEND_ALIGN, "Remote", "Send", "Alignment", "", "%d",
+		 &remote_send_align, 1, 0);
 
-  set_output_elt(REMOTE_SEND_DIRTY_COUNT, "Remote", "Send", "Dirty", "Count", "%d", &rem_dirty_count, 1, 0);
+  set_output_elt(REMOTE_SEND_DIRTY_COUNT, "Remote", "Send", "Dirty", "Count",
+		 "%d", &rem_dirty_count, 1, 0);
 
-  set_output_elt(REMOTE_RECV_DIRTY_COUNT, "Remote", "Recv", "Dirty", "Count", "%d", &rem_dirty_count, 1, 0);
+  set_output_elt(REMOTE_RECV_DIRTY_COUNT, "Remote", "Recv", "Dirty", "Count",
+		 "%d", &rem_dirty_count, 1, 0);
 
-set_output_elt(REMOTE_RECV_CLEAN_COUNT, "Remote", "Recv", "Clean", "Count", "%d", &rem_clean_count, 1, 0);
+  set_output_elt(REMOTE_RECV_CLEAN_COUNT, "Remote", "Recv", "Clean", "Count",
+		 "%d", &rem_clean_count, 1, 0);
 
-  set_output_elt(REMOTE_CPU_UTIL, "Remote", "CPU", "Util", "%", "%.2f", &remote_cpu_utilization_double, 1, 0);
+  set_output_elt(REMOTE_CPU_UTIL, "Remote", "CPU", "Util", "%", "%.2f",
+		 &remote_cpu_utilization_double, 1, 0);
 
-  set_output_elt(REMOTE_CPU_PEAK_UTIL, "Remote", "Peak", "Per CPU", "Util %", "%.2f", &lib_remote_peak_cpu_util, 1, 0);
+  set_output_elt(REMOTE_CPU_PEAK_UTIL, "Remote", "Peak", "Per CPU", "Util %",
+		 "%.2f", &lib_remote_peak_cpu_util, 1, 0);
 
-  set_output_elt(REMOTE_CPU_PEAK_ID, "Remote", "Peak", "Per CPU", "ID", "%d", &lib_remote_peak_cpu_id, 1, 0);
+  set_output_elt(REMOTE_CPU_PEAK_ID, "Remote", "Peak", "Per CPU", "ID", "%d",
+		 &lib_remote_peak_cpu_id, 1, 0);
 
-  set_output_elt(REMOTE_CPU_BIND, "Remote", "CPU", "Bind", "", "%d", &remote_proc_affinity, 1, 0);
+  set_output_elt(REMOTE_CPU_BIND, "Remote", "CPU", "Bind", "", "%d",
+		 &remote_proc_affinity, 1, 0);
 
-  set_output_elt(REMOTE_SD, "Remote", "Service", "Demand", "", "%.3f", &remote_service_demand_double, 1, 0);
+  set_output_elt(REMOTE_SD, "Remote", "Service", "Demand", "", "%.3f",
+		 &remote_service_demand_double, 1, 0);
 
-  set_output_elt(REMOTE_CPU_METHOD, "Remote", "CPU", "Util", "Method", "%c", &remote_cpu_method, 1, 0);
+  set_output_elt(REMOTE_CPU_METHOD, "Remote", "CPU", "Util", "Method", "%c",
+		 &remote_cpu_method, 1, 0);
 
-  set_output_elt(REMOTE_CPU_COUNT, "Remote", "CPU", "Count", "", "%d", &lib_num_rem_cpus, 1, 0);
+  set_output_elt(REMOTE_CPU_COUNT, "Remote", "CPU", "Count", "", "%d",
+		 &lib_num_rem_cpus, 1, 0);
 
-  set_output_elt(REMOTE_NODELAY, "Remote", "NODELAY", "", "", "%d", &rem_nodelay, 1, 0);
+  set_output_elt(REMOTE_NODELAY, "Remote", "NODELAY", "", "", "%d",
+		 &rem_nodelay, 1, 0);
 
-  set_output_elt(REMOTE_CORK, "Remote", "Cork", "", "", "%d", &rem_tcpcork, 1, 0);
+  set_output_elt(REMOTE_CORK, "Remote", "Cork", "", "", "%d",
+		 &rem_tcpcork, 1, 0);
 
-  set_output_elt(LOCAL_DRIVER_NAME, "Local", "Driver", "Name", "", "%s", local_driver_name, 1, OMNI_WANT_LOC_DRVINFO);
+  set_output_elt(LOCAL_DRIVER_NAME, "Local", "Driver", "Name", "", "%s",
+		 local_driver_name, 1, OMNI_WANT_LOC_DRVINFO);
 
-  set_output_elt(LOCAL_DRIVER_VERSION, "Local", "Driver", "Version", "", "%s", local_driver_version, 1, OMNI_WANT_LOC_DRVINFO);
+  set_output_elt(LOCAL_DRIVER_VERSION, "Local", "Driver", "Version", "", "%s",
+		 local_driver_version, 1, OMNI_WANT_LOC_DRVINFO);
 
-  set_output_elt(LOCAL_DRIVER_FIRMWARE, "Local", "Driver", "Firmware", "", "%s", local_driver_firmware, 1, OMNI_WANT_LOC_DRVINFO);
+  set_output_elt(LOCAL_DRIVER_FIRMWARE, "Local", "Driver", "Firmware", "",
+		 "%s", local_driver_firmware, 1, OMNI_WANT_LOC_DRVINFO);
 
-  set_output_elt(LOCAL_DRIVER_BUS, "Local", "Driver", "Bus", "", "%s", local_driver_bus, 1, OMNI_WANT_LOC_DRVINFO);
+  set_output_elt(LOCAL_DRIVER_BUS, "Local", "Driver", "Bus", "", "%s", 
+		 local_driver_bus, 1, OMNI_WANT_LOC_DRVINFO);
 
-  set_output_elt(REMOTE_DRIVER_NAME, "Remote", "Driver", "Name", "", "%s", remote_driver_name, 1, OMNI_WANT_REM_DRVINFO);
+  set_output_elt(REMOTE_DRIVER_NAME, "Remote", "Driver", "Name", "", "%s",
+		 remote_driver_name, 1, OMNI_WANT_REM_DRVINFO);
 
-  set_output_elt(REMOTE_DRIVER_VERSION, "Remote", "Driver", "Version", "", "%s", remote_driver_version, 1, OMNI_WANT_REM_DRVINFO);
+  set_output_elt(REMOTE_DRIVER_VERSION, "Remote", "Driver", "Version", "",
+		 "%s", remote_driver_version, 1, OMNI_WANT_REM_DRVINFO);
 
-  set_output_elt(REMOTE_DRIVER_FIRMWARE, "Remote", "Driver", "Firmware", "", "%s", remote_driver_firmware, 1, OMNI_WANT_REM_DRVINFO);
+  set_output_elt(REMOTE_DRIVER_FIRMWARE, "Remote", "Driver", "Firmware", "",
+		 "%s", remote_driver_firmware, 1, OMNI_WANT_REM_DRVINFO);
 
-  set_output_elt(REMOTE_DRIVER_BUS, "Remote", "Driver", "Bus", "", "%s", remote_driver_bus, 1, OMNI_WANT_REM_DRVINFO);
+  set_output_elt(REMOTE_DRIVER_BUS, "Remote", "Driver", "Bus", "", "%s",
+		 remote_driver_bus, 1, OMNI_WANT_REM_DRVINFO);
 
-  set_output_elt(LOCAL_INTERFACE_SUBDEVICE, "Local", "Interface", "Subdevice", "", "0x%.4x", &local_interface_subdevice, 1, OMNI_WANT_LOC_IFIDS);
+  set_output_elt(LOCAL_INTERFACE_SUBDEVICE, "Local", "Interface", "Subdevice",
+		 "", "0x%.4x", &local_interface_subdevice, 1,
+		 OMNI_WANT_LOC_IFIDS);
 
-  set_output_elt(LOCAL_INTERFACE_DEVICE, "Local", "Interface", "Device", "", "0x%.4x", &local_interface_device, 1, OMNI_WANT_LOC_IFIDS);
+  set_output_elt(LOCAL_INTERFACE_DEVICE, "Local", "Interface", "Device", "",
+		 "0x%.4x", &local_interface_device, 1, OMNI_WANT_LOC_IFIDS);
 
-  set_output_elt(LOCAL_INTERFACE_SUBVENDOR, "Local", "Interface", "Subvendor", "", "0x%.4x", &local_interface_subvendor, 1, OMNI_WANT_LOC_IFIDS);
+  set_output_elt(LOCAL_INTERFACE_SUBVENDOR, "Local", "Interface", "Subvendor",
+		 "", "0x%.4x", &local_interface_subvendor, 1, 
+		 OMNI_WANT_LOC_IFIDS);
 
-  set_output_elt(LOCAL_INTERFACE_VENDOR, "Local", "Interface", "Vendor", "", "0x%.4x", &local_interface_vendor, 1, OMNI_WANT_LOC_IFIDS);
+  set_output_elt(LOCAL_INTERFACE_VENDOR, "Local", "Interface", "Vendor", "",
+		 "0x%.4x", &local_interface_vendor, 1, OMNI_WANT_LOC_IFIDS);
 
-  set_output_elt(REMOTE_INTERFACE_SUBDEVICE, "Remote", "Interface", "Subdevice", "", "0x%.4x", &remote_interface_subdevice, 1, OMNI_WANT_REM_IFIDS);
+  set_output_elt(REMOTE_INTERFACE_SUBDEVICE, "Remote", "Interface", 
+		 "Subdevice", "", "0x%.4x", &remote_interface_subdevice, 1,
+		 OMNI_WANT_REM_IFIDS);
 
-  set_output_elt(REMOTE_INTERFACE_DEVICE, "Remote", "Interface", "Device", "", "0x%.4x", &remote_interface_device, 1, OMNI_WANT_REM_IFIDS);
+  set_output_elt(REMOTE_INTERFACE_DEVICE, "Remote", "Interface", "Device", "",
+		 "0x%.4x", &remote_interface_device, 1, OMNI_WANT_REM_IFIDS);
 
-  set_output_elt(REMOTE_INTERFACE_SUBVENDOR, "Remote", "Interface", "Subvendor", "", "0x%.4x", &remote_interface_subvendor, 1, OMNI_WANT_REM_IFIDS);
+  set_output_elt(REMOTE_INTERFACE_SUBVENDOR, "Remote", "Interface",
+		 "Subvendor", "", "0x%.4x", &remote_interface_subvendor, 1,
+		 OMNI_WANT_REM_IFIDS);
 
-  set_output_elt(REMOTE_INTERFACE_VENDOR, "Remote", "Interface", "Vendor", "", "0x%.4x", &remote_interface_vendor, 1, OMNI_WANT_REM_IFIDS);
+  set_output_elt(REMOTE_INTERFACE_VENDOR, "Remote", "Interface", "Vendor", "",
+		 "0x%.4x", &remote_interface_vendor, 1, OMNI_WANT_REM_IFIDS);
 
-  set_output_elt(LOCAL_INTERFACE_NAME, "Local", "Interface", "Name", "", "%s", local_interface_name, 1, OMNI_WANT_LOC_IFNAME);
+  set_output_elt(LOCAL_INTERFACE_NAME, "Local", "Interface", "Name", "", "%s",
+		 local_interface_name, 1, OMNI_WANT_LOC_IFNAME);
 
-  set_output_elt(REMOTE_INTERFACE_NAME, "Remote", "Interface", "Name", "", "%s", remote_interface_name, 1, OMNI_WANT_REM_IFNAME);
+  set_output_elt(REMOTE_INTERFACE_NAME, "Remote", "Interface", "Name", "",
+		 "%s", remote_interface_name, 1, OMNI_WANT_REM_IFNAME);
 
-  set_output_elt(LOCAL_INTERFACE_SLOT, "Local", "Interface", "Slot", "", "%s", local_interface_slot, 1, OMNI_WANT_LOC_IFSLOT);
+  set_output_elt(LOCAL_INTERFACE_SLOT, "Local", "Interface", "Slot", "", "%s",
+		 local_interface_slot, 1, OMNI_WANT_LOC_IFSLOT);
 
-set_output_elt(REMOTE_INTERFACE_SLOT,  "Remote",  "Interface",  "Slot",  "",  "%s",  remote_interface_slot, 1, OMNI_WANT_REM_IFSLOT);
+  set_output_elt(REMOTE_INTERFACE_SLOT,  "Remote",  "Interface",  "Slot",  "",
+		 "%s",  remote_interface_slot, 1, OMNI_WANT_REM_IFSLOT);
 
-  set_output_elt(REMOTE_MACHINE, "Remote", "Machine", "", "", "%s", remote_machine, 1, 0);
+  set_output_elt(REMOTE_MACHINE, "Remote", "Machine", "", "", "%s",
+		 remote_machine, 1, 0);
   
-  set_output_elt(REMOTE_VERSION, "Remote", "Version", "", "", "%s", remote_version, 1, 0);
+  set_output_elt(REMOTE_VERSION, "Remote", "Version", "", "", "%s",
+		 remote_version, 1, 0);
   
-  set_output_elt(REMOTE_RELEASE, "Remote", "Release", "", "", "%s", remote_release, 1, 0);
+  set_output_elt(REMOTE_RELEASE, "Remote", "Release", "", "", "%s",
+		 remote_release, 1, 0);
 
-  set_output_elt(REMOTE_SYSNAME, "Remote", "Sysname", "", "", "%s", remote_sysname, 1, 0);
+  set_output_elt(REMOTE_SYSNAME, "Remote", "Sysname", "", "", "%s",
+		 remote_sysname, 1, 0);
 
-  set_output_elt(LOCAL_MACHINE, "Local", "Machine", "", "", "%s", local_machine, 1, 0);
+  set_output_elt(LOCAL_MACHINE, "Local", "Machine", "", "", "%s",
+		 local_machine, 1, 0);
 
-  set_output_elt(LOCAL_VERSION, "Local", "Version", "", "", "%s", local_version, 1, 0);
+  set_output_elt(LOCAL_VERSION, "Local", "Version", "", "", "%s",
+		 local_version, 1, 0);
 
-  set_output_elt(LOCAL_RELEASE, "Local", "Release", "", "", "%s", local_release, 1, 0);
+  set_output_elt(LOCAL_RELEASE, "Local", "Release", "", "", "%s",
+		 local_release, 1, 0);
 
-  set_output_elt(LOCAL_SYSNAME, "Local", "Sysname", "", "", "%s", local_sysname, 1, 0);
+  set_output_elt(LOCAL_SYSNAME, "Local", "Sysname", "", "", "%s",
+		 local_sysname, 1, 0);
 
-  set_output_elt(REMOTE_INTERVAL_USECS, "Remote", "Interval", "Usecs", "", "%d", &remote_interval_usecs, 1, 0);
+  set_output_elt(REMOTE_INTERVAL_USECS, "Remote", "Interval", "Usecs", "",
+		 "%d", &remote_interval_usecs, 1, 0);
 
-  set_output_elt(REMOTE_INTERVAL_BURST, "Remote", "Interval", "Burst", "", "%d", &remote_interval_burst, 1, 0);
+  set_output_elt(REMOTE_INTERVAL_BURST, "Remote", "Interval", "Burst", "",
+		 "%d", &remote_interval_burst, 1, 0);
 
-  set_output_elt(LOCAL_SECURITY_ENABLED, "Local", "OS", "Security", "Enabled", "%s", local_security_enabled, 1, 0);
+  set_output_elt(LOCAL_SECURITY_ENABLED, "Local", "OS", "Security", "Enabled",
+		 "%s", local_security_enabled, 1, 0);
 
-  set_output_elt(LOCAL_SECURITY_TYPE, "Local", "OS", "Security", "Type", "%s", local_security_type, 1, 0);
+  set_output_elt(LOCAL_SECURITY_TYPE, "Local", "OS", "Security", "Type", "%s",
+		 local_security_type, 1, 0);
 
-  set_output_elt(LOCAL_SECURITY_SPECIFIC, "Local", "OS", "Security", "Specific", "%s", local_security_specific, 1, 0);
+  set_output_elt(LOCAL_SECURITY_SPECIFIC, "Local", "OS", "Security", 
+		 "Specific", "%s", local_security_specific, 1, 0);
 
-  set_output_elt(LOCAL_SECURITY_ENABLED_NUM, "Local", "OS", "Security", "Enabled Num", "%d", &local_security_enabled_num, 1, 0);
+  set_output_elt(LOCAL_SECURITY_ENABLED_NUM, "Local", "OS", "Security",
+		 "Enabled Num", "%d", &local_security_enabled_num, 1, 0);
 
-  set_output_elt(LOCAL_SECURITY_TYPE_ID, "Local", "OS", "Security", "Type ID", "%d", &local_security_type_id, 1, 0);
+  set_output_elt(LOCAL_SECURITY_TYPE_ID, "Local", "OS", "Security", "Type ID",
+		 "%d", &local_security_type_id, 1, 0);
 
-  set_output_elt(REMOTE_SECURITY_ENABLED, "Remote", "OS", "Security", "Enabled", "%s", remote_security_enabled, 1, 0);
+  set_output_elt(REMOTE_SECURITY_ENABLED, "Remote", "OS", "Security",
+		 "Enabled", "%s", remote_security_enabled, 1, 0);
 
-  set_output_elt(REMOTE_SECURITY_TYPE, "Remote", "OS", "Security", "Type", "%s", remote_security_type, 1, 0);
+  set_output_elt(REMOTE_SECURITY_TYPE, "Remote", "OS", "Security", "Type",
+		 "%s", remote_security_type, 1, 0);
 
-  set_output_elt(REMOTE_SECURITY_SPECIFIC, "Remote", "OS", "Security", "Specific", "%s", remote_security_specific, 1, 0);
+  set_output_elt(REMOTE_SECURITY_SPECIFIC, "Remote", "OS", "Security",
+		 "Specific", "%s", remote_security_specific, 1, 0);
 
-  set_output_elt(REMOTE_SECURITY_ENABLED_NUM, "Remote", "OS", "Security", "Enabled", "%d", &remote_security_enabled_num, 1, 0);
+  set_output_elt(REMOTE_SECURITY_ENABLED_NUM, "Remote", "OS", "Security",
+		 "Enabled", "%d", &remote_security_enabled_num, 1, 0);
 
-  set_output_elt(REMOTE_SECURITY_TYPE_ID, "Remote", "OS", "Security", "Type", "%d", &remote_security_type_id, 1, 0);
+  set_output_elt(REMOTE_SECURITY_TYPE_ID, "Remote", "OS", "Security", "Type",
+		 "%d", &remote_security_type_id, 1, 0);
 
-  set_output_elt(LOCAL_INTERVAL_USECS, "Local", "Interval", "Usecs", "", "%d", &interval_usecs, 1, 0);
+  set_output_elt(LOCAL_INTERVAL_USECS, "Local", "Interval", "Usecs", "", "%d",
+		 &interval_usecs, 1, 0);
 
-  set_output_elt(LOCAL_INTERVAL_BURST, "Local", "Interval", "Burst", "", "%d", &interval_burst, 1, 0);
+  set_output_elt(LOCAL_INTERVAL_BURST, "Local", "Interval", "Burst", "", "%d",
+		 &interval_burst, 1, 0);
 
-  set_output_elt(REMOTE_SYSTEM_MODEL, "Remote", "System", "Model", "", "%s", remote_system_model, 1, 0);
+  set_output_elt(REMOTE_SYSTEM_MODEL, "Remote", "System", "Model", "", "%s",
+		 remote_system_model, 1, 0);
 
-  set_output_elt(REMOTE_CPU_MODEL, "Remote", "CPU", "Model", "", "%s", remote_cpu_model, 1, 0);
+  set_output_elt(REMOTE_CPU_MODEL, "Remote", "CPU", "Model", "", "%s",
+		 remote_cpu_model, 1, 0);
 
-  set_output_elt(REMOTE_CPU_FREQUENCY, "Remote", "CPU", "Frequency", "MHz", "%d", &remote_cpu_frequency, 1, 0);
+  set_output_elt(REMOTE_CPU_FREQUENCY, "Remote", "CPU", "Frequency", "MHz",
+		 "%d", &remote_cpu_frequency, 1, 0);
 
-  set_output_elt(LOCAL_SYSTEM_MODEL, "Local", "System", "Model", "", "%s", local_system_model, 1, 0);
+  set_output_elt(LOCAL_SYSTEM_MODEL, "Local", "System", "Model", "", "%s",
+		 local_system_model, 1, 0);
 
-  set_output_elt(LOCAL_CPU_MODEL, "Local", "CPU", "Model", "", "%s", local_cpu_model, 1, 0);
+  set_output_elt(LOCAL_CPU_MODEL, "Local", "CPU", "Model", "", "%s",
+		 local_cpu_model, 1, 0);
 
-  set_output_elt(LOCAL_CPU_FREQUENCY, "Local", "CPU", "Frequency", "MHz", "%d", &local_cpu_frequency, 1, 0);
+  set_output_elt(LOCAL_CPU_FREQUENCY, "Local", "CPU", "Frequency", "MHz", "%d",
+		 &local_cpu_frequency, 1, 0);
 
-  set_output_elt(MIN_LATENCY, "Minimum", "Latency", "Microseconds", "", "%d", &min_latency, 0, OMNI_WANT_STATS);
+  set_output_elt(MIN_LATENCY, "Minimum", "Latency", "Microseconds", "", "%d",
+		 &min_latency, 0, OMNI_WANT_STATS);
 
-  set_output_elt(MAX_LATENCY, "Maximum", "Latency", "Microseconds", "", "%d", &max_latency, 0, OMNI_WANT_STATS);
+  set_output_elt(MAX_LATENCY, "Maximum", "Latency", "Microseconds", "", "%d",
+		 &max_latency, 0, OMNI_WANT_STATS);
 
-  set_output_elt(P50_LATENCY, "50th", "Percentile", "Latency", "Microseconds", "%d", &p50_latency, 0, OMNI_WANT_STATS);
+  set_output_elt(P50_LATENCY, "50th", "Percentile", "Latency", "Microseconds",
+		 "%d", &p50_latency, 0, OMNI_WANT_STATS);
 
-  set_output_elt(P90_LATENCY, "90th", "Percentile", "Latency", "Microseconds", "%d", &p90_latency, 0, OMNI_WANT_STATS);
+  set_output_elt(P90_LATENCY, "90th", "Percentile", "Latency", "Microseconds",
+		 "%d", &p90_latency, 0, OMNI_WANT_STATS);
 
-set_output_elt(P99_LATENCY, "99th", "Percentile", "Latency", "Microseconds", "%d", &p99_latency, 0, OMNI_WANT_STATS);
+  set_output_elt(P99_LATENCY, "99th", "Percentile", "Latency", "Microseconds",
+		 "%d", &p99_latency, 0, OMNI_WANT_STATS);
 
-  set_output_elt(MEAN_LATENCY, "Mean", "Latency", "Microseconds", "", "%.2f", &mean_latency, 0, OMNI_WANT_STATS);
+  set_output_elt(MEAN_LATENCY, "Mean", "Latency", "Microseconds", "", "%.2f",
+		 &mean_latency, 0, OMNI_WANT_STATS);
 
-  set_output_elt(STDDEV_LATENCY, "Stddev", "Latency", "Microseconds", "", "%.2f", &stddev_latency, 0, OMNI_WANT_STATS);
+  set_output_elt(STDDEV_LATENCY, "Stddev", "Latency", "Microseconds", "",
+		 "%.2f", &stddev_latency, 0, OMNI_WANT_STATS);
 
-  set_output_elt(LOCAL_SOCKET_PRIO, "Local", "Socket", "Priority", "", "%d", &local_socket_prio, 1, 0);
+  set_output_elt(LOCAL_SOCKET_PRIO, "Local", "Socket", "Priority", "", "%d",
+		 &local_socket_prio, 1, 0);
 
-  set_output_elt(REMOTE_SOCKET_PRIO, "Remote", "Socket", "Priority", "", "%d", &remote_socket_prio, 1, 0);
+  set_output_elt(REMOTE_SOCKET_PRIO, "Remote", "Socket", "Priority", "", "%d"
+		 , &remote_socket_prio, 1, 0);
 
-  set_output_elt(LOCAL_SOCKET_TOS, "Local", "Socket", "TOS", "", "0x%.2x", &local_socket_tos, 1, 0);
+  set_output_elt(LOCAL_SOCKET_TOS, "Local", "Socket", "TOS", "", "0x%.2x",
+		 &local_socket_tos, 1, 0);
 
-  set_output_elt(REMOTE_SOCKET_TOS, "Remote", "Socket", "TOS", "", "0x%.2x", &remote_socket_tos, 1, 0);
+  set_output_elt(REMOTE_SOCKET_TOS, "Remote", "Socket", "TOS", "", "0x%.2x",
+		 &remote_socket_tos, 1, 0);
 
   netperf_output_source[i].output_name = OUTPUT_END;
   netperf_output_source[i].line[0] = "This";
