@@ -919,9 +919,7 @@ catcher(int sig)
   switch(sig) {
     
   case SIGINT:
-    fprintf(where,"netperf: caught SIGINT\n");
-    fflush(where);
-    exit(1);
+    times_up = 1;
     break;
   case SIGALRM: 
    if (--test_len_ticks == 0) {
@@ -1127,8 +1125,6 @@ if (debug) {
 }
 
   action.sa_handler = catcher;
-  sigemptyset(&(action.sa_mask));
-  sigaddset(&(action.sa_mask),SIGALRM);
 
 #ifdef SA_INTERRUPT
   /* on some systems (SunOS 4.blah), system calls are restarted. we do */
@@ -1138,9 +1134,21 @@ if (debug) {
   action.sa_flags = 0;
 #endif /* SA_INTERRUPT */
 
+  sigemptyset(&(action.sa_mask));
+  sigaddset(&(action.sa_mask),SIGALRM);
   if (sigaction(SIGALRM, &action, NULL) < 0) {
     fprintf(where,
 	    "start_timer: error installing alarm handler errno %d\n",
+	    errno);
+    fflush(where);
+    exit(-1);
+  }
+
+  sigemptyset(&(action.sa_mask));
+  sigaddset(&(action.sa_mask),SIGINT);
+  if (sigaction(SIGINT, &action, NULL) < 0) {
+    fprintf(where,
+	    "start_timer: error installing SIGINT handler errno %d\n",
 	    errno);
     fflush(where);
     exit(-1);
