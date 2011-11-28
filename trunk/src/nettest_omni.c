@@ -453,6 +453,11 @@ char        *remote_security_enabled = NULL;
 char        *remote_security_type = NULL;
 char        *remote_security_specific = NULL;
 
+char        local_cong_control[16] = "";
+char        remote_cong_control[16] = "";
+char        local_cong_control_req[16] = "";
+char        remote_cong_control_req[16] = "";
+
 /* new statistics based on code diffs from Google, with raj's own
    personal twist added to make them compatible with the omni
    tests... 20100913 */
@@ -674,6 +679,8 @@ enum netperf_output_name {
   REMOTE_SOCKET_PRIO,
   LOCAL_SOCKET_TOS,
   REMOTE_SOCKET_TOS,
+  LOCAL_CONG_CONTROL,
+  REMOTE_CONG_CONTROL,
   COMMAND_LINE,    /* COMMAND_LINE should always be "last" */
   OUTPUT_END,
   NETPERF_OUTPUT_MAX
@@ -691,6 +698,8 @@ enum netperf_output_name {
 #define OMNI_WANT_REM_DRVINFO 0X00000008
 #define OMNI_WANT_LOC_DRVINFO 0X00080000
 #define OMNI_WANT_STATS       0X00100010
+#define OMNI_WANT_REM_CONG    0X00000020
+#define OMNI_WANT_LOC_CONG    0X00200000
 
 unsigned int desired_output_groups = 0;
 
@@ -1284,6 +1293,10 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "LOCAL_SOCKET_TOS";
   case REMOTE_SOCKET_TOS:
     return "REMOTE_SOCKET_TOS";
+  case LOCAL_CONG_CONTROL:
+    return "LOCAL_CONG_CONTROL";
+  case REMOTE_CONG_CONTROL:
+    return "REMOTE_CONG_CONTROL";
   case OUTPUT_END:
     return "OUTPUT_END";
   default:
@@ -2277,6 +2290,15 @@ print_omni_init_list() {
   set_output_elt(REMOTE_SOCKET_TOS, "Remote", "Socket", "TOS", "", "0x%.2x",
 		 &remote_socket_tos, 1, 0);
 
+  set_output_elt(LOCAL_CONG_CONTROL, "Local", "Congestion", "Control", 
+		 "Algorithm", "%s", local_cong_control, 0,
+		 OMNI_WANT_LOC_CONG);
+
+  set_output_elt(REMOTE_CONG_CONTROL, "Remote", "Congestion", "Control", 
+		 "Algorithm", "%s", remote_cong_control, 0,
+		 OMNI_WANT_REM_CONG);
+
+
   netperf_output_source[i].output_name = OUTPUT_END;
   netperf_output_source[i].line[0] = "This";
   netperf_output_source[i].line[1] = "Is";
@@ -3135,6 +3157,59 @@ get_transport_info(SOCKET socket, int *mss, int protocol)
 
 }
 
+/* 
+   if ( setsockopt(sd, SOL_TCP, TCP_CONGESTION, "ledbat", 6) == -1 ) {
+     perror("setsockopt");
+     exit(EXIT_FAILURE);
+   }
+*/
+static void
+get_transport_cong_control(SOCKET socket, int protocol, char cong_control[], int len)
+{
+#ifdef TCP_CONGESTION
+  int my_len = len;
+  if (protocol != IPPROTO_TCP) {
+    strncpy(cong_control,"TCP Only",len);
+  }
+  else if (getsockopt(socket,
+		      protocol, TCP_CONGESTION, cong_control, &my_len) ==
+	   SOCKET_ERROR) {
+    snprintf(cong_control,len,"%d errno",errno);
+  }
+#else
+  strncpy(cong_control,"Unavailable",len);
+#endif
+  cong_control[len-1] = '\0';
+}
+
+static void
+set_transport_cong_control(SOCKET socket, int protocol, char cong_control[], int len)
+{
+#ifdef TCP_CONGESTION
+  if (protocol == IPPROTO_TCP) {
+    /* if it fails, we'll pick that up via the subsequent "get" */
+    setsockopt(socket, protocol, TCP_CONGESTION, cong_control, len);
+  }
+#endif
+}
+
+static SOCKET
+omni_create_data_socket(struct addrinfo *res) 
+{
+  SOCKET temp_socket;
+
+  temp_socket = create_data_socket(res);
+
+  if (temp_socket != SOCKET_ERROR) {
+    if (local_cong_control_req[0] != '\0') {
+      set_transport_cong_control(temp_socket,
+				 res->ai_protocol,
+				 local_cong_control_req,
+				 sizeof(local_cong_control_req));
+    }
+  }
+  return temp_socket;
+}
 /* choosing the default send size is a trifle more complicated than it
    used to be as we have to account for different protocol limits */
 
@@ -3498,6 +3573,9 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
       
       if (desired_output_groups & OMNI_WANT_REM_DRVINFO)
 	omni_request->flags |= OMNI_WANT_DRVINFO;
+
+      if (desired_output_groups & OMNI_WANT_REM_CONG)
+	omni_request->flags |= OMNI_WANT_REM_CONG;
 
       if (want_keepalive)
 	omni_request->flags |= OMNI_WANT_KEEPALIVE;
@@ -4093,6 +4171,14 @@ p       based.  having said that, we rely entirely on other code to
       lsr_size_end = lsr_size;
       lss_size_end = lss_size;
 #endif
+      if ((desired_output_groups & OMNI_WANT_LOC_CONG) &&
+	  (local_cong_control[0] == '\0')) {
+	get_transport_cong_control(data_socket,
+				   local_res->ai_protocol,
+				   local_cong_control,
+				   sizeof(local_cong_control));
+      }
+
       /* CHECK PARMS HERE; */
       ret = disconnect_data_socket(data_socket,
 				   1,
@@ -4123,6 +4209,7 @@ p       based.  having said that, we rely entirely on other code to
     /* if this is a legacy test, there is not much point to finding
        all these things since they will not be emitted. */
     if (!legacy) {
+
       /* and even if this is not a legacy test, there is still not
 	 much point to finding these things if they will not be
 	 emitted */
@@ -6476,7 +6563,7 @@ scan_omni_args(int argc, char *argv[])
 
 {
 
-#define OMNI_ARGS "b:cCd:DG:hH:kl:L:m:M:nNoOp:P:r:R:s:S:t:T:u:Vw:W:46"
+#define OMNI_ARGS "b:cCd:DG:hH:kK:l:L:m:M:nNoOp:P:r:R:s:S:t:T:u:Vw:W:46"
 
   extern char	*optarg;	  /* pointer to option string	*/
   
@@ -6614,6 +6701,14 @@ scan_omni_args(int argc, char *argv[])
 	  exit(1);
 	}
       }
+      break;
+    case 'K':
+      /* "Kongestion Kontrol */
+      break_args(optarg,arg1,arg2);
+      if (arg1[0])
+	strncpy(local_cong_control_req,arg1,sizeof(local_cong_control_req));
+      if (arg2[2])
+	strncpy(remote_cong_control_req,arg2,sizeof(remote_cong_control_req));
       break;
     case 'l':
       multicast_ttl = atoi(optarg);
