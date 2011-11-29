@@ -84,6 +84,10 @@ struct  omni_request_struct {
   uint32_t   netserver_ip[4]; /* when netperf tells netserver his IP */
   int32_t    socket_prio; /* what netserver should use for socket prio */
   int32_t    socket_tos;  /* what netserver should use for socket tos */
+  /* there are 38 "ints" above here, add another and you will need to
+     adjust the define below */
+#define OMNI_REQUEST_CONV_CUTOFF 38
+  char       cong_control[16]; /* the requested congestion control alg */
 };
 
 struct  omni_response_struct {
@@ -125,6 +129,7 @@ struct  omni_response_struct {
 				name that long - and still didn't
 				include the 9NNN model number! */
   char       security_string[16];
+  char       cong_control[16]; /* what the congestion control alg was */
 };
 
 struct omni_results_struct {

@@ -2514,6 +2514,20 @@ send_response()
 
 }
 
+/* go back and "undo" the ntohl that recv_request() did, starting with
+   the specified point and going to the end of the request array */
+void
+fixup_request_n(int n) 
+{
+  int i;
+  int limit;
+
+  limit = sizeof(netperf_request) / 4;
+  for (i = n; i < limit; i++) {
+    request_array[i] = htonl(request_array[i]);
+  }
+}
+
 /* receive a request, only converting the first n ints-worth of the
    test-specific data via htonl() before sending on the
    connection. the first two ints, which are before the test-specific

@@ -2779,7 +2779,7 @@ send_data(SOCKET data_socket, struct ring_elt *send_ring, uint32_t bytes_to_send
      we use send.  we ass-u-me blocking operations always, so no need
      to check for eagain or the like. */
 
-  if (debug > 1) {
+  if (debug > 2) {
     fprintf(where,
 	    "send_data sock %d, ring elt %p, bytes %d, dest %p, len %d\n",
 	    data_socket,
@@ -3424,7 +3424,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
     if (remote_mask_len)
       random_ip_address(remote_res, remote_mask_len);
 
-    data_socket = create_data_socket(local_res);
+    data_socket = omni_create_data_socket(local_res);
     
     if (data_socket == INVALID_SOCKET) {
       perror("netperf: send_omni: unable to create data socket");
@@ -3577,6 +3577,14 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
       if (desired_output_groups & OMNI_WANT_REM_CONG)
 	omni_request->flags |= OMNI_WANT_REM_CONG;
 
+      /* perhaps this should be made conditional on
+	 remote_cong_control_req[0] not being NULL? */
+      strncpy(omni_request->cong_control,
+	      remote_cong_control_req,
+	      sizeof(omni_request->cong_control));
+      omni_request->cong_control[sizeof(omni_request->cong_control) - 1] = 
+	'\0';
+
       if (want_keepalive)
 	omni_request->flags |= OMNI_WANT_KEEPALIVE;
 
@@ -3634,7 +3642,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	fprintf(where,"netperf: send_omni: requesting OMNI test\n");
       }
     
-      send_request();
+      send_request_n(OMNI_REQUEST_CONV_CUTOFF);
 
     
       /* the response from the remote should contain all the relevant
@@ -3690,6 +3698,13 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	remote_security_type = nsec_type_to_str(remote_security_type_id);
 	remote_security_enabled = 
 	  nsec_enabled_to_str(remote_security_enabled_num);
+	/* what was the congestion control? */
+	if (desired_output_groups & OMNI_WANT_REM_CONG) {
+	  strncpy(remote_cong_control,
+		  omni_response->cong_control,
+		  sizeof(remote_cong_control));
+	  remote_cong_control[sizeof(remote_cong_control) - 1] = '\0';
+	}
       }
       else {
 	Set_errno(netperf_response.content.serv_errno);
@@ -3800,7 +3815,7 @@ p       based.  having said that, we rely entirely on other code to
 
 	  pick_next_port_number(local_res,remote_res);
 
-	data_socket = create_data_socket(local_res);
+	data_socket = omni_create_data_socket(local_res);
   
 	if (data_socket == INVALID_SOCKET) {
 	  perror("netperf: send_omni: unable to create data socket");
@@ -4641,7 +4656,17 @@ recv_omni()
     fprintf(where,"netserver: recv_omni: entered...\n");
     fflush(where);
   }
-  
+
+  /* netserver has no good way of knowing where the conversion cutoff
+     point is, so we have to fix it after the fact */
+  fixup_request_n(OMNI_REQUEST_CONV_CUTOFF);
+
+  /* thus fixed-up, we can extract the requested congestion control
+     algorithm */
+  strncpy(local_cong_control_req,
+	  omni_request->cong_control,
+	  sizeof(local_cong_control_req));
+
   /* based on what we have been told by the remote netperf, we want to
      setup our endpoint for the "data connection" and let the remote
      netperf know the situation. */
@@ -4714,7 +4739,7 @@ recv_omni()
 				omni_request->protocol,
 				0);
 
-  s_listen = create_data_socket(local_res);
+  s_listen = omni_create_data_socket(local_res);
   
   if (s_listen == INVALID_SOCKET) {
     netperf_response.content.serv_errno = errno;
@@ -4926,6 +4951,13 @@ recv_omni()
 	  local_security_specific,
 	  sizeof(omni_response->security_string));
   omni_response->security_string[sizeof(omni_response->security_string)-1] = 0;
+
+  if (omni_request->flags & OMNI_WANT_REM_CONG) {
+    get_transport_cong_control(s_listen,
+			       local_res->ai_protocol,
+			       omni_response->cong_control,
+			       sizeof(omni_response->cong_control));
+  }
 
   send_response_n(OMNI_RESPONSE_CONV_CUTOFF); /* brittle, but functional */
 
