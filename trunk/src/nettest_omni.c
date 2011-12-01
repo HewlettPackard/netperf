@@ -6161,8 +6161,8 @@ bytes   bytes    secs            #      #   %s/sec\n\n";
     "%7.2f\n";
   
   char *tput_fmt_1 = "\
-%6d  %6d   %-7.2f   %7d %6d    %7.2f\n\
-%6d           %-7.2f   %7d           %7.2f\n\n";
+%6d  %6d   %-7.2f   %7"PRIu64" %6d    %7.2f\n\
+%6d           %-7.2f   %7"PRIu64"           %7.2f\n\n";
   
   
   char *cpu_title = "\
@@ -6174,8 +6174,8 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     "%6.2f %c\n";
   
   char *cpu_fmt_1 = "\
-%6d  %6d   %-7.2f   %7d %6d    %7.1f     %-6.2f   %-6.3f\n\
-%6d           %-7.2f   %7d           %7.1f     %-6.2f   %-6.3f\n\n";
+%6d  %6d   %-7.2f   %7"PRIu64" %6d    %7.1f     %-6.2f   %-6.3f\n\
+%6d           %-7.2f   %7"PRIu64"           %7.1f     %-6.2f   %-6.3f\n\n";
 
 
   send_omni_inner(remote_host, legacy, "MIGRATED UDP STREAM TEST");
@@ -6552,6 +6552,9 @@ OMNI and Migrated BSD Sockets Test Options:\n\
                       A mask value will cause randomization of the IP used\n\
     -k [file]         Generate keyval output optionally based on file\n\
                       Use filename of '?' to get the list of choices\n\
+    -K loc[,rem]      Set the local and/or remote congestion control\n\
+                      algorithm to use on those platforms where it can\n\
+                      be set.\n\
     -L name[/mask],fam  Use name (or IP) and family as source of data connection\n\
                       A mask value will cause randomization of the IP used\n\
     -m bytes          Set the send size (TCP_STREAM, UDP_STREAM)\n\

@@ -1,5 +1,10 @@
 These are the Release Notes for post Revision 2.5.0 top-of-trunk netperf:
 
+*) It is now possible to set/get the TCP congestion control algorithm
+   being used by either end of the test connection when using the omni
+   code.  The output selectors are LOCAL_CONG_CONTROL and
+   REMOTE_CONG_CONTROL and setting is via the test-specific -K option.
+
 *) Stop leaking file descriptors when looking-up probable egress
    interface names and I/O slot numbers.
 
