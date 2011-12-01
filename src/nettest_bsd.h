@@ -129,7 +129,6 @@ struct  omni_response_struct {
 				name that long - and still didn't
 				include the 9NNN model number! */
   char       security_string[16];
-  char       cong_control[16]; /* what the congestion control alg was */
 };
 
 struct omni_results_struct {
@@ -169,6 +168,7 @@ struct omni_results_struct {
   char       firmware[32];  
   char       bus[32];
   char       ifslot[16];    /* slot id of the probable egress interface */
+  char       cong_control[16]; /* what the congestion control alg was */
 
 };
 
