@@ -1626,6 +1626,7 @@ void
 parse_output_selection_direct(char *output_selection) {
 
   char *source,*line,*remainder,*temp;
+  char *f1, *f2, *f3;
   int i,len,done;
 
   len = strlen(output_selection);
@@ -1641,6 +1642,10 @@ parse_output_selection_direct(char *output_selection) {
     fflush(where);
     exit(-1);
   }
+
+  f1 = source;
+  f2 = line;
+  f3 = remainder;
 
   i = 0;
   done = 0;
@@ -1670,9 +1675,9 @@ parse_output_selection_direct(char *output_selection) {
     }
   } while (!done);
 
-  free(source);
-  free(line);
-  free(remainder);
+  free(f1);
+  free(f2);
+  free(f3);
 
 }
 
@@ -1933,10 +1938,10 @@ print_omni_init_list() {
   set_output_elt(LOCAL_RECV_SIZE, "Local", "Recv", "Size", "", "%d",
 		 &recv_size, 1, 0);
 
-  set_output_elt(LOCAL_SEND_CALLS, "Local", "Send", "Calls", "", "%d",
+  set_output_elt(LOCAL_SEND_CALLS, "Local", "Send", "Calls", "", "%"PRIu64,
 		 &local_send_calls, 1, 0);
 
-  set_output_elt(LOCAL_RECV_CALLS, "Local", "Recv", "Calls", "", "%d",
+  set_output_elt(LOCAL_RECV_CALLS, "Local", "Recv", "Calls", "", "%"PRIu64,
 		 &local_receive_calls, 1, 0);
 
   set_output_elt(LOCAL_BYTES_PER_RECV, "Local", "Bytes", "Per", "Recv", "%.2f",
@@ -1945,10 +1950,10 @@ print_omni_init_list() {
   set_output_elt(LOCAL_BYTES_PER_SEND, "Local", "Bytes", "Per", "Send", "%.2f",
 		 &bytes_per_send, 1, 0);
 
-  set_output_elt(LOCAL_BYTES_RECVD, "Local", "Bytes", "Received", "", "%lld",
+  set_output_elt(LOCAL_BYTES_RECVD, "Local", "Bytes", "Received", "", "%"PRIu64,
 		 &bytes_received, 1, 0);
 
-  set_output_elt(LOCAL_BYTES_SENT, "Local", "Bytes", "Sent", "", "%lld",
+  set_output_elt(LOCAL_BYTES_SENT, "Local", "Bytes", "Sent", "", "%"PRIu64,
 		 &bytes_sent, 1, 0);
 
   set_output_elt(LOCAL_BYTES_XFERD, "Local", "Bytes", "Xferred", "", "%.0f",
@@ -2034,10 +2039,10 @@ print_omni_init_list() {
   set_output_elt(REMOTE_RECV_SIZE, "Remote", "Recv", "Size", "", "%d",
 		 &remote_recv_size, 1, 0);
 
-  set_output_elt(REMOTE_SEND_CALLS, "Remote", "Send", "Calls", "", "%lld",
+  set_output_elt(REMOTE_SEND_CALLS, "Remote", "Send", "Calls", "", "%"PRIu64,
 		 &remote_send_calls, 1, 0);
 
-  set_output_elt(REMOTE_RECV_CALLS, "Remote", "Recv", "Calls", "", "%lld",
+  set_output_elt(REMOTE_RECV_CALLS, "Remote", "Recv", "Calls", "", "%"PRIu64,
 		 &remote_receive_calls, 1, 0);
 
   set_output_elt(REMOTE_BYTES_PER_RECV, "Remote", "Bytes", "Per", "Recv",
@@ -2046,10 +2051,10 @@ print_omni_init_list() {
   set_output_elt(REMOTE_BYTES_PER_SEND, "Remote", "Bytes", "Per", "Send",
 		 "%.2f", &remote_bytes_per_send, 1, 0);
 
-  set_output_elt(REMOTE_BYTES_RECVD, "Remote", "Bytes", "Received", "", "%lld",
+  set_output_elt(REMOTE_BYTES_RECVD, "Remote", "Bytes", "Received", "", "%"PRIu64,
 		 &remote_bytes_received, 1, 0);
 
-  set_output_elt(REMOTE_BYTES_SENT, "Remote", "Bytes", "Sent", "", "%lld",
+  set_output_elt(REMOTE_BYTES_SENT, "Remote", "Bytes", "Sent", "", "%"PRIu64,
 		 &remote_bytes_sent, 1, 0);
 
   set_output_elt(REMOTE_BYTES_XFERD, "Remote", "Bytes", "Xferred", "", "%.0f",
