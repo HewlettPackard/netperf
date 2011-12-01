@@ -5280,6 +5280,17 @@ recv_omni()
     lsr_size_end = lsr_size;
     lss_size_end = lss_size;
 #endif
+    if (omni_request->flags & OMNI_WANT_REM_CONG) {
+      get_transport_cong_control(data_socket,
+				 local_res->ai_protocol,
+				 omni_results->cong_control,
+				 sizeof(omni_results->cong_control));
+    }
+    else {
+      strncpy(omni_results->cong_control,"",sizeof(omni_results->cong_control));
+    }
+
+
     close_data_socket(data_socket,NULL,0,omni_request->protocol);
   }
   else {
@@ -5355,16 +5366,6 @@ recv_omni()
     strncpy(omni_results->firmware,"Bug If Seen DRVINFO",32);
     strncpy(omni_results->bus,"Bug If Seen DRVINFO",32);
   }
-  if (omni_request->flags & OMNI_WANT_REM_CONG) {
-    get_transport_cong_control(s_listen,
-			       local_res->ai_protocol,
-			       omni_results->cong_control,
-			       sizeof(omni_results->cong_control));
-  }
-  else {
-    strncpy(omni_results->cong_control,"",sizeof(omni_results->cong_control));
-  }
-
 
   if (debug) {
     fprintf(where,
