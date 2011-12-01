@@ -3698,13 +3698,6 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	remote_security_type = nsec_type_to_str(remote_security_type_id);
 	remote_security_enabled = 
 	  nsec_enabled_to_str(remote_security_enabled_num);
-	/* what was the congestion control? */
-	if (desired_output_groups & OMNI_WANT_REM_CONG) {
-	  strncpy(remote_cong_control,
-		  omni_response->cong_control,
-		  sizeof(remote_cong_control));
-	  remote_cong_control[sizeof(remote_cong_control) - 1] = '\0';
-	}
       }
       else {
 	Set_errno(netperf_response.content.serv_errno);
@@ -4348,6 +4341,13 @@ p       based.  having said that, we rely entirely on other code to
 	remote_interface_subvendor = omni_result->subvendor;
 	remote_interface_subdevice = omni_result->subdevice;
 	remote_transport_retrans = omni_result->transport_retrans;
+	/* what was the congestion control? */
+	if (desired_output_groups & OMNI_WANT_REM_CONG) {
+	  strncpy(remote_cong_control,
+		  omni_result->cong_control,
+		  sizeof(remote_cong_control));
+	  remote_cong_control[sizeof(remote_cong_control) - 1] = '\0';
+	}
       }
       else {
 	Set_errno(netperf_response.content.serv_errno);
@@ -4952,13 +4952,6 @@ recv_omni()
 	  sizeof(omni_response->security_string));
   omni_response->security_string[sizeof(omni_response->security_string)-1] = 0;
 
-  if (omni_request->flags & OMNI_WANT_REM_CONG) {
-    get_transport_cong_control(s_listen,
-			       local_res->ai_protocol,
-			       omni_response->cong_control,
-			       sizeof(omni_response->cong_control));
-  }
-
   send_response_n(OMNI_RESPONSE_CONV_CUTOFF); /* brittle, but functional */
 
   local_send_calls = 0;
@@ -5362,6 +5355,16 @@ recv_omni()
     strncpy(omni_results->firmware,"Bug If Seen DRVINFO",32);
     strncpy(omni_results->bus,"Bug If Seen DRVINFO",32);
   }
+  if (omni_request->flags & OMNI_WANT_REM_CONG) {
+    get_transport_cong_control(s_listen,
+			       local_res->ai_protocol,
+			       omni_results->cong_control,
+			       sizeof(omni_results->cong_control));
+  }
+  else {
+    strncpy(omni_results->cong_control,"",sizeof(omni_results->cong_control));
+  }
+
 
   if (debug) {
     fprintf(where,
