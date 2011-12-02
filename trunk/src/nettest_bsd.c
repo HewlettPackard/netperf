@@ -1664,17 +1664,26 @@ void
 print_top_test_header(char test_name[], struct addrinfo *source, struct addrinfo *destination)
 {
 
-#if defined(AF_INET6)
-  char address_buf[INET6_ADDRSTRLEN];
+  char *address_buf;
+
+#ifdef AF_INET6
+  address_buf = malloc(INET6_ADDRSTRLEN);
 #else
-  char address_buf[16]; /* magic constant */
+  address_buf = malloc(16); /* magic constant */
 #endif
 
-  /* we want to have some additional, interesting information in */
-  /* the headers. we know some of it here, but not all, so we will */
-  /* only print the test title here and will print the results */
-  /* titles after the test is finished */
+  if (address_buf == NULL) {
+    fprintf(where,"Unable to allocate address_buf\n");
+    fflush(where);
+    exit(1);
+  }
+
+  /* we want to have some additional, interesting information in the
+     headers. we know some of it here, but not all, so we will only
+     print the test title here and will print the results titles after
+     the test is finished */
   fprintf(where,"%s",test_name);
+
   address_buf[0] = '\0';
   inet_ntop(source->ai_family,get_address_address(source),address_buf,sizeof(address_buf));
   fprintf(where,
@@ -1683,6 +1692,7 @@ print_top_test_header(char test_name[], struct addrinfo *source, struct addrinfo
 	  address_buf,
 	  get_port_number(source),
 	  inet_ftos(source->ai_family));
+
   address_buf[0] = '\0';
   inet_ntop(destination->ai_family,get_address_address(destination),address_buf,sizeof(address_buf));
   fprintf(where,
@@ -1743,7 +1753,8 @@ print_top_test_header(char test_name[], struct addrinfo *source, struct addrinfo
     fprintf(where," : cpu bind");
   }
   fprintf(where,"\n");
-  
+
+  free(address_buf);
 }
 
 /* if WANT_MIGRATION is defined, we will use the send_tcp_stream()
