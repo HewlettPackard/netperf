@@ -2303,16 +2303,8 @@ print_omni_init_list() {
 		 "Algorithm", "%s", remote_cong_control, 0,
 		 OMNI_WANT_REM_CONG);
 
-
-  netperf_output_source[i].output_name = OUTPUT_END;
-  netperf_output_source[i].line[0] = "This";
-  netperf_output_source[i].line[1] = "Is";
-  netperf_output_source[i].line[2] = "The";
-  netperf_output_source[i].line[3] = "End";
-  netperf_output_source[i].format = "%s";
-  netperf_output_source[i].display_value = NULL;
-  netperf_output_source[i].max_line_len = NETPERF_LINE_MAX(i);
-  netperf_output_source[i].tot_line_len = NETPERF_LINE_TOT(i);
+  set_output_elt(OUTPUT_END, "This", "Is", "The", "End", "%s",
+		 NULL, 0, 0);
 
 }
 
