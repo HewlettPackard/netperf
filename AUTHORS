@@ -270,5 +270,5 @@ Cleanups for the manual.
 Amir Vidai
 Patch from which changes to set SO_PRIORITY were based.
 
-Alexander Dyuck
+Alexander Duyck
 Uncovering an out of bounds access of the netperf_output_source array.
