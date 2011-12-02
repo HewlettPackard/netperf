@@ -4596,6 +4596,7 @@ send_omni(char remote_host[])
 {
   char name_buf[32];
   snprintf(name_buf,sizeof(name_buf),"OMNI %s TEST",direction_str);
+  name_buf[31] = '\0';
   send_omni_inner(remote_host, 0, name_buf);
 }
 
