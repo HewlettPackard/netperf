@@ -1632,8 +1632,8 @@ parse_output_selection_direct(char *output_selection) {
   len = strlen(output_selection);
 
   source = strdup(output_selection);
-  line = (char *) malloc(len);
-  remainder = (char *) malloc(len);
+  line = (char *) malloc(len+1);
+  remainder = (char *) malloc(len+1);
 
   if ((NULL == source) ||
       (NULL == line) ||
@@ -1674,11 +1674,11 @@ parse_output_selection_direct(char *output_selection) {
       done = 1;
     }
   } while (!done);
-
+  
   free(f1);
   free(f2);
   free(f3);
-
+  
 }
 
 /* building blocks for output selection */
