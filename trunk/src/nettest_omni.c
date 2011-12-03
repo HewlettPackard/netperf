@@ -1821,7 +1821,7 @@ print_omni_init_list() {
   set_output_elt(COMMAND_LINE, "Command","Line","","","\"%s\"",
 		 command_line,1, 0);
 
-  set_output_elt(UUID, "Test", "i", "", "", "%s", test_uuid, 1, 0);
+  set_output_elt(UUID, "Test", "UUID", "", "", "%s", test_uuid, 1, 0);
 
   set_output_elt(RESULT_BRAND, "Result", "Tag", "", "", "\"%s\"",
 		 result_brand, 1, 0);
