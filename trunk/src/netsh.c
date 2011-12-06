@@ -112,7 +112,8 @@ int
   local_address_family = AF_UNSPEC; /* which address family local */
 
 /* the source of data for filling the buffers */
-char    fill_file[BUFSIZ] = "";
+char    local_fill_file[BUFSIZ] = "";
+char    remote_fill_file[32] = ""; /* size limited for control message */
 
 /* output controlling variables */
 int
@@ -266,7 +267,7 @@ Global options:\n\
     -D [secs,units] * Display interim results at least every secs seconds\n\
                       using units as the initial guess for units per second\n\
     -f G|M|K|g|m|k    Set the output units\n\
-    -F fill_file      Pre-fill buffers with data from fill_file\n\
+    -F lfill[,rfill]* Pre-fill buffers with data from specified file\n\
     -h                Display this text\n\
     -H name|ip,fam *  Specify the target machine and/or local ip and family\n\
     -i max,min        Specify the max and min number of iterations (15,1)\n\
@@ -699,8 +700,16 @@ scan_cmd_line(int argc, char *argv[])
       libfmt = *optarg;
       break;
     case 'F':
-      /* set the fill_file variable for pre-filling buffers */
-      strcpy(fill_file,optarg);
+      /* set the fill_file variables for pre-filling buffers */
+      break_args_explicit(optarg,arg1,arg2);
+      if (arg1[0]) {
+	strncpy(local_fill_file,arg1,sizeof(local_fill_file));
+	local_fill_file[sizeof(local_fill_file) - 1] = '\0';
+      }
+      if (arg2[0]) {
+	strncpy(remote_fill_file,arg2,sizeof(remote_fill_file));
+	remote_fill_file[sizeof(remote_fill_file) - 1] = '\0';
+      }
       break;
     case 'i':
       /* set the iterations min and max for confidence intervals */

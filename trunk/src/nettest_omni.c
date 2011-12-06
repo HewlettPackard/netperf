@@ -681,6 +681,8 @@ enum netperf_output_name {
   REMOTE_SOCKET_TOS,
   LOCAL_CONG_CONTROL,
   REMOTE_CONG_CONTROL,
+  LOCAL_FILL_FILE,
+  REMOTE_FILL_FILE,
   COMMAND_LINE,    /* COMMAND_LINE should always be "last" */
   OUTPUT_END,
   NETPERF_OUTPUT_MAX
@@ -1297,6 +1299,10 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "LOCAL_CONG_CONTROL";
   case REMOTE_CONG_CONTROL:
     return "REMOTE_CONG_CONTROL";
+  case LOCAL_FILL_FILE:
+    return "LOCAL_FILL_FILE";
+  case REMOTE_FILL_FILE:
+    return "REMOTE_FILL_FILE";
   case OUTPUT_END:
     return "OUTPUT_END";
   default:
@@ -2302,6 +2308,12 @@ print_omni_init_list() {
   set_output_elt(REMOTE_CONG_CONTROL, "Remote", "Congestion", "Control", 
 		 "Algorithm", "%s", remote_cong_control, 0,
 		 OMNI_WANT_REM_CONG);
+
+  set_output_elt(LOCAL_FILL_FILE, "Local", "Fill", "File", "", "%s",
+		 local_fill_file,0,0);
+
+  set_output_elt(REMOTE_FILL_FILE, "Remote", "Fill", "File", "", "%s",
+		 remote_fill_file,0,0);
 
   set_output_elt(OUTPUT_END, "This", "Is", "The", "End", "%s",
 		 NULL, 0, 0);
@@ -3638,7 +3650,11 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
       if (debug > 1) {
 	fprintf(where,"netperf: send_omni: requesting OMNI test\n");
       }
-    
+
+      strncpy(omni_request->fill_file,
+	      remote_fill_file,
+	      sizeof(omni_request->fill_file));
+
       send_request_n(OMNI_REQUEST_CONV_CUTOFF);
 
     
@@ -4714,6 +4730,12 @@ recv_omni()
 
   connection_test = omni_request->flags & OMNI_CONNECT_TEST;
   direction       = omni_request->direction;
+
+  /* let's be quite certain the fill file string is null terminated */
+  omni_request->fill_file[sizeof(omni_request->fill_file) - 1] = '\0';
+  strncpy(local_fill_file,
+	  omni_request->fill_file,
+	  sizeof(local_fill_file));
 
   /* kludgy, because I have no way at present to say how many bytes
      needed to be swapped around for the request from which this is

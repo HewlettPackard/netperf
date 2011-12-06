@@ -88,6 +88,7 @@ struct  omni_request_struct {
      adjust the define below */
 #define OMNI_REQUEST_CONV_CUTOFF 38
   char       cong_control[16]; /* the requested congestion control alg */
+  char       fill_file[32]; /* file from which netserver fills bufs */
 };
 
 struct  omni_response_struct {
