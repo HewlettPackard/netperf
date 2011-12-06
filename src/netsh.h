@@ -194,7 +194,8 @@ extern	char
   test_name[BUFSIZ];
 
 extern char
-  fill_file[BUFSIZ];
+  local_fill_file[BUFSIZ],
+  remote_fill_file[32];
 
 extern char *
   result_brand;

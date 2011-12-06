@@ -1451,16 +1451,17 @@ allocate_buffer_ring(int width, int buffer_size, int alignment, int offset)
 
   /* did the user wish to have the buffers pre-filled with data from a */
   /* particular source? */
-  if (strcmp(fill_file,"") == 0) {
+  if (strcmp(local_fill_file,"") == 0) {
     do_fill = 0;
     fill_source = NULL;
   }
   else {
     do_fill = 1;
-    fill_source = (FILE *)fopen(fill_file,"r");
+    fill_source = (FILE *)fopen(local_fill_file,"r");
     if (fill_source == (FILE *)NULL) {
-      perror("Could not open requested fill file");
-      exit(1);
+      fprintf(where,"Could not open requested fill file: %s\n",
+	      strerror(errno));
+      fflush(where);
     }
   }
 
@@ -1590,8 +1591,8 @@ access_buffer(char *buffer_ptr,int length, int dirty_count, int clean_count) {
    send or receive operations. each of these buffers will be aligned
    and offset as per the users request. the circumference of this ring
    will be controlled by the setting of send_width. the buffers will
-   be filled with data from the file specified in fill_file. if
-   fill_file is an empty string, the buffers will not be filled with
+   be filled with data from the file specified in local_fill_file. if
+   local_fill_file is an empty string, the buffers will not be filled with
    any particular data */
 
 struct ring_elt *
@@ -1617,12 +1618,12 @@ allocate_exs_buffer_ring (int width, int buffer_size, int alignment, int offset,
 
     /* did the user wish to have the buffers pre-filled with data from a */
     /* particular source? */
-    if (strcmp (fill_file, "") == 0) {
+    if (strcmp (local_fill_file, "") == 0) {
         do_fill = 0;
         fill_source = NULL;
     } else {
         do_fill = 1;
-        fill_source = (FILE *) fopen (fill_file, "r");
+        fill_source = (FILE *) fopen (local_fill_file, "r");
         if (fill_source == (FILE *) NULL) {
             perror ("Could not open requested fill file");
             exit (1);
@@ -1753,7 +1754,7 @@ alloc_sendfile_buf_ring(int width,
   /* if the user has not specified a file with the -F option, we will
      fail the test. otherwise, go ahead and try to open the
      file. 08/2000 */
-  if (strcmp(fill_file,"") == 0) {
+  if (strcmp(local_fill_file,"") == 0) {
     /* use an temp file for the fill file */
     char temp_file[] = {"netperfXXXXXX\0"};
     int *temp_buffer;
@@ -1810,7 +1811,7 @@ alloc_sendfile_buf_ring(int width,
   }
   else {
     /* the user pointed us at a file, so try it */
-    fildes = open(fill_file , O_RDONLY);
+    fildes = open(local_fill_file , O_RDONLY);
     if (fildes == -1){
       perror("alloc_sendfile_buf_ring: Could not open requested file");
       exit(1);
@@ -1819,7 +1820,7 @@ alloc_sendfile_buf_ring(int width,
        complete ring. that way we do not need additional logic in the
        ring setup to deal with wrap-around issues. we might want that
        someday, but not just now. 08/2000 */
-    if (stat(fill_file,&statbuf) != 0) {
+    if (stat(local_fill_file,&statbuf) != 0) {
       perror("alloc_sendfile_buf_ring: could not stat file");
       exit(1);
     }
