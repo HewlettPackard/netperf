@@ -1,5 +1,16 @@
 These are the Release Notes for post Revision 2.5.0 top-of-trunk netperf:
 
+*) Demo mode output format will now track the omni output format. So,
+   if the omni ouput format is CSV then the interim results will be
+   emitted in csv. Likewise for keyval.  If the mode is human (default
+   and test-specific -O) then the output remains unchanged.  Keyval
+   output includes the count of interval, with a mind towards being
+   able to source it in shells and whatnot.  Subject to change without
+   notice.
+
+*) A patch to correctly handle IPv6 addresses in the control messages,
+   courtesy of Bjoern Zeeb.
+
 *) The global -F option can now be used specify a local and/or remote
    fill file.
 

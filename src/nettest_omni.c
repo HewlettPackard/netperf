@@ -135,6 +135,13 @@ char nettest_omni_id[]="\
 
 static HIST time_hist;
 
+enum netperf_output_modes {
+  HUMAN = 0,
+  CSV,
+  KEYVAL,
+};
+enum netperf_output_modes netperf_output_mode = HUMAN;
+
 #ifdef WANT_DEMO
 #ifdef HAVE_GETHRTIME
 static hrtime_t demo_one;
@@ -171,44 +178,84 @@ static struct timeval *temp_demo_ptr = &demo_one;
       } \
     }
 
-#define DEMO_INTERVAL(units) \
-  if (demo_mode) {		\
-    double actual_interval;	\
-    struct timeval now;		  \
-    units_this_tick += units;		     \
-    if (units_this_tick >= demo_units) {			    \
-      /* time to possibly update demo_units and maybe output an	    \
-	 interim result */					    \
-      HIST_timestamp(demo_two_ptr);				    \
-      actual_interval = delta_micro(demo_one_ptr,demo_two_ptr);	    \
-      /* we always want to fine-tune demo_units here whether we	    \
-	 emit an interim result or not.  if we are short, this	    \
-	 will lengthen demo_units.  if we are long, this will	    \
-	 shorten it */						       \
-      demo_units = demo_units * (demo_interval / actual_interval);     \
-      if (actual_interval >= demo_interval) {			       \
-        /* time to emit an interim result, giving the current time \ 
-	   to the millisecond for compatability with RRD  */ \
-        gettimeofday(&now,NULL); \
-	fprintf(where,							\
-		"Interim result: %7.2f %s/s over %.2f seconds ending at %ld.%.3ld\n", \
-		calc_thruput_interval(units_this_tick,			\
-				      actual_interval/1000000.0),	\
-		format_units(),						\
-		actual_interval/1000000.0, \
-		now.tv_sec, \
-		(long) now.tv_usec/1000);	\
-	fflush(where);		    \
-	units_this_tick = 0.0;					     \
-	/* now get a new starting timestamp.  we could be clever     \
-	   and swap pointers - the math we do probably does not	     \
-	   take all that long, but for now this will suffice */	     \
-	temp_demo_ptr = demo_one_ptr;				     \
-	demo_one_ptr = demo_two_ptr;				     \
-	demo_two_ptr = temp_demo_ptr;				     \
-      }								     \
-    }								     \
+/* this has gotten long enough to make a static inline, and it has been enough years since all the important compilers have supported such a construct so it shold not be a big deal. raj 2012-01-23 */
+
+static inline DEMO_INTERVAL(uint32_t units) {
+  if (demo_mode) {
+    double actual_interval;
+    static int count = 0;
+    struct timeval now;
+    units_this_tick += units;		
+    if (units_this_tick >= demo_units) {			
+      /* time to possibly update demo_units and maybe output an	
+	 interim result */					
+      HIST_timestamp(demo_two_ptr);				
+      actual_interval = delta_micro(demo_one_ptr,demo_two_ptr);	
+      /* we always want to fine-tune demo_units here whether we emit
+	 an interim result or not.  if we are short, this will
+	 lengthen demo_units.  if we are long, this will shorten it */
+      demo_units = demo_units * (demo_interval / actual_interval);
+      if (actual_interval >= demo_interval) {			
+        /* time to emit an interim result, giving the current time to
+	   the millisecond for compatability with RRD  */
+        gettimeofday(&now,NULL);
+	switch (netperf_output_mode) {
+	case HUMAN:
+	  fprintf(where,
+		  "Interim result: %7.2f %s/s over %.2f seconds ending at %ld.%.3ld\n",
+		  calc_thruput_interval(units_this_tick,
+					actual_interval/1000000.0),
+		  format_units(),
+		  actual_interval/1000000.0,
+		  now.tv_sec,
+		  (long) now.tv_usec/1000);
+	  break;
+	case CSV:
+	  fprintf(where,
+		  "%7.2f,%s/s,%.2f,%ld.%.3ld\n",
+		  calc_thruput_interval(units_this_tick,
+					actual_interval/1000000.0),
+		  format_units(),
+		  actual_interval/1000000.0,
+		  now.tv_sec,
+		  (long) now.tv_usec/1000);
+	  break;
+	case KEYVAL:
+	  fprintf(where,
+		  "NETPERF_INTERIM_RESULT[%d]=%7.2f\n"
+		  "NETPERF_UNITS[%d]=%s/s\n"
+		  "NETPERF_INTERVAL[%d]=%.2f\n"
+		  "NETPERF_ENDING[%d]=%ld.%.3ld\n",
+		  count,
+		  calc_thruput_interval(units_this_tick,
+					actual_interval/1000000.0),
+		  count,
+		  format_units(),
+		  count,
+		  actual_interval/1000000.0,
+		  count,
+		  now.tv_sec,
+		  (long) now.tv_usec/1000);
+	  count += 1;
+	  break;
+	default:
+	  fprintf(where,
+		  "Hey Ricky you not fine, theres a bug at demo time. Hey Ricky!");
+	  fflush(where);
+	  exit(-1);
+	}
+	fflush(where);		
+	units_this_tick = 0.0;					
+	/* now get a new starting timestamp.  we could be clever
+	   and swap pointers - the math we do probably does not	
+	   take all that long, but for now this will suffice */	
+	temp_demo_ptr = demo_one_ptr;				
+	demo_one_ptr = demo_two_ptr;				
+	demo_two_ptr = temp_demo_ptr;				
+      }								
+    }								
   }
+}
 
 #define DEMO_STREAM_INTERVAL(units) DEMO_INTERVAL(units)
 
@@ -371,14 +418,13 @@ int failed_sends;
 int bytes_to_recv;
 double bytes_per_recv;
 int null_message_ok = 0;
-int human = 0;
+
 int was_legacy = 0;
 int legacy = 0;
 int implicit_direction = 0;
 int implicit_socket = 0;
 int explicit_data_address = 0;
-int csv = 0;
-int keyword = 0;
+
 uint64_t      trans_completed = 0;
 int64_t       units_remaining;
 uint64_t      bytes_sent = 0;
@@ -2731,12 +2777,21 @@ print_omni()
   if (debug > 2) 
     dump_netperf_output_source(where);
 
-  if (csv) 
+  switch (netperf_output_mode) {
+  case CSV:
     print_omni_csv();
-  else if (keyword)
+    break;
+  case KEYVAL:
     print_omni_keyword();
-  else
+    break;
+  case HUMAN:
     print_omni_human();
+    break;
+  default:
+    fprintf(where,"Yo Rick! There is a bug in netperf_output_mode!\n");
+    fflush(where);
+    exit(-1);
+  }
 
 }
 /* for the next few routines (connect, accept, send, recv,
@@ -4740,9 +4795,17 @@ recv_omni()
   /* kludgy, because I have no way at present to say how many bytes
      needed to be swapped around for the request from which this is
      pulled, and it is probably all wrong for IPv6 :( */
-  for (ret=0; ret < 4; ret++) {
-    omni_request->netserver_ip[ret] = htonl(omni_request->netserver_ip[ret]);
-    omni_request->netperf_ip[ret] = htonl(omni_request->netperf_ip[ret]);
+  switch (nf_to_af(omni_request->ipfamily)) {
+  case AF_INET6:
+    /* yes indeed it is, do nothing, bz */
+    break;
+  case AF_INET:
+  default:
+    for (ret=0; ret < 4; ret++) {
+      omni_request->netserver_ip[ret] = htonl(omni_request->netserver_ip[ret]);
+      omni_request->netperf_ip[ret] = htonl(omni_request->netperf_ip[ret]);
+    }
+    break;
   }
 
   set_hostname_and_port_2(omni_request->netserver_ip,
@@ -6739,10 +6802,8 @@ scan_omni_args(int argc, char *argv[])
       }
       break;
     case 'k':
-      human = 0;
+      netperf_output_mode = KEYVAL;
       legacy = 0;
-      csv = 0;
-      keyword = 1;
       /* obliterate any previous file name */
       if (output_selection_spec) {
 	free(output_selection_spec);
@@ -6835,10 +6896,8 @@ scan_omni_args(int argc, char *argv[])
       remote_connected = 1;
       break;
     case 'o':
-      human = 0;
+      netperf_output_mode = CSV;
       legacy = 0;
-      csv = 1;
-      keyword = 0;
       /* obliterate any previous file name */
       if (output_selection_spec) {
 	free(output_selection_spec);
@@ -6862,10 +6921,8 @@ scan_omni_args(int argc, char *argv[])
       }
       break;
     case 'O':
-      human = 1;
+      netperf_output_mode = HUMAN;
       legacy = 0;
-      csv = 0;
-      keyword = 0;
       /* obliterate any previous file name */
       if (output_selection_spec) {
 	free(output_selection_spec);
