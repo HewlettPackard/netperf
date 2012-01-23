@@ -1104,15 +1104,9 @@ set_sockaddr_family_addr_port(struct sockaddr_storage *sockaddr, int family, voi
 #if defined(AF_INET6)
   case AF_INET6: {
     struct sockaddr_in6 *foo = (struct sockaddr_in6 *)sockaddr;
-    int *bar;
-    int i;
     foo->sin6_port = htons((unsigned short) port);
     foo->sin6_family = (unsigned short) family;
     memcpy(&(foo->sin6_addr),addr,sizeof(foo->sin6_addr));
-    /* how to put this into "host" order? */
-    for (i = sizeof(foo->sin6_addr)/sizeof(int), bar=addr; i > 0; i--) {
-      bar[i] = htonl(bar[i]);
-    }
     break;
   }
 #endif
@@ -1153,17 +1147,13 @@ get_sockaddr_family_addr_port(struct sockaddr_storage *sockaddr, int family, voi
   }
 #ifdef AF_INET6
   case AF_INET6: {
-    int *foo;
     int i;
     struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)sockaddr;
-    ret = 0;
     *port = ntohs(sin6->sin6_port);
+    ret = 1;
+    for (i=0; i < sizeof(struct in6_addr); i++)
+      if (sin6->sin6_addr.s6_addr[i] != 0) ret=0;
     memcpy(addr,&(sin6->sin6_addr), sizeof(sin6->sin6_addr));
-    /* how to put this into "host" order? */
-    for (i = sizeof(sin6->sin6_addr)/sizeof(int), foo=addr; i > 0; i--) {
-      if (foo[i] != 0) ret = 1;
-      foo[i] = ntohl(foo[i]);
-    }
     break;
   }
 #endif
