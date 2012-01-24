@@ -50,6 +50,12 @@ char	netperf_id[]="\
 
 #include <stdio.h>
 #include <stdlib.h>
+#if HAVE_STRING_H
+# if !STDC_HEADERS && HAVE_MEMORY_H
+#  include <memory.h>
+# endif
+# include <string.h>
+#endif
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
@@ -133,6 +139,14 @@ main(int argc, char *argv[])
   if (!no_control) {
     establish_control(host_name,test_port,address_family,
 		      local_host_name,local_test_port,local_address_family);
+
+    if (passphrase != NULL) {
+      netperf_request.content.request_type = PASSPHRASE;
+      strncpy((char *)netperf_request.content.test_specific_data,
+	      passphrase,
+	      sizeof(netperf_request.content.test_specific_data));
+      send_request_n(0);
+    }
   }
   
   if (strcasecmp(test_name,"TCP_STREAM") == 0) {

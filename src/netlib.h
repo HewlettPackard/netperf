@@ -33,6 +33,7 @@
 #define         DEBUG_OK                3
 #define         NODE_IDENTIFY           4
 #define         CPU_CALIBRATE           5
+#define         PASSPHRASE              6
 
 #define         DO_TCP_STREAM           10
 #define         TCP_STREAM_RESPONSE     11

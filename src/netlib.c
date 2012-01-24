@@ -2535,14 +2535,17 @@ fixup_request_n(int n)
    portion are always converted. raj 2008-02-05 */
 
 int
-recv_request_n(int n)
+recv_request_timed_n(int n, int seconds)
 {
-int     tot_bytes_recvd,
-        bytes_recvd, 
-        bytes_left;
-char    *buf = (char *)&netperf_request;
-int     buflen = sizeof(netperf_request);
-int     counter,count;
+  int     tot_bytes_recvd,
+    bytes_recvd, 
+    bytes_left;
+  char    *buf = (char *)&netperf_request;
+  int     buflen = sizeof(netperf_request);
+  int     counter,count;
+
+  fd_set  readfds;
+  struct timeval timeout;
 
   if (n < 0) count = sizeof(netperf_request)/4;
   else count = 2 + n;
@@ -2558,15 +2561,39 @@ int     counter,count;
     count = sizeof(netperf_request)/4;
   }
 
+  /* for the time being, we rather rely on select decrementing timeout
+     each time to preclude someone with nefarious intent from just
+     dribbling data to us piecemeal.  of course, who knows what
+     someone with nefarious intent might come-up with. raj 2012-01-23 */
   tot_bytes_recvd = 0;    
   bytes_recvd = 0;     /* nt_lint; bytes_recvd uninitialized if buflen == 0 */
   bytes_left      = buflen;
-  while ((tot_bytes_recvd != buflen) &&
-	 ((bytes_recvd = recv(server_sock, buf, bytes_left,0)) > 0 )) {
-    tot_bytes_recvd += bytes_recvd;
-    buf             += bytes_recvd;
-    bytes_left      -= bytes_recvd;
-  }
+  timeout.tv_sec = seconds;
+  timeout.tv_usec = 0;
+  do {
+    FD_ZERO(&readfds);
+    FD_SET(server_sock,&readfds);
+    if (select(FD_SETSIZE,
+	       &readfds,
+	       0,
+	       0,
+	       (seconds > 0) ? &timeout : NULL) != 1) {
+      fprintf(where,
+	      "Issue receiving request on control connection. Errno %d (%s)\n",
+	      errno,
+	      strerror(errno));
+      fflush(where);
+      close(server_sock);
+      return -1;
+    }
+
+    if ((bytes_recvd = recv(server_sock, buf, bytes_left, 0)) > 0) {
+      tot_bytes_recvd += bytes_recvd;
+      buf             += bytes_recvd;
+      bytes_left      -= bytes_recvd;
+    }
+  }  while ((tot_bytes_recvd != buflen) &&
+	    (bytes_recvd > 0 ));
   
   /* put the request into host order */
   
@@ -2585,7 +2612,8 @@ int     counter,count;
     Print_errno(where,
 		"recv_request: error on recv");
     fflush(where);
-    exit(1);
+    close(server_sock);
+    return -1;
   }
   
   if (bytes_recvd == 0) {
@@ -2609,7 +2637,8 @@ int     counter,count;
 	    "recv_request: partial request received of %d bytes\n",
 	    tot_bytes_recvd);
     fflush(where);
-    exit(1);
+    close(server_sock);
+    return -1;
   }
 
   if (debug > 1) {
@@ -2626,6 +2655,19 @@ int     counter,count;
   } 
 
   return buflen;
+}
+
+/* receive a request, only converting the first n ints-worth of the
+   test-specific data via htonl() before sending on the
+   connection. the first two ints, which are before the test-specific
+   portion are always converted. raj 2008-02-05 */
+
+int
+recv_request_n(int n)
+{
+
+  return recv_request_timed_n(n,0);
+
 }
 
  /***********************************************************************/
