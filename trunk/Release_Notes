@@ -1,5 +1,17 @@
 These are the Release Notes for post Revision 2.5.0 top-of-trunk netperf:
 
+*) A new global -Z option has been added to netperf and netserver.
+   This takes as an argument a passphrase.  In the case of netserver
+   it will expect a control message with the passphrase as the first
+   thing it receives on the control connection.  If netserver does not
+   receive a control message with the passphrase it will close the
+   control connection and move-on.  If the netserver receives a
+   control message with a passprhase when it is not lookign for one,
+   it will be ignored. There is at present a 20 second timeout on the
+   attempted receipt of the request message. In the case of netperf,
+   the passphrase will be the first thing sent on the control
+   connection.  There is no response to a passphrase control message.
+
 *) Demo mode output format will now track the omni output format. So,
    if the omni ouput format is CSV then the interim results will be
    emitted in csv. Likewise for keyval.  If the mode is human (default

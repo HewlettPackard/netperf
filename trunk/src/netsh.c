@@ -87,7 +87,7 @@ extern	int	getopt(int , char **, char *) ;
    getopt to parse the command line, we will tell getopt that they do
    not take parms, and then look for them ourselves */
 
-#define GLOBAL_CMD_LINE_ARGS "A:a:b:B:CcdDf:F:H:hi:I:jk:K:l:L:n:NO:o:P:p:rSs:t:T:v:VW:w:y:Y:46"
+#define GLOBAL_CMD_LINE_ARGS "A:a:b:B:CcdDf:F:H:hi:I:jk:K:l:L:n:NO:o:P:p:rSs:t:T:v:VW:w:y:Y:Z:46"
 
 /************************************************************************/
 /*									*/
@@ -233,6 +233,9 @@ int cpu_binding_requested = 0;
 /* are we not establishing a control connection? */
 int no_control = 0;
 
+/* what is the passphrase? */
+char *passphrase = NULL;
+
 char netserver_usage[] = "\n\
 Usage: netserver [options] \n\
 \n\
@@ -248,6 +251,7 @@ Options:\n\
     -6                Do IPv6\n\
     -v verbosity      Specify the verbosity level\n\
     -V                Display version information and exit\n\
+    -Z passphrase     Expect passphrase as the first thing received\n\
 \n";
 
 /* netperf_usage done as two concatenated strings to make the MS
@@ -292,7 +296,8 @@ Global options:\n\
     -v level          Set the verbosity level (default 1, min 0)\n\
     -V                Display the netperf version and exit\n\
     -y local,remote   Set the socket priority\n\
-    -Y local,remote   Set the IP_TOS. Use hexadecimal.\n";
+    -Y local,remote   Set the IP_TOS. Use hexadecimal.\n\
+    -Z passphrase     Set and pass to netserver a passphrase\n";
 
 char netperf_usage2[] = "\n\
 For those options taking two parms, at least one must be specified;\n\
@@ -890,6 +895,12 @@ scan_cmd_line(int argc, char *argv[])
 #endif
       if (arg2[0])
 	remote_socket_tos = strtol(arg2,NULL,0);
+      break;
+    case 'Z':
+      /* only copy as much of the passphrase as could fit in the
+	 test-specific portion of a control message. */
+      passphrase = strndup(optarg,
+			   sizeof(netperf_request.content.test_specific_data));
       break;
     case 'l':
       /* determine test end conditions */

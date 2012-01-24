@@ -77,6 +77,8 @@
 extern char		*program; /* program invocation name		*/
 extern char             *command_line;  /* how we were invoked          */
 
+extern char  *passphrase;
+
 /* stuff to say where this test is going                                */
 extern char	host_name[HOSTNAMESIZE];/* remote host name or ip addr  */
 extern char     local_host_name[HOSTNAMESIZE];

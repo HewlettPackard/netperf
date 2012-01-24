@@ -178,8 +178,6 @@ char	netserver_id[]="\
 #endif
 char     FileName[PATH_MAX];
 
-
-
 char     listen_port[10];
 
 struct listen_elt {
@@ -202,6 +200,8 @@ int      suppress_debug = 0;
 
 extern	char	*optarg;
 extern	int	optind, opterr;
+
+/* char  *passphrase = NULL; */
 
 static void
 init_netserver_globals() {
@@ -691,6 +691,34 @@ close_listens(struct listen_elt *list) {
   }
 }
 
+static int
+recv_passphrase() {
+
+  /* may need to revisit the timeout. we only respond if there is an
+     error with receiving the passphrase */
+  if ((recv_request_timed_n(0,20) > 0) &&
+      (netperf_request.content.request_type == PASSPHRASE) &&
+      (!strcmp(passphrase,
+	       (char *)netperf_request.content.test_specific_data))) {
+    /* it was okey dokey */
+    return 0;
+  }
+#if defined(SEND_PASSPHRASE_RESPONSE)
+  netperf_response.content.response_type = PASSPHRASE;
+  netperf_response.content.serv_errno = 403;
+    snprintf((char *)netperf_response.content.test_specific_data,
+	     sizeof(netperf_response.content.test_specific_data),
+	     "Sorry, unable to match with required passphrase\n");
+  send_response_n(0);
+#endif
+  fprintf(where,
+	  "Unable to match required passphrase.  Closing control connection\n");
+  fflush(where);
+  
+  close(server_sock);
+  return -1;
+}
+
 /* This routine implements the "main event loop" of the netperf server
    code. Code above it will have set-up the control connection so it
    can just merrily go about its business, which is to "schedule"
@@ -709,10 +737,20 @@ process_requests()
     fflush(where);
   }
 
+  /* if the netserver was started with a passphrase, look for it in
+     the first request to arrive.  if there is no passphrase in the
+     first request we will end-up dumping the control connection. raj
+     2012-01-23 */
+
+  if ((passphrase != NULL)  && (recv_passphrase()))
+      return;
+
   while (1) {
 
-    if (recv_request() == 0) 
+    if (recv_request() <= 0) {
+      close(server_sock);
       return;
+    }
 
     switch (netperf_request.content.request_type) {
       
@@ -957,6 +995,13 @@ process_requests()
       recv_omni();
       break;
 #endif
+
+    case PASSPHRASE:
+      if (debug) {
+	fprintf(where,"Ignoring an unexpected passphrase control message\n");
+	fflush(where);
+      }
+      break;
 
     default:
       fprintf(where,"unknown test number %d\n",
@@ -1247,9 +1292,9 @@ accept_connections() {
 }
 
 #ifndef WIN32
-#define SERVER_ARGS "DdfhL:n:Np:v:V46"
+#define SERVER_ARGS "DdfhL:n:Np:v:VZ:46"
 #else
-#define SERVER_ARGS "DdfhL:n:Np:v:V46I:i:"
+#define SERVER_ARGS "DdfhL:n:Np:v:VZ:46I:i:"
 #endif
 void
 scan_netserver_args(int argc, char *argv[]) {
@@ -1319,6 +1364,12 @@ scan_netserver_args(int argc, char *argv[]) {
       /* we want to open a listen socket at a specified port number */
       strncpy(listen_port,optarg,sizeof(listen_port));
       not_inetd = 1;
+      break;
+    case 'Z':
+      /* only copy as much of the passphrase as could fit in the
+	 test-specific portion of a control message. */
+      passphrase = strndup(optarg,
+			   sizeof(netperf_request.content.test_specific_data));
       break;
     case '4':
       local_address_family = AF_INET;
