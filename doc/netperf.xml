@@ -7,7 +7,7 @@
   <para>This is Rick Jones' feeble attempt at a Texinfo-based manual for the netperf benchmark.</para>
   <para>Copyright &copyright; 2005-2011 Hewlett-Packard Company</para>
   <quotation>
-    <para>Permission is granted to copy, distribute and/or modify this document per the terms of the netperf source licence, a copy of which can be found in the file <file>COPYING</file> of the basic netperf distribution.</para>
+    <para>Permission is granted to copy, distribute and/or modify this document per the terms of the netperf source license, a copy of which can be found in the file <file>COPYING</file> of the basic netperf distribution.</para>
   </quotation>
   <titlepage>
     <booktitle>Care and Feeding of Netperf</booktitle>
@@ -17,7 +17,7 @@
     <para>This is Rick Jones' feeble attempt at a Texinfo-based manual for the netperf benchmark.</para>
     <para>Copyright &copyright; 2005-2011 Hewlett-Packard Company</para>
     <quotation>
-      <para>Permission is granted to copy, distribute and/or modify this document per the terms of the netperf source licence, a copy of which can be found in the file <file>COPYING</file> of the basic netperf distribution.</para>
+      <para>Permission is granted to copy, distribute and/or modify this document per the terms of the netperf source license, a copy of which can be found in the file <file>COPYING</file> of the basic netperf distribution.</para>
     </quotation>
   </titlepage>
 <!-- begin with a table of contents -->
@@ -32,7 +32,7 @@
       <para>This is Rick Jones' feeble attempt at a Texinfo-based manual for the netperf benchmark.</para>
       <para>Copyright &copyright; 2005-2011 Hewlett-Packard Company</para>
       <quotation>
-        <para>Permission is granted to copy, distribute and/or modify this document per the terms of the netperf source licence, a copy of which can be found in the file <file>COPYING</file> of the basic netperf distribution.</para>
+        <para>Permission is granted to copy, distribute and/or modify this document per the terms of the netperf source license, a copy of which can be found in the file <file>COPYING</file> of the basic netperf distribution.</para>
       </quotation>
       <menu>
         <menuentry>
@@ -253,8 +253,8 @@ make install</example>
       <para><indexterm index="vr">&ndash;enable-cpuutil, Configure</indexterm>If the netperf configure script does not know how to automagically detect which CPU utilization mechanism to use on your platform you may want to add a <code>--enable-cpuutil=mumble</code> option to the configure command.   If you have knowledge and/or experience to contribute to that area, feel free to contact <email><emailaddress>netperf-feedback@netperf.org</emailaddress></email>.</para>
       <para><indexterm index="vr">&ndash;enable-xti, Configure</indexterm><indexterm index="vr">&ndash;enable-unixdomain, Configure</indexterm><indexterm index="vr">&ndash;enable-dlpi, Configure</indexterm><indexterm index="vr">&ndash;enable-sctp, Configure</indexterm>Similarly, if you want tests using the XTI interface, Unix Domain Sockets, DLPI or SCTP it will be necessary to add one or more <code>--enable-[xti|unixdomain|dlpi|sctp]=yes</code> options to the configure command.  As of this writing, the configure script will not include those tests automagically.</para>
       <para><indexterm index="vr">&ndash;enable-omni, Configure</indexterm>Starting with version 2.5.0, netperf is migrating most of the &ldquo;classic&rdquo; netperf tests found in <file>src/nettest_bsd.c</file> to the so-called &ldquo;omni&rdquo; tests (aka &ldquo;two routines to run them all&rdquo;) found in <file>src/nettest_omni.c</file>.  This migration enables a number of new features such as greater control over what output is included, and new things to output.  The &ldquo;omni&rdquo; test is enabled by default in 2.5.0 and a number of the classic tests are migrated - you can tell if a test has been migrated from the presence of <code>MIGRATED</code> in the test banner.  If you encounter problems with either the omni or migrated tests, please first attempt to obtain resolution via <email><emailaddress>netperf-talk@netperf.org</emailaddress></email> or <email><emailaddress>netperf-feedback@netperf.org</emailaddress></email>.  If that is unsuccessful, you can add a <code>--enable-omni=no</code> to the configure command and the omni tests will not be compiled-in and the classic tests will not be migrated.</para>
-      <para>Starting with version 2.5.0, netperf will include the &ldquo;burst mode&rdquo; functionality in a default compilation of the bits.  If you encounter problems with this, please first attempt to obtain help via <email><emailaddress>netperf-talk@netperf.org</emailaddress></email> or <email><emailaddress>netperf-feedback@netperf.org</emailaddress></email>.  If that is unsuccessful, you can add a <code>--enable-burst=no</code> to the configure command and the burst mode functionality will nt be compiled-in.</para>
-      <para>On some platforms, it may be necessary to precede the configure command with a CFLAGS and/or LIBS variable as the netperf configure script is not yet smart enough to set them itself.  Whenever possible, these requirements will be found in <file>README.<var>platform</var></file> files. Expertise and assistance in making that more automagical in the configure script would be most welcome.</para>
+      <para>Starting with version 2.5.0, netperf will include the &ldquo;burst mode&rdquo; functionality in a default compilation of the bits.  If you encounter problems with this, please first attempt to obtain help via <email><emailaddress>netperf-talk@netperf.org</emailaddress></email> or <email><emailaddress>netperf-feedback@netperf.org</emailaddress></email>.  If that is unsuccessful, you can add a <code>--enable-burst=no</code> to the configure command and the burst mode functionality will not be compiled-in.</para>
+      <para>On some platforms, it may be necessary to precede the configure command with a CFLAGS and/or LIBS variable as the netperf configure script is not yet smart enough to set them itself.  Whenever possible, these requirements will be found in <file>README.<var>platform</var></file> files. Expertise and assistance in making that more automagic in the configure script would be most welcome.</para>
       <para><indexterm index="cp">Limiting Bandwidth</indexterm><indexterm index="cp">Bandwidth Limitation</indexterm><indexterm index="vr">&ndash;enable-intervals, Configure</indexterm><indexterm index="vr">&ndash;enable-histogram, Configure</indexterm>Other optional configure-time settings include <code>--enable-intervals=yes</code> to give netperf the ability to &ldquo;pace&rdquo; its _STREAM tests and <code>--enable-histogram=yes</code> to have netperf keep a histogram of interesting times.  Each of these will have some effect on the measured result.  If your system supports <code>gethrtime()</code> the effect of the histogram measurement should be minimized but probably still measurable.  For example, the histogram of a netperf TCP_RR test will be of the individual transaction times:</para>
       <example xml:space="preserve">netperf -t TCP_RR -H lag -v 2
 TCP REQUEST/RESPONSE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to lag.hpl.hp.com (15.4.89.214) port 0 AF_INET : histogram
@@ -398,7 +398,7 @@ bytes  bytes   bytes    secs.    10^6bits/sec
         <tableitem>
           <tableterm><code>N</code></tableterm>
           <item>
-            <para>A Microsoft Windows-specific mechanism, the code for which can be found in <file>src/netcpu_ntperf.c</file>.  This mechanism too is based on what appears to be a form of micro-state accounting and requires no calibration.  On laptops, or other systems which may dynamically alter the CPU frequency to minimize power consumtion, it has been suggested that this mechanism may become slightly confused, in which case using BIOS/uEFI settings to disable the power saving would be indicated.</para>
+            <para>A Microsoft Windows-specific mechanism, the code for which can be found in <file>src/netcpu_ntperf.c</file>.  This mechanism too is based on what appears to be a form of micro-state accounting and requires no calibration.  On laptops, or other systems which may dynamically alter the CPU frequency to minimize power consumption, it has been suggested that this mechanism may become slightly confused, in which case using BIOS/uEFI settings to disable the power saving would be indicated.</para>
           </item>
         </tableitem>
         <tableitem>
@@ -552,14 +552,14 @@ bytes  bytes   bytes    secs.    10^6bits/sec
         <tableitem>
           <tableterm><code>-f G|M|K|g|m|k|x</code></tableterm>
           <item>
-            <para>This option can be used to change the reporting units for _STREAM tests.  Arguments of &ldquo;G,&rdquo; &ldquo;M,&rdquo; or &ldquo;K&rdquo; will set the units to 2^30, 2^20 or 2^10 bytes/s respectively (EG power of two GB, MB or KB).  Arguments of &ldquo;g,&rdquo; &ldquo;,m&rdquo; or &ldquo;k&rdquo; will set the units to 10^9, 10^6 or 10^3 bits/s respectively.  An argument of &ldquo;x&rdquo; requests the units be transactions per second and is only meaninful for a request-response test. [Default: &ldquo;m&rdquo; or 10^6 bits/s]</para>
+            <para>This option can be used to change the reporting units for _STREAM tests.  Arguments of &ldquo;G,&rdquo; &ldquo;M,&rdquo; or &ldquo;K&rdquo; will set the units to 2^30, 2^20 or 2^10 bytes/s respectively (EG power of two GB, MB or KB).  Arguments of &ldquo;g,&rdquo; &ldquo;,m&rdquo; or &ldquo;k&rdquo; will set the units to 10^9, 10^6 or 10^3 bits/s respectively.  An argument of &ldquo;x&rdquo; requests the units be transactions per second and is only meaningful for a request-response test. [Default: &ldquo;m&rdquo; or 10^6 bits/s]</para>
             <para><indexterm index="vr">-F, Global</indexterm></para>
           </item>
         </tableitem>
         <tableitem>
           <tableterm><code>-F &lt;fillfile&gt;</code></tableterm>
           <item>
-            <para>This option specified the file from which send which buffers will be pre-filled .  While the buffers will contain data from the specified file, the file is not fully transfered to the remote system as the receiving end of the test will not write the contents of what it receives to a file.  This can be used to pre-fill the send buffers with data having different compressibility and so is useful when measuring performance over mechanisms which perform compression.</para>
+            <para>This option specified the file from which send which buffers will be pre-filled .  While the buffers will contain data from the specified file, the file is not fully transferred to the remote system as the receiving end of the test will not write the contents of what it receives to a file.  This can be used to pre-fill the send buffers with data having different compressibility and so is useful when measuring performance over mechanisms which perform compression.</para>
             <para>While previously required for a TCP_SENDFILE test, later versions of netperf removed that restriction, creating a temporary file as needed.  While the author cannot recall exactly when that took place, it is known to be unnecessary in version 2.5.0 and later.</para>
             <para><indexterm index="vr">-h, Global</indexterm></para>
           </item>
@@ -611,8 +611,8 @@ Size   Size    Size     Time     Throughput
 bytes  bytes   bytes    secs.    10^6bits/sec
 
  32768  16384  16384    10.01      40.23</example>
-            <para>In the example above we see that netperf did not meet the desired convidence intervals.  Instead of being 99% confident it was within +/- 2.5% of the real mean value of throughput it is only confident it was within +/-3.4%.  In this example, increasing the <option>-i</option> option (described below) and/or increasing the iteration length with the <option>-l</option> option might resolve the situation.</para>
-            <para>In an explicit &ldquo;omni&rdquo; test, failure to meet the confidence intervals will not result in netperf emitting a warning.  To verify the hitting, or not, of the confidence intervals one will need to include them as part of an an <xref><xrefnodename>Omni Output Selection</xrefnodename><xrefinfoname>output selection</xrefinfoname></xref> in the test-specific <option>-o</option>, <option>-O</option> or <option>k</option> output selection options.  The warning about not hitting the confidence intervals will remain in a &ldquo;migrated&rdquo; classic netperf test.</para>
+            <para>In the example above we see that netperf did not meet the desired confidence intervals.  Instead of being 99% confident it was within +/- 2.5% of the real mean value of throughput it is only confident it was within +/-3.4%.  In this example, increasing the <option>-i</option> option (described below) and/or increasing the iteration length with the <option>-l</option> option might resolve the situation.</para>
+            <para>In an explicit &ldquo;omni&rdquo; test, failure to meet the confidence intervals will not result in netperf emitting a warning.  To verify the hitting, or not, of the confidence intervals one will need to include them as part of an <xref><xrefnodename>Omni Output Selection</xrefnodename><xrefinfoname>output selection</xrefinfoname></xref> in the test-specific <option>-o</option>, <option>-O</option> or <option>k</option> output selection options.  The warning about not hitting the confidence intervals will remain in a &ldquo;migrated&rdquo; classic netperf test.</para>
             <para><indexterm index="vr">-i, Global</indexterm></para>
           </item>
         </tableitem>
@@ -655,7 +655,7 @@ bytes  bytes   bytes    secs.    10^6bits/sec
               </item>
             </itemize>
             <para>These statistics will be based on an expanded (100 buckets per row rather than 10) histogram of times rather than a terribly long list of individual times.  As such, there will be some slight error thanks to the bucketing. However, the reduction in storage and processing overheads is well worth it.  When running a request/response test, one might get some idea of the error by comparing the <xref><xrefnodename>Omni Output Selectors</xrefnodename><xrefinfoname><code>MEAN_LATENCY</code></xrefinfoname></xref> calculated from the histogram with the <code>RT_LATENCY</code> calculated from the number of request/response transactions and the test run time.</para>
-            <para>In the case of a request/response test the latencies will be transaction latencies.  In the case of a receive-only test they will be time spent in the receive call.  In the case of a send-only test they will be tim spent in the send call. The units will be microseconds. Added in netperf 2.5.0.</para>
+            <para>In the case of a request/response test the latencies will be transaction latencies.  In the case of a receive-only test they will be time spent in the receive call.  In the case of a send-only test they will be time spent in the send call. The units will be microseconds. Added in netperf 2.5.0.</para>
             <para><indexterm index="vr">-l, Global</indexterm></para>
           </item>
         </tableitem>
@@ -688,7 +688,7 @@ bytes  bytes   bytes    secs.    10^6bits/sec
         <tableitem>
           <tableterm><code>-N</code></tableterm>
           <item>
-            <para>This option tells netperf to forego establishing a control connection. This makes it is possible to run some limited netperf tests without a corresponding netserver on the remote system.</para>
+            <para>This option tells netperf to forgo establishing a control connection. This makes it is possible to run some limited netperf tests without a corresponding netserver on the remote system.</para>
             <para>With this option set, the test to be run is to get all the addressing information it needs to establish its data connection from the command line or internal defaults.  If not otherwise specified by test-specific command line options, the data connection for a &ldquo;STREAM&rdquo; or &ldquo;SENDFILE&rdquo; test will be to the &ldquo;discard&rdquo; port, an &ldquo;RR&rdquo; test will be to the &ldquo;echo&rdquo; port, and a &ldquo;MEARTS&rdquo; test will be to the chargen port.</para>
             <para>The response size of an &ldquo;RR&rdquo; test will be silently set to be the same as the request size.  Otherwise the test would hang if the response size was larger than the request size, or would report an incorrect, inflated transaction rate if the response size was less than the request size.</para>
             <para>Since there is no control connection when this option is specified, it is not possible to set &ldquo;remote&rdquo; properties such as socket buffer size and the like via the netperf command line. Nor is it possible to retrieve such interesting remote information as CPU utilization. These items will be displayed as values which should make it immediately obvious that was the case.</para>
@@ -1092,7 +1092,7 @@ Size   Size    Size     Time     Throughput
 bytes  bytes   bytes    secs.    10^6bits/sec
 
  32768  16384  16384    10.00      80.42</example>
-      <para>We see that the default receive socket buffer size for the receiver (lag - HP-UX 11.23) is 32768 bytes, and the default socket send buffer size for the sender (Debian 2.6 kernel) is 16384 bytes, however Linux does &ldquo;auto tuning&rdquo; of socket buffer and TCP window sizes, which means the send socket buffer size may be different at the end of the test than it was at the beginning.  This is addressed in the <xref><xrefnodename>The Omni Tests</xrefnodename><xrefinfoname>omni tests</xrefinfoname></xref> added in version 2.5.0 and <xref><xrefnodename>Omni Output Selection</xrefnodename><xrefinfoname>output selection</xrefinfoname></xref>.  Througput is expressed as 10^6 (aka Mega) bits per second, and the test ran for 10 seconds.  IPv4 addresses (AF_INET) were used.</para>
+      <para>We see that the default receive socket buffer size for the receiver (lag - HP-UX 11.23) is 32768 bytes, and the default socket send buffer size for the sender (Debian 2.6 kernel) is 16384 bytes, however Linux does &ldquo;auto tuning&rdquo; of socket buffer and TCP window sizes, which means the send socket buffer size may be different at the end of the test than it was at the beginning.  This is addressed in the <xref><xrefnodename>The Omni Tests</xrefnodename><xrefinfoname>omni tests</xrefinfoname></xref> added in version 2.5.0 and <xref><xrefnodename>Omni Output Selection</xrefnodename><xrefinfoname>output selection</xrefinfoname></xref>.  Throughput is expressed as 10^6 (aka Mega) bits per second, and the test ran for 10 seconds.  IPv4 addresses (AF_INET) were used.</para>
     </subsection>
   </node>
   <node>
@@ -1229,7 +1229,7 @@ bytes   bytes    secs            #      #   10^6bits/sec
         <tableitem>
           <tableterm><code>-D &lt;devspec&gt;</code></tableterm>
           <item>
-            <para>This option is used to provide the fully-qualified names for the local and/or remote DPLI device files.  The syntax is otherwise identical to that of a <dfn>sizespec</dfn>.</para>
+            <para>This option is used to provide the fully-qualified names for the local and/or remote DLPI device files.  The syntax is otherwise identical to that of a <dfn>sizespec</dfn>.</para>
           </item>
         </tableitem>
         <tableitem>
@@ -1304,8 +1304,8 @@ bytes   bytes    secs            #      #   10^6bits/sec
     <chapter>
       <title>Using Netperf to Measure Request/Response</title>
       <para>Request/response performance is often overlooked, yet it is just as important as bulk-transfer performance.  While things like larger socket buffers and TCP windows, and stateless offloads like TSO and LRO can cover a multitude of latency and even path-length sins, those sins cannot easily hide from a request/response test.  The convention for a request/response test is to have a _RR suffix.  There are however a few &ldquo;request/response&rdquo; tests that have other suffixes.</para>
-      <para>A request/response test, particularly synchronous, one transaction at at time test such as those found by default in netperf, is particularly sensitive to the path-length of the networking stack.  An _RR test can also uncover those platforms where the NIC's are strapped by default with overbearing interrupt avoidance settings in an attempt to increase the bulk-transfer performance (or rather, decrease the CPU utilization of a bulk-transfer test).  This sensitivity is most acute for small request and response sizes, such as the single-byte default for a netperf _RR test.</para>
-      <para>While a bulk-transfer test reports its results in units of bits or bytes transfered per second, by default a mumble_RR test reports transactions per second where a transaction is defined as the completed exchange of a request and a response.  One can invert the transaction rate to arrive at the average round-trip latency.  If one is confident about the symmetry of the connection, the average one-way latency can be taken as one-half the average round-trip latency. As of version 2.5.0 (actually slightly before) netperf still does not do the latter, but will do the former if one sets the verbosity to 2 for a classic netperf test, or includes the apropriate <xref><xrefnodename>Omni Output Selectors</xrefnodename><xrefinfoname>output selector</xrefinfoname></xref> in an <xref><xrefnodename>The Omni Tests</xrefnodename><xrefinfoname>omni test</xrefinfoname></xref>.  It will also allow the user to switch the throughput units from transactions per secont to bits or bytes per second with the global <option>-f</option> option.</para>
+      <para>A request/response test, particularly synchronous, one transaction at a time test such as those found by default in netperf, is particularly sensitive to the path-length of the networking stack.  An _RR test can also uncover those platforms where the NICs are strapped by default with overbearing interrupt avoidance settings in an attempt to increase the bulk-transfer performance (or rather, decrease the CPU utilization of a bulk-transfer test).  This sensitivity is most acute for small request and response sizes, such as the single-byte default for a netperf _RR test.</para>
+      <para>While a bulk-transfer test reports its results in units of bits or bytes transferred per second, by default a mumble_RR test reports transactions per second where a transaction is defined as the completed exchange of a request and a response.  One can invert the transaction rate to arrive at the average round-trip latency.  If one is confident about the symmetry of the connection, the average one-way latency can be taken as one-half the average round-trip latency. As of version 2.5.0 (actually slightly before) netperf still does not do the latter, but will do the former if one sets the verbosity to 2 for a classic netperf test, or includes the appropriate <xref><xrefnodename>Omni Output Selectors</xrefnodename><xrefinfoname>output selector</xrefinfoname></xref> in an <xref><xrefnodename>The Omni Tests</xrefnodename><xrefinfoname>omni test</xrefinfoname></xref>.  It will also allow the user to switch the throughput units from transactions per second to bits or bytes per second with the global <option>-f</option> option.</para>
       <menu>
         <menuentry>
           <menunode>Issues in Request/Response</menunode>
@@ -1332,7 +1332,7 @@ bytes   bytes    secs            #      #   10^6bits/sec
       <para>A single instance of a one transaction outstanding _RR test should _never_ completely saturate the CPU of a system.  If testing between otherwise evenly matched systems, the symmetric nature of a _RR test with equal request and response sizes should result in equal CPU loading on both systems. However, this may not hold true on MP systems, particularly if one CPU binds the netperf and netserver differently via the global <option>-T</option> option.</para>
       <para>For smaller request and response sizes packet loss is a bigger issue as there is no opportunity for a <dfn>fast retransmit</dfn> or retransmission prior to a retransmission timer expiring.</para>
       <para>Virtualization may considerably increase the effective path length of a networking stack.  While this may not preclude achieving link-rate on a comparatively slow link (eg 1 Gigabit Ethernet) on a _STREAM test, it can show-up as measurably fewer transactions per second on an _RR test.  However, this may still be masked by interrupt coalescing in the NIC/driver.</para>
-      <para>Certain NICs have ways to minimize the number of interrupts sent to the host.  If these are strapped badly they can significantly reduce the performance of something like a single-byte request/response test. Such setups are distinguised by seriously low reported CPU utilization and what seems like a low (even if in the thousands) transaction per second rate.  Also, if you run such an OS/driver combination on faster or slower hardware and do not see a corresponding change in the transaction rate, chances are good that the drvier is strapping the NIC with aggressive interrupt avoidance settings.  Good for bulk throughput, but bad for latency.</para>
+      <para>Certain NICs have ways to minimize the number of interrupts sent to the host.  If these are strapped badly they can significantly reduce the performance of something like a single-byte request/response test. Such setups are distinguished by seriously low reported CPU utilization and what seems like a low (even if in the thousands) transaction per second rate.  Also, if you run such an OS/driver combination on faster or slower hardware and do not see a corresponding change in the transaction rate, chances are good that the driver is strapping the NIC with aggressive interrupt avoidance settings.  Good for bulk throughput, but bad for latency.</para>
       <para>Some drivers may try to automagically adjust the interrupt avoidance settings.  If they are not terribly good at it, you will see considerable run-to-run variation in reported transaction rates. Particularly if you &ldquo;mix-up&rdquo; _STREAM and _RR tests.</para>
     </section>
   </node>
@@ -1638,7 +1638,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  % I    % I    us/Tr   us/Tr
     <chapter>
       <title>Using Netperf to Measure Aggregate Performance</title>
       <para><indexterm index="cp">Aggregate Performance</indexterm><indexterm index="vr">&ndash;enable-burst, Configure</indexterm> Ultimately, <xref><xrefnodename>Netperf4</xrefnodename><xrefinfoname>Netperf4</xrefinfoname></xref> will be the preferred benchmark to use when one wants to measure aggregate performance because netperf has no support for explicit synchronization of concurrent tests. Until netperf4 is ready for prime time, one can make use of the heuristics and procedures mentioned here for the 85% solution.</para>
-      <para>Basically, there are two ways to measure aggregate performance with netperf.  The first is to run multiple, concurrent netperf tests and can be applied to any of the netperf tests.  The second is to configure netperf with <code>--enable-burst</code> and is applicable to the TCP_RR test.</para>
+      <para>There are a few ways to measure aggregate performance with netperf. The first is to run multiple, concurrent netperf tests and can be applied to any of the netperf tests.  The second is to configure netperf with <code>--enable-burst</code> and is applicable to the TCP_RR test. The third is a variation on the first.</para>
       <menu>
         <menuentry>
           <menunode>Running Concurrent Netperf Tests</menunode>
@@ -1648,6 +1648,11 @@ bytes  bytes  bytes   bytes  secs.   per sec  % I    % I    us/Tr   us/Tr
         <menuentry>
           <menunode>Using --enable-burst</menunode>
           <menutitle>Using &ndash;enable-burst</menutitle>
+          <menucomment></menucomment>
+        </menuentry>
+        <menuentry>
+          <menunode>Using --enable-demo</menunode>
+          <menutitle>Using &ndash;enable-demo</menutitle>
           <menucomment></menucomment>
         </menuentry>
       </menu>
@@ -1684,9 +1689,9 @@ done
 87380  16384  16384    10.03       234.73   3.67     5.09     10.260  14.225
 87380  16384  16384    10.03       234.64   3.67     5.10     10.263  14.231
 87380  16384  16384    10.03       234.87   3.67     5.09     10.253  14.215</example>
-      <para>If the CPU utilizations reported for the same system are the same or very very close you can be reasonably confident that skew error is minimized.  Presumeably one could then omit <option>-i</option> but that is not advised, particularly when/if the CPU utilization approaches 100 percent.  In the example above we see that the CPU utilization on the local system remains the same for all four tests, and is only off by 0.01 out of 5.09 on the remote system.  As the number of CPUs in the system increases, and so too the odds of saturating a single CPU, the accuracy of similar CPU utilization implying little skew error is diminished.  This is also the case for those increasingly rare single CPU systems if the utilization is reported as 100% or very close to it.</para>
+      <para>If the CPU utilizations reported for the same system are the same or very very close you can be reasonably confident that skew error is minimized.  Presumably one could then omit <option>-i</option> but that is not advised, particularly when/if the CPU utilization approaches 100 percent.  In the example above we see that the CPU utilization on the local system remains the same for all four tests, and is only off by 0.01 out of 5.09 on the remote system.  As the number of CPUs in the system increases, and so too the odds of saturating a single CPU, the accuracy of similar CPU utilization implying little skew error is diminished.  This is also the case for those increasingly rare single CPU systems if the utilization is reported as 100% or very close to it.</para>
       <quotation>
-        <para><b>NOTE: It is very important to rememeber that netperf is calculating system-wide CPU utilization.  When calculating the service demand (those last two columns in the output above) each netperf assumes it is the only thing running on the system.  This means that for concurrent tests the service demands reported by netperf will be wrong.  One has to compute service demands for concurrent tests by hand.</b></para>
+        <para><b>NOTE: It is very important to remember that netperf is calculating system-wide CPU utilization.  When calculating the service demand (those last two columns in the output above) each netperf assumes it is the only thing running on the system.  This means that for concurrent tests the service demands reported by netperf will be wrong.  One has to compute service demands for concurrent tests by hand.</b></para>
       </quotation>
       <para>If you wish you can add a unique, global <option>-B</option> option to each command line to append the given string to the output:</para>
       <example xml:space="preserve">for i in 1 2 3 4
@@ -1716,20 +1721,23 @@ done
       <title>Issues in Running Concurrent Tests</title>
       <para>In addition to the aforementioned issue of skew error, there can be other issues to consider when running concurrent netperf tests.</para>
       <para>For example, when running concurrent tests over multiple interfaces, one is not always assured that the traffic one thinks went over a given interface actually did so.  In particular, the Linux networking stack takes a particularly strong stance on its following the so called <samp>weak end system model</samp>.  As such, it is willing to answer ARP requests for any of its local IP addresses on any of its interfaces.  If multiple interfaces are connected to the same broadcast domain, then even if they are configured into separate IP subnets there is no a priori way of knowing which interface was actually used for which connection(s).  This can be addressed by setting the <samp>arp_ignore</samp> sysctl before configuring interfaces.</para>
-      <para>As it is quite important, we will repeat that it is very important to rememeber that each concurrent netperf instance is calculating system-wide CPU utilization.  When calculating the service demand each netperf assumes it is the only thing running on the system.  This means that for concurrent tests the service demands reported by netperf <b>will be wrong</b>.  One has to compute service demands for concurrent tests by hand</para>
+      <para>As it is quite important, we will repeat that it is very important to remember that each concurrent netperf instance is calculating system-wide CPU utilization.  When calculating the service demand each netperf assumes it is the only thing running on the system.  This means that for concurrent tests the service demands reported by netperf <b>will be wrong</b>.  One has to compute service demands for concurrent tests by hand</para>
+      <para>Running concurrent tests can also become difficult when there is no one &ldquo;central&rdquo; node.  Running tests between pairs of systems may be more difficult, calling for remote shell commands in the for loop rather than netperf commands.  This introduces more skew error, which the confidence intervals may not be able to sufficiently mitigate. One possibility is to actually run three consecutive netperf tests on each node - the first being a warm-up, the last being a cool-down. The idea then is to ensure that the time it takes to get all the netperfs started is less than the length of the first netperf command in the sequence of three.  Similarly, it assumes that all &ldquo;middle&rdquo; netperfs will complete before the first of the &ldquo;last&rdquo; netperfs complete.</para>
     </subsection>
   </node>
   <node>
     <nodename>Using --enable-burst</nodename>
+    <nodenext>Using --enable-demo</nodenext>
     <nodeprev>Running Concurrent Netperf Tests</nodeprev>
     <nodeup>Using Netperf to Measure Aggregate Performance</nodeup>
 <!-- node-name,  next,  previous,  up -->
     <section>
-      <title>Using &ndash;enable-burst</title>
+      <title>Using - -enable-burst</title>
       <para>Starting in version 2.5.0 <code>--enable-burst=yes</code> is the default, which means one no longer must:</para>
       <example xml:space="preserve">configure --enable-burst</example>
-      <para>To have burst-mode functionality present in netperf.  This enables a test-specific <option>-b num</option> option in <xref><xrefnodename>TCP_RR</xrefnodename><xrefinfoname>TCP_RR</xrefinfoname></xref>, <xref><xrefnodename>UDP_RR</xrefnodename><xrefinfoname>UDP_RR</xrefinfoname></xref> and <xref><xrefnodename>The Omni Tests</xrefnodename><xrefinfoname>omni</xrefinfoname></xref> tests. This option causes those tests to quickly work their way up to having at least <option>num</option> plus one transactions in flight at one time.</para>
-      <para>This is used as an alternative to or even in conjunction with multiple-concurrent _RR tests and as a way to implement a single-connection, bidirectional bulk-transfer test.  When run with just a single instance of netperf, increasing the burst size can determine the maximum number of transactions per second which can be serviced by a single process:</para>
+      <para>To have burst-mode functionality present in netperf.  This enables a test-specific <option>-b num</option> option in <xref><xrefnodename>TCP_RR</xrefnodename><xrefinfoname>TCP_RR</xrefinfoname></xref>, <xref><xrefnodename>UDP_RR</xrefnodename><xrefinfoname>UDP_RR</xrefinfoname></xref> and <xref><xrefnodename>The Omni Tests</xrefnodename><xrefinfoname>omni</xrefinfoname></xref> tests.</para>
+      <para>Normally, netperf will attempt to ramp-up the number of outstanding requests to <option>num</option> plus one transactions in flight at one time. The ramp-up is to avoid transactions being smashed together into a smaller number of segments when the transport's congestion window (if any) is smaller at the time than what netperf wants to have outstanding at one time. If, however, the user specifies a negative value for <option>num</option> this ramp-up is bypassed and the burst of sends is made without consideration of transport congestion window.</para>
+      <para>This burst-mode is used as an alternative to or even in conjunction with multiple-concurrent _RR tests and as a way to implement a single-connection, bidirectional bulk-transfer test.  When run with just a single instance of netperf, increasing the burst size can determine the maximum number of transactions per second which can be serviced by a single process:</para>
       <example xml:space="preserve">for b in 0 1 2 4 8 16 32
 do
  netperf -v 0 -t TCP_RR -B "-b $b" -H hpcpc108 -P 0 -- -b $b
@@ -1743,7 +1751,7 @@ done
 71929.27 -b 16
 109718.17 -b 32</example>
       <para>The global <option>-v</option> and <option>-P</option> options were used to minimize the output to the single figure of merit which in this case the transaction rate.  The global <code>-B</code> option was used to more clearly label the output, and the test-specific <option>-b</option> option enabled by <code>--enable-burst</code> increase the number of transactions in flight at one time.</para>
-      <para>Now, since the test-specific <option>-D</option> option was not specified to set TCP_NODELAY, the stack was free to &ldquo;bundle&rdquo; requests and/or responses into TCP segments as it saw fit, and since the default request and response size is one byte, there could have been some considerable bundling.  If one wants to try to achieve a closer to one-to-one correspondence between a request and response and a TCP segment, add the test-specific <option>-D</option> option:</para>
+      <para>Now, since the test-specific <option>-D</option> option was not specified to set TCP_NODELAY, the stack was free to &ldquo;bundle&rdquo; requests and/or responses into TCP segments as it saw fit, and since the default request and response size is one byte, there could have been some considerable bundling even in the absence of transport congestion window issues.  If one wants to try to achieve a closer to one-to-one correspondence between a request and response and a TCP segment, add the test-specific <option>-D</option> option:</para>
       <example xml:space="preserve">for b in 0 1 2 4 8 16 32
 do
  netperf -v 0 -t TCP_RR -B "-b $b -D" -H hpcpc108 -P 0 -- -b $b -D
@@ -1799,7 +1807,7 @@ grep packets delta
       <para>The sum of the reported transaction rates is 204178 over 60 seconds, which is a total of 12250680 transactions.  Each transaction is the exchange of a request and a response, so we multiply that by 2 to arrive at 24501360.</para>
       <para>The sum of the ethtool stats is 24503094 packets which matches what netperf was reporting very well.</para>
       <para>Had the request or response size differed, we would need to know how it compared with the <dfn>MSS</dfn> for the connection.</para>
-      <para>Just for grins, here is the excercise repeated, using <code>netstat</code> instead of <code>ethtool</code></para>
+      <para>Just for grins, here is the exercise repeated, using <code>netstat</code> instead of <code>ethtool</code></para>
       <example xml:space="preserve">netstat -s -t &gt; before
 for i in 1 2 3 4
 do
@@ -1819,9 +1827,69 @@ grep segments delta
     12445730 segments send out
     1 segments retransmited
     0 bad segments received.</example>
-      <para>The sums are left as an excercise to the reader :)</para>
+      <para>The sums are left as an exercise to the reader :)</para>
       <para>Things become considerably more complicated if there are non-trvial packet losses and/or retransmissions.</para>
       <para>Of course all this checking is unnecessary if the test is a UDP_RR test because UDP &ldquo;never&rdquo; aggregates multiple sends into the same UDP datagram, and there are no ACKnowledgements in UDP.  The loss of a single request or response will not bring a &ldquo;burst&rdquo; UDP_RR test to a screeching halt, but it will reduce the number of transactions outstanding at any one time.  A &ldquo;burst&rdquo; UDP_RR test <b>will</b> come to a halt if the sum of the lost requests and responses reaches the value specified in the test-specific <option>-b</option> option.</para>
+    </section>
+  </node>
+  <node>
+    <nodename>Using --enable-demo</nodename>
+    <nodeprev>Using --enable-burst</nodeprev>
+    <nodeup>Using Netperf to Measure Aggregate Performance</nodeup>
+    <section>
+      <title>Using - -enable-demo</title>
+      <para>One can</para>
+      <example xml:space="preserve">configure --enable-demo</example>
+      <para>and compile netperf to enable netperf to emit &ldquo;interim results&rdquo; at semi-regular intervals.  This enables a global <code>-D</code> option which takes a reporting interval as an argument.  With that specified, the output of netperf will then look something like</para>
+      <example xml:space="preserve">$ src/netperf -D 1.25
+MIGRATED TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain () port 0 AF_INET : demo
+Interim result: 25425.52 10^6bits/s over 1.25 seconds ending at 1327962078.405
+Interim result: 25486.82 10^6bits/s over 1.25 seconds ending at 1327962079.655
+Interim result: 25474.96 10^6bits/s over 1.25 seconds ending at 1327962080.905
+Interim result: 25523.49 10^6bits/s over 1.25 seconds ending at 1327962082.155
+Interim result: 25053.57 10^6bits/s over 1.27 seconds ending at 1327962083.429
+Interim result: 25349.64 10^6bits/s over 1.25 seconds ending at 1327962084.679
+Interim result: 25292.84 10^6bits/s over 1.25 seconds ending at 1327962085.932
+Recv   Send    Send
+Socket Socket  Message  Elapsed
+Size   Size    Size     Time     Throughput
+bytes  bytes   bytes    secs.    10^6bits/sec
+
+ 87380  16384  16384    10.00    25375.66</example>
+      <para>The units of the &ldquo;Interim result&rdquo; lines will follow the units selected via the global <code>-f</code> option.  If the test-specific <code>-o</code> option is specified on the command line, the format will be CSV:</para>
+      <example xml:space="preserve">...
+2978.81,MBytes/s,1.25,1327962298.035
+...</example>
+      <para>If the test-specific <code>-k</code> option is used the format will be keyval with each keyval being given an index:</para>
+      <example xml:space="preserve">...
+NETPERF_INTERIM_RESULT[2]=25.00
+NETPERF_UNITS[2]=10^9bits/s
+NETPERF_INTERVAL[2]=1.25
+NETPERF_ENDING[2]=1327962357.249
+...</example>
+      <para>The expectation is it may be easier to utilize the keyvals if they have indices.</para>
+      <para>But how does this help with aggregate tests?  Well, what one can do is start the netperfs via a script, giving each a Very Long (tm) run time.  Direct the output to a file per instance.  Then, once all the netperfs have been started, take a timestamp and wait for some desired test interval.  Once that interval expires take another timestamp and then start terminating the netperfs by sending them a SIGALRM signal via the likes of the <code>kill</code> or <code>pkill</code> command.  The netperfs will terminate and emit the rest of the &ldquo;usual&rdquo; output, and you can then bring the files to a central location for post processing to find the aggregate performance over the &ldquo;test interval.&rdquo;</para>
+      <para>This method has the advantage that it does not require advance knowledge of how long it takes to get netperf tests started and/or stopped.  It does though require sufficiently synchronized clocks on all the test systems.</para>
+      <para>While calls to get the current time can be inexpensive, that neither has nor is universally true.  For that reason netperf tries to minimize the number of such &ldquo;timestamping&rdquo; calls (eg <code>gettimeofday</code>) calls it makes when in demo mode.  Rather than take a timestamp after each <code>send</code> or <code>recv</code> call completes netperf tries to guess how many units of work will be performed over the desired interval.  Only once that many units of work have been completed will netperf check the time.  If the reporting interval has passed, netperf will emit an &ldquo;interim result.&rdquo;  If the interval has not passed, netperf will update its estimate for units and continue.</para>
+      <para>After a bit of thought one can see that if things &ldquo;speed-up&rdquo; netperf will still honor the interval.  However, if things &ldquo;slow-down&rdquo; netperf may be late with an &ldquo;interim result.&rdquo;  Here is an example of both of those happening during a test - with the interval being honored while throughput increases, and then about half-way through when another netperf (not shown) is started we see things slowing down and netperf not hitting the interval as desired.</para>
+      <example xml:space="preserve">$ src/netperf -D 2 -H tardy.hpl.hp.com -l 20
+MIGRATED TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to tardy.hpl.hp.com () port 0 AF_INET : demo
+Interim result:   36.46 10^6bits/s over 2.01 seconds ending at 1327963880.565
+Interim result:   59.19 10^6bits/s over 2.00 seconds ending at 1327963882.569
+Interim result:   73.39 10^6bits/s over 2.01 seconds ending at 1327963884.576
+Interim result:   84.01 10^6bits/s over 2.03 seconds ending at 1327963886.603
+Interim result:   75.63 10^6bits/s over 2.21 seconds ending at 1327963888.814
+Interim result:   55.52 10^6bits/s over 2.72 seconds ending at 1327963891.538
+Interim result:   70.94 10^6bits/s over 2.11 seconds ending at 1327963893.650
+Interim result:   80.66 10^6bits/s over 2.13 seconds ending at 1327963895.777
+Interim result:   86.42 10^6bits/s over 2.12 seconds ending at 1327963897.901
+Recv   Send    Send
+Socket Socket  Message  Elapsed
+Size   Size    Size     Time     Throughput
+bytes  bytes   bytes    secs.    10^6bits/sec
+
+ 87380  16384  16384    20.34      68.87</example>
+      <para>So long as your post-processing mechanism can account for that, there should be no problem.  As time passes there may be changes to try to improve the netperf's honoring the interval but one should not ass-u-me it will always do so.  One should not assume the precision will remain fixed - future versions may change it - perhaps going beyond tenths of seconds in reporting the interval length etc.</para>
     </section>
   </node>
   <node>
@@ -1832,7 +1900,7 @@ grep segments delta
 <!-- node-name,  next,  previous,  up -->
     <chapter>
       <title>Using Netperf to Measure Bidirectional Transfer</title>
-      <para>There are two ways to use netperf to measure the perfomance of bidirectional transfer.  The first is to run concurrent netperf tests from the command line.  The second is to configure netperf with <code>--enable-burst</code> and use a single instance of the <xref><xrefnodename>TCP_RR</xrefnodename><xrefinfoname>TCP_RR</xrefinfoname></xref> test.</para>
+      <para>There are two ways to use netperf to measure the performance of bidirectional transfer.  The first is to run concurrent netperf tests from the command line.  The second is to configure netperf with <code>--enable-burst</code> and use a single instance of the <xref><xrefnodename>TCP_RR</xrefnodename><xrefinfoname>TCP_RR</xrefinfoname></xref> test.</para>
       <para>While neither method is more &ldquo;correct&rdquo; than the other, each is doing so in different ways, and that has possible implications.  For instance, using the concurrent netperf test mechanism means that multiple TCP connections and multiple processes are involved, whereas using the single instance of TCP_RR there is only one TCP connection and one process on each end.  They may behave differently, especially on an MP system.</para>
       <menu>
         <menuentry>
@@ -1927,7 +1995,7 @@ Send   Recv    Send   Recv    usec/Tran  per sec  Outbound   Inbound
       <para>Broadly speaking, a single &ldquo;connection&rdquo; or &ldquo;flow&rdquo; of traffic cannot make use of the services of more than one or two CPUs at either end.  Whether one or two CPUs will be used processing a flow will depend on the specifics of the stack(s) involved and whether or not the global <option>-T</option> option has been used to bind netperf/netserver to specific CPUs.</para>
       <para>When using concurrent tests there will be two concurrent connections or flows, which means that upwards of four CPUs will be employed processing the packets (global <option>-T</option> used, no more than two if not), however, with just a single, bidirectional request/response test no more than two CPUs will be employed (only one if the global <option>-T</option> is not used).</para>
       <para>If there is a CPU bottleneck on either system this may result in rather different results between the two methods.</para>
-      <para>Also, with a bidirectional request/response test there is something of a natural balance or synchronization between inbound and outbound - a response will not be sent until a request is received, and (once the burst level is reached) a subseqent request will not be sent until a response is received.  This may mask favoritism in the NIC between inbound and outbound processing.</para>
+      <para>Also, with a bidirectional request/response test there is something of a natural balance or synchronization between inbound and outbound - a response will not be sent until a request is received, and (once the burst level is reached) a subsequent request will not be sent until a response is received.  This may mask favoritism in the NIC between inbound and outbound processing.</para>
       <para>With two concurrent unidirectional tests there is no such synchronization or balance and any favoritism in the NIC may be exposed.</para>
     </section>
   </node>
@@ -1980,7 +2048,7 @@ Send   Recv    Send   Recv    usec/Tran  per sec  Outbound   Inbound
         <tableitem>
           <tableterm><code>-d &lt;direction&gt;</code></tableterm>
           <item>
-            <para>This option sets the direction of the test relative to the netperf process.  As of version 2.5.0 one can use the following in a case-insenstive manner:</para>
+            <para>This option sets the direction of the test relative to the netperf process.  As of version 2.5.0 one can use the following in a case-insensitive manner:</para>
             <table>
               <tableitem>
                 <tableterm><code>send, stream, transmit, xmit or 2</code></tableterm>
@@ -2001,7 +2069,7 @@ Send   Recv    Send   Recv    usec/Tran  per sec  Outbound   Inbound
                 </item>
               </tableitem>
             </table>
-            <para>Additionally, one can specify two directions separated by a '|' character and they will be OR'ed together.  In this way one can use the &rdquo;Send|Recv&rdquo; that will be emitted by the <xref><xrefnodename>Omni Output Selectors</xrefnodename><xrefinfoname>DIRECTION</xrefinfoname></xref> <xref><xrefnodename>Omni Output Selection</xrefnodename><xrefinfoname>output selector</xrefinfoname></xref> when used with a request/reponse test.</para>
+            <para>Additionally, one can specify two directions separated by a '|' character and they will be OR'ed together.  In this way one can use the &rdquo;Send|Recv&rdquo; that will be emitted by the <xref><xrefnodename>Omni Output Selectors</xrefnodename><xrefinfoname>DIRECTION</xrefinfoname></xref> <xref><xrefnodename>Omni Output Selection</xrefnodename><xrefinfoname>output selector</xrefinfoname></xref> when used with a request/response test.</para>
             <para><indexterm index="vr">-k, Test-specific</indexterm></para>
           </item>
         </tableitem>
@@ -2022,7 +2090,7 @@ THROUGHPUT_UNITS=Trans/s</example>
         <tableitem>
           <tableterm><code>-o [<xref><xrefnodename>Omni Output Selection</xrefnodename><xrefinfoname>output selector</xrefinfoname></xref>]</code></tableterm>
           <item>
-            <para>This option sets the style of output to &ldquo;CSV&rdquo; where there will be one line of comma-separated values, preceeded by one line of column names unless the global <option>-P</option> option is used with a value of 0:</para>
+            <para>This option sets the style of output to &ldquo;CSV&rdquo; where there will be one line of comma-separated values, preceded by one line of column names unless the global <option>-P</option> option is used with a value of 0:</para>
             <example xml:space="preserve">$ netperf -t omni -- -d rr -o "THROUGHPUT,THROUGHPUT_UNITS"
 OMNI TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain (127.0.0.1) port 0 AF_INET : demo
 Throughput,Throughput Units
@@ -2067,7 +2135,7 @@ Throughput Throughput
               <tableitem>
                 <tableterm><code>UDP</code></tableterm>
                 <item>
-                  <para>Select the User Datagram Procotol</para>
+                  <para>Select the User Datagram Protocol</para>
                 </item>
               </tableitem>
               <tableitem>
@@ -2224,7 +2292,7 @@ bytes  Bytes  bytes    bytes   secs.    per sec
           </item>
         </tableitem>
       </table>
-      <para>The order of evaluation will first check for an output selection.  If none is specified with the <option>-k</option>, <option>-o</option> or <option>-O</option> option netperf will select a default based on the characterists of the test.  If there is an output selection, the code will first check for <samp>?</samp>, then check to see if it is the magic <samp>all</samp> keyword. After that it will check for either <samp>,</samp> or <samp>;</samp> in the selection and take that to mean it is a comma and/or semi-colon-separated list. If none of those checks match, netperf will then assume the output specification is a filename and attempt to open and parse the file.</para>
+      <para>The order of evaluation will first check for an output selection.  If none is specified with the <option>-k</option>, <option>-o</option> or <option>-O</option> option netperf will select a default based on the characteristics of the test.  If there is an output selection, the code will first check for <samp>?</samp>, then check to see if it is the magic <samp>all</samp> keyword. After that it will check for either <samp>,</samp> or <samp>;</samp> in the selection and take that to mean it is a comma and/or semi-colon-separated list. If none of those checks match, netperf will then assume the output specification is a filename and attempt to open and parse the file.</para>
       <menu>
         <menuentry>
           <menunode>Omni Output Selectors</menunode>
@@ -2275,7 +2343,7 @@ bytes  Bytes  bytes    bytes   secs.    per sec
         <tableitem>
           <tableterm><code>THROUGHPUT</code></tableterm>
           <item>
-            <para>This will display the througput for the test. Units: As requested via the global <option>-f</option> option and displayed by the THROUGHPUT_UNITS output selector.</para>
+            <para>This will display the throughput for the test. Units: As requested via the global <option>-f</option> option and displayed by the THROUGHPUT_UNITS output selector.</para>
           </item>
         </tableitem>
         <tableitem>
@@ -2407,7 +2475,7 @@ bytes  Bytes  bytes    bytes   secs.    per sec
         <tableitem>
           <tableterm><code>LOCAL_SD</code></tableterm>
           <item>
-            <para>This will display the service demand, or units of CPU consumed per unit of work, as measured by netperf. Units: microsconds of CPU consumed per either KB (K==1024) of data transferred or request/response transaction.</para>
+            <para>This will display the service demand, or units of CPU consumed per unit of work, as measured by netperf. Units: microseconds of CPU consumed per either KB (K==1024) of data transferred or request/response transaction.</para>
           </item>
         </tableitem>
         <tableitem>
@@ -2425,7 +2493,7 @@ bytes  Bytes  bytes    bytes   secs.    per sec
         <tableitem>
           <tableterm><code>REMOTE_SD</code></tableterm>
           <item>
-            <para>This will display the service demand, or units of CPU consumed per unit of work, as measured by netserver. Units: microseconds of CPU consumed consumed per either KB (K==1024) of data transferred or request/response transaction.</para>
+            <para>This will display the service demand, or units of CPU consumed per unit of work, as measured by netserver. Units: microseconds of CPU consumed per either KB (K==1024) of data transferred or request/response transaction.</para>
           </item>
         </tableitem>
         <tableitem>
@@ -2707,19 +2775,19 @@ bytes  Bytes  bytes    bytes   secs.    per sec
         <tableitem>
           <tableterm><code>LOCAL_SEND_WIDTH</code></tableterm>
           <item>
-            <para>The &ldquo;width&rdquo; of the ring of buffers through which netperf cycles as it makes its &ldquo;send&rdquo; calls.  Defaults to one more than the local send socket buffer size divided by the send size as determined at the time the data socket is created. Can be used to make netperf more processor data cache unfiendly. Units: number of buffers.</para>
+            <para>The &ldquo;width&rdquo; of the ring of buffers through which netperf cycles as it makes its &ldquo;send&rdquo; calls.  Defaults to one more than the local send socket buffer size divided by the send size as determined at the time the data socket is created. Can be used to make netperf more processor data cache unfriendly. Units: number of buffers.</para>
           </item>
         </tableitem>
         <tableitem>
           <tableterm><code>LOCAL_RECV_WIDTH</code></tableterm>
           <item>
-            <para>The &ldquo;width&rdquo; of the ring of buffers through which netperf cycles as it makes its &ldquo;receive&rdquo; calls.  Defaults to one more than the local receive socket buffer size divided by the receive size as determined at the time the data socket is created. Can be used to make netperf more processor data cache unfiendly. Units: number of buffers.</para>
+            <para>The &ldquo;width&rdquo; of the ring of buffers through which netperf cycles as it makes its &ldquo;receive&rdquo; calls.  Defaults to one more than the local receive socket buffer size divided by the receive size as determined at the time the data socket is created. Can be used to make netperf more processor data cache unfriendly. Units: number of buffers.</para>
           </item>
         </tableitem>
         <tableitem>
           <tableterm><code>LOCAL_SEND_DIRTY_COUNT</code></tableterm>
           <item>
-            <para>The number of bytes to &ldquo;dirty&rdquo; (write to) before netperf makes a &ldquo;send&rdquo; call. Specified via the global <option>-k</option> option, which requires that &ndash;enable-dirty=yes was specificed with the configure command prior to building netperf. Units: Bytes.</para>
+            <para>The number of bytes to &ldquo;dirty&rdquo; (write to) before netperf makes a &ldquo;send&rdquo; call. Specified via the global <option>-k</option> option, which requires that &ndash;enable-dirty=yes was specified with the configure command prior to building netperf. Units: Bytes.</para>
           </item>
         </tableitem>
         <tableitem>
@@ -2830,7 +2898,7 @@ bytes  Bytes  bytes    bytes   secs.    per sec
         <tableitem>
           <tableterm><code>LOCAL_INTERFACE_SUBVENDOR</code></tableterm>
           <item>
-            <para>The sub-vendor ID of the probable egress interface through which traffic on the the data connection went on the system running netperf. Units: Hexadecimal IDs as might be found in a <file>pci.ids</file> file or at <uref><urefurl>http://pciids.sourceforge.net/</urefurl><urefdesc>the PCI ID Repository</urefdesc></uref>.</para>
+            <para>The sub-vendor ID of the probable egress interface through which traffic on the data connection went on the system running netperf. Units: Hexadecimal IDs as might be found in a <file>pci.ids</file> file or at <uref><urefurl>http://pciids.sourceforge.net/</urefurl><urefdesc>the PCI ID Repository</urefdesc></uref>.</para>
           </item>
         </tableitem>
         <tableitem>
@@ -3022,7 +3090,7 @@ bytes  Bytes  bytes    bytes   secs.    per sec
     <section>
       <title>CPU rate calibration</title>
       <para>Some of the CPU utilization measurement mechanisms of netperf work by comparing the rate at which some counter increments when the system is idle with the rate at which that same counter increments when the system is running a netperf test.  The ratio of those rates is used to arrive at a CPU utilization percentage.</para>
-      <para>This means that netperf must know the rate at which the counter increments when the system is presumed to be &ldquo;idle.&rdquo;  If it does not know the rate, netperf will measure it before starting a data transfer test.  This calibration step takes 40 seconds for each of the local or remote ystems, and if repeated for each netperf test would make taking repeated measurements rather slow.</para>
+      <para>This means that netperf must know the rate at which the counter increments when the system is presumed to be &ldquo;idle.&rdquo;  If it does not know the rate, netperf will measure it before starting a data transfer test.  This calibration step takes 40 seconds for each of the local or remote systems, and if repeated for each netperf test would make taking repeated measurements rather slow.</para>
       <para>Thus, the netperf CPU utilization options <option>-c</option> and and <option>-C</option> can take an optional calibration value.  This value is used as the &ldquo;idle rate&rdquo; and the calibration step is not performed. To determine the idle rate, netperf can be used to run special tests which only report the value of the calibration - they are the LOC_CPU and REM_CPU tests.  These return the calibration value for the local and remote system respectively.  A common way to use these tests is to store their results into an environment variable and use that in subsequent netperf commands:</para>
       <example xml:space="preserve">LOC_RATE=`netperf -t LOC_CPU`
 REM_RATE=`netperf -H &lt;remote&gt; -t REM_CPU`
@@ -3041,7 +3109,7 @@ netperf -H &lt;remote&gt; -c $LOC_RATE -C $REM_RATE ... -- ...</example>
       <para>Beginning with version 2.5.0 netperf can generate Universally Unique IDentifiers (UUIDs).  This can be done explicitly via the &ldquo;UUID&rdquo; test:</para>
       <example xml:space="preserve">$ netperf -t UUID
 2c8561ae-9ebd-11e0-a297-0f5bfa0349d0</example>
-      <para>In and of itself, this is not terribly useful, but used in conjuction with the test-specific <option>-u</option> option of an &ldquo;omni&rdquo; test to set the UUID emitted by the <xref><xrefnodename>Omni Output Selectors</xrefnodename><xrefinfoname>UUID</xrefinfoname></xref> output selector, it can be used to tie-together the separate instances of an aggregate netperf test.  Say, for instance if they were inserted into a database of some sort.</para>
+      <para>In and of itself, this is not terribly useful, but used in conjunction with the test-specific <option>-u</option> option of an &ldquo;omni&rdquo; test to set the UUID emitted by the <xref><xrefnodename>Omni Output Selectors</xrefnodename><xrefinfoname>UUID</xrefinfoname></xref> output selector, it can be used to tie-together the separate instances of an aggregate netperf test.  Say, for instance if they were inserted into a database of some sort.</para>
     </section>
   </node>
   <node>
@@ -3073,7 +3141,7 @@ netperf -H &lt;remote&gt; -c $LOC_RATE -C $REM_RATE ... -- ...</example>
           <para>Add files <file>src/nettest_mumble.c</file> and <file>src/nettest_mumble.h</file> where mumble is replaced with something meaningful for the test-suite.</para>
         </item>
         <item>
-          <para>Add support for an apropriate <option>--enable-mumble</option> option in <file>configure.ac</file>.</para>
+          <para>Add support for an appropriate <option>--enable-mumble</option> option in <file>configure.ac</file>.</para>
         </item>
         <item>
           <para>Edit <file>src/netperf.c</file>, <file>netsh.c</file>, and <file>netserver.c</file> as required, using #ifdef WANT_MUMBLE.</para>
@@ -3083,7 +3151,7 @@ netperf -H &lt;remote&gt; -c $LOC_RATE -C $REM_RATE ... -- ...</example>
         </item>
       </enumerate>
       <para>However, with the addition of the &ldquo;omni&rdquo; tests in version 2.5.0 it is preferred that one attempt to make the necessary changes to <file>src/nettest_omni.c</file> rather than adding new source files, unless this would make the omni tests entirely too complicated.</para>
-      <para>If you wish to submit your changes for possible inclusion into the mainline sources, please try to base your changes on the latest available sources. (See <xref><xrefnodename>Getting Netperf Bits</xrefnodename></xref>.) and then send email describing the changes at a high level to <email><emailaddress>netperf-feedback@netperf.org</emailaddress></email> or perhaps <email><emailaddress>netperf-talk@netperf.org</emailaddress></email>.  If the concensus is positive, then sending context <command>diff</command> results to <email><emailaddress>netperf-feedback@netperf.org</emailaddress></email> is the next step.  From that point, it is a matter of pestering the Netperf Contributing Editor until he gets the changes incorporated :)</para>
+      <para>If you wish to submit your changes for possible inclusion into the mainline sources, please try to base your changes on the latest available sources. (See <xref><xrefnodename>Getting Netperf Bits</xrefnodename></xref>.) and then send email describing the changes at a high level to <email><emailaddress>netperf-feedback@netperf.org</emailaddress></email> or perhaps <email><emailaddress>netperf-talk@netperf.org</emailaddress></email>.  If the consensus is positive, then sending context <command>diff</command> results to <email><emailaddress>netperf-feedback@netperf.org</emailaddress></email> is the next step.  From that point, it is a matter of pestering the Netperf Contributing Editor until he gets the changes incorporated :)</para>
     </chapter>
   </node>
   <node>
@@ -3094,7 +3162,7 @@ netperf -H &lt;remote&gt; -c $LOC_RATE -C $REM_RATE ... -- ...</example>
 <!-- node-name,  next,  previous,  up -->
     <chapter>
       <title>Netperf4</title>
-      <para>Netperf4 is the shorthand name given to version 4.X.X of netperf. This is really a separate benchmark more than a newer version of netperf, but it is a decendant of netperf so the netperf name is kept.  The facetious way to describe netperf4 is to say it is the egg-laying-woolly-milk-pig version of netperf :)  The more respectful way to describe it is to say it is the version of netperf with support for synchronized, multiple-thread, multiple-test, multiple-system, network-oriented benchmarking.</para>
+      <para>Netperf4 is the shorthand name given to version 4.X.X of netperf. This is really a separate benchmark more than a newer version of netperf, but it is a descendant of netperf so the netperf name is kept.  The facetious way to describe netperf4 is to say it is the egg-laying-woolly-milk-pig version of netperf :)  The more respectful way to describe it is to say it is the version of netperf with support for synchronized, multiple-thread, multiple-test, multiple-system, network-oriented benchmarking.</para>
       <para>Netperf4 is still undergoing evolution. Those wishing to work with or on netperf4 are encouraged to join the <uref><urefurl>http://www.netperf.org/cgi-bin/mailman/listinfo/netperf-dev</urefurl><urefdesc>netperf-dev</urefdesc></uref> mailing list and/or peruse the <uref><urefurl>http://www.netperf.org/svn/netperf4/trunk</urefurl><urefdesc>current sources</urefdesc></uref>.</para>
     </chapter>
   </node>
