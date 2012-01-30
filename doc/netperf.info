@@ -2305,6 +2305,7 @@ netperf with `--enable-burst' and is applicable to the TCP_RR test.
 
 * Running Concurrent Netperf Tests::
 * Using --enable-burst::
+* Using --enable-demo::
 
 
 File: netperf.info,  Node: Running Concurrent Netperf Tests,  Next: Using --enable-burst,  Prev: Using Netperf to Measure Aggregate Performance,  Up: Using Netperf to Measure Aggregate Performance
@@ -2431,7 +2432,7 @@ be wrong.  One has to compute service demands for concurrent tests by
 hand
 
 
-File: netperf.info,  Node: Using --enable-burst,  Prev: Running Concurrent Netperf Tests,  Up: Using Netperf to Measure Aggregate Performance
+File: netperf.info,  Node: Using --enable-burst,  Next: Using --enable-demo,  Prev: Running Concurrent Netperf Tests,  Up: Using Netperf to Measure Aggregate Performance
 
 7.2 Using -enable-burst
 =======================
@@ -2614,6 +2615,12 @@ screeching halt, but it will reduce the number of transactions
 outstanding at any one time.  A "burst" UDP_RR test will come to a halt
 if the sum of the lost requests and responses reaches the value
 specified in the test-specific `-b' option.
+
+
+File: netperf.info,  Node: Using --enable-demo,  Prev: Using --enable-burst,  Up: Using Netperf to Measure Aggregate Performance
+
+7.3 Using -enable-demo
+======================
 
 
 File: netperf.info,  Node: Using Netperf to Measure Bidirectional Transfer,  Next: The Omni Tests,  Prev: Using Netperf to Measure Aggregate Performance,  Up: Top
@@ -4163,25 +4170,26 @@ Node: DLCL_RR105306
 Node: DLCO_RR105459
 Node: SCTP_RR105611
 Node: Using Netperf to Measure Aggregate Performance105747
-Node: Running Concurrent Netperf Tests106726
-Node: Issues in Running Concurrent Tests110973
-Node: Using --enable-burst112481
-Node: Using Netperf to Measure Bidirectional Transfer119348
-Node: Bidirectional Transfer with Concurrent Tests120480
-Node: Bidirectional Transfer with TCP_RR122836
-Node: Implications of Concurrent Tests vs Burst Request/Response125220
-Node: The Omni Tests127034
-Node: Native Omni Tests128081
-Node: Migrated Tests133359
-Node: Omni Output Selection135464
-Node: Omni Output Selectors138447
-Node: Other Netperf Tests166155
-Node: CPU rate calibration166590
-Node: UUID Generation168958
-Node: Address Resolution169674
-Node: Enhancing Netperf171650
-Node: Netperf4173145
-Node: Concept Index174050
-Node: Option Index176376
+Node: Running Concurrent Netperf Tests106750
+Node: Issues in Running Concurrent Tests110997
+Node: Using --enable-burst112505
+Node: Using --enable-demo119400
+Node: Using Netperf to Measure Bidirectional Transfer119579
+Node: Bidirectional Transfer with Concurrent Tests120711
+Node: Bidirectional Transfer with TCP_RR123067
+Node: Implications of Concurrent Tests vs Burst Request/Response125451
+Node: The Omni Tests127265
+Node: Native Omni Tests128312
+Node: Migrated Tests133590
+Node: Omni Output Selection135695
+Node: Omni Output Selectors138678
+Node: Other Netperf Tests166386
+Node: CPU rate calibration166821
+Node: UUID Generation169189
+Node: Address Resolution169905
+Node: Enhancing Netperf171881
+Node: Netperf4173376
+Node: Concept Index174281
+Node: Option Index176607
 
 End Tag Table

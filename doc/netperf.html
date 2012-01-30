@@ -100,7 +100,8 @@ Copyright (C) 2005-2011 Hewlett-Packard Company
 <ul>
 <li><a href="#Issues-in-Running-Concurrent-Tests">7.1.1 Issues in Running Concurrent Tests</a>
 </li></ul>
-<li><a href="#Using-_002d_002denable_002dburst">7.2 Using &ndash;enable-burst</a>
+<li><a href="#Using-_002d_002denable_002dburst">7.2 Using - -enable-burst</a>
+<li><a href="#Using-_002d_002denable_002ddemo">7.3 Using - -enable-demo</a>
 </li></ul>
 <li><a name="toc_Using-Netperf-to-Measure-Bidirectional-Transfer" href="#Using-Netperf-to-Measure-Bidirectional-Transfer">8 Using Netperf to Measure Bidirectional Transfer</a>
 <ul>
@@ -2639,6 +2640,7 @@ TCP_RR test.
 <ul class="menu">
 <li><a accesskey="1" href="#Running-Concurrent-Netperf-Tests">Running Concurrent Netperf Tests</a>
 <li><a accesskey="2" href="#Using-_002d_002denable_002dburst">Using --enable-burst</a>
+<li><a accesskey="3" href="#Using-_002d_002denable_002ddemo">Using --enable-demo</a>
 </ul>
 
 <div class="node">
@@ -2780,17 +2782,31 @@ means that for concurrent tests the service demands reported by
 netperf <b>will be wrong</b>.  One has to compute service demands for
 concurrent tests by hand
 
+   <p>Running concurrent tests can also become difficult when there is no
+one &ldquo;central&rdquo; node.  Running tests between pairs of systems may be
+more difficult, calling for remote shell commands in the for loop
+rather than netperf commands.  This introduces more skew error, which
+the confidence intervals may not be able to sufficiently mitigate. 
+One possibility is to actually run three consecutive netperf tests on
+each node - the first being a warm-up, the last being a cool-down. 
+The idea then is to ensure that the time it takes to get all the
+netperfs started is less than the length of the first netperf command
+in the sequence of three.  Similarly, it assumes that all &ldquo;middle&rdquo;
+netperfs will complete before the first of the &ldquo;last&rdquo; netperfs
+complete.
+
 <div class="node">
 <a name="Using---enable-burst"></a>
 <a name="Using-_002d_002denable_002dburst"></a>
 <p><hr>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Using-_002d_002denable_002ddemo">Using --enable-demo</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Running-Concurrent-Netperf-Tests">Running Concurrent Netperf Tests</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Using-Netperf-to-Measure-Aggregate-Performance">Using Netperf to Measure Aggregate Performance</a>
 
 </div>
 
 <!-- node-name,  next,  previous,  up -->
-<h3 class="section">7.2 Using &ndash;enable-burst</h3>
+<h3 class="section">7.2 Using - -enable-burst</h3>
 
 <p>Starting in version 2.5.0 <code>--enable-burst=yes</code> is the default,
 which means one no longer must:
@@ -2975,6 +2991,120 @@ screeching halt, but it will reduce the number of transactions
 outstanding at any one time.  A &ldquo;burst&rdquo; UDP_RR test <b>will</b> come to a
 halt if the sum of the lost requests and responses reaches the value
 specified in the test-specific <samp><span class="option">-b</span></samp> option.
+
+<div class="node">
+<a name="Using---enable-demo"></a>
+<a name="Using-_002d_002denable_002ddemo"></a>
+<p><hr>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Using-_002d_002denable_002dburst">Using --enable-burst</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Using-Netperf-to-Measure-Aggregate-Performance">Using Netperf to Measure Aggregate Performance</a>
+
+</div>
+
+<h3 class="section">7.3 Using - -enable-demo</h3>
+
+<p>One can
+<pre class="example">     configure --enable-demo
+</pre>
+   <p>and compile netperf to enable netperf to emit &ldquo;interim results&rdquo; at
+semi-regular intervals.  This enables a global <code>-D</code> option which
+takes a reporting interval as an argument.  With that specified, the
+output of netperf will then look something like
+
+<pre class="example">     $ src/netperf -D 1.25
+     MIGRATED TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain () port 0 AF_INET : demo
+     Interim result: 25425.52 10^6bits/s over 1.25 seconds ending at 1327962078.405
+     Interim result: 25486.82 10^6bits/s over 1.25 seconds ending at 1327962079.655
+     Interim result: 25474.96 10^6bits/s over 1.25 seconds ending at 1327962080.905
+     Interim result: 25523.49 10^6bits/s over 1.25 seconds ending at 1327962082.155
+     Interim result: 25053.57 10^6bits/s over 1.27 seconds ending at 1327962083.429
+     Interim result: 25349.64 10^6bits/s over 1.25 seconds ending at 1327962084.679
+     Interim result: 25292.84 10^6bits/s over 1.25 seconds ending at 1327962085.932
+     Recv   Send    Send
+     Socket Socket  Message  Elapsed
+     Size   Size    Size     Time     Throughput
+     bytes  bytes   bytes    secs.    10^6bits/sec
+     
+      87380  16384  16384    10.00    25375.66
+</pre>
+   <p>The units of the &ldquo;Interim result&rdquo; lines will follow the units
+selected via the global <code>-f</code> option.  If the test-specific
+<code>-o</code> option is specified on the command line, the format will be
+CSV:
+<pre class="example">     ...
+     2978.81,MBytes/s,1.25,1327962298.035
+     ...
+</pre>
+   <p>If the test-specific <code>-k</code> option is used the format will be
+keyval with each keyval being given an index:
+<pre class="example">     ...
+     NETPERF_INTERIM_RESULT[2]=25.00
+     NETPERF_UNITS[2]=10^9bits/s
+     NETPERF_INTERVAL[2]=1.25
+     NETPERF_ENDING[2]=1327962357.249
+     ...
+</pre>
+   <p>The expectation is it may be easier to utilize the keyvals if they
+have indices.
+
+   <p>But how does this help with aggregate tests?  Well, what one can do is
+start the netperfs via a script, giving each a Very Long (tm) run
+time.  Direct the output to a file per instance.  Then, once all the
+netperfs have been started, take a timestamp and wait for some desired
+test interval.  Once that interval expires take another timestamp and
+then start terminating the netperfs by sending them a SIGALRM signal
+via the likes of the <code>kill</code> or <code>pkill</code> command.  The
+netperfs will terminate and emit the rest of the &ldquo;usual&rdquo; output, and
+you can then bring the files to a central location for post
+processing to find the aggregate performance over the &ldquo;test interval.&rdquo;
+
+   <p>This method has the advantage that it does not require advance
+knowledge of how long it takes to get netperf tests started and/or
+stopped.  It does though require sufficiently synchronized clocks on
+all the test systems.
+
+   <p>While calls to get the current time can be inexpensive, that neither
+has nor is universally true.  For that reason netperf tries to
+minimize the number of such &ldquo;timestamping&rdquo; calls (eg
+<code>gettimeofday</code>) calls it makes when in demo mode.  Rather than
+take a timestamp after each <code>send</code> or <code>recv</code> call completes
+netperf tries to guess how many units of work will be performed over
+the desired interval.  Only once that many units of work have been
+completed will netperf check the time.  If the reporting interval has
+passed, netperf will emit an &ldquo;interim result.&rdquo;  If the interval has
+not passed, netperf will update its estimate for units and continue.
+
+   <p>After a bit of thought one can see that if things &ldquo;speed-up&rdquo; netperf
+will still honor the interval.  However, if things &ldquo;slow-down&rdquo;
+netperf may be late with an &ldquo;interim result.&rdquo;  Here is an example of
+both of those happening during a test - with the interval being
+honored while throughput increases, and then about half-way through
+when another netperf (not shown) is started we see things slowing down
+and netperf not hitting the interval as desired.
+<pre class="example">     $ src/netperf -D 2 -H tardy.hpl.hp.com -l 20
+     MIGRATED TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to tardy.hpl.hp.com () port 0 AF_INET : demo
+     Interim result:   36.46 10^6bits/s over 2.01 seconds ending at 1327963880.565
+     Interim result:   59.19 10^6bits/s over 2.00 seconds ending at 1327963882.569
+     Interim result:   73.39 10^6bits/s over 2.01 seconds ending at 1327963884.576
+     Interim result:   84.01 10^6bits/s over 2.03 seconds ending at 1327963886.603
+     Interim result:   75.63 10^6bits/s over 2.21 seconds ending at 1327963888.814
+     Interim result:   55.52 10^6bits/s over 2.72 seconds ending at 1327963891.538
+     Interim result:   70.94 10^6bits/s over 2.11 seconds ending at 1327963893.650
+     Interim result:   80.66 10^6bits/s over 2.13 seconds ending at 1327963895.777
+     Interim result:   86.42 10^6bits/s over 2.12 seconds ending at 1327963897.901
+     Recv   Send    Send
+     Socket Socket  Message  Elapsed
+     Size   Size    Size     Time     Throughput
+     bytes  bytes   bytes    secs.    10^6bits/sec
+     
+      87380  16384  16384    20.34      68.87
+</pre>
+   <p>So long as your post-processing mechanism can account for that, there
+should be no problem.  As time passes there may be changes to try to
+improve the netperf's honoring the interval but one should not
+ass-u-me it will always do so.  One should not assume the precision
+will remain fixed - future versions may change it - perhaps going
+beyond tenths of seconds in reporting the interval length etc.
 
 <div class="node">
 <a name="Using-Netperf-to-Measure-Bidirectional-Transfer"></a>
