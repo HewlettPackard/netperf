@@ -202,7 +202,7 @@ static inline DEMO_INTERVAL(uint32_t units) {
 	switch (netperf_output_mode) {
 	case HUMAN:
 	  fprintf(where,
-		  "Interim result: %7.2f %s/s over %.2f seconds ending at %ld.%.3ld\n",
+		  "Interim result: %7.2f %s/s over %.3f seconds ending at %ld.%.3ld\n",
 		  calc_thruput_interval(units_this_tick,
 					actual_interval/1000000.0),
 		  format_units(),
@@ -212,7 +212,7 @@ static inline DEMO_INTERVAL(uint32_t units) {
 	  break;
 	case CSV:
 	  fprintf(where,
-		  "%7.2f,%s/s,%.2f,%ld.%.3ld\n",
+		  "%7.2f,%s/s,%.3f,%ld.%.3ld\n",
 		  calc_thruput_interval(units_this_tick,
 					actual_interval/1000000.0),
 		  format_units(),
@@ -222,9 +222,9 @@ static inline DEMO_INTERVAL(uint32_t units) {
 	  break;
 	case KEYVAL:
 	  fprintf(where,
-		  "NETPERF_INTERIM_RESULT[%d]=%7.2f\n"
+		  "NETPERF_INTERIM_RESULT[%d]=%.2f\n"
 		  "NETPERF_UNITS[%d]=%s/s\n"
-		  "NETPERF_INTERVAL[%d]=%.2f\n"
+		  "NETPERF_INTERVAL[%d]=%.3f\n"
 		  "NETPERF_ENDING[%d]=%ld.%.3ld\n",
 		  count,
 		  calc_thruput_interval(units_this_tick,
@@ -3064,6 +3064,9 @@ disconnect_data_socket(SOCKET data_socket, int initiate, int do_close, struct so
      we assume a reliable connection and can do the usual graceful
      shutdown thing */
 
+  /* this needs to be revisited for the netperf receiving case when
+     the test is terminated by a Ctrl-C.  raj 2012-01-24 */
+
   if (protocol != IPPROTO_UDP) {
     if (initiate)
       shutdown(data_socket, SHUT_WR);
@@ -3072,15 +3075,15 @@ disconnect_data_socket(SOCKET data_socket, int initiate, int do_close, struct so
        connection close, or an error. of course, we *may* never
        receive anything from the remote which means we probably really
        aught to have a select here but until we are once bitten we
-       will remain twice bold */
+       will remain twice bold. */
     bytes_recvd = recv(data_socket,
 		       buffer,
 		       1,
 		       0);
     
     if (bytes_recvd != 0) {
-      /* connection close, call close. we assume that the requisite */
-      /* number of bytes have been received */
+      /* connection close, call close. we assume that the requisite
+         number of bytes have been received */
       if (SOCKET_EINTR(bytes_recvd))
 	{
 	  /* We hit the end of a timed test. */
