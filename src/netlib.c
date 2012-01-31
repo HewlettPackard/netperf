@@ -247,6 +247,8 @@ int remote_data_family=AF_UNSPEC;
 
 char *netperf_version;
 
+enum netperf_output_modes netperf_output_mode = HUMAN;
+
 /* in the past, I was overlaying a structure on an array of ints. now
    I am going to have a "real" structure, and point an array of ints
    at it. the real structure will be forced to the same alignment as
@@ -311,6 +313,7 @@ SYSTEM_INFO SystemInfo;
 }
 
 
+
 #ifdef WANT_INTERVALS
 static unsigned int usec_per_itvl;
 
@@ -3827,6 +3830,161 @@ msec_sleep( int msecs )
   return(0);
 }
 #endif /* WIN32 */
+
+#if defined(WANT_INTERVALS) || defined(WANT_DEMO)
+
+int demo_mode;                    /* are we actually in demo mode? */
+double demo_interval = 1000000.0; /* what is the desired interval to
+				     display interval results. default
+				     is one second in units of
+				     microseconds */
+double demo_units = 0.0;          /* what is our current best guess as
+				     to how many work units must be
+				     done to be near the desired
+				     reporting interval? */ 
+
+double units_this_tick;
+#endif
+
+#ifdef WANT_DEMO
+#ifdef HAVE_GETHRTIME
+static hrtime_t demo_one;
+static hrtime_t demo_two;
+static hrtime_t *demo_one_ptr = &demo_one;
+static hrtime_t *demo_two_ptr = &demo_two;
+static hrtime_t *temp_demo_ptr = &demo_one;
+#elif defined(WIN32)
+static LARGE_INTEGER demo_one;
+static LARGE_INTEGER demo_two;
+static LARGE_INTEGER *demo_one_ptr = &demo_one;
+static LARGE_INTEGER *demo_two_ptr = &demo_two;
+static LARGE_INTEGER *temp_demo_ptr = &demo_one;
+#else
+static struct timeval demo_one;
+static struct timeval demo_two;
+static struct timeval *demo_one_ptr = &demo_one;
+static struct timeval *demo_two_ptr = &demo_two;
+static struct timeval *temp_demo_ptr = &demo_one;
+#endif 
+
+void demo_first_timestamp() {
+  HIST_timestamp(demo_one_ptr);
+}
+
+/* for a _STREAM test, "a" should be lss_size and "b" should be
+   rsr_size. for a _MAERTS test, "a" should be lsr_size and "b" should
+   be rss_size. raj 2005-04-06 */
+void demo_stream_setup(uint32_t a, uint32_t b) {
+  if ((demo_mode) && (demo_units == 0)) {
+    /* take our default value of demo_units to be the larger of
+       twice the remote's SO_RCVBUF or twice our SO_SNDBUF */
+    if (a > b) {
+      demo_units = 2*a;
+    }
+    else {
+      demo_units = 2*b;
+    }
+  }
+}
+
+/* this has gotten long enough to warrant being an inline function
+   rather than a macro, and it has been enough years since all the
+   important compilers have supported such a construct so it should
+   not be a big deal. raj 2012-01-23 */
+
+inline demo_interval_tick(uint32_t units) {
+  if (demo_mode) {
+    double actual_interval;
+    static int count = 0;
+    struct timeval now;
+    units_this_tick += units;
+    if (units_this_tick >= demo_units) {			
+      /* time to possibly update demo_units and maybe output an	
+	 interim result */					
+      HIST_timestamp(demo_two_ptr);				
+      actual_interval = delta_micro(demo_one_ptr,demo_two_ptr);	
+      /* we always want to fine-tune demo_units here whether we emit
+	 an interim result or not.  if we are short, this will
+	 lengthen demo_units.  if we are long, this will shorten it */
+      demo_units = demo_units * (demo_interval / actual_interval);
+      if (actual_interval >= demo_interval) {			
+        /* time to emit an interim result, giving the current time to
+	   the millisecond for compatability with RRD  */
+        gettimeofday(&now,NULL);
+	switch (netperf_output_mode) {
+	case HUMAN:
+	  fprintf(where,
+		  "Interim result: %7.2f %s/s over %.3f seconds ending at %ld.%.3ld\n",
+		  calc_thruput_interval(units_this_tick,
+					actual_interval/1000000.0),
+		  format_units(),
+		  actual_interval/1000000.0,
+		  now.tv_sec,
+		  (long) now.tv_usec/1000);
+	  break;
+	case CSV:
+	  fprintf(where,
+		  "%7.2f,%s/s,%.3f,%ld.%.3ld\n",
+		  calc_thruput_interval(units_this_tick,
+					actual_interval/1000000.0),
+		  format_units(),
+		  actual_interval/1000000.0,
+		  now.tv_sec,
+		  (long) now.tv_usec/1000);
+	  break;
+	case KEYVAL:
+	  fprintf(where,
+		  "NETPERF_INTERIM_RESULT[%d]=%.2f\n"
+		  "NETPERF_UNITS[%d]=%s/s\n"
+		  "NETPERF_INTERVAL[%d]=%.3f\n"
+		  "NETPERF_ENDING[%d]=%ld.%.3ld\n",
+		  count,
+		  calc_thruput_interval(units_this_tick,
+					actual_interval/1000000.0),
+		  count,
+		  format_units(),
+		  count,
+		  actual_interval/1000000.0,
+		  count,
+		  now.tv_sec,
+		  (long) now.tv_usec/1000);
+	  count += 1;
+	  break;
+	default:
+	  fprintf(where,
+		  "Hey Ricky you not fine, theres a bug at demo time. Hey Ricky!");
+	  fflush(where);
+	  exit(-1);
+	}
+	fflush(where);		
+	units_this_tick = 0.0;					
+	/* now get a new starting timestamp.  we could be clever
+	   and swap pointers - the math we do probably does not	
+	   take all that long, but for now this will suffice */	
+	temp_demo_ptr = demo_one_ptr;				
+	demo_one_ptr = demo_two_ptr;				
+	demo_two_ptr = temp_demo_ptr;				
+      }								
+    }								
+  }
+}
+
+void demo_stream_interval(uint32_t units) {
+  demo_interval_tick(units);
+}
+
+void demo_rr_setup(uint32_t a) {
+  if ((demo_mode) && (demo_units == 0)) {
+    /* take whatever we are given */
+    demo_units = a;
+  }
+}
+
+void demo_rr_interval(uint32_t units) {
+  demo_interval_tick(units);
+}
+
+#endif 
 
 /* hist.c
 

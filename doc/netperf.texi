@@ -2463,7 +2463,17 @@ brevity.  The output looks something like this:
 @end example
 
 We can take the sum of the results and be reasonably confident that
-the aggregate performance was 940 Mbits/s.
+the aggregate performance was 940 Mbits/s.  This method does not need
+to be limited to one system speaking to one other system.  It can be
+extended to one system talking to N other systems.  It could be as simple as:
+@example
+for host in 'foo bar baz bing'
+do
+netperf -t TCP_STREAM -H $hosts -i 10 -P 0 &
+done
+@end example
+A more complicated/sophisticated example can be found in
+@file{doc/examples/runemomniagg2.sh} where.
 
 If you see warnings about netperf not achieving the confidence
 intervals, the best thing to do is to increase the number of
@@ -2525,9 +2535,9 @@ done
 
 You will notice that the tests completed in an order other than they
 were started from the shell.  This underscores why there is a threat
-of skew error and why netperf4 is the preferred tool for aggregate
-tests.  Even if you see the Netperf Contributing Editor acting to the
-contrary!-)
+of skew error and why netperf4 will eventually be the preferred tool
+for aggregate tests.  Even if you see the Netperf Contributing Editor
+acting to the contrary!-)
 
 @menu
 * Issues in Running Concurrent Tests::  
@@ -2842,7 +2852,7 @@ stopped.  It does though require sufficiently synchronized clocks on
 all the test systems.
 
 While calls to get the current time can be inexpensive, that neither
-has nor is universally true.  For that reason netperf tries to
+has been nor is universally true.  For that reason netperf tries to
 minimize the number of such ``timestamping'' calls (eg
 @code{gettimeofday}) calls it makes when in demo mode.  Rather than
 take a timestamp after each @code{send} or @code{recv} call completes

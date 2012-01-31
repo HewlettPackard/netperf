@@ -2683,7 +2683,16 @@ brevity.  The output looks something like this:
       87380  16384  16384    10.03     233.96
 </pre>
    <p>We can take the sum of the results and be reasonably confident that
-the aggregate performance was 940 Mbits/s.
+the aggregate performance was 940 Mbits/s.  This method does not need
+to be limited to one system speaking to one other system.  It can be
+extended to one system talking to N other systems.  It could be as simple as:
+<pre class="example">     for host in 'foo bar baz bing'
+     do
+     netperf -t TCP_STREAM -H $hosts -i 10 -P 0 &amp;
+     done
+</pre>
+   <p>A more complicated/sophisticated example can be found in
+<samp><span class="file">doc/examples/runemomniagg2.sh</span></samp> where.
 
    <p>If you see warnings about netperf not achieving the confidence
 intervals, the best thing to do is to increase the number of
@@ -2741,9 +2750,9 @@ command line to append the given string to the output:
 </pre>
    <p>You will notice that the tests completed in an order other than they
 were started from the shell.  This underscores why there is a threat
-of skew error and why netperf4 is the preferred tool for aggregate
-tests.  Even if you see the Netperf Contributing Editor acting to the
-contrary!-)
+of skew error and why netperf4 will eventually be the preferred tool
+for aggregate tests.  Even if you see the Netperf Contributing Editor
+acting to the contrary!-)
 
 <ul class="menu">
 <li><a accesskey="1" href="#Issues-in-Running-Concurrent-Tests">Issues in Running Concurrent Tests</a>
@@ -3064,7 +3073,7 @@ stopped.  It does though require sufficiently synchronized clocks on
 all the test systems.
 
    <p>While calls to get the current time can be inexpensive, that neither
-has nor is universally true.  For that reason netperf tries to
+has been nor is universally true.  For that reason netperf tries to
 minimize the number of such &ldquo;timestamping&rdquo; calls (eg
 <code>gettimeofday</code>) calls it makes when in demo mode.  Rather than
 take a timestamp after each <code>send</code> or <code>recv</code> call completes
