@@ -102,8 +102,6 @@ static  char  local_cpu_method;
 static  char  remote_cpu_method;
 
 #ifdef WANT_HISTOGRAM
-static struct timeval time_one;
-static struct timeval time_two;
 static HIST time_hist;
 #endif /* WANT_HISTOGRAM */
 
@@ -414,7 +412,7 @@ Size (bytes)\n\
     (struct sctp_stream_results_struct *)netperf_response.content.test_specific_data;
 
 #ifdef WANT_HISTOGRAM
-  time_hist = HIST_new();
+  time_hist = HIST_new_n(1);
 #endif /* WANT_HISTOGRAM */
   /* since we are now disconnected from the code that established the */
   /* control socket, and since we want to be able to use different */
@@ -706,7 +704,7 @@ Size (bytes)\n\
 #ifdef WANT_HISTOGRAM
       /* timestamp just before we go into send and then again just after */
       /* we come out raj 8/94 */
-      HIST_timestamp(&time_one);
+      HIST_timestamp_start(time_hist);
 #endif /* WANT_HISTOGRAM */
       
       while ((len=sctp_sendmsg(send_socket,
@@ -730,8 +728,7 @@ Size (bytes)\n\
 
 #ifdef WANT_HISTOGRAM
       /* timestamp the exit from the send call and update the histogram */
-      HIST_timestamp(&time_two);
-      HIST_add(time_hist,delta_micro(&time_one,&time_two));
+      HIST_timestamp_stop_add(time_hist);
 #endif /* WANT_HISTOGRAM */      
 
 #ifdef WANT_INTERVALS      
@@ -1546,7 +1543,7 @@ Size (bytes)\n\
     (struct sctp_stream_results_struct *)netperf_response.content.test_specific_data;
 
 #ifdef WANT_HISTOGRAM
-  time_hist = HIST_new();
+  time_hist = HIST_new_n(1);
 #endif /* WANT_HISTOGRAM */
   
   complete_addrinfos(&remote_res,
@@ -1845,7 +1842,7 @@ Size (bytes)\n\
 #ifdef WANT_HISTOGRAM
       /* timestamp just before we go into send and then again just after */
       /* we come out raj 8/94 */
-      gettimeofday(&time_one,NULL);
+      HIST_timestamp_start(time_hist);
 #endif /* WANT_HISTOGRAM */
       
       for (j = 0; j < num_associations; j++) {
@@ -1876,8 +1873,7 @@ Size (bytes)\n\
 
 #ifdef WANT_HISTOGRAM
       /* timestamp the exit from the send call and update the histogram */
-      gettimeofday(&time_two,NULL);
-      HIST_add(time_hist,delta_micro(&time_one,&time_two));
+      HIST_timestamp_stop_add(time_hist);
 #endif /* WANT_HISTOGRAM */      
 
 #ifdef WANT_INTERVALS      
@@ -2643,7 +2639,7 @@ Send   Recv    Send   Recv\n\
     (struct sctp_rr_results_struct *)netperf_response.content.test_specific_data;
   
 #ifdef WANT_HISTOGRAM
-  time_hist = HIST_new();
+  time_hist = HIST_new_n(1);
 #endif /* WANT_HISTOGRAM */
 
   /* since we are now disconnected from the code that established the */
@@ -2900,7 +2896,7 @@ Send   Recv    Send   Recv\n\
 #ifdef WANT_HISTOGRAM
       /* timestamp just before our call to send, and then again just */
       /* after the receive raj 8/94 */
-      HIST_timestamp(&time_one);
+      HIST_timestamp_start(time_hist);
 #endif /* WANT_HISTOGRAM */
       
       while ((len=sctp_sendmsg(send_socket,
@@ -2958,8 +2954,7 @@ Send   Recv    Send   Recv\n\
       }
       
 #ifdef WANT_HISTOGRAM
-      HIST_timestamp(&time_two);
-      HIST_add(time_hist,delta_micro(&time_one,&time_two));
+      HIST_timestamp_stop_add(time_hist);
 #endif /* WANT_HISTOGRAM */
 #ifdef WANT_INTERVALS      
       if (demo_mode) {
@@ -3694,7 +3689,7 @@ Send   Recv    Send   Recv\n\
     (struct sctp_rr_results_struct *)netperf_response.content.test_specific_data;
   
 #ifdef WANT_HISTOGRAM
-  time_hist = HIST_new();
+  time_hist = HIST_new_n(1);
 #endif /* WANT_HISTOGRAM */
 
   /* since we are now disconnected from the code that established the */
@@ -3969,7 +3964,7 @@ Send   Recv    Send   Recv\n\
 #ifdef WANT_HISTOGRAM
 	/* timestamp just before our call to send, and then again just */
 	/* after the receive raj 8/94 */
-	gettimeofday(&time_one,NULL);
+	HIST_timestamp_start(time_hist);
 #endif /* WANT_HISTOGRAM */
 	
 	while ((len=sctp_sendmsg(send_socket[j],
@@ -4029,8 +4024,7 @@ Send   Recv    Send   Recv\n\
 	}
 	
 #ifdef WANT_HISTOGRAM
-	gettimeofday(&time_two,NULL);
-	HIST_add(time_hist,delta_micro(&time_one,&time_two));
+	HIST_timestamp_stop_add(time_hist);
 #endif /* WANT_HISTOGRAM */
 	
 	nummessages++;          
