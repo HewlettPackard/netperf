@@ -334,90 +334,6 @@ static struct timeval *temp_intvl_ptr = &intvl_one;
 #endif
 #endif
 
-#ifdef WANT_DEMO
-#ifdef HAVE_GETHRTIME
-static hrtime_t demo_one;
-static hrtime_t demo_two;
-static hrtime_t *demo_one_ptr = &demo_one;
-static hrtime_t *demo_two_ptr = &demo_two;
-static hrtime_t *temp_demo_ptr = &demo_one;
-#elif defined(WIN32)
-static LARGE_INTEGER demo_one;
-static LARGE_INTEGER demo_two;
-static LARGE_INTEGER *demo_one_ptr = &demo_one;
-static LARGE_INTEGER *demo_two_ptr = &demo_two;
-static LARGE_INTEGER *temp_demo_ptr = &demo_one;
-#else
-static struct timeval demo_one;
-static struct timeval demo_two;
-static struct timeval *demo_one_ptr = &demo_one;
-static struct timeval *demo_two_ptr = &demo_two;
-static struct timeval *temp_demo_ptr = &demo_one;
-#endif 
-
-/* for a _STREAM test, "a" should be lss_size and "b" should be
-   rsr_size. for a _MAERTS test, "a" should be lsr_size and "b" should
-   be rss_size. raj 2005-04-06 */
-#define DEMO_STREAM_SETUP(a,b) \
-    if ((demo_mode) && (demo_units == 0)) { \
-      /* take our default value of demo_units to be the larger of \
-	 twice the remote's SO_RCVBUF or twice our SO_SNDBUF */ \
-      if (a > b) { \
-	demo_units = 2*a; \
-      } \
-      else { \
-	demo_units = 2*b; \
-      } \
-    }
-
-/* now that calc_thruput_interval knows about transactions as a format
-   we can merge DEMO_STREAM_INTERVAL and DEMO_RR_INTERVAL since the
-   are the same */
-
-#define DEMO_INTERVAL(units) \
-      if (demo_mode) { \
-	double actual_interval; \
-	units_this_tick += units; \
-	if (units_this_tick >= demo_units) { \
-	  /* time to possibly update demo_units and maybe output an \
-	     interim result */ \
-	  HIST_timestamp(demo_two_ptr); \
-	  actual_interval = delta_micro(demo_one_ptr,demo_two_ptr); \
-	  /* we always want to fine-tune demo_units here whether we \
-	     emit an interim result or not.  if we are short, this \
-	     will lengthen demo_units.  if we are long, this will \
-	     shorten it */ \
-	  demo_units = demo_units * (demo_interval / actual_interval); \
-	  if (actual_interval >= demo_interval) { \
-	    /* time to emit an interim result */ \
-	    fprintf(where, \
-		    "Interim result: %.2f %s/s over %.2f seconds\n", \
-		    calc_thruput_interval(units_this_tick, \
-					  actual_interval/1000000.0), \
-		    format_units(), \
-		    actual_interval/1000000.0); \
-	    units_this_tick = 0.0; \
-	    /* now get a new starting timestamp.  we could be clever \
-	       and swap pointers - the math we do probably does not \
-	       take all that long, but for now this will suffice */ \
-	    temp_demo_ptr = demo_one_ptr; \
-	    demo_one_ptr = demo_two_ptr; \
-	    demo_two_ptr = temp_demo_ptr; \
-	  } \
-	} \
-      }
-
-#define DEMO_STREAM_INTERVAL(units) DEMO_INTERVAL(units)
-
-#define DEMO_RR_SETUP(a) \
-    if ((demo_mode) && (demo_units == 0)) { \
-      /* take whatever we are given */ \
-	demo_units = a; \
-    }
-
-#define DEMO_RR_INTERVAL(units) DEMO_INTERVAL(units)
-
-#endif 
 
 char sockets_usage[] = "\n\
 Usage: netperf [global options] -- [test options] \n\
@@ -2035,7 +1951,7 @@ Size (bytes)\n\
     }
 
 #ifdef WANT_DEMO
-    DEMO_STREAM_SETUP(lss_size,rsr_size)
+    demo_stream_setup(lss_size,rsr_size);
 #endif
 
     /*Connect up to the remote port on the data socket  */
@@ -2101,7 +2017,7 @@ Size (bytes)\n\
 
 #ifdef WANT_DEMO
       if (demo_mode) {
-	HIST_timestamp(demo_one_ptr);
+	demo_first_timestamp();
       }
 #endif
       
@@ -2155,7 +2071,7 @@ Size (bytes)\n\
 #endif /* WANT_HISTOGRAM */      
 
 #ifdef WANT_DEMO
-      DEMO_STREAM_INTERVAL(send_size)
+      demo_stream_interval(send_size);
 #endif 
 
 #if defined(WANT_INTERVALS)
@@ -2748,7 +2664,7 @@ Size (bytes)\n\
     }
 
 #ifdef WANT_DEMO
-    DEMO_STREAM_SETUP(lsr_size,rss_size)
+    demo_stream_setup(lsr_size,rss_size);
 #endif
 
     /*Connect up to the remote port on the data socket  */
@@ -2821,7 +2737,7 @@ Size (bytes)\n\
 
 #ifdef WANT_DEMO
     if (demo_mode) {
-      HIST_timestamp(demo_one_ptr);
+      demo_first_timestamp();
     }
 #endif
 
@@ -2861,7 +2777,7 @@ Size (bytes)\n\
 #endif /* DIRTY */
 
 #ifdef WANT_DEMO
-      DEMO_STREAM_INTERVAL(len);
+      demo_stream_interval(len);
 #endif
 
 #ifdef WANT_INTERVALS      
@@ -3677,7 +3593,7 @@ Size (bytes)\n\
         }
 
 #if 0 /* def WANT_DEMO */
-        DEMO_STREAM_SETUP(lss_size,rsr_size)
+        demo_stream_setup(lss_size,rsr_size);
 #endif
 
             /*Connect up to the remote port on the data socket  */
@@ -3740,7 +3656,7 @@ Size (bytes)\n\
 
 #if 0 /* def WANT_DEMO */
         if (demo_mode) {
-            HIST_timestamp(demo_one_ptr);
+	  demo_first_timestamp();
         }
 #endif
 
@@ -3836,7 +3752,7 @@ Size (bytes)\n\
 #endif /* WANT_HISTOGRAM */
 
 #if 0 /* def WANT_DEMO */
-            DEMO_STREAM_INTERVAL(send_size);
+            demo_stream_interval(send_size);
 #endif
 
 #if 0 /* def WANT_INTERVALS */
@@ -4491,7 +4407,7 @@ Size (bytes)\n\
     }
 
 #ifdef WANT_DEMO
-    DEMO_STREAM_SETUP(lss_size,rsr_size)
+    demo_stream_setup(lss_size,rsr_size);
 #endif
 
     /*Connect up to the remote port on the data socket  */
@@ -4558,7 +4474,7 @@ Size (bytes)\n\
 
 #ifdef WANT_DEMO
     if (demo_mode) {
-      HIST_timestamp(demo_one_ptr);
+      demo_first_timestamp();
     }
 #endif
 
@@ -4662,7 +4578,7 @@ Size (bytes)\n\
 #endif /* WANT_HISTOGRAM */      
     
 #ifdef WANT_DEMO
-      DEMO_STREAM_INTERVAL(send_size);
+      demo_stream_interval(send_size);
 #endif 
   
 #ifdef WANT_INTERVALS      
@@ -6002,7 +5918,7 @@ Send   Recv    Send   Recv    usec/Tran  per sec  Outbound   Inbound\n\
     }
 
 #ifdef WANT_DEMO
-    DEMO_RR_SETUP(1000)
+    demo_rr_setup(1000);
 #endif
 
     /*Connect up to the remote port on the data socket  */
@@ -6066,7 +5982,7 @@ Send   Recv    Send   Recv    usec/Tran  per sec  Outbound   Inbound\n\
 
 #ifdef WANT_DEMO
       if (demo_mode) {
-	HIST_timestamp(demo_one_ptr);
+	demo_first_timestamp();
       }
 #endif
 
@@ -6189,7 +6105,7 @@ Send   Recv    Send   Recv    usec/Tran  per sec  Outbound   Inbound\n\
 #endif /* WANT_HISTOGRAM */
 
 #ifdef WANT_DEMO
-      DEMO_RR_INTERVAL(1);
+      demo_rr_interval(1);
 #endif
 
 #ifdef WANT_INTERVALS      
@@ -6748,7 +6664,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     }
 
 #ifdef WANT_DEMO
-    DEMO_STREAM_SETUP(lss_size,rsr_size)
+    demo_stream_setup(lss_size,rsr_size);
 #endif
 
     /* We "connect" up to the remote post to allow is to use the send */
@@ -6808,7 +6724,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
 
 #ifdef WANT_DEMO
     if (demo_mode) {
-      HIST_timestamp(demo_one_ptr);
+      demo_first_timetsamp();
     }
 #endif
 
@@ -6881,7 +6797,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
 #endif /* WANT_HISTOGRAM */
 
 #ifdef WANT_DEMO
-      DEMO_STREAM_INTERVAL(send_size)
+      demo_stream_interval(send_size);
 #endif
 
 #ifdef WANT_INTERVALS      
@@ -7697,7 +7613,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
     }
 
 #ifdef WANT_DEMO
-    DEMO_RR_SETUP(100)
+    demo_rr_setup(100);
 #endif
 
     /* Connect up to the remote port on the data socket. This will set */
@@ -7752,7 +7668,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
 
 #ifdef WANT_DEMO
     if (demo_mode) {
-      HIST_timestamp(demo_one_ptr);
+      demo_first_timestamp();
     }
 #endif 
 
@@ -7838,7 +7754,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
       /* millisecond.  */
 
 #ifdef WANT_DEMO
-      DEMO_RR_INTERVAL(1);
+      demo_rr_interval(1);
 #endif
 
 #ifdef WANT_INTERVALS      
@@ -9095,7 +9011,7 @@ Send   Recv    Send   Recv\n\
     }
   }
 #ifdef WANT_DEMO
-  DEMO_RR_SETUP(100)
+  demo_rr_setup(100);
 #endif
 
   /* pick a nice random spot between client_port_min and */
@@ -9134,7 +9050,7 @@ Send   Recv    Send   Recv\n\
 
 #ifdef WANT_DEMO
       if (demo_mode) {
-	HIST_timestamp(demo_one_ptr);
+	demo_first_timestamp();
       }
 #endif
   
@@ -9318,7 +9234,7 @@ newport:
 #endif /* WANT_HISTOGRAM */
 
 #ifdef WANT_DEMO
-      DEMO_RR_INTERVAL(1)
+      demo_rr_interval(1);
 #endif
 
       nummessages++;          
@@ -12286,7 +12202,7 @@ Send   Recv    Send   Recv\n\
   }
 
 #ifdef WANT_DEMO
-  DEMO_RR_SETUP(100)
+  demo_rr_setup(100);
 #endif
   
   /* pick a nice random spot between client_port_min and */
@@ -12325,7 +12241,7 @@ Send   Recv    Send   Recv\n\
 
 #ifdef WANT_DEMO
   if (demo_mode) {
-    HIST_timestamp(demo_one_ptr);
+    demo_first_timestamp();
   }
 #endif
 
@@ -12436,7 +12352,7 @@ Send   Recv    Send   Recv\n\
 #endif /* WANT_HISTOGRAM */
 
 #ifdef WANT_DEMO
-      DEMO_RR_INTERVAL(1)
+      demo_rr_interval(1);
 #endif
 
       nummessages++;          

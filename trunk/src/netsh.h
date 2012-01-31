@@ -140,13 +140,6 @@ extern	int	     interval_burst;
 extern  int          remote_interval_usecs;
 extern  int          remote_interval_burst;
 
-#if defined(WANT_INTERVALS) || defined(WANT_DEMO)
-
-extern int    demo_mode;
-extern double demo_interval;
-extern double demo_units;
-extern double units_this_tick;
-#endif 
 
 #ifdef DIRTY
 extern int	rem_dirty_count;

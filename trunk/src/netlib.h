@@ -242,6 +242,12 @@ enum sock_buffer{
   RECV_BUFFER
 };
 
+enum netperf_output_modes {
+  HUMAN = 0,
+  CSV,
+  KEYVAL,
+};
+
 /* some defines for security types, perhaps these would be better
    elsewhere but for now here they are */
 
@@ -480,6 +486,22 @@ extern  int     times_up;
 extern  FILE    *where;
 extern  int     loops_per_msec;
 extern  float   lib_local_per_cpu_util[];
+
+extern enum netperf_output_modes netperf_output_mode;
+
+#if defined(WANT_INTERVALS) || defined(WANT_DEMO)
+
+extern int    demo_mode;
+extern double demo_interval;
+extern double demo_units;
+extern double units_this_tick;
+#if defined(WANT_DEMO)
+extern void   demo_rr_interval(uint32_t units);
+extern void   demo_rr_setup(uint32_t units);
+extern void   demo_stream_interval(uint32_t units);
+extern void   demo_interval_tick(uint32_t units);
+#endif
+#endif 
   
 extern  void    netlib_init();
 extern  int     netlib_get_page_size();
