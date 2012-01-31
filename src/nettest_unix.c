@@ -14,7 +14,7 @@
 
 #ifdef WANT_UNIX
 char	nettest_unix_id[]="\
-@(#)nettest_unix.c (c) Copyright 1994-2008 Hewlett-Packard Co. Version 2.4.5";
+@(#)nettest_unix.c (c) Copyright 1994-2012 Hewlett-Packard Co. Version post-2.5.0-tot";
      
 /****************************************************************/
 /*								*/
@@ -373,7 +373,7 @@ Send   Recv    Send   Recv             Send (avg)          Recv (avg)\n\
   /* default should be used. Alignment is the exception, it will */
   /* default to 1, which will be no alignment alterations. */
   
-  netperf_request.content.request_type		=	DO_STREAM_STREAM;
+  netperf_request.content.request_type	=	DO_STREAM_STREAM;
   stream_stream_request->send_buf_size	=	rss_size;
   stream_stream_request->recv_buf_size	=	rsr_size;
   stream_stream_request->receive_size	=	recv_size;
@@ -3401,33 +3401,33 @@ scan_unix_args(int argc, char *argv[])
       /* set local socket sizes */
       break_args(optarg,arg1,arg2);
       if (arg1[0])
-	lss_size_req = atoi(arg1);
+	lss_size_req = convert(arg1);
       if (arg2[0])
-	lsr_size_req = atoi(arg2);
+	lsr_size_req = convert(arg2);
       break;
     case 'S':
       /* set remote socket sizes */
       break_args(optarg,arg1,arg2);
       if (arg1[0])
-	rss_size = atoi(arg1);
+	rss_size = convert(arg1);
       if (arg2[0])
-	rsr_size = atoi(arg2);
+	rsr_size = convert(arg2);
       break;
     case 'r':
       /* set the request/response sizes */
       break_args(optarg,arg1,arg2);
       if (arg1[0])
-	req_size = atoi(arg1);
+	req_size = convert(arg1);
       if (arg2[0])	
-	rsp_size = atoi(arg2);
+	rsp_size = convert(arg2);
       break;
     case 'm':
       /* set the send size */
-      send_size = atoi(optarg);
+      send_size = convert(optarg);
       break;
     case 'M':
       /* set the recv size */
-      recv_size = atoi(optarg);
+      recv_size = convert(optarg);
       break;
     };
   }
