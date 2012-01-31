@@ -80,7 +80,7 @@ char	nettest_unix_id[]="\
 static char
   path_prefix[32];
 
-static int	
+static int
   rss_size,		/* remote socket send buffer size */
   rsr_size,		/* remote socket recv buffer size	*/
   lss_size_req,		/* requested local socket send buffer size */
@@ -1140,7 +1140,7 @@ Send   Recv    Send   Recv\n\
 				   rsp_size,
 				   local_recv_align,
 				   local_recv_offset);
-				
+
   /*set up the data socket                        */
   send_socket = create_unix_socket(AF_UNIX,
 				   SOCK_STREAM);
@@ -1308,7 +1308,7 @@ Send   Recv    Send   Recv\n\
       }
       rsp_bytes_left -= rsp_bytes_recvd;
       temp_message_ptr  += rsp_bytes_recvd;
-    }	
+    }
     recv_ring = recv_ring->next;
 
     if (timed_out) {
@@ -1598,7 +1598,7 @@ bytes   bytes    secs            #      #   %s/sec   %%       us/KB\n\n";
       printf(cpu_title,format_units());
     else
       printf(tput_title,format_units());
-  }	
+  }
 
   failed_sends	= 0;
   failed_cows	= 0;
@@ -1783,7 +1783,7 @@ bytes   bytes    secs            #      #   %s/sec   %%       us/KB\n\n";
      number of messages to the test. */
 
   /* the test is over, so get stats and stuff */
-  cpu_stop(local_cpu_usage,	
+  cpu_stop(local_cpu_usage,
 	   &elapsed_time);
 
   /* Get the statistics from the remote end  */
@@ -2306,7 +2306,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      us/Tr   us/Tr\n\n"
     exit(1);
   }
   send_message_ptr = (char *)(( (long)temp_message_ptr +
-			(long) local_send_align - 1) &	
+			(long) local_send_align - 1) &
 			~((long) local_send_align - 1));
   send_message_ptr = send_message_ptr + local_send_offset;
   temp_message_ptr = (char *)malloc(DATABUFFERLEN);
@@ -2315,7 +2315,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      us/Tr   us/Tr\n\n"
     exit(1);
   }
   recv_message_ptr = (char *)(( (long)temp_message_ptr +
-			(long) local_recv_align - 1) &	
+			(long) local_recv_align - 1) &
 			~((long) local_recv_align - 1));
   recv_message_ptr = recv_message_ptr + local_recv_offset;
 
@@ -2332,7 +2332,7 @@ bytes  bytes  bytes   bytes  secs.   per sec  %%      %%      us/Tr   us/Tr\n\n"
     fprintf(where,"send_dg_rr: send_socket obtained...\n");
   }
 
-	
+
   /* If the user has requested cpu utilization measurements, we must
      calibrate the cpu(s). We will perform this task within the tests
      themselves. If the user has specified the cpu rate, then
@@ -3273,7 +3273,7 @@ recv_stream_rr()
       /* we hit the end of the test based on time - lets
          bail out of here now... */
       fprintf(where,"yo5\n");
-      fflush(where);						
+      fflush(where);
       break;
     }
 
@@ -3290,7 +3290,7 @@ recv_stream_rr()
 	/* the test timer has popped */
 	timed_out = 1;
 	fprintf(where,"yo6\n");
-	fflush(where);						
+	fflush(where);
 	break;
       }
       netperf_response.content.serv_errno = 997;
@@ -3369,7 +3369,7 @@ scan_unix_args(int argc, char *argv[])
 
   int		c;
 
-  char	
+  char
     arg1[BUFSIZ],  /* argument holders		*/
     arg2[BUFSIZ];
 
@@ -3389,7 +3389,7 @@ scan_unix_args(int argc, char *argv[])
 
   while ((c= getopt(argc, argv, UNIX_ARGS)) != EOF) {
     switch (c) {
-    case '?':	
+    case '?':
     case 'h':
       print_unix_usage();
       exit(1);
@@ -3419,7 +3419,7 @@ scan_unix_args(int argc, char *argv[])
       break_args(optarg,arg1,arg2);
       if (arg1[0])
 	req_size = convert(arg1);
-      if (arg2[0])	
+      if (arg2[0])
 	rsp_size = convert(arg2);
       break;
     case 'm':
