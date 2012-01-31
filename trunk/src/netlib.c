@@ -136,7 +136,7 @@ char    netlib_id[]="\
 #include <sys/pri.h>
 #define PRIORITY PRI_LOW
 #else/* _AIX */
-#ifdef __sgi 
+#ifdef __sgi
 #include <sys/prctl.h>
 #include <sys/schedctl.h>
 #define PRIORITY NDPLOMIN
@@ -191,7 +191,7 @@ SOCKET     win_kludge_socket2 = INVALID_SOCKET;
     process-level looper process. we also now require support for the
     "long" integer type. raj 4/95.  */
 
-int 
+int
   lib_num_loc_cpus,    /* the number of cpus in the system */
   lib_num_rem_cpus;    /* how many we think are in the remote */
 
@@ -222,7 +222,7 @@ int     *request_array;
 int     *response_array;
 
 /* INVALID_SOCKET == INVALID_HANDLE_VALUE == (unsigned int)(~0) == -1 */
-SOCKET  netlib_control = INVALID_SOCKET;  
+SOCKET  netlib_control = INVALID_SOCKET;
 SOCKET  server_sock = INVALID_SOCKET;
 int     control_family = AF_UNSPEC;
 
@@ -261,7 +261,7 @@ union   netperf_response_struct netperf_response;
 FILE    *where;
 
 char    libfmt = '?';
-        
+
 #ifdef WIN32
 HANDLE hAlarm = INVALID_HANDLE_VALUE;
 #endif
@@ -293,7 +293,7 @@ netlib_get_page_size(void) {
     bytes.  this should be more than enough to be sure that there is
     no page  or cache thrashing by looper processes on MP
     systems. otherwise  that's really just too bad - such systems
-    should define  _SC_PAGE_SIZE - raj 4/95 */ 
+    should define  _SC_PAGE_SIZE - raj 4/95 */
 
 #ifndef _SC_PAGE_SIZE
 #ifdef WIN32
@@ -327,11 +327,11 @@ stop_itimer()
   struct itimerval old_interval;
 
   new_interval.it_interval.tv_sec = 0;
-  new_interval.it_interval.tv_usec = 0;  
+  new_interval.it_interval.tv_usec = 0;
   new_interval.it_value.tv_sec = 0;
-  new_interval.it_value.tv_usec = 0;  
+  new_interval.it_value.tv_usec = 0;
   if (setitimer(ITIMER_REAL,&new_interval,&old_interval) != 0) {
-    /* there was a problem arming the interval timer */ 
+    /* there was a problem arming the interval timer */
     perror("netperf: setitimer");
     exit(1);
   }
@@ -357,11 +357,11 @@ getopt(int argc, char **argv, char *ostr)
 {
   static char *place = EMSG;    /* option letter processing */
   register char *oli;                   /* option letter list index */
-  
+
   if (!*place) {
     /* update scanning pointer */
       if (optind >= argc || *(place = argv[optind]) != '-' || !*++place) {
-        return EOF; 
+        return EOF;
       }
     if (*place == '-') {
       /* found "--" */
@@ -370,7 +370,7 @@ getopt(int argc, char **argv, char *ostr)
         return EOF;
     }
   }
-  
+
   /* option letter okay? */
   if ((optopt = (int)*place++) == (int)':'
       || !(oli = strchr(ostr, optopt))) {
@@ -380,7 +380,7 @@ getopt(int argc, char **argv, char *ostr)
     error("illegal option");
     return BADCH;
   }
-  if (*++oli != ':') {  
+  if (*++oli != ':') {
     /* don't need argument */
     optarg = NULL;
     if (!*place)
@@ -421,11 +421,11 @@ void PrintWin32Error(FILE *stream, LPSTR text)
     dwError = GetLastError();
     dwResult = FormatMessage(
         FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM |FORMAT_MESSAGE_ARGUMENT_ARRAY,
-        NULL, 
-        dwError, 
-        LANG_NEUTRAL, 
-        (LPTSTR)&szTemp, 
-        0, 
+        NULL,
+        dwError,
+        LANG_NEUTRAL,
+        (LPTSTR)&szTemp,
+        0,
         NULL );
 
     if (dwResult)
@@ -468,7 +468,7 @@ char * nsec_type_to_str(int type) {
 
 
 char *
-inet_ttos(int type) 
+inet_ttos(int type)
 {
   switch (type) {
   case SOCK_DGRAM:
@@ -529,10 +529,10 @@ inet_ptos(int protocol) {
 #ifndef AF_INET_SDP
 #define AF_INET_SDP 27
 #define PF_INET_SDP AF_INET_SDP
-#endif 
+#endif
 
 char *
-inet_ftos(int family) 
+inet_ftos(int family)
 {
   switch(family) {
   case AF_INET:
@@ -555,7 +555,7 @@ inet_ftos(int family)
 }
 
 int
-inet_nton(int af, const void *src, char *dst, int cnt) 
+inet_nton(int af, const void *src, char *dst, int cnt)
 
 {
 
@@ -624,7 +624,7 @@ ntohd(double net_double)
      the way they belong before we swap */
   conv_rec.words[0] = htonl(conv_rec.words[0]);
   conv_rec.words[1] = htonl(conv_rec.words[1]);
-  
+
   /* now swap */
   for (i=0; i<= 3; i++) {
     scratch = conv_rec.bytes[i];
@@ -642,7 +642,7 @@ ntohd(double net_double)
 #endif
 
   return(conv_rec.whole_thing);
-  
+
 }
 
 double
@@ -674,7 +674,7 @@ htond(double host_double)
     conv_rec.bytes[i] = conv_rec.bytes[7-i];
     conv_rec.bytes[7-i] = scratch;
   }
-  
+
 #if defined(__FLOAT_WORD_ORDER) && defined(__BYTE_ORDER)
   if (__FLOAT_WORD_ORDER != __BYTE_ORDER) {
     /* Fixup mixed endian floating point machines */
@@ -689,9 +689,9 @@ htond(double host_double)
      this happens, the proper order will go out on the network */
   conv_rec.words[0] = htonl(conv_rec.words[0]);
   conv_rec.words[1] = htonl(conv_rec.words[1]);
-  
+
   return(conv_rec.whole_thing);
-  
+
 }
 
 
@@ -750,7 +750,7 @@ random_ip_address(struct addrinfo *res, int mask_len)
       fflush(where);
       exit(-1);
     }
-    
+
     for (i = 0; i < 4; i ++){
       addr[i] = ntohl(addr[i]);
       len = mask_len - i * 32;
@@ -780,7 +780,7 @@ get_num_cpus()
 {
 
   /* on HP-UX, even when we use the looper procs we need the pstat */
-  /* call */ 
+  /* call */
 
   int temp_cpus;
 
@@ -789,7 +789,7 @@ get_num_cpus()
 
   struct pst_dynamic psd;
 
-  if (pstat_getdynamic((struct pst_dynamic *)&psd, 
+  if (pstat_getdynamic((struct pst_dynamic *)&psd,
                        (size_t)sizeof(psd), (size_t)1, 0) != -1) {
     temp_cpus = psd.psd_proc_cnt;
   }
@@ -812,7 +812,7 @@ get_num_cpus()
 #ifdef WIN32
   SYSTEM_INFO SystemInfo;
   GetSystemInfo(&SystemInfo);
-  
+
   temp_cpus = SystemInfo.dwNumberOfProcessors;
 #else
   /* we need to know some other ways to do this, or just fall-back on
@@ -833,8 +833,8 @@ get_num_cpus()
   }
 
   return(temp_cpus);
-  
-}  
+
+}
 
 #ifdef WIN32
 #ifdef __GNUC__
@@ -886,7 +886,7 @@ stop_timer()
 
 }
 
-     
+
 
 /************************************************************************/
 /*                                                                      */
@@ -895,12 +895,12 @@ stop_timer()
 /************************************************************************/
 
 void
-#if defined(__hpux) 
+#if defined(__hpux)
 catcher(sig, code, scp)
      int sig;
      int code;
      struct sigcontext *scp;
-#else 
+#else
 catcher(int sig)
 #endif /* __hpux || __VMS */
 {
@@ -920,11 +920,11 @@ catcher(int sig)
 #endif /* RAJ_DEBUG */
 
   switch(sig) {
-    
+
   case SIGINT:
     times_up = 1;
     break;
-  case SIGALRM: 
+  case SIGALRM:
    if (--test_len_ticks == 0) {
       /* the test is over */
       if (times_up != 0) {
@@ -964,7 +964,7 @@ catcher(int sig)
               "catcher: interval timer running unexpectedly!\n");
       fflush(where);
       times_up = 1;
-#endif /* WANT_INTERVALS */      
+#endif /* WANT_INTERVALS */
       break;
     }
   }
@@ -1015,7 +1015,7 @@ install_signal_catchers()
   }
 #else
   return;
-#endif /* WIN32 */ 
+#endif /* WIN32 */
 }
 
 
@@ -1026,27 +1026,27 @@ emulate_alarm( int seconds )
 {
   DWORD ErrorCode;
   DWORD HandlesClosedFlags = 0;
-  
+
   /* Wait on this event for parm seconds. */
-  
+
   ErrorCode = WaitForSingleObject(hAlarm, seconds*1000);
   if (ErrorCode == WAIT_FAILED)
     {
       perror("WaitForSingleObject failed");
       exit(1);
     }
-  
+
   if (ErrorCode == WAIT_TIMEOUT)
     {
       /* WaitForSingleObject timed out; this means the timer
 	 wasn't canceled. */
-      
+
       times_up = 1;
-      
+
       /* Give the other threads time to notice that times_up has
 	 changed state before taking the harsh step of closing the
 	 sockets. */
-      
+
       if (WaitForSingleObject(hAlarm, PAD_TIME/2*1000) ==
 	  WAIT_TIMEOUT) {
 	/* We have yet to find a good way to fully emulate
@@ -1056,7 +1056,7 @@ emulate_alarm( int seconds )
 	   It is rather kludgy, but should be sufficient to
 	   get this puppy shipped.  The concept can be
 	   attributed/blamed :) on Robin raj 1/96 */
-	
+
 	if (win_kludge_socket != INVALID_SOCKET) {
 	  HandlesClosedFlags |= 1;
 	  closesocket(win_kludge_socket);
@@ -1088,11 +1088,11 @@ start_timer(int time)
 
   DWORD  thread_id ;
   HANDLE tHandle;
-  
+
   if (hAlarm == (HANDLE) INVALID_HANDLE_VALUE)
     {
       /* Create the Alarm event object */
-      hAlarm = CreateEvent( 
+      hAlarm = CreateEvent(
 			   (LPSECURITY_ATTRIBUTES) NULL, /* no security */
 			   FALSE,	 /* auto reset event */
 			   FALSE,   /* init. state = reset */
@@ -1107,16 +1107,16 @@ start_timer(int time)
     {
       ResetEvent(hAlarm);
     }
-  
-  
+
+
   tHandle = CreateThread(0,
 			 0,
 			 (LPTHREAD_START_ROUTINE)emulate_alarm,
 			 (LPVOID)(ULONG_PTR)time,
-			 0,		
+			 0,
 			 &thread_id ) ;
   CloseHandle(tHandle);
-  
+
 #else /* not WIN32 */
 
 struct sigaction action;
@@ -1157,7 +1157,7 @@ if (debug) {
     exit(-1);
   }
 
-  /* this is the easy case - just set the timer for so many seconds */ 
+  /* this is the easy case - just set the timer for so many seconds */
   ret = alarm(time);
   if (ret != 0) {
     fprintf(where,
@@ -1171,7 +1171,7 @@ if (debug) {
 
   test_len_ticks = 1;
 
-} 
+}
 
 
 
@@ -1196,7 +1196,7 @@ start_itimer(unsigned int interval_len_msec )
      running "long" it would be necessary to keep this in mind when
      calculating the number of itimer events */
 
-  ticks_per_itvl = ((interval_wate * sysconf(_SC_CLK_TCK) * 1000) / 
+  ticks_per_itvl = ((interval_wate * sysconf(_SC_CLK_TCK) * 1000) /
                     1000000);
 
   if (ticks_per_itvl == 0) ticks_per_itvl = 1;
@@ -1227,11 +1227,11 @@ start_itimer(unsigned int interval_len_msec )
      signal catcher raj 2/95 */
 
   new_interval.it_interval.tv_sec = usec_per_itvl / 1000000;
-  new_interval.it_interval.tv_usec = usec_per_itvl % 1000000;  
+  new_interval.it_interval.tv_usec = usec_per_itvl % 1000000;
   new_interval.it_value.tv_sec = usec_per_itvl / 1000000;
-  new_interval.it_value.tv_usec = usec_per_itvl % 1000000;  
+  new_interval.it_value.tv_usec = usec_per_itvl % 1000000;
   if (setitimer(ITIMER_REAL,&new_interval,&old_interval) != 0) {
-    /* there was a problem arming the interval timer */ 
+    /* there was a problem arming the interval timer */
     perror("netperf: setitimer");
     exit(1);
   }
@@ -1493,12 +1493,12 @@ allocate_buffer_ring(int width, int buffer_size, int alignment, int offset)
     }
 
 #ifndef WIN32
-    temp_link->buffer_ptr = (char *)(( (long)(temp_link->buffer_base) + 
-                          (long)alignment - 1) &        
+    temp_link->buffer_ptr = (char *)(( (long)(temp_link->buffer_base) +
+                          (long)alignment - 1) &
                          ~((long)alignment - 1));
 #else
-    temp_link->buffer_ptr = (char *)(( (ULONG_PTR)(temp_link->buffer_base) + 
-                          (ULONG_PTR)alignment - 1) &   
+    temp_link->buffer_ptr = (char *)(( (ULONG_PTR)(temp_link->buffer_base) +
+                          (ULONG_PTR)alignment - 1) &
                          ~((ULONG_PTR)alignment - 1));
 #endif
     temp_link->buffer_ptr += offset;
@@ -1561,7 +1561,7 @@ access_buffer(char *buffer_ptr,int length, int dirty_count, int clean_count) {
   limit = temp_buffer + length;
   dirty_totals = 0;
 
-  for (i = 0; 
+  for (i = 0;
        ((i < dirty_count) && (temp_buffer < limit));
        i++) {
     *temp_buffer += (char)i;
@@ -1569,7 +1569,7 @@ access_buffer(char *buffer_ptr,int length, int dirty_count, int clean_count) {
     temp_buffer++;
   }
 
-  for (i = 0; 
+  for (i = 0;
        ((i < clean_count) && (temp_buffer < limit));
        i++) {
     dirty_totals += *temp_buffer;
@@ -1749,7 +1749,7 @@ alloc_sendfile_buf_ring(int width,
   struct sendfile_ring_elt *first_link = NULL;
   struct sendfile_ring_elt *temp_link  = NULL;
   struct sendfile_ring_elt *prev_link;
-  
+
   int i;
   int fildes;
   struct stat statbuf;
@@ -1761,7 +1761,7 @@ alloc_sendfile_buf_ring(int width,
     /* use an temp file for the fill file */
     char temp_file[] = {"netperfXXXXXX\0"};
     int *temp_buffer;
-    
+
     /* make sure we have at least an ints worth, even if the user is
        using an insane buffer size for a sendfile test. we are
        ass-u-me-ing that malloc will return something at least aligned
@@ -1836,7 +1836,7 @@ alloc_sendfile_buf_ring(int width,
       exit(1);
     }
   }
-  
+
   /* so, at this point we know that fildes is a descriptor which
      references a file of sufficient size for our nefarious
      porpoises. raj 2007-08-09 */
@@ -1881,7 +1881,7 @@ alloc_sendfile_buf_ring(int width,
   }
   /* close the ring */
   first_link->next = temp_link;
-  
+
   return(first_link); /* it's a dummy ring */
 }
 
@@ -1952,8 +1952,8 @@ fflush(where);
 
  /*
 
-      format_number()                                                 
-                                                                    
+      format_number()
+
   return a pointer to a formatted string containing the value passed
   translated into the units specified. It assumes that the base units
   are bytes. If the format calls for bits, it will use SI units (10^)
@@ -1967,13 +1967,13 @@ fflush(where);
   elsewhere such as in the TCP_RR-as-bidirectional test case.
 
  */
- 
+
 
 char *
 format_number(double number)
 {
   static  char    fmtbuf[64];
-        
+
   switch (libfmt) {
   case 'K':
     snprintf(fmtbuf, sizeof(fmtbuf),  "%-7.2f" , number / 1024.0);
@@ -2054,7 +2054,7 @@ format_cpu_method(int method)
   default:
     method_char = '?';
   }
-  
+
   return method_char;
 
 }
@@ -2063,7 +2063,7 @@ char *
 format_units()
 {
   static        char    unitbuf[64];
-  
+
   switch (libfmt) {
   case 'K':
     strcpy(unitbuf, "KBytes");
@@ -2086,11 +2086,11 @@ format_units()
   case 'x':
     strcpy(unitbuf, "Trans");
     break;
-    
+
   default:
     strcpy(unitbuf, "KBytes");
   }
-  
+
   return unitbuf;
 }
 
@@ -2102,7 +2102,7 @@ format_units()
 /* tear-down the control connection between me and the server.  */
 /****************************************************************/
 
-void 
+void
 shutdown_control()
 {
 
@@ -2159,7 +2159,7 @@ shutdown_control()
 
 }
 
-/* 
+/*
   bind_to_specific_processor will bind the calling process to the
   processor in "processor"  It has lots of ugly ifdefs to deal with
   all the different ways systems do processor affinity.  this is a
@@ -2217,7 +2217,7 @@ bind_to_specific_processor(int processor_affinity, int use_cpu_map)
 #define NETPERF_CPU_SETSIZE __CPU_SETSIZE
 #if defined(__CPU_SET_S)
 #define NETPERF_CPU_SET(cpu, cpusetp)  __CPU_SET_S(cpu, sizeof (cpu_set_t), cpusetp)
-#define NETPERF_CPU_ZERO(cpusetp)      __CPU_ZERO_S (sizeof (cpu_set_t), cpusetp) 
+#define NETPERF_CPU_ZERO(cpusetp)      __CPU_ZERO_S (sizeof (cpu_set_t), cpusetp)
 #else
 #define NETPERF_CPU_SET(cpu, cpusetp)  __CPU_SET(cpu, cpusetp)
 #define NETPERF_CPU_ZERO(cpusetp)      __CPU_ZERO (cpusetp)
@@ -2236,7 +2236,7 @@ bind_to_specific_processor(int processor_affinity, int use_cpu_map)
   if (mapped_affinity < 8*sizeof(netperf_cpu_set)) {
     NETPERF_CPU_ZERO(&netperf_cpu_set);
     NETPERF_CPU_SET(mapped_affinity,&netperf_cpu_set);
-    
+
     if (sched_setaffinity(getpid(), len, &netperf_cpu_set)) {
       if (debug) {
 	fprintf(stderr, "failed to set PID %d's CPU affinity errno %d\n",
@@ -2252,7 +2252,7 @@ bind_to_specific_processor(int processor_affinity, int use_cpu_map)
 	fflush(stderr);
       }
   }
-      
+
 #elif HAVE_BIND_TO_CPU_ID
   /* this is the one for Tru64 */
 #include <sys/types.h>
@@ -2260,7 +2260,7 @@ bind_to_specific_processor(int processor_affinity, int use_cpu_map)
 #include <sys/processor.h>
 
   /* really should be checking a return code one of these days. raj
-     2005/08/31 */ 
+     2005/08/31 */
 
   bind_to_cpu_id(getpid(), mapped_affinity,0);
 
@@ -2270,26 +2270,26 @@ bind_to_specific_processor(int processor_affinity, int use_cpu_map)
     ULONG_PTR AffinityMask;
     ULONG_PTR ProcessAffinityMask;
     ULONG_PTR SystemAffinityMask;
-    
-    if ((mapped_affinity < 0) || 
+
+    if ((mapped_affinity < 0) ||
 	(mapped_affinity > MAXIMUM_PROCESSORS)) {
       fprintf(where,
 	      "Invalid processor_affinity specified: %d\n", mapped_affinity);      fflush(where);
       return;
     }
-    
+
     if (!GetProcessAffinityMask(
-				GetCurrentProcess(), 
-				&ProcessAffinityMask, 
+				GetCurrentProcess(),
+				&ProcessAffinityMask,
 				&SystemAffinityMask))
       {
 	perror("GetProcessAffinityMask failed");
 	fflush(stderr);
 	exit(1);
       }
-    
+
     AffinityMask = (ULONG_PTR)1 << mapped_affinity;
-    
+
     if (AffinityMask & ProcessAffinityMask) {
       if (!SetThreadAffinityMask( GetCurrentThread(), AffinityMask)) {
 	perror("SetThreadAffinityMask failed");
@@ -2352,10 +2352,10 @@ send_request_n(int n)
     }
     count = sizeof(netperf_request)/4;
   }
-  
+
   /* display the contents of the request if the debug level is high
      enough. otherwise, just send the darned thing ;-) */
-  
+
   if (debug > 1) {
     fprintf(where,
 	    "entered send_request_n...contents before %d htonls:\n",
@@ -2374,12 +2374,12 @@ send_request_n(int n)
      arbitrarily rather than trying to figure-out just how much of the
      request array contains real information. this should be simpler,
      and at any rate, the performance of sending control messages for
-     this benchmark is not of any real concern. */ 
-  
+     this benchmark is not of any real concern. */
+
   for (counter = 0;counter < count; counter++) {
     request_array[counter] = htonl(request_array[counter]);
   }
-  
+
   if (debug > 1) {
     fprintf(where,"send_request_n...contents after %d htonls:\n",
 	    count);
@@ -2397,7 +2397,7 @@ send_request_n(int n)
            sizeof(netperf_request),
            0) != sizeof(netperf_request)) {
     perror("send_request: send call failure");
-    
+
     exit(1);
   }
 }
@@ -2417,7 +2417,7 @@ send_request_n(int n)
 void
 send_request()
 {
-  
+
   /* pass the processor affinity request value to netserver this is a
      kludge and I know it.  sgb 8/11/04  */
 
@@ -2470,11 +2470,11 @@ send_response_n(int n)
      request array contains real information. this should be simpler,
      and at any rate, the performance of sending control messages for
      this benchmark is not of any real concern. */
-  
+
   for (counter = 0; counter < count; counter++) {
     response_array[counter] = htonl(response_array[counter]);
   }
-  
+
   if (debug > 1) {
     fprintf(where,
             "send_response_n: contents after htonl\n");
@@ -2495,7 +2495,7 @@ send_response_n(int n)
     fprintf(where, "BytesSent: %d\n", bytes_sent);
     exit(1);
   }
-  
+
 }
 
 /***********************************************************************/
@@ -2521,7 +2521,7 @@ send_response()
 /* go back and "undo" the ntohl that recv_request() did, starting with
    the specified point and going to the end of the request array */
 void
-fixup_request_n(int n) 
+fixup_request_n(int n)
 {
   int i;
   int limit;
@@ -2541,7 +2541,7 @@ int
 recv_request_timed_n(int n, int seconds)
 {
   int     tot_bytes_recvd,
-    bytes_recvd, 
+    bytes_recvd,
     bytes_left;
   char    *buf = (char *)&netperf_request;
   int     buflen = sizeof(netperf_request);
@@ -2568,7 +2568,7 @@ recv_request_timed_n(int n, int seconds)
      each time to preclude someone with nefarious intent from just
      dribbling data to us piecemeal.  of course, who knows what
      someone with nefarious intent might come-up with. raj 2012-01-23 */
-  tot_bytes_recvd = 0;    
+  tot_bytes_recvd = 0;
   bytes_recvd = 0;     /* nt_lint; bytes_recvd uninitialized if buflen == 0 */
   bytes_left      = buflen;
   timeout.tv_sec = seconds;
@@ -2597,9 +2597,9 @@ recv_request_timed_n(int n, int seconds)
     }
   }  while ((tot_bytes_recvd != buflen) &&
 	    (bytes_recvd > 0 ));
-  
+
   /* put the request into host order */
-  
+
   for (counter = 0; counter < count; counter++) {
     request_array[counter] = ntohl(request_array[counter]);
   }
@@ -2618,7 +2618,7 @@ recv_request_timed_n(int n, int seconds)
     close(server_sock);
     return -1;
   }
-  
+
   if (bytes_recvd == 0) {
     /* the remote has shutdown the control connection, we should shut
        it down as well and return */
@@ -2627,7 +2627,7 @@ recv_request_timed_n(int n, int seconds)
 	      "recv_request: remote requested shutdown of control\n");
       fflush(where);
     }
-    
+
     close(server_sock);
     return 0;
   }
@@ -2635,7 +2635,7 @@ recv_request_timed_n(int n, int seconds)
   if (tot_bytes_recvd < buflen) {
     if (debug > 1)
       dump_request();
-    
+
     fprintf(where,
 	    "recv_request: partial request received of %d bytes\n",
 	    tot_bytes_recvd);
@@ -2646,16 +2646,16 @@ recv_request_timed_n(int n, int seconds)
 
   if (debug > 1) {
     dump_request();
-  } 
+  }
 
   /* get the processor affinity request value from netperf this is a
      kludge and I know it.  sgb 8/11/04  */
-  
+
   local_proc_affinity = netperf_request.content.dummy;
-  
+
   if (local_proc_affinity != -1) {
     bind_to_specific_processor(local_proc_affinity,0);
-  } 
+  }
 
   return buflen;
 }
@@ -2697,19 +2697,19 @@ void
 recv_response_timed_n(int addl_time, int n)
 {
   int     tot_bytes_recvd,
-          bytes_recvd = 0, 
+          bytes_recvd = 0,
           bytes_left;
   char    *buf = (char *)&netperf_response;
   int     buflen = sizeof(netperf_response);
   int     counter,count;
-  
+
   /* stuff for select, use fd_set for better compliance */
   fd_set  readfds;
   struct  timeval timeout;
-  
-  tot_bytes_recvd = 0;    
+
+  tot_bytes_recvd = 0;
   bytes_left      = buflen;
-  
+
   if (n < 0) count = sizeof(netperf_request)/4;
   else count = 2 + n;
 
@@ -2725,18 +2725,18 @@ recv_response_timed_n(int addl_time, int n)
   }
 
   /* zero out the response structure */
-  
+
   /* BUG FIX SJB 2/4/93 - should be < not <= */
-  for (counter = 0; 
+  for (counter = 0;
        counter < sizeof(netperf_response)/sizeof(int);
        counter++) {
     response_array[counter] = 0;
   }
-  
+
   /* we only select once. it is assumed that if the response is split
      (which should not be happening, that we will receive the whole
      thing and not have a problem ;-) */
-  
+
   FD_ZERO(&readfds);
   FD_SET(netlib_control,&readfds);
   timeout.tv_sec  = 120 + addl_time;  /* wait at least two minutes
@@ -2748,7 +2748,7 @@ recv_response_timed_n(int addl_time, int n)
 					 triggered by fix from Jeff
 					 Dwork. */
   timeout.tv_usec = 0;
-  
+
   /* select had better return one, or there was either a problem or a */
   /* timeout... */
 
@@ -2763,26 +2763,26 @@ recv_response_timed_n(int addl_time, int n)
 	    counter);
     exit(1);
   }
-  
+
   while ((tot_bytes_recvd != buflen) &&
 	 ((bytes_recvd = recv(netlib_control, buf, bytes_left,0)) > 0 )) {
     tot_bytes_recvd += bytes_recvd;
     buf             += bytes_recvd;
     bytes_left      -= bytes_recvd;
   }
-  
+
   if (debug) {
     fprintf(where,"recv_response: received a %d byte response\n",
 	    tot_bytes_recvd);
     fflush(where);
   }
-  
+
   /* put the desired quantity of the response into host order */
-  
+
   for (counter = 0; counter < count; counter++) {
     response_array[counter] = ntohl(response_array[counter]);
   }
-  
+
   if (bytes_recvd == SOCKET_ERROR) {
     perror("recv_response");
     exit(1);
@@ -2803,14 +2803,14 @@ recv_response_timed_n(int addl_time, int n)
 
 /*
 
-  recv_response_timed()                                           
-                                                                    
+  recv_response_timed()
+
   receive the remote's response on the control socket. we will put the
   entire response into host order before giving it to the calling
   routine. hopefully, this will go most of the way to insuring
   intervendor interoperability. if there are any problems, we will
   just punt the entire situation.
-                                                                    
+
   The call to select at the beginning is to get us out of hang
   situations where the remote gives-up but we don't find-out about
   it. This seems to happen only rarely, but it would be nice to be
@@ -2841,7 +2841,7 @@ recv_response_timed(int addl_time)
 }
 
 void
-recv_response() 
+recv_response()
 {
   /* 0 => no additional time, -1 => convert all test-specific data */
   recv_response_timed_n(0,-1);
@@ -2853,7 +2853,7 @@ recv_response_n(int n)
   recv_response_timed_n(0,n);
 }
 
-void 
+void
 get_remote_system_info()
 {
   char delim[2];
@@ -2890,7 +2890,7 @@ get_remote_system_info()
     remote_machine = strdup("UnknownRemoteMachine");
     remote_version = strdup("UnknownRemoteVersion");
   }
-    
+
 }
 
 
@@ -3141,7 +3141,7 @@ resolve_host(char *hostname,
   (iirc) that we might get a mixed-mode connection would be if the
   address family is specified as AF_UNSPEC, and getaddrinfo() returns
   different families for the local and server names.
-  
+
   the "names" can also be IP addresses in ASCII string form.
 
   raj 2003-02-27 */
@@ -3373,7 +3373,7 @@ struct  utsname         system_name;
 	  GetVersion() & 0xFF ,
 	  GetVersion() & 0xFF00 ,
 	  SystemInfo.dwProcessorType
-	  
+
 #else
 	  "%-15s%-15s%-15s%-15s%-15s",
 	  system_name.sysname,
@@ -3435,25 +3435,25 @@ identify_remote()
 {
 
   char    *remote_id="";
-  
+
   /* send a request for node info to the remote */
   netperf_request.content.request_type = NODE_IDENTIFY;
-  
+
   send_request();
-  
+
   /* and now wait for the reply to come back */
-  
+
   recv_response();
-  
+
   if (netperf_response.content.serv_errno) {
     Set_errno(netperf_response.content.serv_errno);
     perror("identify_remote: on remote");
     exit(1);
   }
-  
+
   fprintf(where,"Remote Information \n\
 Sysname       Nodename       Release        Version        Machine\n");
-  
+
   fprintf(where,"%s",
 	  remote_id);
 }
@@ -3464,7 +3464,7 @@ cpu_start(int measure_cpu)
 
   gettimeofday(&time1,
                &tz);
-  
+
   if (measure_cpu) {
     cpu_util_init();
     measuring_cpu = 1;
@@ -3486,21 +3486,21 @@ cpu_stop(int measure_cpu, float *elapsed)
     cpu_stop_internal();
     cpu_util_terminate();
   }
-  
+
   gettimeofday(&time2,
 	       &tz);
-  
+
   if (time2.tv_usec < time1.tv_usec) {
     time2.tv_usec += 1000000;
     time2.tv_sec  -= 1;
   }
-  
+
   sec     = time2.tv_sec - time1.tv_sec;
   usec    = time2.tv_usec - time1.tv_usec;
   lib_elapsed     = (float)sec + ((float)usec/(float)1000000.0);
-  
+
   *elapsed = lib_elapsed;
-  
+
 }
 
 
@@ -3533,11 +3533,11 @@ calc_thruput_interval(double units_received,double elapsed)
   case 'x':
     divisor = 1.0;
     break;
-    
+
   default:
     divisor = 1024.0;
   }
-  
+
   return (units_received / divisor / elapsed);
 
 }
@@ -3591,7 +3591,7 @@ calc_thruput_interval_omni(double units_received,double elapsed)
     fflush(where);
     divisor = 1024.0;
   }
-  
+
   return (units_received / divisor / elapsed);
 
 }
@@ -3607,7 +3607,7 @@ calc_thruput_omni(double units_received)
 
 
 
-float 
+float
 calc_cpu_util(float elapsed_time)
 {
   float temp_util;
@@ -3625,7 +3625,7 @@ calc_cpu_util(float elapsed_time)
   return temp_util;
 }
 
-float 
+float
 calc_service_demand_internal(double unit_divisor,
 			     double units_sent,
 			     float elapsed_time,
@@ -3651,16 +3651,16 @@ calc_service_demand_internal(double unit_divisor,
   }
 
   if (num_cpus == 0) num_cpus = lib_num_loc_cpus;
-  
+
   if (elapsed_time == 0.0) {
     elapsed_time = lib_elapsed;
   }
   if (cpu_utilization == 0.0) {
     cpu_utilization = lib_local_cpu_util;
   }
-  
-  thruput = (units_sent / 
-             (double) unit_divisor / 
+
+  thruput = (units_sent /
+             (double) unit_divisor /
              (double) elapsed_time);
 
   /* on MP systems, it is necessary to multiply the service demand by
@@ -3672,10 +3672,10 @@ calc_service_demand_internal(double unit_divisor,
      millisecond, so we multiply cpu_utilization by 10 to go to
      milliseconds, or 10,000 to go to micro seconds. With revision
      2.1, the service demand measure goes to microseconds per unit.
-     raj 12/95 */ 
-  service_demand = (cpu_utilization*10000.0/thruput) * 
+     raj 12/95 */
+  service_demand = (cpu_utilization*10000.0/thruput) *
     (float) num_cpus;
-  
+
   if (debug) {
     fprintf(where,
 	    "calc_service_demand using:   units_sent = %f\n"
@@ -3735,7 +3735,7 @@ float calc_service_demand_fmt(double units_sent,
 float
 calibrate_local_cpu(float local_cpu_rate)
 {
-  
+
   lib_num_loc_cpus = get_num_cpus();
 
   lib_use_idle = 0;
@@ -3797,7 +3797,7 @@ calibrate_remote_cpu()
 	  sizeof(lib_num_rem_cpus));
 /*    remrate = (float) netperf_response.content.test_specific_data[0]; */
     return(remrate);
-  }     
+  }
 }
 
 
@@ -3841,7 +3841,7 @@ double demo_interval = 1000000.0; /* what is the desired interval to
 double demo_units = 0.0;          /* what is our current best guess as
 				     to how many work units must be
 				     done to be near the desired
-				     reporting interval? */ 
+				     reporting interval? */
 
 double units_this_tick;
 #endif
@@ -3865,7 +3865,7 @@ static struct timeval demo_two;
 static struct timeval *demo_one_ptr = &demo_one;
 static struct timeval *demo_two_ptr = &demo_two;
 static struct timeval *temp_demo_ptr = &demo_one;
-#endif 
+#endif
 
 void demo_first_timestamp() {
   HIST_timestamp(demo_one_ptr);
@@ -3898,16 +3898,16 @@ inline demo_interval_tick(uint32_t units) {
     static int count = 0;
     struct timeval now;
     units_this_tick += units;
-    if (units_this_tick >= demo_units) {			
-      /* time to possibly update demo_units and maybe output an	
-	 interim result */					
-      HIST_timestamp(demo_two_ptr);				
-      actual_interval = delta_micro(demo_one_ptr,demo_two_ptr);	
+    if (units_this_tick >= demo_units) {
+      /* time to possibly update demo_units and maybe output an
+	 interim result */
+      HIST_timestamp(demo_two_ptr);
+      actual_interval = delta_micro(demo_one_ptr,demo_two_ptr);
       /* we always want to fine-tune demo_units here whether we emit
 	 an interim result or not.  if we are short, this will
 	 lengthen demo_units.  if we are long, this will shorten it */
       demo_units = demo_units * (demo_interval / actual_interval);
-      if (actual_interval >= demo_interval) {			
+      if (actual_interval >= demo_interval) {
         /* time to emit an interim result, giving the current time to
 	   the millisecond for compatability with RRD  */
         gettimeofday(&now,NULL);
@@ -3956,16 +3956,16 @@ inline demo_interval_tick(uint32_t units) {
 	  fflush(where);
 	  exit(-1);
 	}
-	fflush(where);		
-	units_this_tick = 0.0;					
+	fflush(where);
+	units_this_tick = 0.0;
 	/* now get a new starting timestamp.  we could be clever
-	   and swap pointers - the math we do probably does not	
-	   take all that long, but for now this will suffice */	
-	temp_demo_ptr = demo_one_ptr;				
-	demo_one_ptr = demo_two_ptr;				
-	demo_two_ptr = temp_demo_ptr;				
-      }								
-    }								
+	   and swap pointers - the math we do probably does not
+	   take all that long, but for now this will suffice */
+	temp_demo_ptr = demo_one_ptr;
+	demo_one_ptr = demo_two_ptr;
+	demo_two_ptr = temp_demo_ptr;
+      }
+    }
   }
 }
 
@@ -3984,12 +3984,12 @@ void demo_rr_interval(uint32_t units) {
   demo_interval_tick(units);
 }
 
-#endif 
+#endif
 
 /* hist.c
 
    Given a time difference in microseconds, increment one of 61
-   different buckets: 
+   different buckets:
 
    0 - 9 in increments of 1 usec
    0 - 9 in increments of 10 usecs
@@ -4000,12 +4000,12 @@ void demo_rr_interval(uint32_t units) {
    1 - 9 in increments of 1 sec
    1 - 9 in increments of 10 sec
    > 100 secs
-   
+
    This will allow any time to be recorded to within an accuracy of
    10%, and provides a compact representation for capturing the
    distribution of a large number of time differences (e.g.
    request-response latencies).
-   
+
    Colin Low  10/6/93
    Rick Jones 2004-06-15 extend to unit and ten usecs
 */
@@ -4025,7 +4025,7 @@ HIST_new_n(int max_outstanding) {
 
   /* we never want to have a full queue, so will trade a little space
      for that. one day we may still have to check for a full queue */
-  h->limit = max_outstanding + 1; 
+  h->limit = max_outstanding + 1;
 
   /* now allocate the time_ones based on h->limit */
 #ifdef HAVE_GETHRTIME
@@ -4033,27 +4033,27 @@ HIST_new_n(int max_outstanding) {
 #elif HAVE_GET_HRT
   h->time_ones = (hrt_t *) malloc(h->limit * sizeof(hrt_t));
 #elif defined(WIN32)
-  h->time_ones = (LARGE_INTEGER *) malloc(h->limit * 
+  h->time_ones = (LARGE_INTEGER *) malloc(h->limit *
 					  sizeof(LARGE_INTEGER));
 #else
-  h->time_ones = (struct timeval *) malloc(h->limit * 
+  h->time_ones = (struct timeval *) malloc(h->limit *
 					   sizeof(struct timeval));
 #endif /* HAVE_GETHRTIME */
   if (h->time_ones == NULL) {
     perror("HIST_new_n - time_ones malloc failed");
     exit(1);
   }
-  
+
   return h;
 }
-  
-HIST 
+
+HIST
 HIST_new(void){
   return HIST_new_n(0);
 }
 
 
-void 
+void
 HIST_clear(HIST h){
    int i;
    for(i = 0; i < HIST_NUM_OF_BUCKET; i++){
@@ -4086,7 +4086,7 @@ HIST_purge(HIST h) {
   h->consumer = 0;
 }
 
-void 
+void
 HIST_add(register HIST h, int time_delta){
    register float val;
    register int base = HIST_NUM_OF_BUCKET / 10;
@@ -4146,7 +4146,7 @@ HIST_add(register HIST h, int time_delta){
    }
 }
 
-void 
+void
 output_row(FILE *fd, char *title, int *row){
   register int i;
   register int j;
@@ -4171,7 +4171,7 @@ sum_row(int *row) {
   return(sum);
 }
 
-void 
+void
 HIST_report(HIST h){
 #ifndef OLD_HISTOGRAM
    output_row(stdout, "UNIT_USEC     ", h->unit_usec);
@@ -4332,7 +4332,7 @@ int delta_micro(LARGE_INTEGER *begin, LARGE_INTEGER *end)
 	LARGE_INTEGER DeltaTimestamp;
 	static LARGE_INTEGER TickHz = {{0,0}};
 
-	if (TickHz.QuadPart == 0) 
+	if (TickHz.QuadPart == 0)
 	{
 		QueryPerformanceFrequency(&TickHz);
 	}
@@ -4341,9 +4341,9 @@ int delta_micro(LARGE_INTEGER *begin, LARGE_INTEGER *end)
 	  good enough? Spencer: Yes, that should be more than good
 	  enough for histogram support */
 
-	DeltaTimestamp.QuadPart = (end->QuadPart - begin->QuadPart) * 
+	DeltaTimestamp.QuadPart = (end->QuadPart - begin->QuadPart) *
 	  1000000/TickHz.QuadPart;
-	assert((DeltaTimestamp.HighPart == 0) && 
+	assert((DeltaTimestamp.HighPart == 0) &&
 	       ((int)DeltaTimestamp.LowPart >= 0));
 
 	return (int)DeltaTimestamp.LowPart;
@@ -4439,26 +4439,26 @@ HIST_timestamp_stop_add(HIST h) {
    code */
 int     confidence_iterations; /* for iterations */
 
-double  
+double
   result_confid=-10.0,
   loc_cpu_confid=-10.0,
   rem_cpu_confid=-10.0,
 
-  measured_sum_result=0.0, 
+  measured_sum_result=0.0,
   measured_square_sum_result=0.0,
-  measured_mean_result=0.0, 
-  measured_var_result=0.0, 
+  measured_mean_result=0.0,
+  measured_var_result=0.0,
 
   measured_sum_local_cpu=0.0,
   measured_square_sum_local_cpu=0.0,
   measured_mean_local_cpu=0.0,
-  measured_var_local_cpu=0.0, 
+  measured_var_local_cpu=0.0,
 
   measured_sum_remote_cpu=0.0,
   measured_square_sum_remote_cpu=0.0,
   measured_mean_remote_cpu=0.0,
-  measured_var_remote_cpu=0.0, 
-  
+  measured_var_remote_cpu=0.0,
+
   measured_sum_local_service_demand=0.0,
   measured_square_sum_local_service_demand=0.0,
   measured_mean_local_service_demand=0.0,
@@ -4474,8 +4474,8 @@ double
   measured_mean_local_time=0.0,
   measured_var_local_time=0.0,
 
-  measured_mean_remote_time=0.0, 
-  
+  measured_mean_remote_time=0.0,
+
   measured_fails,
   measured_local_results,
   confidence=-10.0;
@@ -4486,7 +4486,7 @@ double
 /*      Constants for Confidence Intervals                              */
 /*                                                                      */
 /************************************************************************/
-void 
+void
 init_stat()
 {
         measured_sum_result=0.0;
@@ -4529,7 +4529,7 @@ init_stat()
 /* this routine does a simple table lookup for some statistical
    function that I would remember if I stayed awake in my probstats
    class... raj 11/94 */
-double 
+double
 confid(int level, int freedom)
 {
 double  t99[35],t95[35];
@@ -4564,7 +4564,7 @@ double  t99[35],t95[35];
    t95[28]= 2.048;
    t95[29]= 2.045;
    t95[30]= 2.042;
-   
+
    t99[1]=63.657;
    t99[2]= 9.925;
    t99[3]= 5.841;
@@ -4595,7 +4595,7 @@ double  t99[35],t95[35];
    t99[28]= 2.763;
    t99[29]= 2.756;
    t99[30]= 2.750;
-   
+
    if(level==95){
         return(t95[freedom]);
    } else if(level==99){
@@ -4631,35 +4631,35 @@ calculate_confidence(int confidence_iterations,
   }
 
   /* the test time */
-  measured_sum_local_time               += 
+  measured_sum_local_time               +=
     (double) time;
-  measured_square_sum_local_time        += 
+  measured_square_sum_local_time        +=
     (double) time*time;
-  measured_mean_local_time              =  
+  measured_mean_local_time              =
     (double) measured_sum_local_time/confidence_iterations;
-  measured_var_local_time               =  
+  measured_var_local_time               =
     (double) measured_square_sum_local_time/confidence_iterations
       -measured_mean_local_time*measured_mean_local_time;
-  
+
   /* the test result */
-  measured_sum_result           += 
+  measured_sum_result           +=
     (double) result;
-  measured_square_sum_result    += 
+  measured_square_sum_result    +=
     (double) result*result;
-  measured_mean_result          =  
+  measured_mean_result          =
     (double) measured_sum_result/confidence_iterations;
-  measured_var_result           =  
+  measured_var_result           =
     (double) measured_square_sum_result/confidence_iterations
       -measured_mean_result*measured_mean_result;
 
   /* local cpu utilization */
-  measured_sum_local_cpu        += 
+  measured_sum_local_cpu        +=
     (double) loc_cpu;
-  measured_square_sum_local_cpu += 
+  measured_square_sum_local_cpu +=
     (double) loc_cpu*loc_cpu;
-  measured_mean_local_cpu       = 
+  measured_mean_local_cpu       =
     (double) measured_sum_local_cpu/confidence_iterations;
-  measured_var_local_cpu        = 
+  measured_var_local_cpu        =
     (double) measured_square_sum_local_cpu/confidence_iterations
       -measured_mean_local_cpu*measured_mean_local_cpu;
 
@@ -4668,9 +4668,9 @@ calculate_confidence(int confidence_iterations,
     (double) rem_cpu;
   measured_square_sum_remote_cpu+=
     (double) rem_cpu*rem_cpu;
-  measured_mean_remote_cpu      = 
+  measured_mean_remote_cpu      =
     (double) measured_sum_remote_cpu/confidence_iterations;
-  measured_var_remote_cpu       = 
+  measured_var_remote_cpu       =
     (double) measured_square_sum_remote_cpu/confidence_iterations
       -measured_mean_remote_cpu*measured_mean_remote_cpu;
 
@@ -4679,9 +4679,9 @@ calculate_confidence(int confidence_iterations,
     (double) loc_sd;
   measured_square_sum_local_service_demand+=
     (double) loc_sd*loc_sd;
-  measured_mean_local_service_demand    = 
+  measured_mean_local_service_demand    =
     (double) measured_sum_local_service_demand/confidence_iterations;
-  measured_var_local_service_demand     = 
+  measured_var_local_service_demand     =
     (double) measured_square_sum_local_service_demand/confidence_iterations
       -measured_mean_local_service_demand*measured_mean_local_service_demand;
 
@@ -4690,26 +4690,26 @@ calculate_confidence(int confidence_iterations,
     (double) rem_sd;
   measured_square_sum_remote_service_demand+=
     (double) rem_sd*rem_sd;
-  measured_mean_remote_service_demand   = 
+  measured_mean_remote_service_demand   =
     (double) measured_sum_remote_service_demand/confidence_iterations;
-  measured_var_remote_service_demand    = 
+  measured_var_remote_service_demand    =
     (double) measured_square_sum_remote_service_demand/confidence_iterations
       -measured_mean_remote_service_demand*measured_mean_remote_service_demand;
 
-  if(confidence_iterations>1){ 
-     result_confid= (double) interval - 
-       2.0 * confid(confidence_level,confidence_iterations-1)* 
-         sqrt(measured_var_result/(confidence_iterations-1.0)) / 
+  if(confidence_iterations>1){
+     result_confid= (double) interval -
+       2.0 * confid(confidence_level,confidence_iterations-1)*
+         sqrt(measured_var_result/(confidence_iterations-1.0)) /
            measured_mean_result;
 
-     loc_cpu_confid= (double) interval - 
-       2.0 * confid(confidence_level,confidence_iterations-1)* 
-         sqrt(measured_var_local_cpu/(confidence_iterations-1.0)) / 
+     loc_cpu_confid= (double) interval -
+       2.0 * confid(confidence_level,confidence_iterations-1)*
+         sqrt(measured_var_local_cpu/(confidence_iterations-1.0)) /
            measured_mean_local_cpu;
 
-     rem_cpu_confid= (double) interval - 
+     rem_cpu_confid= (double) interval -
        2.0 * confid(confidence_level,confidence_iterations-1)*
-         sqrt(measured_var_remote_cpu/(confidence_iterations-1.0)) / 
+         sqrt(measured_var_remote_cpu/(confidence_iterations-1.0)) /
            measured_mean_remote_cpu;
 
      if(debug){

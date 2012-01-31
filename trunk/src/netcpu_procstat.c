@@ -2,7 +2,7 @@ char   netcpu_procstat_id[]="\
 @(#)netcpu_procstat.c (c) Copyright 2005-2011 Version 2.5.0";
 
 /* netcpu_procstat.c
-  
+
    Implement the /proc/stat specific portions of netperf CPU
    utilization measurements. These are broken-out into a separate file
    to make life much nicer over in netlib.c which had become a maze of
@@ -54,7 +54,7 @@ typedef struct cpu_states
   uint64_t     	hard_irq;
   uint64_t     	soft_irq;
   uint64_t     	steal;
-  uint64_t     	guest;  
+  uint64_t     	guest;
 } cpu_states_t;
 
 static cpu_states_t  lib_start_count[MAXCPUS];
@@ -71,7 +71,7 @@ static char *proc_stat_buf = NULL;
 static int proc_stat_buflen = 0;
 
 void
-cpu_util_init(void) 
+cpu_util_init(void)
 {
 
   if (debug) {
@@ -230,7 +230,7 @@ tick_subtract(uint64_t start, uint64_t end)
   if (end >= start || (start & 0xffffffff00000000ULL))
     return (end - start);
 
-  /* 
+  /*
    *  We wrapped, and it is likely that the kernel is suppling 32-bit
    *  counters, because "start" is less than 32-bits wide.  If that's
    *  the case, then handle the wrap by subtracting off everything but
@@ -256,9 +256,9 @@ calc_cpu_util_internal(float elapsed_time)
      example, tests that were ended by watchdog timers such as the udp
      stream test. We let these tests tell up what the elapsed time
      should be. */
-  
+
   if (elapsed_time != 0.0) {
-    correction_factor = (float) 1.0 + 
+    correction_factor = (float) 1.0 +
       ((lib_elapsed - elapsed_time) / elapsed_time);
   }
   else {
@@ -272,9 +272,9 @@ calc_cpu_util_internal(float elapsed_time)
   for (i = 0; i < lib_num_loc_cpus; i++) {
 
     /* Find the difference in all CPU stat fields */
-    diff.user = 
+    diff.user =
       tick_subtract(lib_start_count[i].user, lib_end_count[i].user);
-    diff.nice = 
+    diff.nice =
       tick_subtract(lib_start_count[i].nice, lib_end_count[i].nice);
     diff.sys =
       tick_subtract(lib_start_count[i].sys, lib_end_count[i].sys);
@@ -290,7 +290,7 @@ calc_cpu_util_internal(float elapsed_time)
       tick_subtract(lib_start_count[i].steal, lib_end_count[i].steal);
     diff.guest =
       tick_subtract(lib_start_count[i].guest, lib_end_count[i].guest);
-    total_ticks = diff.user + diff.nice + diff.sys + diff.idle + diff.iowait 
+    total_ticks = diff.user + diff.nice + diff.sys + diff.idle + diff.iowait
       + diff.hard_irq + diff.soft_irq + diff.steal + diff.guest;
 
     /* calculate idle time as a percentage of all CPU states */
@@ -300,7 +300,7 @@ calc_cpu_util_internal(float elapsed_time)
       }
       lib_local_per_cpu_util[i] = 100.0;
     } else {
-      lib_local_per_cpu_util[i] = 100.0 * 
+      lib_local_per_cpu_util[i] = 100.0 *
 	((float) diff.idle / (float) total_ticks);
     }
     /* invert percentage to reflect non-idle time */
@@ -329,7 +329,7 @@ calc_cpu_util_internal(float elapsed_time)
   }
   /* we want the average across all n processors */
   lib_local_cpu_util /= (float)lib_num_loc_cpus;
-  
+
   return lib_local_cpu_util;
 }
 
