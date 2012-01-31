@@ -134,7 +134,7 @@ int
   local_cpu_usage = 0,	/* you guessed it */
   remote_cpu_usage = 0;	/* still right ! */
 
-float			       
+float
   local_cpu_rate = 0.0F,
   remote_cpu_rate = 0.0F;
 
@@ -144,7 +144,7 @@ int
 /* the end-test conditions for the tests - either transactions, bytes,
    or time. different vars used for clarity - space is cheap ;-) */
 
-int	
+int
   test_time = 10, /* test ends by time */
   test_len_ticks, /* how many times will the timer go off before the
 		     test is over? */
@@ -296,7 +296,7 @@ comma.\n\
 "* For these options taking two parms, specifying one value with no comma\n\
 will only set the first parms and will leave the second at the default\n\
 value. To set the second value it must be preceded with a comma or be a\n\
-comma-separated pair. This is to retain previous netperf behaviour.\n"; 
+comma-separated pair. This is to retain previous netperf behaviour.\n";
 
 
 /* This routine will return the two arguments to the calling routine.
@@ -353,7 +353,7 @@ break_args_explicit_sep(char *s, int sep, char *arg1, char *arg2)
 
 /* break_args_explicit - now just a wrapper around a call to
    break_args_explicit_sep passing-in a ',' as the separator. raj
-   20101129 */ 
+   20101129 */
 
 void
 break_args_explicit(char *s, char *arg1, char *arg2)
@@ -487,7 +487,7 @@ parse_direction(char direction_string[])
 }
 
 int
-parse_protocol(char protocol_string[]) 
+parse_protocol(char protocol_string[])
 {
   char temp[10];
 
@@ -499,7 +499,7 @@ parse_protocol(char protocol_string[])
 	    temp,
 	    protocol_string);
   }
-  
+
 #ifdef IPPROTO_TCP
   if (!strcasecmp(temp,"tcp")){
     socket_type = SOCK_STREAM;
@@ -556,7 +556,7 @@ print_netperf_usage()
 
 /* convert the specified string to upper case if we know how */
 static void
-convert_to_upper(char *source) 
+convert_to_upper(char *source)
 {
 #if defined(HAVE_TOUPPER)
   int i,length;
@@ -581,10 +581,10 @@ scan_cmd_line(int argc, char *argv[])
   char          *p;
 
   int		c;
-  
+
   char	arg1[BUFSIZ],  /* argument holders		*/
     arg2[BUFSIZ];
-  
+
   program = (char *)malloc(strlen(argv[0]) + 1);
   if (program == NULL) {
     printf("malloc() to store program name failed!\n");
@@ -619,10 +619,10 @@ scan_cmd_line(int argc, char *argv[])
      set both to that value. Specifying only the second will leave the
      first untouched. To change only the first, use the form first,
      (see the routine break_args.. */
-  
+
   while ((c= getopt(argc, argv, GLOBAL_CMD_LINE_ARGS)) != EOF) {
     switch (c) {
-    case '?':	
+    case '?':
     case 'h':
       print_netperf_usage();
       exit(1);
@@ -680,11 +680,11 @@ scan_cmd_line(int argc, char *argv[])
 	  demo_units = convert(arg2);
 	}
       }
-#else 
+#else
       printf("Sorry, Demo Mode not configured into this netperf.\n"
 	     "Please consider reconfiguring netperf with\n"
 	     "--enable-demo=yes and recompiling\n");
-#endif 
+#endif
       break;
     case 'f':
       /* set the thruput formatting */
@@ -741,7 +741,7 @@ scan_cmd_line(int argc, char *argv[])
       /* make sure that iteration_min and iteration_max are at least
 	 at a reasonable default value.  if a -i option has previously
 	 been parsed, these will no longer be 1, so we can check
-	 against 1 */ 
+	 against 1 */
       if (iteration_min == 1) iteration_min = 3;
       if (iteration_max == 1) iteration_max = 10;
       /* make sure that the interval is set if it isn't at its default
@@ -797,7 +797,7 @@ scan_cmd_line(int argc, char *argv[])
     case 'O':
       /* set the remote offsets */
       break_args(optarg,arg1,arg2);
-      if (arg1[0]) 
+      if (arg1[0])
 	remote_send_offset = convert(arg1);
       if (arg2[0])
 	remote_recv_offset = convert(arg2);
@@ -819,7 +819,7 @@ scan_cmd_line(int argc, char *argv[])
       break;
     case 's':
       /* the user wishes us to sleep/pause some length of time before
-	 actually starting the test */ 
+	 actually starting the test */
       wait_time_secs = convert(optarg);
       break;
     case 't':
@@ -843,9 +843,9 @@ scan_cmd_line(int argc, char *argv[])
       break;
     case 'W':
       /* set the "width" of the user space data buffer ring. This will
-	 be the number of send_size buffers malloc'd in the tests */  
+	 be the number of send_size buffers malloc'd in the tests */
       break_args(optarg,arg1,arg2);
-      if (arg1[0]) 
+      if (arg1[0])
 	send_width = convert(arg1);
       if (arg2[0])
 	recv_width = convert(arg2);
@@ -917,7 +917,7 @@ scan_cmd_line(int argc, char *argv[])
     case 'H':
       /* save-off the host identifying information, use
 	 break_args_explicit since passing just one value should not
-	 set both */ 
+	 set both */
       break_args_explicit(optarg,arg1,arg2);
       if (arg1[0])
 	strncpy(host_name,arg1,sizeof(host_name));
@@ -1048,7 +1048,7 @@ scan_cmd_line(int argc, char *argv[])
 	       address_family);
 	exit(-1);
       }
-      break; 
+      break;
 #if defined(AF_INET6)
     case AF_INET6:
       strcpy(host_name,"::1");
@@ -1149,7 +1149,7 @@ scan_cmd_line(int argc, char *argv[])
 #endif
 #ifdef HAVE_ICSC_EXS
 	(strcasecmp(test_name,"EXS_TCP_STREAM") == 0) ||
-#endif /* HAVE_ICSC_EXS */ 
+#endif /* HAVE_ICSC_EXS */
 #ifdef HAVE_SENDFILE
 	(strcasecmp(test_name,"TCP_SENDFILE") == 0) ||
 #endif /* HAVE_SENDFILE */

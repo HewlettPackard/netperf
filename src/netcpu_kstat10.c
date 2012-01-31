@@ -54,7 +54,7 @@ static cpu_time_counters_t delta_cpu_counters[MAXCPUS];
 static cpu_time_counters_t corrected_cpu_counters[MAXCPUS];
 
 static void
-print_cpu_time_counters(char *name, int instance, cpu_time_counters_t *counters) 
+print_cpu_time_counters(char *name, int instance, cpu_time_counters_t *counters)
 {
   fprintf(where,
 	  "%s[%d]:\n"
@@ -70,7 +70,7 @@ print_cpu_time_counters(char *name, int instance, cpu_time_counters_t *counters)
 }
 
 void
-cpu_util_init(void) 
+cpu_util_init(void)
 {
   kstat_t   *ksp;
   int i;
@@ -92,7 +92,7 @@ cpu_util_init(void)
   i = 0;
   for (ksp = kc->kc_chain, i = 0;
        (ksp != NULL) && (i < MAXCPUS);
-       ksp = ksp->ks_next) {  
+       ksp = ksp->ks_next) {
     if ((strcmp(ksp->ks_module,"cpu") == 0) &&
 	(strcmp(ksp->ks_name,"sys") == 0)) {
       if (debug) {
@@ -102,7 +102,7 @@ cpu_util_init(void)
       }
       lib_cpu_map[i++] = ksp->ks_instance;
     }
-  }  
+  }
 
   if (MAXCPUS == i) {
     fprintf(where,
@@ -193,7 +193,7 @@ get_cpu_counters(int cpu_num, cpu_time_counters_t *counters)
 	}
 	else if (strstr(knp->name,"nsec")) {
 	  /* finding another nsec here means Sun have changed
-	     something and we need to warn the user. raj 2005-01-28 */ 
+	     something and we need to warn the user. raj 2005-01-28 */
 	  print_unexpected_statistic_warning("get_cpu_counters",
 					     knp->name,
 					     "nsec");
@@ -334,7 +334,7 @@ get_cpu_time_counters(cpu_time_counters_t *counters)
 /* the kstat10 mechanism, since it is based on actual nanosecond
    counters is not going to use a comparison to an idle rate. so, the
    calibrate_idle_rate routine will be rather simple :) raj 2005-01-28
-   */ 
+   */
 
 float
 calibrate_idle_rate(int iterations, int interval)
@@ -348,7 +348,7 @@ calc_cpu_util_internal(float elapsed_time)
   int i;
   float correction_factor;
   float actual_rate;
-  
+
   uint64_t total_cpu_nsec;
 
   /* multiply by 100 and divide by total and you get whole
@@ -361,7 +361,7 @@ calc_cpu_util_internal(float elapsed_time)
 #define CALC_HUNDREDTH_PERCENT 10000
 #define CALC_THOUSANDTH_PERCENT 100000
 #define CALC_ACCURACY CALC_THOUSANDTH_PERCENT
-  
+
   uint64_t fraction_idle;
   uint64_t fraction_user;
   uint64_t fraction_kernel;
@@ -378,9 +378,9 @@ calc_cpu_util_internal(float elapsed_time)
      example, tests that were ended by watchdog timers such as the udp
      stream test. We let these tests tell up what the elapsed time
      should be. */
-  
+
   if (elapsed_time != 0.0) {
-    correction_factor = (float) 1.0 + 
+    correction_factor = (float) 1.0 +
       ((lib_elapsed - elapsed_time) / elapsed_time);
   }
   else {
@@ -409,7 +409,7 @@ calc_cpu_util_internal(float elapsed_time)
        with the interrupt time and use that to calculate a new idle
        percentage and thus a CPU util percentage.
 
-       that is what we will attempt to do here.  raj 2005-01-28 
+       that is what we will attempt to do here.  raj 2005-01-28
 
        of course, we also have to wonder what we should do if there is
        more interrupt time than the sum of user, kernel and idle.
@@ -417,7 +417,7 @@ calc_cpu_util_internal(float elapsed_time)
        time-being, one that we will blythly ignore, except perhaps for
        a quick check. raj 2005-01-31
     */
-    
+
     /* we ass-u-me that these counters will never wrap during a
        netperf run.  this may not be a particularly safe thing to
        do. raj 2005-01-28 */
@@ -429,13 +429,13 @@ calc_cpu_util_internal(float elapsed_time)
       starting_cpu_counters[i].kernel;
     delta_cpu_counters[i].interrupt = ending_cpu_counters[i].interrupt -
       starting_cpu_counters[i].interrupt;
-    
+
     if (debug) {
       print_cpu_time_counters("delta_cpu_counters",i,delta_cpu_counters);
     }
 
     /* for this summation, we do not include interrupt time */
-    total_cpu_nsec = 
+    total_cpu_nsec =
       delta_cpu_counters[i].idle +
       delta_cpu_counters[i].user +
       delta_cpu_counters[i].kernel;
@@ -461,7 +461,7 @@ calc_cpu_util_internal(float elapsed_time)
 	      i,delta_cpu_counters[i].user,
 	      i,delta_cpu_counters[i].kernel);
       fflush(where);
-      
+
       lib_local_cpu_util = -1.0;
       lib_local_per_cpu_util[i] = -1.0;
       return -1.0;
@@ -471,25 +471,25 @@ calc_cpu_util_internal(float elapsed_time)
        promote things to long doubled but that didn't seem to result
        in happiness and joy. raj 2005-01-28 */
 
-    fraction_idle = 
+    fraction_idle =
       (delta_cpu_counters[i].idle * CALC_ACCURACY) / total_cpu_nsec;
 
-    fraction_user = 
+    fraction_user =
       (delta_cpu_counters[i].user * CALC_ACCURACY) / total_cpu_nsec;
 
-    fraction_kernel = 
+    fraction_kernel =
       (delta_cpu_counters[i].kernel * CALC_ACCURACY) / total_cpu_nsec;
 
     /* ok, we have our fractions, now we want to take that fraction of
        the interrupt time and subtract that from the bucket. */
 
-    interrupt_idle =  ((delta_cpu_counters[i].interrupt * fraction_idle) / 
+    interrupt_idle =  ((delta_cpu_counters[i].interrupt * fraction_idle) /
 		       CALC_ACCURACY);
 
-    interrupt_user = ((delta_cpu_counters[i].interrupt * fraction_user) / 
+    interrupt_user = ((delta_cpu_counters[i].interrupt * fraction_user) /
 		      CALC_ACCURACY);
 
-    interrupt_kernel = ((delta_cpu_counters[i].interrupt * fraction_kernel) / 
+    interrupt_kernel = ((delta_cpu_counters[i].interrupt * fraction_kernel) /
 			CALC_ACCURACY);
 
     if (debug) {
@@ -505,17 +505,17 @@ calc_cpu_util_internal(float elapsed_time)
 	      interrupt_kernel);
     }
 
-    corrected_cpu_counters[i].idle = delta_cpu_counters[i].idle - 
+    corrected_cpu_counters[i].idle = delta_cpu_counters[i].idle -
       interrupt_idle;
 
-    corrected_cpu_counters[i].user = delta_cpu_counters[i].user - 
+    corrected_cpu_counters[i].user = delta_cpu_counters[i].user -
       interrupt_user;
 
-    corrected_cpu_counters[i].kernel = delta_cpu_counters[i].kernel - 
+    corrected_cpu_counters[i].kernel = delta_cpu_counters[i].kernel -
       interrupt_kernel;
 
     corrected_cpu_counters[i].interrupt = delta_cpu_counters[i].interrupt;
-		  
+
     if (debug) {
       print_cpu_time_counters("corrected_cpu_counters",
 			      i,
@@ -529,7 +529,7 @@ calc_cpu_util_internal(float elapsed_time)
     /* ok, now we sum the numbers again, this time including interrupt
        */
 
-    total_cpu_nsec = 
+    total_cpu_nsec =
       corrected_cpu_counters[i].idle +
       corrected_cpu_counters[i].user +
       corrected_cpu_counters[i].kernel +
@@ -538,22 +538,22 @@ calc_cpu_util_internal(float elapsed_time)
     /* and recalculate our fractions we are really only going to use
        fraction_idle, but lets calculate the rest just for the heck of
        it. one day we may want to display them. raj 2005-01-28 */
-    
+
     /* multiply by 100 and divide by total and you get whole
        percentages. multiply by 1000 and divide by total and you get
        tenths of percentages.  multiply by 10000 and divide by total
        and you get hundredths of percentages. etc etc etc raj
        2005-01-28 */
-    fraction_idle = 
+    fraction_idle =
       (corrected_cpu_counters[i].idle * CALC_ACCURACY) / total_cpu_nsec;
 
-    fraction_user = 
+    fraction_user =
       (corrected_cpu_counters[i].user * CALC_ACCURACY) / total_cpu_nsec;
 
-    fraction_kernel = 
+    fraction_kernel =
       (corrected_cpu_counters[i].kernel * CALC_ACCURACY) / total_cpu_nsec;
 
-    fraction_interrupt = 
+    fraction_interrupt =
       (corrected_cpu_counters[i].interrupt * CALC_ACCURACY) / total_cpu_nsec;
 
     if (debug) {
@@ -564,7 +564,7 @@ calc_cpu_util_internal(float elapsed_time)
     }
 
     /* and finally, what is our CPU utilization? */
-    lib_local_per_cpu_util[i] = 100.0 - (((float)fraction_idle / 
+    lib_local_per_cpu_util[i] = 100.0 - (((float)fraction_idle /
 					  (float)CALC_ACCURACY) * 100.0);
     lib_local_per_cpu_util[i] *= correction_factor;
     if (debug) {

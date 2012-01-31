@@ -143,7 +143,7 @@ struct omni_results_struct {
   uint32_t   send_calls;
   int32_t    send_buf_size; /* SO_SNDBUF at end of test */
   uint32_t   failed_sends;
-  uint32_t   trans_received; 
+  uint32_t   trans_received;
 
   float      elapsed_time;  /* length of test in seconds */
 
@@ -156,7 +156,7 @@ struct omni_results_struct {
   float      peak_cpu_util; /* its individual utilization */
   int32_t    vendor;
   int32_t    device;        /* pci device id of the probable egress
-			       interface */ 
+			       interface */
   int32_t    subvendor;
   int32_t    subdevice;
   int32_t    transport_retrans;
@@ -166,7 +166,7 @@ struct omni_results_struct {
   char       ifname[16];    /* the probable egress interface */
   char       driver[32];    /* size based on linux/ethtool.h */
   char       version[32];
-  char       firmware[32];  
+  char       firmware[32];
   char       bus[32];
   char       ifslot[16];    /* slot id of the probable egress interface */
   char       cong_control[16]; /* what the congestion control alg was */
@@ -178,25 +178,25 @@ struct omni_results_struct {
 struct	tcp_stream_request_struct {
   int	send_buf_size;
   int	recv_buf_size;	/* how big does the client want it - the */
-			/* receive socket buffer that is */ 
+			/* receive socket buffer that is */
   int	receive_size;   /* how many bytes do we want to receive at one */
-			/* time? */ 
+			/* time? */
   int	recv_alignment; /* what is the alignment of the receive */
-			/* buffer? */ 
-  int	recv_offset;    /* and at what offset from that alignment? */ 
+			/* buffer? */
+  int	recv_offset;    /* and at what offset from that alignment? */
   int	no_delay;       /* do we disable the nagle algorithm for send */
-			/* coalescing? */ 
+			/* coalescing? */
   int	measure_cpu;	/* does the client want server cpu utilization */
-			/* measured? */ 
-  float	cpu_rate;	/* do we know how fast the cpu is already? */ 
+			/* measured? */
+  float	cpu_rate;	/* do we know how fast the cpu is already? */
   int	test_length;	/* how long is the test?		*/
   int	so_rcvavoid;    /* do we want the remote to avoid copies on */
-			/* receives? */ 
+			/* receives? */
   int	so_sndavoid;    /* do we want the remote to avoid send copies? */
   int   dirty_count;    /* how many integers in the receive buffer */
-			/* should be made dirty before calling recv? */  
+			/* should be made dirty before calling recv? */
   int   clean_count;    /* how many integers should be read from the */
-			/* recv buffer before calling recv? */ 
+			/* recv buffer before calling recv? */
   int   port;           /* the port to which the recv side should bind
 			   to allow netperf to run through those evil
 			   firewall things */
@@ -212,13 +212,13 @@ struct	tcp_stream_response_struct {
   int	send_buf_size;
   int	data_port_number;	/* connect to me here	*/
   float	cpu_rate;		/* could we measure	*/
-  int	so_rcvavoid;	/* could the remote avoid receive copies? */ 
+  int	so_rcvavoid;	/* could the remote avoid receive copies? */
   int	so_sndavoid;	/* could the remote avoid send copies? */
 };
 
 struct tcp_stream_results_struct {
   double         bytes_received;
-  unsigned int	 recv_calls;	
+  unsigned int	 recv_calls;
   float	         elapsed_time;	/* how long the test ran */
   float	         cpu_util;	/* -1 if not measured */
   float	         serv_dem;	/* -1 if not measured */
@@ -231,25 +231,25 @@ struct tcp_stream_results_struct {
 struct	tcp_maerts_request_struct {
   int	send_buf_size;
   int	recv_buf_size;	/* how big does the client want it - the */
-			/* receive socket buffer that is */ 
+			/* receive socket buffer that is */
   int	send_size;      /* how many bytes do we want netserver to send
 			   at one time? */
   int	send_alignment; /* what is the alignment of the send */
-			/* buffer? */ 
-  int	send_offset;    /* and at what offset from that alignment? */ 
+			/* buffer? */
+  int	send_offset;    /* and at what offset from that alignment? */
   int	no_delay;       /* do we disable the nagle algorithm for send */
-			/* coalescing? */ 
+			/* coalescing? */
   int	measure_cpu;	/* does the client want server cpu utilization */
-			/* measured? */ 
-  float	cpu_rate;	/* do we know how fast the cpu is already? */ 
+			/* measured? */
+  float	cpu_rate;	/* do we know how fast the cpu is already? */
   int	test_length;	/* how long is the test?		*/
   int	so_rcvavoid;    /* do we want the remote to avoid copies on */
-			/* receives? */ 
+			/* receives? */
   int	so_sndavoid;    /* do we want the remote to avoid send copies? */
   int   dirty_count;    /* how many integers in the send buffer */
-			/* should be made dirty before calling recv? */  
+			/* should be made dirty before calling recv? */
   int   clean_count;    /* how many integers should be read from the */
-			/* recv buffer before calling recv? */ 
+			/* recv buffer before calling recv? */
   int   port;           /* the port to which the recv side should bind
 			   to allow netperf to run through those evil
 			   firewall things */
@@ -265,13 +265,13 @@ struct	tcp_maerts_response_struct {
   int	send_buf_size;
   int	data_port_number;	/* connect to me here	*/
   float	cpu_rate;		/* could we measure	*/
-  int	so_rcvavoid;	/* could the remote avoid receive copies? */ 
+  int	so_rcvavoid;	/* could the remote avoid receive copies? */
   int	so_sndavoid;	/* could the remote avoid send copies? */
 };
 
 struct tcp_maerts_results_struct {
   double         bytes_sent;
-  unsigned int	 send_calls;	
+  unsigned int	 send_calls;
   float	         elapsed_time;	/* how long the test ran */
   float	         cpu_util;	/* -1 if not measured */
   float	         serv_dem;	/* -1 if not measured */
@@ -293,7 +293,7 @@ struct	tcp_rr_request_struct {
   float	cpu_rate;	/* do we know how fast the cpu is?	*/
   int	test_length;	/* how long is the test?		*/
   int	so_rcvavoid;    /* do we want the remote to avoid receive */
-			/* copies? */ 
+			/* copies? */
   int	so_sndavoid;    /* do we want the remote to avoid send copies? */
   int   port;           /* the port to which the recv side should bind
 			   to allow netperf to run through those evil
@@ -338,7 +338,7 @@ struct	tcp_conn_rr_request_struct {
   float	cpu_rate;	/* do we know how fast the cpu is?	*/
   int	test_length;	/* how long is the test?		*/
   int	so_rcvavoid;    /* do we want the remote to avoid receive */
-			/* copies? */ 
+			/* copies? */
   int	so_sndavoid;    /* do we want the remote to avoid send copies? */
   int   port;           /* the port to which the recv side should bind
 			   to allow netperf to run through those evil
@@ -384,7 +384,7 @@ struct	tcp_tran_rr_request_struct {
   float	cpu_rate;	/* do we know how fast the cpu is?	*/
   int	test_length;	/* how long is the test?		*/
   int	so_rcvavoid;    /* do we want the remote to avoid receive */
-			/* copies? */ 
+			/* copies? */
   int	so_sndavoid;    /* do we want the remote to avoid send copies? */
   int   port;           /* the port to which the recv side should bind
 			   to allow netperf to run through those evil
@@ -428,13 +428,13 @@ struct	udp_stream_request_struct {
   float	cpu_rate;
   int	test_length;
   int	so_rcvavoid;    /* do we want the remote to avoid receive */
-			/* copies? */ 
+			/* copies? */
   int	so_sndavoid;    /* do we want the remote to avoid send copies? */
   int   port;           /* the port to which the recv side should bind
 			   to allow netperf to run through those evil
 			   firewall things */
   int   ipfamily;
-  
+
 };
 
 struct	udp_stream_response_struct {
@@ -472,7 +472,7 @@ struct	udp_rr_request_struct {
   float	cpu_rate;	/* do we know how fast the cpu is?	*/
   int	test_length;	/* how long is the test?		*/
   int	so_rcvavoid;    /* do we want the remote to avoid receive */
-			/* copies? */ 
+			/* copies? */
   int	so_sndavoid;    /* do we want the remote to avoid send copies? */
   int   port;           /* the port to which the recv side should bind
 			   to allow netperf to run through those evil
@@ -517,7 +517,7 @@ struct	tcp_cc_request_struct {
   float	cpu_rate;	/* do we know how fast the cpu is?	*/
   int	test_length;	/* how long is the test?		*/
   int	so_rcvavoid;    /* do we want the remote to avoid receive */
-			/* copies? */ 
+			/* copies? */
   int	so_sndavoid;    /* do we want the remote to avoid send copies? */
   int   port;           /* the port to which the recv side should bind
 			   to allow netperf to run through those evil
@@ -582,18 +582,18 @@ extern int
 extern void scan_omni_args(int argc, char *argv[]);
 #endif
 extern void scan_sockets_args(int argc, char *argv[]);
-extern struct addrinfo *complete_addrinfo(char *controlhost, 
-				   char *data_address, 
-				   char *port, 
-				   int family, 
-				   int type, 
-				   int protocol, 
+extern struct addrinfo *complete_addrinfo(char *controlhost,
+				   char *data_address,
+				   char *port,
+				   int family,
+				   int type,
+				   int protocol,
 				   int flags);
 extern void complete_addrinfos(struct addrinfo **remote,
-			       struct addrinfo **local, 
-			       char remote_host[], 
-			       int type, 
-			       int protocol, 
+			       struct addrinfo **local,
+			       char remote_host[],
+			       int type,
+			       int protocol,
 			       int flags);
 extern int af_to_nf(int af);
 extern int nf_to_af(int nf);
@@ -601,14 +601,14 @@ extern int nst_to_hst(int nst);
 extern int hst_to_nst(int hst);
 extern char *hst_to_str(int hst);
 extern char *protocol_to_str(int protocol);
-extern void print_top_test_header(char test_name[], 
-				  struct addrinfo *source, 
+extern void print_top_test_header(char test_name[],
+				  struct addrinfo *source,
 				  struct addrinfo *destination);
-extern void set_port_number(struct addrinfo *res, 
+extern void set_port_number(struct addrinfo *res,
 			    unsigned short port);
-extern void set_hostname_and_port(char *hostname, 
-				  char *portstr, 
-				  int family, 
+extern void set_hostname_and_port(char *hostname,
+				  char *portstr,
+				  int family,
 				  int port);
 extern void set_sockaddr_family_addr_port(struct sockaddr_storage *sockaddr,
 					  int family,
