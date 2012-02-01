@@ -27,14 +27,14 @@ char   netcpu_ntperf_id[]="\
 // System CPU time information class.
 // Used to get CPU time information.
 //
-//     SDK\inc\ntexapi.h 
+//     SDK\inc\ntexapi.h
 // Function x8:   SystemProcessorPerformanceInformation
-// DataStructure: SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION 
+// DataStructure: SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION
 //
 
 #define SystemProcessorPerformanceInformation 0x08
 
-typedef struct 
+typedef struct
 {
         LARGE_INTEGER   IdleTime;
         LARGE_INTEGER   KernelTime;
@@ -47,11 +47,11 @@ typedef struct
 //
 // Calls to get the information
 //
-typedef ULONG (__stdcall *NT_QUERY_SYSTEM_INFORMATION)( 
-                                                                                        ULONG SystemInformationClass, 
-                                                                                        PVOID SystemInformation, 
+typedef ULONG (__stdcall *NT_QUERY_SYSTEM_INFORMATION)(
+                                                                                        ULONG SystemInformationClass,
+                                                                                        PVOID SystemInformation,
                                                                                         ULONG SystemInformationLength,
-                                                                                        PULONG ReturnLength 
+                                                                                        PULONG ReturnLength
                                                                                         );
 
 NT_QUERY_SYSTEM_INFORMATION NtQuerySystemInformation = NULL;
@@ -72,7 +72,7 @@ _inline LARGE_INTEGER ReadPerformanceCounter(VOID)
    call.  References to the PDH.DLL have been deleted.  This structure
    is the root for these data structures. */
 
-typedef struct sPerfObj 
+typedef struct sPerfObj
 {
         LARGE_INTEGER   StartTime;
         LARGE_INTEGER   EndTime;
@@ -91,7 +91,7 @@ void ClosePerfCntrs(PerfObj *PerfCntrs);
 
 
 void
-cpu_util_init(void) 
+cpu_util_init(void)
 {
   if (NtQuerySystemInformation == NULL) {
     // Open the performance counter interface
@@ -129,7 +129,7 @@ calibrate_idle_rate(int iterations, int interval)
 
 
 /*
-  InitPerfCntrs() - 
+  InitPerfCntrs() -
 
   Changed to no longer access the NT performance registry interfaces.
   A direct call to NtQuerySystemInformation (an undocumented NT API)
@@ -149,20 +149,20 @@ PerfObj *InitPerfCntrs()
 
   NewPerfCntrs = (PerfObj *)GlobalAlloc(GPTR, sizeof(PerfObj));
   assert(NewPerfCntrs != NULL);
-  
+
   ZeroMemory((PCHAR)NewPerfCntrs, sizeof(PerfObj));
-  
+
   // get NT version
   NTVersion = GetVersion();
-  if (NTVersion >= 0x80000000) 
+  if (NTVersion >= 0x80000000)
     {
       fprintf(stderr, "Not running on Windows NT\n");
       exit(1);
     }
-  
+
   // locate the calls we need in NTDLL
-  //Lint 
-  NtQuerySystemInformation = 
+  //Lint
+  NtQuerySystemInformation =
     (NT_QUERY_SYSTEM_INFORMATION)GetProcAddress( GetModuleHandle("ntdll.dll"),
 						 "NtQuerySystemInformation" );
 
@@ -173,16 +173,16 @@ PerfObj *InitPerfCntrs()
       fprintf(stderr, "GetProcAddressFailed, status: %lX\n", status);
       exit(1);
     }
-  
+
   // setup to measure timestamps with the high resolution timers.
   if (QueryPerformanceFrequency(&TickHz) == FALSE)
     {
       fprintf(stderr,"MAIN - QueryPerformanceFrequency Failed!\n");
-      exit(2);   
+      exit(2);
     }
-  
+
   RestartPerfCntrs(NewPerfCntrs);
-  
+
   return(NewPerfCntrs);
 }  /* InitPerfCntrs */
 
@@ -202,30 +202,30 @@ void RestartPerfCntrs(PerfObj *PerfCntrs)
   DWORD returnLength = 0;  //Lint
   DWORD returnNumCPUs;  //Lint
   DWORD i;
-  
+
   DWORD status;
   SYSTEM_INFO SystemInfo;
 
   GetSystemInfo(&SystemInfo);
-  
+
   // Move previous data from EndInfo to StartInfo.
   CopyMemory((PCHAR)&PerfCntrs->StartInfo[0],
 	     (PCHAR)&PerfCntrs->EndInfo[0],
 	     sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION)*(MAXCPUS +1));
-  
+
   PerfCntrs->StartTime = PerfCntrs->EndTime;
-  
+
   // get the current CPUTIME information
   if ( (status = NtQuerySystemInformation( SystemProcessorPerformanceInformation,
 					   (PCHAR)&PerfCntrs->EndInfo[0], sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION)*MAXCPUS,
-					   &returnLength )) != 0) 
+					   &returnLength )) != 0)
     {
       fprintf(stderr, "NtQuery failed, status: %lX\n", status);
       exit(1);
     }
-  
+
   PerfCntrs->EndTime = ReadPerformanceCounter();
-  
+
   // Validate that NtQuery returned a reasonable amount of data
   if ((returnLength % sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION)) != 0)
     {
@@ -234,8 +234,8 @@ void RestartPerfCntrs(PerfObj *PerfCntrs)
 	      sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION), returnLength);
       exit(1);
     }
-  returnNumCPUs = returnLength / sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION); 
-  
+  returnNumCPUs = returnLength / sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION);
+
   if (returnNumCPUs != (int)SystemInfo.dwNumberOfProcessors)
     {
       fprintf(stderr, "NtQuery didn't return expected amount of data\n");
@@ -243,17 +243,17 @@ void RestartPerfCntrs(PerfObj *PerfCntrs)
 	      (int)SystemInfo.dwNumberOfProcessors, returnNumCPUs);
       exit(1);
     }
-  
+
   // Zero entries not returned by NtQuery
   ZeroMemory((PCHAR)&PerfCntrs->EndInfo[returnNumCPUs],
 	     sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION)*
 	     (MAXCPUS +1 - returnNumCPUs));
-  
+
   // Total all of the CPUs
   //      KernelTime needs to be fixed-up; it includes both idle &
-  // true kernel time 
+  // true kernel time
   //  Note that kernel time also includes DpcTime & InterruptTime, but
-  // I like this. 
+  // I like this.
   for (i=0; i < returnNumCPUs; i++)
     {
       PerfCntrs->EndInfo[i].KernelTime.QuadPart         -= PerfCntrs->EndInfo[i].IdleTime.QuadPart;
@@ -264,13 +264,13 @@ void RestartPerfCntrs(PerfObj *PerfCntrs)
       PerfCntrs->EndInfo[MAXCPUS].InterruptTime.QuadPart += PerfCntrs->EndInfo[i].InterruptTime.QuadPart;
       PerfCntrs->EndInfo[MAXCPUS].InterruptCount                += PerfCntrs->EndInfo[i].InterruptCount;
     }
-  
+
 }   /* RestartPerfCntrs */
 
 /*
   ReportPerfCntrs() -
   This routine reports the results of the various performance
-  counters. 
+  counters.
 */
 
 double ReportPerfCntrs(PerfObj *PerfCntrs)
@@ -278,13 +278,13 @@ double ReportPerfCntrs(PerfObj *PerfCntrs)
   double tot_CPU_Util;
   int i;
   double duration;  // in milliseconds
-  
+
   LARGE_INTEGER ActualDuration;
-  
-  SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION        DeltaInfo[MAXCPUS +1];  
-  
-  LARGE_INTEGER   TotalCPUTime[MAXCPUS +1];         
-  
+
+  SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION        DeltaInfo[MAXCPUS +1];
+
+  LARGE_INTEGER   TotalCPUTime[MAXCPUS +1];
+
   SYSTEM_INFO SystemInfo;
 
   GetSystemInfo(&SystemInfo);
@@ -303,8 +303,8 @@ double ReportPerfCntrs(PerfObj *PerfCntrs)
 	PerfCntrs->StartInfo[i].InterruptTime.QuadPart;
       DeltaInfo[i].InterruptCount               = PerfCntrs->EndInfo[i].InterruptCount -
 	PerfCntrs->StartInfo[i].InterruptCount;
-      
-      TotalCPUTime[i].QuadPart =      
+
+      TotalCPUTime[i].QuadPart =
 	DeltaInfo[i].IdleTime.QuadPart +
 	DeltaInfo[i].KernelTime.QuadPart +
 	DeltaInfo[i].UserTime.QuadPart;
@@ -312,22 +312,22 @@ double ReportPerfCntrs(PerfObj *PerfCntrs)
       // + DeltaInfo[i].DpcTime.QuadPart  +
       //  DeltaInfo[i].InterruptTime.QuadPart;
     }
-  
+
   tot_CPU_Util = 100.0*(1.0 - (double)DeltaInfo[MAXCPUS].IdleTime.QuadPart/(double)TotalCPUTime[MAXCPUS].QuadPart);  //Lint
-  
+
   // Re-calculate duration, since we may have stoped early due to cntr-C.
-  ActualDuration.QuadPart = PerfCntrs->EndTime.QuadPart - 
+  ActualDuration.QuadPart = PerfCntrs->EndTime.QuadPart -
     PerfCntrs->StartTime.QuadPart;
-  
+
   // convert to 100 usec (1/10th milliseconds) timebase.
   ActualDuration.QuadPart = (ActualDuration.QuadPart*10000)/TickHz.QuadPart;
   duration = (double)ActualDuration.QuadPart/10.0;  // duration in ms
-  
+
   if (verbosity > 1)
     {
       fprintf(where,"ActualDuration (ms): %d\n", (int)duration);
     }
-  
+
   if (verbosity > 1)
     {
       fprintf(where, "%% CPU    _Total");
@@ -339,91 +339,91 @@ double ReportPerfCntrs(PerfObj *PerfCntrs)
 	    }
 	}
       fprintf(where, "\n");
-      
+
       fprintf(where, "Busy      %5.2f", tot_CPU_Util);
       if ((int)SystemInfo.dwNumberOfProcessors > 1)
 	{
 	  for (i=0; i < (int)SystemInfo.dwNumberOfProcessors; i++)
 	    {
-	      fprintf(where, "\t %5.2f", 
+	      fprintf(where, "\t %5.2f",
 		      100.0*(1.0 - (double)DeltaInfo[i].IdleTime.QuadPart/(double)TotalCPUTime[i].QuadPart));  //Lint
 	    }
 	}
       fprintf(where, "\n");
-      
-      fprintf(where, "Kernel    %5.2f", 
+
+      fprintf(where, "Kernel    %5.2f",
 	      100.0*(double)DeltaInfo[MAXCPUS].KernelTime.QuadPart/(double)TotalCPUTime[MAXCPUS].QuadPart);  //Lint
-      
+
       if ((int)SystemInfo.dwNumberOfProcessors > 1)
 	{
 	  for (i=0; i < (int)SystemInfo.dwNumberOfProcessors; i++)
 	    {
-	      fprintf(where, "\t %5.2f", 
+	      fprintf(where, "\t %5.2f",
 		      100.0*(double)DeltaInfo[i].KernelTime.QuadPart/(double)TotalCPUTime[i].QuadPart);  //Lint
 	    }
 	}
       fprintf(where, "\n");
-      
-      fprintf(where, "User      %5.2f", 
+
+      fprintf(where, "User      %5.2f",
 	      100.0*(double)DeltaInfo[MAXCPUS].UserTime.QuadPart/(double)TotalCPUTime[MAXCPUS].QuadPart);
-      
+
       if ((int)SystemInfo.dwNumberOfProcessors > 1)
 	{
 	  for (i=0; i < (int)SystemInfo.dwNumberOfProcessors; i++)
 	    {
-	      fprintf(where, "\t %5.2f", 
+	      fprintf(where, "\t %5.2f",
 		      100.0*(double)DeltaInfo[i].UserTime.QuadPart/TotalCPUTime[i].QuadPart);  //Lint
 	    }
 	}
       fprintf(where, "\n");
-      
-      fprintf(where, "Dpc       %5.2f", 
+
+      fprintf(where, "Dpc       %5.2f",
 	      100.0*(double)DeltaInfo[MAXCPUS].DpcTime.QuadPart/(double)TotalCPUTime[MAXCPUS].QuadPart);  //Lint
-      
+
       if ((int)SystemInfo.dwNumberOfProcessors > 1)
 	{
 	  for (i=0; i < (int)SystemInfo.dwNumberOfProcessors; i++)
 	    {
-	      fprintf(where, "\t %5.2f", 
+	      fprintf(where, "\t %5.2f",
 		      100.0*(double)DeltaInfo[i].DpcTime.QuadPart/(double)TotalCPUTime[i].QuadPart);  //Lint
 	    }
 	}
       fprintf(where, "\n");
-      
-      fprintf(where, "Interrupt %5.2f", 
+
+      fprintf(where, "Interrupt %5.2f",
 	      100.0*(double)DeltaInfo[MAXCPUS].InterruptTime.QuadPart/(double)TotalCPUTime[MAXCPUS].QuadPart);  //Lint
-      
+
       if ((int)SystemInfo.dwNumberOfProcessors > 1)
 	{
 	  for (i=0; i < (int)SystemInfo.dwNumberOfProcessors; i++)
 	    {
-	      fprintf(where, "\t %5.2f", 
+	      fprintf(where, "\t %5.2f",
 		      100.0*(double)DeltaInfo[i].InterruptTime.QuadPart/TotalCPUTime[i].QuadPart);  //Lint
 	    }
 	}
       fprintf(where, "\n\n");
-      
-      fprintf(where, "Interrupt/Sec. %5.1f", 
+
+      fprintf(where, "Interrupt/Sec. %5.1f",
 	      (double)DeltaInfo[MAXCPUS].InterruptCount*1000.0/duration);
-      
+
       if ((int)SystemInfo.dwNumberOfProcessors > 1)
 	{
 	  for (i=0; i < (int)SystemInfo.dwNumberOfProcessors; i++)
 	    {
-	      fprintf(where, "\t %5.1f", 
+	      fprintf(where, "\t %5.1f",
 		      (double)DeltaInfo[i].InterruptCount*1000.0/duration);
 	    }
 	}
       fprintf(where, "\n\n");
       fflush(where);
     }
-  
+
   return (tot_CPU_Util);
-  
+
 }  /* ReportPerfCntrs */
 
 /*
-  ClosePerfCntrs() -  
+  ClosePerfCntrs() -
 
   This routine cleans up the performance counter APIs.
 */
@@ -448,7 +448,7 @@ cpu_stop_internal(void)
 }
 
 float
-calc_cpu_util_internal(float elapsed_time) 
+calc_cpu_util_internal(float elapsed_time)
 {
   float correction_factor;
   lib_local_cpu_util = (float)0.0;
@@ -457,9 +457,9 @@ calc_cpu_util_internal(float elapsed_time)
   /* calculations - for example, tests that were ended by */
   /* watchdog timers such as the udp stream test. We let these */
   /* tests tell up what the elapsed time should be. */
-  
+
   if (elapsed_time != 0.0) {
-    correction_factor = (float) 1.0 + 
+    correction_factor = (float) 1.0 +
       ((lib_elapsed - elapsed_time) / elapsed_time);
   }
   else {

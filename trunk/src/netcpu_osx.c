@@ -61,7 +61,7 @@ static host_cpu_load_info_data_t lib_end_ticks;
 static mach_port_t lib_host_port;
 
 void
-cpu_util_init(void) 
+cpu_util_init(void)
 {
   lib_host_port = mach_host_self();
   return;
@@ -102,7 +102,7 @@ get_host_ticks(host_cpu_load_info_t info)
 float
 calibrate_idle_rate(int iterations, int interval)
 {
-    return (float)0.0;   
+    return (float)0.0;
 }
 
 float
@@ -117,9 +117,9 @@ calc_cpu_util_internal(float elapsed_time)
      example, tests that were ended by watchdog timers such as the udp
      stream test. We let these tests tell up what the elapsed time
      should be. */
-  
+
   if (elapsed_time != 0.0) {
-    correction_factor = (float) 1.0 + 
+    correction_factor = (float) 1.0 +
       ((lib_elapsed - elapsed_time) / elapsed_time);
   }
   else {

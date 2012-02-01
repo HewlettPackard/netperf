@@ -19,7 +19,7 @@ char   netcpu_none_id[]="\
 #include "netlib.h"
 
 void
-cpu_util_init(void) 
+cpu_util_init(void)
 {
   return;
 }

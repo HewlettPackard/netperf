@@ -24,7 +24,7 @@ char   netcpu_pstatnew_id[]="\
 
 #if HAVE_LIMITS_H
 # include <limits.h>
-#endif 
+#endif
 
 #include <sys/dk.h>
 #include <sys/pstat.h>
@@ -32,7 +32,7 @@ char   netcpu_pstatnew_id[]="\
 /* HP-UX 11.23 seems to have added three other cycle counters to the
    original psp_idlecycles - one for user, one for kernel and one for
    interrupt. so, we can now use those to calculate CPU utilization
-   without requiring any calibration phase.  raj 2005-02-16 */ 
+   without requiring any calibration phase.  raj 2005-02-16 */
 
 #ifndef PSTAT_IPCINFO
 # error Sorry, pstat() CPU utilization on 10.0 and later only
@@ -73,7 +73,7 @@ static cpu_time_counters_t  delta_cpu_counters[MAXCPUS];
 static long max_proc_count;
 
 void
-cpu_util_init(void) 
+cpu_util_init(void)
 {
   struct pst_dynamic psd;
   if (pstat_getdynamic((struct pst_dynamic *)&psd,
@@ -108,7 +108,7 @@ get_cpu_counters(cpu_time_counters_t *res)
 	 only the bottom 32-bits are actually valid.  don't ask me
 	 why, that is just the way it is.  soo, we shift the psc_hi
 	 value by 32 bits and then just sum-in the psc_lo value.  raj
-	 2005/09/06 */ 
+	 2005/09/06 */
       struct pst_processor *psp;
 
       /* to handle the cases of "processors" present but disabled, we
@@ -189,7 +189,7 @@ calibrate_idle_rate(int iterations, int interval)
 }
 
 static void
-print_cpu_time_counters(char *name, int instance, cpu_time_counters_t *counters) 
+print_cpu_time_counters(char *name, int instance, cpu_time_counters_t *counters)
 {
   fprintf(where,
 	  "%s[%d]:\n"
@@ -242,9 +242,9 @@ calc_cpu_util_internal(float elapsed_time)
   /* calculations - for example, tests that were ended by */
   /* watchdog timers such as the udp stream test. We let these */
   /* tests tell up what the elapsed time should be. */
-  
+
   if (elapsed_time != 0.0) {
-    correction_factor = (float) 1.0 + 
+    correction_factor = (float) 1.0 +
       ((lib_elapsed - elapsed_time) / elapsed_time);
   }
   else {
@@ -278,13 +278,13 @@ calc_cpu_util_internal(float elapsed_time)
      fix the interupt cycle accounting.  raj 2005/09/14 */
 
   /* calculate what the sum of CPU cycles _SHOULD_ be */
-  sanity_cpu_cycles = (uint64_t) ((double)lib_elapsed * 
+  sanity_cpu_cycles = (uint64_t) ((double)lib_elapsed *
     (double) sysconf(_SC_CLK_TCK) * (double)lib_iticksperclktick);
 
   /* this looks just like the looper case. at least I think it */
   /* should :) raj 4/95 */
   for (i = 0; i < lib_num_loc_cpus; i++) {
-    
+
     /* we ass-u-me that these counters will never wrap during a
        netperf run.  this may not be a particularly safe thing to
        do. raj 2005-01-28 */
@@ -296,14 +296,14 @@ calc_cpu_util_internal(float elapsed_time)
       starting_cpu_counters[i].kernel;
     delta_cpu_counters[i].interrupt = ending_cpu_counters[i].interrupt -
       starting_cpu_counters[i].interrupt;
-    
+
     if (debug) {
       print_cpu_time_counters("delta_cpu_counters",i,delta_cpu_counters);
     }
 
     /* now get the sum, which we ass-u-me does not overflow a 64-bit
        counter. raj 2005-02-16 */
-    total_cpu_cycles = 
+    total_cpu_cycles =
       delta_cpu_counters[i].idle +
       delta_cpu_counters[i].user +
       delta_cpu_counters[i].kernel +
@@ -327,22 +327,22 @@ calc_cpu_util_internal(float elapsed_time)
        we can use total_cpu_cycles rather than sanity_cpu_cycles, but
        until then, use sanity_cpu_ccles. raj 2005/09/14 */
 
-    fraction_idle = (double)delta_cpu_counters[i].idle / 
+    fraction_idle = (double)delta_cpu_counters[i].idle /
       (double)sanity_cpu_cycles;
 
-    fraction_user = (double)delta_cpu_counters[i].user / 
+    fraction_user = (double)delta_cpu_counters[i].user /
       (double)sanity_cpu_cycles;
 
-    fraction_kernel = (double) delta_cpu_counters[i].kernel / 
+    fraction_kernel = (double) delta_cpu_counters[i].kernel /
       (double)sanity_cpu_cycles;
 
-    fraction_interrupt = (double)delta_cpu_counters[i].interrupt / 
+    fraction_interrupt = (double)delta_cpu_counters[i].interrupt /
       (double)sanity_cpu_cycles;
 
     /* ass-u-me that it is only interrupt that is bogus, and assign
        all the "missing" cycles to it. raj 2005/09/14 */
     estimated_fraction_interrupt = ((double)delta_cpu_counters[i].interrupt +
-				    (sanity_cpu_cycles - total_cpu_cycles)) / 
+				    (sanity_cpu_cycles - total_cpu_cycles)) /
       (double)sanity_cpu_cycles;
 
     if (debug) {
@@ -376,22 +376,22 @@ calc_cpu_util_internal(float elapsed_time)
        we can use total_cpu_cycles rather than sanity_cpu_cycles, but
        until then, use sanity_cpu_ccles. raj 2005/09/14 */
 
-    fraction_idle = 
+    fraction_idle =
       (delta_cpu_counters[i].idle * CALC_ACCURACY) / sanity_cpu_cycles;
 
-    fraction_user = 
+    fraction_user =
       (delta_cpu_counters[i].user * CALC_ACCURACY) / sanity_cpu_cycles;
 
-    fraction_kernel = 
+    fraction_kernel =
       (delta_cpu_counters[i].kernel * CALC_ACCURACY) / sanity_cpu_cycles;
 
-    fraction_interrupt = 
+    fraction_interrupt =
       (delta_cpu_counters[i].interrupt * CALC_ACCURACY) / sanity_cpu_cycles;
 
 
-    estimated_fraction_interrupt = 
-      ((delta_cpu_counters[i].interrupt + 
-	(sanity_cpu_cycles - total_cpu_cycles)) * 
+    estimated_fraction_interrupt =
+      ((delta_cpu_counters[i].interrupt +
+	(sanity_cpu_cycles - total_cpu_cycles)) *
        CALC_ACCURACY) / sanity_cpu_cycles;
 
     if (debug) {
@@ -409,7 +409,7 @@ calc_cpu_util_internal(float elapsed_time)
     }
 
     /* and finally, what is our CPU utilization? */
-    lib_local_per_cpu_util[i] = 100.0 - (((float)fraction_idle / 
+    lib_local_per_cpu_util[i] = 100.0 - (((float)fraction_idle /
 					  (float)CALC_ACCURACY) * 100.0);
 #endif
     lib_local_per_cpu_util[i] *= correction_factor;
