@@ -90,7 +90,7 @@ find_egress_interface_by_addr(struct sockaddr *addr, int local_ip_check) {
   else
     return strdup("NotFound");
 
-#else  
+#else
   char *buf,*ptr;
   int  lastlen,len,cmplen;
   int   sockfd;
@@ -113,7 +113,7 @@ find_egress_interface_by_addr(struct sockaddr *addr, int local_ip_check) {
 
   sockfd = socket(AF_INET,SOCK_DGRAM,0);
   if (sockfd < 0) {
-    if (local_ip_check) 
+    if (local_ip_check)
       return NULL;
     else
       return strdup("socket");
@@ -176,7 +176,7 @@ find_egress_interface_by_addr(struct sockaddr *addr, int local_ip_check) {
       len = sizeof(struct sockaddr_in);
       break;
     }
-    
+
 #if defined(NETPERF_STANDALONE_DEBUG)
     printf("hello i am interface %s family %d\n",
 	   ifr->ifr_name,
@@ -193,11 +193,11 @@ find_egress_interface_by_addr(struct sockaddr *addr, int local_ip_check) {
     /* we are basicaly ass-u-me-ing that an ifr is only a name and a
        sockaddr */
     ptr += sizeof(ifr->ifr_name) + len;
-    
+
     if (ifr->ifr_addr.sa_family != sin->sin_family)
       continue;
     else {
-      
+
 #if defined(NETPERF_STANDALONE_DEBUG)
       printf("addr1 %p addr2 %p len %d\n",addr1,addr2,cmplen);
 #endif
@@ -287,18 +287,18 @@ find_egress_interface(struct sockaddr *source, struct sockaddr *dest) {
 #endif
     return strdup("lo0");
   }
-    
+
 
   sockfd = socket(AF_ROUTE, SOCK_RAW, 0);
   if (sockfd < 0)
     return strdup("socket");
 
-  buffer = calloc(1,BUFLEN); 
+  buffer = calloc(1,BUFLEN);
   if (NULL == buffer)
     return strdup("calloc");
 
   rtm = (struct rt_msghdr *)buffer;
-  
+
   rtm->rtm_msglen = sizeof(struct rt_msghdr);
   sin = (struct sockaddr_in *)dest;
 
