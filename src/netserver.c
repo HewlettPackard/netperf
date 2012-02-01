@@ -1,30 +1,30 @@
 /*
- 
+
 	   Copyright (C) 1993-2011 Hewlett-Packard Company
                          ALL RIGHTS RESERVED.
- 
+
   The enclosed software and documentation includes copyrighted works
   of Hewlett-Packard Co. For as long as you comply with the following
   limitations, you are hereby authorized to (i) use, reproduce, and
   modify the software and documentation, and to (ii) distribute the
   software and documentation, including modifications, for
   non-commercial purposes only.
-      
+
   1.  The enclosed software and documentation is made available at no
       charge in order to advance the general development of
       high-performance networking products.
- 
+
   2.  You may not delete any copyright notices contained in the
       software or documentation. All hard copies, and copies in
       source code or object code form, of the software or
       documentation (including modifications) must contain at least
       one of the copyright notices.
- 
+
   3.  The enclosed software and documentation has not been subjected
       to testing and quality control and is not a Hewlett-Packard Co.
       product. At a future time, Hewlett-Packard Co. may or may not
       offer a version of the software and documentation as a product.
-  
+
   4.  THE SOFTWARE AND DOCUMENTATION IS PROVIDED "AS IS".
       HEWLETT-PACKARD COMPANY DOES NOT WARRANT THAT THE USE,
       REPRODUCTION, MODIFICATION OR DISTRIBUTION OF THE SOFTWARE OR
@@ -34,12 +34,12 @@
       EXPRESS AND IMPLIED, WITH REGARD TO THE SOFTWARE AND THE
       DOCUMENTATION. HP SPECIFICALLY DISCLAIMS ALL WARRANTIES OF
       MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
-  
+
   5.  HEWLETT-PACKARD COMPANY WILL NOT IN ANY EVENT BE LIABLE FOR ANY
       DIRECT, INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES
       (INCLUDING LOST PROFITS) RELATED TO ANY USE, REPRODUCTION,
       MODIFICATION, OR DISTRIBUTION OF THE SOFTWARE OR DOCUMENTATION.
- 
+
 */
 
 #include "netperf_version.h"
@@ -109,7 +109,7 @@ char	netserver_id[]="\
 #ifndef SIGCLD
 #define SIGCLD SIGCHLD
 #endif /* SIGCLD */
-      
+
 #endif
 
 #if !defined(HAVE_SETSID)
@@ -232,7 +232,7 @@ unlink_empty_debug_file() {
 
   if (stat(FileName,&buf)== 0) {
 
-    if (buf.st_size == 0) 
+    if (buf.st_size == 0)
       unlink(FileName);
   }
 #endif
@@ -242,7 +242,7 @@ unlink_empty_debug_file() {
    routine as we depend on the control socket being dup()ed out of the
    way when we go messing about with the streams. */
 void
-open_debug_file() 
+open_debug_file()
 {
 #if !defined WIN32
 #define NETPERF_NULL "/dev/null"
@@ -354,19 +354,19 @@ open_debug_file()
   /* Hopefully, by closing stdout & stderr, the subsequent fopen calls
      will get mapped to the correct std handles. */
   fclose(stdout);
-  
+
   if ((where = fopen(FileName, "w")) == NULL) {
     perror("netserver: fopen of debug file as new stdout failed!");
     exit(1);
   }
-  
+
   fclose(stderr);
-  
+
   if ((where = fopen(FileName, "w")) == NULL) {
     fprintf(stdout, "fopen of debug file as new stderr failed!\n");
     exit(1);
   }
-  
+
 #endif
 
 }
@@ -401,7 +401,7 @@ set_server_sock() {
   server_sock = dup(0);
 
 #else
-  if ((server_sock = 
+  if ((server_sock =
        socket(TCPIP$C_AUXS, SOCK_STREAM, 0)) == INVALID_SOCKET) {
     fprintf(stderr,
 	    "%s: failed to grab aux server socket: %s (errno %s)\n",
@@ -463,7 +463,7 @@ create_listens(char hostname[], char port[], int af) {
 
   if (error) {
     if (debug) {
-      
+
       fprintf(stderr,
 	      "%s: could not resolve remote '%s' port '%s' af %d\n"
 	      "\tgetaddrinfo returned %s (%d)\n",
@@ -473,7 +473,7 @@ create_listens(char hostname[], char port[], int af) {
 	      af,
 	      gai_strerror(error),
 	      error);
-      
+
     }
     return;
   }
@@ -503,9 +503,9 @@ create_listens(char hostname[], char port[], int af) {
 
     /* happiness and joy, keep going */
     if (setsockopt(temp_socket,
-		   SOL_SOCKET, 
-		   SO_REUSEADDR, 
-		   (char *)&on , 
+		   SOL_SOCKET,
+		   SO_REUSEADDR,
+		   (char *)&on ,
 		   sizeof(on)) == SOCKET_ERROR) {
       if (debug) {
 	fprintf(stderr,
@@ -519,7 +519,7 @@ create_listens(char hostname[], char port[], int af) {
     /* still happy and joyful */
 
     if ((bind(temp_socket,
-	      local_res_temp->ai_addr, 
+	      local_res_temp->ai_addr,
 	      local_res_temp->ai_addrlen) != SOCKET_ERROR) &&
 	(listen(temp_socket,128) != SOCKET_ERROR))  {
 
@@ -684,7 +684,7 @@ close_listens(struct listen_elt *list) {
   }
 
   temp = list;
-  
+
   while (temp) {
     close(temp->fd);
     temp = temp->next;
@@ -714,7 +714,7 @@ recv_passphrase() {
   fprintf(where,
 	  "Unable to match required passphrase.  Closing control connection\n");
   fflush(where);
-  
+
   close(server_sock);
   return -1;
 }
@@ -724,12 +724,12 @@ recv_passphrase() {
    can just merrily go about its business, which is to "schedule"
    performance tests on the server.  */
 
-void 
+void
 process_requests()
 {
-  
+
   float	temp_rate;
-  
+
   if (debug) {
     fprintf(where,
 	    "%s: enter\n",
@@ -753,7 +753,7 @@ process_requests()
     }
 
     switch (netperf_request.content.request_type) {
-      
+
     case DEBUG_ON:
       netperf_response.content.response_type = DEBUG_OK;
       if (!suppress_debug) {
@@ -770,7 +770,7 @@ process_requests()
 
       send_response();
       break;
-      
+
     case DEBUG_OFF:
       if (debug)
 	debug--;
@@ -790,7 +790,7 @@ process_requests()
 	delims[1] = strdup(",");
 	delims[2] = strdup("_");
 	delims[3] = strdup(";");
-	
+
 	netperf_response.content.response_type = SYSINFO_RESPONSE;
 	for (i = 0; i < 4; i++) {
 	  if ((!strstr(local_sysname,delims[i])) &&
@@ -837,7 +837,7 @@ process_requests()
 	    (char *)netperf_response.content.test_specific_data,
 	    sizeof(temp_rate));
       bcopy((char *)&lib_num_loc_cpus,
-	    (char *)netperf_response.content.test_specific_data + 
+	    (char *)netperf_response.content.test_specific_data +
 	            sizeof(temp_rate),
 	    sizeof(lib_num_loc_cpus));
       if (debug) {
@@ -847,64 +847,64 @@ process_requests()
 		lib_num_loc_cpus);
 	fflush(where);
       }
-      
+
       /* we need the cpu_start, cpu_stop in the looper case to kill
          the child proceses raj 7/95 */
-      
+
 #ifdef USE_LOOPER
       cpu_start(1);
       cpu_stop(1,&temp_rate);
 #endif /* USE_LOOPER */
-      
+
       send_response();
       break;
-      
+
     case DO_TCP_STREAM:
       recv_tcp_stream();
       break;
-      
+
     case DO_TCP_MAERTS:
       recv_tcp_maerts();
       break;
-      
+
     case DO_TCP_RR:
       recv_tcp_rr();
       break;
-      
+
     case DO_TCP_CRR:
       recv_tcp_conn_rr();
       break;
-      
+
     case DO_TCP_CC:
       recv_tcp_cc();
       break;
-      
+
 #ifdef DO_1644
     case DO_TCP_TRR:
       recv_tcp_tran_rr();
       break;
 #endif /* DO_1644 */
-      
+
 #ifdef DO_NBRR
     case DO_TCP_NBRR:
       recv_tcp_nbrr();
       break;
 #endif /* DO_NBRR */
-      
+
     case DO_UDP_STREAM:
       recv_udp_stream();
       break;
-      
+
     case DO_UDP_RR:
       recv_udp_rr();
       break;
-      
+
 #ifdef WANT_DLPI
 
     case DO_DLPI_CO_RR:
       recv_dlpi_co_rr();
       break;
-      
+
     case DO_DLPI_CL_RR:
       recv_dlpi_cl_rr();
       break;
@@ -924,34 +924,34 @@ process_requests()
     case DO_STREAM_STREAM:
       recv_stream_stream();
       break;
-      
+
     case DO_STREAM_RR:
       recv_stream_rr();
       break;
-      
+
     case DO_DG_STREAM:
       recv_dg_stream();
       break;
-      
+
     case DO_DG_RR:
       recv_dg_rr();
       break;
-      
+
 #endif /* WANT_UNIX */
 
 #ifdef WANT_XTI
     case DO_XTI_TCP_STREAM:
       recv_xti_tcp_stream();
       break;
-      
+
     case DO_XTI_TCP_RR:
       recv_xti_tcp_rr();
       break;
-      
+
     case DO_XTI_UDP_STREAM:
       recv_xti_udp_stream();
       break;
-      
+
     case DO_XTI_UDP_RR:
       recv_xti_udp_rr();
       break;
@@ -962,7 +962,7 @@ process_requests()
     case DO_SCTP_STREAM:
       recv_sctp_stream();
       break;
-      
+
     case DO_SCTP_STREAM_MANY:
       recv_sctp_stream_1toMany();
       break;
@@ -988,7 +988,7 @@ process_requests()
     case DO_SDP_RR:
       recv_sdp_rr();
       break;
-#endif 
+#endif
 
 #ifdef WANT_OMNI
     case DO_OMNI:
@@ -1010,7 +1010,7 @@ process_requests()
       netperf_response.content.serv_errno=998;
       send_response();
       break;
-      
+
     }
   }
 }
@@ -1095,14 +1095,14 @@ spawn_child() {
     fflush(where);
   }
 
-	    
+
   /* create the cmdline array based on strlen(program) + 80 chars */
   cmdline_length = strlen(program) + 80;
   cmdline = malloc(cmdline_length + 1);  // +1 for trailing null
-	    
+
   memset(&si, 0 , sizeof(STARTUPINFO));
   si.cb = sizeof(STARTUPINFO);
-	    
+
   /* Pass the server_sock as stdin for the new process.  Hopefully
      this will continue to be created with the OBJ_INHERIT
      attribute. */
@@ -1110,7 +1110,7 @@ spawn_child() {
   si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
   si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
   si.dwFlags = STARTF_USESTDHANDLES;
-	    
+
   /* Build cmdline for child process */
   strcpy(cmdline, program);
   cmd_index = strlen(cmdline);
@@ -1140,7 +1140,7 @@ spawn_child() {
 			cmdline_length - cmd_index,
 			" -i %x",
 			(int)(UINT_PTR)where);
-	    
+
   b = CreateProcess(NULL,    /* Application Name */
 		    cmdline,
 		    NULL,    /* Process security attributes */
@@ -1158,13 +1158,13 @@ spawn_child() {
       free(cmdline); /* even though we exit :) */
       exit(1);
     }
-	    
+
   /* We don't need the thread or process handles any more;
      let them go away on their own timeframe. */
-	    
+
   CloseHandle(pi.hThread);
   CloseHandle(pi.hProcess);
-	    
+
   /* the caller/parent will close server_sock */
 
   free(cmdline);
@@ -1389,7 +1389,7 @@ scan_netserver_args(int argc, char *argv[]) {
       printf("Netperf version %s\n",NETPERF_VERSION);
       exit(0);
       break;
-      
+
     }
   }
 }
@@ -1441,7 +1441,7 @@ daemonize() {
 
       /* ok, we can start accepting control connections now */
       accept_connections();
-      
+
   default:
     /* we are the parent, nothing to do but exit? */
     exit(0);
@@ -1526,7 +1526,7 @@ main(int argc, char *argv[]) {
 
 #ifdef WIN32
   WSADATA	wsa_data ;
-  
+
   /* Initialize the winsock lib do we still want version 2.2? */
   if ( WSAStartup(MAKEWORD(2,2), &wsa_data) == SOCKET_ERROR ){
     printf("WSAStartup() failed : %lu\n", GetLastError()) ;
@@ -1541,15 +1541,15 @@ main(int argc, char *argv[]) {
     return -1 ;
   }
   strcpy(program, argv[0]);
-  
+
   init_netserver_globals();
 
   netlib_init();
-  
+
   strncpy(local_host_name,"",sizeof(local_host_name));
   local_address_family = AF_UNSPEC;
   strncpy(listen_port,TEST_PORT,sizeof(listen_port));
-	  
+
   scan_netserver_args(argc, argv);
 
   check_if_inetd();
@@ -1587,5 +1587,5 @@ main(int argc, char *argv[]) {
 #endif
 
   return 0;
-	  
+
 }
