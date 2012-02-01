@@ -3677,13 +3677,16 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
     WAIT_BEFORE_DATA_TRAFFIC();
 
     /* Set-up the test end conditions. For tests over a
-       "reliable/connection-oriented" transport (eg TCP, SCTP, etc) this
-       can be either time or byte/transaction count based.  for
+       "reliable/connection-oriented" transport (eg TCP, SCTP, etc)
+       this can be either time or byte/transaction count based.  for
        unreliable transport or connection tests it can only be time
-p       based.  having said that, we rely entirely on other code to
+       based.  having said that, we rely entirely on other code to
        enforce this before we even get here. raj 2008-01-08 */
 
-    if (test_time) {
+    /* enable a test_time of 0 to mean just keep running until
+       something other than alarm() generates a signal. raj
+       2012-02-01 */
+    if ((test_time) || ((test_trans == 0) && (test_bytes == 0))) {
       /* The user wanted to end the test after a period of time.  if
 	 we are a recv-only test, we need to protect ourself against
 	 the remote going poof, but we want to make sure we don't
@@ -3692,7 +3695,9 @@ p       based.  having said that, we rely entirely on other code to
 	 padding */
       times_up = 0;
       units_remaining = 0;
-      if ((!no_control) && (NETPERF_RECV_ONLY(direction)))
+      if ((!no_control) && 
+	  (NETPERF_RECV_ONLY(direction)) &&
+	  ((test_trans == 0) && (test_bytes == 0)))
 	pad_time = PAD_TIME;
       start_timer(test_time + pad_time);
     }
@@ -4925,12 +4930,13 @@ recv_omni()
      counts over "reliable" protocols.  perhaps at some point we
      should add a check herebouts to verify that... */
 
-  if (omni_request->test_length > 0) {
+  if (omni_request->test_length >= 0) {
     times_up = 0;
     units_remaining = 0;
     /* if we are the sender and only sending, then we don't need/want
        the padding, otherwise, we need the padding */
-    if (!(NETPERF_XMIT_ONLY(omni_request->direction)))
+    if (!(NETPERF_XMIT_ONLY(omni_request->direction)) && 
+	(omni_request->test_length > 0))
       pad_time = PAD_TIME;
     start_timer(omni_request->test_length + pad_time);
   }
