@@ -46,7 +46,7 @@ find_security_info_selinux(int *enabled, int *type, char **specific){
 #endif
 
   switch(enforcing) {
-  case -1: 
+  case -1:
     *enabled = NSEC_DISABLED;
     break;
   case 0:
@@ -58,7 +58,7 @@ find_security_info_selinux(int *enabled, int *type, char **specific){
   default:
     *enabled = NSEC_UNKNOWN;
   }
-    
+
   getpolicy = dlsym(messiah, "selinux_getpolicytype");
   if (NULL == getpolicy) {
     dlclose(messiah);
