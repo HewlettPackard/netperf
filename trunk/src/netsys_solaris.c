@@ -107,7 +107,7 @@ find_system_model(char **system_model) {
 #if defined(HAVE_SYS_SMBIOS_H) && defined(HAVE_LIBSMBIOS)
 #include <sys/smbios.h>
   smbios_hdl_t *smbios_handle;
-  smbios_info_t info; 
+  smbios_info_t info;
 
   int error;
   int  ret;
@@ -129,7 +129,7 @@ find_system_model(char **system_model) {
     return;
   }
   ret = smbios_info_common(smbios_handle,256,&info);
-  if (0 == ret) 
+  if (0 == ret)
     *system_model = strdup(info.smbi_product);
   else {
     /* we ass-u-me that while there was smbios on the system it didn't
@@ -176,4 +176,4 @@ main(int argc, char *argv[]) {
 	 frequency);
 }
 #endif
-    
+

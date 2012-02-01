@@ -10,7 +10,7 @@ static char interface_slot[13]="not found";
 
 static int
 find_slot(const char *fpath, const struct stat *sb,
-	  int tflag, struct FTW *ftwbuf) 
+	  int tflag, struct FTW *ftwbuf)
 {
   char slot_address[11];
   int  ret;
@@ -45,7 +45,7 @@ find_slot(const char *fpath, const struct stat *sb,
 	  strcpy(interface_slot,"strcpy");
 	  return 1;
 	}
-	
+
 	this_tok = strtok(myfpath,"/");
 	while (strcmp(this_tok,"address")) {
 	  last_tok = this_tok;
@@ -131,7 +131,7 @@ get_val_from_file(char *valsource) {
 
   fclose(valfile);
   return ret;
-  
+
 }
 
 void

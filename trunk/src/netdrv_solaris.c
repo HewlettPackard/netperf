@@ -29,7 +29,7 @@ find_driver_info(char *ifname, char *driver, char *version, char *firmware, char
 
   /* on the off chance we managed to toast the entire string, we
      should probably mention that somehow. raj 2008-03-19 */
-  if (strlen(driver) == 0) 
+  if (strlen(driver) == 0)
     strncpy(driver,"NoAlpha",len);
 
   strncpy(version,"Unavailable",len);

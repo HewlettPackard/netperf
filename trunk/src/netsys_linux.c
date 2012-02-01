@@ -78,7 +78,7 @@ find_cpu_freq() {
   return -1;
 }
 
-static void 
+static void
 find_system_model(char **system_model) {
 #if defined(HAVE_LIBSMBIOS)
 #if defined(HAVE_SMBIOS_SYSTEMINFO_H)

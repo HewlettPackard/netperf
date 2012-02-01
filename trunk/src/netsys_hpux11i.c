@@ -39,18 +39,18 @@ find_system_info(char **system_model, char **cpu_model, int *cpu_frequency) {
        what other tools/platforms support, we shouldn't do a simple
        integer divide - instead, we should do our division in floating
        point and then round */
-    *cpu_frequency = rint((double)processor_info.psp_cpu_frequency / 
+    *cpu_frequency = rint((double)processor_info.psp_cpu_frequency /
 			  1000000.0);
 #else
     /* older OSes were "known" to be on CPUs where the itick was
        1to1 here */
-    *cpu_frequency = rint(((double)processor_info.psp_iticksperclktick * 
+    *cpu_frequency = rint(((double)processor_info.psp_iticksperclktick *
 			   (double)sysconf(_SC_CLK_TCK)) / 1000000.0);
-#endif 
+#endif
   }
   else
     *cpu_frequency = -1;
 
   *cpu_model = strdup("Unknown CPU Model");
 }
-  
+
