@@ -27,14 +27,14 @@ static int  found_subdevice = 0;
 
 static char *
 set_interface_match(char *interface_name) {
-  
+
   int i;
   char *nukeit;
 
   strncpy(interface_match,interface_name,IFNAMSIZ);
   interface_match[IFNAMSIZ-1] = 0;
 
-  
+
   /* strip away the logical interface information if present we "know"
      thanks to the above that we will find a null character to get us
      out of the loop */
@@ -89,7 +89,7 @@ parse_binding_name(char *binding_name) {
 
      pciex108e,abcd.108e.0.1
      pci14e4,164c.12
-     
+
      are somewhat perplexing also.  Can we ass-u-me that the id's will
      always be presented as four character hex? Until we learn to the
      contrary, that is what will be ass-u-me-d here and so we will

@@ -33,7 +33,7 @@ find_interface_slot(char *interface_name) {
   olar_io_slot_t slot_id;
   olar_err_t oe;
   char slot_str[MAX_SLOT_ID_LEN];
-  
+
   /* Open dev_config for libIO communication */
   if ( io_init(O_RDONLY) == IO_ERROR ) {
     return strdup("io_init");
@@ -76,7 +76,7 @@ find_interface_slot(char *interface_name) {
   /* we can give them the honest to goodness slot id as a string now,
      so let us free that which we should free */
   free(hw_str);
-  
+
   return strdup(slot_str);
 }
 
