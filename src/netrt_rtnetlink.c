@@ -38,9 +38,9 @@ find_egress_interface(struct sockaddr *source, struct sockaddr *dest) {
      source... raj 2008-02-11 */
 
   struct msghdr msg;
- 
+
   struct iovec iov;
- 
+
   struct {
     struct nlmsghdr nl;
     struct rtmsg    rt;
@@ -131,14 +131,14 @@ find_egress_interface(struct sockaddr *source, struct sockaddr *dest) {
       close(s);
       return strdup("UnknownAddressFamily");
     }
-     
+
 
     /* add the length of the just added attribute to the overall
      message length. it should already be suitably padded by the
      previous RTA_SPACE */
     request.nl.nlmsg_len += rtap->rta_len;
   }
-  
+
   /* address it */
   memset(&them, 0, sizeof(them));
   them.nl_family = AF_NETLINK;
@@ -163,7 +163,7 @@ find_egress_interface(struct sockaddr *source, struct sockaddr *dest) {
 
   memset(reply,0,sizeof(reply));
   ret = recv(s, reply, sizeof(reply), 0);
-  
+
   if (ret < 0) {
     close(s);
     return strdup("RecvmsgFailure");
@@ -189,7 +189,7 @@ find_egress_interface(struct sockaddr *source, struct sockaddr *dest) {
       printf("skipping table %d\n",rtp->rtm_table);
       continue;
     }
-#endif 
+#endif
 
     for (rtap = (struct rtattr *) RTM_RTA(rtp), rtl = RTM_PAYLOAD(nlp);
 	 RTA_OK(rtap, rtl);
