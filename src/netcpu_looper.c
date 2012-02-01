@@ -2,7 +2,7 @@ char   netcpu_looper_id[]="\
 @(#)netcpu_looper.c (c) Copyright 2005-2007. Version 2.4.3";
 
 /* netcpu_looper.c
-  
+
    Implement the soaker process specific portions of netperf CPU
    utilization measurements. These are broken-out into a separate file
    to make life much nicer over in netlib.c which had become a maze of
@@ -135,7 +135,7 @@ bind_to_processor(int child_num)
 
   if (processor_bind(P_PID,
                      getpid(),
-                     (child_num % lib_num_loc_cpus), 
+                     (child_num % lib_num_loc_cpus),
                       &old_binding) != 0) {
     fprintf(where,"bind_to_processor: unable to perform processor binding\n");
     fprintf(where,"                   errno %d\n",errno);
@@ -171,7 +171,7 @@ bind_to_processor(int child_num)
  /* by each looper process, or something appropriate on Windows/NT */
  /* (malloc'd or such). This routine is reasonably ugly in that it has */
  /* priority manipulating code for lots of different operating */
- /* systems. This routine never returns. raj 1/96 */ 
+ /* systems. This routine never returns. raj 1/96 */
 
 static void
 sit_and_spin(int child_index)
@@ -191,14 +191,14 @@ sit_and_spin(int child_index)
             getpid());
     fflush(where);
   }
-  
+
 #endif /* WIN32 */
 
   /* reset our base pointer to be at the appropriate offset */
-  my_counter_ptr = (uint64_t *) ((char *)lib_base_pointer + 
-                             (netlib_get_page_size() * 
+  my_counter_ptr = (uint64_t *) ((char *)lib_base_pointer +
+                             (netlib_get_page_size() *
                               PAGES_PER_CHILD * child_index));
-  
+
   /* in the event we are running on an MP system, it would */
   /* probably be good to bind the soaker processes to specific */
   /* processors. I *think* this is the most reasonable thing to */
@@ -207,13 +207,13 @@ sit_and_spin(int child_index)
   /* here, but will "abstract it into another routine to keep this */
   /* area more readable. I'll probably do the same thine with the */
   /* "low pri code" raj 10/95 */
-  
+
   /* since we are "flying blind" wrt where we should bind the looper
      processes, we want to use the cpu_map that was prepared by netlib
      rather than assume that the CPU ids on the system start at zero
      and are contiguous. raj 2006-04-03 */
   bind_to_specific_processor(child_index % lib_num_loc_cpus,1);
-  
+
   for (*my_counter_ptr = 0L;
        ;
        (*my_counter_ptr)++) {
@@ -230,7 +230,7 @@ sit_and_spin(int child_index)
       pid = getpid();
       /* if you are not root, this call will return EPERM - why one */
       /* cannot change one's own priority to  lower value is beyond */
-      /* me. raj 2/26/96 */  
+      /* me. raj 2/26/96 */
       setpri(pid, prio);
 #else /* _AIX */
 #ifdef __sgi
@@ -276,16 +276,16 @@ start_looper_processes()
 {
 
   unsigned int      i, file_size;
-  
+
   /* we want at least two pages for each processor. the */
   /* child for any one processor will write to the first of his two */
   /* pages, and the second page will be a buffer in case there is page */
   /* prefetching. if your system pre-fetches more than a single page, */
   /* well, you'll have to modify this or live with it :( raj 4/95 */
 
-  file_size = ((netlib_get_page_size() * PAGES_PER_CHILD) * 
+  file_size = ((netlib_get_page_size() * PAGES_PER_CHILD) *
                lib_num_loc_cpus);
-  
+
 #ifndef WIN32
 
   /* we we are not using WINDOWS NT (or 95 actually :), then we want */
@@ -297,30 +297,30 @@ start_looper_processes()
   /* debugging, could result in some filesystem activity - like */
   /* metadata updates? raj 4/96 */
   lib_idle_fd = open("/tmp/netperf_cpu",O_RDWR | O_CREAT | O_EXCL);
-  
+
   if (lib_idle_fd == -1) {
     fprintf(where,"create_looper: file creation; errno %d\n",errno);
     fflush(where);
     exit(1);
   }
-  
+
   if (chmod("/tmp/netperf_cpu",0644) == -1) {
     fprintf(where,"create_looper: chmod; errno %d\n",errno);
     fflush(where);
     exit(1);
   }
-  
+
   /* with the file descriptor in place, lets be sure that the file is */
   /* large enough. */
-  
+
   if (truncate("/tmp/netperf_cpu",file_size) == -1) {
     fprintf(where,"create_looper: truncate: errno %d\n",errno);
     fflush(where);
     exit(1);
   }
-  
+
   /* the file should be large enough now, so we can mmap it */
-  
+
   /* if the system does not have MAP_VARIABLE, just define it to */
   /* be zero. it is only used/needed on HP-UX (?) raj 4/95 */
 #ifndef MAP_VARIABLE
@@ -339,7 +339,7 @@ start_looper_processes()
     fflush(where);
     exit(1);
   }
-  
+
 
   if (debug > 1) {
     fprintf(where,"num CPUs %d, file_size %d, lib_base_pointer %p\n",
@@ -350,7 +350,7 @@ start_looper_processes()
   }
 
   /* we should have a valid base pointer. lets fork */
-  
+
   for (i = 0; i < (unsigned int)lib_num_loc_cpus; i++) {
     switch (lib_idle_pids[i] = fork()) {
     case -1:
@@ -368,8 +368,8 @@ start_looper_processes()
       break;
     default:
       /* we must be the parent */
-      lib_idle_address[i] = (uint64_t *) ((char *)lib_base_pointer + 
-                                      (netlib_get_page_size() * 
+      lib_idle_address[i] = (uint64_t *) ((char *)lib_base_pointer +
+                                      (netlib_get_page_size() *
                                        PAGES_PER_CHILD * i));
       if (debug) {
         fprintf(where,"lib_idle_address[%d] is %p\n",
@@ -404,8 +404,8 @@ start_looper_processes()
       /* I wonder if I need to look for other threads to kill? */
       exit(1);
     }
-    lib_idle_address[i] = (long *) ((char *)lib_base_pointer + 
-                                    (netlib_get_page_size() * 
+    lib_idle_address[i] = (long *) ((char *)lib_base_pointer +
+                                    (netlib_get_page_size() *
                                      PAGES_PER_CHILD * i));
     if (debug) {
       fprintf(where,"lib_idle_address[%d] is %p\n",
@@ -423,7 +423,7 @@ start_looper_processes()
 }
 
 void
-cpu_util_init(void) 
+cpu_util_init(void)
 {
   cpu_method = LOOPER;
 
@@ -458,10 +458,10 @@ cpu_util_terminate() {
   lib_loopers_running = 0;
   /* reap the children */
   while(waitpid(-1, NULL, WNOHANG) > 0) { }
-  
+
   /* finally, unlink the mmaped file */
   munmap((caddr_t)lib_base_pointer,
-         ((netlib_get_page_size() * PAGES_PER_CHILD) * 
+         ((netlib_get_page_size() * PAGES_PER_CHILD) *
           lib_num_loc_cpus));
   unlink("/tmp/netperf_cpu");
 #endif
@@ -488,29 +488,29 @@ calibrate_idle_rate (int iterations, int interval)
     firstcnt[MAXCPUS],
     secondcnt[MAXCPUS];
 
-  float 
+  float
     elapsed,
     temp_rate,
     rate[MAXTIMES],
     local_maxrate;
 
-  long  
+  long
     sec,
     usec;
 
-  int   
+  int
     i,
     j;
-  
+
   struct  timeval time1, time2 ;
   struct  timezone tz;
-  
+
   if (iterations > MAXTIMES) {
     iterations = MAXTIMES;
   }
 
   local_maxrate = (float)-1.0;
-  
+
   for(i = 0; i < iterations; i++) {
     rate[i] = (float)0.0;
     for (j = 0; j < lib_num_loc_cpus; j++) {
@@ -528,7 +528,7 @@ calibrate_idle_rate (int iterations, int interval)
     sec = time2.tv_sec - time1.tv_sec;
     usec = time2.tv_usec - time1.tv_usec;
     elapsed = (float)sec + ((float)usec/(float)1000000.0);
-    
+
     if(debug) {
       fprintf(where, "Calibration for counter run: %d\n",i);
       fprintf(where,"\tsec = %ld usec = %ld\n",sec,usec);
@@ -552,7 +552,7 @@ calibrate_idle_rate (int iterations, int interval)
       /* we assume that it would wrap no more than once. we also */
       /* assume that the result of subtracting will "fit" raj 4/95 */
       temp_rate = (secondcnt[j] >= firstcnt[j]) ?
-        (float)(secondcnt[j] - firstcnt[j])/elapsed : 
+        (float)(secondcnt[j] - firstcnt[j])/elapsed :
           (float)(secondcnt[j]-firstcnt[j]+MAXLONG)/elapsed;
       if (temp_rate > rate[i]) rate[i] = temp_rate;
       if(debug) {
@@ -594,9 +594,9 @@ calc_cpu_util_internal(float elapsed_time)
   /* calculations - for example, tests that were ended by */
   /* watchdog timers such as the udp stream test. We let these */
   /* tests tell up what the elapsed time should be. */
-  
+
   if (elapsed_time != 0.0) {
-    correction_factor = (float) 1.0 + 
+    correction_factor = (float) 1.0 +
       ((lib_elapsed - elapsed_time) / elapsed_time);
   }
   else {
@@ -610,12 +610,12 @@ calc_cpu_util_internal(float elapsed_time)
      tracks. if this happens, we need to ensure that the calculation
      does not go south. raj 6/95 and if we run completely out of idle,
      the same thing could in theory happen to the USE_KSTAT path. raj
-     8/2000 */ 
-    
+     8/2000 */
+
     if (lib_end_count[i] == lib_start_count[i]) {
       lib_end_count[i]++;
     }
-    
+
     actual_rate = (lib_end_count[i] > lib_start_count[i]) ?
       (float)(lib_end_count[i] - lib_start_count[i])/lib_elapsed :
       (float)(lib_end_count[i] - lib_start_count[i] +
@@ -637,7 +637,7 @@ calc_cpu_util_internal(float elapsed_time)
   }
   /* we want the average across all n processors */
   lib_local_cpu_util /= (float)lib_num_loc_cpus;
-  
+
   return lib_local_cpu_util;
 }
 

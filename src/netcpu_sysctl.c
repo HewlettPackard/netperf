@@ -64,7 +64,7 @@ static CP_TIME_TYPE lib_start_count[CPUSTATES];
 static CP_TIME_TYPE lib_end_count[CPUSTATES];
 
 void
-cpu_util_init(void) 
+cpu_util_init(void)
 {
   return;
 }

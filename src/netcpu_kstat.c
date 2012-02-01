@@ -48,7 +48,7 @@ static  kstat_t *cpu_ks[MAXCPUS]; /* the addresses that kstat will
                                      need to pull the cpu info from
                                      the kstat interface.  at least I
                                      think that is what this is :) raj
-                                     8/2000 */  
+                                     8/2000 */
 
 #define UPDKCID(nk,ok) \
 if (nk == -1) { \
@@ -80,11 +80,11 @@ open_kstat()
     fprintf(where,"open_kstat: enter\n");
     fflush(where);
   }
-  
+
   /*
    * 0. kstat_open
    */
-  
+
   if (!kc)
     {
       kc = kstat_open();
@@ -111,7 +111,7 @@ open_kstat()
     fprintf(where,"passing kcid_changed\n");
     fflush(where);
   }
-  
+
   /*
    * 1.  kstat_chain_update
    */
@@ -128,28 +128,28 @@ open_kstat()
     fprintf(where,"kstat_lookup for unix/system_misc\n");
     fflush(where);
   }
-  
+
   ks = kstat_lookup(kc, "unix", 0, "system_misc");
   if (kstat_read(kc, ks, 0) == -1) {
     perror("kstat_read");
     exit(1);
   }
-  
-  
+
+
   if (changed) {
-    
+
     /*
      * 2. get data addresses
      */
-    
+
     ncpu = 0;
-    
+
     kn = kstat_data_lookup(ks, "ncpus");
     if (kn && kn->value.ui32 > lib_num_loc_cpus) {
       fprintf(stderr,"number of CPU's mismatch!");
       exit(1);
     }
-    
+
     for (ks = kc->kc_chain; ks;
          ks = ks->ks_next)
       {
@@ -162,7 +162,7 @@ open_kstat()
                values. hopefully this is not going to be a big
                issue. raj 8/2000 */
             UPDKCID(nkcid, kcid);
-            
+
             if (debug) {
               fprintf(where,"cpu_ks[%d] getting %p\n",ncpu,ks);
               fflush(where);
@@ -173,7 +173,7 @@ open_kstat()
             if (ncpu > lib_num_loc_cpus)
               {
                 /* with the check above, would we ever hit this? */
-                fprintf(stderr, 
+                fprintf(stderr,
                         "kstat finds too many cpus %d: should be %d\n",
                         ncpu,lib_num_loc_cpus);
                 exit(1);
@@ -212,7 +212,7 @@ get_kstat_idle(cpu)
 }
 
 void
-cpu_util_init(void) 
+cpu_util_init(void)
 {
   open_kstat();
   return;
@@ -248,28 +248,28 @@ get_cpu_idle(uint64_t *res)
 float
 calibrate_idle_rate(int iterations, int interval)
 {
- 
-  long  
+
+  long
     firstcnt[MAXCPUS],
     secondcnt[MAXCPUS];
 
-  float 
+  float
     elapsed,
     temp_rate,
     rate[MAXTIMES],
     local_maxrate;
 
-  long  
+  long
     sec,
     usec;
 
-  int   
+  int
     i,
     j;
-  
+
   struct  timeval time1, time2 ;
   struct  timezone tz;
-  
+
   if (debug) {
     fprintf(where,"calling open_kstat from calibrate_kstat\n");
     fflush(where);
@@ -282,7 +282,7 @@ calibrate_idle_rate(int iterations, int interval)
   }
 
   local_maxrate = (float)-1.0;
-  
+
   for(i = 0; i < iterations; i++) {
     rate[i] = (float)0.0;
     for (j = 0; j < lib_num_loc_cpus; j++) {
@@ -300,7 +300,7 @@ calibrate_idle_rate(int iterations, int interval)
     sec = time2.tv_sec - time1.tv_sec;
     usec = time2.tv_usec - time1.tv_usec;
     elapsed = (float)sec + ((float)usec/(float)1000000.0);
-    
+
     if(debug) {
       fprintf(where, "Calibration for kstat counter run: %d\n",i);
       fprintf(where,"\tsec = %ld usec = %ld\n",sec,usec);
@@ -324,7 +324,7 @@ calibrate_idle_rate(int iterations, int interval)
       /* we assume that it would wrap no more than once. we also */
       /* assume that the result of subtracting will "fit" raj 4/95 */
       temp_rate = (secondcnt[j] >= firstcnt[j]) ?
-        (float)(secondcnt[j] - firstcnt[j])/elapsed : 
+        (float)(secondcnt[j] - firstcnt[j])/elapsed :
           (float)(secondcnt[j]-firstcnt[j]+MAXLONG)/elapsed;
       if (temp_rate > rate[i]) rate[i] = temp_rate;
       if(debug) {
@@ -354,9 +354,9 @@ calc_cpu_util_internal(float elapsed_time)
   /* calculations - for example, tests that were ended by */
   /* watchdog timers such as the udp stream test. We let these */
   /* tests tell up what the elapsed time should be. */
-  
+
   if (elapsed_time != 0.0) {
-    correction_factor = (float) 1.0 + 
+    correction_factor = (float) 1.0 +
       ((lib_elapsed - elapsed_time) / elapsed_time);
   }
   else {
@@ -370,12 +370,12 @@ calc_cpu_util_internal(float elapsed_time)
      tracks. if this happens, we need to ensure that the calculation
      does not go south. raj 6/95 and if we run completely out of idle,
      the same thing could in theory happen to the USE_KSTAT path. raj
-     8/2000 */ 
-    
+     8/2000 */
+
     if (lib_end_count[i] == lib_start_count[i]) {
       lib_end_count[i]++;
     }
-    
+
     actual_rate = (lib_end_count[i] > lib_start_count[i]) ?
       (float)(lib_end_count[i] - lib_start_count[i])/lib_elapsed :
       (float)(lib_end_count[i] - lib_start_count[i] +
@@ -395,7 +395,7 @@ calc_cpu_util_internal(float elapsed_time)
   }
   /* we want the average across all n processors */
   lib_local_cpu_util /= (float)lib_num_loc_cpus;
-  
+
   return lib_local_cpu_util;
 }
 

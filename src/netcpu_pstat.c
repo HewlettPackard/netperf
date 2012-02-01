@@ -17,7 +17,7 @@ char   netcpu_pstat_id[]="\
 
 #if HAVE_LIMITS_H
 # include <limits.h>
-#endif 
+#endif
 
 #include <sys/dk.h>
 #include <sys/pstat.h>
@@ -38,7 +38,7 @@ static uint64_t  lib_start_count[MAXCPUS];
 static uint64_t  lib_end_count[MAXCPUS];
 
 void
-cpu_util_init(void) 
+cpu_util_init(void)
 {
   return;
 }
@@ -64,7 +64,7 @@ get_cpu_idle(uint64_t *res)
         long long full;
         long      word[2];
       } *overlay;
-      
+
       psp = (struct pst_processor *)malloc(lib_num_loc_cpus * sizeof(*psp));
       if (psp == NULL) {
         printf("malloc(%d) failed!\n", lib_num_loc_cpus * sizeof(*psp));
@@ -102,31 +102,31 @@ calibrate_idle_rate(int iterations, int interval)
     firstcnt[MAXCPUS],
     secondcnt[MAXCPUS];
 
-  float 
-    elapsed, 
+  float
+    elapsed,
     temp_rate,
     rate[MAXTIMES],
     local_maxrate;
 
-  long  
+  long
     sec,
     usec;
 
-  int   
+  int
     i,
     j;
-  
+
   long  count;
 
   struct  timeval time1, time2;
   struct  timezone tz;
 
   struct pst_processor *psp;
-  
+
   if (iterations > MAXTIMES) {
     iterations = MAXTIMES;
   }
-  
+
   local_maxrate = -1.0;
 
   psp = (struct pst_processor *)malloc(lib_num_loc_cpus * sizeof(*psp));
@@ -158,7 +158,7 @@ calibrate_idle_rate(int iterations, int interval)
     gettimeofday (&time1, &tz);
     sleep(interval);
     gettimeofday (&time2, &tz);
-    
+
     if (time2.tv_usec < time1.tv_usec)
       {
         time2.tv_usec += 1000000;
@@ -195,8 +195,8 @@ calibrate_idle_rate(int iterations, int interval)
                   hi_32(&secondcnt[j]),
                   lo_32(&secondcnt[j]));
         }
-        temp_rate = (secondcnt[j] >= firstcnt[j]) ? 
-          (float)(secondcnt[j] - firstcnt[j] )/elapsed : 
+        temp_rate = (secondcnt[j] >= firstcnt[j]) ?
+          (float)(secondcnt[j] - firstcnt[j] )/elapsed :
             (float)(secondcnt[j] - firstcnt[j] + LONG_LONG_MAX)/elapsed;
         if (temp_rate > rate[i]) rate[i] = temp_rate;
         if(debug) {
@@ -234,9 +234,9 @@ calc_cpu_util_internal(float elapsed_time)
   /* calculations - for example, tests that were ended by */
   /* watchdog timers such as the udp stream test. We let these */
   /* tests tell up what the elapsed time should be. */
-  
+
   if (elapsed_time != 0.0) {
-    correction_factor = (float) 1.0 + 
+    correction_factor = (float) 1.0 +
       ((lib_elapsed - elapsed_time) / elapsed_time);
   }
   else {
@@ -246,15 +246,15 @@ calc_cpu_util_internal(float elapsed_time)
   /* this looks just like the looper case. at least I think it */
   /* should :) raj 4/95 */
   for (i = 0; i < lib_num_loc_cpus; i++) {
-    
+
     /* we assume that the two are not more than a long apart. I */
     /* know that this is bad, but trying to go from long longs to */
     /* a float (perhaps a double) is boggling my mind right now. */
     /* raj 4/95 */
-    
-    long long 
+
+    long long
       diff;
-    
+
     if (lib_end_count[i] >= lib_start_count[i]) {
       diff = lib_end_count[i] - lib_start_count[i];
     }
@@ -276,10 +276,10 @@ calc_cpu_util_internal(float elapsed_time)
 	      correction_factor);
     }
   }
-  
+
   /* we want the average across all n processors */
   lib_local_cpu_util /= (float)lib_num_loc_cpus;
-  
+
   if (debug) {
     fprintf(where,
 	    "calc_cpu_util: average across CPUs is %g\n",lib_local_cpu_util);

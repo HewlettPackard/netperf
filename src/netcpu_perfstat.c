@@ -31,7 +31,7 @@ char   netcpu_perfstat_id[]="\
 # ifndef LONG_LONG_MAX
 #  define LONG_LONG_MAX LLONG_MAX
 # endif /* LONG_LONG_MAX */
-#endif 
+#endif
 
 #include <errno.h>
 
@@ -48,7 +48,7 @@ static uint64_t  lib_end_count[MAXCPUS];
 
 
 void
-cpu_util_init(void) 
+cpu_util_init(void)
 {
   return;
 }
@@ -72,7 +72,7 @@ get_cpu_idle(uint64_t *res)
   perfstat_cpu_t *per_cpu_pointer;
   perfstat_id_t  name;
   int i,ret;
-  
+
   /* a name of "" will cause us to start from the beginning */
   strcpy(name.name,"");
   perfstat_buffer = (perfstat_cpu_t *)malloc(lib_num_loc_cpus *
@@ -84,14 +84,14 @@ get_cpu_idle(uint64_t *res)
     fflush(where);
     exit(-1);
   }
-  
+
   /* happiness and joy, keep going */
   ret = perfstat_cpu(&name,
 		     perfstat_buffer,
 		     sizeof(perfstat_cpu_t),
 		     lib_num_loc_cpus);
-  
-  if ((ret == -1) || 
+
+  if ((ret == -1) ||
       (ret != lib_num_loc_cpus)) {
     fprintf(where,
 	    "cpu_start: perfstat_cpu failed/count off; errno %d cpus %d count %d\n",
@@ -101,14 +101,14 @@ get_cpu_idle(uint64_t *res)
     fflush(where);
     exit(-1);
   }
-  
+
   per_cpu_pointer = perfstat_buffer;
   for (i = 0; i < lib_num_loc_cpus; i++){
     res[i] = per_cpu_pointer->idle;
     per_cpu_pointer++;
   }
   free(perfstat_buffer);
-  
+
   return;
 }
 
@@ -119,20 +119,20 @@ calibrate_idle_rate(int iterations, int interval)
     firstcnt[MAXCPUS],
     secondcnt[MAXCPUS];
 
-  float 
+  float
     elapsed,
     temp_rate,
     rate[MAXTIMES],
     local_maxrate;
 
-  long  
+  long
     sec,
     usec;
 
-  int   
+  int
     i,
     j;
-  
+
   struct  timeval time1, time2 ;
   struct  timezone tz;
 
@@ -140,7 +140,7 @@ calibrate_idle_rate(int iterations, int interval)
   perfstat_cpu_t  *per_cpu_pointer;
   perfstat_id_t   name;
   int ret;
-  
+
   if (debug) {
     fprintf(where,"enter calibrate_perfstat\n");
     fflush(where);
@@ -151,7 +151,7 @@ calibrate_idle_rate(int iterations, int interval)
   }
 
   local_maxrate = (float)-1.0;
-  
+
   perfstat_buffer = (perfstat_cpu_t *)malloc(lib_num_loc_cpus *
                                              sizeof(perfstat_cpu_t));
   if (perfstat_buffer == NULL) {
@@ -166,14 +166,14 @@ calibrate_idle_rate(int iterations, int interval)
     rate[i] = (float)0.0;
     /* a name of "" will cause us to start from the beginning */
     strcpy(name.name,"");
-     
+
     /* happiness and joy, keep going */
     ret = perfstat_cpu(&name,
                        perfstat_buffer,
                        sizeof(perfstat_cpu_t),
                        lib_num_loc_cpus);
-    
-    if ((ret == -1) || 
+
+    if ((ret == -1) ||
         (ret != lib_num_loc_cpus)) {
       fprintf(where,
               "calibrate_perfstat: perfstat_cpu failed/count off; errno %d cpus %d count %d\n",
@@ -207,8 +207,8 @@ calibrate_idle_rate(int iterations, int interval)
                        perfstat_buffer,
                        sizeof(perfstat_cpu_t),
                        lib_num_loc_cpus);
-    
-    if ((ret == -1) || 
+
+    if ((ret == -1) ||
         (ret != lib_num_loc_cpus)) {
       fprintf(where,
               "calibrate_perfstat: perfstat_cpu failed/count off; errno %d cpus %d count %d\n",
@@ -220,7 +220,7 @@ calibrate_idle_rate(int iterations, int interval)
     }
 
     per_cpu_pointer = perfstat_buffer;
-    
+
     if(debug) {
       fprintf(where,
 	      "Calibration for perfstat counter run: %d\n"
@@ -249,7 +249,7 @@ calibrate_idle_rate(int iterations, int interval)
       /* we assume that it would wrap no more than once. we also
 	 assume that the result of subtracting will "fit" raj 4/95 */
       temp_rate = (secondcnt[j] >= firstcnt[j]) ?
-        (float)(secondcnt[j] - firstcnt[j])/elapsed : 
+        (float)(secondcnt[j] - firstcnt[j])/elapsed :
           (float)(secondcnt[j]-firstcnt[j]+MAXLONG)/elapsed;
       if (temp_rate > rate[i]) rate[i] = temp_rate;
       if(debug) {
@@ -323,7 +323,7 @@ calc_cpu_util_internal(float elapsed_time)
 
   /* we want the average across all n processors */
   lib_local_cpu_util /= (float)lib_num_loc_cpus;
-  
+
   if (debug) {
     fprintf(where,
             "calc_cpu_util: average across CPUs is %g\n",lib_local_cpu_util);
@@ -345,7 +345,7 @@ cpu_start_internal(void)
   get_cpu_idle(lib_start_count);
   return;
 }
- 
+
 void
 cpu_stop_internal(void)
 {
