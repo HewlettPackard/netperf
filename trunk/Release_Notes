@@ -1,5 +1,8 @@
 These are the Release Notes for post Revision 2.5.0 top-of-trunk netperf:
 
+*) Fix a problem with late checking of the return from select() in
+   src/netserver.c. Reported by Waqar Sheikh.
+
 *) A new global -Z option has been added to netperf and netserver.
    This takes as an argument a passphrase.  In the case of netserver
    it will expect a control message with the passphrase as the first

@@ -1266,6 +1266,16 @@ accept_connections() {
 		       &except_fds,
 		       NULL);
 
+    if (num_ready < 0) {
+      fprintf(where,
+	      "%s: select failure: %s (errno %d)\n",
+	      __FUNCTION__,
+	      strerror(errno),
+	      errno);
+      fflush(where);
+      exit(1);
+    }
+
     /* try to keep things simple */
     candidate = 0;
     while ((num_ready) && (candidate <= high_fd)) {
@@ -1277,16 +1287,6 @@ accept_connections() {
       else {
 	candidate++;
       }
-    }
-
-    if (num_ready < 0) {
-      fprintf(where,
-	      "%s: select failure: %s (errno %d)\n",
-	      __FUNCTION__,
-	      strerror(errno),
-	      errno);
-      fflush(where);
-      exit(1);
     }
   }
 }
