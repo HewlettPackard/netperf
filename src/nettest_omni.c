@@ -4057,7 +4057,12 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 
 #ifdef WANT_DEMO
       if (NETPERF_IS_RR(direction)) {
-	demo_interval_tick(1);
+	if (libfmt == 'x') {
+	  demo_interval_tick(1);
+	}
+	else {
+	  demo_interval_tick(req_size + rsp_size);
+	}
       }
       else if (NETPERF_XMIT_ONLY(direction)) {
 	demo_interval_tick(bytes_to_send);
