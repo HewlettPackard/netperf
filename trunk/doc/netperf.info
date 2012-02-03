@@ -2341,7 +2341,16 @@ something like this:
       87380  16384  16384    10.03     233.96
 
    We can take the sum of the results and be reasonably confident that
-the aggregate performance was 940 Mbits/s.
+the aggregate performance was 940 Mbits/s.  This method does not need
+to be limited to one system speaking to one other system.  It can be
+extended to one system talking to N other systems.  It could be as
+simple as:
+     for host in 'foo bar baz bing'
+     do
+     netperf -t TCP_STREAM -H $hosts -i 10 -P 0 &
+     done
+   A more complicated/sophisticated example can be found in
+`doc/examples/runemomniagg2.sh' where.
 
    If you see warnings about netperf not achieving the confidence
 intervals, the best thing to do is to increase the number of iterations
@@ -2395,9 +2404,9 @@ line to append the given string to the output:
 
    You will notice that the tests completed in an order other than they
 were started from the shell.  This underscores why there is a threat of
-skew error and why netperf4 is the preferred tool for aggregate tests.
-Even if you see the Netperf Contributing Editor acting to the
-contrary!-)
+skew error and why netperf4 will eventually be the preferred tool for
+aggregate tests.  Even if you see the Netperf Contributing Editor
+acting to the contrary!-)
 
 * Menu:
 
@@ -2691,15 +2700,15 @@ stopped.  It does though require sufficiently synchronized clocks on
 all the test systems.
 
    While calls to get the current time can be inexpensive, that neither
-has nor is universally true.  For that reason netperf tries to minimize
-the number of such "timestamping" calls (eg `gettimeofday') calls it
-makes when in demo mode.  Rather than take a timestamp after each
-`send' or `recv' call completes netperf tries to guess how many units
-of work will be performed over the desired interval.  Only once that
-many units of work have been completed will netperf check the time.  If
-the reporting interval has passed, netperf will emit an "interim
-result."  If the interval has not passed, netperf will update its
-estimate for units and continue.
+has been nor is universally true.  For that reason netperf tries to
+minimize the number of such "timestamping" calls (eg `gettimeofday')
+calls it makes when in demo mode.  Rather than take a timestamp after
+each `send' or `recv' call completes netperf tries to guess how many
+units of work will be performed over the desired interval.  Only once
+that many units of work have been completed will netperf check the
+time.  If the reporting interval has passed, netperf will emit an
+"interim result."  If the interval has not passed, netperf will update
+its estimate for units and continue.
 
    After a bit of thought one can see that if things "speed-up" netperf
 will still honor the interval.  However, if things "slow-down" netperf
@@ -4281,25 +4290,25 @@ Node: DLCO_RR105459
 Node: SCTP_RR105611
 Node: Using Netperf to Measure Aggregate Performance105747
 Node: Running Concurrent Netperf Tests106779
-Node: Issues in Running Concurrent Tests111026
-Node: Using --enable-burst113290
-Node: Using --enable-demo120189
-Node: Using Netperf to Measure Bidirectional Transfer125740
-Node: Bidirectional Transfer with Concurrent Tests126872
-Node: Bidirectional Transfer with TCP_RR129228
-Node: Implications of Concurrent Tests vs Burst Request/Response131612
-Node: The Omni Tests133426
-Node: Native Omni Tests134473
-Node: Migrated Tests139751
-Node: Omni Output Selection141856
-Node: Omni Output Selectors144839
-Node: Other Netperf Tests172547
-Node: CPU rate calibration172982
-Node: UUID Generation175350
-Node: Address Resolution176066
-Node: Enhancing Netperf178042
-Node: Netperf4179537
-Node: Concept Index180442
-Node: Option Index182768
+Node: Issues in Running Concurrent Tests111420
+Node: Using --enable-burst113684
+Node: Using --enable-demo120583
+Node: Using Netperf to Measure Bidirectional Transfer126139
+Node: Bidirectional Transfer with Concurrent Tests127271
+Node: Bidirectional Transfer with TCP_RR129627
+Node: Implications of Concurrent Tests vs Burst Request/Response132011
+Node: The Omni Tests133825
+Node: Native Omni Tests134872
+Node: Migrated Tests140150
+Node: Omni Output Selection142255
+Node: Omni Output Selectors145238
+Node: Other Netperf Tests172946
+Node: CPU rate calibration173381
+Node: UUID Generation175749
+Node: Address Resolution176465
+Node: Enhancing Netperf178441
+Node: Netperf4179936
+Node: Concept Index180841
+Node: Option Index183167
 
 End Tag Table
