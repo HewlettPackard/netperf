@@ -275,3 +275,6 @@ Uncovering an out of bounds access of the netperf_output_source array.
 
 Bjoern A. Zeeb - a patch to enable netperf to correctly manipulate
 IPv6 addresses in the control message.
+
+Shachar Raindel - a patch to bring the "get linux to emit ENOBUFS"
+functionality from classic netperf tests to the omni tests.
