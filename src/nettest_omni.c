@@ -3179,12 +3179,43 @@ print_uuid(char remote_host[])
 {
   printf("%s",test_uuid);
 }
+#if defined(__linux)
+/*
+ * Linux has this odd behavior where if the socket buffers are larger
+ * than a device's txqueuelen, the kernel will silently drop transmits
+ * which would not fit into the tx queue, and not pass an ENOBUFS
+ * error back to the application.  As a result, a UDP stream test can
+ * report absurd transmit bandwidths (like 20Gb/s on a 1GbE NIC).
+ * This behavior can be avoided if you request extended error
+ * reporting on the socket.  This is done by setting the IP_RECVERR
+ * socket option at the IP level.
+ */
+static void
+enable_enobufs(int s)
+{
+  struct protoent *pr;
+  int on = 1;
+  
+  if ((pr = getprotobyname("ip")) == NULL) {
+    fprintf(where, "enable_enobufs failed: getprotobyname\n");
+    fflush(where);
+    return;
+  }
+  if (setsockopt(s, pr->p_proto, IP_RECVERR, (char *)&on, sizeof(on)) < 0) {
+    fprintf(where, "enable_enobufs failed: setsockopt\n");
+    fflush(where);
+    return;
+  }
+  /*printf( "enable_enobufs successful\n");*/
+}
+#endif
 
- /* this code is intended to be "the two routines to run them all" for
-    BSDish sockets.  it comes about as part of a desire to shrink the
-    code footprint of netperf and to avoid having so many blessed
-    routines to alter as time goes by.  the downside is there will be
-    more "ifs" than there were before. raj 2008-01-07 */
+
+/* this code is intended to be "the two routines to run them all" for
+   BSDish sockets.  it comes about as part of a desire to shrink the
+   code footprint of netperf and to avoid having so many blessed
+   routines to alter as time goes by.  the downside is there will be
+   more "ifs" than there were before. raj 2008-01-07 */
 
 void
 send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[])
@@ -3365,6 +3396,9 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
       perror("netperf: send_omni: unable to create data socket");
       exit(1);
     }
+#if defined(__linux)
+    enable_enobufs(data_socket);
+#endif
     need_socket = 0;
 
     /* we need to consider if this is a request/response test, if we
@@ -3759,6 +3793,9 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	  exit(1);
 	}
 	need_socket = 0;
+#if defined(__linux)
+	enable_enobufs(data_socket);
+#endif
       }
 
       /* only connect if and when we need to */

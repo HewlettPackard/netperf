@@ -1,5 +1,10 @@
 These are the Release Notes for post Revision 2.5.0 top-of-trunk netperf:
 
+*) Include a patch from Sachar Raindel to enable the omni tests to get
+   ENOBUFS under Linux when the socket buffer is larger than the tx
+   queue of the egress interface.  This will help preclude netperf's
+   reporting a larger than link-rate send-side figure.
+
 *) Fix a problem with late checking of the return from select() in
    src/netserver.c. Reported by Waqar Sheikh.
 
