@@ -2,6 +2,7 @@
 #include <config.h>
 #endif
 
+#include <unistd.h>
 #include <sys/types.h>
 #include <string.h>
 #include <sys/ioctl.h>

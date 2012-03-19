@@ -3019,7 +3019,7 @@ set_sock_buffer (SOCKET sd, enum sock_buffer which, int requested_size, int *eff
 
 void
 dump_addrinfo(FILE *dumploc, struct addrinfo *info,
-              char *host, char *port, int family)
+              const char *host, char *port, int family)
 {
   struct sockaddr *ai_addr;
   struct addrinfo *temp;
@@ -4017,6 +4017,7 @@ void demo_rr_interval(uint32_t units) {
 HIST
 HIST_new_n(int max_outstanding) {
   HIST h;
+
   if((h = (HIST) malloc(sizeof(struct histogram_struct))) == NULL) {
     perror("HIST_new_n - histogram_struct malloc failed");
     exit(1);
@@ -4081,6 +4082,7 @@ HIST_clear(HIST h){
 
 void
 HIST_purge(HIST h) {
+  printf("%s\n",__FUNCTION__);
   h->count = 0;
   h->producer = 0;
   h->consumer = 0;

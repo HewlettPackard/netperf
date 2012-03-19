@@ -154,7 +154,7 @@ static void get_random_info(char seed[16])
   fp = fopen("/dev/urandom","rb");
 
   if (NULL != fp) {
-    fread(seed,sizeof(seed),1,fp);
+    fread(seed,sizeof(char),16,fp);
     fclose(fp);
     return;
   }
