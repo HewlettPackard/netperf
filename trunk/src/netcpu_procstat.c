@@ -175,7 +175,7 @@ get_cpu (cpu_states_t *res)
   if (n > 1) p = strchr (p, '\n');
 
   for (i = 0; i < n; i++) {
-    memset(&res[i], 0, sizeof (&res[i]));
+    memset(&res[i], 0, sizeof (res[i]));
     p = strchr (p, ' ');
     sscanf(p, "%llu %llu %llu %llu %llu %llu %llu %llu %llu",
 	   (unsigned long long *)&res[i].user,

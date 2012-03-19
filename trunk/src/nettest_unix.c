@@ -1280,8 +1280,7 @@ Send   Recv    Send   Recv\n\
 		 req_size,
 		 0)) != req_size) {
       if (errno == EINTR) {
-	/* we hit the end of a
-	/* timed test. */
+	/* we hit the end of a timed test. */
 	timed_out = 1;
 	break;
       }
