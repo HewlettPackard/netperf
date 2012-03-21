@@ -3053,7 +3053,7 @@ dump_addrinfo(FILE *dumploc, struct addrinfo *info,
       fprintf(dumploc,
               "\tsa_family: %s sadata:",
               inet_ftos(ai_addr->sa_family));
-      for (i = 0; i < temp->ai_addrlen; i++) {
+      for (i = 0; i < (int) temp->ai_addrlen; i++) {
 	fprintf(dumploc,
 		(temp->ai_family == AF_INET) ? " %d" : " %.2x",
 		(u_char)ai_addr->sa_data[i]);
@@ -3892,7 +3892,11 @@ void demo_stream_setup(uint32_t a, uint32_t b) {
    important compilers have supported such a construct so it should
    not be a big deal. raj 2012-01-23 */
 
+#ifdef WIN32
+__forceinline demo_interval_tick(uint32_t units) {
+#else
 inline demo_interval_tick(uint32_t units) {
+#endif
   if (demo_mode) {
     double actual_interval;
     static int count = 0;
@@ -4278,7 +4282,8 @@ HIST_get_stats(HIST h, int *min, int *max, double *mean, double *stddev){
   *max = h->hmax;
   if (h->total){
     *mean = (double)h->sum / (double)h->total;
-    *stddev = (h->sumsquare * h->total - pow(h->sum, 2)) / pow(h->total, 2);
+    *stddev = (h->sumsquare * h->total - pow((double)h->sum, 2)) /
+      pow(h->total, 2);
     *stddev = sqrt(*stddev);
   }
   else{
