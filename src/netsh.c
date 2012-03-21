@@ -500,19 +500,21 @@ parse_protocol(char protocol_string[])
 	    protocol_string);
   }
 
-#ifdef IPPROTO_TCP
+  /* we ass-u-me that everyone has IPPROTO_TCP elsewhere so might as
+     well here, and avoid issues with windows using an enum.  Kudos to
+     Jonathan Cook. */
   if (!strcasecmp(temp,"tcp")){
     socket_type = SOCK_STREAM;
     return IPPROTO_TCP;
   }
-#endif
 
-#ifdef IPPROTO_UDP
   if (!strcasecmp(temp,"udp")) {
     socket_type = SOCK_DGRAM;
     return IPPROTO_UDP;
   }
-#endif
+
+  /* we keep the rest of the #idefs though because these may not be as
+     universal as TCP and UDP... */
 #ifdef IPPROTO_SCTP
   if (!strcasecmp(temp,"sctp")) {
     /* it can be more than one socket type */
@@ -691,13 +693,24 @@ scan_cmd_line(int argc, char *argv[])
       libfmt = *optarg;
       break;
     case 'F':
-      /* set the fill_file variables for pre-filling buffers */
+      /* set the fill_file variables for pre-filling buffers. check
+	 the remote fill file name length against our limit as we will
+	 not hear from the remote on errors opening the fill
+	 file. Props to Jonathan Cook for the remote name check */
       break_args_explicit(optarg,arg1,arg2);
       if (arg1[0]) {
 	strncpy(local_fill_file,arg1,sizeof(local_fill_file));
 	local_fill_file[sizeof(local_fill_file) - 1] = '\0';
       }
       if (arg2[0]) {
+	if (strlen(arg2)>(sizeof(remote_fill_file) - 1)){
+	  fprintf(stderr,
+		  "Remote fill file name must be less than %d characters\n",
+		  (int) sizeof(remote_fill_file));
+	  fflush(stderr);
+	  exit(-1);
+	}
+
 	strncpy(remote_fill_file,arg2,sizeof(remote_fill_file));
 	remote_fill_file[sizeof(remote_fill_file) - 1] = '\0';
       }
@@ -884,9 +897,18 @@ scan_cmd_line(int argc, char *argv[])
       break;
     case 'Z':
       /* only copy as much of the passphrase as could fit in the
-	 test-specific portion of a control message. */
-      passphrase = strndup(optarg,
-			   sizeof(netperf_request.content.test_specific_data));
+	 test-specific portion of a control message. Windows does not
+	 seem to have a strndup() so just malloc and strncpy it.  we
+	 weren't checking the strndup() return so won't bother with
+	 checking malloc(). we will though make certain we only
+	 allocated it once in the event that someone puts -Z on the
+	 command line more than once */
+      if (passphrase == NULL) 
+	passphrase = malloc(sizeof(netperf_request.content.test_specific_data));
+      strncpy(passphrase,
+	      optarg,
+	      sizeof(netperf_request.content.test_specific_data));
+      passphrase[sizeof(netperf_request.content.test_specific_data) - 1] = '\0';
       break;
     case 'l':
       /* determine test end conditions */
