@@ -521,6 +521,7 @@ extern  void    send_request();
 extern  void    recv_response();
 extern  void    send_response();
 extern  int     recv_request();
+extern  int     recv_request_timed_n(int n, int seconds);
 extern  void    send_request_n(int n);  /* convert only the first N ints */
 extern  void    recv_response_n(int n); /* of the test-specific data via */
 extern  void    send_response_n(int n); /* htonl/ntonl as required */
@@ -587,6 +588,8 @@ extern void     find_system_info(char **system_model, char **cpu_model, int *cpu
 extern int      HIST_get_percentile();
 extern void     HIST_get_stats();
 extern void     find_security_info(int *enabled, int *type, char **specific);
+extern void     demo_first_timestamp();
+extern void     demo_stream_setup(uint32_t a, uint32_t b);
 #ifndef WIN32
 
 /* WIN32 requires that at least one of the file sets to select be
