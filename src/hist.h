@@ -8,6 +8,9 @@
 #  include <time.h>
 # endif
 #endif
+#ifdef WIN32
+#  include "missing\stdint.h"
+#endif
 
 /* hist.h
 
