@@ -3158,10 +3158,11 @@ choose_send_size(int lss, int protocol) {
   if (lss > 0) {
     send_size = lss_size;
 
-#ifdef IPPROTO_UDP
+    /* we will assume that everyone has IPPROTO_UDP and thus avoid an
+       issue with Windows using an enum */
     if ((protocol == IPPROTO_UDP) && (send_size > UDP_LENGTH_MAX))
       send_size = UDP_LENGTH_MAX;
-#endif
+
   }
   else {
     send_size = 4096;

@@ -1367,9 +1367,18 @@ scan_netserver_args(int argc, char *argv[]) {
       break;
     case 'Z':
       /* only copy as much of the passphrase as could fit in the
-	 test-specific portion of a control message. */
-      passphrase = strndup(optarg,
-			   sizeof(netperf_request.content.test_specific_data));
+	 test-specific portion of a control message. Windows does not
+	 seem to have a strndup() so just malloc and strncpy it.  we
+	 weren't checking the strndup() return so won't bother with
+	 checking malloc(). we will though make certain we only
+	 allocated it once in the event that someone puts -Z on the
+	 command line more than once */
+      if (passphrase == NULL) 
+	passphrase = malloc(sizeof(netperf_request.content.test_specific_data));
+      strncpy(passphrase,
+	      optarg,
+	      sizeof(netperf_request.content.test_specific_data));
+      passphrase[sizeof(netperf_request.content.test_specific_data) - 1] = '\0';
       break;
     case '4':
       local_address_family = AF_INET;
