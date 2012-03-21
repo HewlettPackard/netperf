@@ -582,7 +582,7 @@ set_tcp_mss(SOCKET socket, int mss) {
   if ((setsockopt(socket,
 		  getprotobyname("tcp")->p_proto,
 		  TCP_MAXSEG,
-		  &mss,
+		  (const char *)&mss,
 		  sock_opt_len) == SOCKET_ERROR) && (debug)) {
     fprintf(where,
 	    "netperf: %s: setsockopt TCP_MAXSEG: %s (errno %d)\n",
@@ -1097,7 +1097,7 @@ set_socket_tos(SOCKET sock, int family, int socket_tos) {
     if (setsockopt(sock,
 		   IPPROTO_IP,
 		   IP_TOS,
-		   &my_tos,sizeof(my_tos)) == SOCKET_ERROR) {
+		   (const char *)&my_tos,sizeof(my_tos)) == SOCKET_ERROR) {
       fprintf(where,
 	      "%s ip_tos failed with %s (errno %d)\n",
 	      __FUNCTION__,
@@ -1111,7 +1111,7 @@ set_socket_tos(SOCKET sock, int family, int socket_tos) {
       getsockopt(sock,
 		 IPPROTO_IP,
 		 IP_TOS,
-		 &my_tos,
+		 (char *)&my_tos,
 		 &sock_opt_len);
     }
     break;
@@ -1123,7 +1123,7 @@ set_socket_tos(SOCKET sock, int family, int socket_tos) {
     if (setsockopt(sock,
 		   IPPROTO_IPV6,
 		   IPV6_TCLASS,
-		   &my_tos,sizeof(my_tos)) == SOCKET_ERROR) {
+		   (const char *)&my_tos,sizeof(my_tos)) == SOCKET_ERROR) {
       fprintf(where,
 	      "%s ip_tos failed with %s (errno %d)\n",
 	      __FUNCTION__,
@@ -1137,7 +1137,7 @@ set_socket_tos(SOCKET sock, int family, int socket_tos) {
       getsockopt(sock,
 		 IPPROTO_IPV6,
 		 IPV6_TCLASS,
-		 &my_tos,
+		 (char *)&my_tos,
 		 &sock_opt_len);
     }
     break;
@@ -6724,7 +6724,7 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
 
 #ifdef WANT_DEMO
     if (demo_mode) {
-      demo_first_timetsamp();
+      demo_first_timestamp();
     }
 #endif
 

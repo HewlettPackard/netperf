@@ -3957,6 +3957,16 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
       requests_outstanding += 1;
 #endif
 
+#ifdef WIN32
+      /* this is used so the timer thread can close the socket out
+	from under us, which to date is the easiest/cleanest/least
+	Windows-specific way I can find to force the winsock calls to
+	return WSAEINTR with the test is over. anything that will run
+	on 95 and NT and is closer to what netperf expects from Unix
+	signals and such would be appreciated raj 1/96 */
+      win_kludge_socket = data_socket;
+#endif /* WIN32 */
+
       if (direction & NETPERF_RECV) {
 	rret = recv_data(data_socket,
 			recv_ring,
@@ -4588,6 +4598,14 @@ send_omni(char remote_host[])
   name_buf[31] = '\0';
   send_omni_inner(remote_host, 0, name_buf);
 }
+
+#if defined(WIN32)
+#if !defined(InetNtop)
+/* +*+ Why isn't this in the winsock headers yet? */
+const char *
+inet_ntop(int af, const void *src, char *dst, size_t size);
+#endif
+#endif
 
 static void
 set_hostname_and_port_2(void *addr, char *hostname, char *portstr, int family, int port)
