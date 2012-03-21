@@ -290,7 +290,6 @@ int null_message_ok = 0;
 int was_legacy = 0;
 int legacy = 0;
 int implicit_direction = 0;
-int implicit_socket = 0;
 int explicit_data_address = 0;
 
 uint64_t      trans_completed = 0;
@@ -6510,7 +6509,6 @@ set_omni_defaults_by_legacy_testname() {
   legacy = 1;
   implicit_direction = 0;  /* do we allow certain options to
 			      implicitly affect the test direction? */
-  implicit_socket = 0;
   if (strcasecmp(test_name,"TCP_STREAM") == 0) {
     direction = NETPERF_XMIT;
   }
@@ -6551,7 +6549,6 @@ set_omni_defaults_by_legacy_testname() {
     was_legacy = 0;
     legacy = 0;
     implicit_direction = 1;
-    implicit_socket = 0;
   }
   socket_type_str = hst_to_str(socket_type);
 }
@@ -6931,13 +6928,11 @@ scan_omni_args(int argc, char *argv[])
       break;
     case 't':
       /* set the socket type */
-      if (implicit_socket)
-	socket_type = parse_socket_type(optarg);
+      socket_type = parse_socket_type(optarg);
       break;
     case 'T':
       /* set the protocol - aka "Transport" */
-      if (implicit_socket)
-	protocol = parse_protocol(optarg);
+      protocol = parse_protocol(optarg);
       break;
     case 'u':
       /* use the supplied string as the UUID for this test. at some

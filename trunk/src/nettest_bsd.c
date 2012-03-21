@@ -506,14 +506,12 @@ hst_to_str(int hst) {
 char *
 protocol_to_str(int protocol) {
   switch(protocol) {
-#ifdef IPPROTO_TCP
+    /* ass-u-me that everyone has IPPROTO_TCP and IPPROTO_UDP */
   case IPPROTO_TCP:
     return "TCP";
-#endif
-#ifdef IPPROTO_UDP
   case IPPROTO_UDP:
     return "UDP";
-#endif
+    /* but do not assume that everyone has the others */
 #ifdef IPPROTO_UDPLITE
   case IPPROTO_UDPLITE:
     return "UDPLite";
