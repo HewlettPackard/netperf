@@ -2096,27 +2096,27 @@ print_omni_init_list() {
 
   set_output_elt(LOCAL_INTERFACE_SUBVENDOR, "Local", "Interface", "Subvendor",
 		 "", "0x%.4x", &local_interface_subvendor, 1,
-		 OMNI_WANT_LOC_IFIDS, NETPERF_TYPE_INT32);
+		 OMNI_WANT_LOC_IFIDS, NETPERF_TYPE_UINT32);
 
   set_output_elt(LOCAL_INTERFACE_VENDOR, "Local", "Interface", "Vendor", "",
 		 "0x%.4x", &local_interface_vendor, 1, OMNI_WANT_LOC_IFIDS,
-		 NETPERF_TYPE_INT32);
+		 NETPERF_TYPE_UINT32);
 
   set_output_elt(REMOTE_INTERFACE_SUBDEVICE, "Remote", "Interface",
 		 "Subdevice", "", "0x%.4x", &remote_interface_subdevice, 1,
-		 OMNI_WANT_REM_IFIDS, NETPERF_TYPE_INT32);
+		 OMNI_WANT_REM_IFIDS, NETPERF_TYPE_UINT32);
 
   set_output_elt(REMOTE_INTERFACE_DEVICE, "Remote", "Interface", "Device", "",
 		 "0x%.4x", &remote_interface_device, 1, OMNI_WANT_REM_IFIDS,
-		 NETPERF_TYPE_INT32);
+		 NETPERF_TYPE_UINT32);
 
   set_output_elt(REMOTE_INTERFACE_SUBVENDOR, "Remote", "Interface",
 		 "Subvendor", "", "0x%.4x", &remote_interface_subvendor, 1,
-		 OMNI_WANT_REM_IFIDS, NETPERF_TYPE_INT32);
+		 OMNI_WANT_REM_IFIDS, NETPERF_TYPE_UINT32);
 
   set_output_elt(REMOTE_INTERFACE_VENDOR, "Remote", "Interface", "Vendor", "",
 		 "0x%.4x", &remote_interface_vendor, 1, OMNI_WANT_REM_IFIDS,
-		 NETPERF_TYPE_INT32);
+		 NETPERF_TYPE_UINT32);
 
   set_output_elt(LOCAL_INTERFACE_NAME, "Local", "Interface", "Name", "", "%s",
 		 local_interface_name, 1, OMNI_WANT_LOC_IFNAME,
@@ -2357,7 +2357,7 @@ my_long_snprintf(char *buffer, size_t size, const char *format, void *value)
 }
 
 int
-my_snprintf(char *buffer, size_t size, const char *format, void *value)
+old_my_snprintf(char *buffer, size_t size, const char *format, void *value)
 {
   const char *fmt = format;
 
@@ -2387,6 +2387,48 @@ my_snprintf(char *buffer, size_t size, const char *format, void *value)
   return -1;
 }
 
+int
+my_snprintf(char *buffer, size_t size, netperf_output_elt_t *output_elt)
+{
+  switch (output_elt->output_type) {
+  case NETPERF_TYPE_CHAR:
+    return snprintf(buffer, size,
+		    output_elt->format,
+		    (char *)output_elt->display_value);
+    break;
+  case NETPERF_TYPE_INT32:
+    return snprintf(buffer, size,
+		    output_elt->format,
+		    *(int *)(output_elt->display_value));
+    break;
+  case NETPERF_TYPE_UINT32:
+    return snprintf(buffer, size,
+		    output_elt->format,
+		    *(unsigned int *)(output_elt->display_value));
+    break;
+  case NETPERF_TYPE_INT64:
+    return snprintf(buffer, size,
+		    output_elt->format,
+		    *(long long *)(output_elt->display_value));
+    break;
+  case NETPERF_TYPE_UINT64:
+    return snprintf(buffer, size,
+		    output_elt->format,
+		    *(unsigned long long *)(output_elt->display_value));
+    break;
+  case NETPERF_TYPE_DOUBLE:
+    return snprintf(buffer, size,
+		    output_elt->format,
+		    *(double *)(output_elt->display_value));
+    break;
+  default:
+    fprintf(stderr,
+	    "Unknown output_elt output_type of %d\n",
+	    output_elt->output_type);
+    fflush(stderr);
+    exit(-1);
+  }
+}
 void
 print_omni_csv()
 {
@@ -2410,8 +2452,7 @@ print_omni_csv()
 	vallen =
 	  my_snprintf(tmpval,
 		      1024,
-		      netperf_output_source[output_list[i][j]].format,
-		      (netperf_output_source[output_list[i][j]].display_value));
+		      &(netperf_output_source[output_list[i][j]]));
 	if (vallen == -1) {
 	  fprintf(where,"my_snprintf failed on %s with format %s\n",
 		  netperf_output_enum_to_str(j),
@@ -2477,8 +2518,7 @@ print_omni_csv()
 	/* tot_line_len is bogus here, but should be "OK" ? */
 	len = my_snprintf(v1,
 			  netperf_output_source[output_list[i][j]].tot_line_len,
-			  netperf_output_source[output_list[i][j]].format,
-			  netperf_output_source[output_list[i][j]].display_value);
+			  &(netperf_output_source[output_list[i][j]]));
 
 	/* nuke the trailing \n" from the string routine.  */
 	*(v1 + len) = ',';
@@ -2528,8 +2568,7 @@ print_omni_keyword()
 	vallen =
 	  my_snprintf(tmpval,
 		      1024,
-		      netperf_output_source[output_list[i][j]].format,
-		      (netperf_output_source[output_list[i][j]].display_value));
+		      &(netperf_output_source[output_list[i][j]]));
 	if (vallen == -1) {
 	  snprintf(tmpval,
 		   1024,
@@ -2576,11 +2615,10 @@ print_omni_human()
       if ((netperf_output_source[output_list[i][j]].format != NULL) &&
 	  (netperf_output_source[output_list[i][j]].display_value !=
 	   NULL))
+	/* need to count the \n */
 	vallen = my_snprintf(tmpval,
 			     1024,
-			     netperf_output_source[output_list[i][j]].
-format,
-			     (netperf_output_source[output_list[i][j]].display_value)) + 1; /* need to count the \n */
+			     &(netperf_output_source[output_list[i][j]])) + 1;
       else
 	vallen = 0;
 
@@ -2643,8 +2681,7 @@ format,
 	int len;
 	len = my_snprintf(v1,
 			  netperf_output_source[output_list[i][j]].max_line_len,
-			  netperf_output_source[output_list[i][j]].format,
-			  netperf_output_source[output_list[i][j]].display_value);
+			  &(netperf_output_source[output_list[i][j]]));
 	/* nuke the trailing \n" from the string routine.  */
 	*(v1 + len) = ' ';
       }
