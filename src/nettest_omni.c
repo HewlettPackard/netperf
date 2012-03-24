@@ -2315,6 +2315,7 @@ print_omni_init() {
 
 }
 
+#ifdef notdef
 /* why? because one cannot simply pass a pointer to snprintf :) for
    our nefarious porpoises, we only expect to handle single-value
    format statements, not a full-blown format */
@@ -2386,7 +2387,10 @@ old_my_snprintf(char *buffer, size_t size, const char *format, void *value)
     }
   return -1;
 }
+#endif /* notdef */
 
+/* why? because one cannot simply pass a pointer to snprintf - well
+   except when it is expecting one... */
 int
 my_snprintf(char *buffer, size_t size, netperf_output_elt_t *output_elt)
 {
