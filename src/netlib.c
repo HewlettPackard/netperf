@@ -3910,9 +3910,7 @@ inline demo_interval_tick(uint32_t units) {
       /* we always want to fine-tune demo_units here whether we emit
 	 an interim result or not.  if we are short, this will
 	 lengthen demo_units.  if we are long, this will shorten it */
-      printf("demo before %f",demo_units);
       demo_units = demo_units * (demo_interval / actual_interval);
-      printf("demo after %f\n",demo_units);
       if (actual_interval >= demo_interval) {
         /* time to emit an interim result, giving the current time to
 	   the millisecond for compatability with RRD  */
