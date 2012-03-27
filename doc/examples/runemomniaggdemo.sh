@@ -24,8 +24,8 @@ function run_cmd {
 
     while [ $i -lt $MAX_INSTANCES ]
     do
-	echo "Starting netperfs on localhost for $TEST" | tee -a $TESTLOG
 	TARGET=${REMOTE_HOSTS[`expr $i % $NUM_REMOTE_HOSTS`]}
+	echo "Starting netperfs on localhost targeting ${TARGET} for $TEST" | tee -a $TESTLOG
 	$NETPERF -H $TARGET $NETPERF_CMD 2>&1 > netperf_${TEST}_to_${TARGET}_${i}.out &
 
     # give it a moment to get going
@@ -90,28 +90,43 @@ fi
 # we assume that netservers are already running on all the load generators
 
 DURATION=120
+# do not have a uuidgen? then use the one in netperf
 MY_UUID=`uuidgen`
+# with top-of-trunk we could make this 0 and run forever
+# but two hours is something of a failsafe if the signals
+# get lost
 LENGTH="-l 7200"
 OUTPUT="-o all"
 
+DO_STREAM=0;
+DO_MAERTS=0;
+DO_BIDIR=0;
+DO_RRAGG=1;
+
 # TCP_RR for TPC/PPS using single-byte transactions and TCP_NODELAY
-TEST="tps"
-TESTLOG="netperf_tps.log"
-NETPERF_CMD="-D 1 -c -C -f x -P 0 -t omni $LENGTH -v 2 -- -r 1 -b 8 -D -u $MY_UUID $OUTPUT"
-run_cmd
+if [ $DO_RRAGG -eq 1 ]; then
+    TEST="tps"
+    TESTLOG="netperf_tps.log"
+    NETPERF_CMD="-D 1 -c -C -f x -P 0 -t omni $LENGTH -v 2 -- -r 1 -b 8 -D -u $MY_UUID $OUTPUT"
+    run_cmd
+fi
 
 # Bidirectional using burst-mode TCP_RR and large request/response size
-TEST="bidirectional"
-TESTLOG="netperf_bidirectional.log"
-NETPERF_CMD="-D 1 -c -C -f m -P 0 -t omni $LENGTH -v 2 -- -r 64K -s 1M -S 1M -b 12 -u $MY_UUID $OUTPUT"
-run_cmd
+if [ $DO_BIDIR -eq 1 ]; then
+    TEST="bidirectional"
+    TESTLOG="netperf_bidirectional.log"
+    NETPERF_CMD="-D 1 -c -C -f m -P 0 -t omni $LENGTH -v 2 -- -r 64K -s 1M -S 1M -b 12 -u $MY_UUID $OUTPUT"
+    run_cmd
+fi
 
 # TCP_STREAM aka outbound with a 64K send size
-TEST="outbound"
-TESTLOG="netperf_outbound.log"
 # the netperf command is everything but netperf -H mumble
-NETPERF_CMD="-D 1 -c -C -f m -P 0 -t omni $LENGTH -v 2 -- -m 64K -u $MY_UUID $OUTPUT"
-run_cmd
+if [ $DO_STREAM -eq 1 ];then
+    TEST="outbound"
+    TESTLOG="netperf_outbound.log"
+    NETPERF_CMD="-D 1 -c -C -f m -P 0 -t omni $LENGTH -v 2 -- -m 64K -u $MY_UUID $OUTPUT"
+    run_cmd
+fi
 
 # TCP_MAERTS aka inbound with a 64K send size - why is this one last?
 # because presently when I pkill the netperf of a "MAERTS" test, the
@@ -119,8 +134,10 @@ run_cmd
 # to behave well.  but we will still have all the interim results even
 # if we don't get the final results, the useful parts of which will be
 # the same as the other tests anyway
-TEST="inbound"
-TESTLOG="netperf_inbound.log"
-NETPERF_CMD="-D 1 -c -C -f m -P 0 -t omni $LENGTH -v 2 -- -m ,64K -u $MY_UUID $OUTPUT"
-run_cmd
+if [ $DO_MAERTS -eq 1 ]; then
+    TEST="inbound"
+    TESTLOG="netperf_inbound.log"
+    NETPERF_CMD="-D 1 -c -C -f m -P 0 -t omni $LENGTH -v 2 -- -m ,64K -u $MY_UUID $OUTPUT"
+    run_cmd
+fi
 
