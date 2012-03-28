@@ -2427,7 +2427,7 @@ my_snprintf(char *buffer, size_t size, netperf_output_elt_t *output_elt)
     break;
   default:
     fprintf(stderr,
-	    "Unknown output_elt output_type of %d\n",
+	    "Unknown/unsupported output_elt output_type of %d\n",
 	    output_elt->output_type);
     fflush(stderr);
     exit(-1);
@@ -2853,6 +2853,7 @@ recv_data(SOCKET data_socket, struct ring_elt *recv_ring, uint32_t bytes_to_recv
   int bytes_left;
   int bytes_recvd;
   int my_recvs;
+  int my_flags = 0; /* will we one day want to set MSG_WAITALL? */
 
   /* receive data off the data_socket, ass-u-me-ing a blocking socket
      all the way!-) 2008-01-08 */
@@ -2884,7 +2885,7 @@ recv_data(SOCKET data_socket, struct ring_elt *recv_ring, uint32_t bytes_to_recv
       bytes_recvd = recvfrom(data_socket,
 			     temp_message_ptr,
 			     bytes_left,
-			     0,
+			     my_flags,
 			     source,
 			     sourcelen);
     }
@@ -2893,7 +2894,7 @@ recv_data(SOCKET data_socket, struct ring_elt *recv_ring, uint32_t bytes_to_recv
       bytes_recvd = recv(data_socket,
 			 temp_message_ptr,
 			 bytes_left,
-			 0);
+			 my_flags);
     }
     if (bytes_recvd > 0) {
       bytes_left -= bytes_recvd;
@@ -3338,9 +3339,9 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
      initial congestion windows and a non-trivial initial burst of
      requests would not be individual segments even with TCP_NODELAY
      set. so, we have to start tracking a poor-man's congestion window
-     up here in window space because we want to try to make something
+     up here in user space because we want to try to make something
      happen that frankly, we cannot guarantee with the specification
-     of TCP.  ain't that grand?-)  raj 2006-01-30 */
+     of TCP.  ain't that grand?-) raj 2006-01-30 */
   int requests_outstanding = 0;
   int requests_this_cwnd = 0;
   int request_cwnd_initial = REQUEST_CWND_INITIAL;
