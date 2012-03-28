@@ -290,6 +290,7 @@ struct ring_elt {
   struct ring_elt *next;  /* next element in the ring */
   char *buffer_base;      /* in case we have to free it at somepoint */
   char *buffer_ptr;       /* the aligned and offset pointer */
+  void *completion_ptr;   /* a pointer to information for async completion */
 };
 
 /* +*+ SAF  Sorry about the hacks with errno; NT made me do it :(

@@ -1427,10 +1427,11 @@ convert_timespec(char *string) {
 /* this routine will allocate a circular list of buffers for either
    send or receive operations. each of these buffers will be aligned
    and offset as per the users request. the circumference of this ring
-   will be controlled by the setting of send_width. the buffers will
-   be filled with data from the file specified in fill_file. if
-   fill_file is an empty string, the buffers will not be filled with
-   any particular data */
+   will be controlled by the setting of width. the buffers will be
+   filled with data from the file specified in fill_file. if fill_file
+   is an empty string, the buffers will be filled from "default_fill"
+   which will be "netperf" so anyone sniffing the traffic will have a
+   better idea what this traffic happens to be. */
 
 struct ring_elt *
 allocate_buffer_ring(int width, int buffer_size, int alignment, int offset)
@@ -1480,6 +1481,7 @@ allocate_buffer_ring(int width, int buffer_size, int alignment, int offset)
 	      (unsigned int)sizeof(struct ring_elt));
       exit(-1);
     }
+    temp_link->completion_ptr = NULL;
     /* remember the first one so we can close the ring at the end */
     if (i == 1) {
       first_link = temp_link;
