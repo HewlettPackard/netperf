@@ -4969,7 +4969,8 @@ recv_omni()
   need_to_accept = (omni_request->protocol != IPPROTO_UDP);
 
   /* we need to hang a listen for everything that needs at least one
-     accept */
+     accept. the age-old constant of 5 is probably OK for our purposes
+     but does not necessarily represent best practice */
   if (need_to_accept) {
     if (listen(s_listen, 5) == SOCKET_ERROR) {
       netperf_response.content.serv_errno = errno;
