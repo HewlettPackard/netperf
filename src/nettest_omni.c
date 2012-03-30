@@ -2795,7 +2795,8 @@ send_data(SOCKET data_socket, struct ring_elt *send_ring, uint32_t bytes_to_send
 
   if (debug > 2) {
     fprintf(where,
-	    "send_data sock %d, ring elt %p, bytes %d, dest %p, len %d\n",
+	    "%s sock %d, ring elt %p, bytes %d, dest %p, len %d\n",
+	    __FUNCTION__,
 	    data_socket,
 	    send_ring,
 	    bytes_to_send,
@@ -2839,7 +2840,7 @@ send_data(SOCKET data_socket, struct ring_elt *send_ring, uint32_t bytes_to_send
     if (errno == ENOBUFS)
       return -2;
     else {
-      fprintf(where,"send_data: data send error: errno %d\n",errno);
+      fprintf(where,"%s: data send error: errno %d\n",__FUNCTION__,errno);
       return -3;
     }
   }
@@ -2863,7 +2864,8 @@ recv_data(SOCKET data_socket, struct ring_elt *recv_ring, uint32_t bytes_to_recv
 
   if (debug > 1) {
     fprintf(where,
-	    "recv_data sock %d, ring elt %p, bytes %d, source %p, srclen %d, flags %x, num_recv %p\n",
+	    "%s sock %d, ring elt %p, bytes %d, source %p, srclen %d, flags %x, num_recv %p\n",
+	    __FUNCTION__,
 	    data_socket,
 	    recv_ring,
 	    bytes_to_recv,
@@ -3000,7 +3002,8 @@ disconnect_data_socket(SOCKET data_socket, int initiate, int do_close, struct so
 
   if (debug) {
     fprintf(where,
-	    "disconnect_d_s sock %d init %d do_close %d protocol %d\n",
+	    "%s sock %d init %d do_close %d protocol %d\n",
+	    __FUNCTION__,
 	    data_socket,
 	    initiate,
 	    do_close,
@@ -3114,7 +3117,8 @@ get_transport_retrans(SOCKET socket, int protocol) {
   if ((ret = getsockopt(socket,protocol,TCP_INFO,&tcp_info,&infosize)) < 0) {
     if (debug) {
       fprintf(where,
-	      "get_tcp_retrans:getsockopt errno %d %s\n",
+	      "%s: getsockopt errno %d %s\n",
+	      __FUNCTION__,
 	      errno,
 	      strerror(errno));
       fflush(where);
@@ -3167,7 +3171,8 @@ get_transport_info(SOCKET socket, int *mss, int protocol)
 		 (char *)mss,
 		 &sock_opt_len) == SOCKET_ERROR) {
     fprintf(where,
-	    "netperf: get_transport_info: getsockopt: errno %d\n",
+	    "%s: getsockopt: errno %d\n",
+	    __FUNCTION__,
 	    errno);
     fflush(where);
     *mss = -1;
@@ -3281,16 +3286,15 @@ enable_enobufs(int s)
   int on = 1;
   
   if ((pr = getprotobyname("ip")) == NULL) {
-    fprintf(where, "enable_enobufs failed: getprotobyname\n");
+    fprintf(where, "%s failed: getprotobyname\n",__FUNCTION__);
     fflush(where);
     return;
   }
   if (setsockopt(s, pr->p_proto, IP_RECVERR, (char *)&on, sizeof(on)) < 0) {
-    fprintf(where, "enable_enobufs failed: setsockopt\n");
+    fprintf(where, "%s failed: setsockopt\n",__FUNCTION__);
     fflush(where);
     return;
   }
-  /*printf( "enable_enobufs successful\n");*/
 }
 #endif
 
@@ -3518,7 +3522,8 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 					 local_send_offset);
 	if (debug) {
 	  fprintf(where,
-		  "send_omni: %d entry send_ring obtained...\n",
+		  "%s: %d entry send_ring obtained...\n",
+		  __FUNCTION__,
 		  send_width);
 	}
       }
@@ -3559,7 +3564,8 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 					 local_recv_offset);
 	if (debug) {
 	  fprintf(where,
-		  "send_omni: %d entry recv_ring obtained...\n",
+		  "%s: %d entry recv_ring obtained...\n",
+		  __FUNCTION__,
 		  recv_width);
 	}
       }
@@ -3692,7 +3698,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	omni_request->netserver_ip[3] = 0;
       }
       if (debug > 1) {
-	fprintf(where,"netperf: send_omni: requesting OMNI test\n");
+	fprintf(where,"netperf: %s: requesting OMNI test\n",__FUNCTION__);
       }
 
       strncpy(omni_request->fill_file,
@@ -4742,7 +4748,7 @@ recv_omni()
     (struct omni_results_struct *)netperf_response.content.test_specific_data;
 
   if (debug) {
-    fprintf(where,"netserver: recv_omni: entered...\n");
+    fprintf(where,"netserver: %s: entered...\n",__FUNCTION__);
     fflush(where);
   }
 
@@ -4761,21 +4767,21 @@ recv_omni()
      netperf know the situation. */
 
   if (debug) {
-    fprintf(where,"recv_omni: setting the response type...\n");
+    fprintf(where,"%s: setting the response type...\n",__FUNCTION__);
     fflush(where);
   }
 
   netperf_response.content.response_type = OMNI_RESPONSE;
 
   if (debug) {
-    fprintf(where,"recv_omni: the response type is set...\n");
+    fprintf(where,"%s: the response type is set...\n",__FUNCTION__);
     fflush(where);
   }
 
   /* Grab a socket to listen on, and then listen on it. */
 
   if (debug) {
-    fprintf(where,"recv_omni: grabbing a socket...\n");
+    fprintf(where,"%s: grabbing a socket...\n",__FUNCTION__);
     fflush(where);
   }
 
@@ -5120,7 +5126,7 @@ recv_omni()
 	}
 	netperf_response.content.serv_errno = errno;
 	send_response();
-	fprintf(where,"recv_omni: accept: errno = %d\n",errno);
+	fprintf(where,"%s: accept: errno = %d\n",__FUNCTION__,errno);
 	fflush(where);
 	close(s_listen);
 
@@ -5128,7 +5134,7 @@ recv_omni()
       }
 
       if (debug) {
-	fprintf(where,"recv_omni: accepted data connection.\n");
+	fprintf(where,"%s: accepted data connection.\n",__FUNCTION__);
 	fflush(where);
       }
       need_to_accept = 0;
@@ -5473,7 +5479,8 @@ recv_omni()
 
   if (debug) {
     fprintf(where,
-	    "recv_omni: test complete, sending results.\n");
+	    "%s: test complete, sending results.\n",
+	    __FUNCTION__);
     fflush(where);
   }
 
