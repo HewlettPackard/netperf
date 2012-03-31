@@ -22,7 +22,7 @@ sleep 30
 
 STREAM_START=`date +%s`
 echo "Starting netperf TCP_STREAM test at $STREAM_START"
-netperf -H $1 -l 30 -t TCP_STREAM -D 1 -v 2 -- -m 64K 2>&1 > netperf_stream.out
+netperf -H $1 -l 60 -t TCP_STREAM -D 1 -v 2 -- -m 64K 2>&1 > netperf_stream.out
 STREAM_STOP=`date +%s`
 echo "Netperf TCP_STREAM test stopped at $STREAM_STOP"
 
@@ -53,12 +53,23 @@ awk -v rrdtool=$RRDTOOL '($1 == "Interim"){printf("%s update netperf_rr.rrd %.3f
 
 # now graph it.  if you change the runtimes you should probably change
 # the width of the chart via the -w option
+
+WIDTH=$LENGTH
+if [ $WIDTH -lt 800 ]
+then
+    WIDTH=800
+fi
+
+SIZE="-w $WIDTH -h 400"
+
 $RRDTOOL graph bloat.png --imgformat PNG \
-    -w 800 -h 400 \
+    $SIZE \
     --lower-limit 0 \
     --start $MIN_TIMESTAMP --end $MAX_TIMESTAMP \
-    -t "Effect of bulk transfer on latency" \
+    -t "Effect of bulk transfer on latency to $1" \
     -v "Seconds" \
     DEF:trans=netperf_rr.rrd:tps:AVERAGE \
     CDEF:latency=1.0,trans,/ \
-    LINE2:latency#00FF0080:Latency
+    LINE2:latency#00FF0080:Latency \
+    VRULE:${STREAM_START}#FF0000:"TCP_STREAM start" \
+    VRULE:${STREAM_STOP}#000000:"TCP_STREAM stop"
