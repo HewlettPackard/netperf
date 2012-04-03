@@ -33,6 +33,9 @@
 #if HAVE_STRING_H
 #include <string.h>
 #endif
+#if HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
 
 #ifdef WIN32
 #define strcasecmp(a,b) _stricmp(a,b)
