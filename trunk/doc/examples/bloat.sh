@@ -51,8 +51,8 @@ $RRDTOOL create netperf_rr.rrd --step 1 --start $MIN_TIMESTAMP \
 # now fill it
 awk -v rrdtool=$RRDTOOL '($1 == "Interim"){printf("%s update netperf_rr.rrd %.3f:%f\n",rrdtool,$10,$3)}' netperf_rr.out | sh
 
-# now graph it.  if you change the runtimes you should probably change
-# the width of the chart via the -w option
+# now graph it. we want to make sure the chart is at least 800 pixels
+# wide, and has enough pixels for every data point
 
 WIDTH=$LENGTH
 if [ $WIDTH -lt 800 ]
@@ -72,4 +72,5 @@ $RRDTOOL graph bloat.png --imgformat PNG \
     CDEF:latency=1.0,trans,/ \
     LINE2:latency#00FF0080:Latency \
     VRULE:${STREAM_START}#FF0000:"TCP_STREAM start" \
-    VRULE:${STREAM_STOP}#000000:"TCP_STREAM stop"
+    VRULE:${STREAM_STOP}#000000:"TCP_STREAM stop" \
+    --x-grid SECOND:10:SECOND:60:SECOND:60:0:%X

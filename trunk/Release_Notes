@@ -1,5 +1,12 @@
 These are the Release Notes for post Revision 2.5.0 top-of-trunk netperf:
 
+*) A fix to have the AF_UNIX tests realize that the value for "take
+   the system default" socket buffer size became -1 years ago.  Bug
+   found by Eric Dumazet.
+
+*) Include a patch from Dave Taht to enable symbolic manipulation of
+   IP_TOS values.
+
 *) Include a patch from Sachar Raindel to enable the omni tests to get
    ENOBUFS under Linux when the socket buffer is larger than the tx
    queue of the egress interface.  This will help preclude netperf's

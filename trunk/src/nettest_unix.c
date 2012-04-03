@@ -121,8 +121,8 @@ init_test_vars()
 {
   rss_size  = 0;
   rsr_size  = 0;
-  lss_size_req = 0;
-  lsr_size_req = 0;
+  lss_size_req = -1;
+  lsr_size_req = -1;
   lss_size  = 0;
   lsr_size  = 0;
   req_size  = 1;
