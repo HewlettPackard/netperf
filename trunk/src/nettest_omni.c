@@ -7071,22 +7071,28 @@ scan_omni_args(int argc, char *argv[])
   if (!have_uuid)
     get_uuid_string(test_uuid,sizeof(test_uuid));
 
+  protocol_str = protocol_to_str(protocol);
+  /* ok, if we have gone through all that, and direction is still
+     zero, let us see if it needs to be set to something else. */
+  if ((0 == direction) && (!connection_test)) direction = NETPERF_XMIT;
+  direction_str = direction_to_str(direction);
+
   /* to cover the backside of blithering idiots who run unidirectional
      UDP tests on test setups where they might trash their corporate
      WAN, we grudgingly provide a safety latch. unless explicitly
      enabled, UDP_STREAM/UDP_MAERTS sockets will not allow themselves
      to be routed via a gateway. raj 20091026 */
 
+  printf("have_R_option %d protocol %d direction %d\n",
+	 have_R_option,
+	 protocol,
+	 direction);
   if ((!have_R_option) &&
       (protocol == IPPROTO_UDP) &&
-      (!NETPERF_IS_RR(direction)))
+      (!NETPERF_IS_RR(direction))) {
+    printf("clearing routing_allowed\n");
     routing_allowed = 0;
-
-  protocol_str = protocol_to_str(protocol);
-  /* ok, if we have gone through all that, and direction is still
-     zero, let us see if it needs to be set to something else. */
-  if ((0 == direction) && (!connection_test)) direction = NETPERF_XMIT;
-  direction_str = direction_to_str(direction);
+  }
 
   /* some other sanity checks we need to make would include stuff when
      the user has set -m and -M such that both XMIT and RECV are set
