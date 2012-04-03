@@ -280,3 +280,5 @@ Shachar Raindel - a patch to bring the "get linux to emit ENOBUFS"
 functionality from classic netperf tests to the omni tests.
 
 Chema Gonzalez - fixes for some assorted warnings.
+
+Dave Taht - changes for symbolic handling of TOS values
