@@ -34,6 +34,10 @@
 #include <string.h>
 #endif
 
+#ifdef WIN32
+#define strcasecmp(a,b) _stricmp(a,b)
+#endif
+
 int parse_ipqos(const char *cp);
 const char * iptos2str(int iptos);
 
@@ -123,7 +127,7 @@ static const struct {
 int
 parse_ipqos(const char *cp)
 {
-	u_int i;
+	unsigned int i;
 	char *ep = NULL;
 	long val;
 
