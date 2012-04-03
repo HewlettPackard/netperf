@@ -883,7 +883,7 @@ scan_cmd_line(int argc, char *argv[])
       break_args(optarg, arg1, arg2);
 #if defined(IP_TOS) || defined(IPV6_TCLASS)
       if (arg1[0])
-	local_socket_tos = strtol(arg1,NULL,0);
+	local_socket_tos = parse_ipqos(arg1);
 #else
       if (debug) {
 	fprintf(where,
@@ -892,8 +892,15 @@ scan_cmd_line(int argc, char *argv[])
       }
       local_socket_tos = -1;
 #endif
-      if (arg2[0])
-	remote_socket_tos = strtol(arg2,NULL,0);
+      if (arg2[0]) {
+	remote_socket_tos = parse_ipqos(arg2);
+	if (debug) {
+	  fprintf(where,
+		  "Setting remote_socket_tos to 0x%x\n",
+		  remote_socket_tos);
+	  fflush(where);
+	}
+      }
       break;
     case 'Z':
       /* only copy as much of the passphrase as could fit in the
@@ -1297,8 +1304,8 @@ dump_globals()
   printf("Remote recv alignment: %d\n",remote_recv_align);
   printf("Local socket priority: %d\n", local_socket_prio);
   printf("Remote socket priority: %d\n", remote_socket_prio);
-  printf("Local socket TOS: %x\n", local_socket_tos);
-  printf("Remote socket TOS: %x\n", remote_socket_tos);
+  printf("Local socket TOS: %s\n", iptos2str(local_socket_tos));
+  printf("Remote socket TOS: %s\n", iptos2str(remote_socket_tos));
   printf("Report local CPU %d\n",local_cpu_usage);
   printf("Report remote CPU %d\n",remote_cpu_usage);
   printf("Verbosity: %d\n",verbosity);

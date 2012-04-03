@@ -2378,7 +2378,7 @@ send_request_n(int n)
      and at any rate, the performance of sending control messages for
      this benchmark is not of any real concern. */
 
-  for (counter = 0;counter < count; counter++) {
+  for (counter = 0; counter < count; counter++) {
     request_array[counter] = htonl(request_array[counter]);
   }
 
@@ -2529,8 +2529,19 @@ fixup_request_n(int n)
   int limit;
 
   limit = sizeof(netperf_request) / 4;
-  for (i = n; i < limit; i++) {
+  /* we must remember that the request_array also contains two ints of
+     "other" stuff, so we start the fixup two in - at least I think we
+     should.  raj 2012-04-02 */
+  for (i = n + 2; i < limit; i++) {
     request_array[i] = htonl(request_array[i]);
+  }
+  if (debug > 1) {
+    fprintf(where,
+	    "%s: request contents after fixup at the %d th int\n",
+	    __FUNCTION__,
+	    n);
+    dump_request();
+    fflush(where);
   }
 }
 
@@ -2760,7 +2771,8 @@ recv_response_timed_n(int addl_time, int n)
 			0,
 			&timeout)) != 1) {
     fprintf(where,
-	    "netperf: receive_response: no response received. errno %d counter %d\n",
+	    "%s: no response received. errno %d counter %d\n",
+	    __FUNCTION__,
 	    errno,
 	    counter);
     exit(1);
@@ -3137,7 +3149,7 @@ resolve_host(char *hostname,
   to assist with pesky end-to-end-unfriendly things like firewalls, we
   allow the caller to specify both the remote hostname and port, and
   the local addressing info.  i believe that in theory it is possible
-  to have an IPv4 endpoint and an IPv6 endpoint communicate with one
+
   another, but for the time being, we are only going to take-in one
   requested address family parameter. this means that the only way
   (iirc) that we might get a mixed-mode connection would be if the
