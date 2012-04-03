@@ -210,3 +210,7 @@ extern int
 #endif /* WANT_DLPI */
 
 #endif
+
+extern int parse_ipqos(const char *cp);
+extern const char * iptos2str(int iptos);
+
