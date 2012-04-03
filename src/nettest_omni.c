@@ -7083,14 +7083,9 @@ scan_omni_args(int argc, char *argv[])
      enabled, UDP_STREAM/UDP_MAERTS sockets will not allow themselves
      to be routed via a gateway. raj 20091026 */
 
-  printf("have_R_option %d protocol %d direction %d\n",
-	 have_R_option,
-	 protocol,
-	 direction);
   if ((!have_R_option) &&
       (protocol == IPPROTO_UDP) &&
       (!NETPERF_IS_RR(direction))) {
-    printf("clearing routing_allowed\n");
     routing_allowed = 0;
   }
 
