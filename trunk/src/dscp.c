@@ -25,8 +25,14 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#if HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdio.h>
+#if HAVE_STRING_H
 #include <string.h>
+#endif
 
 int parse_ipqos(const char *cp);
 const char * iptos2str(int iptos);
@@ -35,8 +41,12 @@ const char * iptos2str(int iptos);
  * Definitions for IP type of service (ip_tos)
  */
 
+#if HAVE_NETINET_IN_SYSTM_H
 #include <netinet/in_systm.h>
+#endif
+#if HAVE_NETINET_IP_H
 #include <netinet/ip.h>
+#endif
 
 #ifndef IPTOS_LOWDELAY
 # define IPTOS_LOWDELAY          0x10
