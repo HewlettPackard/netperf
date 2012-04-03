@@ -36,6 +36,7 @@
 
 #ifdef WIN32
 #define strcasecmp(a,b) _stricmp(a,b)
+#define snprintf _snprintf
 #endif
 
 int parse_ipqos(const char *cp);
