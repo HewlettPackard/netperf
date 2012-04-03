@@ -31,5 +31,6 @@ SOURCES= \
 	..\netrt_none.c \
 	..\net_uuid.c \
 	..\netserver.c \
+	..\dscp.c \
 	..\inet_ntop.c
 
