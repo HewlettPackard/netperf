@@ -1525,7 +1525,7 @@ be 2^30 (GB), 2^20 (MB) or 2^10 (KB) respectively.  A suffix of ``g,''
 ``m'' or ``k'' will specify units of 10^9, 10^6 or 10^3 bytes
 respectively.  For example:
 @example
-@code{-s 128K}
+@code{-S 128K}
 @end example
 Will request the remote send and receive socket buffer sizes to be
 128KB or 131072 bytes. 
@@ -2121,7 +2121,7 @@ to be 2^30 (GB), 2^20 (MB) or 2^10 (KB) respectively.  A suffix of
 ``g,'' ``m'' or ``k'' will specify units of 10^9, 10^6 or 10^3 bytes
 respectively.  For example:
 @example
-@code{-s 128K}
+@code{-S 128K}
 @end example
 Will request the remote (netserver) send and receive socket buffer
 sizes to be 128KB or 131072 bytes.

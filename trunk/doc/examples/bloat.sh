@@ -102,7 +102,7 @@ $RRDTOOL graph bloat.png --imgformat PNG \
     DEF:mbps=netperf_stream.rrd:mbps:AVERAGE \
     CDEF:bps=mbps,1000000,\* \
     CDEF:sbps=bps,$SCALE,/ \
-    LINE2:sbps#0000FF80:"TCP_STREAM Throughput" \
-    VRULE:${STREAM_START}#FF0000:"TCP_STREAM start" \
-    VRULE:${STREAM_STOP}#000000:"TCP_STREAM stop" \
+    LINE2:sbps#0000FFF0:"TCP_STREAM Throughput" \
+    VRULE:${STREAM_START}#FF000080:"TCP_STREAM start" \
+    VRULE:${STREAM_STOP}#00000080:"TCP_STREAM stop" \
     --x-grid SECOND:10:SECOND:60:SECOND:60:0:%X
