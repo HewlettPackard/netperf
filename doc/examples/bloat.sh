@@ -22,7 +22,7 @@ sleep 30
 
 STREAM_START=`date +%s`
 echo "Starting netperf TCP_STREAM test at $STREAM_START"
-netperf -H $1 -l 60 -t TCP_STREAM -D 1 -v 2 -- -m 64K 2>&1 > netperf_stream.out
+netperf -H $1 -l 90 -t TCP_STREAM -D 1 -v 2 -- -m 64K 2>&1 > netperf_stream.out
 STREAM_STOP=`date +%s`
 echo "Netperf TCP_STREAM test stopped at $STREAM_STOP"
 
@@ -51,6 +51,20 @@ $RRDTOOL create netperf_rr.rrd --step 1 --start $MIN_TIMESTAMP \
 # now fill it
 awk -v rrdtool=$RRDTOOL '($1 == "Interim"){printf("%s update netperf_rr.rrd %.3f:%f\n",rrdtool,$10,$3)}' netperf_rr.out | sh
 
+# now post process the tcp_stream test. we could use STREAM_START and
+# STREAM_STOP but these will be just a bit more accurate
+STREAM_MIN_TIMESTAMP=`grep Interim netperf_stream.out | head -1 | awk '{print int($10)}'`
+STREAM_MAX_TIMESTAMP=`grep Interim netperf_stream.out | tail -1 | awk '{print int($10)}'`
+STREAM_MAX_INTERVAL=`grep Interim netperf_stream.out | awk 'BEGIN{max=0.0} ($6 > max) {max = $6}END{print int(max) + 1}'`
+STREAM_LENGTH=`expr $STREAM_MAX_TIMESTAMP - $STREAM_MIN_TIMESTAMP`
+
+$RRDTOOL create netperf_stream.rrd --step 1 --start $STREAM_MIN_TIMESTAMP \
+    DS:mbps:GAUGE:$STREAM_MAX_INTERVAL:U:U RRA:AVERAGE:0.5:1:$STREAM_LENGTH
+
+# now fill it
+awk -v rrdtool=$RRDTOOL '($1 == "Interim"){printf("%s update netperf_stream.rrd %.3f:%f\n",rrdtool,$10,$3)}' netperf_stream.out | sh
+
+
 # now graph it. we want to make sure the chart is at least 800 pixels
 # wide, and has enough pixels for every data point
 
@@ -62,15 +76,33 @@ fi
 
 SIZE="-w $WIDTH -h 400"
 
+# we want to find the scaling factor for the throughput
+
+SCALE=`$RRDTOOL graph /dev/null \
+    --start $MIN_TIMESTAMP --end $MAX_TIMESTAMP \
+    DEF:trans=netperf_rr.rrd:tps:AVERAGE \
+    CDEF:latency=1.0,trans,/ \
+    DEF:mbps=netperf_stream.rrd:mbps:AVERAGE \
+    CDEF:bps=mbps,1000000,\* \
+    CDEF:scale=bps,latency,/ \
+    VDEF:maxscale=scale,MAXIMUM \
+    PRINT:maxscale:"%.20lf" | sed 1d
+`
 $RRDTOOL graph bloat.png --imgformat PNG \
     $SIZE \
     --lower-limit 0 \
     --start $MIN_TIMESTAMP --end $MAX_TIMESTAMP \
     -t "Effect of bulk transfer on latency to $1" \
     -v "Seconds" \
+    --right-axis $SCALE:0 \
+    --right-axis-label "Bits per Second" \
     DEF:trans=netperf_rr.rrd:tps:AVERAGE \
     CDEF:latency=1.0,trans,/ \
-    LINE2:latency#00FF0080:Latency \
+    LINE2:latency#00FF0080:"TCP_RR Latency" \
+    DEF:mbps=netperf_stream.rrd:mbps:AVERAGE \
+    CDEF:bps=mbps,1000000,\* \
+    CDEF:sbps=bps,$SCALE,/ \
+    LINE2:sbps#0000FF80:"TCP_STREAM Throughput" \
     VRULE:${STREAM_START}#FF0000:"TCP_STREAM start" \
     VRULE:${STREAM_STOP}#000000:"TCP_STREAM stop" \
     --x-grid SECOND:10:SECOND:60:SECOND:60:0:%X
