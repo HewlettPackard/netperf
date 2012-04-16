@@ -234,6 +234,10 @@
 #else
 # if HAVE_STDINT_H
 #  include <stdint.h>
+#else
+# ifdef WIN32
+#  include "missing\inttypes.h"
+# endif
 # endif
 #endif
 
