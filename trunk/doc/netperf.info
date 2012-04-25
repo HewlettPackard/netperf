@@ -1418,7 +1418,7 @@ BSD Sockets or the XTI interface those common options include:
      units to be 2^30 (GB), 2^20 (MB) or 2^10 (KB) respectively.  A
      suffix of "g," "m" or "k" will specify units of 10^9, 10^6 or 10^3
      bytes respectively.  For example:
-          `-s 128K'
+          `-S 128K'
      Will request the remote send and receive socket buffer sizes to be
      128KB or 131072 bytes.
 
@@ -2009,7 +2009,7 @@ BSD Sockets or the XTI interface those common options include:
      units to be 2^30 (GB), 2^20 (MB) or 2^10 (KB) respectively.  A
      suffix of "g," "m" or "k" will specify units of 10^9, 10^6 or 10^3
      bytes respectively.  For example:
-          `-s 128K'
+          `-S 128K'
      Will request the remote (netserver) send and receive socket buffer
      sizes to be 128KB or 131072 bytes.
 
