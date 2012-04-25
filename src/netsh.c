@@ -87,7 +87,7 @@ extern	int	getopt(int , char **, char *) ;
    getopt to parse the command line, we will tell getopt that they do
    not take parms, and then look for them ourselves */
 
-#define GLOBAL_CMD_LINE_ARGS "A:a:b:B:CcdDf:F:H:hi:I:jk:K:l:L:n:NO:o:P:p:rSs:t:T:v:VW:w:y:Y:Z:46"
+#define GLOBAL_CMD_LINE_ARGS "A:a:b:B:CcdD:f:F:H:hi:I:jk:K:l:L:n:NO:o:P:p:rSs:t:T:v:VW:w:y:Y:Z:46"
 
 /************************************************************************/
 /*									*/
@@ -254,8 +254,10 @@ Global options:\n\
     -c [cpu_rate]     Report local CPU usage\n\
     -C [cpu_rate]     Report remote CPU usage\n\
     -d                Increase debugging output\n\
-    -D [secs,units] * Display interim results at least every secs seconds\n\
+    -D time,[units] * Display interim results at least every time interval\n\
                       using units as the initial guess for units per second\n\
+                      A negative value for time will make heavy use of the\n\
+                      system's timestamping functionality\n\
     -f G|M|K|g|m|k    Set the output units\n\
     -F lfill[,rfill]* Pre-fill buffers with data from specified file\n\
     -h                Display this text\n\
@@ -670,17 +672,17 @@ scan_cmd_line(int argc, char *argv[])
       break;
     case 'D':
 #if (defined WANT_DEMO)
-      demo_mode++;
-      if (argv[optind] && isdigit((unsigned char)argv[optind][0])){
-	/* there was an optional parm */
-	break_args_explicit(argv[optind],arg1,arg2);
-	optind++;
-	if (arg1[0]) {
-	  demo_interval = atof(arg1) * 1000000.0;
+      demo_mode = 1; /* 1 == use units; 2 == always timestamp */
+      break_args_explicit(optarg,arg1,arg2);
+      if (arg1[0]) {
+	demo_interval = atof(arg1) * 1000000.0;
+	if (demo_interval < 0.0) {
+	  demo_interval = demo_interval * -1.0;
+	  demo_mode = 2;
 	}
-	if (arg2[0]) {
-	  demo_units = convert(arg2);
-	}
+      }
+      if (arg2[0]) {
+	demo_units = convert(arg2);
       }
 #else
       printf("Sorry, Demo Mode not configured into this netperf.\n"

@@ -3847,7 +3847,10 @@ msec_sleep( int msecs )
 
 #if defined(WANT_INTERVALS) || defined(WANT_DEMO)
 
-int demo_mode;                    /* are we actually in demo mode? */
+int demo_mode;                    /* are we actually in demo mode? = 0
+				     == not in demo mode; 1 == classic
+				     unit based demo mode; 2 == always
+				     timestamp demo mode */
 double demo_interval = 1000000.0; /* what is the desired interval to
 				     display interval results. default
 				     is one second in units of
@@ -3911,10 +3914,15 @@ __forceinline demo_interval_tick(uint32_t units) {
 #else
 inline demo_interval_tick(uint32_t units) {
 #endif
-  if (demo_mode) {
-    double actual_interval;
-    static int count = 0;
-    struct timeval now;
+  double actual_interval = 0.0;
+  static int count = 0;
+  struct timeval now;
+  int emit_output = 0;
+
+  switch (demo_mode) {
+  case 0:
+    return;
+  case 1: /* use the unit accumulation first */
     units_this_tick += units;
     if (units_this_tick >= demo_units) {
       /* time to possibly update demo_units and maybe output an
@@ -3925,65 +3933,82 @@ inline demo_interval_tick(uint32_t units) {
 	 an interim result or not.  if we are short, this will
 	 lengthen demo_units.  if we are long, this will shorten it */
       demo_units = demo_units * (demo_interval / actual_interval);
-      if (actual_interval >= demo_interval) {
-        /* time to emit an interim result, giving the current time to
-	   the millisecond for compatability with RRD  */
-        gettimeofday(&now,NULL);
-	switch (netperf_output_mode) {
-	case HUMAN:
-	  fprintf(where,
-		  "Interim result: %7.2f %s/s over %.3f seconds ending at %ld.%.3ld\n",
-		  calc_thruput_interval(units_this_tick,
-					actual_interval/1000000.0),
-		  format_units(),
-		  actual_interval/1000000.0,
-		  now.tv_sec,
-		  (long) now.tv_usec/1000);
-	  break;
-	case CSV:
-	  fprintf(where,
-		  "%7.2f,%s/s,%.3f,%ld.%.3ld\n",
-		  calc_thruput_interval(units_this_tick,
-					actual_interval/1000000.0),
-		  format_units(),
-		  actual_interval/1000000.0,
-		  now.tv_sec,
-		  (long) now.tv_usec/1000);
-	  break;
-	case KEYVAL:
-	  fprintf(where,
-		  "NETPERF_INTERIM_RESULT[%d]=%.2f\n"
-		  "NETPERF_UNITS[%d]=%s/s\n"
-		  "NETPERF_INTERVAL[%d]=%.3f\n"
-		  "NETPERF_ENDING[%d]=%ld.%.3ld\n",
-		  count,
-		  calc_thruput_interval(units_this_tick,
-					actual_interval/1000000.0),
-		  count,
-		  format_units(),
-		  count,
-		  actual_interval/1000000.0,
-		  count,
-		  now.tv_sec,
-		  (long) now.tv_usec/1000);
-	  count += 1;
-	  break;
-	default:
-	  fprintf(where,
-		  "Hey Ricky you not fine, theres a bug at demo time. Hey Ricky!");
-	  fflush(where);
-	  exit(-1);
-	}
-	fflush(where);
-	units_this_tick = 0.0;
-	/* now get a new starting timestamp.  we could be clever
-	   and swap pointers - the math we do probably does not
-	   take all that long, but for now this will suffice */
-	temp_demo_ptr = demo_one_ptr;
-	demo_one_ptr = demo_two_ptr;
-	demo_two_ptr = temp_demo_ptr;
-      }
     }
+    else
+      return;
+    break;
+  case 2:  /* Always timestamp */
+    units_this_tick += units;
+    HIST_timestamp(demo_two_ptr);
+    actual_interval = delta_micro(demo_one_ptr,demo_two_ptr);
+
+    break;
+  default:
+    fprintf(where,
+	    "Unexpected value of demo_mode of %d. Please report this as a bug.\n",
+	    demo_mode);
+    fflush(where);
+    exit(-1);
+  }
+
+  if (actual_interval >= demo_interval) {
+    /* time to emit an interim result, giving the current time to the
+       millisecond for compatability with RRD  */
+    gettimeofday(&now,NULL);
+    switch (netperf_output_mode) {
+    case HUMAN:
+      fprintf(where,
+	      "Interim result: %7.2f %s/s over %.3f seconds ending at %ld.%.3ld\n",
+	      calc_thruput_interval(units_this_tick,
+				    actual_interval/1000000.0),
+	      format_units(),
+	      actual_interval/1000000.0,
+	      now.tv_sec,
+	      (long) now.tv_usec/1000);
+      break;
+    case CSV:
+      fprintf(where,
+	      "%7.2f,%s/s,%.3f,%ld.%.3ld\n",
+	      calc_thruput_interval(units_this_tick,
+				    actual_interval/1000000.0),
+	      format_units(),
+	      actual_interval/1000000.0,
+	      now.tv_sec,
+	      (long) now.tv_usec/1000);
+      break;
+    case KEYVAL:
+      fprintf(where,
+	      "NETPERF_INTERIM_RESULT[%d]=%.2f\n"
+	      "NETPERF_UNITS[%d]=%s/s\n"
+	      "NETPERF_INTERVAL[%d]=%.3f\n"
+	      "NETPERF_ENDING[%d]=%ld.%.3ld\n",
+	      count,
+	      calc_thruput_interval(units_this_tick,
+				    actual_interval/1000000.0),
+	      count,
+	      format_units(),
+	      count,
+	      actual_interval/1000000.0,
+	      count,
+	      now.tv_sec,
+	      (long) now.tv_usec/1000);
+      count += 1;
+      break;
+    default:
+      fprintf(where,
+	      "Hey Ricky you not fine, theres a bug at demo time. Hey Ricky!");
+      fflush(where);
+      exit(-1);
+    }
+    fflush(where);
+    units_this_tick = 0.0;
+    /* now get a new starting timestamp.  we could be clever
+       and swap pointers - the math we do probably does not
+       take all that long, but for now this will suffice */
+    temp_demo_ptr = demo_one_ptr;
+    demo_one_ptr = demo_two_ptr;
+    demo_two_ptr = temp_demo_ptr;
+    
   }
 }
 
