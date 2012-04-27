@@ -3925,6 +3925,7 @@ inline demo_interval_tick(uint32_t units) {
        empty case so do something with no side effects */
     emit_output = 0;
     return;
+    break;
   case 1: /* use the unit accumulation first */
     units_this_tick += units;
     if (units_this_tick >= demo_units) {
