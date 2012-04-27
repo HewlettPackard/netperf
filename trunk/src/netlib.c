@@ -3917,7 +3917,6 @@ inline void demo_interval_tick(uint32_t units) {
   double actual_interval = 0.0;
   static int count = 0;
   struct timeval now;
-  int emit_output = 0;
 
   switch (demo_mode) {
   case 0:
