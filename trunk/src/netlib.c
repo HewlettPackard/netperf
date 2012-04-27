@@ -3921,6 +3921,9 @@ inline demo_interval_tick(uint32_t units) {
 
   switch (demo_mode) {
   case 0:
+    /* for some reason, Microsoft's DDK/WDK compiler does not like an
+       empty case so do something with no side effects */
+    emit_output = 0;
     return;
   case 1: /* use the unit accumulation first */
     units_this_tick += units;
