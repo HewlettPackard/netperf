@@ -3910,9 +3910,9 @@ void demo_stream_setup(uint32_t a, uint32_t b) {
    not be a big deal. raj 2012-01-23 */
 
 #ifdef WIN32
-__forceinline demo_interval_tick(uint32_t units) {
+__forceinline void demo_interval_tick(uint32_t units) {
 #else
-inline demo_interval_tick(uint32_t units) {
+inline void demo_interval_tick(uint32_t units) {
 #endif
   double actual_interval = 0.0;
   static int count = 0;
@@ -3921,11 +3921,7 @@ inline demo_interval_tick(uint32_t units) {
 
   switch (demo_mode) {
   case 0:
-    /* for some reason, Microsoft's DDK/WDK compiler does not like an
-       empty case so do something with no side effects */
-    emit_output = 0;
     return;
-    break;
   case 1: /* use the unit accumulation first */
     units_this_tick += units;
     if (units_this_tick >= demo_units) {
