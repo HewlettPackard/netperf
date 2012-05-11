@@ -1,5 +1,5 @@
 # a crude script to try to find the burst size which results in
-# something approximating peak transactions per second.  once we so
+# something approximating peak transactions per second.  once we
 # pass the peak, we may want to refine further but for now, this
 # should suffice
 
