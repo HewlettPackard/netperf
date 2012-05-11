@@ -79,7 +79,8 @@ NUM_CPUS=`grep processor /proc/cpuinfo | wc -l`
 # number of CPUs
 MAX_INSTANCES=`expr $NUM_CPUS \* 2`
 
-NETPERF=${NETPERF:="./netperf"}
+# allow the netperf binary to be used to be overridden 
+NETPERF=${NETPERF:="netperf"}
 
 if [ $NUM_REMOTE_HOSTS -lt 2 ]
 then
@@ -105,9 +106,15 @@ DO_RRAGG=1;
 
 # TCP_RR for TPC/PPS using single-byte transactions and TCP_NODELAY
 if [ $DO_RRAGG -eq 1 ]; then
+    BURST=`./find_max_burst.sh ${REMOTE_HOSTS[0]}`
+    if [ $BURST -eq -1 ]; then
+        # use a value that find_max_burst will not have picked
+        BURST=9
+        echo "find_max_burst.sh returned -1 so picking a burst of $BURST"
+    fi
     TEST="tps"
     TESTLOG="netperf_tps.log"
-    NETPERF_CMD="-D 1 -c -C -f x -P 0 -t omni $LENGTH -v 2 -- -r 1 -b 8 -D -u $MY_UUID $OUTPUT"
+    NETPERF_CMD="-D 1 -c -C -f x -P 0 -t omni $LENGTH -v 2 -- -r 1 -b $BURST -D -u $MY_UUID $OUTPUT"
     run_cmd
 fi
 

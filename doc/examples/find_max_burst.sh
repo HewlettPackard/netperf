@@ -6,8 +6,9 @@
 LAST_TPS=0
 BURST=1
 LAST_BURST=0
+NETPERF=${NETPERF:="netperf"}
 
-TMP_TPS=`netperf -t TCP_RR -P 0 -H $1 -- -b $BURST -D -o throughput`
+TMP_TPS=`$NETPERF -t TCP_RR -P 0 -H $1 -- -b $BURST -D -o throughput`
 
 if [ $? -ne 0 ]
 then
@@ -23,7 +24,7 @@ do
     BURST=`expr $BURST \* 2`
     LAST_TPS=$CUR_TPS
 
-    TMP_TPS=`netperf -t TCP_RR -P 0 -H $1 -- -b $BURST -D -o throughput`
+    TMP_TPS=`$NETPERF -t TCP_RR -P 0 -H $1 -- -b $BURST -D -o throughput`
 
     if [ $? -ne 0 ]
     then
