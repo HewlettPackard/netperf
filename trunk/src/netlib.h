@@ -505,6 +505,7 @@ extern void   demo_rr_interval(uint32_t units);
 extern void   demo_rr_setup(uint32_t units);
 extern void   demo_stream_interval(uint32_t units);
 extern void   demo_interval_tick(uint32_t units);
+extern void   demo_interval_final();
 #endif
 #endif 
   

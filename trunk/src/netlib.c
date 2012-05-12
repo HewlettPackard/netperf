@@ -3904,19 +3904,76 @@ void demo_stream_setup(uint32_t a, uint32_t b) {
   }
 }
 
+#ifdef WIN32
+__forceinline void demo_interval_display(double actual_interval)
+#else
+  inline void demo_interval_display(double actual_interval)
+#endif
+{
+  static int count = 0;
+  struct timeval now;
+  
+  gettimeofday(&now,NULL);
+  switch (netperf_output_mode) {
+  case HUMAN:
+    fprintf(where,
+	    "Interim result: %7.2f %s/s over %.3f seconds ending at %ld.%.3ld\n",
+	    calc_thruput_interval(units_this_tick,
+				  actual_interval/1000000.0),
+	    format_units(),
+	    actual_interval/1000000.0,
+	    now.tv_sec,
+	    (long) now.tv_usec/1000);
+    break;
+  case CSV:
+    fprintf(where,
+	    "%7.2f,%s/s,%.3f,%ld.%.3ld\n",
+	    calc_thruput_interval(units_this_tick,
+				  actual_interval/1000000.0),
+	    format_units(),
+	    actual_interval/1000000.0,
+	    now.tv_sec,
+	    (long) now.tv_usec/1000);
+    break;
+  case KEYVAL:
+    fprintf(where,
+	    "NETPERF_INTERIM_RESULT[%d]=%.2f\n"
+	    "NETPERF_UNITS[%d]=%s/s\n"
+	    "NETPERF_INTERVAL[%d]=%.3f\n"
+	    "NETPERF_ENDING[%d]=%ld.%.3ld\n",
+	    count,
+	    calc_thruput_interval(units_this_tick,
+				  actual_interval/1000000.0),
+	    count,
+	    format_units(),
+	    count,
+	    actual_interval/1000000.0,
+	    count,
+	    now.tv_sec,
+	    (long) now.tv_usec/1000);
+    count += 1;
+    break;
+  default:
+    fprintf(where,
+	    "Hey Ricky you not fine, theres a bug at demo time. Hey Ricky!");
+    fflush(where);
+    exit(-1);
+  }
+  fflush(where);
+}
+
 /* this has gotten long enough to warrant being an inline function
    rather than a macro, and it has been enough years since all the
    important compilers have supported such a construct so it should
    not be a big deal. raj 2012-01-23 */
 
 #ifdef WIN32
-__forceinline void demo_interval_tick(uint32_t units) {
+__forceinline void demo_interval_tick(uint32_t units)
 #else
-inline void demo_interval_tick(uint32_t units) {
+  inline void demo_interval_tick(uint32_t units)
 #endif
+{
   double actual_interval = 0.0;
-  static int count = 0;
-  struct timeval now;
 
   switch (demo_mode) {
   case 0:
@@ -3950,56 +4007,14 @@ inline void demo_interval_tick(uint32_t units) {
     exit(-1);
   }
 
+
+
+  /* units == 0 will be when we have completed a test.  we want to
+     emit a final interim results if there is anything to report */
   if (actual_interval >= demo_interval) {
     /* time to emit an interim result, giving the current time to the
        millisecond for compatability with RRD  */
-    gettimeofday(&now,NULL);
-    switch (netperf_output_mode) {
-    case HUMAN:
-      fprintf(where,
-	      "Interim result: %7.2f %s/s over %.3f seconds ending at %ld.%.3ld\n",
-	      calc_thruput_interval(units_this_tick,
-				    actual_interval/1000000.0),
-	      format_units(),
-	      actual_interval/1000000.0,
-	      now.tv_sec,
-	      (long) now.tv_usec/1000);
-      break;
-    case CSV:
-      fprintf(where,
-	      "%7.2f,%s/s,%.3f,%ld.%.3ld\n",
-	      calc_thruput_interval(units_this_tick,
-				    actual_interval/1000000.0),
-	      format_units(),
-	      actual_interval/1000000.0,
-	      now.tv_sec,
-	      (long) now.tv_usec/1000);
-      break;
-    case KEYVAL:
-      fprintf(where,
-	      "NETPERF_INTERIM_RESULT[%d]=%.2f\n"
-	      "NETPERF_UNITS[%d]=%s/s\n"
-	      "NETPERF_INTERVAL[%d]=%.3f\n"
-	      "NETPERF_ENDING[%d]=%ld.%.3ld\n",
-	      count,
-	      calc_thruput_interval(units_this_tick,
-				    actual_interval/1000000.0),
-	      count,
-	      format_units(),
-	      count,
-	      actual_interval/1000000.0,
-	      count,
-	      now.tv_sec,
-	      (long) now.tv_usec/1000);
-      count += 1;
-      break;
-    default:
-      fprintf(where,
-	      "Hey Ricky you not fine, theres a bug at demo time. Hey Ricky!");
-      fflush(where);
-      exit(-1);
-    }
-    fflush(where);
+    demo_interval_display(actual_interval);
     units_this_tick = 0.0;
     /* now get a new starting timestamp.  we could be clever
        and swap pointers - the math we do probably does not
@@ -4008,6 +4023,29 @@ inline void demo_interval_tick(uint32_t units) {
     demo_one_ptr = demo_two_ptr;
     demo_two_ptr = temp_demo_ptr;
     
+  }
+}
+
+#ifdef WIN32
+__forceinline void demo_interval_final()
+#else
+  inline void demo_interval_final()
+#endif
+{
+
+  double actual_interval;
+
+  switch (demo_mode) {
+  case 0:
+    return;
+  case 1:
+  case 2:
+    if (units_this_tick > 0.0) {
+      HIST_timestamp(demo_two_ptr);
+      actual_interval = delta_micro(demo_one_ptr,demo_two_ptr);
+      demo_interval_display(actual_interval);
+      units_this_tick = 0.0;
+    }
   }
 }
 
