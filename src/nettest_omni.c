@@ -4227,6 +4227,12 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 
     /* we are now, ostensibly, at the end of this iteration */
 
+#if defined(WANT_DEMO)
+    /* if we were in demo mode this will ensure one final interim
+       result, which, naturally might be a bit early :) */
+    demo_interval_final();
+#endif
+
     if (transport_mss == -2)
       get_transport_info(data_socket,
 			 &transport_mss,
