@@ -1,5 +1,12 @@
 These are the Release Notes for post Revision 2.5.0 top-of-trunk netperf:
 
+*) When in demo mode (./configure --enable-demo and a global -D
+   <interval> option netperf will make sure it emits "one last
+   interval result" when the test is terminated.  This should assist
+   when post-processing results through the likes of rrdtool when
+   there is a slow-down in the performance just at the end that would
+   have stretched the interval to beyond the test termination.
+
 *) A fix to have the AF_UNIX tests realize that the value for "take
    the system default" socket buffer size became -1 years ago.  Bug
    found by Eric Dumazet.

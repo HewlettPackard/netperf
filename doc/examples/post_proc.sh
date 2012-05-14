@@ -1,4 +1,4 @@
-
+#!/bin/bash
 # find where to put the vertical lines
 awk -f vrules.awk $1 > vrules
 . ./vrules
@@ -12,7 +12,10 @@ do
 done
 # echo $VRULES
 
-rm kitsink
+if [ -f kitsink ]
+then
+  rm kitsink
+fi
 
 prefix=${1%.log}
 echo "Prefix is $prefix"
@@ -63,9 +66,9 @@ echo Performing overall summary computations
 # echo "MAX_INTERVAL $MAX_INTERVAL MIN_TIMESTAMP $MIN_TIMESTAMP MAX_TIMESTAMP $MAX_TIMESTAMP"
     LENGTH=`expr $MAX_TIMESTAMP - $MIN_TIMESTAMP`
     WIDTH=$LENGTH
-    if [ $WIDTH -lt 500 ]
+    if [ $WIDTH -lt 800 ]
     then
-	WIDTH=500
+	WIDTH=800
     fi
     SIZE="-w $WIDTH -h 400"
 
