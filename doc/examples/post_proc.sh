@@ -36,7 +36,7 @@ do
 
     # ooh, rick learns how to strip a suffix
     basename=${i%\.out}
-    echo "Post-processing ${basename}"
+#    echo "Post-processing ${basename}"
 
     rrdtool create ${basename}.rrd --step 1 --start $MIN_TIMESTAMP \
 	DS:mbps:GAUGE:$MAX_INTERVAL:U:U RRA:AVERAGE:0.5:1:$LENGTH
@@ -103,9 +103,67 @@ case $prefix in
 	;;
 esac
 
+# find the interval with the highest AVERAGE.  we can use the
+# timestamps in the vrules file to check this
 
-# now graph it
-rrdtool graph ${prefix}_overall.png --start $MIN_TIMESTAMP --end $MAX_TIMESTAMP \
+rrdtool create ${prefix}_intervals.rrd --step 1 \
+    --start `expr $MIN_TIMESTAMP - 1` \
+    DS:avg:GAUGE:1:U:U RRA:AVERAGE:0.5:1:$LENGTH \
+    DS:min:GAUGE:1:U:U RRA:AVERAGE:0.5:1:$LENGTH \
+    DS:max:GAUGE:1:U:U RRA:AVERAGE:0.5:1:$LENGTH
+
+i=0
+AVG=0
+end=`expr $NUM_VRULES - 1`
+count=1
+while [ $i -lt $end ]
+do
+    start=`expr ${VRULE_TIME[$i]} + 1`
+    j=`expr $i + 1`
+    endtime=`expr ${VRULE_TIME[$j]} - 1`
+    avgminmax=`rrdtool graph /dev/null --start $start --end $endtime \
+	DEF:foo=netperf_tps_overall.rrd:mbps:AVERAGE \
+	VDEF:avg=foo,AVERAGE \
+	VDEF:min=foo,MINIMUM \
+	VDEF:max=foo,MAXIMUM \
+	PRINT:avg:"%6.2lf" \
+	PRINT:min:"%6.2lf" \
+	PRINT:max:"%6.2lf" | sed 1d `
+    avg=`echo $avgminmax | awk '{print int($1)}'`
+    min=`echo $avgminmax | awk '{print int($2)}'`
+    max=`echo $avgminmax | awk '{print int($3)}'`
+#    echo "Updating intervals from $start to $endtime with $avg $min $max"
+    for k in `seq $start $endtime`
+    do
+	rrdtool update ${prefix}_intervals.rrd $k:$avg:$min:$max
+    done
+    if [ $avg -gt $AVG ]
+    then
+	peakintvid=`expr $i / 2`
+	peakintvid=`expr $peakintvid + 1`
+	maxstart=$start
+	maxend=$endtime
+	AVG=$avg
+	MIN=$min
+	MAX=$max
+    fi
+    i=`expr $i + 2`
+    count=`expr $count + 1`
+done
+
+# multiply it by the MULTIPLIER
+AVG=`expr $AVG \* $MULTIPLIER`
+MIN=`expr $MIN \* $MULTIPLIER`
+MAX=`expr $MAX \* $MULTIPLIER`
+
+# now graph it.  if you want the min and max on the graph then add
+#    HRULE:${MIN}#0F0F0F:"Minimum of peak interval is $MIN" \
+#    HRULE:${MAX}#0000FF:"Maximum of peak interval is $MAX" \
+#    HRULE:${AVG}#0000FF80:"Average of peak interval (${peakintvid}) is $AVG" \
+# to the rrdtool command though it can make the chart rather busy
+
+rrdtool graph ${prefix}_overall.png \
+    --start $MIN_TIMESTAMP --end $MAX_TIMESTAMP \
     $SIZE \
     --imgformat PNG \
     --font DEFAULT:0:Helvetica \
@@ -114,7 +172,10 @@ rrdtool graph ${prefix}_overall.png --start $MIN_TIMESTAMP --end $MAX_TIMESTAMP 
     DEF:foo=${prefix}_overall.rrd:mbps:AVERAGE \
     CDEF:bits=foo,$MULTIPLIER,\* \
     $VRULES \
-    LINE2:bits#00FF0080:"$UNITS"
+    LINE2:bits#00FF0080:"$UNITS" > /dev/null \
+    DEF:bar=${prefix}_intervals.rrd:avg:AVERAGE \
+    CDEF:intvl=bar,$MULTIPLIER,\* \
+    LINE2:intvl#0F0F0F40:"Interval average. Peak of $AVG during interval ${peakintvid}."
 
 # now we can do the individual run graphs using the same x axis limits
 # as the overall graph
@@ -130,6 +191,9 @@ do
 	DEF:foo=${basename}.rrd:mbps:AVERAGE \
         CDEF:bits=foo,$MULTIPLIER,\* \
 	$VRULES \
-	LINE2:bits#00FF0080:"$UNITS"
+	LINE2:bits#00FF0080:"$UNITS" > /dev/null
 
 done
+echo "Average of peak interval is $AVG"
+echo "Minimum of peak interval is $MIN"
+echo "Maximum of peak interval is $MAX"
