@@ -104,7 +104,11 @@ case $prefix in
 esac
 
 # find the interval with the highest AVERAGE.  we can use the
-# timestamps in the vrules file to check this
+# timestamps in the vrules file to check this.  while we are doing so,
+# might as well find the average, minimum and maximum for each
+# interval and we will chart the interval averages with some
+# reasonable transparancy.  if someone wants to chart the interval
+# mins and maxes hopefully it will be fairly clear what to do
 
 rrdtool create ${prefix}_intervals.rrd --step 1 \
     --start `expr $MIN_TIMESTAMP - 1` \
@@ -115,7 +119,6 @@ rrdtool create ${prefix}_intervals.rrd --step 1 \
 i=0
 AVG=0
 end=`expr $NUM_VRULES - 1`
-count=1
 while [ $i -lt $end ]
 do
     start=`expr ${VRULE_TIME[$i]} + 1`
@@ -129,6 +132,9 @@ do
 	PRINT:avg:"%6.2lf" \
 	PRINT:min:"%6.2lf" \
 	PRINT:max:"%6.2lf" | sed 1d `
+    # there is probably some clever way to do this without spawning
+    # processes but I guess I'm just a fan of stone knives and
+    # bearskins
     avg=`echo $avgminmax | awk '{print int($1)}'`
     min=`echo $avgminmax | awk '{print int($2)}'`
     max=`echo $avgminmax | awk '{print int($3)}'`
@@ -148,7 +154,6 @@ do
 	MAX=$max
     fi
     i=`expr $i + 2`
-    count=`expr $count + 1`
 done
 
 # multiply it by the MULTIPLIER
@@ -194,6 +199,6 @@ do
 	LINE2:bits#00FF0080:"$UNITS" > /dev/null
 
 done
-echo "Average of peak interval is $AVG"
-echo "Minimum of peak interval is $MIN"
-echo "Maximum of peak interval is $MAX"
+echo "Average of peak interval is $AVG $UNITS"
+echo "Minimum of peak interval is $MIN $UNITS"
+echo "Maximum of peak interval is $MAX $UNITS"
