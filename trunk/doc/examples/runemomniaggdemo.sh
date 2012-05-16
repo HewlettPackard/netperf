@@ -114,7 +114,7 @@ if [ $DO_RRAGG -eq 1 ]; then
     fi
     TEST="tps"
     TESTLOG="netperf_tps.log"
-    NETPERF_CMD="-D 1 -c -C -f x -P 0 -t omni $LENGTH -v 2 -- -r 1 -b $BURST -D -u $MY_UUID $OUTPUT"
+    NETPERF_CMD="-D 0.5 -c -C -f x -P 0 -t omni $LENGTH -v 2 -- -r 1 -b $BURST -D -u $MY_UUID $OUTPUT"
     run_cmd
 fi
 
@@ -122,7 +122,7 @@ fi
 if [ $DO_BIDIR -eq 1 ]; then
     TEST="bidirectional"
     TESTLOG="netperf_bidirectional.log"
-    NETPERF_CMD="-D 1 -c -C -f m -P 0 -t omni $LENGTH -v 2 -- -r 64K -s 1M -S 1M -b 12 -u $MY_UUID $OUTPUT"
+    NETPERF_CMD="-D 0.5 -c -C -f m -P 0 -t omni $LENGTH -v 2 -- -r 64K -s 1M -S 1M -b 12 -u $MY_UUID $OUTPUT"
     run_cmd
 fi
 
@@ -131,7 +131,7 @@ fi
 if [ $DO_STREAM -eq 1 ];then
     TEST="outbound"
     TESTLOG="netperf_outbound.log"
-    NETPERF_CMD="-D 1 -c -C -f m -P 0 -t omni $LENGTH -v 2 -- -m 64K -u $MY_UUID $OUTPUT"
+    NETPERF_CMD="-D 0.5 -c -C -f m -P 0 -t omni $LENGTH -v 2 -- -m 64K -u $MY_UUID $OUTPUT"
     run_cmd
 fi
 
@@ -144,7 +144,7 @@ fi
 if [ $DO_MAERTS -eq 1 ]; then
     TEST="inbound"
     TESTLOG="netperf_inbound.log"
-    NETPERF_CMD="-D 1 -c -C -f m -P 0 -t omni $LENGTH -v 2 -- -m ,64K -u $MY_UUID $OUTPUT"
+    NETPERF_CMD="-D 0.5 -c -C -f m -P 0 -t omni $LENGTH -v 2 -- -m ,64K -u $MY_UUID $OUTPUT"
     run_cmd
 fi
 
