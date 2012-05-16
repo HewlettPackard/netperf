@@ -122,7 +122,7 @@ do
     j=`expr $i + 1`
     endtime=`expr ${VRULE_TIME[$j]} - 1`
     avgminmax=`rrdtool graph /dev/null --start $start --end $endtime \
-	DEF:foo=netperf_tps_overall.rrd:mbps:AVERAGE \
+	DEF:foo=${prefix}_overall.rrd:mbps:AVERAGE \
 	VDEF:avg=foo,AVERAGE \
 	VDEF:min=foo,MINIMUM \
 	VDEF:max=foo,MAXIMUM \
