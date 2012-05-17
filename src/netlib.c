@@ -3968,7 +3968,11 @@ __forceinline void demo_interval_display(double actual_interval)
    not be a big deal. raj 2012-01-23 */
 
 #ifdef WIN32
-__forceinline void demo_interval_tick(uint32_t units)
+/* It would seem that the Microsoft compiler will not inline across
+   source files. So there is little point in having an inline
+   directive in that situation.  Of course that makes me wonder if an
+   inline directive has to appear in netlib.h... */
+void demo_interval_tick(uint32_t units)
 #else
   inline void demo_interval_tick(uint32_t units)
 #endif
