@@ -199,6 +199,6 @@ do
 	LINE2:bits#00FF0080:"$UNITS" > /dev/null
 
 done
-echo "Average of peak interval is $AVG $UNITS"
-echo "Minimum of peak interval is $MIN $UNITS"
-echo "Maximum of peak interval is $MAX $UNITS"
+echo "Average of peak interval is $AVG $UNITS from $maxstart to $maxend"
+echo "Minimum of peak interval is $MIN $UNITS from $maxstart to $maxend"
+echo "Maximum of peak interval is $MAX $UNITS from $maxstart to $maxend"
