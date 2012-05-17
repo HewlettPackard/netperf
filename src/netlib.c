@@ -4026,12 +4026,7 @@ __forceinline void demo_interval_tick(uint32_t units)
   }
 }
 
-#ifdef WIN32
-__forceinline void demo_interval_final()
-#else
-  inline void demo_interval_final()
-#endif
-{
+void demo_interval_final() {
 
   double actual_interval;
 
