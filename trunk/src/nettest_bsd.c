@@ -245,6 +245,17 @@ static HIST time_hist;
 #ifdef WANT_INTERVALS
 int interval_count;
 #ifndef WANT_SPIN
+#ifdef WIN32
+#define INTERVALS_INIT() \
+    if (interval_burst) { \
+      /* zero means that we never pause, so we never should need the \
+         interval timer. we used to use it for demo mode, but we deal \
+	 with that with a variant on watching the clock rather than \
+	 waiting for a timer. raj 2006-02-06 */ \
+      start_itimer(interval_wate); \
+    } \
+    interval_count = interval_burst; 
+#else
 sigset_t signal_set;
 #define INTERVALS_INIT() \
     if (interval_burst) { \
@@ -264,7 +275,27 @@ sigset_t signal_set;
       fflush(where); \
       exit(1); \
     }
+#endif /* WIN32 */
 
+#ifdef WIN32
+#define INTERVALS_WAIT() \
+      /* in this case, the interval count is the count-down counter \
+	 to decide to sleep for a little bit */ \
+      if ((interval_burst) && (--interval_count == 0)) { \
+	/* call WaitForSingleObject and wait for the interval timer to get us \
+	   out */ \
+	if (debug > 1) { \
+	  fprintf(where,"about to suspend\n"); \
+	  fflush(where); \
+	} \
+    if (WaitForSingleObject(WinTimer, INFINITE) != WAIT_OBJECT_0) { \
+        fprintf(where, "WaitForSingleObject failed (%d)\n", GetLastError()); \
+	  fflush(where); \
+	  exit(1); \
+	} \
+	interval_count = interval_burst; \
+      }
+#else
 #define INTERVALS_WAIT() \
       /* in this case, the interval count is the count-down couter \
 	 to decide to sleep for a little bit */ \
@@ -284,6 +315,7 @@ sigset_t signal_set;
 	} \
 	interval_count = interval_burst; \
       }
+#endif /* WIN32 */
 #else
 /* first out timestamp */
 #ifdef HAVE_GETHRTIME
@@ -2124,6 +2156,12 @@ Size (bytes)\n\
 
     close(send_socket);
 
+#if defined(WANT_INTERVALS)
+#ifdef WIN32
+  stop_itimer();
+#endif
+#endif /* WANT_INTERVALS */
+
     if (!no_control) {
       /* Get the statistics from the remote end. The remote will have
 	 calculated service demand and all those interesting
@@ -2832,6 +2870,12 @@ Size (bytes)\n\
     }
 
     stop_timer();
+	
+#if defined(WANT_INTERVALS)
+#ifdef WIN32
+    stop_itimer();
+#endif
+#endif /* WANT_INTERVALS */
 
     /* this call will always give us the local elapsed time for the
        test, and will also store-away the necessaries for cpu
@@ -4642,7 +4686,13 @@ Size (bytes)\n\
 
     close(send_socket);
 
-    /* Get the statistics from the remote end. The remote will have */
+ #if defined(WANT_INTERVALS)
+#ifdef WIN32
+    stop_itimer();
+#endif
+#endif /* WANT_INTERVALS */
+
+   /* Get the statistics from the remote end. The remote will have */
     /* calculated service demand and all those interesting things. If it */
     /* wasn't supposed to care, it will return obvious values. */
 
@@ -6139,6 +6189,12 @@ Send   Recv    Send   Recv    usec/Tran  per sec  Outbound   Inbound\n\
 						/* measured? how long */
 						/* did we really run? */
 
+#if defined(WANT_INTERVALS)
+#ifdef WIN32
+    stop_itimer();
+#endif
+#endif /* WANT_INTERVALS */
+
     if (!no_control) {
       /* Get the statistics from the remote end. The remote will have
 	 calculated CPU utilization. If it wasn't supposed to care, it
@@ -6812,6 +6868,12 @@ bytes   bytes    secs            #      #   %s/sec %% %c%c     us/KB\n\n";
     /* the test is over, so get stats and stuff */
     cpu_stop(local_cpu_usage,
 	     &elapsed_time);
+
+#if defined(WANT_INTERVALS)
+#ifdef WIN32
+    stop_itimer();
+#endif
+#endif /* WANT_INTERVALS */
 
     if (!no_control) {
       /* Get the statistics from the remote end	*/
@@ -7783,6 +7845,12 @@ bytes  bytes  bytes   bytes  secs.   per sec  %% %c    %% %c    us/Tr   us/Tr\n\
     cpu_stop(local_cpu_usage,&elapsed_time);	/* was cpu being */
 						/* measured? how long */
 						/* did we really run? */
+
+#if defined(WANT_INTERVALS)
+#ifdef WIN32
+    stop_itimer();
+#endif
+#endif /* WANT_INTERVALS */
 
     if (!no_control) {
       /* Get the statistics from the remote end. The remote will have
@@ -11379,6 +11447,12 @@ Send   Recv    Send   Recv\n\
     /* Get the statistics from the remote end. The remote will have */
     /* calculated service demand and all those interesting things. If it */
     /* wasn't supposed to care, it will return obvious values. */
+
+#if defined(WANT_INTERVALS)
+#ifdef WIN32
+    stop_itimer();
+#endif
+#endif /* WANT_INTERVALS */
 
     recv_response();
     if (!netperf_response.content.serv_errno) {

@@ -646,6 +646,7 @@ extern unsigned int convert_timespec(char *string);
 
 #ifdef WANT_INTERVALS
 extern void start_itimer(unsigned int interval_len_msec);
+extern void stop_itimer(void);
 #endif
  /* these are all for the confidence interval stuff */
 extern double confidence;
@@ -662,6 +663,7 @@ extern int lib_cpu_map[];
 #endif
 
 #ifdef WIN32
+extern HANDLE WinTimer;
 #if 0
 /* Should really use safe string functions; but not for now... */
 #include <strsafe.h>
