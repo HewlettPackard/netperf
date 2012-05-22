@@ -10,24 +10,31 @@ then
     exit -1
 fi
 
+CHUNK=30
+
 # first, start the TCP_RR test
 RR_START=`date +%s`
 echo "Starting netperf TCP_RR at $RR_START"
-netperf -H $1 -l 7200 -t TCP_RR -D 1 -v 2 -- -r 1 2>&1 > netperf_rr.out &
+# a negative value for the demo interval (-D) will cause netperf to
+# make gettimeofday() calls after every transaction. this will result
+# in more accurate demo intervals once the STREAM test kicks-in, but a
+# somewhat lower transaction rate.  not unlike enabling histogram
+# mode.
+netperf -H $1 -l 7200 -t TCP_RR -D -0.5 -v 2 -- -r 1 2>&1 > netperf_rr.out &
 
-# sleep 30 seconds
-sleep 30
+# sleep CHUNK seconds
+sleep $CHUNK
 
 # now run the TCP_STREAM test
 
 STREAM_START=`date +%s`
 echo "Starting netperf TCP_STREAM test at $STREAM_START"
-netperf -H $1 -l 90 -t TCP_STREAM -D 1 -v 2 -- -m 64K 2>&1 > netperf_stream.out
+netperf -H $1 -l `expr $CHUNK \* 2` -t TCP_STREAM -D 0.25 -v 2 -- -m 1K 2>&1 > netperf_stream.out
 STREAM_STOP=`date +%s`
 echo "Netperf TCP_STREAM test stopped at $STREAM_STOP"
 
-# sleep another 30 seconds
-sleep 30
+# sleep another CHUNK seconds
+sleep $CHUNK
 
 pkill -ALRM netperf
 RR_STOP=`date +%s`
@@ -76,18 +83,26 @@ fi
 
 SIZE="-w $WIDTH -h 400"
 
-# we want to find the scaling factor for the throughput
+# we want to find the scaling factor for the throughput, with the goal
+# being that latency can go to the top of the charts and throughput
+# will go half-way up
 
-SCALE=`$RRDTOOL graph /dev/null \
+MAXLATMAXBPS=`$RRDTOOL graph /dev/null \
     --start $MIN_TIMESTAMP --end $MAX_TIMESTAMP \
     DEF:trans=netperf_rr.rrd:tps:AVERAGE \
     CDEF:latency=1.0,trans,/ \
+    VDEF:maxlatency=latency,MAXIMUM \
     DEF:mbps=netperf_stream.rrd:mbps:AVERAGE \
-    CDEF:bps=mbps,1000000,\* \
-    CDEF:scale=bps,latency,/ \
-    VDEF:maxscale=scale,MAXIMUM \
-    PRINT:maxscale:"%.20lf" | sed 1d
-`
+    CDEF:bps=mbps,2000000,\* \
+    VDEF:maxbps=bps,MAXIMUM \
+    PRINT:maxlatency:"%.20lf" \
+    PRINT:maxbps:"%.20lf" | sed 1d`
+
+# should I check the completion status of the previous command?
+# probably :)
+
+SCALE=`echo $MAXLATMAXBPS | awk '{print $2/$1}'`
+
 $RRDTOOL graph bloat.png --imgformat PNG \
     $SIZE \
     --lower-limit 0 \

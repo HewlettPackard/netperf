@@ -1,4 +1,4 @@
-# this is a quick and dirty migration of runemomniagg2.sh to the 
+ this is a quick and dirty migration of runemomniagg2.sh to the 
 # --enable-demo mode of aggregate testing
 
 function kill_netperfs {
@@ -101,6 +101,10 @@ OUTPUT="-o all"
 
 DO_STREAM=0;
 DO_MAERTS=0;
+# NOTE!  The Bidir test depends on being able to set a socket buffer
+# size greater than 13 * 64KB or 832 KB or there is a risk of the test
+# hanging.  If you are running linux, make certain that
+# net.core.[r|w]mem_max are sufficiently large
 DO_BIDIR=0;
 DO_RRAGG=1;
 
