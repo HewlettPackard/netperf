@@ -1,5 +1,8 @@
 These are the Release Notes for post Revision 2.5.0 top-of-trunk netperf:
 
+*) Initial pass at support for --enable-intervals (WANT_INTERVALS) for
+   Windows, courtesy of Jonathan Cook.
+
 *) When in demo mode (./configure --enable-demo and a global -D
    <interval> option netperf will make sure it emits "one last
    interval result" when the test is terminated.  This should assist

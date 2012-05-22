@@ -168,6 +168,18 @@ static struct timeval *temp_intvl_ptr = &intvl_one;
 #endif
 
 #ifndef WANT_SPIN
+#ifdef WIN32
+#define INTERVALS_INIT() \
+    if (interval_burst) { \
+      /* zero means that we never pause, so we never should need the \
+         interval timer. we used to use it for demo mode, but we deal \
+	 with that with a variant on watching the clock rather than \
+	 waiting for a timer. raj 2006-02-06 */ \
+      start_itimer(interval_wate); \
+    } \
+    interval_count = interval_burst; \
+    interval_wait_microseconds = 0;
+#else
 sigset_t signal_set;
 #define INTERVALS_INIT() \
     if (interval_burst) { \
@@ -188,7 +200,31 @@ sigset_t signal_set;
       fflush(where); \
       exit(1); \
     }
+#endif /* WIN32 */
 
+#ifdef WIN32
+#define INTERVALS_WAIT() \
+      /* in this case, the interval count is the count-down counter \
+	 to decide to sleep for a little bit */ \
+      if ((interval_burst) && (--interval_count == 0)) { \
+	/* call WaitForSingleObject and wait for the interval timer to get us \
+	   out */ \
+	if (debug > 1) { \
+	  fprintf(where,"about to suspend\n"); \
+	  fflush(where); \
+	} \
+        HIST_timestamp(&intvl_wait_start); \
+    if (WaitForSingleObject(WinTimer, INFINITE) != WAIT_OBJECT_0) { \
+        fprintf(where, "WaitForSingleObject failed (%d)\n", GetLastError()); \
+	  fflush(where); \
+	  exit(1); \
+	} \
+        HIST_timestamp(&intvl_two); \
+        interval_wait_microseconds += \
+          delta_micro(&intvl_wait_start,&intvl_two); \
+	interval_count = interval_burst; \
+      }
+#else
 #define INTERVALS_WAIT() \
       /* in this case, the interval count is the count-down couter \
 	 to decide to sleep for a little bit */ \
@@ -212,6 +248,7 @@ sigset_t signal_set;
           delta_micro(&intvl_wait_start,&intvl_two); \
 	interval_count = interval_burst; \
       }
+#endif /* WIN32 */
 #else
 
 #define INTERVALS_INIT() \
@@ -3822,7 +3859,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
       if ((!no_control) && 
 	  (NETPERF_RECV_ONLY(direction)) &&
 	  ((test_trans == 0) && (test_bytes == 0)))
-	pad_time = PAD_TIME;
+	    pad_time = 0;
       start_timer(test_time + pad_time);
     }
     else {
@@ -4500,7 +4537,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	 there is no such thing as a free lunch is there :) raj
 	 20110121 */
       if (interval_burst) {
-	rtt_elapsed_time -= (float)interval_wait_microseconds / 1000000.0;
+	rtt_elapsed_time -= (float)(interval_wait_microseconds / 1000000.0);
       }
 #endif /* WANT_INTERVALS */
 
@@ -4578,7 +4615,13 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
      still be reported as one */
   confidence_iteration--;
 
-  /* at some point we may want to actually display some results :) */
+#if defined(WANT_INTERVALS)
+#ifdef WIN32
+  stop_itimer();
+#endif
+#endif /* WANT_INTERVALS */
+
+/* at some point we may want to actually display some results :) */
 
   retrieve_confident_values(&elapsed_time,
 			    &thruput,
@@ -5090,6 +5133,7 @@ recv_omni()
   if (omni_request->test_length >= 0) {
     times_up = 0;
     units_remaining = 0;
+	test_time=omni_request->test_length;
     /* if we are the sender and only sending, then we don't need/want
        the padding, otherwise, we need the padding */
     if (!(NETPERF_XMIT_ONLY(omni_request->direction)) && 
@@ -5363,7 +5407,13 @@ recv_omni()
   cpu_stop(omni_request->flags & OMNI_MEASURE_CPU,&elapsed_time);
   close(s_listen);
 
-  if (timed_out) {
+#if defined(WANT_INTERVALS)
+#ifdef WIN32
+  stop_itimer();
+#endif
+#endif /* WANT_INTERVALS */
+
+ if (timed_out) {
     /* we ended the test by time, which may have been PAD_TIME seconds
        longer than we wanted to run. so, we want to subtract pad_time
        from the elapsed_time. if we didn't pad the timer pad_time will
@@ -5483,6 +5533,12 @@ recv_omni()
     strncpy(omni_results->firmware,"Bug If Seen DRVINFO",32);
     strncpy(omni_results->bus,"Bug If Seen DRVINFO",32);
   }
+
+#if defined(WANT_INTERVALS)
+#ifdef WIN32
+  stop_itimer();
+#endif
+#endif /* WANT_INTERVALS */
 
   if (debug) {
     fprintf(where,

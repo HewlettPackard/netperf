@@ -111,7 +111,7 @@ char    netlib_id[]="\
 #include <winsock2.h>
 #define netperf_socklen_t socklen_t
 #include <windows.h>
-
+#include <mmsystem.h>
 /* the only time someone should need to define DONT_IPV6 in the
    "sources" file is if they are trying to compile on Windows 2000 or
    NT4 and I suspect this may not be their only problem :) */
@@ -264,6 +264,7 @@ char    libfmt = '?';
 
 #ifdef WIN32
 HANDLE hAlarm = INVALID_HANDLE_VALUE;
+int timed_out=0;
 #endif
 
 int     times_up;
@@ -315,6 +316,16 @@ SYSTEM_INFO SystemInfo;
 
 
 #ifdef WANT_INTERVALS
+#ifdef WIN32
+HANDLE WinTimer;
+UINT timerRes;
+void stop_itimer()
+{
+	CancelWaitableTimer(WinTimer);
+	CloseHandle(WinTimer);
+	timeEndPeriod(timerRes);
+}
+#else
 static unsigned int usec_per_itvl;
 
 
@@ -337,6 +348,7 @@ stop_itimer()
   }
   return;
 }
+#endif /* WIN32 */
 #endif /* WANT_INTERVALS */
 
 
@@ -893,7 +905,7 @@ stop_timer()
 /*      signal catcher                                                  */
 /*                                                                      */
 /************************************************************************/
-
+#ifndef WIN32
 void
 #if defined(__hpux)
 catcher(sig, code, scp)
@@ -970,7 +982,7 @@ catcher(int sig)
   }
   return;
 }
-
+#endif /* WIN32 */
 
 void
 install_signal_catchers()
@@ -1046,7 +1058,9 @@ emulate_alarm( int seconds )
       /* Give the other threads time to notice that times_up has
 	 changed state before taking the harsh step of closing the
 	 sockets. */
-
+#ifdef WIN32
+      timed_out=0;
+#endif
       if (WaitForSingleObject(hAlarm, PAD_TIME/2*1000) ==
 	  WAIT_TIMEOUT) {
 	/* We have yet to find a good way to fully emulate
@@ -1056,7 +1070,10 @@ emulate_alarm( int seconds )
 	   It is rather kludgy, but should be sufficient to
 	   get this puppy shipped.  The concept can be
 	   attributed/blamed :) on Robin raj 1/96 */
-
+#ifdef WIN32
+    timed_out=1;
+#endif
+	
 	if (win_kludge_socket != INVALID_SOCKET) {
 	  HandlesClosedFlags |= 1;
 	  closesocket(win_kludge_socket);
@@ -1183,7 +1200,43 @@ if (debug) {
 void
 start_itimer(unsigned int interval_len_msec )
 {
-
+#ifdef WIN32
+    LARGE_INTEGER liDueTime;
+	TIMECAPS ptc;
+	MMRESULT mmr;
+	
+	/* make sure timer resolution is at least as small as interval length */
+	timerRes=interval_len_msec;
+	mmr=timeGetDevCaps(&ptc, sizeof (ptc));
+	if (mmr==TIMERR_NOERROR){
+	  if (interval_len_msec<ptc.wPeriodMin){
+		timerRes=ptc.wPeriodMin;
+		fprintf(where, "Timer cannot be set to %dmsec.  Minimum timer resolution: %d\n", interval_len_msec, ptc.wPeriodMin);
+		fflush(where);
+	  }
+	}
+	/* timeBeginPeriod() affects a global Windows setting. 
+	Windows uses the lowest value (that is, highest resolution) requested by any process. */
+	mmr=timeBeginPeriod(timerRes);
+	/* Create a waitable timer. */
+    WinTimer = CreateWaitableTimer(NULL, FALSE, "IntervalTimer");
+    if (NULL == WinTimer)
+    {
+        fprintf(where, "CreateWaitableTimer failed (%d)\n", GetLastError());
+        fflush(where);
+		exit(1);
+    }
+ 	/*The time after which the state of the timer is to be set to signaled the first time, 
+	in 100 nanosecond intervals.  Negative values indicate relative time. */
+    liDueTime.QuadPart=-10000LL*interval_len_msec;
+   /* Set the timer to wait for interval_len_msec and periodically signal every interval_len_msec */
+    if (!SetWaitableTimer(WinTimer, &liDueTime, interval_len_msec, NULL, NULL, TRUE))
+    {
+        fprintf(where,"SetWaitableTimer failed (%d)\n", GetLastError());
+        fflush(where);
+		exit(1);
+    }
+#else
   unsigned int ticks_per_itvl;
 
   struct itimerval new_interval;
@@ -1235,6 +1288,7 @@ start_itimer(unsigned int interval_len_msec )
     perror("netperf: setitimer");
     exit(1);
   }
+ #endif /* WIN32*/
 }
 #endif /* WANT_INTERVALS */
 
@@ -3512,7 +3566,7 @@ cpu_stop(int measure_cpu, float *elapsed)
   sec     = time2.tv_sec - time1.tv_sec;
   usec    = time2.tv_usec - time1.tv_usec;
   lib_elapsed     = (float)sec + ((float)usec/(float)1000000.0);
-
+  /* if (timed_out) lib_elapsed-=PAD_TIME/2; */
   *elapsed = lib_elapsed;
 
 }
