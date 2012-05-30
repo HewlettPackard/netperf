@@ -1058,11 +1058,10 @@ emulate_alarm( int seconds )
       /* Give the other threads time to notice that times_up has
 	 changed state before taking the harsh step of closing the
 	 sockets. */
-#ifdef WIN32
       timed_out=0;
-#endif
       if (WaitForSingleObject(hAlarm, PAD_TIME/2*1000) ==
 	  WAIT_TIMEOUT) {
+        timed_out=1;
 	/* We have yet to find a good way to fully emulate
 	   the effects of signals and getting EINTR from
 	   system calls under winsock, so what we do here is
@@ -1070,9 +1069,6 @@ emulate_alarm( int seconds )
 	   It is rather kludgy, but should be sufficient to
 	   get this puppy shipped.  The concept can be
 	   attributed/blamed :) on Robin raj 1/96 */
-#ifdef WIN32
-    timed_out=1;
-#endif
 	
 	if (win_kludge_socket != INVALID_SOCKET) {
 	  HandlesClosedFlags |= 1;
@@ -3566,7 +3562,9 @@ cpu_stop(int measure_cpu, float *elapsed)
   sec     = time2.tv_sec - time1.tv_sec;
   usec    = time2.tv_usec - time1.tv_usec;
   lib_elapsed     = (float)sec + ((float)usec/(float)1000000.0);
-  /* if (timed_out) lib_elapsed-=PAD_TIME/2; */
+#ifdef WIN32
+  if (timed_out) lib_elapsed-=PAD_TIME/2;
+#endif
   *elapsed = lib_elapsed;
 
 }
