@@ -2884,6 +2884,116 @@ send_data(SOCKET data_socket, struct ring_elt *send_ring, uint32_t bytes_to_send
   return len;
 }
 
+#if defined(__linux)
+static int
+recv_data_no_copy(SOCKET data_socket, struct ring_elt *recv_ring, uint32_t bytes_to_recv, struct sockaddr *source, netperf_socklen_t *sourcelen, uint32_t flags, uint32_t *num_receives) {
+
+
+  static int pfd[2] = {-1, -1};
+  static int fdnull = -1;
+
+
+  char *temp_message_ptr;
+  int bytes_left;
+  int bytes_recvd;
+  int my_recvs;
+  int my_flags = 0; /* will we one day want to set MSG_WAITALL? */
+  int ret;
+
+  if (pfd[0] == -1) {
+    if (pipe(pfd)) {
+      fprintf(where,
+	      "%s pipe call failed with errno %d '%s'\n",
+	      __FUNCTION__,
+	      errno,
+	      strerror(errno));
+      return -4;  /* this will cause recv_data to do things the
+		     old-fashioned way for the test */
+    }
+    if ((fdnull = open("/dev/null",O_WRONLY)) == -1) {
+      fprintf(where,
+	      "%s open call failed with errno %d '%s'\n",
+	      __FUNCTION__,
+	      errno,
+	      strerror(errno));
+      return -4;
+    }
+  }    
+
+  /* receive data off the data_socket, ass-u-me-ing a blocking socket
+     all the way!-) 2008-01-08 */
+  my_recvs = 0;
+  bytes_left = bytes_to_recv;
+
+  if (debug > 1) {
+    fprintf(where,
+	    "%s sock %d, ring elt %p, bytes %d, source %p, srclen %d, flags %x, num_recv %p\n",
+	    __FUNCTION__,
+	    data_socket,
+	    recv_ring,
+	    bytes_to_recv,
+	    source,
+	    (source != NULL) ? *sourcelen : -1,
+	    flags,
+	    num_receives);
+    fflush(where);
+  }
+  do {
+
+    bytes_recvd = splice(data_socket,
+			 NULL,
+			 pfd[1],
+			 NULL,
+			 bytes_left,
+			 my_flags);
+    
+    
+    if (bytes_recvd > 0) {
+      if (splice(pfd[0],
+		 NULL,
+		 fdnull,
+		 NULL,
+		 bytes_recvd,
+		 my_flags) != bytes_recvd) {
+	return -3;
+      }
+      bytes_left -= bytes_recvd;
+    }
+    else {
+      break;
+    }
+    my_recvs++; /* should the pair of splices count as one? */
+  } while ((bytes_left > 0) && (flags & NETPERF_WAITALL));
+
+  *num_receives = my_recvs;
+
+  /* OK, we are out of the loop - now what? */
+  if (bytes_recvd < 0) {
+    /* did the timer hit, or was there an error? */
+    if (SOCKET_EINTR(bytes_recvd))
+      {
+	/* We hit the end of a timed test. */
+	return -1;
+      }
+    /* it was a hard error */
+    return -3;
+  }
+
+
+  /* this looks a little funny, but should be correct.  if we had
+     NETPERF_WAITALL set and we got here, it means we got all the
+     bytes of the request/response.  otherwise we would have hit the
+     error or end of test cases.  if NETPERF_WAITALL isn't set, this
+     is a STREAM test, and we will have only made one call to recv, so
+     bytes_recvd will be accurate. */
+  if (bytes_left)
+    return bytes_recvd;
+  else
+    return bytes_to_recv;
+
+}
+#endif
+
 int
 recv_data(SOCKET data_socket, struct ring_elt *recv_ring, uint32_t bytes_to_recv, struct sockaddr *source, netperf_socklen_t *sourcelen, uint32_t flags, uint32_t *num_receives) {
 
@@ -2892,6 +3002,17 @@ recv_data(SOCKET data_socket, struct ring_elt *recv_ring, uint32_t bytes_to_recv
   int bytes_recvd;
   int my_recvs;
   int my_flags = 0; /* will we one day want to set MSG_WAITALL? */
+
+#if defined(__linux)
+  int ret;
+  if (loc_rcvavoid == 1) {
+    ret = recv_data_no_copy(data_socket, recv_ring, bytes_to_recv, source, sourcelen, flags, num_receives);
+    if (ret != -4)
+      return ret;
+    else
+      loc_rcvavoid = 0;
+  }
+#endif
 
   /* receive data off the data_socket, ass-u-me-ing a blocking socket
      all the way!-) 2008-01-08 */
@@ -7111,18 +7232,8 @@ scan_omni_args(int argc, char *argv[])
       /* it for everything, everywhere, if we really */
       /* can. of course, we don't know anything */
       /* about the remote... */
-#ifdef SO_SND_COPYAVOID
       loc_sndavoid = 1;
-#else
-      loc_sndavoid = 0;
-      printf("Local send copy avoidance not available.\n");
-#endif
-#ifdef SO_RCV_COPYAVOID
       loc_rcvavoid = 1;
-#else
-      loc_rcvavoid = 0;
-      printf("Local recv copy avoidance not available.\n");
-#endif
       rem_sndavoid = 1;
       rem_rcvavoid = 1;
       break;

@@ -1243,6 +1243,8 @@ create_data_socket(struct addrinfo *res)
   /* local system. of course, this may not be possible... */
 
 #ifdef SO_RCV_COPYAVOID
+  /* this is ancient vestigial HP-UX code that should probably go away
+     one day */
   if (loc_rcvavoid) {
     if (setsockopt(temp_socket,
 		   SOL_SOCKET,
@@ -1255,10 +1257,7 @@ create_data_socket(struct addrinfo *res)
       loc_rcvavoid = 0;
     }
   }
-#else
-  /* it wasn't compiled in... */
-  loc_rcvavoid = 0;
-#endif /* SO_RCV_COPYAVOID */
+#endif
 
 #ifdef SO_SND_COPYAVOID
   if (loc_sndavoid) {
@@ -1273,9 +1272,6 @@ create_data_socket(struct addrinfo *res)
       loc_sndavoid = 0;
     }
   }
-#else
-  /* it was not compiled in... */
-  loc_sndavoid = 0;
 #endif
 
   /* Now, we will see about setting the TCP_NODELAY flag on the local */
