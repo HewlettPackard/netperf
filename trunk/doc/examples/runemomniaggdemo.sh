@@ -1,4 +1,4 @@
- this is a quick and dirty migration of runemomniagg2.sh to the 
+# this is a quick and dirty migration of runemomniagg2.sh to the 
 # --enable-demo mode of aggregate testing
 
 function kill_netperfs {
