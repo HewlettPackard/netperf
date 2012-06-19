@@ -1,7 +1,7 @@
 #include "netperf_version.h"
 
 char	netsh_id[]="\
-@(#)netsh.c (c) Copyright 1993-2011 Hewlett-Packard Company. Version 2.5.0";
+@(#)netsh.c (c) Copyright 1993-2012 Hewlett-Packard Company. Version 2.6.0";
 
 
 /****************************************************************/

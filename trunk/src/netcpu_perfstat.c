@@ -1,5 +1,5 @@
 char   netcpu_perfstat_id[]="\
-@(#)netcpu_perfstat.c Version 2.5.0";
+@(#)netcpu_perfstat.c Version 2.6.0";
 
 #if HAVE_CONFIG_H
 # include <config.h>

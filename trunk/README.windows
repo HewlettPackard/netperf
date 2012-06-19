@@ -30,6 +30,9 @@ NOTE: If any components of the path (ie the full names of the files,
 including parent directories) contain spaces (eg "My Documents"),
 build will charge off into the weeds.
 
+If you do not want the corresponding features, edit the sources files
+and remove the -Ds for WANT_DEMO, WANT_HISTOGRAM and/or WANT_INTERVALS
+
 And if that weren't enough, it is also known that netperf has been
 compiled using MS Visual Studio 2003.  Here are the instructions from
 the person who made that work (See Authors):

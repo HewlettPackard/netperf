@@ -1,5 +1,5 @@
 char   netcpu_procstat_id[]="\
-@(#)netcpu_procstat.c (c) Copyright 2005-2011 Version 2.5.0";
+@(#)netcpu_procstat.c (c) Copyright 2005-2012 Version 2.6.0";
 
 /* netcpu_procstat.c
 

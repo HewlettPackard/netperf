@@ -42,7 +42,7 @@
 
 */
 char	netperf_id[]="\
-@(#)netperf.c (c) Copyright 1993-2011 Hewlett-Packard Company. Version 2.5.0";
+@(#)netperf.c (c) Copyright 1993-2012 Hewlett-Packard Company. Version 2.6.0";
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

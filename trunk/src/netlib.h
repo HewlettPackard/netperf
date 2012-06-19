@@ -1,5 +1,5 @@
 /*
-        Copyright (C) 1993-2005 Hewlett-Packard Company
+        Copyright (C) 1993-2012 Hewlett-Packard Company
 */
 
 #ifdef HAVE_CONFIG_H

@@ -1,5 +1,5 @@
 char   netcpu_kstat10_id[]="\
-@(#)netcpu_kstat10.c (c) Copyright 2005-2011, Hewlett-Packard Company Version 2.5.0";
+@(#)netcpu_kstat10.c (c) Copyright 2005-2012, Hewlett-Packard Company Version 2.6.0";
 
 #if HAVE_CONFIG_H
 # include <config.h>

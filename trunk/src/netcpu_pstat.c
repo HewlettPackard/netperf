@@ -1,5 +1,5 @@
 char   netcpu_pstat_id[]="\
-@(#)netcpu_pstat.c (c) Copyright 2005, Hewlett-Packard Company, Version 2.4.0";
+@(#)netcpu_pstat.c (c) Copyright 2005-2012, Hewlett-Packard Company, Version 2.6.0";
 
 #if HAVE_CONFIG_H
 # include <config.h>

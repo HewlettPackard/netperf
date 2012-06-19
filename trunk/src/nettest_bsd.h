@@ -1,5 +1,5 @@
 /*
-        Copyright (C) 1993-2004 Hewlett-Packard Company
+        Copyright (C) 1993-2012 Hewlett-Packard Company
 */
 
  /* This file contains the test-specific definitions for netperf's BSD */
