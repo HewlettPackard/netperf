@@ -6,7 +6,7 @@ LINKLIBS= \
 	$(SDK_LIB_PATH)\kernel32.lib \
 	$(SDK_LIB_PATH)\ws2_32.lib \
 	$(SDK_LIB_PATH)\wsock32.lib \
-	$(SDK_LIB_PATH}\Winmm.lib
+	$(SDK_LIB_PATH)\Winmm.lib
 
 USE_MSVCRT=1
 UMTYPE=console
