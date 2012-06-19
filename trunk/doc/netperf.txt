@@ -45,7 +45,8 @@ Netperf Manual
 7 Using Netperf to Measure Aggregate Performance
   7.1 Running Concurrent Netperf Tests
     7.1.1 Issues in Running Concurrent Tests
-  7.2 Using -enable-burst
+  7.2 Using - -enable-burst
+  7.3 Using - -enable-demo
 8 Using Netperf to Measure Bidirectional Transfer
   8.1 Bidirectional Transfer with Concurrent Tests
   8.2 Bidirectional Transfer with TCP_RR
@@ -71,7 +72,7 @@ Netperf Manual
 This is Rick Jones' feeble attempt at a Texinfo-based manual for the
 netperf benchmark.
 
-   Copyright (C) 2005-2011 Hewlett-Packard Company
+   Copyright (C) 2005-2012 Hewlett-Packard Company
 
      Permission is granted to copy, distribute and/or modify this
      document per the terms of the netperf source license, a copy of
@@ -232,8 +233,8 @@ is provided via the NetperfPage (http://www.netperf.org/)
    The bits corresponding to each discrete release of netperf are
 tagged (http://www.netperf.org/svn/netperf2/tags) for retrieval via
 subversion.  For example, there is a tag for the first version
-corresponding to this version of the manual - netperf 2.5.0
-(http://www.netperf.org/svn/netperf2/tags/netperf-2.5.0).  Those
+corresponding to this version of the manual - netperf 2.6.0
+(http://www.netperf.org/svn/netperf2/tags/netperf-2.6.0).  Those
 wishing to be on the bleeding edge of netperf development can use
 subversion to grab the top of trunk
 (http://www.netperf.org/svn/netperf2/trunk).  When fixing bugs or
@@ -285,7 +286,7 @@ Sockets, DLPI or SCTP it will be necessary to add one or more
 command.  As of this writing, the configure script will not include
 those tests automagically.
 
-   Starting with version 2.5.0, netperf is migrating most of the
+   Starting with version 2.5.0, netperf began migrating most of the
 "classic" netperf tests found in `src/nettest_bsd.c' to the so-called
 "omni" tests (aka "two routines to run them all") found in
 `src/nettest_omni.c'.  This migration enables a number of new features
@@ -299,7 +300,7 @@ attempt to obtain resolution via <netperf-talk@netperf.org> or
 `--enable-omni=no' to the configure command and the omni tests will not
 be compiled-in and the classic tests will not be migrated.
 
-   Starting with version 2.5.0, netperf will include the "burst mode"
+   Starting with version 2.5.0, netperf includes the "burst mode"
 functionality in a default compilation of the bits.  If you encounter
 problems with this, please first attempt to obtain help via
 <netperf-talk@netperf.org> or <netperf-feedback@netperf.org>.  If that
@@ -1145,9 +1146,9 @@ still be preceded by a `--'.  For example:
 
      In an *note omni: The Omni Tests. test the verbosity setting is
      largely ignored, save for when asking for the time histogram to be
-     displayed.  In version 2.5.0 there is no *note output selector:
-     Omni Output Selectors. for the histogram and so it remains
-     displayed only when the verbosity level is set to 2.
+     displayed.  In version 2.5.0 and later there is no *note output
+     selector: Omni Output Selectors. for the histogram and so it
+     remains displayed only when the verbosity level is set to 2.
 
 `-V'
      This option displays the netperf version and then exits.
@@ -1377,7 +1378,7 @@ BSD Sockets or the XTI interface those common options include:
      units to be 2^30 (GB), 2^20 (MB) or 2^10 (KB) respectively.  A
      suffix of "g," "m" or "k" will specify units of 10^9, 10^6 or 10^3
      bytes respectively.  For example:
-          `-s 128K'
+          `-S 128K'
      Will request the remote send and receive socket buffer sizes to be
      128KB or 131072 bytes.
 
@@ -1907,7 +1908,7 @@ BSD Sockets or the XTI interface those common options include:
      units to be 2^30 (GB), 2^20 (MB) or 2^10 (KB) respectively.  A
      suffix of "g," "m" or "k" will specify units of 10^9, 10^6 or 10^3
      bytes respectively.  For example:
-          `-s 128K'
+          `-S 128K'
      Will request the remote (netserver) send and receive socket buffer
      sizes to be 128KB or 131072 bytes.
 
@@ -2144,10 +2145,11 @@ no support for explicit synchronization of concurrent tests. Until
 netperf4 is ready for prime time, one can make use of the heuristics
 and procedures mentioned here for the 85% solution.
 
-   Basically, there are two ways to measure aggregate performance with
-netperf.  The first is to run multiple, concurrent netperf tests and
-can be applied to any of the netperf tests.  The second is to configure
-netperf with `--enable-burst' and is applicable to the TCP_RR test.
+   There are a few ways to measure aggregate performance with netperf.
+The first is to run multiple, concurrent netperf tests and can be
+applied to any of the netperf tests.  The second is to configure
+netperf with `--enable-burst' and is applicable to the TCP_RR test. The
+third is a variation on the first.
 
 7.1 Running Concurrent Netperf Tests
 ====================================
@@ -2179,7 +2181,16 @@ something like this:
       87380  16384  16384    10.03     233.96
 
    We can take the sum of the results and be reasonably confident that
-the aggregate performance was 940 Mbits/s.
+the aggregate performance was 940 Mbits/s.  This method does not need
+to be limited to one system speaking to one other system.  It can be
+extended to one system talking to N other systems.  It could be as
+simple as:
+     for host in 'foo bar baz bing'
+     do
+     netperf -t TCP_STREAM -H $hosts -i 10 -P 0 &
+     done
+   A more complicated/sophisticated example can be found in
+`doc/examples/runemomniagg2.sh' where.
 
    If you see warnings about netperf not achieving the confidence
 intervals, the best thing to do is to increase the number of iterations
@@ -2233,9 +2244,9 @@ line to append the given string to the output:
 
    You will notice that the tests completed in an order other than they
 were started from the shell.  This underscores why there is a threat of
-skew error and why netperf4 is the preferred tool for aggregate tests.
-Even if you see the Netperf Contributing Editor acting to the
-contrary!-)
+skew error and why netperf4 will eventually be the preferred tool for
+aggregate tests.  Even if you see the Netperf Contributing Editor
+acting to the contrary!-)
 
 7.1.1 Issues in Running Concurrent Tests
 ----------------------------------------
@@ -2263,8 +2274,20 @@ that for concurrent tests the service demands reported by netperf will
 be wrong.  One has to compute service demands for concurrent tests by
 hand
 
-7.2 Using -enable-burst
-=======================
+   Running concurrent tests can also become difficult when there is no
+one "central" node.  Running tests between pairs of systems may be more
+difficult, calling for remote shell commands in the for loop rather
+than netperf commands.  This introduces more skew error, which the
+confidence intervals may not be able to sufficiently mitigate.  One
+possibility is to actually run three consecutive netperf tests on each
+node - the first being a warm-up, the last being a cool-down.  The idea
+then is to ensure that the time it takes to get all the netperfs
+started is less than the length of the first netperf command in the
+sequence of three.  Similarly, it assumes that all "middle" netperfs
+will complete before the first of the "last" netperfs complete.
+
+7.2 Using - -enable-burst
+=========================
 
 Starting in version 2.5.0 `--enable-burst=yes' is the default, which
 means one no longer must:
@@ -2444,6 +2467,106 @@ screeching halt, but it will reduce the number of transactions
 outstanding at any one time.  A "burst" UDP_RR test will come to a halt
 if the sum of the lost requests and responses reaches the value
 specified in the test-specific `-b' option.
+
+7.3 Using - -enable-demo
+========================
+
+One can
+     configure --enable-demo
+   and compile netperf to enable netperf to emit "interim results" at
+semi-regular intervals.  This enables a global `-D' option which takes
+a reporting interval as an argument.  With that specified, the output
+of netperf will then look something like
+
+     $ src/netperf -D 1.25
+     MIGRATED TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain () port 0 AF_INET : demo
+     Interim result: 25425.52 10^6bits/s over 1.25 seconds ending at 1327962078.405
+     Interim result: 25486.82 10^6bits/s over 1.25 seconds ending at 1327962079.655
+     Interim result: 25474.96 10^6bits/s over 1.25 seconds ending at 1327962080.905
+     Interim result: 25523.49 10^6bits/s over 1.25 seconds ending at 1327962082.155
+     Interim result: 25053.57 10^6bits/s over 1.27 seconds ending at 1327962083.429
+     Interim result: 25349.64 10^6bits/s over 1.25 seconds ending at 1327962084.679
+     Interim result: 25292.84 10^6bits/s over 1.25 seconds ending at 1327962085.932
+     Recv   Send    Send
+     Socket Socket  Message  Elapsed
+     Size   Size    Size     Time     Throughput
+     bytes  bytes   bytes    secs.    10^6bits/sec
+
+      87380  16384  16384    10.00    25375.66
+   The units of the "Interim result" lines will follow the units
+selected via the global `-f' option.  If the test-specific `-o' option
+is specified on the command line, the format will be CSV:
+     ...
+     2978.81,MBytes/s,1.25,1327962298.035
+     ...
+   If the test-specific `-k' option is used the format will be keyval
+with each keyval being given an index:
+     ...
+     NETPERF_INTERIM_RESULT[2]=25.00
+     NETPERF_UNITS[2]=10^9bits/s
+     NETPERF_INTERVAL[2]=1.25
+     NETPERF_ENDING[2]=1327962357.249
+     ...
+   The expectation is it may be easier to utilize the keyvals if they
+have indices.
+
+   But how does this help with aggregate tests?  Well, what one can do
+is start the netperfs via a script, giving each a Very Long (tm) run
+time.  Direct the output to a file per instance.  Then, once all the
+netperfs have been started, take a timestamp and wait for some desired
+test interval.  Once that interval expires take another timestamp and
+then start terminating the netperfs by sending them a SIGALRM signal
+via the likes of the `kill' or `pkill' command.  The netperfs will
+terminate and emit the rest of the "usual" output, and you can then
+bring the files to a central location for post processing to find the
+aggregate performance over the "test interval."
+
+   This method has the advantage that it does not require advance
+knowledge of how long it takes to get netperf tests started and/or
+stopped.  It does though require sufficiently synchronized clocks on
+all the test systems.
+
+   While calls to get the current time can be inexpensive, that neither
+has been nor is universally true.  For that reason netperf tries to
+minimize the number of such "timestamping" calls (eg `gettimeofday')
+calls it makes when in demo mode.  Rather than take a timestamp after
+each `send' or `recv' call completes netperf tries to guess how many
+units of work will be performed over the desired interval.  Only once
+that many units of work have been completed will netperf check the
+time.  If the reporting interval has passed, netperf will emit an
+"interim result."  If the interval has not passed, netperf will update
+its estimate for units and continue.
+
+   After a bit of thought one can see that if things "speed-up" netperf
+will still honor the interval.  However, if things "slow-down" netperf
+may be late with an "interim result."  Here is an example of both of
+those happening during a test - with the interval being honored while
+throughput increases, and then about half-way through when another
+netperf (not shown) is started we see things slowing down and netperf
+not hitting the interval as desired.
+     $ src/netperf -D 2 -H tardy.hpl.hp.com -l 20
+     MIGRATED TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to tardy.hpl.hp.com () port 0 AF_INET : demo
+     Interim result:   36.46 10^6bits/s over 2.01 seconds ending at 1327963880.565
+     Interim result:   59.19 10^6bits/s over 2.00 seconds ending at 1327963882.569
+     Interim result:   73.39 10^6bits/s over 2.01 seconds ending at 1327963884.576
+     Interim result:   84.01 10^6bits/s over 2.03 seconds ending at 1327963886.603
+     Interim result:   75.63 10^6bits/s over 2.21 seconds ending at 1327963888.814
+     Interim result:   55.52 10^6bits/s over 2.72 seconds ending at 1327963891.538
+     Interim result:   70.94 10^6bits/s over 2.11 seconds ending at 1327963893.650
+     Interim result:   80.66 10^6bits/s over 2.13 seconds ending at 1327963895.777
+     Interim result:   86.42 10^6bits/s over 2.12 seconds ending at 1327963897.901
+     Recv   Send    Send
+     Socket Socket  Message  Elapsed
+     Size   Size    Size     Time     Throughput
+     bytes  bytes   bytes    secs.    10^6bits/sec
+
+      87380  16384  16384    20.34      68.87
+   So long as your post-processing mechanism can account for that, there
+should be no problem.  As time passes there may be changes to try to
+improve the netperf's honoring the interval but one should not ass-u-me
+it will always do so.  One should not assume the precision will remain
+fixed - future versions may change it - perhaps going beyond tenths of
+seconds in reporting the interval length etc.
 
 8 Using Netperf to Measure Bidirectional Transfer
 *************************************************
@@ -3741,99 +3864,99 @@ list and/or peruse the current sources
 Concept Index
 *************
 
-Aggregate Performance:                         See 7.        (line 2141)
-Bandwidth Limitation:                          See 2.2.      (line  316)
-Connection Latency:                            See 6.2.2.    (line 1984)
-CPU Utilization:                               See 3.1.      (line  465)
-Design of Netperf:                             See 3.        (line  435)
-Installation:                                  See 2.        (line  197)
-Introduction:                                  See 1.        (line   84)
-Latency, Connection Establishment <1>:         See 6.2.7.    (line 2111)
-Latency, Connection Establishment <2>:         See 6.2.6.    (line 2101)
-Latency, Connection Establishment <3>:         See 6.2.3.    (line 2027)
-Latency, Connection Establishment:             See 6.2.2.    (line 1984)
-Latency, Request-Response <1>:                 See 6.2.11.   (line 2138)
-Latency, Request-Response <2>:                 See 6.2.10.   (line 2135)
-Latency, Request-Response <3>:                 See 6.2.9.    (line 2132)
-Latency, Request-Response <4>:                 See 6.2.8.    (line 2121)
-Latency, Request-Response <5>:                 See 6.2.7.    (line 2111)
-Latency, Request-Response <6>:                 See 6.2.5.    (line 2090)
-Latency, Request-Response <7>:                 See 6.2.4.    (line 2047)
-Latency, Request-Response <8>:                 See 6.2.3.    (line 2027)
-Latency, Request-Response:                     See 6.2.1.    (line 1935)
-Limiting Bandwidth <1>:                        See 5.2.4.    (line 1563)
-Limiting Bandwidth:                            See 2.2.      (line  316)
-Measuring Latency:                             See 6.2.1.    (line 1935)
-Packet Loss:                                   See 6.2.4.    (line 2047)
-Port Reuse:                                    See 6.2.2.    (line 1991)
-TIME_WAIT:                                     See 6.2.2.    (line 1991)
+Aggregate Performance:                         See 7.        (line 2142)
+Bandwidth Limitation:                          See 2.2.      (line  317)
+Connection Latency:                            See 6.2.2.    (line 1985)
+CPU Utilization:                               See 3.1.      (line  466)
+Design of Netperf:                             See 3.        (line  436)
+Installation:                                  See 2.        (line  198)
+Introduction:                                  See 1.        (line   85)
+Latency, Connection Establishment <1>:         See 6.2.7.    (line 2112)
+Latency, Connection Establishment <2>:         See 6.2.6.    (line 2102)
+Latency, Connection Establishment <3>:         See 6.2.3.    (line 2028)
+Latency, Connection Establishment:             See 6.2.2.    (line 1985)
+Latency, Request-Response <1>:                 See 6.2.11.   (line 2139)
+Latency, Request-Response <2>:                 See 6.2.10.   (line 2136)
+Latency, Request-Response <3>:                 See 6.2.9.    (line 2133)
+Latency, Request-Response <4>:                 See 6.2.8.    (line 2122)
+Latency, Request-Response <5>:                 See 6.2.7.    (line 2112)
+Latency, Request-Response <6>:                 See 6.2.5.    (line 2091)
+Latency, Request-Response <7>:                 See 6.2.4.    (line 2048)
+Latency, Request-Response <8>:                 See 6.2.3.    (line 2028)
+Latency, Request-Response:                     See 6.2.1.    (line 1936)
+Limiting Bandwidth <1>:                        See 5.2.4.    (line 1564)
+Limiting Bandwidth:                            See 2.2.      (line  317)
+Measuring Latency:                             See 6.2.1.    (line 1936)
+Packet Loss:                                   See 6.2.4.    (line 2048)
+Port Reuse:                                    See 6.2.2.    (line 1992)
+TIME_WAIT:                                     See 6.2.2.    (line 1992)
 Option Index
 ************
 
---enable-burst, Configure:                     See 7.        (line 2141)
---enable-cpuutil, Configure:                   See 2.2.      (line  276)
---enable-dlpi, Configure:                      See 2.2.      (line  282)
---enable-histogram, Configure:                 See 2.2.      (line  316)
---enable-intervals, Configure:                 See 2.2.      (line  316)
---enable-omni, Configure:                      See 2.2.      (line  288)
---enable-sctp, Configure:                      See 2.2.      (line  282)
---enable-unixdomain, Configure:                See 2.2.      (line  282)
---enable-xti, Configure:                       See 2.2.      (line  282)
--4, Global:                                    See 4.2.      (line 1173)
--4, Test-specific <1>:                         See 6.2.      (line 1921)
--4, Test-specific:                             See 5.2.      (line 1394)
--6 Test-specific:                              See 6.2.      (line 1927)
--6, Global:                                    See 4.2.      (line 1182)
--6, Test-specific:                             See 5.2.      (line 1400)
--A, Global:                                    See 4.2.      (line  702)
--a, Global:                                    See 4.2.      (line  690)
--B, Global:                                    See 4.2.      (line  713)
--b, Global:                                    See 4.2.      (line  706)
--C, Global:                                    See 4.2.      (line  726)
--c, Global:                                    See 4.2.      (line  717)
--c, Test-specific:                             See 9.1.      (line 2623)
--D, Global:                                    See 4.2.      (line  740)
--d, Global:                                    See 4.2.      (line  731)
--d, Test-specific:                             See 9.1.      (line 2627)
--F, Global:                                    See 4.2.      (line  760)
--f, Global:                                    See 4.2.      (line  751)
--H, Global:                                    See 4.2.      (line  779)
--h, Global:                                    See 4.2.      (line  775)
--H, Test-specific:                             See 6.2.      (line 1850)
--h, Test-specific <1>:                         See 6.2.      (line 1843)
--h, Test-specific:                             See 5.2.      (line 1294)
--i, Global:                                    See 4.2.      (line  863)
--I, Global:                                    See 4.2.      (line  814)
--j, Global:                                    See 4.2.      (line  889)
--k, Test-specific:                             See 9.1.      (line 2647)
--L, Global:                                    See 4.2.      (line  947)
--l, Global:                                    See 4.2.      (line  926)
--L, Test-specific <1>:                         See 6.2.      (line 1859)
--L, Test-specific:                             See 5.2.      (line 1309)
--M, Test-specific:                             See 5.2.      (line 1332)
--m, Test-specific:                             See 5.2.      (line 1316)
--N, Global:                                    See 4.2.      (line  977)
--n, Global:                                    See 4.2.      (line  959)
--O, Global:                                    See 4.2.      (line 1022)
--o, Global:                                    See 4.2.      (line 1013)
--O, Test-specific:                             See 9.1.      (line 2672)
--o, Test-specific:                             See 9.1.      (line 2660)
--P, Global:                                    See 4.2.      (line 1047)
--p, Global:                                    See 4.2.      (line 1027)
--P, Test-specific <1>:                         See 6.2.      (line 1866)
--P, Test-specific:                             See 5.2.      (line 1345)
--r, Test-specific:                             See 6.2.      (line 1869)
--S Test-specific:                              See 5.2.      (line 1371)
--S, Global:                                    See 4.2.      (line 1065)
--s, Global:                                    See 4.2.      (line 1056)
--S, Test-specific:                             See 6.2.      (line 1901)
--s, Test-specific <1>:                         See 6.2.      (line 1881)
--s, Test-specific:                             See 5.2.      (line 1348)
--T, Global:                                    See 4.2.      (line 1107)
--t, Global:                                    See 4.2.      (line 1075)
--T, Test-specific:                             See 9.1.      (line 2691)
--t, Test-specific:                             See 9.1.      (line 2686)
--V, Global:                                    See 4.2.      (line 1152)
--v, Global:                                    See 4.2.      (line 1124)
--W, Global:                                    See 4.2.      (line 1164)
--w, Global:                                    See 4.2.      (line 1157)
+--enable-burst, Configure:                     See 7.        (line 2142)
+--enable-cpuutil, Configure:                   See 2.2.      (line  277)
+--enable-dlpi, Configure:                      See 2.2.      (line  283)
+--enable-histogram, Configure:                 See 2.2.      (line  317)
+--enable-intervals, Configure:                 See 2.2.      (line  317)
+--enable-omni, Configure:                      See 2.2.      (line  289)
+--enable-sctp, Configure:                      See 2.2.      (line  283)
+--enable-unixdomain, Configure:                See 2.2.      (line  283)
+--enable-xti, Configure:                       See 2.2.      (line  283)
+-4, Global:                                    See 4.2.      (line 1174)
+-4, Test-specific <1>:                         See 6.2.      (line 1922)
+-4, Test-specific:                             See 5.2.      (line 1395)
+-6 Test-specific:                              See 6.2.      (line 1928)
+-6, Global:                                    See 4.2.      (line 1183)
+-6, Test-specific:                             See 5.2.      (line 1401)
+-A, Global:                                    See 4.2.      (line  703)
+-a, Global:                                    See 4.2.      (line  691)
+-B, Global:                                    See 4.2.      (line  714)
+-b, Global:                                    See 4.2.      (line  707)
+-C, Global:                                    See 4.2.      (line  727)
+-c, Global:                                    See 4.2.      (line  718)
+-c, Test-specific:                             See 9.1.      (line 2746)
+-D, Global:                                    See 4.2.      (line  741)
+-d, Global:                                    See 4.2.      (line  732)
+-d, Test-specific:                             See 9.1.      (line 2750)
+-F, Global:                                    See 4.2.      (line  761)
+-f, Global:                                    See 4.2.      (line  752)
+-H, Global:                                    See 4.2.      (line  780)
+-h, Global:                                    See 4.2.      (line  776)
+-H, Test-specific:                             See 6.2.      (line 1851)
+-h, Test-specific <1>:                         See 6.2.      (line 1844)
+-h, Test-specific:                             See 5.2.      (line 1295)
+-i, Global:                                    See 4.2.      (line  864)
+-I, Global:                                    See 4.2.      (line  815)
+-j, Global:                                    See 4.2.      (line  890)
+-k, Test-specific:                             See 9.1.      (line 2770)
+-L, Global:                                    See 4.2.      (line  948)
+-l, Global:                                    See 4.2.      (line  927)
+-L, Test-specific <1>:                         See 6.2.      (line 1860)
+-L, Test-specific:                             See 5.2.      (line 1310)
+-M, Test-specific:                             See 5.2.      (line 1333)
+-m, Test-specific:                             See 5.2.      (line 1317)
+-N, Global:                                    See 4.2.      (line  978)
+-n, Global:                                    See 4.2.      (line  960)
+-O, Global:                                    See 4.2.      (line 1023)
+-o, Global:                                    See 4.2.      (line 1014)
+-O, Test-specific:                             See 9.1.      (line 2795)
+-o, Test-specific:                             See 9.1.      (line 2783)
+-P, Global:                                    See 4.2.      (line 1048)
+-p, Global:                                    See 4.2.      (line 1028)
+-P, Test-specific <1>:                         See 6.2.      (line 1867)
+-P, Test-specific:                             See 5.2.      (line 1346)
+-r, Test-specific:                             See 6.2.      (line 1870)
+-S Test-specific:                              See 5.2.      (line 1372)
+-S, Global:                                    See 4.2.      (line 1066)
+-s, Global:                                    See 4.2.      (line 1057)
+-S, Test-specific:                             See 6.2.      (line 1902)
+-s, Test-specific <1>:                         See 6.2.      (line 1882)
+-s, Test-specific:                             See 5.2.      (line 1349)
+-T, Global:                                    See 4.2.      (line 1108)
+-t, Global:                                    See 4.2.      (line 1076)
+-T, Test-specific:                             See 9.1.      (line 2814)
+-t, Test-specific:                             See 9.1.      (line 2809)
+-V, Global:                                    See 4.2.      (line 1153)
+-v, Global:                                    See 4.2.      (line 1125)
+-W, Global:                                    See 4.2.      (line 1165)
+-w, Global:                                    See 4.2.      (line 1158)

@@ -1,8 +1,8 @@
 <html lang="en">
 <head>
-<title>Care and Feeding of Netperf 2.5.X</title>
+<title>Care and Feeding of Netperf 2.6.X</title>
 <meta http-equiv="Content-Type" content="text/html">
-<meta name="description" content="Care and Feeding of Netperf 2.5.X">
+<meta name="description" content="Care and Feeding of Netperf 2.6.X">
 <meta name="generator" content="makeinfo 4.13">
 <link title="Top" rel="top" href="#Top">
 <link href="http://www.gnu.org/software/texinfo/" rel="generator-home" title="Texinfo Homepage">
@@ -10,7 +10,7 @@
 This is Rick Jones' feeble attempt at a Texinfo-based manual for the
 netperf benchmark.
 
-Copyright (C) 2005-2011 Hewlett-Packard Company
+Copyright (C) 2005-2012 Hewlett-Packard Company
 
      Permission is granted to copy, distribute and/or modify this
      document per the terms of the netperf source license, a copy of
@@ -31,7 +31,7 @@ Copyright (C) 2005-2011 Hewlett-Packard Company
 --></style>
 </head>
 <body>
-<h1 class="settitle">Care and Feeding of Netperf 2.5.X</h1>
+<h1 class="settitle">Care and Feeding of Netperf 2.6.X</h1>
 <div class="contents">
 <h2>Table of Contents</h2>
 <ul>
@@ -147,7 +147,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#dir">(dir)</a>
 <p>This is Rick Jones' feeble attempt at a Texinfo-based manual for the
 netperf benchmark.
 
-   <p>Copyright &copy; 2005-2011 Hewlett-Packard Company
+   <p>Copyright &copy; 2005-2012 Hewlett-Packard Company
 <blockquote>
 Permission is granted to copy, distribute and/or modify this document
 per the terms of the netperf source license, a copy of which can be
@@ -372,7 +372,7 @@ is provided via the
 <a href="http://www.netperf.org/svn/netperf2/tags">tagged</a> for retrieval
 via subversion.  For example, there is a tag for the first version
 corresponding to this version of the manual -
-<a href="http://www.netperf.org/svn/netperf2/tags/netperf-2.5.0">netperf 2.5.0</a>.  Those wishing to be on the bleeding edge of netperf
+<a href="http://www.netperf.org/svn/netperf2/tags/netperf-2.6.0">netperf 2.6.0</a>.  Those wishing to be on the bleeding edge of netperf
 development can use subversion to grab the
 <a href="http://www.netperf.org/svn/netperf2/trunk">top of trunk</a>.  When
 fixing bugs or making enhancements, patches against the top-of-trunk
@@ -433,7 +433,7 @@ Sockets, DLPI or SCTP it will be necessary to add one or more
 command.  As of this writing, the configure script will not include
 those tests automagically.
 
-   <p><a name="index-g_t_002d_002denable_002domni_002c-Configure-8"></a>Starting with version 2.5.0, netperf is migrating most of the
+   <p><a name="index-g_t_002d_002denable_002domni_002c-Configure-8"></a>Starting with version 2.5.0, netperf began migrating most of the
 &ldquo;classic&rdquo; netperf tests found in <samp><span class="file">src/nettest_bsd.c</span></samp> to the
 so-called &ldquo;omni&rdquo; tests (aka &ldquo;two routines to run them all&rdquo;) found
 in <samp><span class="file">src/nettest_omni.c</span></samp>.  This migration enables a number of new
@@ -450,7 +450,7 @@ can add a <code>--enable-omni=no</code> to the configure command and the
 omni tests will not be compiled-in and the classic tests will not be
 migrated.
 
-   <p>Starting with version 2.5.0, netperf will include the &ldquo;burst mode&rdquo;
+   <p>Starting with version 2.5.0, netperf includes the &ldquo;burst mode&rdquo;
 functionality in a default compilation of the bits.  If you encounter
 problems with this, please first attempt to obtain help via
 <a href="mailto:netperf-talk@netperf.org">netperf-talk@netperf.org</a> or
@@ -1319,7 +1319,7 @@ each transaction if netperf was configured with
 
      <p>In an <a href="#The-Omni-Tests">omni</a> test the verbosity setting is largely
 ignored, save for when asking for the time histogram to be displayed. 
-In version 2.5.0 there is no <a href="#Omni-Output-Selectors">output selector</a> for the histogram and so it remains displayed only when the
+In version 2.5.0 and later there is no <a href="#Omni-Output-Selectors">output selector</a> for the histogram and so it remains displayed only when the
 verbosity level is set to 2.
 
      <p><a name="index-g_t_002dV_002c-Global-43"></a><br><dt><code>-V</code><dd>This option displays the netperf version and then exits.

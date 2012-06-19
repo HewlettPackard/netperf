@@ -4,7 +4,7 @@ netperf.texi.
 This is Rick Jones' feeble attempt at a Texinfo-based manual for the
 netperf benchmark.
 
-   Copyright (C) 2005-2011 Hewlett-Packard Company
+   Copyright (C) 2005-2012 Hewlett-Packard Company
 
      Permission is granted to copy, distribute and/or modify this
      document per the terms of the netperf source license, a copy of
@@ -20,7 +20,7 @@ Netperf Manual
 This is Rick Jones' feeble attempt at a Texinfo-based manual for the
 netperf benchmark.
 
-   Copyright (C) 2005-2011 Hewlett-Packard Company
+   Copyright (C) 2005-2012 Hewlett-Packard Company
 
      Permission is granted to copy, distribute and/or modify this
      document per the terms of the netperf source license, a copy of
@@ -222,8 +222,8 @@ is provided via the NetperfPage (http://www.netperf.org/)
    The bits corresponding to each discrete release of netperf are
 tagged (http://www.netperf.org/svn/netperf2/tags) for retrieval via
 subversion.  For example, there is a tag for the first version
-corresponding to this version of the manual - netperf 2.5.0
-(http://www.netperf.org/svn/netperf2/tags/netperf-2.5.0).  Those
+corresponding to this version of the manual - netperf 2.6.0
+(http://www.netperf.org/svn/netperf2/tags/netperf-2.6.0).  Those
 wishing to be on the bleeding edge of netperf development can use
 subversion to grab the top of trunk
 (http://www.netperf.org/svn/netperf2/trunk).  When fixing bugs or
@@ -278,7 +278,7 @@ Sockets, DLPI or SCTP it will be necessary to add one or more
 command.  As of this writing, the configure script will not include
 those tests automagically.
 
-   Starting with version 2.5.0, netperf is migrating most of the
+   Starting with version 2.5.0, netperf began migrating most of the
 "classic" netperf tests found in `src/nettest_bsd.c' to the so-called
 "omni" tests (aka "two routines to run them all") found in
 `src/nettest_omni.c'.  This migration enables a number of new features
@@ -292,7 +292,7 @@ attempt to obtain resolution via <netperf-talk@netperf.org> or
 `--enable-omni=no' to the configure command and the omni tests will not
 be compiled-in and the classic tests will not be migrated.
 
-   Starting with version 2.5.0, netperf will include the "burst mode"
+   Starting with version 2.5.0, netperf includes the "burst mode"
 functionality in a default compilation of the bits.  If you encounter
 problems with this, please first attempt to obtain help via
 <netperf-talk@netperf.org> or <netperf-feedback@netperf.org>.  If that
@@ -1172,9 +1172,9 @@ File: netperf.info,  Node: Global Options,  Prev: Command-line Options Syntax,  
 
      In an *note omni: The Omni Tests. test the verbosity setting is
      largely ignored, save for when asking for the time histogram to be
-     displayed.  In version 2.5.0 there is no *note output selector:
-     Omni Output Selectors. for the histogram and so it remains
-     displayed only when the verbosity level is set to 2.
+     displayed.  In version 2.5.0 and later there is no *note output
+     selector: Omni Output Selectors. for the histogram and so it
+     remains displayed only when the verbosity level is set to 2.
 
 `-V'
      This option displays the netperf version and then exits.
@@ -4253,62 +4253,62 @@ Node: Conventions4150
 Node: Installing Netperf5913
 Node: Getting Netperf Bits7467
 Node: Installing Netperf Bits9326
-Node: Verifying Installation17821
-Node: The Design of Netperf18525
-Node: CPU Utilization20121
-Node: CPU Utilization in a Virtual Guest28845
-Node: Global Command-line Options30432
-Node: Command-line Options Syntax30971
-Node: Global Options32367
-Node: Using Netperf to Measure Bulk Data Transfer56520
-Node: Issues in Bulk Transfer57193
-Node: Options common to TCP UDP and SCTP tests61454
-Node: TCP_STREAM67779
-Node: TCP_MAERTS71864
-Node: TCP_SENDFILE73101
-Node: UDP_STREAM75601
-Node: XTI_TCP_STREAM79037
-Node: XTI_UDP_STREAM79682
-Node: SCTP_STREAM80327
-Node: DLCO_STREAM81027
-Node: DLCL_STREAM83000
-Node: STREAM_STREAM83874
-Node: DG_STREAM84732
-Node: Using Netperf to Measure Request/Response85413
-Node: Issues in Request/Response87731
-Node: Options Common to TCP UDP and SCTP _RR tests90105
-Node: TCP_RR95129
-Node: TCP_CC97529
-Node: TCP_CRR99763
-Node: UDP_RR100825
-Node: XTI_TCP_RR103129
-Node: XTI_TCP_CC103712
-Node: XTI_TCP_CRR104217
-Node: XTI_UDP_RR104729
-Node: DLCL_RR105306
-Node: DLCO_RR105459
-Node: SCTP_RR105611
-Node: Using Netperf to Measure Aggregate Performance105747
-Node: Running Concurrent Netperf Tests106779
-Node: Issues in Running Concurrent Tests111420
-Node: Using --enable-burst113684
-Node: Using --enable-demo120583
-Node: Using Netperf to Measure Bidirectional Transfer126139
-Node: Bidirectional Transfer with Concurrent Tests127271
-Node: Bidirectional Transfer with TCP_RR129627
-Node: Implications of Concurrent Tests vs Burst Request/Response132011
-Node: The Omni Tests133825
-Node: Native Omni Tests134872
-Node: Migrated Tests140150
-Node: Omni Output Selection142255
-Node: Omni Output Selectors145238
-Node: Other Netperf Tests172946
-Node: CPU rate calibration173381
-Node: UUID Generation175749
-Node: Address Resolution176465
-Node: Enhancing Netperf178441
-Node: Netperf4179936
-Node: Concept Index180841
-Node: Option Index183167
+Node: Verifying Installation17820
+Node: The Design of Netperf18524
+Node: CPU Utilization20120
+Node: CPU Utilization in a Virtual Guest28844
+Node: Global Command-line Options30431
+Node: Command-line Options Syntax30970
+Node: Global Options32366
+Node: Using Netperf to Measure Bulk Data Transfer56529
+Node: Issues in Bulk Transfer57202
+Node: Options common to TCP UDP and SCTP tests61463
+Node: TCP_STREAM67788
+Node: TCP_MAERTS71873
+Node: TCP_SENDFILE73110
+Node: UDP_STREAM75610
+Node: XTI_TCP_STREAM79046
+Node: XTI_UDP_STREAM79691
+Node: SCTP_STREAM80336
+Node: DLCO_STREAM81036
+Node: DLCL_STREAM83009
+Node: STREAM_STREAM83883
+Node: DG_STREAM84741
+Node: Using Netperf to Measure Request/Response85422
+Node: Issues in Request/Response87740
+Node: Options Common to TCP UDP and SCTP _RR tests90114
+Node: TCP_RR95138
+Node: TCP_CC97538
+Node: TCP_CRR99772
+Node: UDP_RR100834
+Node: XTI_TCP_RR103138
+Node: XTI_TCP_CC103721
+Node: XTI_TCP_CRR104226
+Node: XTI_UDP_RR104738
+Node: DLCL_RR105315
+Node: DLCO_RR105468
+Node: SCTP_RR105620
+Node: Using Netperf to Measure Aggregate Performance105756
+Node: Running Concurrent Netperf Tests106788
+Node: Issues in Running Concurrent Tests111429
+Node: Using --enable-burst113693
+Node: Using --enable-demo120592
+Node: Using Netperf to Measure Bidirectional Transfer126148
+Node: Bidirectional Transfer with Concurrent Tests127280
+Node: Bidirectional Transfer with TCP_RR129636
+Node: Implications of Concurrent Tests vs Burst Request/Response132020
+Node: The Omni Tests133834
+Node: Native Omni Tests134881
+Node: Migrated Tests140159
+Node: Omni Output Selection142264
+Node: Omni Output Selectors145247
+Node: Other Netperf Tests172955
+Node: CPU rate calibration173390
+Node: UUID Generation175758
+Node: Address Resolution176474
+Node: Enhancing Netperf178450
+Node: Netperf4179945
+Node: Concept Index180850
+Node: Option Index183176
 
 End Tag Table

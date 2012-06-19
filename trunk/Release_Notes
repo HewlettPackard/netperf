@@ -1,4 +1,4 @@
-These are the Release Notes for post Revision 2.5.0 top-of-trunk netperf:
+These are the Release Notes for Revision 2.6.0 of netperf:
 
 *) Initial pass at support for --enable-intervals (WANT_INTERVALS) for
    Windows, courtesy of Jonathan Cook.
