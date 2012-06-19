@@ -2,11 +2,11 @@
 # Process this file with autoconf to produce a configure script.
 
 FULL-PACKAGE-NAME=netperf
-VERSION=pre-2.6.0-tot
+VERSION=2.6.0
 BUG-REPORT-ADDRESS=netperf-feedback@netperf.org
 
 AC_PREREQ(2.59)
-AC_INIT(netperf, pre-2.6.0-tot)
+AC_INIT(netperf, 2.6.0)
 
 # Inherit compiler flags from the environment...
 CFLAGS="${CFLAGS:=}"

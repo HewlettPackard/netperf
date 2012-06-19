@@ -1,5 +1,5 @@
 char   netcpu_pstatnew_id[]="\
-@(#)netcpu_pstatnew.c (c) Copyright 2005-2011 Hewlett-Packard Company, Version 2.5.0";
+@(#)netcpu_pstatnew.c (c) Copyright 2005-2012 Hewlett-Packard Company, Version 2.6.0";
 
 /* since we "know" that this interface is available only on 11.23 and
    later, and that 11.23 and later are strictly 64-bit kernels, we can

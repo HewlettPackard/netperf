@@ -5,7 +5,7 @@
 #ifdef WANT_XTI
 #ifndef lint
 char	nettest_xti_id[]="\
-@(#)nettest_xti.c (c) Copyright 1995-2008 Hewlett-Packard Co. Version 2.4.5";
+@(#)nettest_xti.c (c) Copyright 1995-2012 Hewlett-Packard Co. Version 2.6.0";
 #else
 #define DIRTY
 #define WANT_HISTOGRAM

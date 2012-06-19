@@ -1,5 +1,5 @@
 char    netlib_id[]="\
-@(#)netlib.c (c) Copyright 1993-2011 Hewlett-Packard Company. Version 2.5.0";
+@(#)netlib.c (c) Copyright 1993-2012 Hewlett-Packard Company. Version 2.6.0";
 
 
 /****************************************************************/

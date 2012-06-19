@@ -1,5 +1,5 @@
 char   netcpu_kstat_id[]="\
-@(#)netcpu_kstat.c  Version 2.4.0";
+@(#)netcpu_kstat.c  Version 2.6.0";
 
 #if HAVE_CONFIG_H
 # include <config.h>
