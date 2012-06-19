@@ -1,0 +1,38 @@
+TARGETNAME=netperf
+TARGETPATH=OBJ
+TARGETTYPE=PROGRAM
+
+LINKLIBS= \
+	$(SDK_LIB_PATH)\kernel32.lib \
+	$(SDK_LIB_PATH)\ws2_32.lib \
+	$(SDK_LIB_PATH)\wsock32.lib \
+	$(SDK_LIB_PATH)\Winmm.lib
+
+USE_MSVCRT=1
+UMTYPE=console
+
+INCLUDES=$(SDK_INC_PATH);.
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+C_DEFINES=$(C_DEFINES) -D_CONSOLE_ -DHAVE_STRING_H -DHAVE_STRUCT_SOCKADDR_STORAGE -DHAVE_GETADDRINFO -DHAVE_GETNAMEINFO -DSTDC_HEADERS -DHAVE_STDLIB_H -DHAVE_WS2TCPIP_H -DWANT_OMNI -DWANT_DEMO -DWANT_HISTOGRAM -DWANT_INTERVALS
+
+#USER_C_FLAGS=$(USER_C_FLAGS) /E
+
+SOURCES= \
+        ..\netcpu_ntperf.c \
+	..\netlib.c \
+	..\netsh.c \
+	..\nettest_bsd.c \
+	..\nettest_omni.c \
+	..\netsec_win.c \
+	..\netdrv_none.c \
+	..\netslot_none.c \
+	..\netsys_none.c \
+	..\netrt_none.c \
+	..\net_uuid.c \
+	..\netperf.c \
+	..\dscp.c \
+	..\inet_ntop.c
+
+

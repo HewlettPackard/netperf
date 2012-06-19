@@ -1,0 +1,29 @@
+Until the release bits the following was true:
+
+    Until such time as Rick Jones can figure-out or be told how to make it
+    automagic in the configure script, prior to configure on solaris, you
+    may need:
+
+    CFLAGS="-lsocket -lnsl -lkstat"
+
+    and if you are trying to compile the SCTP tests:
+
+    CFLAGS="-lxnet -lsocket -lnsl -lkstat -D_XOPEN_SOURCE=500 -D__EXTENSIONS__"
+
+as the release bits have a "smarter" configure script, and the SCTP
+tests use libsctp, the above no longer applies.  It should all just be
+automagic (although for SCTP you still must --enable-sctp at configure
+time)
+
+Beware CPU util figures on anything before Solaris 10 that does not
+say 100%, and still be a triffle cautious with Solaris 10 CPU util
+reports.  The CPU time accounting mechanisms either do not track time
+spent servicing interrupts, or do so in parallel with time spent in
+user/kernel/idle which means that some idle time isn't _really_ idle
+time.
+
+And beyond that, it is still not clear if the CPU utilization reported
+on systems with hardware threading support (eg UltraSPARC-T1) is
+really accurate even ignoring the issue with interrupt time.  It is
+likely that to be truely accurate, it is necessary to know how much
+"real work" any one strand performed.

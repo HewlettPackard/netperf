@@ -1,0 +1,109 @@
+It has been reported that versions of netperf have configured and
+compiled under Cygwin.  
+
+It is also known that netperf has compiled using the Windows DDK.
+Here is a skeleton of the instructions to do so:
+
+Steps are:
+
+A) Install the Windows driver developer kit (if not already done).
+
+B) open a Cmd windows (i.e., a DOS box) for the target environment
+   (target OS version; free vs checked build; x86, AMD64, or IA64).
+   This is picked from the "Start\Developer Kits" path.
+
+C) enter the src\NetPerfDir directory
+
+D) Edit sources to enable any desired optional features (eg
+   -DWANT_HISTOGRAM) or to remove features which your version of
+   Windows might not support (eg -DHAVE_STRUCT_SOCKADDR_STORAGE)
+
+E) while still in the src\NetperfDir directory type "build /cD".
+
+F) Repeat steps C through E in src\NetServerDir
+
+G) the target files will be in a directory like:
+   NetPerfDir\objchk_wnet_IA64\IA64, NetServerDir\objchk_wnet_IA64\IA64
+   NetPerfDir\objfre_wnet_x86\i386, or NetPerfDir\objfre_wnet_AMD64\amd64
+
+NOTE: If any components of the path (ie the full names of the files,
+including parent directories) contain spaces (eg "My Documents"),
+build will charge off into the weeds.
+
+If you do not want the corresponding features, edit the sources files
+and remove the -Ds for WANT_DEMO, WANT_HISTOGRAM and/or WANT_INTERVALS
+
+And if that weren't enough, it is also known that netperf has been
+compiled using MS Visual Studio 2003.  Here are the instructions from
+the person who made that work (See Authors):
+
+1.  Under the PROJECT tab, <project name> PROPERTIES, LINKER folder,
+Select COMMAND LINE and add WS2_32.lib in the whitespace labeled
+Additional Options:
+ 
+ 
+2.  Under the PROJECT tab, <project name> PROPERTIES, C/C++ foleder,
+Select Preprocessor, On the right, add DO_IPV6; at the end of the
+Preprocessor Definitions whitespace.
+ 
+ 
+He goes on to say:
+ 
+NOTE: WHEN COMPLING NETSERVER, it works, but I got issued the
+foillowing warnigns in my build:
+ 
+
+------ Rebuild All started: Project: netserver, Configuration: Debug Win32 ------
+
+Deleting intermediate files and output files for project 'netserver', configuration 'Debug|Win32'.
+
+Compiling...
+
+nettest_bsd.c
+
+g:\Program Files\netperf\netperf-2.4.1rc1\src\nettest_bsd.c(846) : warning C4267: 'function' : conversion from 'size_t' to 'int', possible loss of data
+
+g:\Program Files\netperf\netperf-2.4.1rc1\src\nettest_bsd.c(1303) : warning C4267: 'function' : conversion from 'size_t' to 'int', possible loss of data
+
+g:\Program Files\netperf\netperf-2.4.1rc1\src\nettest_bsd.c(2020) : warning C4267: 'function' : conversion from 'size_t' to 'int', possible loss of data
+
+g:\Program Files\netperf\netperf-2.4.1rc1\src\nettest_bsd.c(5080) : warning C4267: 'function' : conversion from 'size_t' to 'int', possible loss of data
+
+g:\Program Files\netperf\netperf-2.4.1rc1\src\nettest_bsd.c(5715) : warning C4267: 'function' : conversion from 'size_t' to 'int', possible loss of data
+
+g:\Program Files\netperf\netperf-2.4.1rc1\src\nettest_bsd.c(6591) : warning C4267: 'function' : conversion from 'size_t' to 'int', possible loss of data
+
+g:\Program Files\netperf\netperf-2.4.1rc1\src\nettest_bsd.c(8013) : warning C4267: 'function' : conversion from 'size_t' to 'int', possible loss of data
+
+g:\Program Files\netperf\netperf-2.4.1rc1\src\nettest_bsd.c(11123) : warning C4267: 'function' : conversion from 'size_t' to 'int', possible loss of data
+
+netsh.c
+
+netserver.c
+
+g:\Program Files\netperf\netperf-2.4.1rc1\src\netserver.c(457) : warning C4267: 'function' : conversion from 'size_t' to 'int', possible loss of data
+
+netlib.c
+
+g:\Program Files\netperf\netperf-2.4.1rc1\src\netlib.c(2470) : warning C4267: 'function' : conversion from 'size_t' to 'int', possible loss of data
+
+g:\Program Files\netperf\netperf-2.4.1rc1\src\netlib.c(2480) : warning C4267: 'function' : conversion from 'size_t' to 'int', possible loss of data
+
+netcpu_ntperf.c
+
+inet_ntop.c
+
+Generating Code...
+
+Linking...
+
+Build log was saved at "file://g:\Documents and Settings\Administrator\My Documents\Visual Studio Projects\netserver\Debug\BuildLog.htm"
+
+netserver - 0 error(s), 11 warning(s)
+
+ 
+
+---------------------- Done ----------------------
+
+Rebuild All: 1 succeeded, 0 failed, 0 skipped
+
