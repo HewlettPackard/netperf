@@ -146,23 +146,27 @@ def process_result(basename, raw_results, start_time,end_time, ksink):
             interim_end=float(fields[9])
             have_result=True
         elif "NETPERF_INTERIM_RESULT" in raw_result:
-            # keyval
+            # keyval first line
             interim_result=float(raw_result.split('=')[1])
             have_result=False
         elif "NETPERF_UNITS" in raw_result:
-            # keyval
+            # keyval second line
             interim_units=raw_result.split('=')[1]
             have_result=False
         elif "NETPERF_INTERVAL" in raw_result:
-            # keyval
+            # keyval keyval third line
             interim_interval=float(raw_result.split('=')[1])
             have_result=False
         elif "NETPERF_ENDING" in raw_result:
-            # keyval
+            # keyval keyval fourth line
             interim_end=float(raw_result.split('=')[1])
             have_result=True
         else:
-            # csv
+            # csv, but we are interested only in those lines with four
+            # fields, three commas.  if someone happens to ask for
+            # four values from the omni-output selector this may not
+            # work so well but we can deal with that when it is known
+            # to be a problem.
             fields = raw_result.split(',')
             if len(fields) == 4:
                 interim_result = float(fields[0])
