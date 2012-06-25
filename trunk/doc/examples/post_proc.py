@@ -26,6 +26,10 @@
 #Average of peak interval is 581460 Trans/s from 1340326283 to 1340326404
 #Minimum of peak interval is 464913 Trans/s from 1340326283 to 1340326404
 #Maximum of peak interval is 594026 Trans/s from 1340326283 to 1340326404
+#
+#real	0m16.873s
+#user	0m0.500s
+#sys	0m0.690s
 
 import os
 import sys
