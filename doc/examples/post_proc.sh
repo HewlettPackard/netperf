@@ -29,7 +29,7 @@ do
 
     . ./minsn
 
-# echo "MAX_INTERVAL $MAX_INTERVAL MIN_TIMESTAMP $MIN_TIMESTAMP MAX_TIMESTAMP $MAX_TIMESTAMP"
+#echo "MAX_INTERVAL $MAX_INTERVAL MIN_TIMESTAMP $MIN_TIMESTAMP MAX_TIMESTAMP $MAX_TIMESTAMP"
     LENGTH=`expr $MAX_TIMESTAMP - $MIN_TIMESTAMP`
     SIZE="-w $LENGTH -h 400"
 
@@ -78,7 +78,7 @@ echo Performing overall summary computations
 # have to use MAX_INTERVAL
 
 rrdtool create ${prefix}_overall.rrd --step 1 --start `expr $MIN_TIMESTAMP - 1` \
-    DS:mbps:GAUGE:2:U:U RRA:AVERAGE:0.5:1:$LENGTH
+    DS:mbps:GAUGE:1:U:U RRA:AVERAGE:0.5:1:$LENGTH
 
 for i in `seq $MIN_TIMESTAMP $MAX_TIMESTAMP`
 do
