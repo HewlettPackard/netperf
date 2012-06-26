@@ -91,19 +91,19 @@ def find_vrules(source):
     return vrules,float(start_time),float(end_time),interval_times
 
 def open_rrd(basename,start_time,end_time,max_interval):
-    output = "Would have opened %s.rrd with start time %d and end time %d" % (basename,int(start_time),int(end_time))
+#    print "Opening %s.rrd with start time %d and end time %d" % (basename,int(start_time),int(end_time))
 
     data_sources = [ 'DS:mbps:GAUGE:%d:U:U' % max_interval ]
     rra = [ 'RRA:AVERAGE:0.5:1:%d' % ((int(end_time) - int(start_time)) + 1) ]
 
     rrdtool.create(basename + ".rrd",
                    '--step', '1',
-                   '--start', str(int(start_time)-1),
+                   '--start', str(int(start_time)),
                    data_sources,
                    rra )
 
 def update_heartbeat(basename,heartbeat):
-    print "Updating heartbeat with %d" % heartbeat
+#    print "Updating heartbeat with %d" % heartbeat
     rrdtool.tune(basename + ".rrd",
                  '--heartbeat', 'mbps:%d' % heartbeat)
 
@@ -125,7 +125,7 @@ def add_to_ksink(basename,start_time,end_time,ksink):
             if result[0]:
                 print "Key %d not in ksink" % key
 
-def process_result(basename, raw_results, start_time,end_time, ksink):
+def process_result(basename, raw_results, end_time, ksink):
     first_result = True
     have_result = False
     interim_result=0.0
@@ -184,6 +184,7 @@ def process_result(basename, raw_results, start_time,end_time, ksink):
             open_rrd(basename,interim_end,end_time,max_interval)
             first_timestamp = interim_end
             first_result = False
+#            print "First entry for %s is %f at time %f" % (basename, interim_result,interim_end)
             
         if int(math.ceil(interim_interval)) > max_interval:
             max_interval = int(math.ceil(interim_interval))
@@ -202,8 +203,8 @@ def process_result(basename, raw_results, start_time,end_time, ksink):
     return first_timestamp, last_timestamp
 
 def process_result_files(prefix,start_time,end_time,ksink):
-    print "Prefix is",prefix
-    
+    print "Prefix is %s" % prefix
+    min_timestamp = 9999999999.9
     results_list = glob.glob(prefix+"*.out")
 
     for result_file in results_list:
@@ -211,11 +212,13 @@ def process_result_files(prefix,start_time,end_time,ksink):
         raw_results = open(result_file,"r")
         first_timestamp, last_timestamp = process_result(basename,
                                                          raw_results,
-                                                         start_time,
                                                          end_time,
                                                          ksink)
+        min_timestamp = min(min_timestamp,first_timestamp)
         # OK, now we get the massaged results
         add_to_ksink(basename,first_timestamp,last_timestamp,ksink)
+
+    return min_timestamp
 
 def generate_overall(prefix,start_time,end_time,ksink):
     overall = prefix + "_overall"
@@ -347,11 +350,11 @@ if __name__ == '__main__':
                           int(end_time)+1),
                    [0.0] * length))
 
-    process_result_files(prefix,start_time,end_time,ksink)
-    generate_overall(prefix,start_time,end_time,ksink)
-    peak_interval_id, peak_average, peak_minimum, peak_maximum = overall_min_max_avg(prefix,start_time,end_time,intervals)
-    graph_overall(prefix,start_time,end_time,vrules,peak_interval_id,peak_average)
-    graph_individual(prefix,start_time,end_time,vrules)
+    min_timestamp = process_result_files(prefix,start_time,end_time,ksink)
+    generate_overall(prefix,min_timestamp-2,end_time,ksink)
+    peak_interval_id, peak_average, peak_minimum, peak_maximum = overall_min_max_avg(prefix,min_timestamp,end_time,intervals)
+    graph_overall(prefix,min_timestamp,end_time,vrules,peak_interval_id,peak_average)
+    graph_individual(prefix,min_timestamp,end_time,vrules)
     
     # we only need the units
     units = units_et_al_by_prefix(prefix)[0]
