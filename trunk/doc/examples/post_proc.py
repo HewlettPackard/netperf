@@ -224,11 +224,18 @@ def generate_overall(prefix,start_time,end_time,ksink):
     overall = prefix + "_overall"
     open_rrd(overall,start_time,end_time,1)
 
-    # this strikes me as being very brittle - can one really rely on
-    # dictionaries to iterate in order of the key when the key is an
-    # integer? for now I will assume so.
-    for key in ksink:
-        update_rrd(overall,ksink[key],key)
+    # one cannot rely on the enumeration of a dictionary being in key
+    # order and I do not know how to sort one, so we will simply walk
+    # the possible keys based on the start_time and end_time and if we
+    # find that key in the kitchen sink, we will use the value to
+    # update the overall rrd.
+    for key in xrange(int(start_time),int(end_time)+1):
+        if key in ksink:
+            try:
+                update_rrd(overall,ksink[key],key)
+                prevkey = key;
+            except:
+                print "Update failed for %d which was key %d previous %d" % (key, i,prevkey)
 
 def overall_min_max_avg(prefix,start_time,end_time,intervals):
 
@@ -356,8 +363,7 @@ if __name__ == '__main__':
     graph_overall(prefix,min_timestamp,end_time,vrules,peak_interval_id,peak_average)
     graph_individual(prefix,min_timestamp,end_time,vrules)
     
-    # we only need the units
-    units = units_et_al_by_prefix(prefix)[0]
-    print "Average of peak interval is %.3f %s from %d to %d" % (peak_average, units, intervals[peak_interval_id-1][0], intervals[peak_interval_id-1][1])
-    print "Minimum of peak interval is %.3f %s from %d to %d" % (peak_minimum, units, intervals[peak_interval_id-1][0], intervals[peak_interval_id-1][1])
-    print "Maximum of peak interval is %.3f %s from %d to %d" % (peak_maximum, units, intervals[peak_interval_id-1][0], intervals[peak_interval_id-1][1])
+    units, multiplier, direction = units_et_al_by_prefix(prefix)
+    print "Average of peak interval is %.3f %s from %d to %d" % (peak_average * float(multiplier), units, intervals[peak_interval_id-1][0], intervals[peak_interval_id-1][1])
+    print "Minimum of peak interval is %.3f %s from %d to %d" % (peak_minimum * float(multiplier), units, intervals[peak_interval_id-1][0], intervals[peak_interval_id-1][1])
+    print "Maximum of peak interval is %.3f %s from %d to %d" % (peak_maximum * float(multiplier), units, intervals[peak_interval_id-1][0], intervals[peak_interval_id-1][1])

@@ -99,13 +99,13 @@ MY_UUID=`uuidgen`
 LENGTH="-l 7200"
 OUTPUT="-o all"
 
-DO_STREAM=0;
-DO_MAERTS=0;
+DO_STREAM=1;
+DO_MAERTS=1;
 # NOTE!  The Bidir test depends on being able to set a socket buffer
 # size greater than 13 * 64KB or 832 KB or there is a risk of the test
 # hanging.  If you are running linux, make certain that
 # net.core.[r|w]mem_max are sufficiently large
-DO_BIDIR=0;
+DO_BIDIR=1;
 DO_RRAGG=1;
 
 # TCP_RR for TPC/PPS using single-byte transactions and TCP_NODELAY
