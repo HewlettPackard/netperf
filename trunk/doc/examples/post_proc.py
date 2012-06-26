@@ -273,11 +273,13 @@ def overall_min_max_avg(prefix,start_time,end_time,intervals):
                            '%d:%f:%f:%f' % (time, iavg, imin, imax))
         if iavg > max_average:
             peak_interval_id = id;
+            peak_interval_start = start
+            peak_interval_end = end
             max_average = iavg
             max_minimum = imin
             max_maximum = imax
 
-    return peak_interval_id, max_average, max_minimum, max_maximum
+    return peak_interval_id, peak_interval_start, peak_interval_end, max_average, max_minimum, max_maximum
 
 def units_et_al_by_prefix(prefix):
     units = "bits/s"
@@ -359,11 +361,11 @@ if __name__ == '__main__':
 
     min_timestamp = process_result_files(prefix,start_time,end_time,ksink)
     generate_overall(prefix,min_timestamp-2,end_time,ksink)
-    peak_interval_id, peak_average, peak_minimum, peak_maximum = overall_min_max_avg(prefix,min_timestamp,end_time,intervals)
+    peak_interval_id, peak_start, peak_end, peak_average, peak_minimum, peak_maximum = overall_min_max_avg(prefix,min_timestamp,end_time,intervals)
     graph_overall(prefix,min_timestamp,end_time,vrules,peak_interval_id,peak_average)
     graph_individual(prefix,min_timestamp,end_time,vrules)
     
     units, multiplier, direction = units_et_al_by_prefix(prefix)
-    print "Average of peak interval is %.3f %s from %d to %d" % (peak_average * float(multiplier), units, intervals[peak_interval_id-1][0], intervals[peak_interval_id-1][1])
-    print "Minimum of peak interval is %.3f %s from %d to %d" % (peak_minimum * float(multiplier), units, intervals[peak_interval_id-1][0], intervals[peak_interval_id-1][1])
-    print "Maximum of peak interval is %.3f %s from %d to %d" % (peak_maximum * float(multiplier), units, intervals[peak_interval_id-1][0], intervals[peak_interval_id-1][1])
+    print "Average of peak interval is %.3f %s from %d to %d" % (peak_average * float(multiplier), units, peak_start, peak_end)
+    print "Minimum of peak interval is %.3f %s from %d to %d" % (peak_minimum * float(multiplier), units, peak_start, peak_end)
+    print "Maximum of peak interval is %.3f %s from %d to %d" % (peak_maximum * float(multiplier), units, peak_start, peak_end)
