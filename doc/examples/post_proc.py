@@ -353,7 +353,10 @@ if __name__ == '__main__':
     vrules,start_time,end_time,intervals = find_vrules(source)
     #print vrules
 
-    # it would certainly be nice to be able to add to a dict on the fly
+    # at one point for some reason I thought one could not add to a
+    # dict on the fly, which of course I now know is silly, but for
+    # the time being I will preallocate the entire dict in one fell
+    # swoop until I can modify add_to_ksink() accordingly
     length = int(end_time + 1) - int(start_time)
     ksink=dict(zip(xrange(int(start_time),
                           int(end_time)+1),
