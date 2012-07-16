@@ -178,10 +178,16 @@ def process_result(basename, raw_results, end_time, ksink):
                 have_result = False
                 
         if first_result:
-            # we could use the overal start time, but using the
-            # first timestamp for this instance may save us some
-            # space in the rrdfile
-            open_rrd(basename,interim_end,end_time,max_interval)
+            # we could use the overal start time, but using the first
+            # timestamp for this instance may save us some space in
+            # the rrdfile.  we do though want to subtract the
+            # interim_interval from that timestamp to give us some
+            # wriggle-room - particularly if the interval happens to
+            # end precisely on a step boundary...
+            open_rrd(basename,
+                     interim_end-interim_interval,
+                     end_time,
+                     max_interval)
             first_timestamp = interim_end
             first_result = False
 #            print "First entry for %s is %f at time %f" % (basename, interim_result,interim_end)
@@ -214,28 +220,34 @@ def process_result_files(prefix,start_time,end_time,ksink):
                                                          raw_results,
                                                          end_time,
                                                          ksink)
+        # we have to check each time because we may not be processing
+        # the individual results files in order
         min_timestamp = min(min_timestamp,first_timestamp)
         # OK, now we get the massaged results
         add_to_ksink(basename,first_timestamp,last_timestamp,ksink)
+
+#    print "For %s min_timestamp is %s" % (prefix, min_timestamp)
 
     return min_timestamp
 
 def generate_overall(prefix,start_time,end_time,ksink):
     overall = prefix + "_overall"
-    open_rrd(overall,start_time,end_time,1)
+    open_rrd(overall,start_time-1,end_time,1)
 
+#    print "Starting time %s ending time %s" % (start_time,end_time)
     # one cannot rely on the enumeration of a dictionary being in key
     # order and I do not know how to sort one, so we will simply walk
     # the possible keys based on the start_time and end_time and if we
     # find that key in the kitchen sink, we will use the value to
     # update the overall rrd.
+    prevkey = -1
     for key in xrange(int(start_time),int(end_time)+1):
         if key in ksink:
             try:
                 update_rrd(overall,ksink[key],key)
                 prevkey = key;
-            except:
-                print "Update failed for %d which was key %d previous %d" % (key, i,prevkey)
+            except Exception as e:
+                print "Update to %s failed for %d, previous %d %s" % (overall, key, prevkey, e)
 
 def overall_min_max_avg(prefix,start_time,end_time,intervals):
 
@@ -251,6 +263,10 @@ def overall_min_max_avg(prefix,start_time,end_time,intervals):
 
     for id, interval in enumerate(intervals,start=1):
         start = interval[0] + 1
+        # take care if there was a long delay between when we started
+        # netperf and when we started getting results out of it.
+        if (start < start_time):
+            start = int(start_time + 1)
         end = interval[1] - 1
         # we have no interest in the size of the graph (the first two
         # items in the list) so slice just the part of interest
@@ -264,7 +280,7 @@ def overall_min_max_avg(prefix,start_time,end_time,intervals):
                                'PRINT:avg:"%6.2lf"',
                                'PRINT:min:"%6.2lf"',
                                'PRINT:max:"%6.2lf"')[2]
-#        print "from %d to %d is %s" % (start,end,result)
+#        print "from %d to %d iavg, imin, imax are %s" % (start,end,result)
         iavg = float(result[0].strip('"'))
         imin = float(result[1].strip('"'))
         imax = float(result[2].strip('"'))
@@ -363,6 +379,7 @@ if __name__ == '__main__':
                    [0.0] * length))
 
     min_timestamp = process_result_files(prefix,start_time,end_time,ksink)
+#    print "Min timestamp for %s is %s start time is %s" % (prefix,min_timestamp,start_time)
     generate_overall(prefix,min_timestamp-2,end_time,ksink)
     peak_interval_id, peak_start, peak_end, peak_average, peak_minimum, peak_maximum = overall_min_max_avg(prefix,min_timestamp,end_time,intervals)
     graph_overall(prefix,min_timestamp,end_time,vrules,peak_interval_id,peak_average)
