@@ -77,7 +77,7 @@ NUM_CPUS=`grep processor /proc/cpuinfo | wc -l`
 
 # the number of netperf instances we will run will be up to 2x the
 # number of CPUs
-MAX_INSTANCES=`expr $NUM_CPUS \* 2`
+MAX_INSTANCES=${1:=`expr $NUM_CPUS \* 2`}
 
 # allow the netperf binary to be used to be overridden 
 NETPERF=${NETPERF:="netperf"}
