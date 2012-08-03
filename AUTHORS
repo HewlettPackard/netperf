@@ -76,6 +76,7 @@ for his help in making the tar files and such more user-friendly
 
 Michael Shuldman <michaels@inet.no>
 Improvements to the makefile and additional checks for OpenBSD
+Changes to make netperf more profiling friendly
 
 Kris Corwin
 discovery of a debug statement outside of if (debug) that may have
@@ -231,9 +232,6 @@ is very long.
 Gisle Vanem
 MingW cnd MSDOS (djgpp) cleanups.
 
-Marcel Shuldman
-Changes to make netperf more profiling friendly
-
 Bruno Cornec
 Fixes to supply some missing fprintf format statements.
 
@@ -282,3 +280,4 @@ functionality from classic netperf tests to the omni tests.
 Chema Gonzalez - fixes for some assorted warnings.
 
 Dave Taht - changes for symbolic handling of TOS values
+
