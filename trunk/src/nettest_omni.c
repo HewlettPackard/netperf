@@ -4402,11 +4402,11 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 				     0);
 	if (ret == 0) {
 	  /* we will need a new connection to be established next time
-	     around the loop */
+	     around the loop.  However, the next time around the loop
+	     will already be picking the next port number */
 	  need_to_connect = 1;
 	  connected = 0;
 	  need_socket = 1;
-	  pick_next_port_number(local_res,remote_res);
 	}
 	else if (ret == -1) {
 	  times_up = 1;
