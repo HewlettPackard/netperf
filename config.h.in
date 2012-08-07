@@ -117,6 +117,9 @@
 /* Define to 1 if you have the <limits.h> header file. */
 #undef HAVE_LIMITS_H
 
+/* Define to 1 if you have the <linux/socket.h> header file. */
+#undef HAVE_LINUX_SOCKET_H
+
 /* Define to 1 if you have the <linux/tcp.h> header file. */
 #undef HAVE_LINUX_TCP_H
 
@@ -158,6 +161,9 @@
 
 /* Define to 1 if you have the `processor_bind' function. */
 #undef HAVE_PROCESSOR_BIND
+
+/* Define to 1 if you have the <sched.h> header file. */
+#undef HAVE_SCHED_H
 
 /* Define to 1 if you have the `sched_setaffinity' function. */
 #undef HAVE_SCHED_SETAFFINITY

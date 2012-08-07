@@ -40,6 +40,12 @@ char nettest_omni_id[]="\
 #if HAVE_UNISTD_H
 # include <unistd.h>
 #endif
+#if HAVE_SYS_IOCTL_H
+# include <sys/ioctl.h>
+#endif
+#if HAVE_SCHED_H
+# include <sched.h>
+#endif
 
 #include <fcntl.h>
 #ifndef WIN32
@@ -76,6 +82,15 @@ char nettest_omni_id[]="\
 #include <linux/tcp.h>
 #else
 #include <netinet/tcp.h>
+#endif
+
+/* this is to get us the definition of MSG_FASTOPEN. we may need to
+   cheat just a litle at first */
+#ifdef HAVE_LINUX_SOCKET_H
+# include <linux/socket.h>
+# ifndef MSG_FASTOPEN
+#  define MSG_FASTOPEN	0x20000000	/* Send data in TCP SYN */
+# endif
 #endif
 
 #ifdef HAVE_NETINET_SCTP_H
@@ -315,6 +330,7 @@ extern int rem_dirty_count;
 extern int rem_clean_count;
 int remote_checksum_off;
 int connection_test;
+int use_fastopen = 0;
 int need_to_connect;
 int need_connection;
 int bytes_to_send;
@@ -407,6 +423,8 @@ char        local_cong_control[16] = "";
 char        remote_cong_control[16] = "";
 char        local_cong_control_req[16] = "";
 char        remote_cong_control_req[16] = "";
+
+int         check_interval = 0;
 
 /* new statistics based on code diffs from Google, with raj's own
    personal twist added to make them compatible with the omni
@@ -2822,7 +2840,7 @@ connect_data_socket(SOCKET send_socket, struct addrinfo *remote_res)
 }
 
 int
-send_data(SOCKET data_socket, struct ring_elt *send_ring, uint32_t bytes_to_send, struct sockaddr *destination, int destlen) {
+send_data(SOCKET data_socket, struct ring_elt *send_ring, uint32_t bytes_to_send, struct sockaddr *destination, int destlen, int protocol) {
 
   int len;
 
@@ -2846,7 +2864,11 @@ send_data(SOCKET data_socket, struct ring_elt *send_ring, uint32_t bytes_to_send
     len = sendto(data_socket,
 		 send_ring->buffer_ptr,
 		 bytes_to_send,
+#if defined(MSG_FASTOPEN)
+		 (use_fastopen && protocol == IPPROTO_TCP) ? MSG_FASTOPEN : 0,
+#else
 		 0,
+#endif
 		 destination,
 		 destlen);
   }
@@ -3259,6 +3281,34 @@ dump_tcp_info(struct tcp_info *tcp_info)
 #endif
 
 static int
+get_unsent_data(SOCKET socket, int protocol) {
+
+#if defined(TIOCOUTQ)
+  int value = -1, ret;
+
+  if (protocol != IPPROTO_TCP) 
+    return -1;
+
+  ret = (ioctl(socket, TIOCOUTQ, &value)) ;
+
+  if (ret) {
+    if (debug) {
+      fprintf(where,
+	      "ioctl(TIOCOUTQ) errno %d (%s)\n",
+	      errno,
+	      strerror(errno));
+      fflush(where);
+    }
+    return -1;
+  }
+   
+  return value;
+#else
+  return -1
+#endif
+}
+
+static int
 get_transport_retrans(SOCKET socket, int protocol) {
 
 #ifdef HAVE_LINUX_TCP_H
@@ -3643,7 +3693,12 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
       exit(1);
     }
 #if defined(__linux)
-    enable_enobufs(data_socket);
+    /* we really only need this for a UDP_STREAM test. we particularly
+       do not want it for a CC or CRR test. raj 2012-08-06 */
+    if ((protocol == IPPROTO_UDP) &&
+	(direction & NETPERF_XMIT)) {
+      enable_enobufs(data_socket);
+    }
 #endif
     need_socket = 0;
 
@@ -3793,6 +3848,9 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 
       if (desired_output_groups & OMNI_WANT_REM_CONG)
 	omni_request->flags |= OMNI_WANT_REM_CONG;
+
+      if (check_interval)
+	omni_request->flags |= OMNI_CHECK_INTERVAL;
 
       /* perhaps this should be made conditional on
 	 remote_cong_control_req[0] not being NULL? */
@@ -4042,12 +4100,15 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	}
 	need_socket = 0;
 #if defined(__linux)
-	enable_enobufs(data_socket);
+	if ((protocol == IPPROTO_UDP) &&
+	    (direction & NETPERF_XMIT)) {
+	  enable_enobufs(data_socket);
+	}
 #endif
       }
 
       /* only connect if and when we need to */
-      if (need_to_connect) {
+      if (need_to_connect && !use_fastopen) {
 	/* assign to data_socket since connect_data_socket returns
 	   SOCKET and not int thanks to Windows. */
 	ret = connect_data_socket(data_socket,remote_res);
@@ -4119,7 +4180,8 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 			     send_ring,
 			     bytes_to_send,
 			     (connected) ? NULL : remote_res->ai_addr,
-			     remote_res->ai_addrlen)) != bytes_to_send) {
+			     remote_res->ai_addrlen,
+			     protocol)) != bytes_to_send) {
 	  /* in theory, we should never hit the end of the test in the
 	     first burst */
 	  perror("send_omni: initial burst data send error");
@@ -4151,7 +4213,8 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 			bytes_to_send,
 			(connected) ? NULL : remote_res->ai_addr,
 			/* if the destination above is NULL, this is ignored */
-			remote_res->ai_addrlen);
+			remote_res->ai_addrlen,
+			protocol);
 	/* the order of these if's will seem a triffle strange, but they
 	   are my best guess as to order of probabilty and/or importance
 	   to the overhead raj 2008-01-09*/
@@ -4279,6 +4342,17 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 		    requests_outstanding,
 		    trans_completed + 1);
 	  }
+	}
+	while (check_interval &&
+	       (requests_outstanding > 1) &&
+	       ((trans_completed % check_interval) == 0) &&
+	       (get_unsent_data(data_socket,protocol) > 0)) {
+#if HAVE_SCHED_H
+	  /* presumably we could have given-up the CPU during the
+	     ioctl() call in get_unsent_data() but might as well do
+	     this too. raj 2012-07-31 */
+	  sched_yield();
+#endif
 	}
 #endif
 
@@ -5240,6 +5314,10 @@ recv_omni()
   addrlen = sizeof(peeraddr_in);
   memset(&peeraddr_in,0,sizeof(peeraddr_in));
 
+  if (omni_request->flags & OMNI_CHECK_INTERVAL) {
+    check_interval = 1000;
+  }
+
   /* Now it's time to start receiving data on the connection. We will */
   /* first grab the apropriate counters and then start grabbing. */
 
@@ -5413,11 +5491,35 @@ recv_omni()
        try to send something. */
     if ((omni_request->direction & NETPERF_XMIT) &&
 	((!times_up) || (units_remaining > 0))) {
+      
+      /* but first, should we make certain there is no queued, unsent
+	 data first? */
+      if (check_interval &&
+	  (local_send_calls > 1) &&
+	  ((local_send_calls % check_interval) == 0)) {
+	if (get_unsent_data(data_socket,omni_request->protocol) > 0) {
+	  check_interval = check_interval / 2;
+	  if (check_interval == 0)
+	    check_interval = 1;
+	  while (get_unsent_data(data_socket,omni_request->protocol) > 0) {
+	    /* presumably we could have given-up the CPU during the
+	       ioctl() call in get_unsent_data() but might as well do
+	       this too. raj 2012-07-31 */
+#if HAVE_SCHED_H
+	    sched_yield();
+#endif
+	  }
+	}
+	else
+	  check_interval += 1;
+      }
+
       ret = send_data(data_socket,
 		      send_ring,
 		      bytes_to_send,
 		      (connected) ? NULL : (struct sockaddr *)&peeraddr_in,
-		      addrlen);
+		      addrlen,
+		      omni_request->protocol);
 
       /* the order of these if's will seem a triffle strange, but they
 	 are my best guess as to order of probabilty and/or importance
@@ -6895,7 +6997,7 @@ scan_omni_args(int argc, char *argv[])
 
 {
 
-#define OMNI_ARGS "b:cCd:DG:hH:kK:l:L:m:M:nNoOp:P:r:R:s:S:t:T:u:Vw:W:46"
+#define OMNI_ARGS "b:cCd:DFG:hH:i:kK:l:L:m:M:nNoOp:P:r:R:s:S:t:T:u:Vw:W:46"
 
   extern char	*optarg;	  /* pointer to option string	*/
 
@@ -6985,6 +7087,13 @@ scan_omni_args(int argc, char *argv[])
       loc_nodelay = 1;
       rem_nodelay = 1;
       break;
+    case 'F':
+#if defined(MSG_FASTOPEN)
+      use_fastopen = 1;
+#else
+      printf("WARNING: TCP FASTOPEN not available on this platform!\n");
+#endif
+      break;
     case 'G':
       /* set the value for a tcp_maxseG call*/
       transport_mss_req = atoi(optarg);
@@ -7010,6 +7119,9 @@ scan_omni_args(int argc, char *argv[])
       if (arg2[0]) {
 	remote_data_family = parse_address_family(arg2);
       }
+      break;
+    case 'i':
+      check_interval = atoi(optarg);
       break;
     case 'k':
       netperf_output_mode = KEYVAL;
