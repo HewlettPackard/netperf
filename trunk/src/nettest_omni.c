@@ -689,7 +689,6 @@ typedef struct netperf_output_elt {
   int max_line_len; /* length of the longest of the "lines" */
   int tot_line_len; /* total length of all lines, including spaces */
   char *line[4];
-  char *brief;         /* the brief name of the value */
   char *format;        /* format to apply to value */
   void *display_value; /* where to find the value */
   enum netperf_output_type output_type; /* what type is the value? */
@@ -1344,7 +1343,6 @@ dump_netperf_output_source(FILE *where)
 	    "\tline[1]: |%s|\n"
 	    "\tline[2]: |%s|\n"
 	    "\tline[3]: |%s|\n"
-	    "\tbrief: |%s|\n"
 	    "\tformat: |%s|\n",
 	    netperf_output_enum_to_str(netperf_output_source[i].output_name),
 	    netperf_output_source[i].max_line_len,
@@ -1358,8 +1356,6 @@ dump_netperf_output_source(FILE *where)
 	    netperf_output_source[i].line[2],
 	    (netperf_output_source[i].line[3] == NULL) ? "" :
 	    netperf_output_source[i].line[3],
-	    (netperf_output_source[i].brief == NULL) ? "" :
-	    netperf_output_source[i].brief,
 	    (netperf_output_source[i].format == NULL) ? "" :
 	    netperf_output_source[i].format);
   }
@@ -1797,7 +1793,6 @@ print_omni_init_list() {
     netperf_output_source[i].line[1] = "";
     netperf_output_source[i].line[2] = "";
     netperf_output_source[i].line[3] = "";
-    netperf_output_source[i].brief = "";
     netperf_output_source[i].format = "";
     netperf_output_source[i].display_value = NULL;
     netperf_output_source[i].output_default = 1;
