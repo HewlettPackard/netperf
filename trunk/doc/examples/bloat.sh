@@ -103,7 +103,7 @@ MAXLATMAXBPS=`$RRDTOOL graph /dev/null \
 
 SCALE=`echo $MAXLATMAXBPS | awk '{print $2/$1}'`
 
-$RRDTOOL graph bloat.png --imgformat PNG \
+$RRDTOOL graph bloat.svg --imgformat SVG \
     $SIZE \
     --lower-limit 0 \
     --start $MIN_TIMESTAMP --end $MAX_TIMESTAMP \
