@@ -245,7 +245,7 @@ def generate_overall(prefix,start_time,end_time,ksink):
         if key in ksink:
             try:
                 update_rrd(overall,ksink[key],key)
-                prevkey = key;
+                prevkey = key
             except Exception as e:
                 print "Update to %s failed for %d, previous %d %s" % (overall, key, prevkey, e)
 
@@ -327,10 +327,11 @@ def graph_overall(prefix,start_time,end_time,vrules,peak_interval_id=None,peak_a
                            'CDEF:intvl=bar,%s,*' % multiplier,
                            'LINE2:intvl#0F0F0F40:Interval average. Peak of %.3f during interval %d' % (peak_average, peak_interval_id) ]
 
-    rrdtool.graph(prefix + "_overall.png", '--imgformat', 'PNG',
+    rrdtool.graph(prefix + "_overall.svg", '--imgformat', 'SVG',
                   '--start', str(int(start_time)),
                   '--end', str(int(end_time)),
                   '-w','%d' % max(800,length),'-h','400',
+                  '--right-axis', '1:0',
                   vrules,
                   '--font', 'DEFAULT:0:Helvetica',
                   '-t', 'Overall %s' % prefix,
@@ -348,12 +349,13 @@ def graph_individual(prefix,start_time,end_time,vrules):
 
     for individual in glob.glob(prefix+"*.out"):
         basename = individual.strip(".out")
-        rrdtool.graph(basename + ".png",
-                      '--imgformat','PNG',
+        rrdtool.graph(basename + ".svg",
+                      '--imgformat','SVG',
                       '--start', str(int(start_time)),
                       '--end', str(int(end_time)),
                       '--font',  'DEFAULT:0:Helvetica',
                       '-w', '%d' % max(800,length), '-h', '400',
+                      '--right-axis', '1:0',
                       vrules,
                       '-t', '%s %s' % (basename,prefix),
                       '-v', '%s %s' % (direction, units),
@@ -383,7 +385,10 @@ if __name__ == '__main__':
     generate_overall(prefix,min_timestamp-2,end_time,ksink)
     peak_interval_id, peak_start, peak_end, peak_average, peak_minimum, peak_maximum = overall_min_max_avg(prefix,min_timestamp,end_time,intervals)
     graph_overall(prefix,min_timestamp,end_time,vrules,peak_interval_id,peak_average)
-    graph_individual(prefix,min_timestamp,end_time,vrules)
+    try:
+        no_individual = sys.argv[2]
+    except:
+        graph_individual(prefix,min_timestamp,end_time,vrules)
     
     units, multiplier, direction = units_et_al_by_prefix(prefix)
     print "Average of peak interval is %.3f %s from %d to %d" % (peak_average * float(multiplier), units, peak_start, peak_end)
