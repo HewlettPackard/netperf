@@ -5465,8 +5465,6 @@ recv_omni()
       }
       else if (ret == -1) {
 	/* test timed-out */
-	fprintf(where,"YO! TIMESUP!\n");
-	fflush(where);
 	times_up = 1;
 	timed_out = 1;
 	break;

@@ -14,7 +14,7 @@ CHUNK=30
 
 # first, start the TCP_RR test
 RR_START=`date +%s`
-echo "Starting netperf TCP_RR at $RR_START"
+echo "Starting netperf TCP_RR at $RR_START" | tee bloat.log
 # a negative value for the demo interval (-D) will cause netperf to
 # make gettimeofday() calls after every transaction. this will result
 # in more accurate demo intervals once the STREAM test kicks-in, but a
@@ -28,17 +28,17 @@ sleep $CHUNK
 # now run the TCP_STREAM test
 
 STREAM_START=`date +%s`
-echo "Starting netperf TCP_STREAM test at $STREAM_START"
+echo "Starting netperf TCP_STREAM test at $STREAM_START" | tee -a bloat.log
 netperf -H $1 -l `expr $CHUNK \* 2` -t TCP_STREAM -D 0.25 -v 2 -- -m 1K 2>&1 > netperf_stream.out
 STREAM_STOP=`date +%s`
-echo "Netperf TCP_STREAM test stopped at $STREAM_STOP"
+echo "Netperf TCP_STREAM test stopped at $STREAM_STOP" | tee -a bloat.log
 
 # sleep another CHUNK seconds
 sleep $CHUNK
 
 pkill -ALRM netperf
 RR_STOP=`date +%s`
-echo "Netperf TCP_RR test stopped at $RR_STOP"
+echo "Netperf TCP_RR test stopped at $RR_STOP" | tee -a bloat.log
 
 RRDTOOL=`which rrdtool`
 if [ $? -ne 0 ]
