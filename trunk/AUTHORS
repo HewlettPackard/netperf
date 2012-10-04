@@ -281,3 +281,5 @@ Chema Gonzalez - fixes for some assorted warnings.
 
 Dave Taht - changes for symbolic handling of TOS values
 
+David Ahern - fix for an incorrect pointer check
+

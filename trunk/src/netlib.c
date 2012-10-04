@@ -1537,7 +1537,7 @@ allocate_buffer_ring(int width, int buffer_size, int alignment, int offset)
       first_link = temp_link;
     }
     temp_link->buffer_base = (char *)malloc(malloc_size);
-    if (temp_link == NULL) {
+    if (temp_link->buffer_base == NULL) {
       fprintf(where,
 	      "malloc(%d) failed!\n",
 	      malloc_size);
@@ -3152,7 +3152,7 @@ resolve_host(char *hostname,
   hints.ai_family = family;
   hints.ai_socktype = SOCK_STREAM;
   hints.ai_protocol = IPPROTO_TCP;
-  hints.ai_flags = AI_CANONNAME|AI_ADDRCONFIG;
+  hints.ai_flags = AI_CANONNAME | AI_ADDRCONFIG;
   count = 0;
   do {
     error = getaddrinfo((char *)hostname,
