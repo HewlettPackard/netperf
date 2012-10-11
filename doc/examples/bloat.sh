@@ -10,7 +10,7 @@ then
     exit -1
 fi
 
-CHUNK=30
+CHUNK=60
 
 # first, start the TCP_RR test
 RR_START=`date +%s`

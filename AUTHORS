@@ -283,3 +283,5 @@ Dave Taht - changes for symbolic handling of TOS values
 
 David Ahern - fix for an incorrect pointer check
 
+Jim Nell - Fix for Solaris 11.1 compilation problem in dscp.c
+
