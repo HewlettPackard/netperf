@@ -3299,7 +3299,7 @@ get_unsent_data(SOCKET socket, int protocol) {
    
   return value;
 #else
-  return -1
+  return -1;
 #endif
 }
 
