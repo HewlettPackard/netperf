@@ -425,6 +425,7 @@ char        local_cong_control_req[16] = "";
 char        remote_cong_control_req[16] = "";
 
 int         check_interval = 0;
+int         receive_timeout = -1;
 
 /* new statistics based on code diffs from Google, with raj's own
    personal twist added to make them compatible with the omni
@@ -3093,6 +3094,10 @@ recv_data(SOCKET data_socket, struct ring_elt *recv_ring, uint32_t bytes_to_recv
 	/* We hit the end of a timed test. */
 	return -1;
       }
+    if (SOCKET_EAGAIN(bytes_recvd) ||
+	SOCKET_EWOULDBLOCK(bytes_recvd)) {
+      return -2;
+    }
     /* it was a hard error */
     return -3;
   }
@@ -3419,6 +3424,26 @@ set_transport_cong_control(SOCKET socket, int protocol, char cong_control[], int
 #endif
 }
 
+static void
+set_receive_timeout(SOCKET sock, int timeout) 
+{
+#ifdef SO_RCVTIMEO
+  struct timeval foo;
+
+  foo.tv_sec = timeout;
+  foo.tv_usec = 0;
+
+  if (setsockopt(sock,SOL_SOCKET,SO_RCVTIMEO,&foo,sizeof(foo)) < 0) {
+    if (debug) {
+      fprintf(where,"Note - attempt to set a receive timeout on the data socket failed with errno %d (%s)\n",
+	      errno,
+	      strerror(errno));
+      fflush(where);
+    }
+  }
+#endif
+}
+
 static SOCKET
 omni_create_data_socket(struct addrinfo *res)
 {
@@ -3433,6 +3458,12 @@ omni_create_data_socket(struct addrinfo *res)
 				 local_cong_control_req,
 				 sizeof(local_cong_control_req));
     }
+
+    if ((res->ai_protocol == IPPROTO_UDP) &&
+	(receive_timeout != -1)) {
+      set_receive_timeout(temp_socket, receive_timeout);
+    }
+      
   }
   return temp_socket;
 }
@@ -4311,8 +4342,23 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	  timed_out = 1;
 	  break;
 	}
+	else if (rret == -2) {
+	  /* we timed-out on a data receive.  this is only allowed for
+	     a UDP_RR test.  we want to set things up so we start
+	     ramping up again like we were at the beginning. if we
+	     actually timeout it means that all has been lost */
+	  if (debug) {
+	    fprintf(where,"Timeout receiving resonse from remote\n");
+	    fflush(where);
+	  }
+	  if (first_burst_size) {
+	    requests_outstanding = 0;
+	    request_cwnd = request_cwnd_initial;
+	  }
+	  continue;
+	}
 	else {
-	  /* presently at least, -2 and -3 are equally bad on recv */
+	  /* anything else is bad */
 	  perror("netperf: send_omni: recv_data failed");
 	  exit(1);
 	}
@@ -6990,7 +7036,7 @@ scan_omni_args(int argc, char *argv[])
 
 {
 
-#define OMNI_ARGS "b:cCd:DFG:hH:i:kK:l:L:m:M:nNoOp:P:r:R:s:S:t:T:u:Vw:W:46"
+#define OMNI_ARGS "b:cCd:De:FG:hH:i:kK:l:L:m:M:nNoOp:P:r:R:s:S:t:T:u:Vw:W:46"
 
   extern char	*optarg;	  /* pointer to option string	*/
 
@@ -7086,6 +7132,10 @@ scan_omni_args(int argc, char *argv[])
 #else
       printf("WARNING: TCP FASTOPEN not available on this platform!\n");
 #endif
+      break;
+    case 'e':
+      /* set the rEceive timeout */
+      receive_timeout = atoi(optarg);
       break;
     case 'G':
       /* set the value for a tcp_maxseG call*/
