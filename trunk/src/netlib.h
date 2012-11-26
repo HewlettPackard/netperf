@@ -371,6 +371,8 @@ extern void PrintWin32Error(FILE *stream, LPSTR text);
 #define SOCKET_EINTR(return_value) (errno == EINTR)
 #define SOCKET_EADDRINUSE(return_value) (errno == EADDRINUSE)
 #define SOCKET_EADDRNOTAVAIL(return_value) (errno == EADDRNOTAVAIL)
+#define SOCKET_EAGAIN(return_value) (errno == EAGAIN)
+#define SOCKET_EWOULDBLOCK(return_value) (errno == EWOULDBLOCK)
 
 #else
 
@@ -390,6 +392,11 @@ extern void PrintWin32Error(FILE *stream, LPSTR text);
 #define SOCKET_EADDRNOTAVAIL(return_value) \
 		(((return_value) == SOCKET_ERROR) && \
 	     ((errno == WSAEADDRNOTAVAIL) ))
+/* guessing here, and equating for one that doesn't exist */
+#define SOCKET_EAGAIN(return_value) 
+  (((return_value) == SOCKET_ERROR) && ((errno == WSAEWOULDBLOCK)))
+#define SOCKET_EWOULDBLOCK(return_value) 
+  (((return_value) == SOCKET_ERROR) && ((errno == WSAEWOULDBLOCK)))
 #endif
 
 #ifdef HAVE_SENDFILE
