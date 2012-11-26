@@ -4355,6 +4355,10 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	    requests_outstanding = 0;
 	    request_cwnd = request_cwnd_initial;
 	  }
+#ifdef WANT_DEMO
+	  demo_reset();
+#endif /* WANT_DEMO */
+
 	  continue;
 	}
 	else {

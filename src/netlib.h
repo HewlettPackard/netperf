@@ -602,6 +602,7 @@ extern int      HIST_get_percentile();
 extern void     HIST_get_stats();
 extern void     find_security_info(int *enabled, int *type, char **specific);
 extern void     demo_first_timestamp();
+extern void     demo_reset();
 extern void     demo_stream_setup(uint32_t a, uint32_t b);
 #ifndef WIN32
 
