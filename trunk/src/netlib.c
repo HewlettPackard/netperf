@@ -3940,6 +3940,16 @@ void demo_first_timestamp() {
   HIST_timestamp(demo_one_ptr);
 }
 
+void demo_reset() {
+  if (debug) {
+    fprintf(where,
+	    "Resetting interim results\n");
+    fflush(where);
+  }
+  units_this_tick = 0;
+  demo_first_timestamp();
+}
+
 /* for a _STREAM test, "a" should be lss_size and "b" should be
    rsr_size. for a _MAERTS test, "a" should be lsr_size and "b" should
    be rss_size. raj 2005-04-06 */
