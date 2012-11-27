@@ -4346,7 +4346,8 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	  /* we timed-out on a data receive.  this is only allowed for
 	     a UDP_RR test.  we want to set things up so we start
 	     ramping up again like we were at the beginning. if we
-	     actually timeout it means that all has been lost */
+	     actually timeout it means that all has been lost.  or at
+	     least we assume so */
 	  if (debug) {
 	    fprintf(where,"Timeout receiving resonse from remote\n");
 	    fflush(where);
@@ -4354,6 +4355,9 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	  if (first_burst_size) {
 	    requests_outstanding = 0;
 	    request_cwnd = request_cwnd_initial;
+	  }
+	  if (keep_histogram) {
+	    HIST_purge(time_hist);
 	  }
 #ifdef WANT_DEMO
 	  demo_reset();
