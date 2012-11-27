@@ -4093,7 +4093,6 @@ void demo_interval_tick(uint32_t units)
 }
 
 void demo_interval_final() {
-
   double actual_interval;
 
   switch (demo_mode) {
