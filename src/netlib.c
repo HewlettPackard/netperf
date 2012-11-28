@@ -3044,6 +3044,7 @@ void
 set_sock_buffer (SOCKET sd, enum sock_buffer which, int requested_size, int *effective_sizep)
 {
 #ifdef SO_SNDBUF
+
   int optname = (which == SEND_BUFFER) ? SO_SNDBUF : SO_RCVBUF;
 
   /* seems that under Windows, setting a value of zero is how one
@@ -3055,9 +3056,10 @@ set_sock_buffer (SOCKET sd, enum sock_buffer which, int requested_size, int *eff
   if (requested_size >= 0) {
     if (setsockopt(sd, SOL_SOCKET, optname,
 		   (char *)&requested_size, sizeof(int)) < 0) {
-      fprintf(where, "netperf: set_sock_buffer: %s option: errno %d\n",
+      fprintf(where, "netperf: set_sock_buffer: %s option: errno %d (%s)\n",
 	      (which == SEND_BUFFER) ? "SO_SNDBUF" : "SO_RCVBUF",
-	      errno);
+	      errno,
+	      strerror(errno));
       fflush(where);
       exit(1);
     }

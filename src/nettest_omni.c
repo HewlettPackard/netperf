@@ -4360,7 +4360,10 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	    HIST_purge(time_hist);
 	  }
 #ifdef WANT_DEMO
-	  demo_reset();
+	  /* "start over" on a demo interval. we will forget about
+	  everything that happened in the demo interval up to the
+	  timeout and begin fresh. */
+	  demo_reset(); 
 #endif /* WANT_DEMO */
 
 	  continue;
