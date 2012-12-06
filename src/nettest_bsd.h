@@ -41,6 +41,7 @@
 #define OMNI_WANT_IFIDS      0x00000100
 #define OMNI_WANT_DRVINFO    0x00000200
 #define OMNI_CHECK_INTERVAL  0x00000400
+#define OMNI_FASTOPEN        0x00000800
 /* room in the middle */
 #define OMNI_WANT_KEEPALIVE  0x80000000
 

@@ -331,6 +331,7 @@ extern int rem_clean_count;
 int remote_checksum_off;
 int connection_test;
 int use_fastopen = 0;
+int use_write = 0;
 int need_to_connect;
 int need_connection;
 int bytes_to_send;
@@ -2869,10 +2870,17 @@ send_data(SOCKET data_socket, struct ring_elt *send_ring, uint32_t bytes_to_send
 		 destlen);
   }
   else {
-    len = send(data_socket,
-	       send_ring->buffer_ptr,
-	       bytes_to_send,
-	       0);
+    if (!use_write) {
+      len = send(data_socket,
+		 send_ring->buffer_ptr,
+		 bytes_to_send,
+		 0);
+    }
+    else {
+      len = write(data_socket,
+		  send_ring->buffer_ptr,
+		  bytes_to_send);
+    }
   }
   if(len != bytes_to_send) {
     /* don't forget that some platforms may do a partial send upon
@@ -3874,6 +3882,9 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 
       if (desired_output_groups & OMNI_WANT_REM_CONG)
 	omni_request->flags |= OMNI_WANT_REM_CONG;
+
+      if (use_fastopen)
+	omni_request->flags |= OMNI_FASTOPEN;
 
       if (check_interval)
 	omni_request->flags |= OMNI_CHECK_INTERVAL;
@@ -5106,6 +5117,9 @@ recv_omni()
 #endif
 
   connection_test = omni_request->flags & OMNI_CONNECT_TEST;
+#ifdef TCP_FASTOPEN
+  use_fastopen = omni_request->flags & OMNI_FASTOPEN;
+#endif
   direction       = omni_request->direction;
 
   /* let's be quite certain the fill file string is null terminated */
@@ -5268,12 +5282,31 @@ recv_omni()
      accept. the age-old constant of 5 is probably OK for our purposes
      but does not necessarily represent best practice */
   if (need_to_accept) {
-    if (listen(s_listen, 5) == SOCKET_ERROR) {
+    int backlog = 5;
+#ifdef TCP_FASTOPEN
+    /* one of these days I will have to go find-out what the backlog
+       is supposed to be here.  until then, I'll just set it to five
+       like the listen() call does - it is classic, and was what was
+       used in the online example I found */
+    if (use_fastopen &&
+	(setsockopt(s_listen,SOL_TCP, TCP_FASTOPEN, &backlog, sizeof(qlen)) ==
+	 SOCKET_ERROR)) {
       netperf_response.content.serv_errno = errno;
       close(s_listen);
       send_response();
       if (debug) {
-	fprintf(where,"could not listen\n");
+	fprintf(where,"netperfserver: %s could not listen\n",__FUNCTION__);
+	fflush(where);
+      }
+      exit(1);
+    }
+#endif /* TCP_FASTOPEN */
+    if (listen(s_listen, backlog) == SOCKET_ERROR) {
+      netperf_response.content.serv_errno = errno;
+      close(s_listen);
+      send_response();
+      if (debug) {
+	fprintf(where,"netperfserver: %s could not listen\n",__FUNCTION__);
 	fflush(where);
       }
       exit(1);
@@ -7047,7 +7080,7 @@ scan_omni_args(int argc, char *argv[])
 
 {
 
-#define OMNI_ARGS "b:cCd:De:FG:hH:i:kK:l:L:m:M:nNoOp:P:r:R:s:S:t:T:u:Vw:W:46"
+#define OMNI_ARGS "b:cCd:De:FG:hH:i:IkK:l:L:m:M:nNoOp:P:r:R:s:S:t:T:u:Vw:W:46"
 
   extern char	*optarg;	  /* pointer to option string	*/
 
@@ -7176,6 +7209,9 @@ scan_omni_args(int argc, char *argv[])
       break;
     case 'i':
       check_interval = atoi(optarg);
+      break;
+    case 'I':
+      use_write = 1;
       break;
     case 'k':
       netperf_output_mode = KEYVAL;
