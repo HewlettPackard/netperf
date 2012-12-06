@@ -2027,6 +2027,9 @@ format_number(double number)
   static  char    fmtbuf[64];
 
   switch (libfmt) {
+  case 'B':
+    snprintf(fmtbuf, sizeof(fmtbuf),  "%-7.2f" , number);
+    break;
   case 'K':
     snprintf(fmtbuf, sizeof(fmtbuf),  "%-7.2f" , number / 1024.0);
     break;
@@ -2035,6 +2038,9 @@ format_number(double number)
     break;
   case 'G':
     snprintf(fmtbuf, sizeof(fmtbuf),  "%-7.2f", number / 1024.0 / 1024.0 / 1024.0);
+    break;
+  case 'b':
+    snprintf(fmtbuf, sizeof(fmtbuf),  "%-7.2f" , number * 8);
     break;
   case 'k':
     snprintf(fmtbuf, sizeof(fmtbuf),  "%-7.2f", number * 8 / 1000.0);
@@ -2117,6 +2123,9 @@ format_units()
   static        char    unitbuf[64];
 
   switch (libfmt) {
+  case 'B':
+    strcpy(unitbuf, "Bytes");
+    break;
   case 'K':
     strcpy(unitbuf, "KBytes");
     break;
@@ -2125,6 +2134,9 @@ format_units()
     break;
   case 'G':
     strcpy(unitbuf, "GBytes");
+    break;
+  case 'b':
+    strcpy(unitbuf, "10^0bits");
     break;
   case 'k':
     strcpy(unitbuf, "10^3bits");
@@ -3599,6 +3611,8 @@ calc_thruput_interval(double units_received,double elapsed)
     divisor = 1000.0 * 1000.0 * 1000.0 / 8.0;
     break;
   case 'x':
+  case 'b':
+  case 'B':
     divisor = 1.0;
     break;
 
@@ -3649,6 +3663,8 @@ calc_thruput_interval_omni(double units_received,double elapsed)
     divisor = 1000.0 * 1000.0 * 1000.0 / 8.0;
     break;
   case 'x':
+  case 'b':
+  case 'B':
     divisor = 1.0;
     break;
 
