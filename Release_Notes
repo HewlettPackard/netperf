@@ -1,3 +1,9 @@
+These are the Release Notes for post Revision 2.6.0 of netperf:
+
+*) Add bits/s (-f b) and Bytes/s (-f B) as selectable throughput
+   units. This may make life easier for folks doing post-processing of
+   things like interim results.
+
 These are the Release Notes for Revision 2.6.0 of netperf:
 
 *) Initial pass at support for --enable-intervals (WANT_INTERVALS) for

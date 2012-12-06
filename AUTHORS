@@ -285,3 +285,5 @@ David Ahern - fix for an incorrect pointer check
 
 Jim Nell - Fix for Solaris 11.1 compilation problem in dscp.c
 
+Steven Noonan - found a variable name bug for the ever unlikely case
+of a platform not defining SO_SNDBUF
