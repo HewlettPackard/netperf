@@ -89,7 +89,12 @@ char nettest_omni_id[]="\
 #ifdef HAVE_LINUX_SOCKET_H
 # include <linux/socket.h>
 # ifndef MSG_FASTOPEN
+#  warning Using our own value for MSG_FASTOPEN
 #  define MSG_FASTOPEN	0x20000000	/* Send data in TCP SYN */
+# endif
+# ifndef TCP_FASTOPEN
+#  warning Using our own value for TCP_FASTOPEN
+#  define TCP_FASTOPEN 23
 # endif
 #endif
 
@@ -3396,12 +3401,6 @@ get_transport_info(SOCKET socket, int *mss, int protocol)
 
 }
 
-/*
-   if ( setsockopt(sd, SOL_TCP, TCP_CONGESTION, "ledbat", 6) == -1 ) {
-     perror("setsockopt");
-     exit(EXIT_FAILURE);
-   }
-*/
 static void
 get_transport_cong_control(SOCKET socket, int protocol, char cong_control[], int len)
 {
@@ -5289,7 +5288,7 @@ recv_omni()
        like the listen() call does - it is classic, and was what was
        used in the online example I found */
     if (use_fastopen &&
-	(setsockopt(s_listen,SOL_TCP, TCP_FASTOPEN, &backlog, sizeof(qlen)) ==
+	(setsockopt(s_listen,IPPROTO_TCP, TCP_FASTOPEN, &backlog, sizeof(backlog)) ==
 	 SOCKET_ERROR)) {
       netperf_response.content.serv_errno = errno;
       close(s_listen);
