@@ -287,3 +287,6 @@ Jim Nell - Fix for Solaris 11.1 compilation problem in dscp.c
 
 Steven Noonan - found a variable name bug for the ever unlikely case
 of a platform not defining SO_SNDBUF
+
+Amos Kong - a fix to report the correct send size in a migrated
+TCP_MAERTS test. Bug reported by Wenli Quan

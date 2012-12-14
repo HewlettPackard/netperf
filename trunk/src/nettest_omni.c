@@ -6135,7 +6135,7 @@ Size (bytes)\n\
 		cpu_fmt_1,		/* the format string */
 		rsr_size,		/* remote recvbuf size */
 		lss_size,		/* local sendbuf size */
-		send_size,		/* how large were the recvs */
+		remote_send_size,	/* how large were the recvs */
 		elapsed_time,		/* how long was the test */
 		thruput, 		/* what was the xfer rate */
 		local_cpu_utilization,	/* local cpu */
@@ -6167,9 +6167,9 @@ Size (bytes)\n\
 		tput_fmt_1,		/* the format string */
 		lsr_size, 		/* local recvbuf size */
 		rss_size, 		/* remot sendbuf size */
-		remote_send_size,		/* how large were the recvs */
+		remote_send_size,	/* how large were the recvs */
 		elapsed_time, 		/* how long did it take */
-		thruput,                  /* how fast did it go */
+		thruput,                /* how fast did it go */
 		((print_headers) ||
 		 (result_brand == NULL)) ? "" : result_brand);
 	break;
