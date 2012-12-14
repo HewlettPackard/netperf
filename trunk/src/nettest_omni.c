@@ -7034,8 +7034,8 @@ OMNI and Migrated BSD Sockets Test Options:\n\
                       be set.\n\
     -L name[/mask],fam  Use name (or IP) and family as source of data connection\n\
                       A mask value will cause randomization of the IP used\n\
-    -m bytes          Set the send size (TCP_STREAM, UDP_STREAM)\n\
-    -M bytes          Set the recv size (TCP_STREAM, UDP_STREAM)\n\
+    -m local,remote   Set the send size for _STREAM/_MAERTS tests\n\
+    -M local,remote   Set the recv size for _STREAM/_MAERTS tests\n\
     -n                Use the connected socket for UDP locally\n\
     -N                Use the connected socket for UDP remotely\n\
     -o [file]         Generate CSV output optionally based on file\n\
