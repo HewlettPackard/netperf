@@ -2919,6 +2919,12 @@ send_data(SOCKET data_socket, struct ring_elt *send_ring, uint32_t bytes_to_send
 static int
 recv_data_no_copy(SOCKET data_socket, struct ring_elt *recv_ring, uint32_t bytes_to_recv, struct sockaddr *source, netperf_socklen_t *sourcelen, uint32_t flags, uint32_t *num_receives) {
 
+#ifndef SPLICE_F_MOVE
+# define SPLICE_F_MOVE 0x01
+#endif
+#ifndef SPLICE_F_NONBLOCK
+# define SPLICE_F_NONBLOCK 0x02
+#endif
 
   static int pfd[2] = {-1, -1};
   static int fdnull = -1;
@@ -2928,7 +2934,9 @@ recv_data_no_copy(SOCKET data_socket, struct ring_elt *recv_ring, uint32_t bytes
   int bytes_left;
   int bytes_recvd;
   int my_recvs;
-  int my_flags = 0; /* will we one day want to set MSG_WAITALL? */
+  int my_flags = SPLICE_F_MOVE | SPLICE_F_NONBLOCK; /* values
+						       suggested by
+						       Eric Dumazet */
   int ret;
 
   if (pfd[0] == -1) {
