@@ -2988,14 +2988,11 @@ recv_data_no_copy(SOCKET data_socket, struct ring_elt *recv_ring, uint32_t bytes
     
     
     if (bytes_recvd > 0) {
-      if (splice(pfd[0],
-		 NULL,
-		 fdnull,
-		 NULL,
-		 bytes_recvd,
-		 my_flags) != bytes_recvd) {
-	return -3;
-      }
+      /* per Eric Dumazet, we should just let this second splice call
+	 move as many bytes as it can and not worry about how much.
+	 this should make the call more robust when made on a system
+	 under memory pressure */
+      splice(pfd[0], NULL, fdnull, NULL, 1 << 30, my_flags);
       bytes_left -= bytes_recvd;
     }
     else {
