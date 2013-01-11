@@ -4050,7 +4050,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
     /* if we are not a connectionless protocol, we need to connect. at
        some point even if we are a connectionless protocol, we may
        still want to "connect" for convenience raj 2008-01-14 */
-    need_to_connect = (protocol != IPPROTO_UDP);
+    need_to_connect = (protocol != IPPROTO_UDP) || local_connected;
 
     /* possibly wait just a moment before actually starting - used
        mainly when one is doing many many many concurrent netperf
