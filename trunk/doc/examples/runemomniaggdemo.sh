@@ -25,7 +25,8 @@ function run_cmd {
     do
 	TARGET=${REMOTE_HOSTS[`expr $i % $NUM_REMOTE_HOSTS`]}
 	echo "Starting netperfs on localhost targeting ${TARGET} for $TEST" | tee -a $TESTLOG
-	$NETPERF -H $TARGET $NETPERF_CMD 2>&1 > netperf_${TEST}_to_${TARGET}_${i}.out &
+	id=`printf "%.5d" $i`
+	$NETPERF -H $TARGET $NETPERF_CMD 2>&1 > netperf_${TEST}_${id}_to_${TARGET}.out &
 
     # give it a moment to get going
 	sleep 1
