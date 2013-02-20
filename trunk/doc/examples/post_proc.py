@@ -101,6 +101,7 @@ def open_rrd(basename,start_time,end_time,max_interval):
                    '--start', str(int(start_time)),
                    data_sources,
                    rra )
+    return basename + ".rrd"
 
 def update_heartbeat(basename,heartbeat):
 #    print "Updating heartbeat with %d" % heartbeat
@@ -128,6 +129,7 @@ def add_to_ksink(basename,start_time,end_time,ksink):
 def process_result(basename, raw_results, end_time, ksink):
     first_result = True
     have_result = False
+    had_results = False
     interim_result=0.0
     interim_units="Trans/s"
     interim_interval=1.0
@@ -137,6 +139,7 @@ def process_result(basename, raw_results, end_time, ksink):
 
 
     for raw_result in raw_results:
+#        print "Checking result %s" % raw_result
         if "Interim result:" in raw_result:
             # human format
             fields = raw_result.split()
@@ -177,21 +180,21 @@ def process_result(basename, raw_results, end_time, ksink):
             else:
                 have_result = False
                 
-        if first_result:
+        if first_result and have_result:
             # we could use the overal start time, but using the first
             # timestamp for this instance may save us some space in
             # the rrdfile.  we do though want to subtract the
             # interim_interval from that timestamp to give us some
             # wriggle-room - particularly if the interval happens to
             # end precisely on a step boundary...
+#            print "First entry for %s is %f at time %f" % (basename, interim_result,interim_end)
             open_rrd(basename,
                      interim_end-interim_interval,
                      end_time,
                      max_interval)
             first_timestamp = interim_end
             first_result = False
-#            print "First entry for %s is %f at time %f" % (basename, interim_result,interim_end)
-            
+              
         if int(math.ceil(interim_interval)) > max_interval:
             max_interval = int(math.ceil(interim_interval))
             update_heartbeat(basename,max_interval)
@@ -201,12 +204,17 @@ def process_result(basename, raw_results, end_time, ksink):
         # feed them en mass. until then we will dribble them one at a
         # time
         if have_result:
+#            print "updating rrd with %s at %s" % (interim_result, interim_end)
             update_rrd(basename,interim_result,interim_end)
             have_result = False
+            had_results = True
 
-    last_timestamp = interim_end
-#    print "First timestamp for this instance %f last %f" % (first_timestamp,last_timestamp)
-    return first_timestamp, last_timestamp
+    if had_results:
+        last_timestamp = interim_end
+ #       print "First timestamp for this instance %f last %f" % (first_timestamp,last_timestamp)
+        return first_timestamp, last_timestamp
+    else:
+        return 0, 0
 
 def process_result_files(prefix,start_time,end_time,ksink):
     print "Prefix is %s" % prefix
@@ -216,18 +224,19 @@ def process_result_files(prefix,start_time,end_time,ksink):
     for result_file in results_list:
         basename = result_file.replace(".out","")
         raw_results = open(result_file,"r")
+#        print "Processing file %s" % basename
         first_timestamp, last_timestamp = process_result(basename,
                                                          raw_results,
                                                          end_time,
                                                          ksink)
-        # we have to check each time because we may not be processing
-        # the individual results files in order
-        min_timestamp = min(min_timestamp,first_timestamp)
-        # OK, now we get the massaged results
-        add_to_ksink(basename,first_timestamp,last_timestamp,ksink)
+        if (first_timestamp != 0) and (last_timestamp != 0):
+            # we have to check each time because we may not be processing
+            # the individual results files in order
+            min_timestamp = min(min_timestamp,first_timestamp)
+            # OK, now we get the massaged results
+            add_to_ksink(basename,first_timestamp,last_timestamp,ksink)
 
 #    print "For %s min_timestamp is %s" % (prefix, min_timestamp)
-
     return min_timestamp
 
 def generate_overall(prefix,start_time,end_time,ksink):
@@ -347,21 +356,26 @@ def graph_individual(prefix,start_time,end_time,vrules):
 
     length = int(end_time) - int(start_time)
 
-    for individual in glob.glob(prefix+"*.out"):
-        basename = individual.strip(".out")
-        rrdtool.graph(basename + ".svg",
-                      '--imgformat','SVG',
-                      '--start', str(int(start_time)),
-                      '--end', str(int(end_time)),
-                      '--font',  'DEFAULT:0:Helvetica',
-                      '-w', '%d' % max(800,length), '-h', '400',
-                      '--right-axis', '1:0',
-                      vrules,
-                      '-t', '%s %s' % (basename,prefix),
-                      '-v', '%s %s' % (direction, units),
-                      'DEF:foo=%s.rrd:mbps:AVERAGE' % basename,
-                      'CDEF:bits=foo,%s,*' % multiplier,
-                      'LINE2:bits#00FF0080:%s' % units)
+    for individual in glob.glob(prefix+"*.rrd"):
+        basename = individual.strip(".rrd")
+        try:
+            rrdtool.graph(basename + ".svg",
+                          '--imgformat','SVG',
+                          '--start', str(int(start_time)),
+                          '--end', str(int(end_time)),
+                          '--font',  'DEFAULT:0:Helvetica',
+                          '-w', '%d' % max(800,length), '-h', '400',
+                          '--right-axis', '1:0',
+                          vrules,
+                          '-t', '%s %s' % (basename,prefix),
+                          '-v', '%s %s' % (direction, units),
+                          'DEF:foo=%s.rrd:mbps:AVERAGE' % basename,
+                          'CDEF:bits=foo,%s,*' % multiplier,
+                          'LINE2:bits#00FF0080:%s' % units)
+        except:
+            # at some point we should make certain this was for the
+            # "intervals" rrd file but until then just pass
+            pass
 
 if __name__ == '__main__':
 
@@ -381,6 +395,10 @@ if __name__ == '__main__':
                    [0.0] * length))
 
     min_timestamp = process_result_files(prefix,start_time,end_time,ksink)
+    if min_timestamp == 9999999999.9:
+        print "There were no valid results for this prefix!"
+        exit()
+
 #    print "Min timestamp for %s is %s start time is %s" % (prefix,min_timestamp,start_time)
     generate_overall(prefix,min_timestamp-2,end_time,ksink)
     peak_interval_id, peak_start, peak_end, peak_average, peak_minimum, peak_maximum = overall_min_max_avg(prefix,min_timestamp,end_time,intervals)
