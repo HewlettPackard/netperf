@@ -2908,7 +2908,8 @@ send_data(SOCKET data_socket, struct ring_elt *send_ring, uint32_t bytes_to_send
     if (errno == ENOBUFS)
       return -2;
     else {
-      fprintf(where,"%s: data send error: errno %d\n",__FUNCTION__,errno);
+      fprintf(where,"%s: data send error: %s (errno %d)\n",
+	      __FUNCTION__, strerror(errno), errno);
       return -3;
     }
   }
@@ -3892,6 +3893,9 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 
       if (check_interval)
 	omni_request->flags |= OMNI_CHECK_INTERVAL;
+
+      if (manipulate_local_firewalls)
+	omni_request->flags |= OMNI_MANAGE_FIREWALL;
 
       /* perhaps this should be made conditional on
 	 remote_cong_control_req[0] not being NULL? */
@@ -5125,6 +5129,7 @@ recv_omni()
   use_fastopen = omni_request->flags & OMNI_FASTOPEN;
 #endif
   direction       = omni_request->direction;
+  manipulate_local_firewalls = (omni_request->flags) & OMNI_MANAGE_FIREWALL;
 
   /* let's be quite certain the fill file string is null terminated */
   omni_request->fill_file[sizeof(omni_request->fill_file) - 1] = '\0';
@@ -5348,6 +5353,10 @@ recv_omni()
     fflush(where);
   }
   netperf_response.content.serv_errno   = 0;
+  if (manipulate_local_firewalls) {
+    enable_port(ntohs(omni_response->data_port),
+		inet_ptos(omni_request->protocol));
+  }
 
   /* But wait, there's more. If the initiator wanted cpu measurements, */
   /* then we must call the calibrate routine, which will return the max */
@@ -5716,6 +5725,10 @@ recv_omni()
   stop_timer();
   cpu_stop(omni_request->flags & OMNI_MEASURE_CPU,&elapsed_time);
   close(s_listen);
+  if (manipulate_local_firewalls) {
+    done_with_port(ntohs(omni_response->data_port),
+		inet_ptos(omni_request->protocol));
+  }
 
 #if defined(WANT_INTERVALS)
 #ifdef WIN32
