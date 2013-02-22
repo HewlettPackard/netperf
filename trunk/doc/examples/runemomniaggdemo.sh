@@ -163,6 +163,9 @@ fi
 # find_max_burst.sh has completed, we are past a burst size of 0
 if [ $DO_RR -eq 1 ]; then
     MAX_INSTANCES=1
+    if [ $DURATION -lt 60 ]; then
+	DURATION=60
+    fi
     TEST="sync_tps"
     TESTLOG="netperf_sync_tps.log"
     NETPERF_CMD="-D 0.5 -c -C -f x -P 0 -t omni $LENGTH -v 2 -- -r 1 -u $MY_UUID $OUTPUT"
