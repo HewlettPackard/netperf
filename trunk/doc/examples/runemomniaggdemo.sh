@@ -106,7 +106,8 @@ DO_MAERTS=0;
 # hanging.  If you are running linux, make certain that
 # net.core.[r|w]mem_max are sufficiently large
 DO_BIDIR=0;
-DO_RRAGG=1;
+DO_RRAGG=0;
+DO_RR=1;
 
 # UDP_RR for TPC/PPS using single-byte transactions. we do not use
 # TCP_RR any longer because any packet losses or other matters
@@ -154,4 +155,18 @@ if [ $DO_MAERTS -eq 1 ]; then
     NETPERF_CMD="-D 0.5 -c -C -f m -P 0 -t omni $LENGTH -v 2 -- -m ,64K -u $MY_UUID $OUTPUT"
     run_cmd
 fi
+
+# A single-stream of synchronous, no-burst TCP_RR in an "aggregate"
+# script?  Yes, because the way the aggregate tests work, while there
+# is a way to see what the performance of a single bulk transfer was,
+# there is no way to see a basic latency - by the time
+# find_max_burst.sh has completed, we are past a burst size of 0
+if [ $DO_RR -eq 1 ]; then
+    MAX_INSTANCES=1
+    TEST="sync_tps"
+    TESTLOG="netperf_sync_tps.log"
+    NETPERF_CMD="-D 0.5 -c -C -f x -P 0 -t omni $LENGTH -v 2 -- -r 1 -u $MY_UUID $OUTPUT"
+    run_cmd
+fi
+
 
