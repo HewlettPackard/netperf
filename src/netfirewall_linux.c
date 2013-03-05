@@ -16,6 +16,8 @@
 #include <netinet/in.h>
 
 static int port_was_enabled = 0;
+static int enabled_port = -1;
+static int enabled_protocol = -1;
 
 static char *protocol_to_ufw(int protocol) {
   switch (protocol) {
@@ -54,13 +56,19 @@ enable_port(int port, int protocol) {
 		     
   /* one of these days we will have to learn the proper way to see if
      a port is already open under Linux... */
-  sprintf(command,"ufw allow %d/%s",port,protocol_to_ufw(protocol));
-  fprintf(stderr,"Command is '%s'\n",command);
-  if (system(command) < 0)
+  sprintf(command,
+	  "ufw allow %d/%s 2>&1 > /dev/null",
+	  port,
+	  protocol_to_ufw(protocol));
+  if (system(command) < 0) {
     /* if the command failed outright, don't bother at the back-end */
     port_was_enabled = 0;
-  else
+  }
+  else {
     port_was_enabled = 1;
+    enabled_port = port;
+    enabled_protocol = protocol;
+  }
   return;
 }
 
@@ -68,11 +76,11 @@ void
 done_with_port(int port, int protocol) {
   char command[128];
 
-  if ((port < 0) || (port > 65535))
-    return;
-		     
-  if (!port_was_enabled) {
-    sprintf(command,"ufw delete allow %d/%s",port,protocol_to_ufw(protocol));
+  if (port_was_enabled) {
+    sprintf(command,
+	    "ufw delete allow %d/%s 2>&1 > /dev/null",
+	    enabled_port,
+	    protocol_to_ufw(enabled_protocol));
     system(command);
   }
   return;

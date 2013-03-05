@@ -163,7 +163,11 @@ EXTRA_DIST = \
        tcp_rr_script                           \
        tcp_stream_script                       \
        udp_rr_script                           \
-       udp_stream_script
+       udp_stream_script \
+	bloat.sh \
+	runemomniaggdemo.sh \
+	runemomniagg2.sh \
+	runemomni.sh
 
 all: all-am
 
@@ -347,6 +351,9 @@ uninstall-am:
 	maintainer-clean maintainer-clean-generic mostlyclean \
 	mostlyclean-generic pdf pdf-am ps ps-am uninstall uninstall-am
 
+	netperf_by_flavor.py \
+	post_proc.py \
+	find_max_burst.sh
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
