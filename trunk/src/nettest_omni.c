@@ -5354,8 +5354,7 @@ recv_omni()
   }
   netperf_response.content.serv_errno   = 0;
   if (manipulate_local_firewalls) {
-    enable_port(ntohs(omni_response->data_port),
-		inet_ptos(omni_request->protocol));
+    enable_port(omni_response->data_port, omni_request->protocol);
   }
 
   /* But wait, there's more. If the initiator wanted cpu measurements, */
@@ -5725,9 +5724,9 @@ recv_omni()
   stop_timer();
   cpu_stop(omni_request->flags & OMNI_MEASURE_CPU,&elapsed_time);
   close(s_listen);
-  if (manipulate_local_firewalls) {
-    done_with_port(ntohs(omni_response->data_port),
-		inet_ptos(omni_request->protocol));
+
+  if (manipulate_local_firewalls > 0) {
+    done_with_port(omni_response->data_port, omni_request->protocol);
   }
 
 #if defined(WANT_INTERVALS)
