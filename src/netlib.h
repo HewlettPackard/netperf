@@ -605,6 +605,8 @@ extern void     find_security_info(int *enabled, int *type, char **specific);
 extern void     demo_first_timestamp();
 extern void     demo_reset();
 extern void     demo_stream_setup(uint32_t a, uint32_t b);
+extern void     enable_port(int port, int protocol);
+extern void     done_with_port(int port, int protocol);
 #ifndef WIN32
 
 /* WIN32 requires that at least one of the file sets to select be
