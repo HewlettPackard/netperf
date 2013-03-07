@@ -3452,9 +3452,6 @@ set_receive_timeout(SOCKET sock, int timeout)
 
   foo.tv_sec = timeout;
   foo.tv_usec = 0;
-#else
-  DWORD foo = timeout * 1000;
-#endif
 
   if (setsockopt(sock,SOL_SOCKET,SO_RCVTIMEO,&foo,sizeof(foo)) < 0) {
     if (debug) {
@@ -3464,6 +3461,7 @@ set_receive_timeout(SOCKET sock, int timeout)
       fflush(where);
     }
   }
+#endif
 #endif
 }
 
