@@ -2882,9 +2882,15 @@ send_data(SOCKET data_socket, struct ring_elt *send_ring, uint32_t bytes_to_send
 		 0);
     }
     else {
+#ifndef WIN32
       len = write(data_socket,
 		  send_ring->buffer_ptr,
 		  bytes_to_send);
+#else
+      fprintf(where,"I'm sorry Dave I cannot write() under Windows\n");
+      fflush(where);
+      return -3;
+#endif
     }
   }
   if(len != bytes_to_send) {
@@ -4371,10 +4377,12 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	    fprintf(where,"Timeout receiving resonse from remote\n");
 	    fflush(where);
 	  }
+#ifdef WANT_FIRST_BURST
 	  if (first_burst_size) {
 	    requests_outstanding = 0;
 	    request_cwnd = request_cwnd_initial;
 	  }
+#endif
 	  if (keep_histogram) {
 	    HIST_purge(time_hist);
 	  }
