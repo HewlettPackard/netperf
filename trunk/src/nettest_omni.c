@@ -3447,10 +3447,14 @@ static void
 set_receive_timeout(SOCKET sock, int timeout) 
 {
 #ifdef SO_RCVTIMEO
+#ifndef WIN32
   struct timeval foo;
 
   foo.tv_sec = timeout;
   foo.tv_usec = 0;
+#else
+  int foo = timeout * 1000;
+#endif
 
   if (setsockopt(sock,SOL_SOCKET,SO_RCVTIMEO,&foo,sizeof(foo)) < 0) {
     if (debug) {
