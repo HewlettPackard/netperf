@@ -99,14 +99,14 @@ MY_UUID=`uuidgen`
 LENGTH="-l 7200"
 OUTPUT="-o all"
 
-DO_STREAM=0;
-DO_MAERTS=0;
+DO_STREAM=1;
+DO_MAERTS=1;
 # NOTE!  The Bidir test depends on being able to set a socket buffer
 # size greater than 13 * 64KB or 832 KB or there is a risk of the test
 # hanging.  If you are running linux, make certain that
 # net.core.[r|w]mem_max are sufficiently large
-DO_BIDIR=0;
-DO_RRAGG=0;
+DO_BIDIR=1;
+DO_RRAGG=1;
 DO_RR=1;
 
 # UDP_RR for TPC/PPS using single-byte transactions. we do not use
@@ -114,7 +114,7 @@ DO_RR=1;
 # affecting the congestion window will break our desire that there be
 # a one to one correspondence between requests/responses and packets.
 if [ $DO_RRAGG -eq 1 ]; then
-    BURST=`./find_max_burst.sh ${REMOTE_HOSTS[0]}`
+    BURST=`find_max_burst.sh ${REMOTE_HOSTS[0]}`
     if [ $BURST -eq -1 ]; then
         # use a value that find_max_burst will not have picked
         BURST=9
