@@ -108,6 +108,7 @@ DO_MAERTS=1;
 DO_BIDIR=1;
 DO_RRAGG=1;
 DO_RR=1;
+DO_ANCILLARY=1;
 
 # UDP_RR for TPC/PPS using single-byte transactions. we do not use
 # TCP_RR any longer because any packet losses or other matters
@@ -173,3 +174,20 @@ if [ $DO_RR -eq 1 ]; then
 fi
 
 
+# now some ancillary things which may nor may not work on your platform
+if [ $DO_ANCILLARY -eq 1 ];then
+    dmodecode 2>&1 > dmidecode.txt
+    uname -a 2>&1 > uname.txt
+    cat /proc/cpuinfo 2>&1 > cpuinfo.txt
+    cat /proc/meminfo 2>&1 > cpuinfo.txt
+    ifconfig -a 2>&1 > ifconfig.txt
+    netstat -rn 2>&1 > netstat.txt
+    dpkg -l 2>&1 > dpkg.txt
+    rpm -qa 2>&1 > rpm.txt
+    cat /proc/interrupts 2>&1 > interrupts.txt
+    i=0
+    while [ $i -lt `expr $NUM_REMOTE_HOSTS - 1` ]
+    do
+	traceroute ${REMOTE_HOSTS[$]]}
+    done
+fi
