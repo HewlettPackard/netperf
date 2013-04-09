@@ -10,6 +10,7 @@ import argparse
 from os import environ
 from novaclient.v1_1 import Client
 from time import sleep, time, strftime, localtime, gmtime
+import paramiko
 
 class TestNetperf() :
     """
@@ -20,20 +21,16 @@ class TestNetperf() :
     def __init__(self) :
         self.verbose = 1
         self.sshopts = " -o StrictHostKeyChecking=no -o HashKnownHosts=no -o ConnectTimeout=30 "
-        self.nova_username = ""
-        self.nova_url = ""
-        self.nova_password = ""
-        self.nova_project_id = ""
-        self.nova_region_name = ""
+
         self.os = None
         self.ip_pool = []
         self.vm_pool = []
+        self.adminPasses = dict()
         self.suitable_images = []
         self.chosen_image = None
         self.keypair = None
         self.start = time()
         self.this_run_started = strftime("%Y-%m-%d-%H-%M",gmtime()) + "/"
-        self.instance_username = "ubuntu"
 
     def fail(self,message) :
         """
@@ -177,23 +174,27 @@ class TestNetperf() :
                 logging.warning("Unable to delete server %s. Error: %s",
                                 server.name, e)
 
-    def allocate_server_pool(self, count, flavor, image, keyname) :
+    def allocate_server_pool(self, count, flavor, image, keyname, secgroup) :
         """
         Allocate the number of requested servers of the specified 
         flavor and image, and with the specified key name
         """
 
-        logging.info("Allocating %d servers of flavor '%s' with image name '%s' and key %s",
+        logging.warning("Allocating %d servers of flavor '%s' with image name '%s' and key %s",
                      count, flavor.name, image.name, keyname)
 
+        # instance number (filled-in later) time flavorname imagename
+        basename = "netperftest%s_%s_%s_%s" % ("%d",str(self.start),flavor.name,image.name)
         for i in xrange(count) :
-            thisname = "netperftest" + str(i)
+            thisname = basename % i
             try:
                 newvm = self.os.servers.create(name = thisname,
                                                image = image,
                                                flavor = flavor,
                                                key_name = keyname,
-                                               security_groups = ["netperftesting"])
+                                               security_groups = secgroup)
+                print "adminPass is %s" % newvm.adminPass
+                self.adminPasses[newvm.id]=newvm.adminPass
                 self.vm_pool.append(newvm)
 
             except Exception as e :
@@ -310,15 +311,7 @@ class TestNetperf() :
 
     def create_security_group(self):
 
-        for group in self.os.security_groups.list() :
-            if (group.name == "netperftesting") :
-                logging.info("Deleting vestigial netperftesting security_group")
-                for rule in group.rules :
-                    logging.info("Deleting vestigial netperftesting security_group rule %s" + str(rule['id']))
-                    self.os.security_group_rules.delete(rule['id'])
-                self.os.security_groups.delete(group.id)
-
-        self.security_group = self.os.security_groups.create("netperftesting","A rather open security group for netperf testing")
+        self.security_group = self.os.security_groups.create("netperftesting " + str(self.start),"A rather open security group for netperf testing")
 
         self.os.security_group_rules.create(parent_group_id = self.security_group.id,
                                             ip_protocol = 'tcp',
@@ -329,7 +322,7 @@ class TestNetperf() :
                                             ip_protocol = 'udp',
                                             from_port = 1,
                                             to_port = 65535)
-
+        
         self.os.security_group_rules.create(parent_group_id = self.security_group.id,
                                             ip_protocol = 'icmp',
                                             from_port = -1,
@@ -369,6 +362,23 @@ class TestNetperf() :
 
         os.chmod(self.keyfilename, stat.S_IRWXU)
 
+    # lifted quite liberally from python-novaclient/novaclient/utils.py
+    def env(self, *args, **kwargs):
+        """
+        returns the first environment variable set
+        if none are non-empty, defaults to '' or keyword arg default
+        """
+        for arg in args:
+            value = os.environ.get(arg, None)
+            if value:
+                return value
+
+        if kwargs.get('failure',None):
+            print "found failure"
+            self.fail(kwargs.get('failure'))
+
+        return kwargs.get('default', '')
+        
     def setup_parser(self) :
         parser = argparse.ArgumentParser()
         parser.add_argument("-f", "--flavor",
@@ -376,14 +386,29 @@ class TestNetperf() :
         parser.add_argument("--image",
                             help="Specify the image type to test")
         parser.add_argument("--region",
+                            default=self.env('OS_REGION_NAME',
+                                             'NOVA_REGION_NAME',
+                                             failure="A Nova region name must be specified via either --region, OS_REGION_NAME or NOVA_REGION_NAME"),
                             help="Specify the region in which to test")
         parser.add_argument("--username",
+                            default=self.env('OS_USERNAME',
+                                             'NOVA_USERNAME',
+                                             failure="A username for Nova access must be specified either via --username, OS_USERNAME, or NOVA_USERNAME"),
                             help="The name of the user to use")
         parser.add_argument("--password",
+                            default=self.env('OS_PASSWORD',
+                                             "NOVA_PASSWORD",
+                                             failure="A password for Nova access must be specified via either --password, OS_PASSWORD or NOVA_PASSWORD"),
                             help="The password for the Nova user")
         parser.add_argument("--url",
+                            default=self.env('OS_AUTH_URL',
+                                             'NOVA_URL',
+                                             failure="A URL for authorization must be provided via either --url, OS_AUTH_URL or NOVA_URL"),
                             help="The URL for Nova")
         parser.add_argument("--project",
+                            default=self.env('OS_TENANT_NAME',
+                                             'NOVA_PROJECT_ID',
+                                             failure="You must provide a project via --project, OS_TENANT_NAME or NOVA_PROJECT_ID"),
                             help="The ID for the Nova project")
 
         parser.add_argument("--archivepath",
@@ -391,38 +416,10 @@ class TestNetperf() :
         parser.add_argument("--collectdsockname",
                             help="The name of the collectd socket.")
         parser.add_argument("--instanceuser",
+                            default=self.env('INSTANCE_USERNAME', default='ubuntppppu'),
                             help="The name of the user on the instance(s)")
 
         return parser
-
-    def get_instance_username(self):
-        if self.args.instanceuser:
-            self.instance_username = self.args.instanceuser
-
-        try:
-            self.instance_username = environ['INSTANCE_USERNAME']
-        except:
-            pass
-
-    def get_nova_project_id(self):
-        if self.args.project :
-            self.nova_project_id = self.args.project
-            return
-
-        try:
-            self.nova_project_id = environ['NOVA_PROJECT_ID']
-        except:
-            self.fail("A Nova project ID must be specifed either via --project or a NOVA_PROJECT_ID environment variable.")
-
-    def get_nova_region_name(self):
-        if self.args.region:
-            self.nova_region_name = self.args.region
-            return
-
-        try:
-            self.nova_region_name = environ['NOVA_REGION_NAME']
-        except:
-            self.fail("A Nova region name must be specified via either --region or a NOVA_REGION_NAME environment variable.")
 
     def get_flavor(self) :
         flav = None
@@ -473,7 +470,7 @@ class TestNetperf() :
                 self.archive_path = "Archive"
 
         self.archive_path = os.path.join(self.archive_path,
-                                         self.nova_region_name,
+                                         self.args.region,
                                          self.this_run_started)
         logging.debug("Asking to make %s", self.archive_path)
         try:
@@ -489,73 +486,30 @@ class TestNetperf() :
 
         return
 
-    def get_nova_password(self):
-
-        if self.args.password :
-            self.nova_password = self.args.password
-            return
-
-        try:
-            self.nova_password = environ['NOVA_PASSWORD']
-        except:
-            self.fail("A password for Nova access must be specified either via --password or the NOVA_PASSWORD environment variable.")
-
-    def get_nova_url(self) :
-
-        if self.args.url :
-            self.nova_url = self.args.url
-            return
-
-        try:
-            self.nova_url = environ['NOVA_URL']
-        except:
-            self.fail("A URL for Nova access must be specified either via --url or the NOVA_URL envionment variable")
-
-    def get_nova_username(self) :
-        if self.args.username :
-            self.nova_username = self.args.username
-            return
-
-        try:
-            self.nova_username = environ['NOVA_USERNAME']
-        except:
-            self.fail("A username for Nova access must be specified eigher via --username or the NOVA_USERNAME environment variable")
-
     def initialize(self) :
         self.flavor_name = None
         self.flavor_id = None
         self.archive_path = None
         self.collectd_sock_name = None
 
-        self.nova_region_name = None
-        self.nova_url = None
-        self.nova_username = None
-        self.nova_project_id = None
-        
         parser = self.setup_parser()
 
         self.args = parser.parse_args()
 
-        self.get_nova_url()
-        self.get_nova_username()
-        self.get_instance_username()
-        self.get_nova_project_id()
-        self.get_nova_region_name()
-        self.get_nova_password()
         self.get_flavor()
         self.get_collectd_sock()
         self.get_archive_path()
 
-        self.os = Client(self.nova_username,
-                         self.nova_password,
-                         self.nova_project_id,
-                         self.nova_url,
-                         region_name = self.nova_region_name)
+        self.os = Client(self.args.username,
+                         self.args.password,
+                         self.args.project,
+                         self.args.url,
+                         region_name = self.args.region)
 
         if (self.os == None) :
             self.fail("OpenStack API connection setup unsuccessful!")
 
-        self.clean_vestigial_keypairs()
+#        self.clean_vestigial_keypairs()
 
         self.allocate_key()
 
@@ -572,7 +526,7 @@ class TestNetperf() :
 
         if self.suitable_images:
             self.chosen_image = self.suitable_images.pop()
-            logging.info("The chosen image is %s",
+            logging.warning("The chosen image is %s",
                          self.chosen_image.name)
         else:
             self.fail("Unable to find a suitable image to test")
@@ -611,16 +565,27 @@ class TestNetperf() :
         will bail on any failures.  in the name of simplicity/laziness
         we will copy everything to everyone.
         """
+        upload_files = ("netperf", "netserver", "runemomniaggdemo.sh", "find_max_burst.sh", "remote_hosts")
         for node in self.vm_pool :
             publicip = self.extract_public_ip(node)
-            cmd = "scp %s -i %s netperf netserver runemomniaggdemo.sh find_max_burst.sh remote_hosts %s@%s:" % (self.sshopts, self.keyfilename, self.instance_username, publicip)
-#            cmd = "scp " + self.sshopts + " -i " + self.keyfilename + " netperf netserver runemomniaggdemo.sh find_max_burst.sh remote_hosts ubuntu@" + str(publicip) +":"
             try :
-                self.do_in_shell(cmd,False)
+                transport = paramiko.Transport((publicip,22))
+                mykey = paramiko.RSAKey.from_private_key_file(os.path.abspath(self.keyfilename))
+                transport.connect(username=self.args.instanceuser,
+                                  pkey = mykey)
+                sftp = paramiko.SFTPClient.from_transport(transport)
+                for file in upload_files:
+                    sftp.put(file,file)
+                    mode = sftp.stat(file).st_mode
+                    # I would really rather not have to do this, but
+                    # SFTP, unlike scp, does not seem to preserve file
+                    # permissions.
+                    sftp.chmod(file, mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+                sftp.close()
+                transport.close()
             except Exception as e :
-#                self.clean_up_instances()
-                logging.warning("The copying of files to %s via command '%s' failed.",
-                                node.name, cmd, e)
+                logging.warning("The copying of files to %s failed.",
+                                node.name, e)
                 raise RuntimeError
 
     def start_netservers(self) :
@@ -630,9 +595,24 @@ class TestNetperf() :
 
         for node in self.vm_pool :
             publicip = self.extract_public_ip(node)
-            cmd = "ssh %s -i %s %s@%s ./netserver -p 12865" % (self.sshopts, self.keyfilename, self.instance_username, publicip)
+            sudo = "sudo"
+            if self.args.instanceuser == 'root':
+                sudo = ""
+
+            cmd = "%s ./netserver -p 12865" % sudo
+
             try :
-                self.do_in_shell(cmd,False)
+                ssh = paramiko.SSHClient()
+                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                ssh.connect(hostname=publicip,
+                            username=self.args.instanceuser,
+                            key_filename=os.path.abspath(self.keyfilename),
+                            timeout=30.0)
+                stdin, stdout, stderr = ssh.exec_command(cmd)
+#                print stdout.readlines()
+#                print stderr.readlines()
+                ssh.close()
+
             except Exception as e:
                 logging.warning("Starting netserver processes was unsuccessful on %s at IP %s",
                                 node.name, publicip)
@@ -644,19 +624,43 @@ class TestNetperf() :
         """
         try :
             publicip = self.extract_public_ip(self.vm_pool[0])
-            cmd = "ssh %s -i %s %s@%s 'export PATH=$PATH:. ; ./runemomniaggdemo.sh | tee overall.log' " % (self.sshopts, self.keyfilename, self.instance_username, publicip)
-            self.do_in_shell(cmd,False)
+            cmd = "export PATH=$PATH:. ; ./runemomniaggdemo.sh | tee overall.log "
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh.connect(hostname=publicip,
+                        username=self.args.instanceuser,
+                        key_filename=os.path.abspath(self.keyfilename),
+                        timeout=30.0)
+            stdin, stdout, stderr = ssh.exec_command(cmd)
+            # if would seem that unless one does something with the
+            # output the exec_command will complete rather quickly,
+            # which is not what we want right here so we will await
+            # the exit status of the underlying channel, whatever that
+            # is :) but it is what I found in a web search :)
+            status = stdout.channel.recv_exit_status()
+            ssh.close()
         except Exception as e:
-            logging.warning("Could not run the netperf script on %s at IP %s",
-                            self.vm_pool[0].name, publicip)
+            logging.warning("Could not run the netperf script on %s at IP %s %s",
+                            self.vm_pool[0].name, publicip,str(e))
             raise RuntimeError
 
     def copy_back_results(self, destination) :
         try :
             publicip = self.extract_public_ip(self.vm_pool[0])
-            cmd = "scp %s -i %s %s@%s:*.{log,out} %s" % (self.sshopts, self.keyfilename, self.instance_username, publicip, destination)
-            logging.info("Scping results with command " + cmd)
-            self.do_in_shell(cmd,False)
+            logging.warning("Copying-back results")
+            transport = paramiko.Transport((publicip,22))
+            mykey = paramiko.RSAKey.from_private_key_file(os.path.abspath(self.keyfilename))
+            transport.connect(username=self.args.instanceuser,
+                              pkey = mykey)
+            sftp = paramiko.SFTPClient.from_transport(transport)
+            for file in sftp.listdir():
+                # one of these days I should read-up on how to make
+                # that one regular expression
+                if (re.match(r".*\.log",file) or
+                    re.match(r".*\.out",file) or
+                    re.match(r".*\.txt",file)):
+                    sftp.get(file,destination+file)
+            sftp.close()
         except Exception as e:
            logging.exception("Could not scp results from %s at IP %s",
                              self.vm_pool[0].name, publicip)
@@ -678,13 +682,22 @@ class TestNetperf() :
             ssher = sshers.pop()
             publicip = self.extract_public_ip(ssher)
             sudo = "sudo"
-            if self.instance_username == 'root':
+            if self.args.instanceuser == 'root':
                 sudo = ""
 
-            cmd = "ssh %s -i %s %s@%s 'hostname; uname -a; date; %s sysctl -w net.core.rmem_max=1048576 net.core.wmem_max=1048576'" % (self.sshopts, os.path.abspath(self.keyfilename), self.instance_username, publicip, sudo)
+            cmd = "hostname; uname -a; date; %s sysctl -w net.core.rmem_max=1048576 net.core.wmem_max=1048576" % sudo
 
             try:
-                self.do_in_shell(cmd,False)
+                ssh = paramiko.SSHClient()
+                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                ssh.connect(hostname=publicip,
+                            username=self.args.instanceuser,
+                            key_filename=os.path.abspath(self.keyfilename),
+                            timeout=30.0)
+                stdin, stdout, stderr = ssh.exec_command(cmd)
+#                print stdout.readlines()
+#                print stderr.readlines()
+                ssh.close()
                 sleeptime = 1
             except Exception as e :
                 now = time()
@@ -702,7 +715,8 @@ class TestNetperf() :
         avg = min = max = end = start ="0"
         units = "unknown"
 
-        logging.info("Post-processing script output")
+        logging.warning("Post-processing script output")
+
         for line in postresults.splitlines() :
             if (re.match("Average of peak interval is",line)) :
                 toks = line.split(" ",11)
@@ -741,17 +755,17 @@ class TestNetperf() :
                 units="BPS"
 
             if (self.collectd_socket != None):
-                self.collectd_socket.send("PUTVAL \"netperf-"+self.nova_region_name+"/unixsock-"+flavor.name+"-"+testtype+"/min\" interval=900 "+end+":"+min+"\n")
-                self.collectd_socket.send("PUTVAL \"netperf-"+self.nova_region_name+"/unixsock-"+flavor.name+"-"+testtype+"/avg\" interval=900 "+end+":"+avg+"\n")
-                self.collectd_socket.send("PUTVAL \"netperf-"+self.nova_region_name+"/unixsock-"+flavor.name+"-"+testtype+"/max\" interval=900 "+end+":"+max+"\n")
-                logging.info("Wrote results for "+self.nova_region_name+" "+flavor.name+" "+testtype+" to collectd")
+                self.collectd_socket.send("PUTVAL \"netperf-"+self.args.region+"/unixsock-"+flavor.name+"-"+testtype+"/min\" interval=900 "+end+":"+min+"\n")
+                self.collectd_socket.send("PUTVAL \"netperf-"+self.args.region+"/unixsock-"+flavor.name+"-"+testtype+"/avg\" interval=900 "+end+":"+avg+"\n")
+                self.collectd_socket.send("PUTVAL \"netperf-"+self.args.region+"/unixsock-"+flavor.name+"-"+testtype+"/max\" interval=900 "+end+":"+max+"\n")
+                logging.warning("Wrote results for "+self.args.region+" "+flavor.name+" "+testtype+" to collectd")
 
 
-            prefix = self.nova_region_name + ":" + self.chosen_image.name + ":" + flavor.name + ":" + testtype
+            prefix = self.args.region + ":" + self.chosen_image.name + ":" + flavor.name + ":" + testtype
             suffix = ":" + units + ":" + end
-            logging.info(prefix + ":min:" + min + suffix)
-            logging.info(prefix + ":avg:" + avg + suffix)
-            logging.info(prefix + ":max:" + max + suffix)
+            logging.warning(prefix + ":min:" + min + suffix)
+            logging.warning(prefix + ":avg:" + avg + suffix)
+            logging.warning(prefix + ":max:" + max + suffix)
 
         except Exception as e:
             logging.warning("Post process fubar %s",e)
@@ -787,37 +801,38 @@ class TestNetperf() :
         Start the right number of instances of the specified flavor
         """
 
-        logging.info("Testing flavor: %s in region %s",
-                     flavor.name, self.nova_region_name)
+        logging.warning("Testing flavor: %s in region %s",
+                     flavor.name, self.args.region)
         archive_location = os.path.join(self.archive_path,
                                         str(flavor.name),
                                         "")
         os.makedirs(archive_location)
 
-        self.allocate_server_pool(3,
+        self.allocate_server_pool(5,
                                   flavor,
                                   self.chosen_image,
-                                  self.keypair.name)
+                                  self.keypair.name,
+                                  ["netperftesting " + str(self.start)])
 
         self.await_server_pool_ready(300)
 #        self.associate_public_ips()
-        logging.info("Server pool allocated. Verifying up and running via ssh")
+        logging.warning("Server pool allocated. Verifying up and running via ssh")
         self.ssh_check()
-        logging.info("ssh_check complete")
+        logging.warning("ssh_check complete")
         self.create_remote_hosts()
-        logging.info("remote_hosts file creation complete")
+        logging.warning("remote_hosts file creation complete")
         self.scp_binaries()
-        logging.info("scp of binaries complete.")
+        logging.warning("transfer of binaries complete.")
         self.start_netservers()
-        logging.info("netservers started. about to start the script")
+        logging.warning("netservers started. about to start the script")
         self.run_netperf()
-        logging.info("netperf run complete. copying back results")
+        logging.warning("netperf run complete. copying back results")
         self.copy_back_results(archive_location)
-        logging.info("cleaning up vms")
+        logging.warning("cleaning up vms")
 #       self.disassociate_public_ips()
         self.deallocate_server_pool()
         self.await_server_pool_gone(300)
-        logging.info("Server pool deallocated")
+        logging.warning("Server pool deallocated")
 
 
 
@@ -850,7 +865,7 @@ class TestNetperf() :
 
     def clean_up_instances(self) :
 
-        logging.info("Asked to clean-up instances with pool len %d",
+        logging.warning("Asked to clean-up instances with pool len %d",
                      len(self.vm_pool))
         if (self.vm_pool != []):
             self.deallocate_server_pool()
@@ -883,9 +898,9 @@ class TestNetperf() :
             self.security_group = None
 
 if __name__ == '__main__' :
-    print "Hello World!"
+    print "Hello World! Let us run some netperf shall we?"
 
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
+    logging.basicConfig(level=logging.WARNING, format="%(asctime)s %(message)s")
     tn = TestNetperf()
     try:
         tn.initialize()

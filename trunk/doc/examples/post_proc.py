@@ -277,6 +277,9 @@ def overall_min_max_avg(prefix,start_time,end_time,intervals):
         if (start < start_time):
             start = int(start_time + 1)
         end = interval[1] - 1
+        # if we have a bogus interval, skip it
+        if (start >= end):
+            continue
         # we have no interest in the size of the graph (the first two
         # items in the list) so slice just the part of interest
         result = rrdtool.graph('/dev/null',
@@ -399,7 +402,7 @@ if __name__ == '__main__':
         print "There were no valid results for this prefix!"
         exit()
 
-#    print "Min timestamp for %s is %s start time is %s" % (prefix,min_timestamp,start_time)
+#    print "Min timestamp for %s is %s start time is %s end_time is %s" % (prefix,min_timestamp,start_time,end_time)
     generate_overall(prefix,min_timestamp-2,end_time,ksink)
     peak_interval_id, peak_start, peak_end, peak_average, peak_minimum, peak_maximum = overall_min_max_avg(prefix,min_timestamp,end_time,intervals)
     graph_overall(prefix,min_timestamp,end_time,vrules,peak_interval_id,peak_average)
