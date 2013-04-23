@@ -60,6 +60,7 @@ class TestNetperf() :
 
         return dout
 
+    # we will need to handle IDs that are UUIDs at some point
     def find_suitable_images(self) :
         """ 
         Try to find a suitable image to use for the testing
@@ -103,6 +104,7 @@ class TestNetperf() :
             waiter = self.vm_pool.pop()
             try: 
                 waiter = self.os.servers.get(waiter.id)
+
                 if (re.search(r"ERROR",waiter.status)) :
                     self.clean_up_overall()
                     self.fail("Instance id " + str(waiter.id) + " name " + str(waiter.name) + " errored during deletion " + str(waiter.status))
@@ -138,17 +140,26 @@ class TestNetperf() :
         """
         Find the public IP of a VM
         """
-        try:
-            iplist = vm.networks['hpcloud']
-        except Exception as e :
-            try :
-                iplist = vm.networks['private']
+        if "rackspace" in self.env('OS_AUTH_SYSTEM',default=[]):
+            ip = vm.accessIPv4
+        else:
+            try:
+                #print "trying networks['hpcloud']"
+                iplist = vm.networks['hpcloud']
             except Exception as e2 :
-                logging.warning("Unable to find a public IP for %s (%s:%s)",
-                                vm.name, e, e2)
-                raise RuntimeError
+                #print "exception 2"
+                try :
+                    #print "trying networks['private']"
+                    iplist = vm.networks['private']
+                except Exception as e3 :
+                    #print "exception 3"
+                    logging.warning("Unable to find a public IP for %s (%s:%s:$s)",
+                                    vm.name, e, e2, e3)
+                    raise RuntimeError
+            ip = iplist[1]
 
-        return iplist[1]
+        #print "returning %s" % ip
+        return ip
 
     def deallocate_server_pool(self) :
         """
@@ -174,14 +185,23 @@ class TestNetperf() :
                 logging.warning("Unable to delete server %s. Error: %s",
                                 server.name, e)
 
-    def allocate_server_pool(self, count, flavor, image, keyname, secgroup) :
+    def allocate_server_pool(self, count, flavor, image) :
         """
         Allocate the number of requested servers of the specified 
         flavor and image, and with the specified key name
         """
 
-        logging.warning("Allocating %d servers of flavor '%s' with image name '%s' and key %s",
-                     count, flavor.name, image.name, keyname)
+        #print "before server_pool opening warning"
+        keyname = None
+        secgroup = None
+        if self.keypair:
+            keyname = self.keypair.name
+        if self.security_group:
+            secgroup = [self.security_group.name]
+
+        logging.warning("Allocating %d servers of flavor '%s' with image name '%s'",
+                        count, flavor.name, image.name)
+        #print "after same"
 
         # instance number (filled-in later) time flavorname imagename
         basename = "netperftest%s_%s_%s_%s" % ("%d",str(self.start),flavor.name,image.name)
@@ -193,7 +213,7 @@ class TestNetperf() :
                                                flavor = flavor,
                                                key_name = keyname,
                                                security_groups = secgroup)
-                print "adminPass is %s" % newvm.adminPass
+                #print "adminPass is %s" % newvm.adminPass
                 self.adminPasses[newvm.id]=newvm.adminPass
                 self.vm_pool.append(newvm)
 
@@ -213,28 +233,38 @@ class TestNetperf() :
         waiters = list(self.vm_pool)
         actives = []
         waiting_started = time()
-        now = time()
+        deadline = waiting_started + time_limit
         sleeptime = 1
 
-        while ((len(waiters) > 0) and
-               ((now - waiting_started) < time_limit)) :
+        #print "awaiting server pool active"
+        while (len(waiters) > 0) :
+
             waiter = waiters.pop()
             waiter = self.os.servers.get(waiter.id)
+            print "elapsed %d server %s state %s" % ((time() - waiting_started), waiter.name, waiter.status)
             if (waiter.status == "ACTIVE") :
+                #print "Extracting public IP"
                 ip_address = self.extract_public_ip(waiter)
+                #print "got IP address from extract"
+                #print "IP address is %s" % ip_address
                 self.known_hosts_ip_remove(ip_address)
                 actives.append(waiter)
                 sleeptime = 1
                 continue
             if (re.search(r"ERROR",waiter.status)) :
-                logging.warning("Instance id %d name %s encountered an error during instantiation of %s",
+                logging.warning("Instance id %s name %s encountered an error during instantiation of %s",
                                 waiter.id, waiter.name, waiter.status)
                 raise RuntimeError
+
+            if (time() >= deadline):
+                break
 
             waiters.append(waiter)
             sleep(sleeptime)
             sleeptime *= 2
-            now = time()
+
+            sleeptime = min(120, deadline - time(), sleeptime)
+
 
         if (len(waiters) > 0) :
             logging.warning("%d waiters failed to acheive ACTIVE status within %d seconds",
@@ -311,7 +341,9 @@ class TestNetperf() :
 
     def create_security_group(self):
 
-        self.security_group = self.os.security_groups.create("netperftesting " + str(self.start),"A rather open security group for netperf testing")
+        #print "Creating security group"
+
+        self.security_group = self.os.security_groups.create("netperftesting " + str(self.start),"A rather open security group for netperf testing debugging")
 
         self.os.security_group_rules.create(parent_group_id = self.security_group.id,
                                             ip_protocol = 'tcp',
@@ -339,6 +371,8 @@ class TestNetperf() :
         self.uniquekeyname = re.sub(r"\n", "", "net" + str(pid) + 
                                     "perf" + str(self.start))
         self.uniquekeyname = re.sub(r"\.", "dot", self.uniquekeyname)
+
+        #print "Allocating key %s" % self.uniquekeyname
 
         self.keypair = self.os.keypairs.create(self.uniquekeyname)
 
@@ -511,9 +545,12 @@ class TestNetperf() :
 
 #        self.clean_vestigial_keypairs()
 
-        self.allocate_key()
-
-        self.create_security_group()
+        if not "rackspace" in self.env('OS_AUTH_SYSTEM',default=[]):
+            self.allocate_key()
+            self.create_security_group()
+        else:
+            self.security_group = None
+            self.keypair = None
 
         self.flavor_list = self.os.flavors.list()
 
@@ -570,9 +607,14 @@ class TestNetperf() :
             publicip = self.extract_public_ip(node)
             try :
                 transport = paramiko.Transport((publicip,22))
-                mykey = paramiko.RSAKey.from_private_key_file(os.path.abspath(self.keyfilename))
-                transport.connect(username=self.args.instanceuser,
-                                  pkey = mykey)
+                if self.keypair:
+                    mykey = paramiko.RSAKey.from_private_key_file(os.path.abspath(self.keyfilename))
+                    transport.connect(username=self.args.instanceuser,
+                                      pkey = mykey)
+                else:
+                    transport.connect(username=self.args.instanceuser,
+                                      password=self.adminPasses[node.id])
+
                 sftp = paramiko.SFTPClient.from_transport(transport)
                 for file in upload_files:
                     sftp.put(file,file)
@@ -604,10 +646,17 @@ class TestNetperf() :
             try :
                 ssh = paramiko.SSHClient()
                 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                ssh.connect(hostname=publicip,
-                            username=self.args.instanceuser,
-                            key_filename=os.path.abspath(self.keyfilename),
-                            timeout=30.0)
+                if self.keypair:
+                    ssh.connect(hostname=publicip,
+                                username=self.args.instanceuser,
+                                key_filename=os.path.abspath(self.keyfilename),
+                                timeout=30.0)
+                else:
+                    ssh.connect(hostname=publicip,
+                                username=self.args.instanceuser,
+                                password=self.adminPasses[node.id],
+                                timeout=30.0)
+
                 stdin, stdout, stderr = ssh.exec_command(cmd)
 #                print stdout.readlines()
 #                print stderr.readlines()
@@ -627,10 +676,17 @@ class TestNetperf() :
             cmd = "export PATH=$PATH:. ; ./runemomniaggdemo.sh | tee overall.log "
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh.connect(hostname=publicip,
-                        username=self.args.instanceuser,
-                        key_filename=os.path.abspath(self.keyfilename),
-                        timeout=30.0)
+            if self.keypair:
+                ssh.connect(hostname=publicip,
+                            username=self.args.instanceuser,
+                            key_filename=os.path.abspath(self.keyfilename),
+                            timeout=30.0)
+            else:
+                ssh.connect(hostname=publicip,
+                            username=self.args.instanceuser,
+                            password=self.adminPasses[self.vm_pool[0].id],
+                            timeout=30.0)
+
             stdin, stdout, stderr = ssh.exec_command(cmd)
             # if would seem that unless one does something with the
             # output the exec_command will complete rather quickly,
@@ -649,9 +705,14 @@ class TestNetperf() :
             publicip = self.extract_public_ip(self.vm_pool[0])
             logging.warning("Copying-back results")
             transport = paramiko.Transport((publicip,22))
-            mykey = paramiko.RSAKey.from_private_key_file(os.path.abspath(self.keyfilename))
-            transport.connect(username=self.args.instanceuser,
-                              pkey = mykey)
+            if self.keypair:
+                mykey = paramiko.RSAKey.from_private_key_file(os.path.abspath(self.keyfilename))
+                transport.connect(username=self.args.instanceuser,
+                                  pkey = mykey)
+            else:
+                transport.connect(username=self.args.instanceuser,
+                                  password=self.adminPasses[self.vm_pool[0].id])
+                
             sftp = paramiko.SFTPClient.from_transport(transport)
             for file in sftp.listdir():
                 # one of these days I should read-up on how to make
@@ -662,7 +723,7 @@ class TestNetperf() :
                     sftp.get(file,destination+file)
             sftp.close()
         except Exception as e:
-           logging.exception("Could not scp results from %s at IP %s",
+           logging.exception("Could not retrieve results from %s at IP %s",
                              self.vm_pool[0].name, publicip)
            raise RuntimeError
 
@@ -676,6 +737,7 @@ class TestNetperf() :
         """
         sshers = list(self.vm_pool)
         starttime = time()
+        deadline = starttime + time_limit
         sleeptime = 1
 
         while (len(sshers) > 0) :
@@ -690,10 +752,19 @@ class TestNetperf() :
             try:
                 ssh = paramiko.SSHClient()
                 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                ssh.connect(hostname=publicip,
-                            username=self.args.instanceuser,
-                            key_filename=os.path.abspath(self.keyfilename),
-                            timeout=30.0)
+                # paper or plastic?
+                if self.keypair:
+                    ssh.connect(hostname=publicip,
+                                username=self.args.instanceuser,
+                                key_filename=os.path.abspath(self.keyfilename),
+                                timeout=30.0)
+                else:
+                    #print "ssh.connect to %s user %s pass %s" % (publicip,self.args.instanceuser,self.adminPasses[ssher.id])
+                    ssh.connect(hostname=publicip,
+                                username=self.args.instanceuser,
+                                password=self.adminPasses[ssher.id],
+                                timeout=30.0)
+
                 stdin, stdout, stderr = ssh.exec_command(cmd)
 #                print stdout.readlines()
 #                print stderr.readlines()
@@ -701,9 +772,11 @@ class TestNetperf() :
                 sleeptime = 1
             except Exception as e :
                 now = time()
-                if ((now - starttime) < time_limit) :
+                #print "Attempt to ssh failed with %s" % str(e)
+                if (now < deadline) :
                     sleep(sleeptime)
                     sleeptime *= 2
+                    sleeptime = min(sleeptime, 120, deadline - now)
                     sshers.append(ssher)
                 else :
                     logging.warning("The ssh check to %s using command '%s' failed after the %d second limit",
@@ -723,17 +796,17 @@ class TestNetperf() :
                 avg = toks[5]
                 start = toks[8]
                 end= toks[10]
-                logging.debug("Found Average %f from %s to %s",
+                logging.debug("Found Average %s from %s to %s",
                               avg, start, end)
 
             if (re.match("Minimum of peak interval is",line)) :
                 toks = line.split(" ",11)
                 min = toks[5]
-                logging.debug("Found Minimum of peak interval %f ", min)
+                logging.debug("Found Minimum of peak interval %s ", min)
             if (re.match("Maximum of peak interval is",line)) :
                 toks = line.split(" ",11)
                 max = toks[5]
-                logging.debug("Found Maximum of peak interval %f", max)
+                logging.debug("Found Maximum of peak interval %s", max)
         try:
 
             # I suppose one could split name on '_' to find the testtype?
@@ -784,7 +857,7 @@ class TestNetperf() :
             for name in files:
                 if (re.match("netperf_.*\.log",name)) :
                     fullname = os.path.join(root,name)
-                    cmd = "PATH=$PATH:. post_proc.py " + fullname
+                    cmd = 'PATH=$PATH:. post_proc.py "%s"' % fullname
                     logging.debug("post processing via command '%s'", cmd)
                     try :
                         postresults = self.do_in_shell(cmd,True)
@@ -808,15 +881,15 @@ class TestNetperf() :
                                         "")
         os.makedirs(archive_location)
 
+        #print "Calling for server pool allocation"
         self.allocate_server_pool(5,
                                   flavor,
-                                  self.chosen_image,
-                                  self.keypair.name,
-                                  ["netperftesting " + str(self.start)])
+                                  self.chosen_image)
 
-        self.await_server_pool_ready(300)
+        logging.warning("Awaiting server pool active")
+        self.await_server_pool_ready(600)
 #        self.associate_public_ips()
-        logging.warning("Server pool allocated. Verifying up and running via ssh")
+        logging.warning("Server pool active. Verifying up and running via ssh")
         self.ssh_check()
         logging.warning("ssh_check complete")
         self.create_remote_hosts()
@@ -831,7 +904,7 @@ class TestNetperf() :
         logging.warning("cleaning up vms")
 #       self.disassociate_public_ips()
         self.deallocate_server_pool()
-        self.await_server_pool_gone(300)
+        self.await_server_pool_gone(600)
         logging.warning("Server pool deallocated")
 
 
@@ -843,12 +916,13 @@ class TestNetperf() :
         been specified
         """
         for flavor in self.flavor_list :
+            #print "Checking flavor name %s id %s" % (flavor.name, flavor.id)
             try:
                 if ((not self.flavor_name and not self.flavor_id)
                     or
                     (self.flavor_name and re.search(self.flavor_name,flavor.name))
                     or
-                    (self.flavor_id and (self.flavor_id == flavor.id))) :
+                    (self.flavor_id and (self.flavor_id == int(flavor.id)))) :
 
                     self.test_flavor(flavor)
                     # we could move the post-processing inside
@@ -858,18 +932,23 @@ class TestNetperf() :
                     self.post_proc_flavor(flavor)
             except:
                 self.clean_up_instances()
-                logging.warning("Test of flavor '%s' (%d) unsuccessful",
+                logging.warning("Test of flavor '%s' (%s) unsuccessful",
                                 flavor.name,
                                 flavor.id)
 
 
     def clean_up_instances(self) :
 
-        logging.warning("Asked to clean-up instances with pool len %d",
-                     len(self.vm_pool))
+        import inspect
+
+        curframe = inspect.currentframe()
+        calframe = inspect.getouterframes(curframe, 2)
+        logging.warning("Asked by %s to clean-up instances with pool len %d",
+                        calframe[1][3],
+                        len(self.vm_pool))
         if (self.vm_pool != []):
             self.deallocate_server_pool()
-            self.await_server_pool_gone(300)
+            self.await_server_pool_gone(600)
 
     def clean_up_overall(self) :
         """
@@ -900,7 +979,7 @@ class TestNetperf() :
 if __name__ == '__main__' :
     print "Hello World! Let us run some netperf shall we?"
 
-    logging.basicConfig(level=logging.WARNING, format="%(asctime)s %(message)s")
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
     tn = TestNetperf()
     try:
         tn.initialize()
@@ -909,5 +988,6 @@ if __name__ == '__main__' :
         tn.clean_up_overall()
         tn.fail("Terminating in reponse to initialization failure")
 
+    print "testing flavors"
     tn.test_flavors()
     tn.clean_up_overall()
