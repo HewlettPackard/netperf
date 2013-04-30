@@ -4166,7 +4166,7 @@ Size (bytes)\n\
   /* the size of the local senc socket buffer. We will want to deal */
   /* with alignment and offset concerns as well. */
 
-  struct sendfile_ring_elt *send_ring;
+  struct ring_elt *send_ring;
 
   int len;
   unsigned int nummessages = 0;

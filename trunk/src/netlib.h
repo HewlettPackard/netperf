@@ -295,6 +295,24 @@ struct ring_elt {
   char *buffer_base;      /* in case we have to free it at somepoint */
   char *buffer_ptr;       /* the aligned and offset pointer */
   void *completion_ptr;   /* a pointer to information for async completion */
+  /* these are for sendfile calls and at some point we should consider
+     using a union but it isn't really all that much extra space */
+  struct iovec *hdtrl;            /* a pointer to a header/trailer
+				     that we do not initially use and
+				     so should be set to NULL when the 
+				     ring is setup. */
+  off_t offset;                   /* the offset from the beginning of
+				     the file for this send */
+  size_t length;                  /* the number of bytes to send -
+				     this is redundant with the
+				     send_size variable but I decided
+				     to include it anyway */
+  int fildes;                     /* the file descriptor of the source
+				     file */ 
+  int flags;                      /* the flags to pass to sendfile() - 
+				     presently unused and should be
+				     set to zero when the ring is
+				     setup. */
 };
 
 /* +*+ SAF  Sorry about the hacks with errno; NT made me do it :(
@@ -400,26 +418,6 @@ extern void PrintWin32Error(FILE *stream, LPSTR text);
 #endif
 
 #ifdef HAVE_SENDFILE
-
-struct sendfile_ring_elt {
-  struct sendfile_ring_elt *next; /* next element in the ring */
-  int fildes;                     /* the file descriptor of the source
-				     file */ 
-  off_t offset;                   /* the offset from the beginning of
-				     the file for this send */
-  size_t length;                  /* the number of bytes to send -
-				     this is redundant with the
-				     send_size variable but I decided
-				     to include it anyway */
-  struct iovec *hdtrl;            /* a pointer to a header/trailer
-				     that we do not initially use and
-				     so should be set to NULL when the 
-				     ring is setup. */
-  int flags;                      /* the flags to pass to sendfile() - 
-				     presently unused and should be
-				     set to zero when the ring is
-				     setup. */
-};
 
 #endif /* HAVE_SENDFILE */
 
@@ -640,7 +638,7 @@ extern void access_buffer(char *buffer_ptr,
 extern  struct ring_elt *allocate_exs_buffer_ring();
 #endif /* HAVE_ICSC_EXS */
 #ifdef HAVE_SENDFILE
-extern  struct sendfile_ring_elt *alloc_sendfile_buf_ring();
+extern  struct ring_elt *alloc_sendfile_buf_ring();
 #endif /* HAVE_SENDFILE */
 #ifdef WANT_DLPI
 /* it seems that AIX in its finite wisdom has some bogus define in an
