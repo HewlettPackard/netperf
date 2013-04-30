@@ -460,6 +460,8 @@ char *direction_str;
 
 extern int first_burst_size;
 
+static int socket_debug = 0;
+
 #if defined(HAVE_SENDFILE) && (defined(__linux) || defined(__sun))
 #include <sys/sendfile.h>
 #endif /* HAVE_SENDFILE && (__linux || __sun) */
@@ -3485,6 +3487,14 @@ omni_create_data_socket(struct addrinfo *res)
       set_receive_timeout(temp_socket, receive_timeout);
     }
       
+    if (socket_debug) {
+      int one = 1;
+      setsockopt(temp_socket, 
+		 SOL_SOCKET,
+		 SO_DEBUG,
+		 &one,
+		 sizeof(one));
+    }
   }
   return temp_socket;
 }
@@ -7106,7 +7116,7 @@ scan_omni_args(int argc, char *argv[])
 
 {
 
-#define OMNI_ARGS "b:cCd:De:FG:hH:i:IkK:l:L:m:M:nNoOp:P:r:R:s:S:t:T:u:Vw:W:46"
+#define OMNI_ARGS "b:cCd:De:FgG:hH:i:IkK:l:L:m:M:nNoOp:P:r:R:s:S:t:T:u:Vw:W:46"
 
   extern char	*optarg;	  /* pointer to option string	*/
 
@@ -7206,6 +7216,10 @@ scan_omni_args(int argc, char *argv[])
     case 'e':
       /* set the rEceive timeout */
       receive_timeout = atoi(optarg);
+      break;
+    case 'g':
+      /* enable SO_DEBUG, or at least make the attempt, on the data socket */
+      socket_debug = 1;
       break;
     case 'G':
       /* set the value for a tcp_maxseG call*/
