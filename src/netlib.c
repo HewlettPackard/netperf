@@ -1790,7 +1790,7 @@ allocate_exs_buffer_ring (int width, int buffer_size, int alignment, int offset,
    a tempoarary file and fill it with random data and use that
    instead.  raj 2007-08-09 */
 
-struct sendfile_ring_elt *
+struct ring_elt *
 alloc_sendfile_buf_ring(int width,
                         int buffer_size,
                         int alignment,
@@ -1798,9 +1798,9 @@ alloc_sendfile_buf_ring(int width,
 
 {
 
-  struct sendfile_ring_elt *first_link = NULL;
-  struct sendfile_ring_elt *temp_link  = NULL;
-  struct sendfile_ring_elt *prev_link;
+  struct ring_elt *first_link = NULL;
+  struct ring_elt *temp_link  = NULL;
+  struct ring_elt *prev_link;
 
   int i;
   int fildes;
@@ -1899,12 +1899,12 @@ alloc_sendfile_buf_ring(int width,
        was successful, but for now we'll just let the code bomb
        mysteriously. 08/2000 */
 
-    temp_link = (struct sendfile_ring_elt *)
-      malloc(sizeof(struct sendfile_ring_elt));
+    temp_link = (struct ring_elt *)
+      malloc(sizeof(struct ring_elt));
     if (temp_link == NULL) {
       fprintf(where,
 	      "malloc(%u) failed!\n",
-	      (unsigned int) sizeof(struct sendfile_ring_elt));
+	      (unsigned int) sizeof(struct ring_elt));
       exit(1);
     }
 

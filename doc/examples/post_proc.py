@@ -204,8 +204,11 @@ def process_result(basename, raw_results, end_time, ksink):
         # feed them en mass. until then we will dribble them one at a
         # time
         if have_result:
-#            print "updating rrd with %s at %s" % (interim_result, interim_end)
-            update_rrd(basename,interim_result,interim_end)
+            #print "updating rrd with %s at %s" % (interim_result, interim_end)
+            try:
+                update_rrd(basename,interim_result,interim_end)
+            except Exception as e:
+                print "Update to %s with %s at %s failed with %s" % (basename,interim_result,interim_end,e)
             have_result = False
             had_results = True
 
