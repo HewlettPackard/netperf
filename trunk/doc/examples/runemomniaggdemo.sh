@@ -63,6 +63,58 @@ function run_cmd {
 
 }
 
+# very much like run_cmd, but it runs the tests one at a time rather
+# than in parallel.  We keep the same logging strings to be compatible
+# (hopefully) with the post processing script, even though they don't
+# make all that much sense :)
+
+function run_cmd_serial {
+
+    NOW=`date +%s.%N`
+    echo "Starting netperfs at $NOW for $TEST" | tee $TESTLOG
+    i=0;
+
+# the starting point for our load level pauses
+    PAUSE_AT=1
+
+
+    while [ $i -lt $NUM_REMOTE_HOSTS ]
+    do
+	TARGET=${REMOTE_HOSTS[`expr $i % $NUM_REMOTE_HOSTS`]}
+	echo "Starting netperfs on localhost targeting ${TARGET} for $TEST" | tee -a $TESTLOG
+	id=`printf "%.5d" $i`
+	$NETPERF -H $TARGET $NETPERF_CMD 2>&1 > netperf_${TEST}_${id}_to_${TARGET}.out &
+
+    # give it a moment to get going
+	sleep 1
+
+	i=`expr $i + 1`
+
+	NOW=`date +%s.%N`
+	echo "Pausing for $DURATION seconds at $NOW with $i netperfs running for $TEST" | tee -a $TESTLOG
+	# the plus two is to make sure we have a full set of interim
+	# results.  probably not necessary here but we want to be
+	# certain
+	sleep `expr $DURATION + 1`
+	kill_netperfs
+	NOW=`date +%s.%N`
+	THEN=`echo $NOW | awk -F "." '{printf("%d.%d",$1-1,$2)}'`
+	echo "Resuming at $THEN for $TEST" | tee -a $TESTLOG
+
+    done
+
+    NOW=`date +%s.%N`
+    echo "Netperfs started by $NOW for $TEST" | tee -a $TESTLOG
+
+# stop all the netperfs - of course actually they have all been
+# stopped already, we just want the log entries
+    NOW=`date +%s.%N`
+    echo "Netperfs stopping $NOW for $TEST" | tee -a $TESTLOG
+    kill_netperfs
+    NOW=`date +%s.%N`
+    echo "Netperfs stopped $NOW for $TEST" | tee -a $TESTLOG
+}
+
 # here then is the "main" part
 
 if [ ! -f ./remote_hosts ]
@@ -163,14 +215,13 @@ fi
 # there is no way to see a basic latency - by the time
 # find_max_burst.sh has completed, we are past a burst size of 0
 if [ $DO_RR -eq 1 ]; then
-    MAX_INSTANCES=1
     if [ $DURATION -lt 60 ]; then
 	DURATION=60
     fi
     TEST="sync_tps"
     TESTLOG="netperf_sync_tps.log"
     NETPERF_CMD="-D 0.5 -c -C -f x -P 0 -t omni $LENGTH -v 2 -- -r 1 -u $MY_UUID $OUTPUT"
-    run_cmd
+    run_cmd_serial
 fi
 
 
