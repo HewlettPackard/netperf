@@ -637,9 +637,12 @@ extern void access_buffer(char *buffer_ptr,
 #ifdef HAVE_ICSC_EXS
 extern  struct ring_elt *allocate_exs_buffer_ring();
 #endif /* HAVE_ICSC_EXS */
+
 #ifdef HAVE_SENDFILE
 extern  struct ring_elt *alloc_sendfile_buf_ring();
+extern  int netperf_sendfile(SOCKET send_socket, struct ring_elt *send_ring);
 #endif /* HAVE_SENDFILE */
+
 #ifdef WANT_DLPI
 /* it seems that AIX in its finite wisdom has some bogus define in an
    include file which defines "rem_addr" which then screws-up this extern

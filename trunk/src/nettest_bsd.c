@@ -4090,24 +4090,6 @@ Size (bytes)\n\
 
 #if defined(HAVE_SENDFILE)
 
-#if defined(QUICK_SENDPATH)
-
-/*
- * a temporary stub for the sendpath() system call
- * which is defined & implemented in the kernel
- * but which has no libc stub.
- */
-#include <sys/types.h>
-#include <sys/scall_define.h>
-#include <sys/uio.h>
-
-ssize_t
-sendpath(int s, char *path, off_t offset, size_t nbytes,
-	 const struct iovec *hdtrl, int flags)
-  {
-    return syscall(SYS_sendpath, s, path, offset, nbytes, hdtrl, flags);
-  }
-#endif /* QUICK_SENDPATH */
 
 /* This routine implements the TCP unidirectional data transfer test
    (a.k.a. stream) for the sockets interface using the sendfile()
@@ -4244,12 +4226,9 @@ Size (bytes)\n\
     /* the headers. we know some of it here, but not all, so we will */
     /* only print the test title here and will print the results */
     /* titles after the test is finished */
-#ifdef QUICK_SENDPATH
-    print_top_test_header("TCP SENDPATH TEST",local_res,remote_res);
-#else
     print_top_test_header("TCP SENDFILE TEST",local_res,remote_res);
-#endif /* QUICK_SENDPATH */
   }
+
   send_ring = NULL;
   confidence_iteration = 1;
   init_stat();
@@ -4538,72 +4517,21 @@ Size (bytes)\n\
 
       /* you can look at netlib.h for a description of the fields we
 	 are passing to sendfile(). 08/2000 */
-#ifdef QUICK_SENDPATH
-      if ((len=sendpath(send_socket,
-			fill_file,
-			send_ring->offset,
-			send_ring->length,
-			send_ring->hdtrl,
-			send_ring->flags)) != send_size)
-#elif defined(__linux)
-	scratch_offset = send_ring->offset;
-      if ((len=sendfile(send_socket,
-			send_ring->fildes,
-			&scratch_offset,   /* modified after the call! */
-			send_ring->length)) != send_size)
-#elif defined (__sun)
-      /* We must call with SFV_NOWAIT and a large file size (>= 16MB) to
-	 get zero-copy, as well as compiling with  -D_LARGEFILE_SOURCE
-	  -D_FILE_OFFSET_BITS=64 */
-      sv.sfv_fd = send_ring->fildes;
-      sv.sfv_flag = SFV_NOWAIT;
-      sv.sfv_off = send_ring->offset;
-      sv.sfv_len =  send_ring->length;
-      if ((len = sendfilev(send_socket, &sv, 1, &scratch_len)) != send_size)
-#elif defined(__FreeBSD__)
-	/* so close to HP-UX and yet so far away... :) */
-	if ((sendfile(send_ring->fildes,
-		      send_socket,
-		      send_ring->offset,
-		      send_ring->length,
-		      NULL,
-		      (off_t *)&len,
-		      send_ring->flags) != 0) ||
-	    (len != send_size))
-#elif defined(USE_OSX)
-    scratch_len = send_ring->length;
-    if ((sendfile(send_ring->fildes,
-              send_socket,
-              send_ring->offset,
-              (off_t *)&scratch_len,
-              NULL,
-              send_ring->flags) != 0) ||
-        (scratch_len != send_size))
-#else /* original sendile HP-UX */
-	  if ((len=sendfile(send_socket,
-			    send_ring->fildes,
-			    send_ring->offset,
-			    send_ring->length,
-			    send_ring->hdtrl,
-			    send_ring->flags)) != send_size)
-#endif /* QUICK_SENDPATH */
-	    {
-	      /* the test was interrupted, must be the end of test. the
-		 send_tcp_stream code has some WIN32 ifdefs that we do not
-		 need here. */
-	      if ((len >=0) || SOCKET_EINTR(len)) {
-		break;
-	      }
-	      perror("netperf: data send error: sendfile");
-	      fprintf(stderr,
-		      "len was %d send_size was %d\n",
-		      len,
-		      send_size);
-	      fflush(stderr);
-	      exit(1);
-	    }
-
-      /*	offset += len;*/
+      if (netperf_sendfile(send_socket, send_ring) != send_size) {
+	/* the test was interrupted, must be the end of test. the
+	   send_tcp_stream code has some WIN32 ifdefs that we do not
+	   need here. */
+	if ((len >=0) || SOCKET_EINTR(len)) {
+	  break;
+	}
+	perror("netperf: data send error: sendfile");
+	fprintf(stderr,
+		"len was %d send_size was %d\n",
+		len,
+		send_size);
+	fflush(stderr);
+	exit(1);
+      }
 
 #ifdef WANT_HISTOGRAM
       if (verbosity > 1) {
