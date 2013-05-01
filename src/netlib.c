@@ -783,6 +783,83 @@ random_ip_address(struct addrinfo *res, int mask_len)
   }
 }
 
+#if defined(HAVE_SENDFILE)
+int netperf_sendfile(SOCKET send_socket, struct ring_elt *send_ring) {
+
+  int  len;
+  int  ret = 0;
+
+#if defined(__linux) || defined(__sun)
+  off_t     scratch_offset;   /* the linux sendfile() call will update
+				 the offset variable, which is
+				 something we do _not_ want to happen
+				 to the value in the send_ring! so, we
+				 have to use a scratch variable. */
+#endif /* __linux  || defined(__sun) */
+
+#if defined (__sun)
+   size_t  scratch_len;	/* the sun sendfilev() needs a place to
+			   tell us how many bytes were written,
+			   even though it also returns the value */
+   sendfilevec_t sv;
+#endif /* __sun */
+
+      /* you can look at netlib.h for a description of the fields we
+	 are passing to sendfile(). 08/2000 */
+#if defined(__linux)
+      scratch_offset = send_ring->offset;
+      len=sendfile(send_socket,
+		   send_ring->fildes,
+		   &scratch_offset,   /* modified after the call! */
+		   send_ring->length);
+#elif defined (__sun)
+      /* We must call with SFV_NOWAIT and a large file size (>= 16MB)
+	 to get zero-copy, as well as compiling with
+	 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 */
+      sv.sfv_fd = send_ring->fildes;
+      sv.sfv_flag = SFV_NOWAIT;
+      sv.sfv_off = send_ring->offset;
+      sv.sfv_len =  send_ring->length;
+      len = sendfilev(send_socket, &sv, 1, &scratch_len);
+#elif defined(__FreeBSD__)
+      /* so close to HP-UX and yet so far away... :) */
+      ret = sendfile(send_ring->fildes,
+		     send_socket,
+		     send_ring->offset,
+		     send_ring->length,
+		     NULL,
+		     (off_t *)&len,
+		     send_ring->flags);
+#elif defined(USE_OSX)
+      len = send_ring->length;
+      ret = sendfile(send_ring->fildes,
+		     send_socket,
+		     send_ring->offset,
+		     (off_t *)&len,
+		     NULL,
+		     send_ring->flags);
+#else /* original sendile HP-UX */
+      len=sendfile(send_socket,
+		   send_ring->fildes,
+		   send_ring->offset,
+		   send_ring->length,
+		   send_ring->hdtrl,
+		   send_ring->flags);
+#endif 
+
+      /* for OSX and FreeBSD, a non-zero ret means something failed.
+	 I would hope that the length fields are set to -1 or the
+	 like, but at the moment I do not know I can count on
+	 that. for other platforms, ret will be set to zero and we can
+	 rely directly on len. raj 2013-05-01 */
+      if (ret != 0)
+	return -1;
+      else
+	return len;
+
+}
+#endif
+
 
 /* one of these days, this should be abstracted-out just like the CPU
    util stuff.  raj 2005-01-27 */
