@@ -779,8 +779,8 @@ class TestNetperf() :
                     sleeptime = min(sleeptime, 120, deadline - now)
                     sshers.append(ssher)
                 else :
-                    logging.warning("The ssh check to %s using command '%s' failed after the %d second limit",
-                                    ssher.name, cmd, time_limit)
+                    logging.warning("The ssh check to %s (IP:%s ID:%s) using command '%s' failed after the %d second limit (%s)",
+                                    ssher.name, publicip, ssher.id, cmd, time_limit,str(e))
                     raise RuntimeError
 
     def extract_min_avg_max(self, flavor, name, postresults) :
@@ -979,7 +979,7 @@ class TestNetperf() :
 if __name__ == '__main__' :
     print "Hello World! Let us run some netperf shall we?"
 
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
+    logging.basicConfig(level=logging.WARNING, format="%(asctime)s %(message)s")
     tn = TestNetperf()
     try:
         tn.initialize()
