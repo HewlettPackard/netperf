@@ -131,6 +131,12 @@ NUM_CPUS=`grep processor /proc/cpuinfo | wc -l`
 # number of CPUs
 MAX_INSTANCES=`expr $NUM_CPUS \* 2`
 
+# but at least as many as there are entries in remote_hosts
+if [ $MAX_INSTANCES -lt $NUM_REMOTE_HOSTS ]
+then
+    MAX_INSTANCES=$NUM_REMOTE_HOSTS
+fi
+
 # allow the netperf binary to be used to be overridden 
 NETPERF=${NETPERF:="netperf"}
 
@@ -227,10 +233,10 @@ fi
 
 # now some ancillary things which may nor may not work on your platform
 if [ $DO_ANCILLARY -eq 1 ];then
-    dmodecode 2>&1 > dmidecode.txt
+    dmidecode 2>&1 > dmidecode.txt
     uname -a 2>&1 > uname.txt
     cat /proc/cpuinfo 2>&1 > cpuinfo.txt
-    cat /proc/meminfo 2>&1 > cpuinfo.txt
+    cat /proc/meminfo 2>&1 > meminfo.txt
     ifconfig -a 2>&1 > ifconfig.txt
     netstat -rn 2>&1 > netstat.txt
     dpkg -l 2>&1 > dpkg.txt
