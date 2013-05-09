@@ -246,5 +246,6 @@ if [ $DO_ANCILLARY -eq 1 ];then
     while [ $i -lt `expr $NUM_REMOTE_HOSTS - 1` ]
     do
 	traceroute ${REMOTE_HOSTS[$i]}
+	i=`expr $i + 1`
     done
 fi
