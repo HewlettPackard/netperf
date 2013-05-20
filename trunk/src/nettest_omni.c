@@ -4246,12 +4246,20 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 			     remote_res->ai_addrlen,
 			     protocol)) != bytes_to_send) {
 	  /* in theory, we should never hit the end of the test in the
-	     first burst */
-	  perror("send_omni: initial burst data send error");
-	  exit(-1);
+	     first burst.  however, in practice I have indeed seen
+	     some ENOBUFS happen in some aggregate tests.  so we need
+	     to be a bit more sophisticated in how we handle it. raj
+	     20130516 */
+	  if (ret != -2) {
+	    perror("send_omni: initial burst data send error");
+	    exit(-1);
+	  }
+	  failed_sends++;
 	}
-	local_send_calls += 1;
-	requests_outstanding += 1;
+	else {
+	  local_send_calls += 1;
+	  requests_outstanding += 1;
+	}
 
 	/* yes, it seems a trifle odd having this *after* the send()
 	   just above, but really this is for the next send() or
