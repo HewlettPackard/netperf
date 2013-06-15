@@ -715,6 +715,17 @@ netperf_output_elt_t netperf_output_source[NETPERF_OUTPUT_MAX];
 
 enum netperf_output_name output_list[NETPERF_MAX_BLOCKS][NETPERF_OUTPUT_MAX];
 
+/* some things for setting the source IP address on outgoing UDP
+   sends. borrows liberally from
+   http://stackoverflow.com/questions/3062205/setting-the-source-ip-for-a-udp-socket */
+
+int want_use_pktinfo = 0;
+int use_pktinfo = 0;
+int have_pktinfo = 0;
+#ifdef IP_PKTINFO
+struct in_pktinfo in_pktinfo;
+#endif
+
 char *direction_to_str(int direction) {
   if (NETPERF_RECV_ONLY(direction)) return "Receive";
   if (NETPERF_XMIT_ONLY(direction)) return "Send";
@@ -2843,6 +2854,41 @@ connect_data_socket(SOCKET send_socket, struct addrinfo *remote_res)
   return 0;
 }
 
+static
+int send_pktinfo(SOCKET data_socket, char *buffer, int len, struct sockaddr *destination, int destlen) {
+#ifdef IP_PKTINFO
+  struct msghdr msg;
+  struct iovec iovec[1];
+  char msg_control[512];
+  struct cmsghdr *cmsg;
+  int cmsg_space = 0;
+
+  iovec[0].iov_base = buffer;
+  iovec[0].iov_len = len;
+  msg.msg_name = destination;
+  msg.msg_namelen = destlen;
+  msg.msg_iov = iovec;
+  msg.msg_iovlen = 1;
+  msg.msg_control = msg_control;
+  msg.msg_controllen = sizeof(msg_control);
+  msg.msg_flags = 0;
+
+  cmsg = CMSG_FIRSTHDR(&msg);
+  if (have_pktinfo) {
+    cmsg->cmsg_level = IPPROTO_IP;
+    cmsg->cmsg_type = IP_PKTINFO;
+    cmsg->cmsg_len = CMSG_LEN(sizeof(in_pktinfo));
+    *(struct in_pktinfo*)CMSG_DATA(cmsg) = in_pktinfo;
+    cmsg_space += CMSG_SPACE(sizeof(in_pktinfo));
+  }
+  msg.msg_controllen = cmsg_space;
+  return sendmsg(data_socket, &msg, 0);
+#else
+  return -1;
+#endif /* IP_PKTINFO */
+}
+
+
 int
 send_data(SOCKET data_socket, struct ring_elt *send_ring, uint32_t bytes_to_send, struct sockaddr *destination, int destlen, int protocol) {
 
@@ -2865,16 +2911,25 @@ send_data(SOCKET data_socket, struct ring_elt *send_ring, uint32_t bytes_to_send
   }
 
   if (destination) {
-    len = sendto(data_socket,
-		 send_ring->buffer_ptr,
-		 bytes_to_send,
+    if (have_pktinfo) {
+      len = send_pktinfo(data_socket,
+			 send_ring->buffer_ptr,
+			 bytes_to_send,
+			 destination,
+			 destlen);
+    }
+    else {
+      len = sendto(data_socket,
+		   send_ring->buffer_ptr,
+		   bytes_to_send,
 #if defined(MSG_FASTOPEN)
-		 (use_fastopen && protocol == IPPROTO_TCP) ? MSG_FASTOPEN : 0,
+		   (use_fastopen && protocol == IPPROTO_TCP) ? MSG_FASTOPEN : 0,
 #else
-		 0,
+		   0,
 #endif
-		 destination,
-		 destlen);
+		   destination,
+		   destlen);
+    }
   }
   else {
     if (!use_write) {
@@ -3037,7 +3092,62 @@ recv_data_no_copy(SOCKET data_socket, struct ring_elt *recv_ring, uint32_t bytes
     return bytes_to_recv;
 
 }
+
 #endif
+
+static
+int recv_pktinfo(SOCKET data_socket, char *message_ptr, int bytes_to_recv,  int my_flags, struct sockaddr *source, netperf_socklen_t *sourcelen) {
+
+#ifdef IP_PKTINFO
+  struct iovec  my_iovec;
+  struct msghdr my_header;
+  struct cmsghdr *cmsg;
+  struct in_pktinfo *pktinfo;
+
+  char control_buf[512];
+  int onoff = 1;
+  int ret;
+
+  my_iovec.iov_base = message_ptr;
+  my_iovec.iov_len = bytes_to_recv;
+
+  my_header.msg_name = source;
+  my_header.msg_namelen = *sourcelen;
+  my_header.msg_iov = &my_iovec;
+  my_header.msg_iovlen = 1;
+  my_header.msg_control = control_buf;
+  my_header.msg_controllen = sizeof(control_buf);
+
+  /* not going to bother checking, if it doesn't work we are no
+     worse-off than we were before. we are going to ignore IPv6 for
+     the time being */
+  setsockopt(data_socket, IPPROTO_IP, IP_PKTINFO, &onoff, sizeof(onoff));
+  
+  ret = recvmsg(data_socket, &my_header, 0);
+
+  if (ret >= 0) {
+    struct sockaddr_in me;
+    struct sockaddr_in clear;
+    netperf_socklen_t melen = sizeof(me);
+    for (cmsg = CMSG_FIRSTHDR(&my_header);
+	 cmsg != NULL;
+	 cmsg = CMSG_NXTHDR(&my_header, cmsg)) {
+      if (cmsg->cmsg_level == IPPROTO_IP && cmsg->cmsg_type == IP_PKTINFO) {
+	in_pktinfo = *(struct in_pktinfo *)CMSG_DATA(cmsg);
+	have_pktinfo = 1;
+      }
+    }
+  }
+
+  onoff = 0;
+  setsockopt(data_socket, IPPROTO_IP, IP_PKTINFO, &onoff, sizeof(onoff));
+
+  return ret;
+#else
+  return -1;
+#endif
+}
+
 
 int
 recv_data(SOCKET data_socket, struct ring_elt *recv_ring, uint32_t bytes_to_recv, struct sockaddr *source, netperf_socklen_t *sourcelen, uint32_t flags, uint32_t *num_receives) {
@@ -3087,12 +3197,23 @@ recv_data(SOCKET data_socket, struct ring_elt *recv_ring, uint32_t bytes_to_recv
 	 us out of the dowhile on the first call anyway.  if it
 	 turns-out not to be the case, then we can hoist the if above
 	 the do and put the dowhile in the else. */
-      bytes_recvd = recvfrom(data_socket,
-			     temp_message_ptr,
-			     bytes_left,
-			     my_flags,
-			     source,
-			     sourcelen);
+      if (use_pktinfo) {
+	bytes_recvd = recv_pktinfo(data_socket,
+				   temp_message_ptr,
+				   bytes_left,
+				   my_flags,
+				   source,
+				   sourcelen);
+	use_pktinfo = 0;
+      }
+      else {
+	bytes_recvd = recvfrom(data_socket,
+			       temp_message_ptr,
+			       bytes_left,
+			       my_flags,
+			       source,
+			       sourcelen);
+      }
     }
     else {
       /* just call recv */
@@ -3914,6 +4035,9 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 
       if (manipulate_local_firewalls)
 	omni_request->flags |= OMNI_MANAGE_FIREWALL;
+
+      if (want_use_pktinfo)
+	omni_request->flags |= OMNI_USE_PKTINFO;
 
       /* perhaps this should be made conditional on
 	 remote_cong_control_req[0] not being NULL? */
@@ -5158,6 +5282,7 @@ recv_omni()
 #endif
   direction       = omni_request->direction;
   manipulate_local_firewalls = (omni_request->flags) & OMNI_MANAGE_FIREWALL;
+  use_pktinfo = (omni_request->flags) & OMNI_USE_PKTINFO;
 
   /* let's be quite certain the fill file string is null terminated */
   omni_request->fill_file[sizeof(omni_request->fill_file) - 1] = '\0';
@@ -7124,7 +7249,7 @@ scan_omni_args(int argc, char *argv[])
 
 {
 
-#define OMNI_ARGS "b:cCd:De:FgG:hH:i:IkK:l:L:m:M:nNoOp:P:r:R:s:S:t:T:u:Vw:W:46"
+#define OMNI_ARGS "Bb:cCd:De:FgG:hH:i:IkK:l:L:m:M:nNoOp:P:r:R:s:S:t:T:u:Vw:W:46"
 
   extern char	*optarg;	  /* pointer to option string	*/
 
@@ -7180,6 +7305,9 @@ scan_omni_args(int argc, char *argv[])
     case 'h':
       print_omni_usage();
       exit(1);
+    case 'B':
+      want_use_pktinfo = 1;
+      break;
     case 'b':
 #ifdef WANT_FIRST_BURST
       first_burst_size = atoi(optarg);
