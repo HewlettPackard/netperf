@@ -264,6 +264,7 @@ def generate_overall(prefix,start_time,end_time,ksink):
 def overall_min_max_avg(prefix,start_time,end_time,intervals):
 
     max_average = 0.0
+    min_graph_interval = 60
     length = int(end_time) - int(start_time)
 
     rrdtool.create(prefix + "_intervals.rrd",
@@ -274,6 +275,11 @@ def overall_min_max_avg(prefix,start_time,end_time,intervals):
                    'DS:max:GAUGE:1:U:U', 'RRA:AVERAGE:0.5:1:%d' % int(length))
 
     for id, interval in enumerate(intervals,start=1):
+        # something to customize the x-axis labling
+        graph_interval = interval[1] - interval[0]
+        if (graph_interval > 0 and graph_interval < min_graph_interval):
+            min_graph_interval = graph_interval
+
         start = interval[0] + 1
         # take care if there was a long delay between when we started
         # netperf and when we started getting results out of it.
@@ -310,7 +316,7 @@ def overall_min_max_avg(prefix,start_time,end_time,intervals):
             max_minimum = imin
             max_maximum = imax
 
-    return peak_interval_id, peak_interval_start, peak_interval_end, max_average, max_minimum, max_maximum
+    return peak_interval_id, peak_interval_start, peak_interval_end, max_average, max_minimum, max_maximum, min_graph_interval
 
 def units_et_al_by_prefix(prefix):
     units = "bits/s"
@@ -327,9 +333,11 @@ def units_et_al_by_prefix(prefix):
 
     return units, multiplier, direction
 
-def graph_overall(prefix,start_time,end_time,vrules,peak_interval_id=None,peak_average=0.0):
+def graph_overall(prefix,start_time,end_time,vrules,peak_interval_id=None,peak_average=0.0,major_interval=60):
 
     length = int(end_time) - int(start_time)
+
+    xgrid_setting = 'SECOND:%d:SECOND:%d:SECOND:%d:0:%%X' % (major_interval/2, major_interval, major_interval)
 
     units, multiplier, direction = units_et_al_by_prefix(prefix)
 
@@ -347,6 +355,7 @@ def graph_overall(prefix,start_time,end_time,vrules,peak_interval_id=None,peak_a
                   '--end', str(int(end_time)),
                   '-w','%d' % max(800,length),'-h','400',
                   '--right-axis', '1:0',
+                  '--x-grid', xgrid_setting,
                   vrules,
                   '--font', 'DEFAULT:0:Helvetica',
                   '-t', 'Overall %s' % prefix,
@@ -356,7 +365,7 @@ def graph_overall(prefix,start_time,end_time,vrules,peak_interval_id=None,peak_a
                   'LINE2:bits#00FF0080:%s' % units,
                   interval_specs)
 
-def graph_individual(prefix,start_time,end_time,vrules):
+def graph_individual(prefix,start_time,end_time,vrules,major_interval=60):
 
     units, multiplier, direction = units_et_al_by_prefix(prefix)
 
@@ -407,12 +416,13 @@ if __name__ == '__main__':
 
 #    print "Min timestamp for %s is %s start time is %s end_time is %s" % (prefix,min_timestamp,start_time,end_time)
     generate_overall(prefix,min_timestamp-2,end_time,ksink)
-    peak_interval_id, peak_start, peak_end, peak_average, peak_minimum, peak_maximum = overall_min_max_avg(prefix,min_timestamp,end_time,intervals)
-    graph_overall(prefix,min_timestamp,end_time,vrules,peak_interval_id,peak_average)
+    peak_interval_id, peak_start, peak_end, peak_average, peak_minimum, peak_maximum, min_graph_interval = overall_min_max_avg(prefix,min_timestamp,end_time,intervals)
+
+    graph_overall(prefix,min_timestamp,end_time,vrules,peak_interval_id,peak_average,major_interval=min_graph_interval)
     try:
         no_individual = sys.argv[2]
     except:
-        graph_individual(prefix,min_timestamp,end_time,vrules)
+        graph_individual(prefix,min_timestamp,end_time,vrules,major_interval=min_graph_interval)
     
     units, multiplier, direction = units_et_al_by_prefix(prefix)
     print "Average of peak interval is %.3f %s from %d to %d" % (peak_average * float(multiplier), units, peak_start, peak_end)
