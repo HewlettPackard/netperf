@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
 
 #if defined(HAVE_INTTYPES_H)
 #include <inttypes.h>
@@ -145,17 +146,17 @@ static void get_system_time(uuid_time_t *uuid_time)
 /* Sample code, not for use in production; see RFC 1750 */
 static void get_random_info(char seed[16])
 {
-  FILE *fp;
+  int fd;
   uint16_t myrand;
   int i;
 
   /* we aren't all that picky, and we would rather not block so we
      will use urandom */
-  fp = fopen("/dev/urandom","rb");
+  fd = open("/dev/urandom", O_RDONLY);
 
-  if (NULL != fp) {
-    fread(seed,sizeof(char),16,fp);
-    fclose(fp);
+  if (fd != -1) {
+    read(fd, seed, 16);
+    close(fd);
     return;
   }
 
@@ -168,7 +169,6 @@ static void get_random_info(char seed[16])
     seed[i++] = myrand >> 8;
   } while (i < 14);
 
-  fclose(fp);
 }
 
 #endif

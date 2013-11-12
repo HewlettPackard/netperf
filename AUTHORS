@@ -290,3 +290,7 @@ of a platform not defining SO_SNDBUF
 
 Amos Kong - a fix to report the correct send size in a migrated
 TCP_MAERTS test. Bug reported by Wenli Quan
+
+Eric Dumazet - improve the performance of launching many netperfs at
+once by obtaining the 16 bytes of randomness for the UUID via slightly
+different means.
