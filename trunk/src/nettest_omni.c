@@ -3677,7 +3677,7 @@ enable_enobufs(int s)
     return;
   }
   if (setsockopt(s, pr->p_proto, IP_RECVERR, (char *)&on, sizeof(on)) < 0) {
-    fprintf(where, "%s failed: setsockopt\n",__FUNCTION__);
+    fprintf(where, "%s failed: setsockopt (errno %d)\n",__FUNCTION__,errno);
     fflush(where);
     return;
   }
