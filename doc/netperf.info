@@ -3340,6 +3340,31 @@ As of version 2.5.0 the output selectors are:
      This will display the overall CPU utilization during the test as
      measured by netperf. Units: 0 to 100 percent.
 
+`LOCAL_CPU_PERCENT_USER'
+     This will display the CPU fraction spent in user mode during the
+     test as measured by netperf. Only supported by netcpu_procstat.
+     Units: 0 to 100 percent.
+
+`LOCAL_CPU_PERCENT_SYSTEM'
+     This will display the CPU fraction spent in system mode during the
+     test as measured by netperf. Only supported by netcpu_procstat.
+     Units: 0 to 100 percent.
+
+`LOCAL_CPU_PERCENT_IOWAIT'
+     This will display the fraction of time waiting for I/O to complete
+     during the test as measured by netperf. Only supported by
+     netcpu_procstat. Units: 0 to 100 percent.
+
+`LOCAL_CPU_PERCENT_IRQ'
+     This will display the fraction of time servicing interrupts during
+     the test as measured by netperf. Only supported by
+     netcpu_procstat. Units: 0 to 100 percent.
+
+`LOCAL_CPU_PERCENT_SWINTR'
+     This will display the fraction of time servicing softirqs during
+     the test as measured by netperf. Only supported by
+     netcpu_procstat. Units: 0 to 100 percent.
+
 `LOCAL_CPU_METHOD'
      This will display the method used by netperf to measure CPU
      utilization. Units: single character denoting method.
@@ -3353,6 +3378,31 @@ As of version 2.5.0 the output selectors are:
 `REMOTE_CPU_UTIL'
      This will display the overall CPU utilization during the test as
      measured by netserver. Units 0 to 100 percent.
+
+`REMOTE_CPU_PERCENT_USER'
+     This will display the CPU fraction spent in user mode during the
+     test as measured by netserver. Only supported by netcpu_procstat.
+     Units: 0 to 100 percent.
+
+`REMOTE_CPU_PERCENT_SYSTEM'
+     This will display the CPU fraction spent in system mode during the
+     test as measured by netserver. Only supported by netcpu_procstat.
+     Units: 0 to 100 percent.
+
+`REMOTE_CPU_PERCENT_IOWAIT'
+     This will display the fraction of time waiting for I/O to complete
+     during the test as measured by netserver. Only supported by
+     netcpu_procstat. Units: 0 to 100 percent.
+
+`REMOTE_CPU_PERCENT_IRQ'
+     This will display the fraction of time servicing interrupts during
+     the test as measured by netserver. Only supported by
+     netcpu_procstat. Units: 0 to 100 percent.
+
+`REMOTE_CPU_PERCENT_SWINTR'
+     This will display the fraction of time servicing softirqs during
+     the test as measured by netserver. Only supported by
+     netcpu_procstat. Units: 0 to 100 percent.
 
 `REMOTE_CPU_METHOD'
      This will display the method used by netserver to measure CPU
@@ -4302,13 +4352,13 @@ Node: Native Omni Tests134881
 Node: Migrated Tests140159
 Node: Omni Output Selection142264
 Node: Omni Output Selectors145247
-Node: Other Netperf Tests172955
-Node: CPU rate calibration173390
-Node: UUID Generation175758
-Node: Address Resolution176474
-Node: Enhancing Netperf178450
-Node: Netperf4179945
-Node: Concept Index180850
-Node: Option Index183176
+Node: Other Netperf Tests174980
+Node: CPU rate calibration175415
+Node: UUID Generation177783
+Node: Address Resolution178499
+Node: Enhancing Netperf180475
+Node: Netperf4181970
+Node: Concept Index182875
+Node: Option Index185201
 
 End Tag Table

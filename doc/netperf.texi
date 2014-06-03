@@ -3475,6 +3475,26 @@ request-response test. Units: Bytes.
 @item LOCAL_CPU_UTIL
 This will display the overall CPU utilization during the test as
 measured by netperf. Units: 0 to 100 percent.
+@item LOCAL_CPU_PERCENT_USER
+This will display the CPU fraction spent in user mode during the test
+as measured by netperf. Only supported by netcpu_procstat. Units: 0 to
+100 percent.
+@item LOCAL_CPU_PERCENT_SYSTEM
+This will display the CPU fraction spent in system mode during the test
+as measured by netperf. Only supported by netcpu_procstat. Units: 0 to
+100 percent.
+@item LOCAL_CPU_PERCENT_IOWAIT
+This will display the fraction of time waiting for I/O to complete
+during the test as measured by netperf. Only supported by
+netcpu_procstat. Units: 0 to 100 percent.
+@item LOCAL_CPU_PERCENT_IRQ
+This will display the fraction of time servicing interrupts during the
+test as measured by netperf. Only supported by netcpu_procstat. Units:
+0 to 100 percent.
+@item LOCAL_CPU_PERCENT_SWINTR
+This will display the fraction of time servicing softirqs during the
+test as measured by netperf. Only supported by netcpu_procstat. Units:
+0 to 100 percent.
 @item LOCAL_CPU_METHOD
 This will display the method used by netperf to measure CPU
 utilization. Units: single character denoting method.
@@ -3486,6 +3506,26 @@ transaction.
 @item REMOTE_CPU_UTIL
 This will display the overall CPU utilization during the test as
 measured by netserver. Units 0 to 100 percent.
+@item REMOTE_CPU_PERCENT_USER
+This will display the CPU fraction spent in user mode during the test
+as measured by netserver. Only supported by netcpu_procstat. Units: 0 to
+100 percent.
+@item REMOTE_CPU_PERCENT_SYSTEM
+This will display the CPU fraction spent in system mode during the test
+as measured by netserver. Only supported by netcpu_procstat. Units: 0 to
+100 percent.
+@item REMOTE_CPU_PERCENT_IOWAIT
+This will display the fraction of time waiting for I/O to complete
+during the test as measured by netserver. Only supported by
+netcpu_procstat. Units: 0 to 100 percent.
+@item REMOTE_CPU_PERCENT_IRQ
+This will display the fraction of time servicing interrupts during the
+test as measured by netserver. Only supported by netcpu_procstat. Units:
+0 to 100 percent.
+@item REMOTE_CPU_PERCENT_SWINTR
+This will display the fraction of time servicing softirqs during the
+test as measured by netserver. Only supported by netcpu_procstat. Units:
+0 to 100 percent.
 @item REMOTE_CPU_METHOD
 This will display the method used by netserver to measure CPU
 utilization. Units: single character denoting method.

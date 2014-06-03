@@ -3681,6 +3681,21 @@ request-response test. Units: Bytes.
 request-response test. Units: Bytes. 
 <br><dt><code>LOCAL_CPU_UTIL</code><dd>This will display the overall CPU utilization during the test as
 measured by netperf. Units: 0 to 100 percent. 
+<br><dt><code>LOCAL_CPU_PERCENT_USER</code><dd>This will display the CPU fraction spent in user mode during the test
+as measured by netperf. Only supported by netcpu_procstat. Units: 0 to
+100 percent. 
+<br><dt><code>LOCAL_CPU_PERCENT_SYSTEM</code><dd>This will display the CPU fraction spent in system mode during the test
+as measured by netperf. Only supported by netcpu_procstat. Units: 0 to
+100 percent. 
+<br><dt><code>LOCAL_CPU_PERCENT_IOWAIT</code><dd>This will display the fraction of time waiting for I/O to complete
+during the test as measured by netperf. Only supported by
+netcpu_procstat. Units: 0 to 100 percent. 
+<br><dt><code>LOCAL_CPU_PERCENT_IRQ</code><dd>This will display the fraction of time servicing interrupts during the
+test as measured by netperf. Only supported by netcpu_procstat. Units:
+0 to 100 percent. 
+<br><dt><code>LOCAL_CPU_PERCENT_SWINTR</code><dd>This will display the fraction of time servicing softirqs during the
+test as measured by netperf. Only supported by netcpu_procstat. Units:
+0 to 100 percent. 
 <br><dt><code>LOCAL_CPU_METHOD</code><dd>This will display the method used by netperf to measure CPU
 utilization. Units: single character denoting method. 
 <br><dt><code>LOCAL_SD</code><dd>This will display the service demand, or units of CPU consumed per
@@ -3689,6 +3704,21 @@ consumed per either KB (K==1024) of data transferred or request/response
 transaction. 
 <br><dt><code>REMOTE_CPU_UTIL</code><dd>This will display the overall CPU utilization during the test as
 measured by netserver. Units 0 to 100 percent. 
+<br><dt><code>REMOTE_CPU_PERCENT_USER</code><dd>This will display the CPU fraction spent in user mode during the test
+as measured by netserver. Only supported by netcpu_procstat. Units: 0 to
+100 percent. 
+<br><dt><code>REMOTE_CPU_PERCENT_SYSTEM</code><dd>This will display the CPU fraction spent in system mode during the test
+as measured by netserver. Only supported by netcpu_procstat. Units: 0 to
+100 percent. 
+<br><dt><code>REMOTE_CPU_PERCENT_IOWAIT</code><dd>This will display the fraction of time waiting for I/O to complete
+during the test as measured by netserver. Only supported by
+netcpu_procstat. Units: 0 to 100 percent. 
+<br><dt><code>REMOTE_CPU_PERCENT_IRQ</code><dd>This will display the fraction of time servicing interrupts during the
+test as measured by netserver. Only supported by netcpu_procstat. Units:
+0 to 100 percent. 
+<br><dt><code>REMOTE_CPU_PERCENT_SWINTR</code><dd>This will display the fraction of time servicing softirqs during the
+test as measured by netserver. Only supported by netcpu_procstat. Units:
+0 to 100 percent. 
 <br><dt><code>REMOTE_CPU_METHOD</code><dd>This will display the method used by netserver to measure CPU
 utilization. Units: single character denoting method. 
 <br><dt><code>REMOTE_SD</code><dd>This will display the service demand, or units of CPU consumed per

@@ -247,6 +247,33 @@ Output Name: LOCAL_CPU_UTIL
 Description: The CPU utilization (0 to 100% regardless of number of
              CPUs) of the local (netperf) system during a test.
 
+Output Name: LOCAL_CPU_PERCENT_USER
+Description: The CPU fraction spent in user mode (0 to 100% regardless
+             of number of CPUs) by the local (netperf) system during a
+             test. Supported only by netcpu_procstat (Linux).
+
+Output Name: LOCAL_CPU_PERCENT_SYSTEM
+Description: The CPU fraction spent in system mode (0 to 100%
+             regardless of number of CPUs) by the local (netperf)
+             system during a test. Supported only by netcpu_procstat
+             (Linux).
+
+Output Name: LOCAL_CPU_PERCENT_IOWAIT
+Description: The fraction of time waiting for I/O to complete (0 to
+             100% regardless of number of CPUs) by the local (netperf)
+             system during a test. Supported only by netcpu_procstat
+             (Linux).
+
+Output Name: LOCAL_CPU_PERCENT_IRQ
+Description: The CPU fraction spent servicing interrupts (0 to 100%
+             regardless of number of CPUs) in the system during a
+             test. Supported only by netcpu_procstat (Linux).
+
+Output Name: LOCAL_CPU_PERCENT_SWINTR
+Description: The CPU fraction spent servicing softirqs (0 to 100%
+             regardless of number of CPUs) in the system during a
+             test. Supported only by netcpu_procstat (Linux).
+
 Output Name: LOCAL_CPU_BIND
 Description: The CPU to which netperf has been bound via the global -T
              option. 
@@ -277,6 +304,26 @@ Description: The identifier (number) of the most heavily utilized
 Output Name: REMOTE_CPU_UTIL
 Description: As with LOCAL_CPU_UTIL but for the remote (netserver)
              system. 
+
+Output Name: REMOTE_CPU_PERCENT_USER
+Description: As with LOCAL_CPU_PERCENT_USER but for the remote
+             (netserver) system.
+
+Output Name: REMOTE_CPU_PERCENT_SYSTEM
+Description: As with LOCAL_CPU_PERCENT_SYSTEM but for the remote
+             (netserver) system.
+
+Output Name: REMOTE_CPU_PERCENT_IOWAIT
+Description: As with LOCAL_CPU_PERCENT_IOWAIT but for the remote
+             (netserver) system.
+
+Output Name: REMOTE_CPU_PERCENT_IRQ
+Description: As with LOCAL_CPU_PERCENT_IRQ but for the remote
+             (netserver) system.
+
+Output Name: REMOTE_CPU_PERCENT_SWINTR
+Description: As with LOCAL_CPU_PERCENT_SWINTR but for the remote
+             (netserver) system.
 
 Output Name: REMOTE_CPU_BIND
 Description: As with LOCAL_CPU_BIND but for the remote (netserver)
@@ -345,4 +392,3 @@ Output Name: REMOTE_RECV_DIRTY_COUNT
 Output Name: REMOTE_RECV_CLEAN_COUNT
 Output Name: REMOTE_NODELAY
 Output Name: REMOTE_CORK
-Output Name: OUTPUT_END

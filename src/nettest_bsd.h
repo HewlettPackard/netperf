@@ -154,6 +154,11 @@ struct omni_results_struct {
   float      elapsed_time;  /* length of test in seconds */
 
   float      cpu_util;
+  float      cpu_percent_user;
+  float      cpu_percent_system;
+  float      cpu_percent_iowait;
+  float      cpu_percent_irq;
+  float      cpu_percent_swintr;
   float      serv_dem;
   uint32_t   cpu_method;    /* how was CPU util measured? */
   uint32_t   num_cpus;      /* number of CPUs in remote */
@@ -166,9 +171,9 @@ struct omni_results_struct {
   int32_t    subvendor;
   int32_t    subdevice;
   int32_t    transport_retrans;
-  /* there are 22 ints above here, add another and you need to adjust
+  /* there are 27 ints above here, add another and you need to adjust
      the define below */
-  #define OMNI_RESULTS_CONV_CUTOFF 22
+  #define OMNI_RESULTS_CONV_CUTOFF 27
   char       ifname[16];    /* the probable egress interface */
   char       driver[32];    /* size based on linux/ethtool.h */
   char       version[32];
