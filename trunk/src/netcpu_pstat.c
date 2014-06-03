@@ -55,7 +55,7 @@ get_cpu_method(void)
   return HP_IDLE_COUNTER;
 }
 
-void
+static void
 get_cpu_idle(uint64_t *res)
 {
       /* get the idle sycle counter for each processor */

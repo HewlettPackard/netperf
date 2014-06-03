@@ -65,7 +65,7 @@ get_cpu_method(void)
   return PERFSTAT;
 }
 
-void
+static void
 get_cpu_idle(uint64_t *res)
 {
   perfstat_cpu_t *perfstat_buffer;
@@ -351,4 +351,3 @@ cpu_stop_internal(void)
 {
   get_cpu_idle(lib_end_count);
 }
-
