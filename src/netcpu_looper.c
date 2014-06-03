@@ -570,7 +570,7 @@ calibrate_idle_rate (int iterations, int interval)
 }
 
 
-void
+static void
 get_cpu_idle (uint64_t *res)
 {
   int i;

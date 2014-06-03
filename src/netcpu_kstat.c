@@ -230,7 +230,7 @@ get_cpu_method(void)
   return KSTAT;
 }
 
-void
+static void
 get_cpu_idle(uint64_t *res)
 {
 
