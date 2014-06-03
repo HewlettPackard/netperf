@@ -70,6 +70,8 @@ char nettest_omni_id[]="\
 #include <malloc.h>
 #endif /* NOSTDLIBH */
 
+#include <assert.h>
+
 #ifndef WIN32
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -7270,6 +7272,28 @@ scan_omni_args(int argc, char *argv[])
       printf("%s ",argv[i]);
     }
     printf("\n");
+  }
+
+  /* double-check struct sizes */
+  {
+    const union netperf_request_struct * u = (const union netperf_request_struct *)0;
+    if (debug) {
+      fprintf(where, "sizeof(omni_request_struct)=%d/%d\n",
+              (int)sizeof(struct omni_request_struct),
+              (int)sizeof(u->content.test_specific_data));
+      fprintf(where, "sizeof(omni_response_struct)=%d/%d\n",
+              (int)sizeof(struct omni_response_struct),
+              (int)sizeof(u->content.test_specific_data));
+      fprintf(where, "sizeof(omni_results_struct)=%d/%d\n",
+              (int)sizeof(struct omni_results_struct),
+              (int)sizeof(u->content.test_specific_data));
+    }
+    assert(sizeof(struct omni_request_struct)
+           <= sizeof(u->content.test_specific_data));
+    assert(sizeof(struct omni_response_struct)
+           <= sizeof(u->content.test_specific_data));
+    assert(sizeof(struct omni_results_struct)
+           <= sizeof(u->content.test_specific_data));
   }
 
   strncpy(local_data_port,"0",sizeof(local_data_port));
