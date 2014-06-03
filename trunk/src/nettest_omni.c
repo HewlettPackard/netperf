@@ -534,9 +534,19 @@ enum netperf_output_name {
   REQUEST_SIZE,
   RESPONSE_SIZE,
   LOCAL_CPU_UTIL,
+  LOCAL_CPU_PERCENT_USER,
+  LOCAL_CPU_PERCENT_SYSTEM,
+  LOCAL_CPU_PERCENT_IOWAIT,
+  LOCAL_CPU_PERCENT_IRQ,
+  LOCAL_CPU_PERCENT_SWINTR,
   LOCAL_CPU_METHOD,
   LOCAL_SD,
   REMOTE_CPU_UTIL,
+  REMOTE_CPU_PERCENT_USER,
+  REMOTE_CPU_PERCENT_SYSTEM,
+  REMOTE_CPU_PERCENT_IOWAIT,
+  REMOTE_CPU_PERCENT_IRQ,
+  REMOTE_CPU_PERCENT_SWINTR,
   REMOTE_CPU_METHOD,
   REMOTE_SD,
   SD_UNITS,
@@ -1092,6 +1102,16 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "LOCAL_RECV_CLEAN_COUNT";
   case   LOCAL_CPU_UTIL:
     return "LOCAL_CPU_UTIL";
+  case   LOCAL_CPU_PERCENT_USER:
+    return "LOCAL_CPU_PERCENT_USER";
+  case   LOCAL_CPU_PERCENT_SYSTEM:
+    return "LOCAL_CPU_PERCENT_SYSTEM";
+  case   LOCAL_CPU_PERCENT_IOWAIT:
+    return "LOCAL_CPU_PERCENT_IOWAIT";
+  case   LOCAL_CPU_PERCENT_IRQ:
+    return "LOCAL_CPU_PERCENT_IRQ";
+  case   LOCAL_CPU_PERCENT_SWINTR:
+    return "LOCAL_CPU_PERCENT_SWINTR";
   case   LOCAL_CPU_BIND:
     return "LOCAL_CPU_BIND";
   case   LOCAL_SD:
@@ -1160,6 +1180,16 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "REMOTE_RECV_CLEAN_COUNT";
   case   REMOTE_CPU_UTIL:
     return "REMOTE_CPU_UTIL";
+  case   REMOTE_CPU_PERCENT_USER:
+    return "REMOTE_CPU_PERCENT_USER";
+  case   REMOTE_CPU_PERCENT_SYSTEM:
+    return "REMOTE_CPU_PERCENT_SYSTEM";
+  case   REMOTE_CPU_PERCENT_IOWAIT:
+    return "REMOTE_CPU_PERCENT_IOWAIT";
+  case   REMOTE_CPU_PERCENT_IRQ:
+    return "REMOTE_CPU_PERCENT_IRQ";
+  case   REMOTE_CPU_PERCENT_SWINTR:
+    return "REMOTE_CPU_PERCENT_SWINTR";
   case   REMOTE_CPU_BIND:
     return "REMOTE_CPU_BIND";
   case   REMOTE_SD:
@@ -1687,7 +1717,7 @@ parse_output_selection_direct(char *output_selection) {
 #define NETPERF_TPUT "ELAPSED_TIME,THROUGHPUT,THROUGHPUT_UNITS"
 #define NETPERF_OUTPUT_STREAM "LSS_SIZE_END,RSR_SIZE_END,LOCAL_SEND_SIZE"
 #define NETPERF_OUTPUT_MAERTS "RSS_SIZE_END,LSR_SIZE_END,REMOTE_SEND_SIZE"
-#define NETPERF_CPU "LOCAL_CPU_UTIL,LOCAL_CPU_METHOD,REMOTE_CPU_UTIL,REMOTE_CPU_METHOD,LOCAL_SD,REMOTE_SD,SD_UNITS"
+#define NETPERF_CPU "LOCAL_CPU_UTIL,LOCAL_CPU_PERCENT_USER,LOCAL_CPU_PERCENT_SYSTEM,LOCAL_CPU_PERCENT_IOWAIT,LOCAL_CPU_PERCENT_IRQ,LOCAL_CPU_PERCENT_SWINTR,LOCAL_CPU_METHOD,REMOTE_CPU_UTIL,REMOTE_CPU_PERCENT_USER,REMOTE_CPU_PERCENT_SYSTEM,REMOTE_CPU_PERCENT_IOWAIT,REMOTE_CPU_PERCENT_IRQ,REMOTE_CPU_PERCENT_SWINTR,REMOTE_CPU_METHOD,LOCAL_SD,REMOTE_SD,SD_UNITS"
 #define NETPERF_RR "LSS_SIZE_END,LSR_SIZE_END,RSR_SIZE_END,RSS_SIZE_END,REQUEST_SIZE,RESPONSE_SIZE"
 
 void
@@ -1999,6 +2029,25 @@ print_omni_init_list() {
   set_output_elt(LOCAL_CPU_UTIL, "Local", "CPU", "Util", "%", "%.2f",
 		 &local_cpu_utilization, 1, 0, NETPERF_TYPE_FLOAT);
 
+  set_output_elt(LOCAL_CPU_PERCENT_USER, "Local", "CPU", "User", "%", "%.2f",
+		 &lib_local_cpu_stats.cpu_user, 1, 0, NETPERF_TYPE_FLOAT);
+
+  set_output_elt(LOCAL_CPU_PERCENT_SYSTEM,
+                 "Local", "CPU", "System", "%", "%.2f",
+		 &lib_local_cpu_stats.cpu_system, 1, 0, NETPERF_TYPE_FLOAT);
+
+  set_output_elt(LOCAL_CPU_PERCENT_IOWAIT,
+                 "Local", "CPU", "I/O", "%", "%.2f",
+		 &lib_local_cpu_stats.cpu_iowait, 1, 0, NETPERF_TYPE_FLOAT);
+
+  set_output_elt(LOCAL_CPU_PERCENT_IRQ,
+                 "Local", "CPU", "IRQ", "%", "%.2f",
+		 &lib_local_cpu_stats.cpu_irq, 1, 0, NETPERF_TYPE_FLOAT);
+
+  set_output_elt(LOCAL_CPU_PERCENT_SWINTR,
+                 "Local", "CPU", "swintr", "%", "%.2f",
+		 &lib_local_cpu_stats.cpu_swintr, 1, 0, NETPERF_TYPE_FLOAT);
+
   set_output_elt(LOCAL_CPU_PEAK_UTIL, "Local", "Peak", "Per CPU", "Util %",
 		 "%.2f", &lib_local_cpu_stats.peak_cpu_util, 1, 0,
                  NETPERF_TYPE_FLOAT);
@@ -2101,6 +2150,25 @@ print_omni_init_list() {
 
   set_output_elt(REMOTE_CPU_UTIL, "Remote", "CPU", "Util", "%", "%.2f",
 		 &remote_cpu_utilization, 1, 0, NETPERF_TYPE_FLOAT);
+
+  set_output_elt(REMOTE_CPU_PERCENT_USER, "Remote", "CPU", "User", "%", "%.2f",
+		 &lib_remote_cpu_stats.cpu_user, 1, 0, NETPERF_TYPE_FLOAT);
+
+  set_output_elt(REMOTE_CPU_PERCENT_SYSTEM,
+                 "Remote", "CPU", "System", "%", "%.2f",
+		 &lib_remote_cpu_stats.cpu_system, 1, 0, NETPERF_TYPE_FLOAT);
+
+  set_output_elt(REMOTE_CPU_PERCENT_IOWAIT,
+                 "Remote", "CPU", "I/O", "%", "%.2f",
+		 &lib_remote_cpu_stats.cpu_iowait, 1, 0, NETPERF_TYPE_FLOAT);
+
+  set_output_elt(REMOTE_CPU_PERCENT_IRQ,
+                 "Remote", "CPU", "IRQ", "%", "%.2f",
+		 &lib_remote_cpu_stats.cpu_irq, 1, 0, NETPERF_TYPE_FLOAT);
+
+  set_output_elt(REMOTE_CPU_PERCENT_SWINTR,
+                 "Remote", "CPU", "swintr", "%", "%.2f",
+		 &lib_remote_cpu_stats.cpu_swintr, 1, 0, NETPERF_TYPE_FLOAT);
 
   set_output_elt(REMOTE_CPU_PEAK_UTIL, "Remote", "Peak", "Per CPU", "Util %",
 		 "%.2f", &lib_remote_cpu_stats.peak_cpu_util, 1, 0,
@@ -4853,6 +4921,11 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	remote_cpu_method = format_cpu_method(omni_result->cpu_method);
 	lib_num_rem_cpus = omni_result->num_cpus;
 	lib_remote_cpu_stats.cpu_util = omni_result->cpu_util;
+	lib_remote_cpu_stats.cpu_user = omni_result->cpu_percent_user;
+	lib_remote_cpu_stats.cpu_system = omni_result->cpu_percent_system;
+	lib_remote_cpu_stats.cpu_iowait = omni_result->cpu_percent_iowait;
+	lib_remote_cpu_stats.cpu_irq = omni_result->cpu_percent_irq;
+	lib_remote_cpu_stats.cpu_swintr = omni_result->cpu_percent_swintr;
 	lib_remote_cpu_stats.peak_cpu_util = omni_result->peak_cpu_util;
 	lib_remote_cpu_stats.peak_cpu_id = omni_result->peak_cpu_id;
 	/* why?  because some stacks want to be clever and autotune their
@@ -5964,6 +6037,11 @@ recv_omni()
   omni_results->num_cpus        = lib_num_loc_cpus;
   if (omni_request->flags & OMNI_MEASURE_CPU) {
     omni_results->cpu_util            = calc_cpu_util(elapsed_time);
+    omni_results->cpu_percent_user    = lib_local_cpu_stats.cpu_user;
+    omni_results->cpu_percent_system  = lib_local_cpu_stats.cpu_system;
+    omni_results->cpu_percent_iowait  = lib_local_cpu_stats.cpu_iowait;
+    omni_results->cpu_percent_irq     = lib_local_cpu_stats.cpu_irq;
+    omni_results->cpu_percent_swintr  = lib_local_cpu_stats.cpu_swintr;
     omni_results->peak_cpu_util       = lib_local_cpu_stats.peak_cpu_util;
     omni_results->peak_cpu_id         = lib_local_cpu_stats.peak_cpu_id;
   }
