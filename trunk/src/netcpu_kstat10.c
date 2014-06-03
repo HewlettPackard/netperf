@@ -371,7 +371,7 @@ calc_cpu_util_internal(float elapsed_time)
   uint64_t interrupt_user;
   uint64_t interrupt_kernel;
 
-  lib_local_cpu_util = (float)0.0;
+  memset(&lib_local_cpu_stats, 0, sizeof(lib_local_cpu_stats));
 
   /* It is possible that the library measured a time other than the
      one that the user want for the cpu utilization calculations - for
@@ -462,7 +462,7 @@ calc_cpu_util_internal(float elapsed_time)
 	      i,delta_cpu_counters[i].kernel);
       fflush(where);
 
-      lib_local_cpu_util = -1.0;
+      lib_local_cpu_stats.cpu_util = -1.0;
       lib_local_per_cpu_util[i] = -1.0;
       return -1.0;
     }
@@ -574,12 +574,12 @@ calc_cpu_util_internal(float elapsed_time)
 	      lib_local_per_cpu_util[i],
 	      correction_factor);
     }
-    lib_local_cpu_util += lib_local_per_cpu_util[i];
+    lib_local_cpu_stats.cpu_util += lib_local_per_cpu_util[i];
   }
   /* we want the average across all n processors */
-  lib_local_cpu_util /= (float)lib_num_loc_cpus;
+  lib_local_cpu_stats.cpu_util /= (float)lib_num_loc_cpus;
 
-  return lib_local_cpu_util;
+  return lib_local_cpu_stats.cpu_util;
 }
 
 void

@@ -252,7 +252,7 @@ calc_cpu_util_internal(float elapsed_time)
   cpu_states_t diff;
   uint64_t total_ticks;
 
-  lib_local_cpu_util = (float)0.0;
+  memset(&lib_local_cpu_stats, 0, sizeof(lib_local_cpu_stats));
 
   /* It is possible that the library measured a time other than the
      one that the user want for the cpu utilization calculations - for
@@ -304,14 +304,18 @@ calc_cpu_util_internal(float elapsed_time)
       if (debug) {
 	fprintf(where, "Total ticks 0 on CPU %d, charging nothing!\n", i);
       }
-      lib_local_per_cpu_util[i] = 100.0;
+      lib_local_per_cpu_util[i] = 0.0;
     } else {
-      lib_local_per_cpu_util[i] = 100.0 *
-	((float) diff.idle / (float) total_ticks);
+#define CPU_STAT_PERCENTIZE(x) (100. * (((float)(x)) / ((float)(total_ticks))))
+      /* utilization = 100% - %idle */
+      lib_local_per_cpu_util[i] = 100. - CPU_STAT_PERCENTIZE(diff.idle);
+      lib_local_cpu_stats.cpu_util += lib_local_per_cpu_util[i];
+      lib_local_cpu_stats.cpu_user += CPU_STAT_PERCENTIZE(diff.user);
+      lib_local_cpu_stats.cpu_system += CPU_STAT_PERCENTIZE(diff.sys);
+      lib_local_cpu_stats.cpu_iowait += CPU_STAT_PERCENTIZE(diff.iowait);
+      lib_local_cpu_stats.cpu_irq += CPU_STAT_PERCENTIZE(diff.hard_irq);
+      lib_local_cpu_stats.cpu_swintr += CPU_STAT_PERCENTIZE(diff.soft_irq);
     }
-    /* invert percentage to reflect non-idle time */
-    lib_local_per_cpu_util[i] = 100.0 - lib_local_per_cpu_util[i];
-
     /* apply correction factor */
     lib_local_per_cpu_util[i] *= correction_factor;
     if (debug) {
@@ -331,12 +335,22 @@ calc_cpu_util_internal(float elapsed_time)
 	      lib_local_per_cpu_util[i],
 	      correction_factor);
     }
-    lib_local_cpu_util += lib_local_per_cpu_util[i];
   }
-  /* we want the average across all n processors */
-  lib_local_cpu_util /= (float)lib_num_loc_cpus;
 
-  return lib_local_cpu_util;
+  /* we want to apply correction factor and average across all n processors */
+#define CPU_STAT_FIXUP(fldname)                                         \
+  lib_local_cpu_stats.fldname = ((correction_factor                     \
+                                  * lib_local_cpu_stats.fldname)        \
+                                 / ((float)lib_num_loc_cpus))
+
+  CPU_STAT_FIXUP(cpu_util);
+  CPU_STAT_FIXUP(cpu_user);
+  CPU_STAT_FIXUP(cpu_system);
+  CPU_STAT_FIXUP(cpu_iowait);
+  CPU_STAT_FIXUP(cpu_irq);
+  CPU_STAT_FIXUP(cpu_swintr);
+
+  return lib_local_cpu_stats.cpu_util;
 }
 
 void

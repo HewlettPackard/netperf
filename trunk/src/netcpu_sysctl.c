@@ -107,16 +107,18 @@ calc_cpu_util_internal(float elapsed_time)
   CP_TIME_TYPE sum_idle, sum_busy;
   int i;
 
+  memset(&lib_local_cpu_stats, 0, sizeof(lib_local_cpu_stats));
+
   for (sum_busy = 0, i = 0; i < CPUSTATES; i++) {
     if (i != CP_IDLE)
       sum_busy += lib_end_count[i] - lib_start_count[i];
   }
 
   sum_idle = lib_end_count[CP_IDLE] - lib_start_count[CP_IDLE];
-  lib_local_cpu_util = (float)sum_busy / (float)(sum_busy + sum_idle);
-  lib_local_cpu_util *= 100.0;
+  lib_local_cpu_stats.cpu_util = (float)sum_busy / (float)(sum_busy + sum_idle);
+  lib_local_cpu_stats.cpu_util *= 100.0;
 
-  return lib_local_cpu_util;
+  return lib_local_cpu_stats.cpu_util;
 
 }
 void
