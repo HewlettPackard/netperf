@@ -451,7 +451,9 @@ float
 calc_cpu_util_internal(float elapsed_time)
 {
   float correction_factor;
-  lib_local_cpu_util = (float)0.0;
+
+  memset(&lib_local_cpu_stats, 0, sizeof(lib_local_cpu_stats));
+
   /* It is possible that the library measured a time other than */
   /* the one that the user want for the cpu utilization */
   /* calculations - for example, tests that were ended by */
@@ -470,8 +472,8 @@ calc_cpu_util_internal(float elapsed_time)
     fprintf(where, "correction factor: %f\n", correction_factor);
   }
 
-  lib_local_cpu_util = (float)ReportPerfCntrs(PerfCntrs);
-  lib_local_cpu_util *= correction_factor;
-  return lib_local_cpu_util;
+  lib_local_cpu_stats.cpu_util = (float)ReportPerfCntrs(PerfCntrs);
+  lib_local_cpu_stats.cpu_util *= correction_factor;
+  return lib_local_cpu_stats.cpu_util;
 
 }

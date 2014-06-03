@@ -315,6 +315,22 @@ struct ring_elt {
 				     setup. */
 };
 
+/* everything in percent except otherwise stated */
+struct cpu_stats_struct {
+  float cpu_util;  /* mandatory = 100% - %idle */
+
+  /* The following are optional, dependent upon netcpu implementation */
+  float cpu_user;
+  float cpu_system;
+  float cpu_iowait;
+  float cpu_irq;
+  float cpu_swintr;
+
+  /* mandatory */
+  float peak_cpu_util;
+  int   peak_cpu_id;  /* ID of most loaded CPU */
+};
+
 /* +*+ SAF  Sorry about the hacks with errno; NT made me do it :(
 
  WinNT does define an errno.
@@ -478,13 +494,10 @@ extern int control_family;
 extern  union netperf_request_struct netperf_request;
 extern  union netperf_response_struct netperf_response;
 
-extern  float    lib_local_cpu_util;
-extern  float    lib_elapsed;
-extern  float    lib_local_maxrate;
-extern  double   lib_local_peak_cpu_util;
-extern  int      lib_local_peak_cpu_id;
-extern  double   lib_remote_peak_cpu_util;
-extern  int      lib_remote_peak_cpu_id;
+extern struct cpu_stats_struct lib_local_cpu_stats;
+extern struct cpu_stats_struct lib_remote_cpu_stats;
+extern float                   lib_elapsed;
+extern float                   lib_local_maxrate;
 
 extern  char    libfmt;
 

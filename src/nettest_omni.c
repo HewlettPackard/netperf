@@ -380,9 +380,7 @@ double        remote_recv_thruput;
 
 /* kludges for omni output */
 double      elapsed_time_double;
-double      local_cpu_utilization_double;
 double      local_service_demand_double;
-double      remote_cpu_utilization_double;
 double      remote_service_demand_double;
 double      transaction_rate = 1.0;
 double      rtt_latency = -1.0;
@@ -1999,13 +1997,14 @@ print_omni_init_list() {
 		 "%d", &loc_clean_count, 1, 0, NETPERF_TYPE_INT32);
 
   set_output_elt(LOCAL_CPU_UTIL, "Local", "CPU", "Util", "%", "%.2f",
-		 &local_cpu_utilization_double, 1, 0, NETPERF_TYPE_DOUBLE);
+		 &local_cpu_utilization, 1, 0, NETPERF_TYPE_FLOAT);
 
   set_output_elt(LOCAL_CPU_PEAK_UTIL, "Local", "Peak", "Per CPU", "Util %",
-		 "%.2f", &lib_local_peak_cpu_util, 1, 0, NETPERF_TYPE_DOUBLE);
+		 "%.2f", &lib_local_cpu_stats.peak_cpu_util, 1, 0,
+                 NETPERF_TYPE_FLOAT);
 
   set_output_elt(LOCAL_CPU_PEAK_ID, "Local", "Peak", "Per CPU", "ID", "%d",
-		 &lib_local_peak_cpu_id, 1, 0, NETPERF_TYPE_INT32);
+		 &lib_local_cpu_stats.peak_cpu_id, 1, 0, NETPERF_TYPE_INT32);
 
   set_output_elt(LOCAL_CPU_BIND, "Local", "CPU", "Bind", "", "%d",
 		 &local_proc_affinity, 1, 0, NETPERF_TYPE_INT32);
@@ -2101,13 +2100,14 @@ print_omni_init_list() {
 		 "%d", &rem_clean_count, 1, 0, NETPERF_TYPE_INT32);
 
   set_output_elt(REMOTE_CPU_UTIL, "Remote", "CPU", "Util", "%", "%.2f",
-		 &remote_cpu_utilization_double, 1, 0, NETPERF_TYPE_DOUBLE);
+		 &remote_cpu_utilization, 1, 0, NETPERF_TYPE_FLOAT);
 
   set_output_elt(REMOTE_CPU_PEAK_UTIL, "Remote", "Peak", "Per CPU", "Util %",
-		 "%.2f", &lib_remote_peak_cpu_util, 1, 0, NETPERF_TYPE_DOUBLE);
+		 "%.2f", &lib_remote_cpu_stats.peak_cpu_util, 1, 0,
+                 NETPERF_TYPE_FLOAT);
 
   set_output_elt(REMOTE_CPU_PEAK_ID, "Remote", "Peak", "Per CPU", "ID", "%d",
-		 &lib_remote_peak_cpu_id, 1, 0, NETPERF_TYPE_INT32);
+		 &lib_remote_cpu_stats.peak_cpu_id, 1, 0, NETPERF_TYPE_INT32);
 
   set_output_elt(REMOTE_CPU_BIND, "Remote", "CPU", "Bind", "", "%d",
 		 &remote_proc_affinity, 1, 0, NETPERF_TYPE_INT32);
@@ -2491,6 +2491,11 @@ my_snprintf(char *buffer, size_t size, netperf_output_elt_t *output_elt)
     return snprintf(buffer, size,
 		    output_elt->format,
 		    *(unsigned long long *)(output_elt->display_value));
+    break;
+  case NETPERF_TYPE_FLOAT:
+    return snprintf(buffer, size,
+		    output_elt->format,
+		    *(float *)(output_elt->display_value));
     break;
   case NETPERF_TYPE_DOUBLE:
     return snprintf(buffer, size,
@@ -4847,8 +4852,9 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	  fprintf(where,"remote results obtained\n");
 	remote_cpu_method = format_cpu_method(omni_result->cpu_method);
 	lib_num_rem_cpus = omni_result->num_cpus;
-	lib_remote_peak_cpu_util = (double)omni_result->peak_cpu_util;
-	lib_remote_peak_cpu_id = omni_result->peak_cpu_id;
+	lib_remote_cpu_stats.cpu_util = omni_result->cpu_util;
+	lib_remote_cpu_stats.peak_cpu_util = omni_result->peak_cpu_util;
+	lib_remote_cpu_stats.peak_cpu_id = omni_result->peak_cpu_id;
 	/* why?  because some stacks want to be clever and autotune their
 	   socket buffer sizes, which means that if we accept the defaults,
 	   the size we get from getsockopt() at the beginning of a
@@ -5056,9 +5062,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
      use doubles rather than floats. help there would be
      appreciated. raj 2008-01-28 */
   elapsed_time_double = (double) elapsed_time;
-  local_cpu_utilization_double = (double)local_cpu_utilization;
   local_service_demand_double = (double)local_service_demand;
-  remote_cpu_utilization_double = (double)remote_cpu_utilization;
   remote_service_demand_double = (double)remote_service_demand;
 
   if ('x' == libfmt) sd_str = "usec/Tran";
@@ -5959,10 +5963,10 @@ recv_omni()
   omni_results->cpu_method      = cpu_method;
   omni_results->num_cpus        = lib_num_loc_cpus;
   if (omni_request->flags & OMNI_MEASURE_CPU) {
-    omni_results->cpu_util = calc_cpu_util(elapsed_time);
+    omni_results->cpu_util            = calc_cpu_util(elapsed_time);
+    omni_results->peak_cpu_util       = lib_local_cpu_stats.peak_cpu_util;
+    omni_results->peak_cpu_id         = lib_local_cpu_stats.peak_cpu_id;
   }
-  omni_results->peak_cpu_util   = (float)lib_local_peak_cpu_util;
-  omni_results->peak_cpu_id     = lib_local_peak_cpu_id;
   if ((omni_request->flags & OMNI_WANT_IFNAME) ||
       (omni_request->flags & OMNI_WANT_IFSLOT) ||
       (omni_request->flags & OMNI_WANT_IFIDS) ||

@@ -195,12 +195,9 @@ int
   lib_num_loc_cpus,    /* the number of cpus in the system */
   lib_num_rem_cpus;    /* how many we think are in the remote */
 
-int
-  lib_local_peak_cpu_id, /* the CPU number of the most utilized CPU */
-  lib_remote_peak_cpu_id;
-double
-  lib_local_peak_cpu_util, /* its utilization */
-  lib_remote_peak_cpu_util;
+struct cpu_stats_struct
+  lib_local_cpu_stats,
+  lib_remote_cpu_stats;
 
 #define PAGES_PER_CHILD 2
 
@@ -211,9 +208,7 @@ struct  timeval         time1, time2;
 struct  timezone        tz;
 float   lib_elapsed,
         lib_local_maxrate,
-        lib_remote_maxrate,
-        lib_local_cpu_util,
-        lib_remote_cpu_util;
+        lib_remote_maxrate;
 
 float   lib_local_per_cpu_util[MAXCPUS];
 int     lib_cpu_map[MAXCPUS];
@@ -1451,10 +1446,10 @@ netlib_init()
     lib_local_per_cpu_util[i] = -1.0;
   }
 
-  lib_local_peak_cpu_id = -1;
-  lib_local_peak_cpu_util = -1.0;
-  lib_remote_peak_cpu_id = -1;
-  lib_remote_peak_cpu_util = -1.0;
+  lib_local_cpu_stats.peak_cpu_id = -1;
+  lib_local_cpu_stats.peak_cpu_util = -1.0;
+  lib_remote_cpu_stats.peak_cpu_id = -1;
+  lib_remote_cpu_stats.peak_cpu_util = -1.0;
 
   netperf_version = strdup(NETPERF_VERSION);
 
@@ -3777,9 +3772,9 @@ calc_cpu_util(float elapsed_time)
 
   /* now, what was the most utilized CPU and its util? */
   for (i = 0; i < MAXCPUS; i++) {
-    if (lib_local_per_cpu_util[i] > lib_local_peak_cpu_util) {
-      lib_local_peak_cpu_util = lib_local_per_cpu_util[i];
-      lib_local_peak_cpu_id = lib_cpu_map[i];
+    if (lib_local_per_cpu_util[i] > lib_local_cpu_stats.peak_cpu_util) {
+      lib_local_cpu_stats.peak_cpu_util = lib_local_per_cpu_util[i];
+      lib_local_cpu_stats.peak_cpu_id = lib_cpu_map[i];
     }
   }
 
@@ -3817,7 +3812,7 @@ calc_service_demand_internal(double unit_divisor,
     elapsed_time = lib_elapsed;
   }
   if (cpu_utilization == 0.0) {
-    cpu_utilization = lib_local_cpu_util;
+    cpu_utilization = lib_local_cpu_stats.cpu_util;
   }
 
   thruput = (units_sent /
@@ -5027,4 +5022,3 @@ display_confidence()
           100.0 * (interval - loc_cpu_confid),
           100.0 * (interval - rem_cpu_confid));
 }
-
