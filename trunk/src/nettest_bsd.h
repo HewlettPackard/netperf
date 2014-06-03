@@ -93,6 +93,7 @@ struct  omni_request_struct {
 #define OMNI_REQUEST_CONV_CUTOFF 38
   char       cong_control[16]; /* the requested congestion control alg */
   char       fill_file[32]; /* file from which netserver fills bufs */
+  /* total sizeof must be <= MAXSPECDATA*sizeof(int) */
 };
 
 struct  omni_response_struct {
@@ -134,6 +135,7 @@ struct  omni_response_struct {
 				name that long - and still didn't
 				include the 9NNN model number! */
   char       security_string[16];
+  /* total sizeof must be <= MAXSPECDATA*sizeof(int) */
 };
 
 struct omni_results_struct {
@@ -164,9 +166,9 @@ struct omni_results_struct {
   int32_t    subvendor;
   int32_t    subdevice;
   int32_t    transport_retrans;
+  /* there are 22 ints above here, add another and you need to adjust
+     the define below */
   #define OMNI_RESULTS_CONV_CUTOFF 22
-  /* this is the 22dn 32-bit word and we have 248-(17*4) bytes
-     available from here */
   char       ifname[16];    /* the probable egress interface */
   char       driver[32];    /* size based on linux/ethtool.h */
   char       version[32];
@@ -174,7 +176,7 @@ struct omni_results_struct {
   char       bus[32];
   char       ifslot[16];    /* slot id of the probable egress interface */
   char       cong_control[16]; /* what the congestion control alg was */
-
+  /* total sizeof must be <= MAXSPECDATA*sizeof(int) */
 };
 
 #endif /* WANT_OMNI */
