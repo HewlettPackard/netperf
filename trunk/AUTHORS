@@ -294,3 +294,7 @@ TCP_MAERTS test. Bug reported by Wenli Quan
 Eric Dumazet - improve the performance of launching many netperfs at
 once by obtaining the 16 bytes of randomness for the UUID via slightly
 different means.
+
+David Decotigny - a series of cleanups and enhancements in the area of
+CPU utilization reporting and making certain that sanity checks are
+made on the size of things being passed in control messages.
