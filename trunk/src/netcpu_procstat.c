@@ -42,7 +42,7 @@ char   netcpu_procstat_id[]="\
    percentage. raj 2005-01-26 */
 
 #define IDLE_IDX 4
-#define CPU_STATES 9
+#define CPU_STATES 10
 
 typedef struct cpu_states
 {
@@ -55,6 +55,7 @@ typedef struct cpu_states
   uint64_t     	soft_irq;
   uint64_t     	steal;
   uint64_t     	guest;
+  uint64_t     	guest_nice;
 } cpu_states_t;
 
 static cpu_states_t  lib_start_count[MAXCPUS];
@@ -177,7 +178,7 @@ get_cpu (cpu_states_t *res)
   for (i = 0; i < n; i++) {
     memset(&res[i], 0, sizeof (res[i]));
     p = strchr (p, ' ');
-    sscanf(p, "%llu %llu %llu %llu %llu %llu %llu %llu %llu",
+    sscanf(p, "%llu %llu %llu %llu %llu %llu %llu %llu %llu %llu",
 	   (unsigned long long *)&res[i].user,
 	   (unsigned long long *)&res[i].nice,
 	   (unsigned long long *)&res[i].sys,
@@ -186,10 +187,11 @@ get_cpu (cpu_states_t *res)
 	   (unsigned long long *)&res[i].hard_irq,
 	   (unsigned long long *)&res[i].soft_irq,
 	   (unsigned long long *)&res[i].steal,
-	   (unsigned long long *)&res[i].guest);
+	   (unsigned long long *)&res[i].guest,
+           (unsigned long long *)&res[i].guest_nice);
     if (debug) {
       fprintf(where,
-	      "res[%d] is %llu %llu %llu %llu %llu %llu %llu %llu %llu\n",
+	      "res[%d] is %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu\n",
 	      i,
 	      (unsigned long long)res[i].user,
 	      (unsigned long long)res[i].nice,
@@ -199,7 +201,8 @@ get_cpu (cpu_states_t *res)
 	      (unsigned long long)res[i].hard_irq,
 	      (unsigned long long)res[i].soft_irq,
 	      (unsigned long long)res[i].steal,
-	      (unsigned long long)res[i].guest);
+	      (unsigned long long)res[i].guest,
+              (unsigned long long)res[i].guest_nice);
       fflush(where);
     }
     p = strchr (p, '\n');
@@ -290,8 +293,11 @@ calc_cpu_util_internal(float elapsed_time)
       tick_subtract(lib_start_count[i].steal, lib_end_count[i].steal);
     diff.guest =
       tick_subtract(lib_start_count[i].guest, lib_end_count[i].guest);
+    diff.guest_nice =
+      tick_subtract(lib_start_count[i].guest_nice, lib_end_count[i].guest_nice);
     total_ticks = diff.user + diff.nice + diff.sys + diff.idle + diff.iowait
-      + diff.hard_irq + diff.soft_irq + diff.steal + diff.guest;
+      + diff.hard_irq + diff.soft_irq + diff.steal
+      + diff.guest + diff.guest_nice;
 
     /* calculate idle time as a percentage of all CPU states */
     if (total_ticks == 0) {
