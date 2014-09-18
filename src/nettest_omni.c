@@ -5841,6 +5841,19 @@ recv_omni()
 	  check_interval += 1;
       }
 
+      if (omni_request->protocol == IPPROTO_UDP && need_to_connect &&
+          !connected) {
+        if (connect(data_socket,
+                    (struct sockaddr*)&peeraddr_in,
+                    addrlen) == INVALID_SOCKET) {
+	  netperf_response.content.serv_errno = errno;
+	  send_response();
+	  close(data_socket);
+	  exit(-1);
+        }
+        connected = 1;
+      }
+      
       ret = send_data(data_socket,
 		      send_ring,
 		      bytes_to_send,
