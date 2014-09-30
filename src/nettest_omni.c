@@ -808,7 +808,11 @@ set_multicast_ttl(SOCKET sock) {
   if (multicast_ttl >= 0) {
     if (setsockopt(sock,
 		   IPPROTO_IP,
+#if defined(IP_MULTICAST_TTL)
+		   IP_MULTICAST_TTL,
+#else
 		   IP_TTL,
+#endif
 		   (const char *)&multicast_ttl,
 		   sizeof(multicast_ttl)) == SOCKET_ERROR) {
       fprintf(where,
