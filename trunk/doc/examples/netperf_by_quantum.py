@@ -333,7 +333,7 @@ class TestNetperf() :
             sec_group_ids = []
             for sec_group in security_groups :
                 sec_group_ids.append(sec_group['id'])
-            body['security_groups'] = sec_group_ids
+            body['port']['security_groups'] = sec_group_ids
 
         logging.debug('create_port(body=%s)', body)
         result = self.qc.create_port(body=body)
@@ -592,7 +592,10 @@ class TestNetperf() :
         parser.add_argument("--use-private-ips",
                             help="Test against instance private IPs rather than public",
                             action="store_true")
-                            
+
+        parser.add_argument("--external-network",
+                            help="Name of the external network. Used for the plumbing of the router.",
+                            default=self.env('EXTERNAL_NETWORK', default='Ext-Net'))
 
         return parser
 
@@ -715,7 +718,7 @@ class TestNetperf() :
 
         logging.warning("Setting-up test network plumbing")
 
-        self.external_network = self.get_network("Ext-Net")
+        self.external_network = self.get_network(self.args.external_network)
 
         self.test_network = self.create_network("netperftesting"+str(self.start))
         self.test_subnet = self.create_subnet(self.test_network,
