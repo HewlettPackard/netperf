@@ -67,6 +67,10 @@ find_security_info_selinux(int *enabled, int *type, char **specific){
   }
 
   ret = (*getpolicy)(specific);
+
+  if (ret != 0)
+    *specific = strdup("N/A");
+
 #if defined(NETPERF_STANDALONE_DEBUG)
   printf("after selinux_getpolicytype ret is %d\n",ret);
 #endif
