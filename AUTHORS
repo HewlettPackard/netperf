@@ -301,3 +301,5 @@ made on the size of things being passed in control messages.
 
 Yaogong Wang - enable support for the -N test-specific option to have
 the UDP socket connected at the netserver side.
+
+Weijia Song - a fix inspiration for a NULL pointer problem.
