@@ -337,6 +337,7 @@ extern int rem_dirty_count;
 extern int rem_clean_count;
 int remote_checksum_off;
 int connection_test;
+int dont_give_up = 0;
 int use_fastopen = 0;
 int use_write = 0;
 int need_to_connect;
@@ -2903,7 +2904,7 @@ print_omni()
    2008-01-09 */
 
 int
-connect_data_socket(SOCKET send_socket, struct addrinfo *remote_res)
+connect_data_socket(SOCKET send_socket, struct addrinfo *remote_res, int dont_give_up)
 {
   int ret;
 
@@ -2916,7 +2917,7 @@ connect_data_socket(SOCKET send_socket, struct addrinfo *remote_res)
 	 over, so return a value of -1 to the caller */
       return -1;
     }
-    if ((SOCKET_EADDRINUSE(ret)) || SOCKET_EADDRNOTAVAIL(ret)) {
+    if ((SOCKET_EADDRINUSE(ret)) || SOCKET_EADDRNOTAVAIL(ret) || dont_give_up) {
       /* likely something our explicit bind() would have caught in
 	 the past, so go get another port, via create_data_socket.
 	 yes, this is a bit more overhead than before, but the
@@ -4377,7 +4378,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
       if (need_to_connect && !use_fastopen) {
 	/* assign to data_socket since connect_data_socket returns
 	   SOCKET and not int thanks to Windows. */
-	ret = connect_data_socket(data_socket,remote_res);
+	ret = connect_data_socket(data_socket,remote_res,dont_give_up);
 	if (ret == 0) {
 	  connected = 1;
 	  need_to_connect = 0;
@@ -7718,6 +7719,10 @@ scan_omni_args(int argc, char *argv[])
       /* strncpy may leave us with a string without a null at the end */
       test_uuid[sizeof(test_uuid) - 1] = 0;
       have_uuid = 1;
+      break;
+    case 'U':
+      /* we don't want to give-up on the failure of a connect() call */
+      dont_give_up = 1;
       break;
     case 'W':
       /* set the "width" of the user space data */
