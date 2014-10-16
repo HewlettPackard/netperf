@@ -7351,7 +7351,7 @@ scan_omni_args(int argc, char *argv[])
 
 {
 
-#define OMNI_ARGS "Bb:cCd:De:FgG:hH:i:IkK:l:L:m:M:nNoOp:P:r:R:s:S:t:T:u:Vw:W:46"
+#define OMNI_ARGS "Bb:cCd:De:FgG:hH:i:IkK:l:L:m:M:nNoOp:P:r:R:s:S:t:T:u:UVw:W:46"
 
   extern char	*optarg;	  /* pointer to option string	*/
 
