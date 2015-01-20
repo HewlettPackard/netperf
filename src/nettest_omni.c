@@ -3489,20 +3489,21 @@ static void
 dump_tcp_info(struct tcp_info *tcp_info)
 {
 
-  printf("tcpi_rto %d tcpi_ato %d tcpi_pmtu %d tcpi_rcv_ssthresh %d\n"
-	 "tcpi_rtt %d tcpi_rttvar %d tcpi_snd_ssthresh %d tpci_snd_cwnd %d\n"
-	 "tcpi_reordering %d tcpi_total_retrans %d\n",
-	 tcp_info->tcpi_rto,
-	 tcp_info->tcpi_ato,
-	 tcp_info->tcpi_pmtu,
-	 tcp_info->tcpi_rcv_ssthresh,
-	 tcp_info->tcpi_rtt,
-	 tcp_info->tcpi_rttvar,
-	 tcp_info->tcpi_snd_ssthresh,
-	 tcp_info->tcpi_snd_cwnd,
-	 tcp_info->tcpi_reordering,
-	 tcp_info->tcpi_total_retrans);
-
+  fprintf(stderr,
+	  "tcpi_rto %d tcpi_ato %d tcpi_pmtu %d tcpi_rcv_ssthresh %d\n"
+	  "tcpi_rtt %d tcpi_rttvar %d tcpi_snd_ssthresh %d tpci_snd_cwnd %d\n"
+	  "tcpi_reordering %d tcpi_total_retrans %d\n",
+	  tcp_info->tcpi_rto,
+	  tcp_info->tcpi_ato,
+	  tcp_info->tcpi_pmtu,
+	  tcp_info->tcpi_rcv_ssthresh,
+	  tcp_info->tcpi_rtt,
+	  tcp_info->tcpi_rttvar,
+	  tcp_info->tcpi_snd_ssthresh,
+	  tcp_info->tcpi_snd_cwnd,
+	  tcp_info->tcpi_reordering,
+	  tcp_info->tcpi_total_retrans);
+  
   return;
 }
 
@@ -3563,7 +3564,8 @@ get_transport_retrans(SOCKET socket, int protocol) {
   }
   else {
 
-    if (debug > 1) {
+    /* we assume that if we have LINUX_TCP_H we also have getenv */
+    if (debug > 1 || getenv("DUMP_TCP_INFO")) {
       dump_tcp_info(&tcp_info);
     }
     return tcp_info.tcpi_total_retrans;
