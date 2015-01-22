@@ -691,16 +691,21 @@ class TestNetperf() :
                          self.args.password,
                          self.args.project,
                          self.args.url,
-                         region_name = self.args.region)
+                         region_name = self.args.region,
+                         cacert = environ.get('OS_CACERT', None))
 
         if (self.os == None) :
             self.fail("OpenStack API connection setup unsuccessful!")
 
+        # Nova wanted cacert, but Neutron wants ca_cert.  It is always
+        # nice to be reminded that OpenStack is not burdened by the
+        # ravages of consistency
         self.qc = neutron_client.Client(username=self.args.username,
                                         password=self.args.password,
                                         tenant_name=self.args.project,
                                         auth_url=self.args.url,
-                                        region_name=self.args.region);
+                                        region_name=self.args.region,
+                                        ca_cert = environ.get('OS_CACERT', None));
 
         if (self.qc == None):
             self.fail("OpenStack Neutron API connection setup unsuccessful!")
