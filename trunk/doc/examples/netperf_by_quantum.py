@@ -237,15 +237,15 @@ class TestNetperf() :
 
                 waiter = self.os.servers.get(vm.id)
 
-                logging.warning("elapsed %d server %s state %s id %s" % ((time() - waiting_started), waiter.name, waiter.status, waiter.id))
+                logging.warning("elapsed %d server %s state %s id %s hostId %s" % ((time() - waiting_started), waiter.name, waiter.status, waiter.id, waiter.hostId))
                 if (waiter.status == "ACTIVE") :
                     actives.append(waiter)
                     sleeptime = 1
                     this_vm_not_active = False
                     continue
                 if (re.search(r"ERROR",waiter.status)) :
-                    logging.warning("Instance id %s name %s encountered an error during instantiation of %s",
-                                    waiter.id, waiter.name, waiter.status)
+                    logging.warning("Instance id %s name %s encountered an error during instantiation of %s with fault %s",
+                                    waiter.id, waiter.name, waiter.status, waiter.fault)
                     raise RuntimeError
 
                 if (time() >= deadline):
