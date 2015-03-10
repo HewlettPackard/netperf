@@ -263,6 +263,54 @@ class TestNetperf() :
         self.vm_pool = []
         self.vm_pool = list(actives)
 
+    def find_singleton_server(self) :
+        """
+        Look for a server which is not on the same hostId as any other
+        instance we have launched and return its position in the
+        original list of servers.  shirley there are better ways to go
+        about doing this.
+        """
+
+        # sort the list of servers by hostId
+        my_pool = sorted(self.vm_pool,key=lambda vm: vm.hostId)
+
+        still_looking = True
+
+        # check the first against the second
+        if (my_pool[0].hostId != my_pool[1].hostId):
+            # the first one is by itself
+            still_looking = False
+            lonely_uuid = my_pool[0].id
+
+        # check the against the middle
+        i = 1
+        while (still_looking and i < (len(my_pool)-1)) :
+            if ((my_pool[i].hostId == my_pool[i-1].hostId) or
+                (my_pool[i].hostId == my_pool[i+1].hostId)) :
+                still_looking = True
+                i += 1
+                continue
+            else :
+                still_looking = False
+                lonely_uuid = my_pool[i].id
+                break
+
+        # check the last one if we need to
+        if (still_looking and (my_pool[i].hostId !=
+                               my_pool[i+1].hostId)):
+            lonely_uuid = my_pool[i+1].id
+            still_looking = False
+
+        if (still_looking) :
+            # we didn't find one by itself
+            return -1
+
+        for (i, vm) in enumerate(self.vm_pool,start=0):
+            if vm.id == lonely_uuid :
+                return i
+
+        
+            
     def print_ip_pool(self) :
         """
         Display the current contents of the IP pool
@@ -593,6 +641,9 @@ class TestNetperf() :
                             help="Test against instance private IPs rather than public",
                             action="store_true")
 
+        parser.add_argument("--singleton",
+                            help="Attempt to find a VM not on the same hostId as any other to use as the Instance Under Test",
+                            action="store_true")
         parser.add_argument("--external-network",
                             help="Name of the external network. Used for the plumbing of the router.",
                             default=self.env('EXTERNAL_NETWORK', default='Ext-Net'))
@@ -749,7 +800,7 @@ class TestNetperf() :
             self.clean_up_overall()
             self.fail("Unable to find a suitable image to test")
 
-    def create_remote_hosts(self) :
+    def create_remote_hosts(self,sut_index) :
         """
         Create the remote_hosts file that will be used by the
         runemomniaggdemo.sh script.  if the script is ever enhanced to
@@ -758,26 +809,29 @@ class TestNetperf() :
         """
         try :
             fl = open("remote_hosts", "w")
-            for i,ip in enumerate(self.ip_pool[1:]) :
-                if not self.args.use_private_ips :
-                    dstip = ip['floating_ip_address']
-                else:
-                    # we could have I suppose looked-up the mappings
-                    # when we did the associate/update of the floating
-                    # IPs, but since we only really need to know the
-                    # private IPs when we are going to use the private
-                    # IPs, and we only need to know them here, there
-                    # isn't much point doing it elsewhere.  of course,
-                    # since OpenStack Neutron is not going to fall
-                    # into the trap of foolish consistency, the "ip" a
-                    # show_floatingip will return is going to be ever
-                    # so slightly different from the "ip" a create
-                    # will have returned...
-                    ip2 = self.qc.show_floatingip(ip['id'])
-                    dstip = ip2['floatingip']['fixed_ip_address']
-                fl.write("REMOTE_HOSTS[%d]=%s\n"%(i,dstip))
+            i=0
+            for j,ip in enumerate(self.ip_pool,start=0) :
+                if j != sut_index :
+                    if not self.args.use_private_ips :
+                        dstip = ip['floating_ip_address']
+                    else:
+                        # we could have I suppose looked-up the mappings
+                        # when we did the associate/update of the floating
+                        # IPs, but since we only really need to know the
+                        # private IPs when we are going to use the private
+                        # IPs, and we only need to know them here, there
+                        # isn't much point doing it elsewhere.  of course,
+                        # since OpenStack Neutron is not going to fall
+                        # into the trap of foolish consistency, the "ip" a
+                        # show_floatingip will return is going to be ever
+                        # so slightly different from the "ip" a create
+                        # will have returned...
+                        ip2 = self.qc.show_floatingip(ip['id'])
+                        dstip = ip2['floatingip']['fixed_ip_address']
+                        fl.write("REMOTE_HOSTS[%d]=%s\n"%(i,dstip))
+                        i += 1
 
-            fl.write("NUM_REMOTE_HOSTS=%d\n" % (i + 1))
+            fl.write("NUM_REMOTE_HOSTS=%d\n" % (i))
 
         except Exception as e:
             logging.warning("Unable to create/write remote_hosts file. %s ",
@@ -858,12 +912,12 @@ class TestNetperf() :
                                 node.name, publicip)
                 raise RuntimeError
 
-    def run_netperf(self) :
+    def run_netperf(self,sut_index) :
         """
-        Actually run the runemomniaggdemo.sh script on the first node
+        Actually run the runemomniaggdemo.sh script on the sut node
         """
         try :
-            publicip = self.ip_pool[0]['floating_ip_address']
+            publicip = self.ip_pool[sut_index]['floating_ip_address']
             cmd = "export PATH=$PATH:. ; ./runemomniaggdemo.sh | tee overall.log "
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -875,7 +929,7 @@ class TestNetperf() :
             else:
                 ssh.connect(hostname=publicip,
                             username=self.args.instanceuser,
-                            password=self.adminPasses[self.vm_pool[0].id],
+                            password=self.adminPasses[self.vm_pool[sut_index].id],
                             timeout=30.0)
 
             stdin, stdout, stderr = ssh.exec_command(cmd)
@@ -888,12 +942,12 @@ class TestNetperf() :
             ssh.close()
         except Exception as e:
             logging.warning("Could not run the netperf script on %s at IP %s %s",
-                            self.vm_pool[0].name, publicip, str(e))
+                            self.vm_pool[sut_index].name, publicip, str(e))
             raise RuntimeError
 
-    def copy_back_results(self, destination) :
+    def copy_back_results(self, destination, sut_index) :
         try :
-            publicip = self.ip_pool[0]['floating_ip_address']
+            publicip = self.ip_pool[sut_index]['floating_ip_address']
             logging.warning("Copying-back results")
             transport = paramiko.Transport((publicip,22))
             if self.keypair:
@@ -902,7 +956,7 @@ class TestNetperf() :
                                   pkey = mykey)
             else:
                 transport.connect(username=self.args.instanceuser,
-                                  password=self.adminPasses[self.vm_pool[0].id])
+                                  password=self.adminPasses[self.vm_pool[sut_index].id])
                 
             sftp = paramiko.SFTPClient.from_transport(transport)
             for file in sftp.listdir():
@@ -915,7 +969,7 @@ class TestNetperf() :
             sftp.close()
         except Exception as e:
            logging.exception("Could not retrieve results from %s at IP %s",
-                             self.vm_pool[0].name, publicip)
+                             self.vm_pool[sut_index].name, publicip)
            raise RuntimeError
 
     def ssh_check(self, time_limit=300) :
@@ -1099,18 +1153,27 @@ class TestNetperf() :
 
         logging.warning("Awaiting server pool active.")
         self.await_server_pool_ready(600)
+        singleton_iut = 0
+        if self.args.singleton:
+            singleton_iut = self.find_singleton_server()
+            if singleton_iut < 0:
+                logging.warning("Unable to find an instance not sharing a hostId.")
+                singleton_iut = 0
+            else:
+                logging.warning("The singleton VM is %s on %s index %d" % (self.vm_pool[singleton_iut].name, self.vm_pool[singleton_iut].hostId, singleton_iut))
+
         logging.warning("Verifying up and running via ssh.")
         self.ssh_check()
         logging.warning("Completed ssh check.")
-        self.create_remote_hosts()
+        self.create_remote_hosts(singleton_iut)
         logging.warning("Creation of remote_hosts file complete with use of private IPs %s." % self.args.use_private_ips)
         self.scp_binaries()
         logging.warning("Transfer of binaries complete.")
         self.start_netservers()
         logging.warning("Netservers started. about to start the script.")
-        self.run_netperf()
+        self.run_netperf(singleton_iut)
         logging.warning("Netperf run complete. Copying back results.")
-        self.copy_back_results(archive_location)
+        self.copy_back_results(archive_location,singleton_iut)
         logging.warning("Cleaning up vms.")
         self.deallocate_server_pool()
         # there is some ongoing confusion as to whether deleting a

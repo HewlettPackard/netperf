@@ -35,10 +35,10 @@ def launch_netperf(output_file,
         arguments.append('%d' % length)
     if frequency:
         arguments.append('-D')
-        arguments.append('%f' % frequency)
+        arguments.append('-%f' % frequency)
     else:
         arguments.append('-D')
-        arguments.append('0.25')
+        arguments.append('-0.25')
     if units:
         arguments.append('-f')
         arguments.append('%s' % units)
@@ -67,8 +67,8 @@ def launch_rr(destination=None,
                                destination=destination,
                                length=length,
                                frequency=frequency,
-                               test="tcp_rr",
-                               test_specific="-r 1"),False))
+                               test="%s_rr" % args.rr_protocol,
+                               test_specific=args.rr_arguments),False))
 
     
     return rrs
@@ -86,8 +86,8 @@ def launch_streams(count,
                                        length=length,
                                        frequency=frequency,
                                        destination=destination,
-                                       test="tcp_stream",
-                                       test_specific="-s 1M -S 1M -m 64K,64K -M 64K,64K"),False))
+                                       test="%s_stream" % args.stream_protocol,
+                                       test_specific=args.stream_arguments),False))
     return streams
 
 def launch_maerts(count,
@@ -411,9 +411,25 @@ def min_max_avg_from_rrd(rrdfile, start_time, end_time) :
 parser = argparse.ArgumentParser(description="Attempt to measure how much bufferbloat exists between this system and another.")
 
 parser.add_argument("destination", help="Destination of the test.")
-parser.add_argument("-c","--concurrency", type=int, help="Number of concurrent bulk transfer streams.")
+parser.add_argument("-a","--annotation",default=None,
+                    help="Annotation to add to chart titles")
+parser.add_argument("-c","--concurrency", type=int,
+                    help="Number of concurrent bulk transfer streams.")
 parser.add_argument("-l","--length", type=int, help="Desired overall runtime.")
-parser.add_argument("-d","--direction", help="Which in which direction(s) should the bulk transfers run.")
+parser.add_argument("-d","--direction",
+                    help="Which in which direction(s) should the bulk transfers run.")
+parser.add_argument("--stream-protocol",default="TCP",
+                    help="Which protocol to use, TCP or UDP (default TCP)")
+parser.add_argument("--rr-protocol",default="TCP",
+                    help="Which protocol to use, TCP or UDP (default TCP)")
+parser.add_argument("-r","--rr-arguments",default="-r 1",
+                    help="Test-specific arguments to use for RR tests")
+parser.add_argument("-s","--stream-arguments",
+                    default="-s 1M -S 1M -m 64K,64K -M 64K,64K",
+                    help="Test-specific arguments to use for STREAM tests")
+parser.add_argument("-m","--maerts-arguments",
+                    default="-s 1M -S 1M -m 64K.64K -M 64K,64K",
+                    help="Test-specific arguments to use for MAERTS tests")
 
 args = parser.parse_args()
 
@@ -469,8 +485,9 @@ if netperf_streams:
 if netperf_maerts:
     terminate_netperfs(netperf_maerts)
     times['maerts_stop']=int(time.time())
-    print "Sleeping for %d" % chunk_time
-    time.sleep(chunk_time)
+
+print "Sleeping for %d" % chunk_time
+time.sleep(chunk_time)
 
 # terminate the rr test here
 terminate_netperfs(netperf_rr)
@@ -493,7 +510,10 @@ if do_streams:
         max_tput = streams_max
         # why 2 *? because we want the latency to have twice the vertical
         # space as throughput
-        scale = rr_max / (2 * max_tput)
+
+        print "rrs", rr_min, rr_max
+        scale = (2 * max_tput) / rr_max
+        print "scale",scale
         right_axis = [ '--right-axis', '%.20f:0' % scale,
                        '--right-axis-label', 'Bits per Second' ]
 
@@ -507,6 +527,7 @@ if do_maerts:
         # why 2 *? because we want the latency to have twice the vertical
         # space as throughput
         scale = (2 * max_tput) / rr_max
+        print "scale",scale
         right_axis = [ '--right-axis', '%.20f:0' % scale,
                        '--right-axis-label', 'Bits per Second' ]
 
@@ -527,11 +548,20 @@ if do_maerts:
 
 length = int(times['rr_stop'] - times['rr_start'])
 
+print "rr times",length, int(times['rr_start']),int(times['rr_stop'])
+
+if args.annotation :
+    title = 'Effect of bulk transfer on latency to %s : %s' % (args.destination, args.annotation)
+else:
+    print "don't have annotation"
+    title = 'Effect of bulk transfer on latency to %s' % args.destination
+
+
 rrdtool.graph('bloat2.svg', '--imgformat', 'SVG',
               '--start', str(int(times['rr_start'])),
               '--end', str(int(times['rr_stop'])),
               '--lower-limit', '0',
-              '-t', 'Effect of bulk transfer on latency to %s' % args.destination,
+              '-t', title,
               '-v', 'Seconds',
               '-w', '%d' % max(800,length),
               '-h', '400',
