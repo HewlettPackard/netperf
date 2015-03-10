@@ -2222,6 +2222,9 @@ format_units()
   case 'x':
     strcpy(unitbuf, "Trans");
     break;
+  case 'u':
+    strcpy(unitbuf,"Usec");
+    break;
 
   default:
     strcpy(unitbuf, "KBytes");
@@ -3687,6 +3690,12 @@ calc_thruput_interval(double units_received,double elapsed)
   case 'B':
     divisor = 1.0;
     break;
+  case 'u':
+    /* latency in microseconds a bit squirrely but we don't want to
+       really muck with things for the default return statement.
+       invert transactions per second and multiply to get microseconds
+       per transaction */
+    return (1 / (units_received / elapsed)) * 1000000.0;
 
   default:
     divisor = 1024.0;
@@ -3739,6 +3748,12 @@ calc_thruput_interval_omni(double units_received,double elapsed)
   case 'B':
     divisor = 1.0;
     break;
+  case 'u':
+    /* latency in microseconds a bit squirrely but we don't want to
+       really muck with things for the default return statement.
+       invert transactions per second and multiply to get microseconds
+       per transaction */
+    return (1 / (units_received / elapsed)) * 1000000.0;
 
   default:
     fprintf(where,

@@ -36,6 +36,7 @@ import sys
 import glob
 import math
 import rrdtool
+import argparse
 
 def find_vrules(source):
     vrules = []
@@ -267,6 +268,10 @@ def overall_min_max_avg(prefix,start_time,end_time,intervals):
     min_graph_interval = 60
     length = int(end_time) - int(start_time)
 
+    # (iavg, imin, imax, istart, iend)
+    # first will be overwritten with peak when known
+    results_list=[(0.0, 0.0, 0.0, 0, 0)]
+
     rrdtool.create(prefix + "_intervals.rrd",
                    '--step', '1',
                    '--start', str(int(start_time) - 1),
@@ -305,6 +310,8 @@ def overall_min_max_avg(prefix,start_time,end_time,intervals):
         iavg = float(result[0].strip('"'))
         imin = float(result[1].strip('"'))
         imax = float(result[2].strip('"'))
+        results_list.append((iavg, imin, imax, start, end))
+
         for time in xrange(start,end+1):
             rrdtool.update(prefix + "_intervals.rrd",
                            '%d:%f:%f:%f' % (time, iavg, imin, imax))
@@ -316,7 +323,10 @@ def overall_min_max_avg(prefix,start_time,end_time,intervals):
             max_minimum = imin
             max_maximum = imax
 
-    return peak_interval_id, peak_interval_start, peak_interval_end, max_average, max_minimum, max_maximum, min_graph_interval
+
+    results_list[0]= (max_average, max_minimum, max_maximum, peak_interval_start, peak_interval_end)
+
+    return peak_interval_id, min_graph_interval, results_list
 
 def units_et_al_by_prefix(prefix):
     units = "bits/s"
@@ -333,7 +343,7 @@ def units_et_al_by_prefix(prefix):
 
     return units, multiplier, direction
 
-def graph_overall(prefix,start_time,end_time,vrules,peak_interval_id=None,peak_average=0.0,major_interval=60):
+def graph_overall(prefix,start_time,end_time,vrules,peak_interval_id=None,peak_average=0.0,major_interval=60,annotation=None,override=None):
 
     length = int(end_time) - int(start_time)
 
@@ -350,6 +360,10 @@ def graph_overall(prefix,start_time,end_time,vrules,peak_interval_id=None,peak_a
                            'CDEF:intvl=bar,%s,*' % multiplier,
                            'LINE2:intvl#0F0F0F40:Interval average. Peak of %.3f during interval %d' % (peak_average, peak_interval_id) ]
 
+    title = "Overall %s" % (override if override else prefix)
+    if annotation:
+        title = "Overall %s %s" % ((override if override else prefix), annotation)
+
     rrdtool.graph(prefix + "_overall.svg", '--imgformat', 'SVG',
                   '--start', str(int(start_time)),
                   '--end', str(int(end_time)),
@@ -358,21 +372,27 @@ def graph_overall(prefix,start_time,end_time,vrules,peak_interval_id=None,peak_a
                   '--x-grid', xgrid_setting,
                   vrules,
                   '--font', 'DEFAULT:0:Helvetica',
-                  '-t', 'Overall %s' % prefix,
+                  '-t', title,
                   '-v', '%s %s' % (direction,units),
                   'DEF:foo=%s_overall.rrd:mbps:AVERAGE' % prefix,
                   'CDEF:bits=foo,%s,*' % multiplier,
                   'LINE2:bits#00FF0080:%s' % units,
                   interval_specs)
 
-def graph_individual(prefix,start_time,end_time,vrules,major_interval=60):
+def graph_individual(prefix,start_time,end_time,vrules,major_interval=60,annotation=None,override=None):
 
     units, multiplier, direction = units_et_al_by_prefix(prefix)
 
     length = int(end_time) - int(start_time)
 
+
     for individual in glob.glob(prefix+"*.rrd"):
         basename = individual.strip(".rrd")
+
+        title = "%s %s" % (basename,(override if override else prefix))
+        if annotation:
+            title = "%s %s %s" % (basename, (override if override else prefix), annotation)
+
         try:
             rrdtool.graph(basename + ".svg",
                           '--imgformat','SVG',
@@ -382,7 +402,7 @@ def graph_individual(prefix,start_time,end_time,vrules,major_interval=60):
                           '-w', '%d' % max(800,length), '-h', '400',
                           '--right-axis', '1:0',
                           vrules,
-                          '-t', '%s %s' % (basename,prefix),
+                          '-t', title,
                           '-v', '%s %s' % (direction, units),
                           'DEF:foo=%s.rrd:mbps:AVERAGE' % basename,
                           'CDEF:bits=foo,%s,*' % multiplier,
@@ -392,9 +412,28 @@ def graph_individual(prefix,start_time,end_time,vrules,major_interval=60):
             # "intervals" rrd file but until then just pass
             pass
 
+def setup_parser() :
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-i", "--individual", action='store_true',
+                        default=False,
+                        help="Generate graps of individual tests")
+    parser.add_argument("-I", "--intervals", action='store_true',
+                        default=False,
+                        help="Emit the results for all intervals, not just peak")    
+    parser.add_argument("-a", "--annotation",default=None,
+                        help="Annotation to add to chart titles")
+    parser.add_argument("-t", "--title", default=None,
+                        help="String to use for chart title. Default based on test")
+    parser.add_argument('filename')
+
+    return parser
+
 if __name__ == '__main__':
 
-    filename = sys.argv[1]
+    parser = setup_parser()
+    args = parser.parse_args()
+
+    filename = args.filename
     prefix = filename.replace(".log","")
     source = open(filename,"r")
     vrules,start_time,end_time,intervals = find_vrules(source)
@@ -416,15 +455,28 @@ if __name__ == '__main__':
 
 #    print "Min timestamp for %s is %s start time is %s end_time is %s" % (prefix,min_timestamp,start_time,end_time)
     generate_overall(prefix,min_timestamp-2,end_time,ksink)
-    peak_interval_id, peak_start, peak_end, peak_average, peak_minimum, peak_maximum, min_graph_interval = overall_min_max_avg(prefix,min_timestamp,end_time,intervals)
+    peak_interval_id, min_graph_interval, results_list = overall_min_max_avg(prefix,min_timestamp,end_time,intervals)
+    peak_average = results_list[0][0]
+    peak_minimum = results_list[0][1]
+    peak_maximum = results_list[0][2]
+    peak_start = results_list[0][3]
+    peak_end = results_list[0][4]
 
-    graph_overall(prefix,min_timestamp,end_time,vrules,peak_interval_id,peak_average,major_interval=min_graph_interval)
-    try:
-        no_individual = sys.argv[2]
-    except:
-        graph_individual(prefix,min_timestamp,end_time,vrules,major_interval=min_graph_interval)
+    graph_overall(prefix, min_timestamp, end_time, vrules, peak_interval_id,
+                  peak_average, major_interval=min_graph_interval,
+                  annotation=args.annotation, override=args.title)
+    if args.individual:
+        graph_individual(prefix, min_timestamp, end_time, vrules,
+                         major_interval=min_graph_interval,
+                         annotation=args.annotation,override=args.title)
     
     units, multiplier, direction = units_et_al_by_prefix(prefix)
-    print "Average of peak interval is %.3f %s from %d to %d" % (peak_average * float(multiplier), units, peak_start, peak_end)
+    print "Average of peak interval is %.3f %s from %d to %d" % (results_list[0][0] * float(multiplier), units, peak_start, peak_end)
     print "Minimum of peak interval is %.3f %s from %d to %d" % (peak_minimum * float(multiplier), units, peak_start, peak_end)
     print "Maximum of peak interval is %.3f %s from %d to %d" % (peak_maximum * float(multiplier), units, peak_start, peak_end)
+
+    if args.intervals:
+        for id, interval in enumerate(results_list[1:]):
+            print "Average of interval %d is %.3f %s from %d to %d" % (id, interval[0] * float(multiplier), units, interval[3], interval[4])
+            print "Minimum of interval %d is %.3f %s from %d to %d" % (id, interval[1] * float(multiplier), units, interval[3], interval[4])
+            print "Maximum of interval %d is %.3f %s from %d to %d" % (id, interval[2] * float(multiplier), units, interval[3], interval[4])
