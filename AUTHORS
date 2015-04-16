@@ -293,8 +293,9 @@ TCP_MAERTS test. Bug reported by Wenli Quan
 
 Eric Dumazet - improve the performance of launching many netperfs at
 once by obtaining the 16 bytes of randomness for the UUID via slightly
-different means.  Dump TCP_INFO results to stderr when either debug > 1
-or DUMP_TCP_INFO envvar is set
+different means.  Dump TCP_INFO results to stderr when either debug >
+1 or DUMP_TCP_INFO envvar is set.  Bump the listen backlog for the
+control endpoint to 1024.
 
 David Decotigny - a series of cleanups and enhancements in the area of
 CPU utilization reporting and making certain that sanity checks are
