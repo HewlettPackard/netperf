@@ -521,7 +521,7 @@ create_listens(char hostname[], char port[], int af) {
     if ((bind(temp_socket,
 	      local_res_temp->ai_addr,
 	      local_res_temp->ai_addrlen) != SOCKET_ERROR) &&
-	(listen(temp_socket,128) != SOCKET_ERROR))  {
+	(listen(temp_socket,1024) != SOCKET_ERROR))  {
 
       /* OK, now add to the list */
       temp_elt = (struct listen_elt *)malloc(sizeof(struct listen_elt));

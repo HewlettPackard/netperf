@@ -828,8 +828,9 @@ class TestNetperf() :
                         # will have returned...
                         ip2 = self.qc.show_floatingip(ip['id'])
                         dstip = ip2['floatingip']['fixed_ip_address']
-                        fl.write("REMOTE_HOSTS[%d]=%s\n"%(i,dstip))
-                        i += 1
+
+                    fl.write("REMOTE_HOSTS[%d]=%s\n"%(i,dstip))
+                    i += 1
 
             fl.write("NUM_REMOTE_HOSTS=%d\n" % (i))
 
@@ -870,7 +871,7 @@ class TestNetperf() :
                 sftp.close()
                 transport.close()
             except Exception as e :
-                logging.warning("The copying of files to %s failed.",
+                logging.warning("The copying of files to %s failed. (%s)",
                                 node.name, e)
                 raise RuntimeError
 
@@ -1111,7 +1112,7 @@ class TestNetperf() :
             for name in files:
                 if (re.match("netperf_.*\.log",name)) :
                     fullname = os.path.join(root,name)
-                    cmd = 'PATH=$PATH:. post_proc.py "%s" no' % fullname
+                    cmd = 'PATH=$PATH:. post_proc.py "%s"' % fullname
                     logging.debug("post processing via command '%s'", cmd)
                     try :
                         postresults = self.do_in_shell(cmd,True)
