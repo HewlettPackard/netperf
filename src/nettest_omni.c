@@ -431,7 +431,6 @@ char        remote_cong_control[16] = "";
 char        local_cong_control_req[16] = "";
 char        remote_cong_control_req[16] = "";
 
-int         check_interval = 0;
 int         receive_timeout = -1;
 
 /* new statistics based on code diffs from Google, with raj's own
@@ -3510,34 +3509,6 @@ dump_tcp_info(struct tcp_info *tcp_info)
 #endif
 
 static int
-get_unsent_data(SOCKET socket, int protocol) {
-
-#if defined(TIOCOUTQ)
-  int value = -1, ret;
-
-  if (protocol != IPPROTO_TCP) 
-    return -1;
-
-  ret = (ioctl(socket, TIOCOUTQ, &value)) ;
-
-  if (ret) {
-    if (debug) {
-      fprintf(where,
-	      "ioctl(TIOCOUTQ) errno %d (%s)\n",
-	      errno,
-	      strerror(errno));
-      fflush(where);
-    }
-    return -1;
-  }
-   
-  return value;
-#else
-  return -1;
-#endif
-}
-
-static int
 get_transport_retrans(SOCKET socket, int protocol) {
 
 #ifdef HAVE_LINUX_TCP_H
@@ -3766,6 +3737,54 @@ enable_enobufs(int s)
 }
 #endif
 
+void
+set_omni_request_flags(struct omni_request_struct *omni_request) {
+
+      /* we have no else clauses here because we previously set flags
+	 to zero above raj 20090803 */
+      if (rem_nodelay)
+	omni_request->flags |= OMNI_NO_DELAY;
+
+      if (remote_use_sendfile)
+	omni_request->flags |= OMNI_USE_SENDFILE;
+
+      if (connection_test)
+	omni_request->flags |= OMNI_CONNECT_TEST;
+
+      if (remote_checksum_off)
+	omni_request->flags |= OMNI_CHECKSUM_OFF;
+
+      if (remote_cpu_usage)
+	omni_request->flags |= OMNI_MEASURE_CPU;
+
+      if (routing_allowed)
+	omni_request->flags |= OMNI_ROUTING_ALLOWED;
+
+      if (desired_output_groups & OMNI_WANT_REM_IFNAME)
+	omni_request->flags |= OMNI_WANT_IFNAME;
+
+      if (desired_output_groups & OMNI_WANT_REM_IFSLOT)
+	omni_request->flags |= OMNI_WANT_IFSLOT;
+
+      if (desired_output_groups & OMNI_WANT_REM_IFIDS)
+	omni_request->flags |= OMNI_WANT_IFIDS;
+
+      if (desired_output_groups & OMNI_WANT_REM_DRVINFO)
+	omni_request->flags |= OMNI_WANT_DRVINFO;
+
+      if (desired_output_groups & OMNI_WANT_REM_CONG)
+	omni_request->flags |= OMNI_WANT_REM_CONG;
+
+      if (use_fastopen)
+	omni_request->flags |= OMNI_FASTOPEN;
+
+      if (manipulate_local_firewalls)
+	omni_request->flags |= OMNI_MANAGE_FIREWALL;
+
+      if (want_use_pktinfo)
+	omni_request->flags |= OMNI_USE_PKTINFO;
+
+}
 
 /* this code is intended to be "the two routines to run them all" for
    BSDish sockets.  it comes about as part of a desire to shrink the
@@ -3804,42 +3823,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
   struct	omni_results_struct	*omni_result;
 
 #ifdef WANT_FIRST_BURST
-#define REQUEST_CWND_INITIAL 2
-  /* "in the beginning..." the WANT_FIRST_BURST stuff was like both
-     Unix and the state of New Jersey - both were simple an unspoiled.
-     then it was realized that some stacks are quite picky about
-     initial congestion windows and a non-trivial initial burst of
-     requests would not be individual segments even with TCP_NODELAY
-     set. so, we have to start tracking a poor-man's congestion window
-     up here in user space because we want to try to make something
-     happen that frankly, we cannot guarantee with the specification
-     of TCP.  ain't that grand?-) raj 2006-01-30 */
   int requests_outstanding = 0;
-  int requests_this_cwnd = 0;
-  int request_cwnd_initial = REQUEST_CWND_INITIAL;
-  int request_cwnd = REQUEST_CWND_INITIAL;  /* we ass-u-me that having
-					       three requests
-					       outstanding at the
-					       beginning of the test
-					       is ok with TCP stacks
-					       of interest. the first
-					       two will come from our
-					       first_burst loop, and
-					       the third from our
-					       regularly scheduled
-					       send */
-
-  /* if the user has specified a negative value for first_burst_size
-     via the test-specific -b option, we forgo the nicities of ramping
-     up the request_cwnd and go straight to burst size. raj 20110715 */
-  if (first_burst_size < 0) {
-    first_burst_size = first_burst_size * -1;
-    request_cwnd_initial = first_burst_size;
-  }
-  else {
-    request_cwnd_initial = REQUEST_CWND_INITIAL;
-  }
-
 #endif
 
   omni_request =
@@ -3934,8 +3918,6 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
        outstanding and the "congestion window for each new
        iteration. raj 2006-01-31. */
     requests_outstanding = 0;
-    requests_this_cwnd = 0;
-    request_cwnd = request_cwnd_initial;
 #endif
 
     /* if the command-line included requests to randomize the IP
@@ -3956,7 +3938,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
     /* we really only need this for a UDP_STREAM test. we particularly
        do not want it for a CC or CRR test. raj 2012-08-06 */
     if ((protocol == IPPROTO_UDP) &&
-	(direction & NETPERF_XMIT)) {
+	NETPERF_XMIT_ONLY(direction)) {
       enable_enobufs(data_socket);
     }
 #endif
@@ -4074,52 +4056,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
       omni_request->socket_prio            = remote_socket_prio;
       omni_request->socket_tos             = remote_socket_tos;
 
-      /* we have no else clauses here because we previously set flags
-	 to zero above raj 20090803 */
-      if (rem_nodelay)
-	omni_request->flags |= OMNI_NO_DELAY;
-
-      if (remote_use_sendfile)
-	omni_request->flags |= OMNI_USE_SENDFILE;
-
-      if (connection_test)
-	omni_request->flags |= OMNI_CONNECT_TEST;
-
-      if (remote_checksum_off)
-	omni_request->flags |= OMNI_CHECKSUM_OFF;
-
-      if (remote_cpu_usage)
-	omni_request->flags |= OMNI_MEASURE_CPU;
-
-      if (routing_allowed)
-	omni_request->flags |= OMNI_ROUTING_ALLOWED;
-
-      if (desired_output_groups & OMNI_WANT_REM_IFNAME)
-	omni_request->flags |= OMNI_WANT_IFNAME;
-
-      if (desired_output_groups & OMNI_WANT_REM_IFSLOT)
-	omni_request->flags |= OMNI_WANT_IFSLOT;
-
-      if (desired_output_groups & OMNI_WANT_REM_IFIDS)
-	omni_request->flags |= OMNI_WANT_IFIDS;
-
-      if (desired_output_groups & OMNI_WANT_REM_DRVINFO)
-	omni_request->flags |= OMNI_WANT_DRVINFO;
-
-      if (desired_output_groups & OMNI_WANT_REM_CONG)
-	omni_request->flags |= OMNI_WANT_REM_CONG;
-
-      if (use_fastopen)
-	omni_request->flags |= OMNI_FASTOPEN;
-
-      if (check_interval)
-	omni_request->flags |= OMNI_CHECK_INTERVAL;
-
-      if (manipulate_local_firewalls)
-	omni_request->flags |= OMNI_MANAGE_FIREWALL;
-
-      if (want_use_pktinfo)
-	omni_request->flags |= OMNI_USE_PKTINFO;
+      set_omni_request_flags(omni_request);
 
       /* perhaps this should be made conditional on
 	 remote_cong_control_req[0] not being NULL? */
@@ -4419,29 +4356,32 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
       }
 
 #ifdef WANT_FIRST_BURST
-      /* we can inject no more than request_cwnd, which will grow with
-	 time, and no more than first_burst_size.  we don't use <= to
-	 account for the "regularly scheduled" send call.  of course
-	 that makes it more a "max_outstanding_ than a
-	 "first_burst_size" but for now we won't fix the names. also,
-	 I suspect the extra check against < first_burst_size is
-	 redundant since later I expect to make sure that request_cwnd
-	 can never get larger than first_burst_size, but just at the
-	 moment I'm feeling like a belt and suspenders kind of
-	 programmer. raj 2006-01-30 */
-      /* we only want to inject the burst if this is a full-on
-	 request/response test. otherwise it doesn't make any sense
-	 anyway. raj 2008-01-25 */
+      /* Long ago and far away, on just about any *nix, one could
+	 avoid having multiple requests bundled into the same TCP
+	 segment simply by setting TCP_NODELAY and perhaps not trying
+	 to have more outstanding at one time than our guesstimate as
+	 to the TCP congestion window.  In that way one could use a
+	 burst mode TCP_RR test as part of trying to measure maximum
+	 packets per second (PPS) on a system or through a NIC (well,
+	 assuming there weren't many retransmissions anyway) These
+	 days with Linux the dominant *nix and with it having made it
+	 virtually impossible to do any longer, it is no longer worth
+	 it to try the application-layer backflips.  So, I am removing
+	 them.  At some point we'll simply have to enhance this code
+	 to deal with multiple connections at one time, each with just
+	 the one transaction in flight for our PPS testing.  Multiple
+	 netperfs, each with one connection and one transaction in
+	 flight rapidly becomes a context-switching benchmark rather
+	 than "networking".  raj 2015-04-20 */
+
       while ((first_burst_size > 0) &&
-	     (requests_outstanding < request_cwnd) &&
 	     (requests_outstanding < first_burst_size) &&
 	     (NETPERF_IS_RR(direction)) &&
 	     (!connection_test)) {
 	if (debug > 1) {
 	  fprintf(where,
-		  "injecting, req_outstanding %d req_cwnd %d burst %d\n",
+		  "injecting, req_outstanding %d burst %d\n",
 		  requests_outstanding,
-		  request_cwnd,
 		  first_burst_size);
 	}
 
@@ -4606,7 +4546,6 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 #ifdef WANT_FIRST_BURST
 	  if (first_burst_size) {
 	    requests_outstanding = 0;
-	    request_cwnd = request_cwnd_initial;
 	  }
 #endif
 	  if (keep_histogram) {
@@ -4634,31 +4573,6 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	   outstanding and we can put one more out there than
 	   before. */
 	requests_outstanding -= 1;
-	if ((request_cwnd < first_burst_size) &&
-	    (NETPERF_IS_RR(direction)) &&
-	    (++requests_this_cwnd == request_cwnd)) {
-	  request_cwnd += 1;
-	  requests_this_cwnd = 0;
-	  if (debug > 1) {
-	    fprintf(where,
-		    "incr req_cwnd to %d first_burst %d reqs_outstanding %d trans %"PRIu64"\n",
-		    request_cwnd,
-		    first_burst_size,
-		    requests_outstanding,
-		    trans_completed + 1);
-	  }
-	}
-	while (check_interval &&
-	       (requests_outstanding > 1) &&
-	       ((trans_completed % check_interval) == 0) &&
-	       (get_unsent_data(data_socket,protocol) > 0)) {
-#if HAVE_SCHED_H
-	  /* presumably we could have given-up the CPU during the
-	     ioctl() call in get_unsent_data() but might as well do
-	     this too. raj 2012-07-31 */
-	  sched_yield();
-#endif
-	}
 #endif
 
       }
@@ -5650,10 +5564,6 @@ recv_omni()
   addrlen = sizeof(peeraddr_in);
   memset(&peeraddr_in,0,sizeof(peeraddr_in));
 
-  if (omni_request->flags & OMNI_CHECK_INTERVAL) {
-    check_interval = 1000;
-  }
-
   /* Now it's time to start receiving data on the connection. We will */
   /* first grab the apropriate counters and then start grabbing. */
 
@@ -5826,27 +5736,11 @@ recv_omni()
     if ((omni_request->direction & NETPERF_XMIT) &&
 	((!times_up) || (units_remaining > 0))) {
       
-      /* but first, should we make certain there is no queued, unsent
-	 data first? */
-      if (check_interval &&
-	  (local_send_calls > 1) &&
-	  ((local_send_calls % check_interval) == 0)) {
-	if (get_unsent_data(data_socket,omni_request->protocol) > 0) {
-	  check_interval = check_interval / 2;
-	  if (check_interval == 0)
-	    check_interval = 1;
-	  while (get_unsent_data(data_socket,omni_request->protocol) > 0) {
-	    /* presumably we could have given-up the CPU during the
-	       ioctl() call in get_unsent_data() but might as well do
-	       this too. raj 2012-07-31 */
-#if HAVE_SCHED_H
-	    sched_yield();
-#endif
-	  }
-	}
-	else
-	  check_interval += 1;
-      }
+      /* there used to be some code here looking sched_yield() until
+	 there was no more queued, unsent data on the socket but
+	 frankly, I've no idea what that was all about so I have
+	 removed it. It may have been part of a kludge to try to avoid
+	 coalescing requests and responses */
 
       if (omni_request->protocol == IPPROTO_UDP && need_to_connect &&
           !connected) {
@@ -7510,7 +7404,8 @@ scan_omni_args(int argc, char *argv[])
       }
       break;
     case 'i':
-      check_interval = atoi(optarg);
+      fprintf(stderr,"The support for check_interval has been removed because the contributing editor no longer knew what it was for\n");
+      fflush(stderr);
       break;
     case 'I':
       use_write = 1;
