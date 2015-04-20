@@ -403,6 +403,7 @@ extern void PrintWin32Error(FILE *stream, LPSTR text);
 
 #ifndef WIN32
 #define SOCKET_EINTR(return_value) (errno == EINTR)
+#define SOCKET_ECONNREFUSED(return_value) (errno == ECONNREFUSED)
 #define SOCKET_EADDRINUSE(return_value) (errno == EADDRINUSE)
 #define SOCKET_EADDRNOTAVAIL(return_value) (errno == EADDRNOTAVAIL)
 #define SOCKET_EAGAIN(return_value) (errno == EAGAIN)
