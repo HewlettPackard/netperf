@@ -326,11 +326,7 @@ int remote_recv_size = -1;
 int remote_send_size_req = -1;
 int remote_recv_size_req = -1;
 int remote_use_sendfile;
-#if 0
-int remote_send_dirty_count;
-int remote_recv_dirty_count;
-int remote_recv_clean_count;
-#endif
+
 extern int loc_dirty_count;
 extern int loc_clean_count;
 extern int rem_dirty_count;
@@ -2459,80 +2455,6 @@ print_omni_init() {
 
 }
 
-#ifdef notdef
-/* why? because one cannot simply pass a pointer to snprintf :) for
-   our nefarious porpoises, we only expect to handle single-value
-   format statements, not a full-blown format */
-int
-my_long_long_snprintf(char *buffer, size_t size, const char *format, void *value)
-{
-  const char *fmt = format;
-  while (*fmt)
-    switch (*fmt++) {
-    case 'd':
-    case 'i':
-      return snprintf(buffer, size, format, *(long long *)value);
-    case 'u':
-    case 'o':
-    case 'x':
-    case 'X':
-      return snprintf(buffer, size, format, *(unsigned long long *)value);
-    }
-  return -1;
-}
-
-int
-my_long_snprintf(char *buffer, size_t size, const char *format, void *value)
-{
-  const char *fmt = format;
-  while (*fmt)
-    switch (*fmt++) {
-    case 'd':
-    case 'i':
-      return snprintf(buffer, size, format, *(long *)value);
-    case 'u':
-    case 'o':
-    case 'x':
-    case 'X':
-      return snprintf(buffer, size, format, *(unsigned long *)value);
-    case 'l':
-      return my_long_long_snprintf(buffer, size, format, value);
-    }
-  return -1;
-}
-
-int
-old_my_snprintf(char *buffer, size_t size, const char *format, void *value)
-{
-  const char *fmt = format;
-
-  while (*fmt)
-    switch (*fmt++) {
-    case 'c':
-      return snprintf(buffer, size, format, *(int *)value);
-    case 'f':
-    case 'e':
-    case 'E':
-    case 'g':
-    case 'G':
-      return snprintf(buffer, size, format, *(double *)value);
-    case 's':
-      return snprintf(buffer, size, format, (char *)value);
-    case 'd':
-    case 'i':
-      return snprintf(buffer, size, format, *(int *)value);
-    case 'u':
-    case 'o':
-    case 'x':
-    case 'X':
-      return snprintf(buffer, size, format, *(unsigned int *)value);
-    case 'l':
-      return my_long_snprintf(buffer, size, format, value);
-    }
-  return -1;
-}
-#endif /* notdef */
-
 /* why? because one cannot simply pass a pointer to snprintf - well
    except when it is expecting one... */
 int
@@ -2582,6 +2504,7 @@ my_snprintf(char *buffer, size_t size, netperf_output_elt_t *output_elt)
     exit(-1);
   }
 }
+
 void
 print_omni_csv()
 {
