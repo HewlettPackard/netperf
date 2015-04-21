@@ -154,7 +154,6 @@ extern int  confidence_level;
 extern int  iteration_min;
 extern int  iteration_max;
 extern int  result_confidence_only;
-extern int  manipulate_local_firewalls;
 extern double interval;
 extern double interval_pct;
 

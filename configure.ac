@@ -783,50 +783,6 @@ esac
 
 AC_SUBST(NETRTLKUP_SOURCE)
 
-# what sort of local firewall will we grok
-
-AC_MSG_CHECKING([which firewall manipulation to use])
-
-AC_ARG_ENABLE(firewall,
-	[AS_HELP_STRING([--enable-firewall],[include code to manipulate the local firewall])])
-
-NETFIREWALL_SOURCE="$enable_firewall"
-case "$enable_firewall" in
-     	ufw)
-		use_firewall=true
-		;;
-
-	linux)
-		use_firewall=true
-		;;
-	'')
-# guess it automagically in a nice big case statement
-		case $target in
-		     *-*-linux*)
-			use_firewall=true
-			enable_firewall="linux - auto"
-			NETFIREWALL_SOURCE="linux"
-			;;
-		     *)
-			use_firewall=false
-			NETFIREWALL_SOURCE="none"
-			enable_firewall="none. Consider teaching configure about your platform."
-			;;
-		esac
-		;;
-	none)
-		use_rtlookup=false
-		;;
-	*)
-		AC_MSG_ERROR([--enable-firewall takes linux, ufw or none])
-		;;
-esac
-
-	AC_MSG_RESULT("$enable_firewall")
-
-AC_SUBST(NETFIREWALL_SOURCE)
-	
-
 # time to see about slot lookup mechanisms
 
 AC_MSG_CHECKING([which slot lookup type to use])

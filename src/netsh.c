@@ -87,7 +87,7 @@ extern	int	getopt(int , char **, char *) ;
    getopt to parse the command line, we will tell getopt that they do
    not take parms, and then look for them ourselves */
 
-#define GLOBAL_CMD_LINE_ARGS "A:a:b:B:CcdD:f:F:H:hi:I:jk:K:l:L:n:NO:o:P:p:RrSs:t:T:v:VW:w:y:Y:Z:46"
+#define GLOBAL_CMD_LINE_ARGS "A:a:b:B:CcdD:f:F:H:hi:I:jk:K:l:L:n:NO:o:P:p:rSs:t:T:v:VW:w:y:Y:Z:46"
 
 /************************************************************************/
 /*									*/
@@ -195,7 +195,6 @@ int  confidence_level = 0;
 int  iteration_min = 1;
 int  iteration_max = 1;
 int  result_confidence_only = 0;
-int  manipulate_local_firewalls = 0;
 double interval = 0.0;
 
  /* stuff to control the "width" of the buffer rings for sending and
@@ -822,10 +821,6 @@ scan_cmd_line(int argc, char *argv[])
       /* to print or not to print, that is */
       /* the header question */
       print_headers = convert(optarg);
-      break;
-    case 'R':
-      /* the user wishes us to try to manipulate the local firewalls */
-      manipulate_local_firewalls = 1;
       break;
     case 'r':
       /* the user wishes that we declare confidence when hit on the
