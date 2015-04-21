@@ -3828,7 +3828,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
     local_receive_calls = 0;
 
     /* since we are tracking the number of outstanding requests for
-       timestamping purposes, and since the previous iteration if
+       timestamping purposes, and since the previous iteration of
        using confidence intervals may not have completed all of them,
        we now need to forget about them or we will mistakenly fill our
        tracking array. raj 2011-03-14 */
@@ -4218,7 +4218,6 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 
       if (need_socket) {
 	if (connection_test)
-
 	  pick_next_port_number(local_res,remote_res);
 
 	data_socket = omni_create_data_socket(local_res);
@@ -5583,12 +5582,6 @@ recv_omni()
 				      omni_request->netperf_ip,
 				      omni_request->netperf_port);
       }
-    }
-
-    if (need_to_connect) {
-      /* initially this will only be used for UDP tests as a TCP or
-	 other connection-oriented test will always have us making an
-	 accept() call raj 2008-01-11 */
     }
 
 #ifdef WIN32
