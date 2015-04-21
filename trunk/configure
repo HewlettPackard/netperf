@@ -608,7 +608,6 @@ NETSYSLKUP_SOURCE
 NETDRVLKUP_SOURCE
 NETSECLKUP_SOURCE
 NETSLOTLKUP_SOURCE
-NETFIREWALL_SOURCE
 NETRTLKUP_SOURCE
 NETCPU_SOURCE
 NEED_LIBCOMPAT_FALSE
@@ -729,7 +728,6 @@ enable_spin
 enable_burst
 enable_cpuutil
 enable_rtlookup
-enable_firewall
 enable_slotlookup
 enable_seclookup
 enable_drvlookup
@@ -1390,7 +1388,6 @@ Optional Features:
                           specified mechanism
   --enable-rtlookup       include code to find the probable egress interface
                           using specified mechanism
-  --enable-firewall       include code to manipulate the local firewall
   --enable-slotlookup     include code to find the probable egress interface
                           using specified mechanism
   --enable-seclookup      include code to find the system security mechanism
@@ -7256,55 +7253,6 @@ esac
 
 	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: \"$enable_rtlookup\"" >&5
 $as_echo "\"$enable_rtlookup\"" >&6; }
-
-
-
-# what sort of local firewall will we grok
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking which firewall manipulation to use" >&5
-$as_echo_n "checking which firewall manipulation to use... " >&6; }
-
-# Check whether --enable-firewall was given.
-if test "${enable_firewall+set}" = set; then :
-  enableval=$enable_firewall;
-fi
-
-
-NETFIREWALL_SOURCE="$enable_firewall"
-case "$enable_firewall" in
-     	ufw)
-		use_firewall=true
-		;;
-
-	linux)
-		use_firewall=true
-		;;
-	'')
-# guess it automagically in a nice big case statement
-		case $target in
-		     *-*-linux*)
-			use_firewall=true
-			enable_firewall="linux - auto"
-			NETFIREWALL_SOURCE="linux"
-			;;
-		     *)
-			use_firewall=false
-			NETFIREWALL_SOURCE="none"
-			enable_firewall="none. Consider teaching configure about your platform."
-			;;
-		esac
-		;;
-	none)
-		use_rtlookup=false
-		;;
-	*)
-		as_fn_error $? "--enable-firewall takes linux, ufw or none" "$LINENO" 5
-		;;
-esac
-
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: \"$enable_firewall\"" >&5
-$as_echo "\"$enable_firewall\"" >&6; }
-
 
 
 

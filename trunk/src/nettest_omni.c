@@ -456,6 +456,8 @@ char *direction_str;
 
 extern int first_burst_size;
 
+int  parallel_connections = 1;
+
 static int socket_debug = 0;
 
 #if defined(HAVE_SENDFILE) && (defined(__linux) || defined(__sun))
@@ -3701,13 +3703,11 @@ set_omni_request_flags(struct omni_request_struct *omni_request) {
       if (use_fastopen)
 	omni_request->flags |= OMNI_FASTOPEN;
 
-      if (manipulate_local_firewalls)
-	omni_request->flags |= OMNI_MANAGE_FIREWALL;
-
       if (want_use_pktinfo)
 	omni_request->flags |= OMNI_USE_PKTINFO;
 
 }
+
 
 /* this code is intended to be "the two routines to run them all" for
    BSDish sockets.  it comes about as part of a desire to shrink the
@@ -5069,6 +5069,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 
 }
 
+
 void
 send_omni(char remote_host[])
 {
@@ -5203,7 +5204,6 @@ recv_omni()
   use_fastopen = omni_request->flags & OMNI_FASTOPEN;
 #endif
   direction       = omni_request->direction;
-  manipulate_local_firewalls = (omni_request->flags) & OMNI_MANAGE_FIREWALL;
   use_pktinfo = (omni_request->flags) & OMNI_USE_PKTINFO;
 
   /* let's be quite certain the fill file string is null terminated */
@@ -5428,9 +5428,6 @@ recv_omni()
     fflush(where);
   }
   netperf_response.content.serv_errno   = 0;
-  if (manipulate_local_firewalls) {
-    enable_port(omni_response->data_port, omni_request->protocol);
-  }
 
   /* But wait, there's more. If the initiator wanted cpu measurements, */
   /* then we must call the calibrate routine, which will return the max */
@@ -5786,10 +5783,6 @@ recv_omni()
   stop_timer();
   cpu_stop(omni_request->flags & OMNI_MEASURE_CPU,&elapsed_time);
   close(s_listen);
-
-  if (manipulate_local_firewalls > 0) {
-    done_with_port(omni_response->data_port, omni_request->protocol);
-  }
 
 #if defined(WANT_INTERVALS)
 #ifdef WIN32
@@ -7163,7 +7156,7 @@ scan_omni_args(int argc, char *argv[])
 
 {
 
-#define OMNI_ARGS "Bb:cCd:De:FgG:hH:i:IkK:l:L:m:M:nNoOp:P:r:R:s:S:t:T:u:UVw:W:46"
+#define OMNI_ARGS "Bb:cCd:De:FgG:hH:i:Ij:kK:l:L:m:M:nNoOp:P:r:R:s:S:t:T:u:UVw:W:46"
 
   extern char	*optarg;	  /* pointer to option string	*/
 
@@ -7325,6 +7318,9 @@ scan_omni_args(int argc, char *argv[])
       break;
     case 'I':
       use_write = 1;
+      break;
+    case 'j':
+      parallel_connections = atoi(optarg);
       break;
     case 'k':
       netperf_output_mode = KEYVAL;
