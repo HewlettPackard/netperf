@@ -625,7 +625,7 @@ set_tcp_mss(SOCKET socket, int mss) {
   if (debug) {
     fprintf(where,
 	    "netperf: %s platform does not know how to set TCP segment size\n",
-	    __FUNCTION);
+	    __FUNCTION__);
     fflush(where);
   }
 
@@ -1761,7 +1761,7 @@ Size (bytes)\n\
      64bit integral type, but those are not entirely common
      yet... time passes, and 64 bit types do indeed become common. */
 #if defined(WIN32) && _MSC_VER <= 1200
-  __int64 local_bytes_sent = 0
+  __int64 local_bytes_sent = 0;
 #else
   unsigned long long local_bytes_sent = 0;
 #endif
