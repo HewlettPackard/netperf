@@ -104,7 +104,7 @@ def launch_maerts(count,
                                       frequency=frequency,
                                       destination=destination,
                                       test="tcp_maerts",
-                                      test_specific="-s 1M -S 1M -m 64K.64K -M 64K,64K"),True))
+                                      test_specific="-s 1M -S 1M -m 64K,64K -M 64K,64K"),True))
 
     return maerts
 
@@ -428,7 +428,7 @@ parser.add_argument("-s","--stream-arguments",
                     default="-s 1M -S 1M -m 64K,64K -M 64K,64K",
                     help="Test-specific arguments to use for STREAM tests")
 parser.add_argument("-m","--maerts-arguments",
-                    default="-s 1M -S 1M -m 64K.64K -M 64K,64K",
+                    default="-s 1M -S 1M -m 64K,64K -M 64K,64K",
                     help="Test-specific arguments to use for MAERTS tests")
 
 args = parser.parse_args()
@@ -499,7 +499,7 @@ times['rr_stop']=int(time.time())
 
 print "rr", rr_min, rr_max, rr_avg
 rr_specs = [ 'DEF:rr=netperf_rr_overall.rrd:units:AVERAGE',
-             'LINE2:rr#00FF0080:TCP_RR Latency' ]
+             'LINE2:rr#00FF0080:TCP_RR Round-Trip Latency' ]
 
 max_tput = 0.0
 stream_specs = []
@@ -539,11 +539,11 @@ if do_maerts:
 if do_streams:
     stream_specs = [ 'DEF:streams=netperf_stream_overall.rrd:units:AVERAGE',
                      'CDEF:sstreams=streams,%.20f,/' % scale,
-                     'LINE2:sstreams#0000FFF0:Outbound Throughput' ]
+                     'LINE2:sstreams#0000FFF0:Throughput to %s' % args.destination ]
 if do_maerts:
     maerts_specs = [ 'DEF:maerts=netperf_maerts_overall.rrd:units:AVERAGE',
                      'CDEF:smaerts=maerts,%.20f,/' % scale,
-                     'LINE2:smaerts#FF0000F0:Inbound Throughput' ]
+                     'LINE2:smaerts#FF0000F0:Throughput from %s' % args.destination ]
 
 
 length = int(times['rr_stop'] - times['rr_start'])
@@ -551,7 +551,7 @@ length = int(times['rr_stop'] - times['rr_start'])
 print "rr times",length, int(times['rr_start']),int(times['rr_stop'])
 
 if args.annotation :
-    title = 'Effect of bulk transfer on latency to %s : %s' % (args.destination, args.annotation)
+    title = 'Effect of bulk transfer on round-trip latency to %s : %s' % (args.destination, args.annotation)
 else:
     print "don't have annotation"
     title = 'Effect of bulk transfer on latency to %s' % args.destination
