@@ -105,9 +105,6 @@
 /* Define to 1 if you have the `sendfile' library (-lsendfile). */
 #undef HAVE_LIBSENDFILE
 
-/* Define to 1 if you have the `smbios' library (-lsmbios). */
-#undef HAVE_LIBSMBIOS
-
 /* Define to 1 if you have the `socket' library (-lsocket). */
 #undef HAVE_LIBSOCKET
 
@@ -181,9 +178,6 @@
 /* Define to 1 if you have the <signal.h> header file. */
 #undef HAVE_SIGNAL_H
 
-/* Define to 1 if you have the <smbios/SystemInfo.h> header file. */
-#undef HAVE_SMBIOS_SYSTEMINFO_H
-
 /* Define if struct sockaddr has the sa_len member */
 #undef HAVE_SOCKADDR_SA_LEN
 
@@ -238,14 +232,8 @@
 /* Define to 1 if you have the <sys/param.h> header file. */
 #undef HAVE_SYS_PARAM_H
 
-/* Define to 1 if you have the <sys/sbmios.h> header file. */
-#undef HAVE_SYS_SBMIOS_H
-
 /* Define to 1 if you have the <sys/select.h> header file. */
 #undef HAVE_SYS_SELECT_H
-
-/* Define to 1 if you have the <sys/smbios.h> header file. */
-#undef HAVE_SYS_SMBIOS_H
 
 /* Define to 1 if you have the <sys/socket.h> header file. */
 #undef HAVE_SYS_SOCKET_H

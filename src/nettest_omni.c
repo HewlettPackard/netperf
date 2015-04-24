@@ -404,12 +404,12 @@ int         local_interface_vendor;
 int         local_interface_device;
 int         local_interface_subvendor;
 int         local_interface_subdevice;
-char        *local_system_model = NULL;
-char        *local_cpu_model = NULL;
-int         local_cpu_frequency;
-char        *remote_system_model = NULL;
-char        *remote_cpu_model = NULL;
-int         remote_cpu_frequency;
+char        *local_system_model = "Deprecated";
+char        *local_cpu_model = "Deprecated";
+int         local_cpu_frequency = 0;
+char        *remote_system_model = "Deprecated";
+char        *remote_cpu_model = "Deprecated";
+int         remote_cpu_frequency = 0;
 
 int         local_security_type_id;
 int         local_security_enabled_num;
@@ -4084,18 +4084,6 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	  fprintf(where,"remote port is %u\n",get_port_number(remote_res));
 	  fflush(where);
 	}
-	/* just in case the remote didn't null terminate */
-	if (NULL == remote_system_model) {
-	  omni_response->system_model[sizeof(omni_response->system_model)-1] =
-	    0;
-	  remote_system_model = strdup(omni_response->system_model);
-	}
-	if (NULL == remote_cpu_model) {
-	  omni_response->cpu_model[sizeof(omni_response->cpu_model) -1 ] = 0;
-	  remote_cpu_model = strdup(omni_response->cpu_model);
-	}
-	remote_cpu_frequency = omni_response->cpu_frequency;
-
       }
       else {
 	Set_errno(netperf_response.content.serv_errno);
@@ -4107,15 +4095,6 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	exit(-1);
       }
 
-    }
-    else {
-      /* we are a no_control test so some things about the remote need
-	 to be set accordingly */
-      if (NULL == remote_system_model)
-	remote_system_model = strdup("Unknown System Model");
-      if (NULL == remote_cpu_model)
-	remote_cpu_model = strdup("Unknown CPU Model");
-      remote_cpu_frequency = -1;
     }
 
 #ifdef WANT_DEMO
@@ -4670,9 +4649,6 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
       /* and even if this is not a legacy test, there is still not
 	 much point to finding these things if they will not be
 	 emitted */
-      find_system_info(&local_system_model,
-		       &local_cpu_model,
-		       &local_cpu_frequency);
 
       if ((desired_output_groups & OMNI_WANT_LOC_IFNAME) ||
 	  (desired_output_groups & OMNI_WANT_LOC_DRVINFO) ||
@@ -5440,13 +5416,6 @@ recv_omni()
   omni_response->so_sndavoid = loc_sndavoid;
   omni_response->interval_usecs = interval_usecs;
   omni_response->interval_burst = interval_burst;
-
-  find_system_info(&local_system_model,&local_cpu_model,&local_cpu_frequency);
-  strncpy(omni_response->system_model,local_system_model,sizeof(omni_response->system_model));
-  omni_response->system_model[sizeof(omni_response->system_model)-1] = 0;
-  strncpy(omni_response->cpu_model,local_cpu_model,sizeof(omni_response->cpu_model));
-  omni_response->cpu_model[sizeof(omni_response->cpu_model)-1] = 0;
-  omni_response->cpu_frequency = local_cpu_frequency;
 
   send_response_n(OMNI_RESPONSE_CONV_CUTOFF); /* brittle, but functional */
 
