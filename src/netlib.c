@@ -1390,38 +1390,6 @@ netlib_init_cpu_map() {
 #endif
 }
 
-void
-get_local_system_info()
-{
-#ifdef HAVE_UNAME
-  struct utsname buf;
-  /* the linux manpage for uname says 0 means success, everyone else
-     says non-negative.  at least they all agree that -1 means
-     error */
-  if (uname(&buf) != -1) {
-    local_sysname = strdup(buf.sysname);
-    local_release = strdup(buf.release);
-    local_version = strdup(buf.version);
-    local_machine = strdup(buf.machine);
-  }
-  else {
-    local_sysname = strdup("UnknownSystem");
-    local_release = strdup("UnknownRelease");
-    local_version = strdup("UnknownVersion");
-    local_machine = strdup("UnknownMachine");
-  }
-#else
-#ifdef WIN32
-  local_sysname = strdup("Windows");
-#else
-  local_sysname = strdup("UnknownSystem");
-#endif
-  local_release = strdup("UnknownRelease");
-  local_version = strdup("UnknownVersion");
-  local_machine = strdup("UnknownMachine");
-
-#endif
-}
 
 
 /****************************************************************/
@@ -1452,9 +1420,6 @@ netlib_init()
   lib_remote_cpu_stats.peak_cpu_util = -1.0;
 
   netperf_version = strdup(NETPERF_VERSION);
-
-  /* retrieve the local system information */
-  get_local_system_info();
 
   /* on those systems where we know that CPU numbers may not start at
      zero and be contiguous, we provide a way to map from a
@@ -3004,45 +2969,6 @@ recv_response_n(int n)
   recv_response_timed_n(0,n);
 }
 
-void
-get_remote_system_info()
-{
-  char delim[2];
-  char *token;
-
-  netperf_request.content.request_type = DO_SYSINFO;
-  send_request();
-  recv_response_n(0);
-  if (!netperf_response.content.serv_errno) {
-    delim[1] = '\0';
-    delim[0] = *(char *)netperf_response.content.test_specific_data;
-#if 0
-    token = (char *)netperf_response.content.test_specific_data +
-      (sizeof(netperf_response) - 7); /* OBOB? */
-    *token = 0;
-#endif
-
-    token = strtok((char *)netperf_response.content.test_specific_data,delim);
-    if (token) remote_sysname = strdup(token);
-    else remote_sysname = strdup("UnknownRemoteSysname");
-    token = strtok(NULL,delim);
-    if (token) remote_release = strdup(token);
-    else remote_release = strdup("UnknownRemoteRelease");
-    token = strtok(NULL,delim);
-    if (token) remote_machine = strdup(token);
-    else remote_machine = strdup("UnknownRemoteMachine");
-    token = strtok(NULL,delim);
-    if (token) remote_version = strdup(token);
-    else remote_version = strdup("UnknownRemoteVersion");
-  }
-  else {
-    remote_sysname = strdup("UnknownRemoteSysname");
-    remote_release = strdup("UnknownRemoteRelease");
-    remote_machine = strdup("UnknownRemoteMachine");
-    remote_version = strdup("UnknownRemoteVersion");
-  }
-
-}
 
 
 
