@@ -2256,28 +2256,28 @@ print_omni_init_list() {
 		 NETPERF_TYPE_CHAR);
 
   set_output_elt(REMOTE_MACHINE, "Remote", "Machine", "", "", "%s",
-		 remote_machine, 1, 0, NETPERF_TYPE_CHAR);
+		 deprecated_str, 1, 0, NETPERF_TYPE_CHAR);
 
   set_output_elt(REMOTE_VERSION, "Remote", "Version", "", "", "%s",
-		 remote_version, 1, 0, NETPERF_TYPE_CHAR);
+		 deprecated_str, 1, 0, NETPERF_TYPE_CHAR);
 
   set_output_elt(REMOTE_RELEASE, "Remote", "Release", "", "", "%s",
-		 remote_release, 1, 0, NETPERF_TYPE_CHAR);
+		 deprecated_str, 1, 0, NETPERF_TYPE_CHAR);
 
   set_output_elt(REMOTE_SYSNAME, "Remote", "Sysname", "", "", "%s",
-		 remote_sysname, 1, 0, NETPERF_TYPE_CHAR);
+		 deprecated_str, 1, 0, NETPERF_TYPE_CHAR);
 
   set_output_elt(LOCAL_MACHINE, "Local", "Machine", "", "", "%s",
-		 local_machine, 1, 0, NETPERF_TYPE_CHAR);
+		 deprecated_str, 1, 0, NETPERF_TYPE_CHAR);
 
   set_output_elt(LOCAL_VERSION, "Local", "Version", "", "", "%s",
-		 local_version, 1, 0, NETPERF_TYPE_CHAR);
+		 deprecated_str, 1, 0, NETPERF_TYPE_CHAR);
 
   set_output_elt(LOCAL_RELEASE, "Local", "Release", "", "", "%s",
-		 local_release, 1, 0, NETPERF_TYPE_CHAR);
+		 deprecated_str, 1, 0, NETPERF_TYPE_CHAR);
 
   set_output_elt(LOCAL_SYSNAME, "Local", "Sysname", "", "", "%s",
-		 local_sysname, 1, 0, NETPERF_TYPE_CHAR);
+		 deprecated_str, 1, 0, NETPERF_TYPE_CHAR);
 
   set_output_elt(REMOTE_INTERVAL_USECS, "Remote", "Interval", "Usecs", "",
 		 "%d", &remote_interval_usecs, 1, 0, NETPERF_TYPE_INT32);
@@ -3735,15 +3735,6 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
   omni_result =
     (struct omni_results_struct *)netperf_response.content.test_specific_data;
 
-
-  /* before we start doing things with our own requests and responses
-     lets go ahead and find-out about the remote system. at some point
-     we probably need to put this somewhere else...  however, we do
-     not want to do this if this is a no_control test. raj 20101220 */
-  /* should we also not call this if this is a legacy test? */
-  if (!no_control) {
-    get_remote_system_info();
-  }
 
   if (keep_histogram) {
     if (first_burst_size > 0)
