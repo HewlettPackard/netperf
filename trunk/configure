@@ -604,7 +604,6 @@ ac_header_list=
 ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
-NETDRVLKUP_SOURCE
 NETRTLKUP_SOURCE
 NETCPU_SOURCE
 NEED_LIBCOMPAT_FALSE
@@ -725,7 +724,6 @@ enable_spin
 enable_burst
 enable_cpuutil
 enable_rtlookup
-enable_drvlookup
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1382,8 +1380,6 @@ Optional Features:
                           specified mechanism
   --enable-rtlookup       include code to find the probable egress interface
                           using specified mechanism
-  --enable-drvlookup      include code to find the driver information for the
-                          probable egress interface
 
 Some influential environment variables:
   CC          C compiler command
@@ -7241,59 +7237,6 @@ esac
 
 	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: \"$enable_rtlookup\"" >&5
 $as_echo "\"$enable_rtlookup\"" >&6; }
-
-
-
-# time to see about driver lookup mechanisms
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking which driver info lookup type to use" >&5
-$as_echo_n "checking which driver info lookup type to use... " >&6; }
-
-# Check whether --enable-drvlookup was given.
-if test "${enable_drvlookup+set}" = set; then :
-  enableval=$enable_drvlookup;
-fi
-
-
-NETDRVLKUP_SOURCE="$enable_drvlookup"
-case "$enable_drvlookup" in
-	ethtool)
-		use_drvlookup=true
-		;;
-
-	solaris)
-		use_drvlookup=true
-		;;
-	'')
-# guess it automagically in a nice big case statement
-		case $target in
-		     *-*-linux*)
-			use_drvlookup=true
-			enable_drvlookup="ethtool - auto"
-			NETDRVLKUP_SOURCE="ethtool"
-			;;
-		     *-*-solaris*)
-		        use_drvlookup=true
-			enable_drvlookup="solaris - auto"
-			NETDRVLKUP_SOURCE="solaris"
-			;;
-		     *)
-			use_drvlookup=false
-			NETDRVLKUP_SOURCE="none"
-			enable_drvlookup="none. Consider teaching configure about your platform."
-			;;
-		esac
-		;;
-	none)
-		use_drvlookup=false
-		;;
-	*)
-		as_fn_error $? "--enable-drvlookup takes ethtool or none" "$LINENO" 5
-		;;
-esac
-
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: \"$enable_drvlookup\"" >&5
-$as_echo "\"$enable_drvlookup\"" >&6; }
 
 
 

@@ -4651,7 +4651,6 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	 emitted */
 
       if ((desired_output_groups & OMNI_WANT_LOC_IFNAME) ||
-	  (desired_output_groups & OMNI_WANT_LOC_DRVINFO) ||
 	  (desired_output_groups & OMNI_WANT_LOC_IFIDS)) {
 	local_interface_name =
 	  find_egress_interface(local_res->ai_addr,remote_res->ai_addr);
@@ -4660,17 +4659,6 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	local_interface_name = strdup("Bug If Seen IFNAME");
       }
 
-      if (desired_output_groups & OMNI_WANT_LOC_DRVINFO) {
-	find_driver_info(local_interface_name,local_driver_name,
-			 local_driver_version,local_driver_firmware,
-			 local_driver_bus,32);
-      }
-      else {
-	strncpy(local_driver_name,"Bug If Seen DRVINFO",32);
-	strncpy(local_driver_version, "Bug If Seen DRVINFO",32);
-	strncpy(local_driver_firmware,"Bug If Seen DRVINFO",32);
-	strncpy(local_driver_bus,"Bug If Seen DRVINFO",32);
-      }
     }
 
     /* if we timed-out, and had padded the timer, we need to subtract
@@ -4736,14 +4724,6 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	  remote_bytes_per_send = 0.0;
 	omni_result->ifname[15] = 0; /* belt and suspenders */
 	remote_interface_name = strdup(omni_result->ifname);
-	strncpy(remote_driver_name,omni_result->driver,32);
-	strncpy(remote_driver_version,omni_result->version,32);
-	strncpy(remote_driver_firmware,omni_result->firmware,32);
-	strncpy(remote_driver_bus,omni_result->bus,32);
-	remote_driver_name[31] = 0;
-	remote_driver_version[31] = 0;
-	remote_driver_firmware[31] = 0;
-	remote_driver_bus[31] = 0;
 	remote_interface_vendor = omni_result->vendor;
 	remote_interface_device = omni_result->device;
 	remote_interface_subvendor = omni_result->subvendor;
@@ -5788,8 +5768,7 @@ recv_omni()
     omni_results->peak_cpu_id         = lib_local_cpu_stats.peak_cpu_id;
   }
   if ((omni_request->flags & OMNI_WANT_IFNAME) ||
-      (omni_request->flags & OMNI_WANT_IFIDS) ||
-      (omni_request->flags & OMNI_WANT_DRVINFO)) {
+      (omni_request->flags & OMNI_WANT_IFIDS)) {
     local_interface_name =
       find_egress_interface(local_res->ai_addr,(struct sockaddr *)&peeraddr_in);
     strncpy(omni_results->ifname,local_interface_name,16);
@@ -5797,21 +5776,6 @@ recv_omni()
   }
   else {
     strncpy(omni_results->ifname,"Bug If Seen IFNAME",16);
-  }
-
-  if (omni_request->flags & OMNI_WANT_DRVINFO) {
-    find_driver_info(local_interface_name,
-		     omni_results->driver,
-		     omni_results->version,
-		     omni_results->firmware,
-		     omni_results->bus,
-		     32);
-  }
-  else {
-    strncpy(omni_results->driver,"Bug If Seen DRVINFO",32);
-    strncpy(omni_results->version,"Bug If Seen DRVINFO",32);
-    strncpy(omni_results->firmware,"Bug If Seen DRVINFO",32);
-    strncpy(omni_results->bus,"Bug If Seen DRVINFO",32);
   }
 
 #if defined(WANT_INTERVALS)
