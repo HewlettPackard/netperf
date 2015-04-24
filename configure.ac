@@ -783,65 +783,6 @@ esac
 
 AC_SUBST(NETRTLKUP_SOURCE)
 
-# time to see about slot lookup mechanisms
-
-AC_MSG_CHECKING([which slot lookup type to use])
-
-AC_ARG_ENABLE(slotlookup,
-	[AS_HELP_STRING([--enable-slotlookup],[include code to find the probable egress interface using specified mechanism])])
-
-NETSLOTLKUP_SOURCE="$enable_slotlookup"
-case "$enable_slotlookup" in
-
-	linux)
-		use_slotlookup=true
-		;;
-	solaris)
-		use_slotlookup=true
-		;;
-	hpux)
-		use_slotlookup=true
-		;;
-	'')
-# guess it automagically in a nice big case statement
-		case $target in
-		     *-*-linux*)
-			use_slotlookup=true
-			enable_slotlookup="linux - auto"
-			NETSLOTLKUP_SOURCE="linux"
-			;;
-		     *-*-solaris*)
-			use_slotlookup=true
-			enable_slotlookup="solaris - auto"
-			NETSLOTLKUP_SOURCE="solaris"
-			AC_HAVE_LIBRARY(devinfo)
-			;;
-		     *-*-hpux11.31*)
-			use_slotlookup=true
-			enable_slotlookup="hpux 11.31 - auto"
-			NETSLOTLKUP_SOURCE="ux1131"
-			AC_HAVE_LIBRARY(IO)
-			AC_HAVE_LIBRARY(olrad)
-			;;
-		     *)
-			use_slotlookup=false
-			NETSLOTLKUP_SOURCE="none"
-			enable_slotlookup="none. Consider teaching configure about your platform."
-			;;
-		esac
-		;;
-	none)
-		use_slotlookup=false
-		;;
-	*)
-		AC_MSG_ERROR([--enable-slotlookup takes linux or none])
-		;;
-esac
-
-	AC_MSG_RESULT("$enable_slotlookup")
-
-AC_SUBST(NETSLOTLKUP_SOURCE)
-
 # time to see about driver lookup mechanisms
 
 AC_MSG_CHECKING([which driver info lookup type to use])

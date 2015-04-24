@@ -605,7 +605,6 @@ ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
 NETDRVLKUP_SOURCE
-NETSLOTLKUP_SOURCE
 NETRTLKUP_SOURCE
 NETCPU_SOURCE
 NEED_LIBCOMPAT_FALSE
@@ -726,7 +725,6 @@ enable_spin
 enable_burst
 enable_cpuutil
 enable_rtlookup
-enable_slotlookup
 enable_drvlookup
 '
       ac_precious_vars='build_alias
@@ -1383,8 +1381,6 @@ Optional Features:
   --enable-cpuutil        include code to measure CPU utilization using
                           specified mechanism
   --enable-rtlookup       include code to find the probable egress interface
-                          using specified mechanism
-  --enable-slotlookup     include code to find the probable egress interface
                           using specified mechanism
   --enable-drvlookup      include code to find the driver information for the
                           probable egress interface
@@ -7245,187 +7241,6 @@ esac
 
 	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: \"$enable_rtlookup\"" >&5
 $as_echo "\"$enable_rtlookup\"" >&6; }
-
-
-
-# time to see about slot lookup mechanisms
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking which slot lookup type to use" >&5
-$as_echo_n "checking which slot lookup type to use... " >&6; }
-
-# Check whether --enable-slotlookup was given.
-if test "${enable_slotlookup+set}" = set; then :
-  enableval=$enable_slotlookup;
-fi
-
-
-NETSLOTLKUP_SOURCE="$enable_slotlookup"
-case "$enable_slotlookup" in
-
-	linux)
-		use_slotlookup=true
-		;;
-	solaris)
-		use_slotlookup=true
-		;;
-	hpux)
-		use_slotlookup=true
-		;;
-	'')
-# guess it automagically in a nice big case statement
-		case $target in
-		     *-*-linux*)
-			use_slotlookup=true
-			enable_slotlookup="linux - auto"
-			NETSLOTLKUP_SOURCE="linux"
-			;;
-		     *-*-solaris*)
-			use_slotlookup=true
-			enable_slotlookup="solaris - auto"
-			NETSLOTLKUP_SOURCE="solaris"
-			{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -ldevinfo" >&5
-$as_echo_n "checking for main in -ldevinfo... " >&6; }
-if ${ac_cv_lib_devinfo_main+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-ldevinfo  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-
-int
-main ()
-{
-return main ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_devinfo_main=yes
-else
-  ac_cv_lib_devinfo_main=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_devinfo_main" >&5
-$as_echo "$ac_cv_lib_devinfo_main" >&6; }
-if test "x$ac_cv_lib_devinfo_main" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBDEVINFO 1
-_ACEOF
-
-  LIBS="-ldevinfo $LIBS"
-
-fi
-ac_cv_lib_devinfo=ac_cv_lib_devinfo_main
-
-			;;
-		     *-*-hpux11.31*)
-			use_slotlookup=true
-			enable_slotlookup="hpux 11.31 - auto"
-			NETSLOTLKUP_SOURCE="ux1131"
-			{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lIO" >&5
-$as_echo_n "checking for main in -lIO... " >&6; }
-if ${ac_cv_lib_IO_main+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lIO  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-
-int
-main ()
-{
-return main ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_IO_main=yes
-else
-  ac_cv_lib_IO_main=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_IO_main" >&5
-$as_echo "$ac_cv_lib_IO_main" >&6; }
-if test "x$ac_cv_lib_IO_main" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBIO 1
-_ACEOF
-
-  LIBS="-lIO $LIBS"
-
-fi
-ac_cv_lib_IO=ac_cv_lib_IO_main
-
-			{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lolrad" >&5
-$as_echo_n "checking for main in -lolrad... " >&6; }
-if ${ac_cv_lib_olrad_main+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lolrad  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-
-int
-main ()
-{
-return main ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_olrad_main=yes
-else
-  ac_cv_lib_olrad_main=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_olrad_main" >&5
-$as_echo "$ac_cv_lib_olrad_main" >&6; }
-if test "x$ac_cv_lib_olrad_main" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBOLRAD 1
-_ACEOF
-
-  LIBS="-lolrad $LIBS"
-
-fi
-ac_cv_lib_olrad=ac_cv_lib_olrad_main
-
-			;;
-		     *)
-			use_slotlookup=false
-			NETSLOTLKUP_SOURCE="none"
-			enable_slotlookup="none. Consider teaching configure about your platform."
-			;;
-		esac
-		;;
-	none)
-		use_slotlookup=false
-		;;
-	*)
-		as_fn_error $? "--enable-slotlookup takes linux or none" "$LINENO" 5
-		;;
-esac
-
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: \"$enable_slotlookup\"" >&5
-$as_echo "\"$enable_slotlookup\"" >&6; }
 
 
 
