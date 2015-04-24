@@ -783,54 +783,6 @@ esac
 
 AC_SUBST(NETRTLKUP_SOURCE)
 
-# time to see about driver lookup mechanisms
-
-AC_MSG_CHECKING([which driver info lookup type to use])
-
-AC_ARG_ENABLE(drvlookup,
-	[AS_HELP_STRING([--enable-drvlookup],[include code to find the driver information for the probable egress interface])])
-
-NETDRVLKUP_SOURCE="$enable_drvlookup"
-case "$enable_drvlookup" in
-	ethtool)
-		use_drvlookup=true
-		;;
-
-	solaris)
-		use_drvlookup=true
-		;;
-	'')
-# guess it automagically in a nice big case statement
-		case $target in
-		     *-*-linux*)
-			use_drvlookup=true
-			enable_drvlookup="ethtool - auto"
-			NETDRVLKUP_SOURCE="ethtool"
-			;;
-		     *-*-solaris*)
-		        use_drvlookup=true
-			enable_drvlookup="solaris - auto"
-			NETDRVLKUP_SOURCE="solaris"
-			;;
-		     *)
-			use_drvlookup=false
-			NETDRVLKUP_SOURCE="none"
-			enable_drvlookup="none. Consider teaching configure about your platform."
-			;;
-		esac
-		;;
-	none)
-		use_drvlookup=false
-		;;
-	*)
-		AC_MSG_ERROR([--enable-drvlookup takes ethtool or none])
-		;;
-esac
-
-	AC_MSG_RESULT("$enable_drvlookup")
-
-AC_SUBST(NETDRVLKUP_SOURCE)
-
 
 # now spit it all out
 AC_CONFIG_FILES([Makefile
