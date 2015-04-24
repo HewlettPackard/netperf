@@ -69,14 +69,8 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
-/* Define to 1 if you have the `devinfo' library (-ldevinfo). */
-#undef HAVE_LIBDEVINFO
-
 /* Define to 1 if you have the `exs' library (-lexs). */
 #undef HAVE_LIBEXS
-
-/* Define to 1 if you have the `IO' library (-lIO). */
-#undef HAVE_LIBIO
 
 /* Define to 1 if you have the `kstat' library (-lkstat). */
 #undef HAVE_LIBKSTAT
@@ -89,9 +83,6 @@
 
 /* Define to 1 if you have the `nsl' library (-lnsl). */
 #undef HAVE_LIBNSL
-
-/* Define to 1 if you have the `olrad' library (-lolrad). */
-#undef HAVE_LIBOLRAD
 
 /* Define to 1 if you have the `perfstat' library (-lperfstat). */
 #undef HAVE_LIBPERFSTAT

@@ -384,26 +384,26 @@ double      rtt_latency = -1.0;
 int32_t     transport_mss = -2;
 int32_t     local_transport_retrans = -2;
 int32_t     remote_transport_retrans = -2;
-char        *local_interface_name=NULL;
-char        *remote_interface_name=NULL;
-char        local_driver_name[32]="";
-char        local_driver_version[32]="";
-char        local_driver_firmware[32]="";
-char        local_driver_bus[32]="";
-char        remote_driver_name[32]="";
-char        remote_driver_version[32]="";
-char        remote_driver_firmware[32]="";
-char        remote_driver_bus[32]="";
-char        *local_interface_slot=NULL;
-char        *remote_interface_slot=NULL;
-int         remote_interface_vendor;
-int         remote_interface_device;
-int         remote_interface_subvendor;
-int         remote_interface_subdevice;
-int         local_interface_vendor;
-int         local_interface_device;
-int         local_interface_subvendor;
-int         local_interface_subdevice;
+char        *local_interface_name="Deprecated";
+char        *remote_interface_name="Deprecated";
+char        local_driver_name[32]="Deprecated";
+char        local_driver_version[32]="Deprecated";
+char        local_driver_firmware[32]="Deprecated";
+char        local_driver_bus[32]="Deprecated";
+char        remote_driver_name[32]="Deprecated";
+char        remote_driver_version[32]="Deprecated";
+char        remote_driver_firmware[32]="Deprecated";
+char        remote_driver_bus[32]="Deprecated";
+char        *local_interface_slot="Deprecated";
+char        *remote_interface_slot="Deprecated";
+int         remote_interface_vendor = -2;
+int         remote_interface_device = -2;
+int         remote_interface_subvendor = -2;
+int         remote_interface_subdevice = -2;
+int         local_interface_vendor = -2;
+int         local_interface_device = -2;
+int         local_interface_subvendor = -2;
+int         local_interface_subdevice = -2;
 char        *local_system_model = "Deprecated";
 char        *local_cpu_model = "Deprecated";
 int         local_cpu_frequency = 0;
@@ -4652,7 +4652,6 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 
       if ((desired_output_groups & OMNI_WANT_LOC_IFNAME) ||
 	  (desired_output_groups & OMNI_WANT_LOC_DRVINFO) ||
-	  (desired_output_groups & OMNI_WANT_LOC_IFSLOT) ||
 	  (desired_output_groups & OMNI_WANT_LOC_IFIDS)) {
 	local_interface_name =
 	  find_egress_interface(local_res->ai_addr,remote_res->ai_addr);
@@ -4671,27 +4670,6 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	strncpy(local_driver_version, "Bug If Seen DRVINFO",32);
 	strncpy(local_driver_firmware,"Bug If Seen DRVINFO",32);
 	strncpy(local_driver_bus,"Bug If Seen DRVINFO",32);
-      }
-
-      if (desired_output_groups & OMNI_WANT_LOC_IFSLOT) {
-	local_interface_slot = find_interface_slot(local_interface_name);
-      }
-      else {
-	local_interface_slot = strdup("Bug If Seen IFSLOT");
-      }
-
-      if (desired_output_groups & OMNI_WANT_LOC_IFIDS) {
-	find_interface_ids(local_interface_name,
-			   &local_interface_vendor,
-			   &local_interface_device,
-			   &local_interface_subvendor,
-			   &local_interface_subdevice);
-      }
-      else {
-	local_interface_vendor = -2;
-	local_interface_device = -2;
-	local_interface_subvendor = -2;
-	local_interface_subdevice = -2;
       }
     }
 
@@ -4758,7 +4736,6 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	  remote_bytes_per_send = 0.0;
 	omni_result->ifname[15] = 0; /* belt and suspenders */
 	remote_interface_name = strdup(omni_result->ifname);
-	remote_interface_slot = strdup(omni_result->ifslot);
 	strncpy(remote_driver_name,omni_result->driver,32);
 	strncpy(remote_driver_version,omni_result->version,32);
 	strncpy(remote_driver_firmware,omni_result->firmware,32);
@@ -5811,7 +5788,6 @@ recv_omni()
     omni_results->peak_cpu_id         = lib_local_cpu_stats.peak_cpu_id;
   }
   if ((omni_request->flags & OMNI_WANT_IFNAME) ||
-      (omni_request->flags & OMNI_WANT_IFSLOT) ||
       (omni_request->flags & OMNI_WANT_IFIDS) ||
       (omni_request->flags & OMNI_WANT_DRVINFO)) {
     local_interface_name =
@@ -5822,27 +5798,7 @@ recv_omni()
   else {
     strncpy(omni_results->ifname,"Bug If Seen IFNAME",16);
   }
-  if (omni_request->flags & OMNI_WANT_IFSLOT) {
-    local_interface_slot = find_interface_slot(local_interface_name);
-    strncpy(omni_results->ifslot,local_interface_slot,16);
-    omni_results->ifslot[15] = 0;
-  }
-  else {
-    strncpy(omni_results->ifslot,"Bug If Seen IFSLOT",16);
-  }
-  if (omni_request->flags & OMNI_WANT_IFIDS) {
-    find_interface_ids(local_interface_name,
-		       &omni_results->vendor,
-		       &omni_results->device,
-		       &omni_results->subvendor,
-		       &omni_results->subdevice);
-  }
-  else {
-    omni_results->vendor = -2;
-    omni_results->device = -2;
-    omni_results->subvendor = -2;
-    omni_results->subdevice = -2;
-  }
+
   if (omni_request->flags & OMNI_WANT_DRVINFO) {
     find_driver_info(local_interface_name,
 		     omni_results->driver,
