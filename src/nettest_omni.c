@@ -384,18 +384,7 @@ double      rtt_latency = -1.0;
 int32_t     transport_mss = -2;
 int32_t     local_transport_retrans = -2;
 int32_t     remote_transport_retrans = -2;
-char        *local_interface_name="Deprecated";
-char        *remote_interface_name="Deprecated";
-char        local_driver_name[32]="Deprecated";
-char        local_driver_version[32]="Deprecated";
-char        local_driver_firmware[32]="Deprecated";
-char        local_driver_bus[32]="Deprecated";
-char        remote_driver_name[32]="Deprecated";
-char        remote_driver_version[32]="Deprecated";
-char        remote_driver_firmware[32]="Deprecated";
-char        remote_driver_bus[32]="Deprecated";
-char        *local_interface_slot="Deprecated";
-char        *remote_interface_slot="Deprecated";
+char        *deprecated_str = "Deprecated";
 int         remote_interface_vendor = -2;
 int         remote_interface_device = -2;
 int         remote_interface_subvendor = -2;
@@ -404,23 +393,13 @@ int         local_interface_vendor = -2;
 int         local_interface_device = -2;
 int         local_interface_subvendor = -2;
 int         local_interface_subdevice = -2;
-char        *local_system_model = "Deprecated";
-char        *local_cpu_model = "Deprecated";
 int         local_cpu_frequency = 0;
-char        *remote_system_model = "Deprecated";
-char        *remote_cpu_model = "Deprecated";
 int         remote_cpu_frequency = 0;
 
 int         local_security_type_id;
 int         local_security_enabled_num;
-char        *local_security_type = "Deprecated";
-char        *local_security_enabled = "Deprecated";
-char        *local_security_specific = "Deprecated";
 int         remote_security_type_id;
 int         remote_security_enabled_num;
-char        *remote_security_enabled = "Deprecated";
-char        *remote_security_type = "Deprecated";
-char        *remote_security_specific = "Deprecated";
 
 char        local_cong_control[16] = "";
 char        remote_cong_control[16] = "";
@@ -2198,34 +2177,34 @@ print_omni_init_list() {
 		 &rem_tcpcork, 1, 0, NETPERF_TYPE_INT32);
 
   set_output_elt(LOCAL_DRIVER_NAME, "Local", "Driver", "Name", "", "%s",
-		 local_driver_name, 1, OMNI_WANT_LOC_DRVINFO,
+		 deprecated_str, 1, OMNI_WANT_LOC_DRVINFO,
 		 NETPERF_TYPE_CHAR);
 
   set_output_elt(LOCAL_DRIVER_VERSION, "Local", "Driver", "Version", "", "%s",
-		 local_driver_version, 1, OMNI_WANT_LOC_DRVINFO,
+		 deprecated_str, 1, OMNI_WANT_LOC_DRVINFO,
 		 NETPERF_TYPE_CHAR);
 
   set_output_elt(LOCAL_DRIVER_FIRMWARE, "Local", "Driver", "Firmware", "",
-		 "%s", local_driver_firmware, 1, OMNI_WANT_LOC_DRVINFO,
+		 "%s", deprecated_str, 1, OMNI_WANT_LOC_DRVINFO,
 		 NETPERF_TYPE_CHAR);
 
   set_output_elt(LOCAL_DRIVER_BUS, "Local", "Driver", "Bus", "", "%s",
-		 local_driver_bus, 1, OMNI_WANT_LOC_DRVINFO, NETPERF_TYPE_CHAR);
+		 deprecated_str, 1, OMNI_WANT_LOC_DRVINFO, NETPERF_TYPE_CHAR);
 
   set_output_elt(REMOTE_DRIVER_NAME, "Remote", "Driver", "Name", "", "%s",
-		 remote_driver_name, 1, OMNI_WANT_REM_DRVINFO,
+		 deprecated_str, 1, OMNI_WANT_REM_DRVINFO,
 		 NETPERF_TYPE_CHAR);
 
   set_output_elt(REMOTE_DRIVER_VERSION, "Remote", "Driver", "Version", "",
-		 "%s", remote_driver_version, 1, OMNI_WANT_REM_DRVINFO,
+		 "%s", deprecated_str, 1, OMNI_WANT_REM_DRVINFO,
 		 NETPERF_TYPE_CHAR);
 
   set_output_elt(REMOTE_DRIVER_FIRMWARE, "Remote", "Driver", "Firmware", "",
-		 "%s", remote_driver_firmware, 1, OMNI_WANT_REM_DRVINFO,
+		 "%s", deprecated_str, 1, OMNI_WANT_REM_DRVINFO,
 		 NETPERF_TYPE_CHAR);
 
   set_output_elt(REMOTE_DRIVER_BUS, "Remote", "Driver", "Bus", "", "%s",
-		 remote_driver_bus, 1, OMNI_WANT_REM_DRVINFO,
+		 deprecated_str, 1, OMNI_WANT_REM_DRVINFO,
 		 NETPERF_TYPE_CHAR);
 
   set_output_elt(LOCAL_INTERFACE_SUBDEVICE, "Local", "Interface", "Subdevice",
@@ -2261,19 +2240,19 @@ print_omni_init_list() {
 		 NETPERF_TYPE_UINT32);
 
   set_output_elt(LOCAL_INTERFACE_NAME, "Local", "Interface", "Name", "", "%s",
-		 local_interface_name, 1, OMNI_WANT_LOC_IFNAME,
+		 deprecated_str, 1, OMNI_WANT_LOC_IFNAME,
 		 NETPERF_TYPE_CHAR);
 
   set_output_elt(REMOTE_INTERFACE_NAME, "Remote", "Interface", "Name", "",
-		 "%s", remote_interface_name, 1, OMNI_WANT_REM_IFNAME,
+		 "%s", deprecated_str, 1, OMNI_WANT_REM_IFNAME,
 		 NETPERF_TYPE_CHAR);
 
   set_output_elt(LOCAL_INTERFACE_SLOT, "Local", "Interface", "Slot", "", "%s",
-		 local_interface_slot, 1, OMNI_WANT_LOC_IFSLOT,
+		 deprecated_str, 1, OMNI_WANT_LOC_IFSLOT,
 		 NETPERF_TYPE_CHAR);
 
   set_output_elt(REMOTE_INTERFACE_SLOT,  "Remote",  "Interface",  "Slot",  "",
-		 "%s",  remote_interface_slot, 1, OMNI_WANT_REM_IFSLOT,
+		 "%s",  deprecated_str, 1, OMNI_WANT_REM_IFSLOT,
 		 NETPERF_TYPE_CHAR);
 
   set_output_elt(REMOTE_MACHINE, "Remote", "Machine", "", "", "%s",
@@ -2307,13 +2286,13 @@ print_omni_init_list() {
 		 "%d", &remote_interval_burst, 1, 0, NETPERF_TYPE_INT32);
 
   set_output_elt(LOCAL_SECURITY_ENABLED, "Local", "OS", "Security", "Enabled",
-		 "%s", local_security_enabled, 1, 0, NETPERF_TYPE_CHAR);
+		 "%s", deprecated_str, 1, 0, NETPERF_TYPE_CHAR);
 
   set_output_elt(LOCAL_SECURITY_TYPE, "Local", "OS", "Security", "Type", "%s",
-		 local_security_type, 1, 0, NETPERF_TYPE_CHAR);
+		 deprecated_str, 1, 0, NETPERF_TYPE_CHAR);
 
   set_output_elt(LOCAL_SECURITY_SPECIFIC, "Local", "OS", "Security",
-		 "Specific", "%s", local_security_specific, 1, 0,
+		 "Specific", "%s", deprecated_str, 1, 0,
 		 NETPERF_TYPE_CHAR);
 
   set_output_elt(LOCAL_SECURITY_ENABLED_NUM, "Local", "OS", "Security",
@@ -2324,14 +2303,14 @@ print_omni_init_list() {
 		 "%d", &local_security_type_id, 1, 0, NETPERF_TYPE_INT32);
 
   set_output_elt(REMOTE_SECURITY_ENABLED, "Remote", "OS", "Security",
-		 "Enabled", "%s", remote_security_enabled, 1, 0,
+		 "Enabled", "%s", deprecated_str, 1, 0,
 		 NETPERF_TYPE_CHAR);
 
   set_output_elt(REMOTE_SECURITY_TYPE, "Remote", "OS", "Security", "Type",
-		 "%s", remote_security_type, 1, 0, NETPERF_TYPE_CHAR);
+		 "%s", deprecated_str, 1, 0, NETPERF_TYPE_CHAR);
 
   set_output_elt(REMOTE_SECURITY_SPECIFIC, "Remote", "OS", "Security",
-		 "Specific", "%s", remote_security_specific, 1, 0,
+		 "Specific", "%s", deprecated_str, 1, 0,
 		 NETPERF_TYPE_CHAR);
 
   set_output_elt(REMOTE_SECURITY_ENABLED_NUM, "Remote", "OS", "Security",
@@ -2348,19 +2327,19 @@ print_omni_init_list() {
 		 &interval_burst, 1, 0, NETPERF_TYPE_INT32);
 
   set_output_elt(REMOTE_SYSTEM_MODEL, "Remote", "System", "Model", "", "%s",
-		 remote_system_model, 1, 0, NETPERF_TYPE_CHAR);
+		 deprecated_str, 1, 0, NETPERF_TYPE_CHAR);
 
   set_output_elt(REMOTE_CPU_MODEL, "Remote", "CPU", "Model", "", "%s",
-		 remote_cpu_model, 1, 0, NETPERF_TYPE_CHAR);
+		 deprecated_str, 1, 0, NETPERF_TYPE_CHAR);
 
   set_output_elt(REMOTE_CPU_FREQUENCY, "Remote", "CPU", "Frequency", "MHz",
 		 "%d", &remote_cpu_frequency, 1, 0, NETPERF_TYPE_INT32);
 
   set_output_elt(LOCAL_SYSTEM_MODEL, "Local", "System", "Model", "", "%s",
-		 local_system_model, 1, 0, NETPERF_TYPE_CHAR);
+		 deprecated_str, 1, 0, NETPERF_TYPE_CHAR);
 
   set_output_elt(LOCAL_CPU_MODEL, "Local", "CPU", "Model", "", "%s",
-		 local_cpu_model, 1, 0, NETPERF_TYPE_CHAR);
+		 deprecated_str, 1, 0, NETPERF_TYPE_CHAR);
 
   set_output_elt(LOCAL_CPU_FREQUENCY, "Local", "CPU", "Frequency", "MHz", "%d",
 		 &local_cpu_frequency, 1, 0, NETPERF_TYPE_INT32);
