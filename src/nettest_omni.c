@@ -413,14 +413,14 @@ int         remote_cpu_frequency;
 
 int         local_security_type_id;
 int         local_security_enabled_num;
-char        *local_security_type = NULL;
-char        *local_security_enabled = NULL;
-char        *local_security_specific = NULL;
+char        *local_security_type = "Deprecated";
+char        *local_security_enabled = "Deprecated";
+char        *local_security_specific = "Deprecated";
 int         remote_security_type_id;
 int         remote_security_enabled_num;
-char        *remote_security_enabled = NULL;
-char        *remote_security_type = NULL;
-char        *remote_security_specific = NULL;
+char        *remote_security_enabled = "Deprecated";
+char        *remote_security_type = "Deprecated";
+char        *remote_security_specific = "Deprecated";
 
 char        local_cong_control[16] = "";
 char        remote_cong_control[16] = "";
@@ -4096,16 +4096,6 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	}
 	remote_cpu_frequency = omni_response->cpu_frequency;
 
-	if (NULL == remote_security_specific) {
-	  omni_response->security_string[sizeof(omni_response->security_string) - 1] = 0;
-	  remote_security_specific = strdup(omni_response->security_string);
-	}
-	/* top bits type, bottom bits enabled */
-	remote_security_type_id = (int) omni_response->security_info >> 16;
-	remote_security_enabled_num = (short)omni_response->security_info;
-	remote_security_type = nsec_type_to_str(remote_security_type_id);
-	remote_security_enabled =
-	  nsec_enabled_to_str(remote_security_enabled_num);
       }
       else {
 	Set_errno(netperf_response.content.serv_errno);
@@ -4613,12 +4603,6 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
     local_transport_retrans = get_transport_retrans(data_socket,
 						    local_res->ai_protocol);
 
-
-    find_security_info(&local_security_enabled_num,
-		       &local_security_type_id,
-		       &local_security_specific);
-    local_security_enabled = nsec_enabled_to_str(local_security_enabled_num);
-    local_security_type    = nsec_type_to_str(local_security_type_id);
 
     /* so, if we have/had a data connection, we will want to close it
        now, and this will be independent of whether there is a control
@@ -5463,17 +5447,6 @@ recv_omni()
   strncpy(omni_response->cpu_model,local_cpu_model,sizeof(omni_response->cpu_model));
   omni_response->cpu_model[sizeof(omni_response->cpu_model)-1] = 0;
   omni_response->cpu_frequency = local_cpu_frequency;
-
-  find_security_info(&local_security_enabled_num,
-		     &local_security_type_id,
-		     &local_security_specific);
-  /* top bits type, bottom bits enabled */
-  omni_response->security_info = local_security_type_id << 16;
-  omni_response->security_info += local_security_enabled_num & 0xffff;
-  strncpy(omni_response->security_string,
-	  local_security_specific,
-	  sizeof(omni_response->security_string));
-  omni_response->security_string[sizeof(omni_response->security_string)-1] = 0;
 
   send_response_n(OMNI_RESPONSE_CONV_CUTOFF); /* brittle, but functional */
 
