@@ -604,7 +604,6 @@ ac_header_list=
 ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
-NETRTLKUP_SOURCE
 NETCPU_SOURCE
 NEED_LIBCOMPAT_FALSE
 NEED_LIBCOMPAT_TRUE
@@ -723,7 +722,6 @@ enable_intervals
 enable_spin
 enable_burst
 enable_cpuutil
-enable_rtlookup
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1378,8 +1376,6 @@ Optional Features:
                           may affect result
   --enable-cpuutil        include code to measure CPU utilization using
                           specified mechanism
-  --enable-rtlookup       include code to find the probable egress interface
-                          using specified mechanism
 
 Some influential environment variables:
   CC          C compiler command
@@ -7179,64 +7175,6 @@ esac
 
 	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: \"$enable_cpuutil\"" >&5
 $as_echo "\"$enable_cpuutil\"" >&6; }
-
-
-
-# time to see about route lookup mechanisms
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking which route lookup type to use" >&5
-$as_echo_n "checking which route lookup type to use... " >&6; }
-
-# Check whether --enable-rtlookup was given.
-if test "${enable_rtlookup+set}" = set; then :
-  enableval=$enable_rtlookup;
-fi
-
-
-NETRTLKUP_SOURCE="$enable_rtlookup"
-case "$enable_rtlookup" in
-	rtmget)
-		use_rtlookup=true
-		;;
-
-	rtnetlink)
-		use_rtlookup=true
-		;;
-	'')
-# guess it automagically in a nice big case statement
-		case $target in
-		     *-*-linux*)
-			use_rtlookup=true
-			enable_rtlookup="rtnetlink - auto"
-			NETRTLKUP_SOURCE="rtnetlink"
-			;;
-		     *-*-hpux11.31 | *-*-solaris* | *-*-aix5*)
-			use_rtlookup=true
-			enable_rtlookup="rtmget - auto"
-			NETRTLKUP_SOURCE="rtmget"
-			;;
-                     *-*-freebsd[4-8].* | *-*-darwin*)
-			use_rtlookup=true
-			enable_rtlookup="rtmget - auto"
-			NETRTLKUP_SOURCE="rtmget"
-			;;
-		     *)
-			use_rtlookup=false
-			NETRTLKUP_SOURCE="none"
-			enable_rtlookup="none. Consider teaching configure about your platform."
-			;;
-		esac
-		;;
-	none)
-		use_rtlookup=false
-		;;
-	*)
-		as_fn_error $? "--enable-rtlookup takes rtmget, rtnetlink or none" "$LINENO" 5
-		;;
-esac
-
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: \"$enable_rtlookup\"" >&5
-$as_echo "\"$enable_rtlookup\"" >&6; }
 
 
 

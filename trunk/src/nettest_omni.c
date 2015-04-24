@@ -4642,25 +4642,6 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 
     cpu_stop(local_cpu_usage,&elapsed_time);
 
-    /* if this is a legacy test, there is not much point to finding
-       all these things since they will not be emitted. */
-    if (!legacy) {
-
-      /* and even if this is not a legacy test, there is still not
-	 much point to finding these things if they will not be
-	 emitted */
-
-      if ((desired_output_groups & OMNI_WANT_LOC_IFNAME) ||
-	  (desired_output_groups & OMNI_WANT_LOC_IFIDS)) {
-	local_interface_name =
-	  find_egress_interface(local_res->ai_addr,remote_res->ai_addr);
-      }
-      else {
-	local_interface_name = strdup("Bug If Seen IFNAME");
-      }
-
-    }
-
     /* if we timed-out, and had padded the timer, we need to subtract
        the pad_time from the elapsed time on the assumption that we
        were essentially idle for pad_time and just waiting for a timer
@@ -4722,12 +4703,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	    (double) omni_result->send_calls;
 	else
 	  remote_bytes_per_send = 0.0;
-	omni_result->ifname[15] = 0; /* belt and suspenders */
-	remote_interface_name = strdup(omni_result->ifname);
-	remote_interface_vendor = omni_result->vendor;
-	remote_interface_device = omni_result->device;
-	remote_interface_subvendor = omni_result->subvendor;
-	remote_interface_subdevice = omni_result->subdevice;
+
 	remote_transport_retrans = omni_result->transport_retrans;
 	/* what was the congestion control? */
 	if (desired_output_groups & OMNI_WANT_REM_CONG) {
@@ -5766,16 +5742,6 @@ recv_omni()
     omni_results->cpu_percent_swintr  = lib_local_cpu_stats.cpu_swintr;
     omni_results->peak_cpu_util       = lib_local_cpu_stats.peak_cpu_util;
     omni_results->peak_cpu_id         = lib_local_cpu_stats.peak_cpu_id;
-  }
-  if ((omni_request->flags & OMNI_WANT_IFNAME) ||
-      (omni_request->flags & OMNI_WANT_IFIDS)) {
-    local_interface_name =
-      find_egress_interface(local_res->ai_addr,(struct sockaddr *)&peeraddr_in);
-    strncpy(omni_results->ifname,local_interface_name,16);
-    omni_results->ifname[15] = 0;
-  }
-  else {
-    strncpy(omni_results->ifname,"Bug If Seen IFNAME",16);
   }
 
 #if defined(WANT_INTERVALS)

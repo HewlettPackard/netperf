@@ -730,59 +730,6 @@ esac
 
 AC_SUBST(NETCPU_SOURCE)
 
-# time to see about route lookup mechanisms
-
-AC_MSG_CHECKING([which route lookup type to use])
-
-AC_ARG_ENABLE(rtlookup,
-	[AS_HELP_STRING([--enable-rtlookup],[include code to find the probable egress interface using specified mechanism])])
-
-NETRTLKUP_SOURCE="$enable_rtlookup"
-case "$enable_rtlookup" in
-	rtmget)
-		use_rtlookup=true
-		;;
-
-	rtnetlink)
-		use_rtlookup=true
-		;;
-	'')
-# guess it automagically in a nice big case statement
-		case $target in
-		     *-*-linux*)
-			use_rtlookup=true
-			enable_rtlookup="rtnetlink - auto"
-			NETRTLKUP_SOURCE="rtnetlink"
-			;;
-		     *-*-hpux11.31 | *-*-solaris* | *-*-aix5*)
-			use_rtlookup=true
-			enable_rtlookup="rtmget - auto"
-			NETRTLKUP_SOURCE="rtmget"
-			;;
-                     *-*-freebsd[[4-8]].* | *-*-darwin*)
-			use_rtlookup=true
-			enable_rtlookup="rtmget - auto"
-			NETRTLKUP_SOURCE="rtmget"
-			;;
-		     *)
-			use_rtlookup=false
-			NETRTLKUP_SOURCE="none"
-			enable_rtlookup="none. Consider teaching configure about your platform."
-			;;
-		esac
-		;;
-	none)
-		use_rtlookup=false
-		;;
-	*)
-		AC_MSG_ERROR([--enable-rtlookup takes rtmget, rtnetlink or none])
-		;;
-esac
-
-	AC_MSG_RESULT("$enable_rtlookup")
-
-AC_SUBST(NETRTLKUP_SOURCE)
-
 
 # now spit it all out
 AC_CONFIG_FILES([Makefile
