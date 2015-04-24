@@ -606,7 +606,6 @@ am__EXEEXT_TRUE
 LTLIBOBJS
 NETSYSLKUP_SOURCE
 NETDRVLKUP_SOURCE
-NETSECLKUP_SOURCE
 NETSLOTLKUP_SOURCE
 NETRTLKUP_SOURCE
 NETCPU_SOURCE
@@ -729,7 +728,6 @@ enable_burst
 enable_cpuutil
 enable_rtlookup
 enable_slotlookup
-enable_seclookup
 enable_drvlookup
 enable_syslookup
 '
@@ -1390,8 +1388,6 @@ Optional Features:
                           using specified mechanism
   --enable-slotlookup     include code to find the probable egress interface
                           using specified mechanism
-  --enable-seclookup      include code to find the system security mechanism
-                          and its state
   --enable-drvlookup      include code to find the driver information for the
                           probable egress interface
   --enable-syslookup      include code to find some rudimentary system
@@ -7434,93 +7430,6 @@ esac
 
 	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: \"$enable_slotlookup\"" >&5
 $as_echo "\"$enable_slotlookup\"" >&6; }
-
-
-
-
-# time to see about sec lookup mechanisms
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking which sec lookup type to use" >&5
-$as_echo_n "checking which sec lookup type to use... " >&6; }
-
-# Check whether --enable-seclookup was given.
-if test "${enable_seclookup+set}" = set; then :
-  enableval=$enable_seclookup;
-fi
-
-
-NETSECLKUP_SOURCE="$enable_seclookup"
-case "$enable_seclookup" in
-
-	linux)
-		use_seclookup=true
-		;;
-	'')
-# guess it automagically in a nice big case statement
-		case $target in
-		     *-*-linux*)
-		        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -ldl" >&5
-$as_echo_n "checking for main in -ldl... " >&6; }
-if ${ac_cv_lib_dl_main+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-ldl  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-
-int
-main ()
-{
-return main ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_dl_main=yes
-else
-  ac_cv_lib_dl_main=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_dl_main" >&5
-$as_echo "$ac_cv_lib_dl_main" >&6; }
-if test "x$ac_cv_lib_dl_main" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBDL 1
-_ACEOF
-
-  LIBS="-ldl $LIBS"
-
-fi
-ac_cv_lib_dl=ac_cv_lib_dl_main
-
-			use_seclookup=true
-			enable_seclookup="linux - auto"
-			NETSECLKUP_SOURCE="linux"
-			;;
-		     *)
-			use_seclookup=false
-			NETSECLKUP_SOURCE="none"
-			enable_seclookup="none. Consider teaching configure about your platform."
-			;;
-		esac
-		;;
-	none)
-		use_seclookup=false
-		;;
-	*)
-		as_fn_error $? "--enable-seclookup takes linux or none" "$LINENO" 5
-		;;
-esac
-
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: \"$enable_seclookup\"" >&5
-$as_echo "\"$enable_seclookup\"" >&6; }
-
 
 
 
