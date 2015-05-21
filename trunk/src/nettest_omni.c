@@ -349,6 +349,7 @@ int was_legacy = 0;
 int legacy = 0;
 int implicit_direction = 0;
 int explicit_data_address = 0;
+int want_defer_accept = 0;
 
 uint64_t      trans_completed = 0;
 int64_t       units_remaining;
@@ -3685,6 +3686,9 @@ set_omni_request_flags(struct omni_request_struct *omni_request) {
       if (want_use_pktinfo)
 	omni_request->flags |= OMNI_USE_PKTINFO;
 
+      if (want_defer_accept)
+	omni_request->flags |= OMNI_WANT_DEFER_ACCEPT;
+
 }
 
 
@@ -5051,6 +5055,7 @@ recv_omni()
   want_keepalive  = (omni_request->flags) & OMNI_WANT_KEEPALIVE;
   local_socket_prio = omni_request->socket_prio;
   local_socket_tos  = omni_request->socket_tos;
+  want_defer_accept = omni_request->flags & OMNI_WANT_DEFER_ACCEPT;
 
 #ifdef WANT_INTERVALS
   interval_usecs = omni_request->interval_usecs;
@@ -5242,12 +5247,26 @@ recv_omni()
       close(s_listen);
       send_response();
       if (debug) {
-	fprintf(where,"netperfserver: %s could not listen\n",__FUNCTION__);
+	fprintf(where,"netperfserver: %s could not fastopen\n",__FUNCTION__);
 	fflush(where);
       }
       exit(1);
     }
 #endif /* TCP_FASTOPEN */
+#ifdef TCP_DEFER_ACCEPT
+    if (want_defer_accept &&
+	(setsockopt(s_listen, IPPROTO_TCP, TCP_DEFER_ACCEPT, &backlog, sizeof(backlog)) == SOCKET_ERROR)) {
+      netperf_response.content.serv_errno = errno;
+      close(s_listen);
+      send_response();
+      if (debug) {
+	fprintf(where,
+		"netperfserver: %s could not defer accept\n",__FUNCTION__);
+	fflush(where);
+      }
+      exit(1);
+    }
+#endif /* TCP_DEFER_ACCEPT */
     if (listen(s_listen, backlog) == SOCKET_ERROR) {
       netperf_response.content.serv_errno = errno;
       close(s_listen);
@@ -6954,7 +6973,7 @@ scan_omni_args(int argc, char *argv[])
 
 {
 
-#define OMNI_ARGS "Bb:cCd:De:FgG:hH:i:Ij:kK:l:L:m:M:nNoOp:P:r:R:s:S:t:T:u:UVw:W:46"
+#define OMNI_ARGS "aBb:cCd:De:FgG:hH:i:Ij:kK:l:L:m:M:nNoOp:P:r:R:s:S:t:T:u:UVw:W:46"
 
   extern char	*optarg;	  /* pointer to option string	*/
 
@@ -7032,6 +7051,9 @@ scan_omni_args(int argc, char *argv[])
     case 'h':
       print_omni_usage();
       exit(1);
+    case 'a':
+      want_defer_accept = 1;
+      break;
     case 'B':
       want_use_pktinfo = 1;
       break;
