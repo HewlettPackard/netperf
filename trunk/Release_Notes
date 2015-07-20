@@ -1,8 +1,19 @@
-These are the Release Notes for post Revision 2.6.0 of netperf:
+These are the Release Notes for Revision 2.7.0 of netperf:
 
 *) Add bits/s (-f b) and Bytes/s (-f B) as selectable throughput
    units. This may make life easier for folks doing post-processing of
    things like interim results.
+
+*) Miscelaneous fixes
+
+*) Much of the now-seeming kruft for things peripheral to netperf's
+   core mission - have been removed though the code itself remains in
+   the repository.  So, things like looking-up egress interface,
+   driver/slot information etc have been disabled in a manner
+   requiring more than just a ./configure to bring-back.
+
+   It wasn't clear those features were being used.  This is a test of
+   that hypothesis.
 
 These are the Release Notes for Revision 2.6.0 of netperf:
 
