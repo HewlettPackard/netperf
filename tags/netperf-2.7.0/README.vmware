@@ -1,0 +1,15 @@
+Compiling for VMware is somewhat like compiling for Windows - there is
+a separate, standalone makefile one uses.  In this case, it is
+src/Makefile.uw.  So, to build the bits, cd to src/ and make -f
+Makefile.uw.
+
+At present, the makefile is setup to use a number of the "none" files
+- in particular netcpu_none.c.  When/if we enable the "omni" tests
+we'll perhaps see the addition of a number of other "none" files as
+well.
+
+Also, seems the way things are "run" under VMware is enough different
+that the scripts, should you chose to use them, will need to be
+modified.  The initial set of patches make some arbitrary changes that
+need to be re-worked with some "To run this under VMware uncomment
+this line" or somesuch.
