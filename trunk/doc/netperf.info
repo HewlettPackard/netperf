@@ -4,7 +4,7 @@ netperf.texi.
 This is Rick Jones' feeble attempt at a Texinfo-based manual for the
 netperf benchmark.
 
-   Copyright (C) 2005-2012 Hewlett-Packard Company
+   Copyright (C) 2005-2015 Hewlett-Packard Company
 
      Permission is granted to copy, distribute and/or modify this
      document per the terms of the netperf source license, a copy of
@@ -20,7 +20,7 @@ Netperf Manual
 This is Rick Jones' feeble attempt at a Texinfo-based manual for the
 netperf benchmark.
 
-   Copyright (C) 2005-2012 Hewlett-Packard Company
+   Copyright (C) 2005-2015 Hewlett-Packard Company
 
      Permission is granted to copy, distribute and/or modify this
      document per the terms of the netperf source license, a copy of
@@ -222,8 +222,8 @@ is provided via the NetperfPage (http://www.netperf.org/)
    The bits corresponding to each discrete release of netperf are
 tagged (http://www.netperf.org/svn/netperf2/tags) for retrieval via
 subversion.  For example, there is a tag for the first version
-corresponding to this version of the manual - netperf 2.6.0
-(http://www.netperf.org/svn/netperf2/tags/netperf-2.6.0).  Those
+corresponding to this version of the manual - netperf 2.7.0
+(http://www.netperf.org/svn/netperf2/tags/netperf-2.7.0).  Those
 wishing to be on the bleeding edge of netperf development can use
 subversion to grab the top of trunk
 (http://www.netperf.org/svn/netperf2/trunk).  When fixing bugs or
@@ -3754,23 +3754,23 @@ As of version 2.5.0 the output selectors are:
 
 `LOCAL_SYSNAME'
      The name of the OS (eg "Linux") running on the system on which
-     netperf was running. Units: ASCII Text
+     netperf was running. Units: ASCII Text.  Disabled in 2.7.0.
 
 `LOCAL_SYSTEM_MODEL'
      The model name of the system on which netperf was running. Units:
-     ASCII Text.
+     ASCII Text.  Disabled in 2.7.0.
 
 `LOCAL_RELEASE'
      The release name/number of the OS running on the system on which
-     netperf  was running. Units: ASCII Text
+     netperf  was running. Units: ASCII Text.  Disabled in 2.7.0.
 
 `LOCAL_VERSION'
      The version number of the OS running on the system on which netperf
-     was running. Units: ASCII Text
+     was running. Units: ASCII Text.  Disabled in 2.7.0.
 
 `LOCAL_MACHINE'
      The machine architecture of the machine on which netperf was
-     running. Units: ASCII Text.
+     running. Units: ASCII Text.  Disabled in 2.7.0.
 
 `REMOTE_SYSNAME'
 
@@ -3782,61 +3782,65 @@ As of version 2.5.0 the output selectors are:
 
 `REMOTE_MACHINE'
      These are all like their "LOCAL_" counterparts only for the
-     netserver rather than netperf.
+     netserver rather than netperf.  Disabled in 2.7.0.
 
 `LOCAL_INTERFACE_NAME'
      The name of the probable egress interface through which the data
      connection went on the system running netperf. Example: eth0.
-     Units: ASCII Text.
+     Units: ASCII Text.  Disabled in 2.7.0.
 
 `LOCAL_INTERFACE_VENDOR'
      The vendor ID of the probable egress interface through which
      traffic on the data connection went on the system running netperf.
      Units: Hexadecimal IDs as might be found in a `pci.ids' file or at
-     the PCI ID Repository (http://pciids.sourceforge.net/).
+     the PCI ID Repository (http://pciids.sourceforge.net/).  Disabled
+     in 2.7.0.
 
 `LOCAL_INTERFACE_DEVICE'
      The device ID of the probable egress interface through which
      traffic on the data connection went on the system running netperf.
      Units: Hexadecimal IDs as might be found in a `pci.ids' file or at
-     the PCI ID Repository (http://pciids.sourceforge.net/).
+     the PCI ID Repository (http://pciids.sourceforge.net/).  Disabled
+     in 2.7.0.
 
 `LOCAL_INTERFACE_SUBVENDOR'
      The sub-vendor ID of the probable egress interface through which
      traffic on the data connection went on the system running netperf.
      Units: Hexadecimal IDs as might be found in a `pci.ids' file or at
-     the PCI ID Repository (http://pciids.sourceforge.net/).
+     the PCI ID Repository (http://pciids.sourceforge.net/).  Disabled
+     in 2.7.0.
 
 `LOCAL_INTERFACE_SUBDEVICE'
      The sub-device ID of the probable egress interface through which
      traffic on the data connection went on the system running netperf.
      Units: Hexadecimal IDs as might be found in a `pci.ids' file or at
-     the PCI ID Repository (http://pciids.sourceforge.net/).
+     the PCI ID Repository (http://pciids.sourceforge.net/).  Disabled
+     in 2.7.0.
 
 `LOCAL_DRIVER_NAME'
      The name of the driver used for the probable egress interface
      through which traffic on the data connection went on the system
-     running netperf. Units: ASCII Text.
+     running netperf. Units: ASCII Text.  Disabled in 2.7.0.
 
 `LOCAL_DRIVER_VERSION'
      The version string for the driver used for the probable egress
      interface through which traffic on the data connection went on the
-     system running netperf. Units: ASCII Text.
+     system running netperf. Units: ASCII Text.  Disabled in 2.7.0.
 
 `LOCAL_DRIVER_FIRMWARE'
      The firmware version for the driver used for the probable egress
      interface through which traffic on the data connection went on the
-     system running netperf. Units: ASCII Text.
+     system running netperf. Units: ASCII Text.  Disabled in 2.7.0.
 
 `LOCAL_DRIVER_BUS'
      The bus address of the probable egress interface through which
      traffic on the data connection went on the system running netperf.
-     Units: ASCII Text.
+     Units: ASCII Text.  Disabled in 2.7.0.
 
 `LOCAL_INTERFACE_SLOT'
      The slot ID of the probable egress interface through which traffic
      on the data connection went on the system running netperf. Units:
-     ASCII Text.
+     ASCII Text.  Disabled in 2.7.0.
 
 `REMOTE_INTERFACE_NAME'
 
@@ -3858,7 +3862,7 @@ As of version 2.5.0 the output selectors are:
 
 `REMOTE_INTERFACE_SLOT'
      These are all like their "LOCAL_" counterparts only for the
-     netserver rather than netperf.
+     netserver rather than netperf.  Disabled in 2.7.0.
 
 `LOCAL_INTERVAL_USECS'
      The interval at which bursts of operations (sends, receives,
@@ -3912,7 +3916,8 @@ As of version 2.5.0 the output selectors are:
 
 `REMOTE_SECURITY_SPECIFIC'
      A bunch of stuff related to what sort of security mechanisms (eg
-     SELINUX) were enabled on the systems during the test.
+     SELINUX) were enabled on the systems during the test.  Disabled in
+     2.7.0.
 
 `RESULT_BRAND'
      The string specified by the user with the global `-B' option.
@@ -4352,13 +4357,13 @@ Node: Native Omni Tests134881
 Node: Migrated Tests140159
 Node: Omni Output Selection142264
 Node: Omni Output Selectors145247
-Node: Other Netperf Tests174980
-Node: CPU rate calibration175415
-Node: UUID Generation177783
-Node: Address Resolution178499
-Node: Enhancing Netperf180475
-Node: Netperf4181970
-Node: Concept Index182875
-Node: Option Index185201
+Node: Other Netperf Tests175368
+Node: CPU rate calibration175803
+Node: UUID Generation178171
+Node: Address Resolution178887
+Node: Enhancing Netperf180863
+Node: Netperf4182358
+Node: Concept Index183263
+Node: Option Index185589
 
 End Tag Table

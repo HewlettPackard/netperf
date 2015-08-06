@@ -1,8 +1,8 @@
 <html lang="en">
 <head>
-<title>Care and Feeding of Netperf 2.6.X</title>
+<title>Care and Feeding of Netperf 2.7.X</title>
 <meta http-equiv="Content-Type" content="text/html">
-<meta name="description" content="Care and Feeding of Netperf 2.6.X">
+<meta name="description" content="Care and Feeding of Netperf 2.7.X">
 <meta name="generator" content="makeinfo 4.13">
 <link title="Top" rel="top" href="#Top">
 <link href="http://www.gnu.org/software/texinfo/" rel="generator-home" title="Texinfo Homepage">
@@ -10,7 +10,7 @@
 This is Rick Jones' feeble attempt at a Texinfo-based manual for the
 netperf benchmark.
 
-Copyright (C) 2005-2012 Hewlett-Packard Company
+Copyright (C) 2005-2015 Hewlett-Packard Company
 
      Permission is granted to copy, distribute and/or modify this
      document per the terms of the netperf source license, a copy of
@@ -31,7 +31,7 @@ Copyright (C) 2005-2012 Hewlett-Packard Company
 --></style>
 </head>
 <body>
-<h1 class="settitle">Care and Feeding of Netperf 2.6.X</h1>
+<h1 class="settitle">Care and Feeding of Netperf 2.7.X</h1>
 <div class="contents">
 <h2>Table of Contents</h2>
 <ul>
@@ -147,7 +147,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#dir">(dir)</a>
 <p>This is Rick Jones' feeble attempt at a Texinfo-based manual for the
 netperf benchmark.
 
-   <p>Copyright &copy; 2005-2012 Hewlett-Packard Company
+   <p>Copyright &copy; 2005-2015 Hewlett-Packard Company
 <blockquote>
 Permission is granted to copy, distribute and/or modify this document
 per the terms of the netperf source license, a copy of which can be
@@ -372,7 +372,7 @@ is provided via the
 <a href="http://www.netperf.org/svn/netperf2/tags">tagged</a> for retrieval
 via subversion.  For example, there is a tag for the first version
 corresponding to this version of the manual -
-<a href="http://www.netperf.org/svn/netperf2/tags/netperf-2.6.0">netperf 2.6.0</a>.  Those wishing to be on the bleeding edge of netperf
+<a href="http://www.netperf.org/svn/netperf2/tags/netperf-2.7.0">netperf 2.7.0</a>.  Those wishing to be on the bleeding edge of netperf
 development can use subversion to grab the
 <a href="http://www.netperf.org/svn/netperf2/trunk">top of trunk</a>.  When
 fixing bugs or making enhancements, patches against the top-of-trunk
@@ -3913,53 +3913,53 @@ yes, 0 means no/not applicable.
 <br><dt><code>REMOTE_SEND_CALLS</code><br><dt><code>REMOTE_RECV_CALLS</code><br><dt><code>REMOTE_BYTES_PER_RECV</code><br><dt><code>REMOTE_BYTES_PER_SEND</code><br><dt><code>REMOTE_BYTES_SENT</code><br><dt><code>REMOTE_BYTES_RECVD</code><br><dt><code>REMOTE_BYTES_XFERD</code><br><dt><code>REMOTE_SEND_OFFSET</code><br><dt><code>REMOTE_RECV_OFFSET</code><br><dt><code>REMOTE_SEND_ALIGN</code><br><dt><code>REMOTE_RECV_ALIGN</code><br><dt><code>REMOTE_SEND_WIDTH</code><br><dt><code>REMOTE_RECV_WIDTH</code><br><dt><code>REMOTE_SEND_DIRTY_COUNT</code><br><dt><code>REMOTE_RECV_DIRTY_COUNT</code><br><dt><code>REMOTE_RECV_CLEAN_COUNT</code><br><dt><code>REMOTE_NODELAY</code><br><dt><code>REMOTE_CORK</code><dd>These are all like their &ldquo;LOCAL_&rdquo; counterparts only for the
 netserver rather than netperf. 
 <br><dt><code>LOCAL_SYSNAME</code><dd>The name of the OS (eg &ldquo;Linux&rdquo;) running on the system on which
-netperf was running. Units: ASCII Text
+netperf was running. Units: ASCII Text.  Disabled in 2.7.0. 
 <br><dt><code>LOCAL_SYSTEM_MODEL</code><dd>The model name of the system on which netperf was running. Units:
-ASCII Text. 
+ASCII Text.  Disabled in 2.7.0. 
 <br><dt><code>LOCAL_RELEASE</code><dd>The release name/number of the OS running on the system on which
-netperf  was running. Units: ASCII Text
+netperf  was running. Units: ASCII Text.  Disabled in 2.7.0. 
 <br><dt><code>LOCAL_VERSION</code><dd>The version number of the OS running on the system on which netperf
-was running. Units: ASCII Text
+was running. Units: ASCII Text.  Disabled in 2.7.0. 
 <br><dt><code>LOCAL_MACHINE</code><dd>The machine architecture of the machine on which netperf was
-running. Units: ASCII Text. 
+running. Units: ASCII Text.  Disabled in 2.7.0. 
 <br><dt><code>REMOTE_SYSNAME</code><br><dt><code>REMOTE_SYSTEM_MODEL</code><br><dt><code>REMOTE_RELEASE</code><br><dt><code>REMOTE_VERSION</code><br><dt><code>REMOTE_MACHINE</code><dd>These are all like their &ldquo;LOCAL_&rdquo; counterparts only for the
-netserver rather than netperf. 
+netserver rather than netperf.  Disabled in 2.7.0. 
 <br><dt><code>LOCAL_INTERFACE_NAME</code><dd>The name of the probable egress interface through which the data
 connection went on the system running netperf. Example: eth0. Units:
-ASCII Text. 
+ASCII Text.  Disabled in 2.7.0. 
 <br><dt><code>LOCAL_INTERFACE_VENDOR</code><dd>The vendor ID of the probable egress interface through which traffic
 on the data connection went on the system running netperf. Units:
 Hexadecimal IDs as might be found in a <samp><span class="file">pci.ids</span></samp> file or at
-<a href="http://pciids.sourceforge.net/">the PCI ID Repository</a>. 
+<a href="http://pciids.sourceforge.net/">the PCI ID Repository</a>.  Disabled in 2.7.0. 
 <br><dt><code>LOCAL_INTERFACE_DEVICE</code><dd>The device ID of the probable egress interface through which traffic
 on the data connection went on the system running netperf. Units:
 Hexadecimal IDs as might be found in a <samp><span class="file">pci.ids</span></samp> file or at
-<a href="http://pciids.sourceforge.net/">the PCI ID Repository</a>. 
+<a href="http://pciids.sourceforge.net/">the PCI ID Repository</a>.  Disabled in 2.7.0. 
 <br><dt><code>LOCAL_INTERFACE_SUBVENDOR</code><dd>The sub-vendor ID of the probable egress interface through which
 traffic on the data connection went on the system running
 netperf. Units: Hexadecimal IDs as might be found in a <samp><span class="file">pci.ids</span></samp>
-file or at <a href="http://pciids.sourceforge.net/">the PCI ID Repository</a>. 
+file or at <a href="http://pciids.sourceforge.net/">the PCI ID Repository</a>.  Disabled in 2.7.0. 
 <br><dt><code>LOCAL_INTERFACE_SUBDEVICE</code><dd>The sub-device ID of the probable egress interface through which
 traffic on the data connection went on the system running
 netperf. Units: Hexadecimal IDs as might be found in a <samp><span class="file">pci.ids</span></samp>
-file or at <a href="http://pciids.sourceforge.net/">the PCI ID Repository</a>. 
+file or at <a href="http://pciids.sourceforge.net/">the PCI ID Repository</a>.  Disabled in 2.7.0. 
 <br><dt><code>LOCAL_DRIVER_NAME</code><dd>The name of the driver used for the probable egress interface through
 which traffic on the data connection went on the system running
-netperf. Units: ASCII Text. 
+netperf. Units: ASCII Text.  Disabled in 2.7.0. 
 <br><dt><code>LOCAL_DRIVER_VERSION</code><dd>The version string for the driver used for the probable egress
 interface through which traffic on the data connection went on the
-system running netperf. Units: ASCII Text. 
+system running netperf. Units: ASCII Text.  Disabled in 2.7.0. 
 <br><dt><code>LOCAL_DRIVER_FIRMWARE</code><dd>The firmware version for the driver used for the probable egress
 interface through which traffic on the data connection went on the
-system running netperf. Units: ASCII Text. 
+system running netperf. Units: ASCII Text.  Disabled in 2.7.0. 
 <br><dt><code>LOCAL_DRIVER_BUS</code><dd>The bus address of the probable egress interface through which traffic
 on the data connection went on the system running netperf. Units:
-ASCII Text. 
+ASCII Text.  Disabled in 2.7.0. 
 <br><dt><code>LOCAL_INTERFACE_SLOT</code><dd>The slot ID of the probable egress interface through which traffic
 on the data connection went on the system running netperf. Units:
-ASCII Text. 
+ASCII Text.  Disabled in 2.7.0. 
 <br><dt><code>REMOTE_INTERFACE_NAME</code><br><dt><code>REMOTE_INTERFACE_VENDOR</code><br><dt><code>REMOTE_INTERFACE_DEVICE</code><br><dt><code>REMOTE_INTERFACE_SUBVENDOR</code><br><dt><code>REMOTE_INTERFACE_SUBDEVICE</code><br><dt><code>REMOTE_DRIVER_NAME</code><br><dt><code>REMOTE_DRIVER_VERSION</code><br><dt><code>REMOTE_DRIVER_FIRMWARE</code><br><dt><code>REMOTE_DRIVER_BUS</code><br><dt><code>REMOTE_INTERFACE_SLOT</code><dd>These are all like their &ldquo;LOCAL_&rdquo; counterparts only for the
-netserver rather than netperf. 
+netserver rather than netperf.  Disabled in 2.7.0. 
 <br><dt><code>LOCAL_INTERVAL_USECS</code><dd>The interval at which bursts of operations (sends, receives,
 transactions) were attempted by netperf.  Specified by the
 global <samp><span class="option">-w</span></samp> option which requires &ndash;enable-intervals to have
@@ -3983,7 +3983,7 @@ units of time. Specified by the global <samp><span class="option">-b</span></sam
 requires &ndash;enable-intervals to have been specified with the configure
 command prior to building netperf.  Units: number of operations per burst. 
 <br><dt><code>LOCAL_SECURITY_TYPE_ID</code><br><dt><code>LOCAL_SECURITY_TYPE</code><br><dt><code>LOCAL_SECURITY_ENABLED_NUM</code><br><dt><code>LOCAL_SECURITY_ENABLED</code><br><dt><code>LOCAL_SECURITY_SPECIFIC</code><br><dt><code>REMOTE_SECURITY_TYPE_ID</code><br><dt><code>REMOTE_SECURITY_TYPE</code><br><dt><code>REMOTE_SECURITY_ENABLED_NUM</code><br><dt><code>REMOTE_SECURITY_ENABLED</code><br><dt><code>REMOTE_SECURITY_SPECIFIC</code><dd>A bunch of stuff related to what sort of security mechanisms (eg
-SELINUX) were enabled on the systems during the test. 
+SELINUX) were enabled on the systems during the test.  Disabled in 2.7.0. 
 <br><dt><code>RESULT_BRAND</code><dd>The string specified by the user with the global <samp><span class="option">-B</span></samp>
 option. Units: ASCII Text. 
 <br><dt><code>UUID</code><dd>The universally unique identifier associated with this test, either

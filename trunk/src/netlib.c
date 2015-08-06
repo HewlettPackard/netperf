@@ -2406,6 +2406,22 @@ bind_to_specific_processor(int processor_affinity, int use_cpu_map)
     }
   }
 
+#elif defined(__FreeBSD__)
+#include <sys/param.h>
+  /* FreeBSD introduced cpuset_setaffinity() in version 7.1 */
+#if (__FreeBSD_version > 701000)
+#include <sys/cpuset.h>  
+
+  cpuset_t mask;
+
+  CPU_ZERO(&mask);
+  CPU_SET(mapped_affinity, &mask);
+  if (cpuset_setaffinity(CPU_LEVEL_WHICH, CPU_WHICH_PID, -1,
+			 sizeof(mask), &mask)) {
+	perror("cpuset_setaffinity failed");
+	fflush(stderr);
+  }
+#endif /* __FreeBSD_version */    
 #else
   if (debug) {
     fprintf(where,
