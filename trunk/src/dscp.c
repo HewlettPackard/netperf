@@ -54,6 +54,9 @@ const char * iptos2str(int iptos);
  */
 
 #if HAVE_NETINET_IN_SYSTM_H
+#if defined(__FreeBSD__)
+#include <sys/types.h>
+#endif
 #include <netinet/in_systm.h>
 #endif
 #if HAVE_NETINET_IP_H
