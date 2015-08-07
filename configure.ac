@@ -467,7 +467,7 @@ case "$enable_sctp" in
 #include <sys/socket.h>
 ]])
 		case "$host" in
-		*-*-freebsd[78].*)
+		*-*-freebsd[[7-9]].* | *-*-freebsd1[[0-1]].* )
 			# FreeBSD 7.x and later SCTP support doesn't need -lsctp.
 			;;
 		*)
@@ -699,7 +699,7 @@ case "$enable_cpuutil" in
 			enable_cpuutil="kstat - auto"
 			NETCPU_SOURCE="kstat"
 			;;
-                     *-*-freebsd[[4-8]].* | *-*-netbsd[[1-9]].* )
+                     *-*-freebsd[[4-9]].* | *-*-freebsd1[[0-1]].* | *-*-netbsd[[1-9]].* )
 			use_cpuutil=true
 			AC_DEFINE([USE_SYSCTL],,[Use MumbleBSD's sysctl interface to measure CPU util.])
 			enable_cpuutil="sysctl - auto"

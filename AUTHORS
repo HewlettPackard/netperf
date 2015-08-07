@@ -107,6 +107,7 @@ calibration-free
 fixes to configure to recognize Solaris 11
 fixes to netcpu_procstat.c for later linux kernels
 workarounds to get Linux to report ENOBUFS on TX queue overflows
+FreeBSD fixes
 
 Mark Cooper
 pointing-out the need for -lresolv when compiling -DDO_DNS on RedHat
