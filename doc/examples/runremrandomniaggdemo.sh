@@ -61,7 +61,7 @@ function run_cmd {
 	TARGET=${NETSERVERS[$netserid]}
 	if [ $USE_PRIVATE_IP -eq 1 ]
         then
-	    TARGET=${NETSERVERS_PRIV[`expr $i % $NUM_NETSERVERS`]}
+	    TARGET=${NETSERVERS_PRIV[${netserid}]}
         fi
 	echo "Starting netperfs on $SOURCE targeting ${TARGET} for $TEST" | tee -a $TESTLOG
 	id=`printf "%.5d" $i`
