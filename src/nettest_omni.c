@@ -2951,8 +2951,12 @@ send_data(SOCKET data_socket, struct ring_elt *send_ring, uint32_t bytes_to_send
        the caller figure it out :) we won't actually check to see if
        this is UDP - it is the author's experience in many, Many, MANY
        years that the only time an ENOBUFS has been returned in a
-       netperf test has been with UDP.  famous last words :) */
-    if (errno == ENOBUFS)
+       netperf test has been with UDP.  famous last words :) 
+
+       And so, many years later, we learn that with virtio one can
+       also get ENOMEM.  So much for famous last words - Thanks Paolo
+       :) */
+    if ((errno == ENOBUFS) || (errno == ENOMEM))
       return -2;
     else {
       fprintf(where,"%s: data send error: %s (errno %d)\n",
