@@ -434,6 +434,10 @@ extern void PrintWin32Error(FILE *stream, LPSTR text);
   (((return_value) == SOCKET_ERROR) && (errno == WSAEWOULDBLOCK))
 #endif
 
+#if defined(HAVE_SYS_SENDFILE_H)
+#include <sys/sendfile.h>
+#endif
+
 #ifdef HAVE_SENDFILE
 
 #endif /* HAVE_SENDFILE */
