@@ -46,7 +46,9 @@ char	nettest_unix_id[]="\
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#if defined(HAVE_SYS_IPC_H)
 #include <sys/ipc.h>
+#endif
 #include <sys/socket.h>
 #include <errno.h>
 #include <signal.h>
