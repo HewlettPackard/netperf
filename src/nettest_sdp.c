@@ -44,7 +44,9 @@ char	nettest_sdp[]="\
 #endif /* NOSTDLIBH */
 
 #if !defined(__VMS)
+#if defined(HAVE_SYS_IPC_H)
 #include <sys/ipc.h>
+#endif
 #endif /* !defined(__VMS) */
 #include <unistd.h>
 #include <sys/types.h>

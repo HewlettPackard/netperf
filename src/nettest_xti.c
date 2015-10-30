@@ -45,7 +45,9 @@ char	nettest_xti_id[]="\
 
 #include <sys/types.h>
 #include <fcntl.h>
+#if defined(HAVE_SYS_IPC_H)
 #include <sys/ipc.h>
+#endif
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
