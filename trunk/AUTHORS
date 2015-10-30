@@ -308,3 +308,5 @@ the UDP socket connected at the netserver side.
 Weijia Song - a fix inspiration for a NULL pointer problem.
 
 Gisle Vanem - some Windows compilation fixes
+
+Elliott Hughes - some fixes for Android compilation

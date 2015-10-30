@@ -29,6 +29,10 @@
 #include <string.h>
 #include <fcntl.h>
 
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
+#endif
+
 #if defined(HAVE_INTTYPES_H)
 #include <inttypes.h>
 #endif
