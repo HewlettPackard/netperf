@@ -207,6 +207,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = m4
+EXTRA_DIST = stdint.h inttypes.h
 @NEED_LIBCOMPAT_TRUE@noinst_LIBRARIES = libcompat.a
 @NEED_LIBCOMPAT_TRUE@libcompat_a_SOURCES = getaddrinfo.h
 @NEED_LIBCOMPAT_TRUE@libcompat_a_LIBADD = $(LIBOBJS) $(ALLOCA)
