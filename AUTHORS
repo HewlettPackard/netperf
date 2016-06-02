@@ -313,3 +313,8 @@ Elliott Hughes - some fixes for Android compilation
 
 Paolo Abeni - include ENOMEM as a transient error to accomodate virtio
               "NICs" and their driver's behaviour.
+
+Sebastian Moeller - fixes to make net_uuid.c happy on OSX 10.10
+
+Andrew Kirch - patch for inline not being appy on OSX - provided the
+               last straw to go ahead and remove the inlining entirely
