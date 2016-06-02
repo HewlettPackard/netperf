@@ -110,6 +110,7 @@ char    netlib_id[]="\
 #include <time.h>
 #include <winsock2.h>
 #define netperf_socklen_t socklen_t
+#define WIN32_LEAN_AND_MEAN 1
 #include <windows.h>
 #include <mmsystem.h>
 /* the only time someone should need to define DONT_IPV6 in the
@@ -118,8 +119,6 @@ char    netlib_id[]="\
 #ifndef DONT_IPV6
 #include <ws2tcpip.h>
 #endif
-
-#include <windows.h>
 
 #define SIGALRM (14)
 #define sleep(x) Sleep((x)*1000)
@@ -4013,11 +4012,7 @@ void demo_stream_setup(uint32_t a, uint32_t b) {
   }
 }
 
-#ifdef WIN32
-__forceinline void demo_interval_display(double actual_interval)
-#else
-  inline void demo_interval_display(double actual_interval)
-#endif
+void demo_interval_display(double actual_interval)
 {
   static int count = 0;
   struct timeval now;
@@ -4076,15 +4071,7 @@ __forceinline void demo_interval_display(double actual_interval)
    important compilers have supported such a construct so it should
    not be a big deal. raj 2012-01-23 */
 
-#ifdef WIN32
-/* It would seem that the Microsoft compiler will not inline across
-   source files. So there is little point in having an inline
-   directive in that situation.  Of course that makes me wonder if an
-   inline directive has to appear in netlib.h... */
 void demo_interval_tick(uint32_t units)
-#else
-  inline void demo_interval_tick(uint32_t units)
-#endif
 {
   double actual_interval = 0.0;
 

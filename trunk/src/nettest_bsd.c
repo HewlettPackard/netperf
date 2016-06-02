@@ -124,6 +124,8 @@ char	nettest_id[]="\
 #ifndef DONT_IPV6
 #include <ws2tcpip.h>
 #endif
+
+#define WIN32_LEAN_AND_MEAN 1
 #include <windows.h>
 
 #define sleep(x) Sleep((x)*1000)

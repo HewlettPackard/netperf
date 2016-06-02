@@ -116,6 +116,7 @@ char nettest_omni_id[]="\
 #ifndef DONT_IPV6
 #include <ws2tcpip.h>
 #endif
+#define WIN32_LEAN_AND_MEAN 1
 #include <windows.h>
 
 #define sleep(x) Sleep((x)*1000)
@@ -712,7 +713,74 @@ int use_pktinfo = 0;
 int have_pktinfo = 0;
 #ifdef IP_PKTINFO
 struct in_pktinfo in_pktinfo;
-#endif
+
+#ifdef WIN32
+//NOTE: Linux's msghdr is very similar to Windows' WSAMSG, but the member names are different :(
+
+//#define cmsghdr WSACMSGHDR
+#define CMSG_FIRSTHDR WSA_CMSG_FIRSTHDR
+#define CMSG_NXTHDR WSA_CMSG_NXTHDR
+#define CMSG_DATA WSA_CMSG_DATA
+#define CMSG_SPACE WSA_CMSG_SPACE
+#define CMSG_LEN WSA_CMSG_LEN
+
+
+// Note: the Winsock2 function WSARecvMsg is NOT defined directly in the MSFT headers; it must be determined via an IOCTL interface.
+// Taken from MSFT example: https://github.com/theonlylawislove/WindowsSDK7-Samples/blob/master/netds/winsock/recvmsg/rmmc.cpp
+
+/*
+ * WSARecvMsg -- support for receiving ancilliary
+ * data/control information with a message.
+ */
+typedef
+INT
+(PASCAL FAR * LPFN_WSARECVMSG) (
+    __in SOCKET s, 
+    __inout LPWSAMSG lpMsg, 
+    __out_opt LPDWORD lpdwNumberOfBytesRecvd, 
+    __inout_opt LPWSAOVERLAPPED lpOverlapped, 
+    __in_opt LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
+    );
+
+#define WSAID_WSARECVMSG \
+    {0xf689d7c8,0x6f1f,0x436b,{0x8a,0x53,0xe5,0x4f,0xe3,0x51,0xc3,0x22}}
+
+LPFN_WSARECVMSG pWSARecvMsg = NULL;
+
+LPFN_WSARECVMSG GetWSARecvMsgFunctionPointer()
+{ 
+    LPFN_WSARECVMSG     lpfnWSARecvMsg = NULL; 
+    GUID                guidWSARecvMsg = WSAID_WSARECVMSG; 
+    SOCKET              sock = INVALID_SOCKET; 
+    DWORD               dwBytes = 0; 
+	int rc;
+
+    sock = socket(AF_INET6,SOCK_DGRAM,0); 
+
+    rc= WSAIoctl(sock,  
+                 SIO_GET_EXTENSION_FUNCTION_POINTER,  
+                 &guidWSARecvMsg,  
+                 sizeof(guidWSARecvMsg),  
+                 &lpfnWSARecvMsg,  
+                 sizeof(lpfnWSARecvMsg),  
+                 &dwBytes,  
+                 NULL,  
+                 NULL 
+                 );
+
+    closesocket(sock); 
+
+	if (rc == SOCKET_ERROR) {
+        //print an error message, such as "WSAIoctl SIO_GET_EXTENSION_FUNCTION_POINTER failed for WSARecvMsg"
+		lpfnWSARecvMsg = NULL;  // Just to be sure...
+    }
+
+
+    return lpfnWSARecvMsg; 
+} 
+
+#endif /* WIN32 */
+#endif /* IP_PKTINFO */
 
 char *direction_to_str(int direction) {
   if (NETPERF_RECV_ONLY(direction)) return "Receive";
@@ -2841,14 +2909,24 @@ connect_data_socket(SOCKET send_socket, struct addrinfo *remote_res, int dont_gi
 static
 int send_pktinfo(SOCKET data_socket, char *buffer, int len, struct sockaddr *destination, int destlen) {
 #ifdef IP_PKTINFO
+//NOTE: Linux's msghdr is very similar to Windows' WSAMSG, but the member names are different :(
+#ifndef WIN32
   struct msghdr msg;
   struct iovec iovec[1];
+#else
+  struct _WSAMSG msg;
+  struct _WSABUF iovec[1];
+  DWORD BytesSent = 0;
+  int rc = 0;
+#endif
   char msg_control[512];
   struct cmsghdr *cmsg;
   int cmsg_space = 0;
 
+#ifndef WIN32
   iovec[0].iov_base = buffer;
   iovec[0].iov_len = len;
+
   msg.msg_name = destination;
   msg.msg_namelen = destlen;
   msg.msg_iov = iovec;
@@ -2856,6 +2934,18 @@ int send_pktinfo(SOCKET data_socket, char *buffer, int len, struct sockaddr *des
   msg.msg_control = msg_control;
   msg.msg_controllen = sizeof(msg_control);
   msg.msg_flags = 0;
+#else
+  iovec[0].buf = buffer;
+  iovec[0].len = len;
+
+  msg.name = destination;
+  msg.namelen = destlen;
+  msg.lpBuffers = iovec;
+  msg.dwBufferCount = 1;
+  msg.Control.buf = msg_control;
+  msg.Control.len = sizeof(msg_control);
+  msg.dwFlags = 0;
+#endif //WIN32
 
   cmsg = CMSG_FIRSTHDR(&msg);
   if (have_pktinfo) {
@@ -2865,8 +2955,15 @@ int send_pktinfo(SOCKET data_socket, char *buffer, int len, struct sockaddr *des
     *(struct in_pktinfo*)CMSG_DATA(cmsg) = in_pktinfo;
     cmsg_space += CMSG_SPACE(sizeof(in_pktinfo));
   }
+#ifndef WIN32
   msg.msg_controllen = cmsg_space;
   return sendmsg(data_socket, &msg, 0);
+#else
+  msg.Control.len = cmsg_space;
+  rc = WSASendMsg(data_socket, &msg, 0, &BytesSent, NULL, NULL);
+  //+*+ If rc != 0 we should call WSAGetLastError and print some kind of error msg...
+  return BytesSent;
+#endif
 #else
   return -1;
 #endif /* IP_PKTINFO */
@@ -2956,6 +3053,14 @@ send_data(SOCKET data_socket, struct ring_elt *send_ring, uint32_t bytes_to_send
        And so, many years later, we learn that with virtio one can
        also get ENOMEM.  So much for famous last words - Thanks Paolo
        :) */
+
+#ifdef WIN32
+	// Until MSFT gets around to defining yhis in winsock2.h
+#ifndef ENOMEM
+#define ENOMEM ENOBUFS
+#endif
+#endif
+
     if ((errno == ENOBUFS) || (errno == ENOMEM))
       return -2;
     else {
@@ -3087,8 +3192,16 @@ static
 int recv_pktinfo(SOCKET data_socket, char *message_ptr, int bytes_to_recv,  int my_flags, struct sockaddr *source, netperf_socklen_t *sourcelen) {
 
 #ifdef IP_PKTINFO
+//NOTE: Linux's msghdr is very similar to Windows' WSAMSG, but the member names are different :(
+#ifndef WIN32
   struct iovec  my_iovec;
   struct msghdr my_header;
+#else
+  struct _WSAMSG my_header;
+  struct _WSABUF my_iovec;
+  DWORD BytesRecvd = 0;
+  int rc;
+#endif
   struct cmsghdr *cmsg;
   struct in_pktinfo *pktinfo;
 
@@ -3096,6 +3209,7 @@ int recv_pktinfo(SOCKET data_socket, char *message_ptr, int bytes_to_recv,  int 
   int onoff = 1;
   int ret;
 
+#ifndef WIN32
   my_iovec.iov_base = message_ptr;
   my_iovec.iov_len = bytes_to_recv;
 
@@ -3105,13 +3219,31 @@ int recv_pktinfo(SOCKET data_socket, char *message_ptr, int bytes_to_recv,  int 
   my_header.msg_iovlen = 1;
   my_header.msg_control = control_buf;
   my_header.msg_controllen = sizeof(control_buf);
+#else
+  my_iovec.buf = message_ptr;
+  my_iovec.len = bytes_to_recv;
 
+  my_header.name = source;
+  my_header.namelen = *sourcelen;
+  my_header.lpBuffers = &my_iovec;
+  my_header.dwBufferCount = 1;
+  my_header.Control.buf = control_buf;
+  my_header.Control.len = sizeof(control_buf);
+  my_header.dwFlags = 0;
+#endif
   /* not going to bother checking, if it doesn't work we are no
      worse-off than we were before. we are going to ignore IPv6 for
      the time being */
-  setsockopt(data_socket, IPPROTO_IP, IP_PKTINFO, &onoff, sizeof(onoff));
+  setsockopt(data_socket, IPPROTO_IP, IP_PKTINFO, (char *)&onoff, sizeof(onoff));
   
+#ifndef WIN32
   ret = recvmsg(data_socket, &my_header, 0);
+#else
+  if (pWSARecvMsg == NULL) pWSARecvMsg = GetWSARecvMsgFunctionPointer();
+  rc = pWSARecvMsg(data_socket, &my_header, &BytesRecvd, NULL, NULL);
+  //+*+ If rc != 0 we should call WSAGetLastError and print some kind of error msg...
+  ret = BytesRecvd;
+#endif  //WIN32
 
   if (ret >= 0) {
     struct sockaddr_in me;
@@ -3128,7 +3260,7 @@ int recv_pktinfo(SOCKET data_socket, char *message_ptr, int bytes_to_recv,  int 
   }
 
   onoff = 0;
-  setsockopt(data_socket, IPPROTO_IP, IP_PKTINFO, &onoff, sizeof(onoff));
+  setsockopt(data_socket, IPPROTO_IP, IP_PKTINFO, (char *)&onoff, sizeof(onoff));
 
   return ret;
 #else
@@ -3575,7 +3707,7 @@ omni_create_data_socket(struct addrinfo *res)
       setsockopt(temp_socket, 
 		 SOL_SOCKET,
 		 SO_DEBUG,
-		 &one,
+		 (char *)&one,
 		 sizeof(one));
     }
   }

@@ -25,12 +25,6 @@ SOURCES= \
 	..\netsh.c \
 	..\nettest_bsd.c \
 	..\nettest_omni.c \
-	..\netsec_win.c \
-	..\netdrv_none.c \
-	..\netslot_none.c \
-	..\netsys_none.c \
-	..\netrt_none.c \
-	..\netfirewall_none.c \
 	..\net_uuid.c \
 	..\netperf.c \
 	..\dscp.c \

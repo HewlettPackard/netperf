@@ -42,6 +42,7 @@
 #define UUIDS_PER_TICK 1024
 
 #ifdef WIN32
+#define WIN32_LEAN_AND_MEAN 1
 #include <windows.h>
 #include "missing\stdint.h"
 #define snprintf _snprintf
@@ -81,7 +82,6 @@ typedef struct {
   char nodeID[6];
 } uuid_node_t;
 
-#undef uuid_t
 typedef struct {
   uint32_t  time_low;
   uint16_t  time_mid;
@@ -89,7 +89,7 @@ typedef struct {
   uint8_t   clock_seq_hi_and_reserved;
   uint8_t   clock_seq_low;
   uint8_t   node[6];
-} uuid_t;
+} netperf_uuid_t;
 
 /* some forward declarations.  kind of wimpy to do that but heck, we
    are all friends here right?  raj 20081024 */
@@ -197,7 +197,7 @@ static uint16_t true_random(void)
 }
 
 /* puid -- print a UUID */
-void puid(uuid_t u)
+void puid(netperf_uuid_t u)
 {
   int i;
 
@@ -210,7 +210,7 @@ void puid(uuid_t u)
 }
 
 /* snpuid -- print a UUID in the supplied buffer */
-void snpuid(char *str, size_t size, uuid_t u) {
+void snpuid(char *str, size_t size, netperf_uuid_t u) {
   int i;
   char *tmp = str;
 
@@ -295,7 +295,7 @@ static void get_ieee_node_identifier(uuid_node_t *node)
 
 /* format_uuid_v1 -- make a UUID from the timestamp, clockseq,
    and node ID */
-static void format_uuid_v1(uuid_t* uuid, uint16_t clock_seq,
+static void format_uuid_v1(netperf_uuid_t* uuid, uint16_t clock_seq,
                     uuid_time_t timestamp, uuid_node_t node)
 {
   /* Construct a version 1 uuid with the information we've gathered
@@ -312,7 +312,7 @@ static void format_uuid_v1(uuid_t* uuid, uint16_t clock_seq,
 }
 
 /* uuid_create -- generator a UUID */
-int uuid_create(uuid_t *uuid)
+int uuid_create(netperf_uuid_t *uuid)
 {
   uuid_time_t timestamp;
   uint16_t clockseq;
@@ -331,7 +331,7 @@ int uuid_create(uuid_t *uuid)
 }
 
 void get_uuid_string(char *uuid_str, size_t size) {
-  uuid_t u;
+  netperf_uuid_t u;
 
   uuid_create(&u);
   snpuid(uuid_str,size,u);
@@ -344,7 +344,7 @@ void get_uuid_string(char *uuid_str, size_t size) {
 int
 main(int argc, char *argv[])
 {
-  uuid_t u;
+  netperf_uuid_t u;
   char  uuid_str[38];
 #if 0
   uuid_create(&u);

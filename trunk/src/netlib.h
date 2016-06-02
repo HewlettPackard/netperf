@@ -290,6 +290,17 @@ union netperf_response_struct {
   double dummy;
 };
 
+#ifdef WIN32
+#ifndef _OFF_T_DEFINED
+typedef long _off_t;                /* file offset value */
+#if     !__STDC__
+/* Non-ANSI name for compatibility */
+typedef long off_t;
+#endif
+#define _OFF_T_DEFINED
+#endif  //_OFF_T_DEFINED
+#endif  //WIN32
+
 struct ring_elt {
   struct ring_elt *next;  /* next element in the ring */
   char *buffer_base;      /* in case we have to free it at somepoint */
