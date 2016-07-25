@@ -6418,18 +6418,18 @@ Send   Recv    Send   Recv    usec/Tran  per sec  Outbound   Inbound\n\
 static void
 enable_enobufs(int s)
 {
-  struct protoent *pr;
   int on = 1;
 
-  if ((pr = getprotobyname("ip")) == NULL) {
-    fprintf(where, "enable_enobufs failed: getprotobyname\n");
-    fflush(where);
-    return;
-  }
-  if (setsockopt(s, pr->p_proto, IP_RECVERR, (char *)&on, sizeof(on)) < 0) {
-    fprintf(where, "enable_enobufs failed: setsockopt\n");
-    fflush(where);
-    return;
+  /* Per Brian Ginsbach, the likes of SLES12 do not have "ip" listed
+     in /etc/protocols and others may have an incorrect value.  At his
+     suggestion, we'll just go with IPPROTO_IP.  And while I am here,
+     perhaps we should be trying IPPROTO_IPV6 if that fails */
+  if (setsockopt(s, IPPROTO_IP, IP_RECVERR, (char *)&on, sizeof(on)) < 0) {
+    if (setsockopt(s, IPPROTO_IPV6, IPV6_RECVERR, (char *)&on, sizeof(on)) < 0) {
+      fprintf(where, "%s failed: setsockopt (errno %d)\n",__FUNCTION__,errno);
+      fflush(where);
+      return;
+    }
   }
 }
 #endif

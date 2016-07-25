@@ -318,3 +318,7 @@ Sebastian Moeller - fixes to make net_uuid.c happy on OSX 10.10
 
 Andrew Kirch - patch for inline not being appy on OSX - provided the
                last straw to go ahead and remove the inlining entirely
+
+Brian Ginsbach - pointing-out that relying on being able to do a
+                 protocol lookup on "ip" isn't going to work with all
+                 Distros.
