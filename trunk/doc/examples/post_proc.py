@@ -416,7 +416,7 @@ def setup_parser() :
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--individual", action='store_true',
                         default=False,
-                        help="Generate graps of individual tests")
+                        help="Generate graphs of individual tests")
     parser.add_argument("-I", "--intervals", action='store_true',
                         default=False,
                         help="Emit the results for all intervals, not just peak")    
