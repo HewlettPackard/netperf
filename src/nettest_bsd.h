@@ -214,6 +214,7 @@ struct	tcp_stream_request_struct {
 			   to allow netperf to run through those evil
 			   firewall things */
   int   ipfamily;       /* the address family of ipaddress */
+  int   recv_aio;       /* use aio_read(2) */
 };
 
 struct	tcp_stream_response_struct {

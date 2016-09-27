@@ -322,3 +322,5 @@ Andrew Kirch - patch for inline not being appy on OSX - provided the
 Brian Ginsbach - pointing-out that relying on being able to do a
                  protocol lookup on "ip" isn't going to work with all
                  Distros.
+
+John Baldwin - Support for POSIX AIO
