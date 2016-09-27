@@ -590,7 +590,8 @@ extern int
   routing_allowed,  /* do we set/clear SO_DONTROUTE on data sock */
   multicast_ttl,    /* what should the TTL be on mcast dgrams */
   want_keepalive,   /* do we bother setting SO_KEEPALIVE? */
-  transport_mss_req;
+  transport_mss_req,
+  pacing_rate;
 
 #ifdef WANT_OMNI
 extern void scan_omni_args(int argc, char *argv[]);

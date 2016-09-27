@@ -7110,7 +7110,7 @@ scan_omni_args(int argc, char *argv[])
 
 {
 
-#define OMNI_ARGS "aBb:cCd:De:FgG:hH:i:Ij:kK:l:L:m:M:nNoOp:P:r:R:s:S:t:T:u:UVw:W:46"
+#define OMNI_ARGS "aBb:cCd:De:FgG:hH:i:Ij:kK:l:L:m:M:nNoOp:P:q:r:R:s:S:t:T:u:UVw:W:46"
 
   extern char	*optarg;	  /* pointer to option string	*/
 
@@ -7435,6 +7435,10 @@ scan_omni_args(int argc, char *argv[])
 	strncpy(local_data_port,arg1,sizeof(local_data_port));
       if (arg2[0])
 	strncpy(remote_data_port,arg2,sizeof(remote_data_port));
+      break;
+    case 'q':
+      /* set the local socket pacing rate */
+      pacing_rate = atoi(optarg);
       break;
     case 'r':
       /* set the request/response sizes. setting request/response
