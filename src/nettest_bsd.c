@@ -237,7 +237,8 @@ int
   rem_rcvavoid, 	/* avoid recv_copies remotely		*/
   local_connected = 0,  /* local socket type, connected/non-connected */
   remote_connected = 0, /* remote socket type, connected/non-connected */
-  routing_allowed = 1;    /* set/clear SO_DONTROUTE on data socket */
+  routing_allowed = 1,  /* set/clear SO_DONTROUTE on data socket */
+  pacing_rate = 0;      /* set a socket pacing rate? */
 
 int multicast_ttl = -1; /* should we set the multicast TTL to a value? */
 
@@ -1518,6 +1519,20 @@ create_data_socket(struct addrinfo *res)
     local_socket_tos = set_socket_tos(temp_socket,res->ai_family, local_socket_tos);
 #endif
 
+  /* some platforms can be told to set a rate on a socket */
+#ifndef SO_MAX_PACING_RATE
+#define SO_MAX_PACING_RATE 47
+#endif
+
+  if (pacing_rate > 0) {
+    if (setsockopt(temp_socket, SOL_SOCKET, SO_MAX_PACING_RATE,
+		   &pacing_rate,
+		   sizeof(pacing_rate)) < 0) {
+      fprintf(where, "netperf: setsockopt: SO_MAX_PACING_RATE: errno %d\n",
+	      errno);
+    }
+  }
+    
   return temp_socket;
 }
 
