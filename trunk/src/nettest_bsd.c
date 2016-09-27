@@ -74,6 +74,10 @@ char	nettest_id[]="\
 #if HAVE_UNISTD_H
 # include <unistd.h>
 #endif
+#if HAVE_AIO
+# include <assert.h> // XXX
+# include <aio.h>
+#endif
 
 #include <fcntl.h>
 #ifndef WIN32
@@ -216,6 +220,17 @@ int
   loc_tcpcork=-1,
   rem_tcpcork=-1,
 #endif /* TCP_CORK */
+#if HAVE_AIO
+  loc_rcvaio,           /* don't/do use aio_read() locally      */
+  rem_rcvaio,           /* don't/do use aio_read() remotely     */
+  loc_sndaio,           /* don't/do use aio_write() locally     */
+  rem_sndaio,           /* don't/do use aio_write() remotely    */
+#else
+  loc_rcvaio=-1,
+  rem_rcvaio=-1,
+  loc_sndaio=-1,
+  rem_sndaio=-1,
+#endif
   loc_sndavoid,		/* avoid send copies locally		*/
   loc_rcvavoid,		/* avoid recv copies locally		*/
   rem_sndavoid,		/* avoid send copies remotely		*/
@@ -375,6 +390,8 @@ char sockets_usage[] = "\n\
 Usage: netperf [global options] -- [test options] \n\
 \n\
 TCP/UDP BSD Sockets Test Options:\n\
+    -a                Use aio_write(2)\n\
+    -A                Use aio_read(2)\n\
     -b number         Send number requests at start of _RR tests\n\
     -C                Set TCP_CORK when available\n\
     -D [L][,R]        Set TCP_NODELAY locally and/or remotely (TCP_*)\n\
@@ -1931,6 +1948,7 @@ Size (bytes)\n\
 #endif /* DIRTY */
       tcp_stream_request->port            =    atoi(remote_data_port);
       tcp_stream_request->ipfamily = af_to_nf(remote_res->ai_family);
+      tcp_stream_request->recv_aio      =       rem_rcvaio;
       if (debug > 1) {
 	fprintf(where,
 		"netperf: send_tcp_stream: requesting TCP stream test\n");
@@ -2060,6 +2078,35 @@ Size (bytes)\n\
 
     while ((!times_up) || (bytes_remaining > 0)) {
 
+#if HAVE_AIO
+      /* When using aio, wait for the previous write for this buffer to
+	 complete. */
+      if (loc_sndaio > 0 && send_ring->completion_ptr != NULL) {
+	const struct aiocb *iocblist[1];
+	struct aiocb *iocb;
+	int error;
+
+	iocb = send_ring->completion_ptr;
+	iocblist[0] = iocb;
+	if (aio_suspend(iocblist, 1, NULL) == -1) {
+	  if (errno == EINTR) {
+	    /* the test was interrupted, must be the end of test */
+	    break;
+	  }
+	  perror("netperf: data send error");
+	  exit(1);
+	}
+
+	error = aio_error(iocb);
+	if (error == 0)
+	  len = aio_return(iocb);
+	else {
+	  len = SOCKET_ERROR;
+	  errno = error;
+	}
+      }
+#endif
+
 #ifdef DIRTY
       access_buffer(send_ring->buffer_ptr,
 		    send_size,
@@ -2077,10 +2124,41 @@ Size (bytes)\n\
       }
 #endif /* WANT_HISTOGRAM */
 
-      if((len=send(send_socket,
+#if HAVE_AIO
+      if (loc_sndaio > 0) {
+	struct aiocb *iocb, *old;
+
+	old = iocb = send_ring->completion_ptr;
+	if (iocb == NULL) {
+	  iocb = calloc(1, sizeof(*iocb));
+	  send_ring->completion_ptr = iocb;
+	} else
+	  memset(iocb, 0, sizeof(*iocb));
+	iocb->aio_nbytes = send_size;
+	iocb->aio_fildes = send_socket;
+	iocb->aio_buf = send_ring->buffer_ptr;
+	if (aio_write(iocb) == -1) {
+	  if (errno == EINTR) {
+	    /* the test was interrupted, must be the end of test */
+	    /* clear the completion pointer to avoid trying to cancel it */
+	    send_ring->completion_ptr = NULL;
+	    send_ring = send_ring->next;
+	    break;
+	  }
+	  perror("netperf: data send error");
+	  exit(1);
+	}
+	if (old == NULL)
+	  /* No previous write was completed. */
+	  goto next_buffer;
+      } else
+#endif
+	len = send(send_socket,
 		   send_ring->buffer_ptr,
 		   send_size,
-		   0)) != send_size) {
+		   0);
+
+      if(len != send_size) {
       if ((len >=0) || SOCKET_EINTR(len)) {
 	    /* the test was interrupted, must be the end of test */
 	    break;
@@ -2091,6 +2169,10 @@ Size (bytes)\n\
       }
 
       local_bytes_sent += send_size;
+
+#if HAVE_AIO
+    next_buffer:
+#endif
 
 #ifdef WANT_HISTOGRAM
       if (verbosity > 1) {
@@ -2123,6 +2205,47 @@ Size (bytes)\n\
     /* The test is over. Flush the buffers to the remote end. We do a */
     /* graceful release to insure that all data has been taken by the */
     /* remote. */
+
+#if HAVE_AIO
+    if (loc_sndaio > 0) {
+      const struct aiocb *iocblist[1];
+      struct ring_elt *send_ring2;
+      struct aiocb *iocb;
+      int error;
+
+      send_ring2 = send_ring;
+      while (send_ring2->completion_ptr != NULL) {
+	if (aio_cancel(send_socket, send_ring2->completion_ptr) == -1) {
+	  perror("netperf: data send error");
+	  exit(1);
+	}
+	send_ring2 = send_ring2->next;
+	if (send_ring2 == send_ring)
+	  break;
+      }
+
+      while (send_ring->completion_ptr != NULL) {
+	iocb = send_ring->completion_ptr;
+	iocblist[0] = iocb;
+	if (aio_suspend(iocblist, 1, NULL) == -1) {
+	  perror("netperf: data send error");
+	  exit(1);
+	}
+
+	error = aio_error(iocb);
+	if (error == 0)
+	  local_bytes_sent += aio_return(iocb);
+	else if (error != ECANCELED) {
+	  errno = error;
+	  perror("netperf: data send error");
+	  exit(1);
+	}
+	send_ring->completion_ptr = NULL;
+	send_ring = send_ring->next;
+	free(iocb);
+      }
+    }
+#endif
 
     /* but first, if the verbosity is greater than 1, find-out what */
     /* the TCP maximum segment_size was (if possible) */
@@ -3238,6 +3361,7 @@ Size (bytes)\n\n";
 #endif /* DIRTY */
     tcp_stream_request->port            =    atoi(remote_data_port);
     tcp_stream_request->ipfamily = af_to_nf(remote_res->ai_family);
+    tcp_stream_request->recv_aio        =       rem_rcvaio;
     if (debug > 1) {
       fprintf(where,
 	      "netperf: send_tcp_mss: requesting TCP stream test\n");
@@ -3588,6 +3712,7 @@ Size (bytes)\n\
 #endif /* DIRTY */
         tcp_stream_request->port            =    atoi(remote_data_port);
         tcp_stream_request->ipfamily = af_to_nf(remote_res->ai_family);
+	tcp_stream_request->recv_aio      =       rem_rcvaio;
         if (debug > 1) {
             fprintf(where,
                     "netperf: send_tcp_stream: requesting TCP stream test\n");
@@ -4381,6 +4506,7 @@ Size (bytes)\n\
 #endif /* DIRTY */
     tcp_stream_request->port     = atoi(remote_data_port);
     tcp_stream_request->ipfamily = af_to_nf(remote_res->ai_family);
+    tcp_stream_request->recv_aio        =       rem_rcvaio;
 
     if (debug > 1) {
       fprintf(where,
@@ -4972,6 +5098,7 @@ recv_tcp_stream()
   loc_nodelay  = tcp_stream_request->no_delay;
   loc_rcvavoid = tcp_stream_request->so_rcvavoid;
   loc_sndavoid = tcp_stream_request->so_sndavoid;
+  loc_rcvaio   = tcp_stream_request->recv_aio;
 
   set_hostname_and_port(local_name,
 			port_buffer,
@@ -5144,7 +5271,60 @@ recv_tcp_stream()
   bytes_received = 0;
   receive_calls  = 0;
 
-  while (!times_up && ((len = recv(s_data, recv_ring->buffer_ptr, recv_size, 0)) != 0)) {
+#if HAVE_AIO
+  if (loc_rcvaio > 0) {
+    struct aiocb *iocb;
+    unsigned int i;
+
+    for (i = 0; i < recv_width; i++) {
+      assert(recv_ring->completion_ptr == NULL);
+      iocb = calloc(1, sizeof(*iocb));
+      iocb->aio_nbytes = recv_size;
+      iocb->aio_fildes = s_data;
+      iocb->aio_buf = recv_ring->buffer_ptr;
+      recv_ring->completion_ptr = iocb;
+      recv_ring = recv_ring->next;
+      if (aio_read(iocb) != 0) {
+        netperf_response.content.serv_errno = errno;
+        send_response();
+        exit(1);
+      }
+    }    
+    assert(recv_ring->completion_ptr != NULL);
+  }
+#endif
+
+  while (!times_up) {
+#if HAVE_AIO
+    if (loc_rcvaio > 0) {
+      const struct aiocb *iocblist[1];
+      struct aiocb *iocb;
+      int error;
+
+      /*
+       * POSIX doesn't define which order jobs of the same priority
+       * are completed in on all systems.  This hopes for FIFO.
+       */
+      iocb = recv_ring->completion_ptr;
+      iocblist[0] = iocb;
+      if (aio_suspend(iocblist, 1, NULL) == -1) {
+        len = SOCKET_ERROR;
+      } else {
+        error = aio_error(iocb);
+        if (error == 0) {
+          len = aio_return(iocb);
+        } else {
+          errno = error;
+          len = SOCKET_ERROR;
+        }
+      }
+    } else
+#endif
+    {
+      len = recv(s_data, recv_ring->buffer_ptr, recv_size, 0);
+    }
+    if (len == 0)
+      break;
     if (len == SOCKET_ERROR ) {
       if (times_up) {
 	break;
@@ -5164,6 +5344,22 @@ recv_tcp_stream()
 		  tcp_stream_request->clean_count);
 #endif /* DIRTY */
 
+#if HAVE_AIO
+    if (loc_rcvaio > 0) {
+      struct aiocb *iocb;
+
+      iocb = recv_ring->completion_ptr;
+      memset(iocb, 0, sizeof(*iocb));
+      iocb->aio_nbytes = recv_size;
+      iocb->aio_fildes = s_data;
+      iocb->aio_buf = recv_ring->buffer_ptr;
+      if (aio_read(iocb) != 0) {
+        netperf_response.content.serv_errno = errno;
+        send_response();
+        exit(1);
+      }      
+    }
+#endif
 
     /* move to the next buffer in the recv_ring */
     recv_ring = recv_ring->next;
@@ -12939,7 +13135,7 @@ scan_sockets_args(int argc, char *argv[])
 
 {
 
-#define SOCKETS_ARGS "b:CDnNhH:L:m:M:p:P:r:R:s:S:T:Vw:W:z46"
+#define SOCKETS_ARGS "aAb:CDnNhH:L:m:M:p:P:r:R:s:S:T:Vw:W:z46"
 
   extern char	*optarg;	  /* pointer to option string	*/
 
@@ -12999,6 +13195,20 @@ scan_sockets_args(int argc, char *argv[])
     case 'h':
       print_sockets_usage();
       exit(1);
+    case 'a':
+#ifdef HAVE_AIO
+      loc_sndaio = 1;
+#else
+      fprintf(stderr, "Asynchronous I/O not available on this platform\n");
+#endif
+      break;
+    case 'A':
+#ifdef HAVE_AIO
+      rem_rcvaio = 1;
+#else
+      fprintf(stderr, "Asynchronous I/O not available on this platform\n");
+#endif
+      break;
     case 'b':
 #ifdef WANT_FIRST_BURST
       first_burst_size = atoi(optarg);

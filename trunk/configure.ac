@@ -98,6 +98,11 @@ if test "$ac_cv_func_inet_ntop" != yes ; then
 fi
 AM_CONDITIONAL(NEED_LIBCOMPAT, test "$HAVE_MISSING" = "yes")
 
+# check for POSIX asynchronous I/O routines
+AC_SEARCH_LIBS(aio_read, rt,
+	[AC_DEFINE(HAVE_AIO, 1,
+    	[Define to 1 if your system has POSIX asynchronous I/O functions. ])])
+
 AC_CHECK_FUNCS(sendfile)
 
 AC_CHECK_FUNCS(uname)
