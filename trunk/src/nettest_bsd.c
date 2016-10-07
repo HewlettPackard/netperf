@@ -1451,10 +1451,8 @@ create_data_socket(struct addrinfo *res)
   }
 
   /* bind only if we must */
-  printf("port %d protocol %d\n",get_port_number(res),res->ai_protocol);
   if ((get_port_number(res) != 0) ||
       (res->ai_protocol == IPPROTO_UDP)) {
-    printf("Binding in create\n");
     if (bind(temp_socket,
 	     res->ai_addr,
 	     res->ai_addrlen) < 0) {
