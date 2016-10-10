@@ -3826,6 +3826,9 @@ set_omni_request_flags(struct omni_request_struct *omni_request) {
       if (want_defer_accept)
 	omni_request->flags |= OMNI_WANT_DEFER_ACCEPT;
 
+      if (remote_connected)
+	omni_request->flags |= OMNI_USE_CONNECTED;
+
 }
 
 
@@ -5101,6 +5104,7 @@ set_hostname_and_port_2(void *addr, char *hostname, char *portstr, int family, i
 
 }
 
+
 
 
 /* the name is something of a misnomer since this test could send, or
@@ -5127,6 +5131,7 @@ recv_omni()
   int   need_to_connect = 0;
   int   need_to_accept;
   int   connected;
+  int   first_receive = 1;
   int   ret;
   uint32_t   temp_recvs;
 
@@ -5190,6 +5195,7 @@ recv_omni()
   loc_sndavoid    = omni_request->so_sndavoid;
   routing_allowed = (omni_request->flags) & OMNI_ROUTING_ALLOWED;
   want_keepalive  = (omni_request->flags) & OMNI_WANT_KEEPALIVE;
+  local_connected = (omni_request->flags) & OMNI_USE_CONNECTED;
   local_socket_prio = omni_request->socket_prio;
   local_socket_tos  = omni_request->socket_tos;
   want_defer_accept = omni_request->flags & OMNI_WANT_DEFER_ACCEPT;
@@ -5614,6 +5620,12 @@ recv_omni()
 	}
 	bytes_received += ret;
 	local_receive_calls += temp_recvs;
+	if (first_receive && local_connected) {
+	  connect(data_socket,
+		  (struct sockaddr *)&peeraddr_in,
+		  addrlen);
+	  first_receive = 0;
+	}
       }
       else if (ret == 0) {
 	/* is this the end of a test, just a zero-byte recv, or
