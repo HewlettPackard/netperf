@@ -336,6 +336,7 @@ int remote_checksum_off;
 int connection_test;
 int dont_give_up = 0;
 int use_fastopen = 0;
+int use_mtu_discover = 0;
 int use_write = 0;
 int need_to_connect;
 int need_connection;
@@ -3710,6 +3711,17 @@ omni_create_data_socket(struct addrinfo *res)
 		 (char *)&one,
 		 sizeof(one));
     }
+
+#ifdef IP_MTU_DISCOVER
+    if (use_mtu_discover) {
+      int type = IP_PMTUDISC_DO;
+      setsockopt(temp_socket,
+		 SOL_IP,
+		 IP_MTU_DISCOVER,
+		 (char *)&type,
+		 sizeof(type));
+    }
+#endif
   }
   return temp_socket;
 }
@@ -3829,6 +3841,8 @@ set_omni_request_flags(struct omni_request_struct *omni_request) {
       if (remote_connected)
 	omni_request->flags |= OMNI_USE_CONNECTED;
 
+      if (use_mtu_discover)
+	omni_request->flags |= OMNI_USE_MTU_DISCOVER;
 }
 
 
@@ -5214,6 +5228,11 @@ recv_omni()
 #ifdef TCP_FASTOPEN
   use_fastopen = omni_request->flags & OMNI_FASTOPEN;
 #endif
+
+#ifdef IP_MTU_DISCOVER
+  use_mtu_discover = omni_request->flags & OMNI_USE_MTU_DISCOVER;
+#endif
+
   direction       = omni_request->direction;
   use_pktinfo = (omni_request->flags) & OMNI_USE_PKTINFO;
 
@@ -7067,6 +7086,8 @@ OMNI and Migrated BSD Sockets Test Options:\n\
                       of 0x2 for transmit and 0x4 for receive. Default:\n\
                       based on test type\n\
     -D [L][,R]        Set TCP_NODELAY locally and/or remotely (TCP_*)\n\
+    -f                Set IP_MTU_DISCOVER:IP_PMTU_DISC_DO where available\n\
+    -F                Use TCP Fast Open functionality where available\n\
     -h                Display this text\n\
     -H name[/mask],fam  Use name (or IP) and family as target of data connection\n\
                       A mask value will cause randomization of the IP used\n\
@@ -7122,7 +7143,7 @@ scan_omni_args(int argc, char *argv[])
 
 {
 
-#define OMNI_ARGS "aBb:cCd:De:FgG:hH:i:Ij:kK:l:L:m:M:nNoOp:P:q:r:R:s:S:t:T:u:UVw:W:46"
+#define OMNI_ARGS "aBb:cCd:De:fFgG:hH:i:Ij:kK:l:L:m:M:nNoOp:P:q:r:R:s:S:t:T:u:UVw:W:46"
 
   extern char	*optarg;	  /* pointer to option string	*/
 
@@ -7239,6 +7260,13 @@ scan_omni_args(int argc, char *argv[])
       /* set the TCP nodelay flag */
       loc_nodelay = 1;
       rem_nodelay = 1;
+      break;
+    case 'f':
+#ifdef IP_MTU_DISCOVER
+      use_mtu_discover = 1;
+#else
+      printf("WARNING: IP_MTU_DISCOVER not available on this platform\n");
+#endif
       break;
     case 'F':
 #if defined(MSG_FASTOPEN)
