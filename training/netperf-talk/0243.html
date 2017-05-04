@@ -1,0 +1,79 @@
+<!-- received="Tue Oct 12 09:22:35 1999 PDT" -->
+<!-- sent="Tue, 12 Oct 1999 09:27:07 -0700" -->
+<!-- name="Rick Jones" -->
+<!-- email="raj@cup.hp.com" -->
+<!-- subject="Re: Question about TCP_STREAM" -->
+<!-- id="3803615B.9F933617@cup.hp.com" -->
+<!-- inreplyto="Question about TCP_STREAM" -->
+<title>Archive of the netperf-talk mailing list: Re: Question about TCP_STREAM</title>
+<h1>Re: Question about TCP_STREAM</h1>
+Rick Jones (<i>raj@cup.hp.com</i>)<br>
+<i>Tue, 12 Oct 1999 09:27:07 -0700</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#243">[ date ]</a><a href="index.html#243">[ thread ]</a><a href="subject.html#243">[ subject ]</a><a href="author.html#243">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0244.html">Rick Jones: "[Fwd: Netperf-NT Workstation]"</a>
+<li> <b>Previous message:</b> <a href="0242.html">Tatsuhiko Terai: "Question about TCP_STREAM"</a>
+<li> <b>Maybe in reply to:</b> <a href="0242.html">Tatsuhiko Terai: "Question about TCP_STREAM"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+Tatsuhiko Terai wrote:<br>
+<i>&gt; </i><br>
+<i>&gt; Hello. I'm Tatsuhiko from Japan.</i><br>
+<i>&gt; I have begun to use netperf to benchmark tcp throughput</i><br>
+<i>&gt; over Myrinet.</i><br>
+<i>&gt; </i><br>
+<i>&gt; I have some question about netperf command and</i><br>
+<i>&gt; how to use.</i><br>
+<i>&gt; </i><br>
+<i>&gt; 1.Can I set the send/recv buffer size over 250kbytes?</i><br>
+<p>
+Netperf places no restrictions on the size of the send or the receive<br>
+socket buffers. It will depend entirely on how large the Transport lets<br>
+the sockets be, and/or how much RAM can be malloc'ed<br>
+<p>
+<i>&gt; 2.Does 'Send Message Size' mean 'one packet size'?</i><br>
+<p>
+Not necessarily. One should only assume that "Send Message Size" is the<br>
+quantity of data presented to the Transport in each send() call. Whether<br>
+or not that is the packet size depends on a whole host of other factors.<br>
+<p>
+<i>&gt; 3.Can I benchmark server tcp throughput such as below</i><br>
+<i>&gt;   topology?</i><br>
+<i>&gt;                  Ethernet   +----------+</i><br>
+<i>&gt;                  +----------+ Client   +</i><br>
+<i>&gt;                  |          +----------+</i><br>
+<i>&gt;                  |</i><br>
+<i>&gt;                  |</i><br>
+<i>&gt;  +++++++++++     | Myrinet  +----------+</i><br>
+<i>&gt;  + Server  + ----+----------+ Client   +</i><br>
+<i>&gt;  +++++++++++                +----------+</i><br>
+<i>&gt; </i><br>
+<i>&gt; I would like to say that 'Can I benchmark above topology that</i><br>
+<i>&gt; Server send to multiple client over different physical layer?'</i><br>
+<p>
+You can, if you invoke netperf multiple times in parallel. As there is<br>
+no synchronization in netperf 2, it is probably best to use either<br>
+really long run times, or to have three tests in sequence to each<br>
+client, both clients in parallel, and then only take the values of the<br>
+middle (second) data point. That way you have a decent assurance that<br>
+both clients were active at the same time.<br>
+<p>
+rick jones<br>
+<pre>
+-- 
+these opinions are mine, all mine; HP might not want them anyway... :)
+feel free to email, or post, but please do not do both...
+my email address is raj in the cup.hp.com domain...
+</pre>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0244.html">Rick Jones: "[Fwd: Netperf-NT Workstation]"</a>
+<li> <b>Previous message:</b> <a href="0242.html">Tatsuhiko Terai: "Question about TCP_STREAM"</a>
+<li> <b>Maybe in reply to:</b> <a href="0242.html">Tatsuhiko Terai: "Question about TCP_STREAM"</a>
+<!-- nextthread="start" -->
+</ul>

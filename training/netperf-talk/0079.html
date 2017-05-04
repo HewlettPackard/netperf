@@ -1,0 +1,66 @@
+<!-- received="Mon Aug 17 17:45:43 1998 PDT" -->
+<!-- sent="Mon, 17 Aug 1998 17:55:26 -0700" -->
+<!-- name="Tom Pavel" -->
+<!-- email="pavel@slac.stanford.edu" -->
+<!-- subject="Re: CPU utilization measure impacts on throughput?" -->
+<!-- id="199808180055.RAA18579@mailbox.SLAC.Stanford.EDU" -->
+<!-- inreplyto="Mon, 17 Aug 1998 20:26:17 EDT" -->
+<title>Archive of the netperf-talk mailing list: Re: CPU utilization measure impacts on throughput?</title>
+<h1>Re: CPU utilization measure impacts on throughput?</h1>
+Tom Pavel (<i>pavel@slac.stanford.edu</i>)<br>
+<i>Mon, 17 Aug 1998 17:55:26 -0700</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#79">[ date ]</a><a href="index.html#79">[ thread ]</a><a href="subject.html#79">[ subject ]</a><a href="author.html#79">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0080.html">Rick Jones: "[Fwd: Verification of netperfs results.]"</a>
+<li> <b>Previous message:</b> <a href="0078.html">Danke Hirasawa: "CPU utilization measure impacts on throughput?"</a>
+<li> <b>In reply to:</b> <a href="0078.html">Danke Hirasawa: "CPU utilization measure impacts on throughput?"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+<i>&gt;&gt;&gt;&gt;&gt; On Mon, 17 Aug 1998, Danke Hirasawa &lt;danke@scientist.com&gt; writes:</i><br>
+<p>
+<i>&gt; I have experienced that we got different throughput numbers in the</i><br>
+<i>&gt; TCP_STREAM test where we measured CPU utilization (with -c &amp; -C options)</i><br>
+<i>&gt; as well as throughput measurements vs.. the another TCP_STREAM test</i><br>
+<i>&gt; where no CPU utilization measurement (without -c nor -C options).</i><br>
+<i>&gt; Usually throughputs of the test without CPU utilization measurements are</i><br>
+<i>&gt; higher.</i><br>
+<i>&gt; </i><br>
+<i>&gt; Does the measurement of CPU utilization (negatively) impact on</i><br>
+<i>&gt; throughput measurement?</i><br>
+<p>
+<p>
+I think the general answer to this depends on how the CPU measurement<br>
+is done.  For example, there is special code to use a<br>
+pstat_getprocessor() call on HPs, which presumably gets CPU<br>
+utilization directly from the kernel without any overhead.  <br>
+<p>
+However, I have used netperf on Solaris, Digital Unix, AIX, and Linux.<br>
+On each of these systems, the USE_LOOPER CPU measurement technique is<br>
+used.  This runs a "competing process" with the netperf process and<br>
+measures how much CPU time this (low-priority) looping process gets.<br>
+Running this CPU utilization test reduced some of my TCP bandwidths by<br>
+as much as 10%.  I was quite surprised when I learned this.<br>
+Presumably, this happens because the schedulers in these OSes are not<br>
+perfect, and because things like paging and interrupts are a shared<br>
+resource despite the illusion of completely independent processes<br>
+presented to you by the OS.<br>
+<p>
+Anyway, the short answer to your question is "Yes"...<br>
+<p>
+<p>
+Tom Pavel<br>
+<p>
+Stanford Linear Accelerator Center<br>
+pavel@slac.stanford.edu                 <a href="http://www.slac.stanford.edu/~pavel/">http://www.slac.stanford.edu/~pavel/</a><br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0080.html">Rick Jones: "[Fwd: Verification of netperfs results.]"</a>
+<li> <b>Previous message:</b> <a href="0078.html">Danke Hirasawa: "CPU utilization measure impacts on throughput?"</a>
+<li> <b>In reply to:</b> <a href="0078.html">Danke Hirasawa: "CPU utilization measure impacts on throughput?"</a>
+<!-- nextthread="start" -->
+</ul>

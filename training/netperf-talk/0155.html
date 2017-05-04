@@ -1,0 +1,63 @@
+<!-- received="Tue Mar 23 00:01:33 1999 PST" -->
+<!-- sent="Tue, 23 Mar 1999 16:53:23 +0900 (KST)" -->
+<!-- name="Lee Jaeyoung" -->
+<!-- email="jylee@cosmos.kaist.ac.kr" -->
+<!-- subject="More throughput than bandwidth" -->
+<!-- id="Pine.BSF.3.96K.990323164028.45658D-100000@sequoia.kaist.ac.kr" -->
+<!-- inreplyto="" -->
+<title>Archive of the netperf-talk mailing list: More throughput than bandwidth</title>
+<h1>More throughput than bandwidth</h1>
+Lee Jaeyoung (<i>jylee@cosmos.kaist.ac.kr</i>)<br>
+<i>Tue, 23 Mar 1999 16:53:23 +0900 (KST)</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#155">[ date ]</a><a href="index.html#155">[ thread ]</a><a href="subject.html#155">[ subject ]</a><a href="author.html#155">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0156.html">Rick Jones: "Re: More throughput than bandwidth"</a>
+<li> <b>Previous message:</b> <a href="0154.html">HomePage Kiano Design HK: "踏入公元二千年在即"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0156.html">Rick Jones: "Re: More throughput than bandwidth"</a>
+</ul>
+<!-- body="start" -->
+Hi, all.<br>
+<p>
+This is my experiment environment with netperf.<br>
+<p>
+source <br>
+<i>  | 35 Mbps</i><br>
+router1<br>
+<i>  | 2 Mbps</i><br>
+router2<br>
+<i>  | 100 Mbps</i><br>
+destination<br>
+<p>
+rtt from source to destination is 35.3ms<br>
+So receiver's window size set to 88250 bytes(2Mbps * 35.3 ms) and<br>
+sender's window size set to 88250 bytes.<br>
+<p>
+netperf's result is<br>
+TCP STREAM TEST to destination : histogram<br>
+Recv    Send      Send      <br>
+Socket  Socket    Message   Elapsed<br>
+Size    Size      Size      Time       Throughput<br>
+bytes   bytes     bytes     secs.      10^6bits/sec<br>
+<p>
+88250   88250     88250     10.04      17.81<br>
+<p>
+it's 17.81Mbps<br>
+I think that since bottleneck bandwidth is 2Mbps,<br>
+throughput is less than it.<br>
+<p>
+Could you give the information about this result?<br>
+Thank you in advance.<br>
+<p>
+- Jaeyoung Lee<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0156.html">Rick Jones: "Re: More throughput than bandwidth"</a>
+<li> <b>Previous message:</b> <a href="0154.html">HomePage Kiano Design HK: "踏入公元二千年在即"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0156.html">Rick Jones: "Re: More throughput than bandwidth"</a>
+</ul>

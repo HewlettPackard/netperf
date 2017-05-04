@@ -1,0 +1,78 @@
+<!-- received="Thu Jul 15 11:51:40 1999 PDT" -->
+<!-- sent="Thu, 15 Jul 1999 11:54:33 -0700" -->
+<!-- name="Rick Jones" -->
+<!-- email="raj@cup.hp.com" -->
+<!-- subject="Re: TCP_RR test weirdness" -->
+<!-- id="378E2E69.7E05FA87@cup.hp.com" -->
+<!-- inreplyto="TCP_RR test weirdness" -->
+<title>Archive of the netperf-talk mailing list: Re: TCP_RR test weirdness</title>
+<h1>Re: TCP_RR test weirdness</h1>
+Rick Jones (<i>raj@cup.hp.com</i>)<br>
+<i>Thu, 15 Jul 1999 11:54:33 -0700</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#203">[ date ]</a><a href="index.html#203">[ thread ]</a><a href="subject.html#203">[ subject ]</a><a href="author.html#203">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0204.html">Jose Weyne Nunes Marcelino: "TCP window size"</a>
+<li> <b>Previous message:</b> <a href="0202.html">Sam Riesland: "TCP_RR test weirdness"</a>
+<li> <b>Maybe in reply to:</b> <a href="0202.html">Sam Riesland: "TCP_RR test weirdness"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0204.html">Jose Weyne Nunes Marcelino: "TCP window size"</a>
+</ul>
+<!-- body="start" -->
+I'm going to guess that you are running on Linux - linux seems to have a<br>
+default "effective" MSS of 1448 bytes instead of 1460 bytes - the other<br>
+12 bytes are for TCP-LW options.<br>
+<p>
+Linux also implements the Nagle algorithm incorrectly. That is the<br>
+algorithm designed to protect the network from small sends by<br>
+applications. It should be interpreted on the user's _send_, not on a<br>
+segment by segment basis.<br>
+<p>
+Linux interprets it on a segment by segment basis, regardless of the<br>
+user's send size.<br>
+<p>
+HP-UX correctly interprets it on a user's send basis.<br>
+<p>
+In other words, if the user sends &gt;= MSS bytes in a send call, *none* of<br>
+those bytes should be delayed by the Nagle algorithm, regardless of the<br>
+size of the last segment holding data from that send.<br>
+<p>
+So, I suggest you submit a defect against Linux. (Or whatever OS you<br>
+happen to be using)<br>
+<p>
+rick jones<br>
+<p>
+Sam Riesland wrote:<br>
+<i>&gt; </i><br>
+<i>&gt; I am running netperf with the following command line... where $RR_SIZE is</i><br>
+<i>&gt; the size of the packets I'm sending and receiving.</i><br>
+<i>&gt; </i><br>
+<i>&gt; /netperf -l 5 -H astrolab3 -i 10,3 -I 99 -d -t TCP_RR -- -r $RR_SIZE</i><br>
+<i>&gt; </i><br>
+<i>&gt; And for some reason when I set $RR_SIZE (the send,recieve packet size) to</i><br>
+<i>&gt; between "1449,1449" and "2171,2171" the Transfer Rate drops way down to</i><br>
+<i>&gt; about 99 bytes per second from somewhere in the thousands.  Also the same</i><br>
+<i>&gt; thing occurs between 4345 and 5067...  and then again between 7241 and</i><br>
+<i>&gt; 7963.  So every 2174 bytes there is a 722 byte block in which the Transfer</i><br>
+<i>&gt; Rate drops down to around 99 bytes.  I can get rid of this problem by</i><br>
+<i>&gt; using the -D switch (TCP_NODELAY set)... but this behavior seems a bit</i><br>
+<i>&gt; strange. Is this a netperf problem? Has anyone else run into anything</i><br>
+<i>&gt; similar?</i><br>
+<p>
+<pre>
+-- 
+these opinions are mine, all mine; HP might not want them anyway... :)
+feel free to email, or post, but please do not do both...
+my email address is raj in the cup.hp.com domain...
+</pre>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0204.html">Jose Weyne Nunes Marcelino: "TCP window size"</a>
+<li> <b>Previous message:</b> <a href="0202.html">Sam Riesland: "TCP_RR test weirdness"</a>
+<li> <b>Maybe in reply to:</b> <a href="0202.html">Sam Riesland: "TCP_RR test weirdness"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0204.html">Jose Weyne Nunes Marcelino: "TCP window size"</a>
+</ul>

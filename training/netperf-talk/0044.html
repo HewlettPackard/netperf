@@ -1,0 +1,54 @@
+<!-- received="Mon Jun 15 13:00:34 1998 PDT" -->
+<!-- sent="Mon, 15 Jun 1998 16:03:00 -0400" -->
+<!-- name="Frimmel@larscom.com" -->
+<!-- email="Frimmel@larscom.com" -->
+<!-- subject="RE: Running Netperf Under NT and Ultra II" -->
+<!-- id="c=US%a=_%p=Larscom%l=RTP2-980615200300Z-2143@rtpnts.rtp.larscom.com" -->
+<!-- inreplyto="" -->
+<title>Archive of the netperf-talk mailing list: RE: Running Netperf Under NT and Ultra II</title>
+<h1>RE: Running Netperf Under NT and Ultra II</h1>
+<i>Frimmel@larscom.com</i><br>
+<i>Mon, 15 Jun 1998 16:03:00 -0400</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#44">[ date ]</a><a href="index.html#44">[ thread ]</a><a href="subject.html#44">[ subject ]</a><a href="author.html#44">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0045.html">Derek Casanares: "RE: Running Netperf Under NT and Ultra II"</a>
+<li> <b>Previous message:</b> <a href="0043.html">Rick Jones: "Re: Running Netperf Under NT and Ultra II"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+<i>&gt;</i><br>
+<i>&gt;I guess that is a limitation on the part of the MS TCP stack. Even in NT</i><br>
+<i>&gt;4.0?</i><br>
+<p>
+I was running NT Workstation 4.0, no experience with NT Server.<br>
+<p>
+<i>&gt;Just make sure you have reasonably close start and stop times with the</i><br>
+<i>&gt;independent streams. </i><br>
+<p>
+The following batch file under NT does the trick quite well:<br>
+<p>
+start/b netperf -p 12865 -H 192.159.80.11 -- -s %1 -S %1 &gt;run.1<br>
+start/b/w netperf -p 12866 -H 192.159.80.11 -- -s %1 -S %1 &gt;run.2<br>
+pause Press enter to view results<br>
+type run.1 run.2<br>
+<p>
+ciao,<br>
+<p>
+     -jf-<br>
+<p>
+==================================<br>
+Jim Frimmel, Systems Architect<br>
+Larscom Incorporated<br>
+Desk 919.991.9165  <br>
+Fax  919.991.9060<br>
+frimmel@larscom.com<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0045.html">Derek Casanares: "RE: Running Netperf Under NT and Ultra II"</a>
+<li> <b>Previous message:</b> <a href="0043.html">Rick Jones: "Re: Running Netperf Under NT and Ultra II"</a>
+<!-- nextthread="start" -->
+</ul>

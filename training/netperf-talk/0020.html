@@ -1,0 +1,85 @@
+<!-- received="Fri Mar 27 01:45:27 1998 PST" -->
+<!-- sent="Fri, 27 Mar 1998 04:47:27 -0500 (EST)" -->
+<!-- name="Edwin Law" -->
+<!-- email="e-law@cs.yorku.ca" -->
+<!-- subject="Asymmetric TCP/ATM throughputs between client and server" -->
+<!-- id="Pine.GSO.3.96.980327043415.15177C-100000@oak" -->
+<!-- inreplyto="" -->
+<title>Archive of the netperf-talk mailing list: Asymmetric TCP/ATM throughputs between client and server</title>
+<h1>Asymmetric TCP/ATM throughputs between client and server</h1>
+Edwin Law (<i>e-law@cs.yorku.ca</i>)<br>
+<i>Fri, 27 Mar 1998 04:47:27 -0500 (EST)</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#20">[ date ]</a><a href="index.html#20">[ thread ]</a><a href="subject.html#20">[ subject ]</a><a href="author.html#20">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0021.html">Ian Heavens: "Pentium hardware and 100 Mbps Ethernet"</a>
+<li> <b>Previous message:</b> <a href="0019.html">Tom Pavel: "Re: VxWorks version of Netperf"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0022.html">Kevin M. Joyce: "Re: Asymmetric TCP/ATM throughputs between client and server"</a>
+</ul>
+<!-- body="start" -->
+Hi,<br>
+    I wonder if anyone has encountered a similar problem before. I have<br>
+obtained different throughput readings when transferring data between a<br>
+client and a server from both directions. I am talking about a different<br>
+of about 50 times in magnitude. This happens when I use the TCP/IP over<br>
+ATM and the default ATM MTU of 9188 on two Sun's running Solaris.  When I<br>
+set the ATM MTU to 65535, the problem goes away. <br>
+<p>
+    I suspect there is some kind of deadlock and time out ocurring.  Some<br>
+papers discuss a throughput deadlock situation which could happen in<br>
+TCP/IP over ATM environments. I'm not sure if this is the case because it<br>
+cannot explain why it occurs in one direction only. <br>
+<p>
+    To help understanding the problem more, I measured the time taken for<br>
+each individual read or write call in both directions. 10 chunks of 8KB<br>
+data were sent in each case. <br>
+<p>
+Client -&gt; Server<br>
+----------------<br>
+        (server read)   (client write)<br>
+1       0.000867        0.000739<br>
+2       0.000634        0.000471<br>
+3       0.000759        0.000387<br>
+4       0.002860        0.001939<br>
+5       0.000863        0.000356<br>
+6       0.000697        0.003460<br>
+7       0.001868        0.000968<br>
+8       0.000612        0.000403<br>
+9       0.001159        0.002203<br>
+10      0.000922        0.000489<br>
+                ----------------<br>
+                Total:  0.011424 second<br>
+<p>
+Server -&gt; Client<br>
+----------------<br>
+        (server write)  (client read)<br>
+1       0.000707        0.052361<br>
+2       0.000948        0.043168<br>
+3       0.000406        0.050055<br>
+4       0.092609        0.050401<br>
+5       0.000859        0.049735<br>
+6       0.099258        0.049865<br>
+7       0.000422        0.049974<br>
+8       0.099437        0.050011<br>
+9       0.000362        0.049966<br>
+10      0.099599        0.050677<br>
+                ----------------<br>
+                Total:  0.496438 second<br>
+<p>
+As far as I know, the throughput deadlock is a result of the presence of<br>
+the delay acknowledgement at 200ms time intervals, which does not seem to<br>
+relate to my case. I hope someone may know something about this. <br>
+<p>
+Thanks in advance,<br>
+Edwin.<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0021.html">Ian Heavens: "Pentium hardware and 100 Mbps Ethernet"</a>
+<li> <b>Previous message:</b> <a href="0019.html">Tom Pavel: "Re: VxWorks version of Netperf"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0022.html">Kevin M. Joyce: "Re: Asymmetric TCP/ATM throughputs between client and server"</a>
+</ul>

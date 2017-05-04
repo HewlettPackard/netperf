@@ -1,0 +1,73 @@
+<!-- received="Mon Mar 30 23:31:50 1998 PST" -->
+<!-- sent="Tue, 31 Mar 1998 09:37:58 +0200 (MET DST)" -->
+<!-- name="Martin Borriss" -->
+<!-- email="mb14@irz301.inf.tu-dresden.de" -->
+<!-- subject="Re: Asymmetric TCP/ATM throughputs between client and server" -->
+<!-- id="199803310737.JAA02496@irz301.inf.tu-dresden.de" -->
+<!-- inreplyto="Pine.GSO.3.96.980330113145.28712C-200000@tiger" -->
+<title>Archive of the netperf-talk mailing list: Re: Asymmetric TCP/ATM throughputs between client and server</title>
+<h1>Re: Asymmetric TCP/ATM throughputs between client and server</h1>
+Martin Borriss (<i>mb14@irz301.inf.tu-dresden.de</i>)<br>
+<i>Tue, 31 Mar 1998 09:37:58 +0200 (MET DST)</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#29">[ date ]</a><a href="index.html#29">[ thread ]</a><a href="subject.html#29">[ subject ]</a><a href="author.html#29">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0030.html">launch@LAUNCHMASTER.COM: "Your Web Site Re-Launch"</a>
+<li> <b>Previous message:</b> <a href="0028.html">Edwin Law: "Re: Asymmetric TCP/ATM throughputs between client and server"</a>
+<li> <b>In reply to:</b> <a href="0028.html">Edwin Law: "Re: Asymmetric TCP/ATM throughputs between client and server"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0027.html">Alain Kaminski: "Re: Asymmetric TCP/ATM throughputs between client and server"</a>
+</ul>
+<!-- body="start" -->
+Hello Edwin,<br>
+<p>
+Edwin Law wrote:<br>
+<i> &gt; </i><br>
+<i> &gt; I am not sure if it is appropriate here, but I have attached here the</i><br>
+<i> &gt; small program I used for me tests, in case it is due to a bug in the</i><br>
+<i> &gt; program (which is quite probable).  The switch driver I am using is 4.1.0.</i><br>
+<i> &gt; The Sun's are running Solaris 2.5.1. The Qos parameters are stated in the</i><br>
+<i> &gt; program.</i><br>
+<i> &gt; </i><br>
+<p>
+[program snippet snipped]<br>
+<p>
+<i> &gt; struct timeval start, finish;</i><br>
+<i> &gt; </i><br>
+<i> &gt; void start_timer() {</i><br>
+<i> &gt;     gettimeofday(&amp;start, (struct timezone*)0);</i><br>
+<i> &gt; }</i><br>
+<i> &gt; </i><br>
+<i> &gt; double stop_timer() {</i><br>
+<i> &gt;     long time;</i><br>
+<i> &gt;  </i><br>
+<i> &gt;     gettimeofday(&amp;finish, (struct timezone*)0);</i><br>
+<i> &gt;     time = (finish.tv_sec - start.tv_sec) * 1000000 + </i><br>
+<i> &gt;             finish.tv_usec - start.tv_usec;</i><br>
+<i> &gt;     return (double) time / 1000000;</i><br>
+<i> &gt; }</i><br>
+<p>
+<p>
+This is suspicious on the first look: <br>
+1. tv_usec is likely to wrap around quite often, so you can't simply<br>
+subtract the numbers.<br>
+2. Is this scaling correct? You're scaling the "tv_sec" member and not<br>
+the usec-member?!<br>
+<p>
+Martin<br>
+<p>
+<pre>
+-- 
+borriss@os.inf.tu-dresden.de 		borriss@mindless.com 
+</pre>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0030.html">launch@LAUNCHMASTER.COM: "Your Web Site Re-Launch"</a>
+<li> <b>Previous message:</b> <a href="0028.html">Edwin Law: "Re: Asymmetric TCP/ATM throughputs between client and server"</a>
+<li> <b>In reply to:</b> <a href="0028.html">Edwin Law: "Re: Asymmetric TCP/ATM throughputs between client and server"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0027.html">Alain Kaminski: "Re: Asymmetric TCP/ATM throughputs between client and server"</a>
+</ul>

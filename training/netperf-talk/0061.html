@@ -1,0 +1,47 @@
+<!-- received="Thu Jul  2 17:38:21 1998 PDT" -->
+<!-- sent="Thu, 2 Jul 1998 20:41:09 -0400 (EDT)" -->
+<!-- name="Edwin Law" -->
+<!-- email="e-law@cs.yorku.ca" -->
+<!-- subject="Throughput deadlock" -->
+<!-- id="Pine.GSO.3.96.980702203732.21198A-100000@oak.cs.yorku.ca" -->
+<!-- inreplyto="35901E98.BA3E0AA1@cup.hp.com" -->
+<title>Archive of the netperf-talk mailing list: Throughput deadlock</title>
+<h1>Throughput deadlock</h1>
+Edwin Law (<i>e-law@cs.yorku.ca</i>)<br>
+<i>Thu, 2 Jul 1998 20:41:09 -0400 (EDT)</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#61">[ date ]</a><a href="index.html#61">[ thread ]</a><a href="subject.html#61">[ subject ]</a><a href="author.html#61">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0062.html">Anne Wong: "HK FINE WINE SHOP ON NET"</a>
+<li> <b>Previous message:</b> <a href="0060.html">Rick Jones: "unsubscribing"</a>
+<li> <b>In reply to:</b> <a href="0052.html">Rick Jones: "Re: Different throughputs in two directions"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0064.html">Rick Jones: "Re: Throughput deadlock"</a>
+</ul>
+<!-- body="start" -->
+Hi,<br>
+    Has anyone tried using a send size of 1 KB and socket size of 4KB in<br>
+an Netperf TCP_STREAM test? I got an exceptionally low throughput of<br>
+0.04Mbps.  I believe it is caused by the so-called "throughput deadlock"<br>
+problem, since 4KB &lt; 3MSS and that turning on the TCP_NODELAY can<br>
+eliminate this anomaly. Can anyone confirm this?<br>
+ <br>
+    How can sending more data (&gt;1MSS) help solving the problem?<br>
+<p>
+    Lastly, can anyone explain to me why this happens on IRIX (which is<br>
+"sort of" BSD-based), but not on the STREAMS-based Solaris?  Does Solaris<br>
+has TCP_NODELAY set as default? <br>
+<p>
+Thanks in advance,<br>
+Edwin.<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0062.html">Anne Wong: "HK FINE WINE SHOP ON NET"</a>
+<li> <b>Previous message:</b> <a href="0060.html">Rick Jones: "unsubscribing"</a>
+<li> <b>In reply to:</b> <a href="0052.html">Rick Jones: "Re: Different throughputs in two directions"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0064.html">Rick Jones: "Re: Throughput deadlock"</a>
+</ul>

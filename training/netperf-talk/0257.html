@@ -1,0 +1,79 @@
+<!-- received="Fri Nov  5 15:55:15 1999 PST" -->
+<!-- sent="Fri, 05 Nov 1999 16:00:32 -0800" -->
+<!-- name="Rick Jones" -->
+<!-- email="raj@cup.hp.com" -->
+<!-- subject="Re: size of thepackets" -->
+<!-- id="38236FA0.452C5FEA@cup.hp.com" -->
+<!-- inreplyto="size of thepackets" -->
+<title>Archive of the netperf-talk mailing list: Re: size of thepackets</title>
+<h1>Re: size of thepackets</h1>
+Rick Jones (<i>raj@cup.hp.com</i>)<br>
+<i>Fri, 05 Nov 1999 16:00:32 -0800</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#257">[ date ]</a><a href="index.html#257">[ thread ]</a><a href="subject.html#257">[ subject ]</a><a href="author.html#257">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0258.html">Kiran Kumar Bhumana: "Re: size of thepackets"</a>
+<li> <b>Previous message:</b> <a href="0256.html">Kiran Kumar Bhumana: "size of thepackets"</a>
+<li> <b>Maybe in reply to:</b> <a href="0256.html">Kiran Kumar Bhumana: "size of thepackets"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0258.html">Kiran Kumar Bhumana: "Re: size of thepackets"</a>
+</ul>
+<!-- body="start" -->
+Kiran Kumar Bhumana wrote:<br>
+<i>&gt; </i><br>
+<i>&gt; a couple of questions.</i><br>
+<i>&gt; </i><br>
+<i>&gt;         1) Can i change the size of the packets that i transfer on the</i><br>
+<i>&gt; net using the netperf program.</i><br>
+<p>
+Not always. Remember that TCP is a _byte-stream_ and that users of TCP<br>
+should (generally) have no interest in or knowledge of the segment size.<br>
+TCP will break "large" user sends into segments, and combine small sends<br>
+into full-sizes segments.<br>
+<p>
+UDP will had whatever you give it to IP, which will then fragment it as<br>
+needed. If your send size in a UDP test is smaller than the MTU-8 that<br>
+will generally be the packet size.<br>
+<p>
+If you enable TCP_NODELAY (generally not a good thing to do), and your<br>
+sends are less than the MSS, that will generally be the packet size.<br>
+<p>
+If your sends are larger than the MSS or MTU, the packet sizes will<br>
+depend on how much larger the sends are relative to the MTU/MSS.<br>
+<p>
+<i>&gt;         2) Is there a way i can figure out the page size of the system? I</i><br>
+<i>&gt; am using Dell computers.</i><br>
+<p>
+That is probably a function of the operating system. If it is running<br>
+Unix, getconf() may help.<br>
+<p>
+<i>&gt;         3) How do i relate the elapsed time and through put?</i><br>
+<p>
+Throughput = totalworkperformed/elapsed time<br>
+<p>
+rick jones<br>
+<i>&gt; </i><br>
+<i>&gt; Thanks a lot,</i><br>
+<i>&gt; BHUMANA KIRAN KUMAR</i><br>
+<i>&gt; bhumana@ece.arizona.edu</i><br>
+<i>&gt; </i><br>
+<i>&gt; Res-(520) 792-9708</i><br>
+<i>&gt; T.A-(520) 621-8677</i><br>
+<p>
+<pre>
+-- 
+these opinions are mine, all mine; HP might not want them anyway... :)
+feel free to email, or post, but please do not do both...
+my email address is raj in the cup.hp.com domain...
+</pre>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0258.html">Kiran Kumar Bhumana: "Re: size of thepackets"</a>
+<li> <b>Previous message:</b> <a href="0256.html">Kiran Kumar Bhumana: "size of thepackets"</a>
+<li> <b>Maybe in reply to:</b> <a href="0256.html">Kiran Kumar Bhumana: "size of thepackets"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0258.html">Kiran Kumar Bhumana: "Re: size of thepackets"</a>
+</ul>

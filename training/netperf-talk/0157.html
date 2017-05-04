@@ -1,0 +1,63 @@
+<!-- received="Mon Apr 12 09:40:08 1999 PDT" -->
+<!-- sent="Mon, 12 Apr 1999 12:37:10 -0400" -->
+<!-- name="Greg Tillman" -->
+<!-- email="GTILLMAN@MAINE.EDU" -->
+<!-- subject="bifurcated results from netperf" -->
+<!-- id="3.0.6.32.19990412123710.007e1100@MAINE.EDU" -->
+<!-- inreplyto="" -->
+<title>Archive of the netperf-talk mailing list: bifurcated results from netperf</title>
+<h1>bifurcated results from netperf</h1>
+Greg Tillman (<i>GTILLMAN@MAINE.EDU</i>)<br>
+<i>Mon, 12 Apr 1999 12:37:10 -0400</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#157">[ date ]</a><a href="index.html#157">[ thread ]</a><a href="subject.html#157">[ subject ]</a><a href="author.html#157">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0158.html">Rick Jones: "Re: bifurcated results from netperf"</a>
+<li> <b>Previous message:</b> <a href="0156.html">Rick Jones: "Re: More throughput than bandwidth"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0158.html">Rick Jones: "Re: bifurcated results from netperf"</a>
+</ul>
+<!-- body="start" -->
+Ok, I know i'm out of my field here, but i'd appreciate any help.  I'm<br>
+using netperf to test the performance between a pair of Intel's<br>
+EtherExpress Pro/100 100Mbs cards, each on a Linux box (RedHat 5.2, kernel<br>
+2.0.36).  I'm just running a basic<br>
+<p>
+	netperf -l 30 -H boxb <br>
+<p>
+The results from a series of 30-second tests seem to be bifurcated,<br>
+clustering around either 12 or 80 Mbs, which are obviously way different<br>
+numbers:<br>
+<p>
+11,82,12,12,83,13,11,14,12,83,83,60,83,12,83,44,83,83,83,14<br>
+<p>
+Ok, i thought, that will smooth out if we up it to 60 seconds.  But, as<br>
+they say, "NOT":<br>
+<p>
+83,13,13,83,83,83,15,12,12,13,83,13,83,13,83,12,82,83,14,83<br>
+<p>
+Even at 30 minutes, it is by no means nice and smooth and repeatable,<br>
+although it's not as bad as the shorter tests.  But if anyone can give me a<br>
+hint what's going on here, I'd appreciate it.  One box has 2 network cards,<br>
+because I wanted to test it as a router (once I had some baseline numbers<br>
+to compare the router performance to :-(  But anyway, I don't see why two<br>
+cards in a box should matter.  I've cut down on the number of other<br>
+processes running on each box to the bare minimum.  Each box has 32MB of<br>
+memory, which should be plenty to prevent any kind of swapping.  I've<br>
+toggled the '-- -D' option, to no effect.  Debug output doesn't give me any<br>
+insight.<br>
+<p>
+Thanks for any help.<br>
+<p>
+- greg tillman<br>
+university of maine at farmington<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0158.html">Rick Jones: "Re: bifurcated results from netperf"</a>
+<li> <b>Previous message:</b> <a href="0156.html">Rick Jones: "Re: More throughput than bandwidth"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0158.html">Rick Jones: "Re: bifurcated results from netperf"</a>
+</ul>

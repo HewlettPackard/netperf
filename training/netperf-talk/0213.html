@@ -1,0 +1,52 @@
+<!-- received="Tue Jul 27 07:50:41 1999 PDT" -->
+<!-- sent="Tue, 27 Jul 1999 16:53:03 +0200" -->
+<!-- name="MOREAU Luc" -->
+<!-- email="LUM@EUROPAY.COM" -->
+<!-- subject="Netperf as coninuous performance reporting tool ?" -->
+<!-- id="AD17847850B0D11182790001FA68C99B031E7CDB@EPIXCH001" -->
+<!-- inreplyto="" -->
+<title>Archive of the netperf-talk mailing list: Netperf as coninuous performance reporting tool ?</title>
+<h1>Netperf as coninuous performance reporting tool ?</h1>
+MOREAU Luc (<i>LUM@EUROPAY.COM</i>)<br>
+<i>Tue, 27 Jul 1999 16:53:03 +0200</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#213">[ date ]</a><a href="index.html#213">[ thread ]</a><a href="subject.html#213">[ subject ]</a><a href="author.html#213">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0214.html">hsalfeld@estec.esa.nl: "Bug in -s -S params?"</a>
+<li> <b>Previous message:</b> <a href="0212.html">Federico Pelizza: "[Fwd: setsockopt() and netperf parameters]"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+Hi all.<br>
+<p>
+I am going to design and implement a performance monitoring solution for my<br>
+company's network (LAN/WAN).  My requirements include availability and<br>
+end-to-end response time.  I am looking at netperf to take these<br>
+measurements, and it seems OK up to now... but I have however some<br>
+questions:<br>
+<p>
+- netperf is clearly designed as a network performance "benchmark" more than<br>
+as a continuous monitoring tool.  Does anybody actually use netperf to<br>
+perform regular tests (from cron for instance) ?  Any issues doing this ?<br>
+<p>
+- netperf is quite flexible in terms of protocol selection (I wish to use<br>
+UDP), request/response packet sizes, socket buffer sizes and more...  BUT is<br>
+there a way I could get a round-trip time (instead of the trx/sec) ?  Is it<br>
+safe to simply invert the trx/sec value for an estimation of the round-trip<br>
+time (in sec) ?<br>
+<p>
+- Using the "-P 0" argument, it is quite simple to parse netperf output.<br>
+Has anybody done this already ?  Wishing to share some code maybe ?<br>
+<p>
+Thanks for such a great program anyway :)<br>
+<p>
+Luc Moreau<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0214.html">hsalfeld@estec.esa.nl: "Bug in -s -S params?"</a>
+<li> <b>Previous message:</b> <a href="0212.html">Federico Pelizza: "[Fwd: setsockopt() and netperf parameters]"</a>
+<!-- nextthread="start" -->
+</ul>

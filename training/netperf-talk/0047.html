@@ -1,0 +1,152 @@
+<!-- received="Fri Jun 19 10:13:24 1998 PDT" -->
+<!-- sent="Fri, 19 Jun 1998 10:12:20 -0700" -->
+<!-- name="Rick Jones" -->
+<!-- email="raj@cup.hp.com" -->
+<!-- subject="Re: Netperf and Sun Gigabit Ethernet (or other Full-duplex modes of transmission)" -->
+<!-- id="358A9BF4.74C4560F@cup.hp.com" -->
+<!-- inreplyto="Netperf and Sun Gigabit Ethernet (or other Full-duplex modes of transmission)" -->
+<title>Archive of the netperf-talk mailing list: Re: Netperf and Sun Gigabit Ethernet (or other Full-duplex modes of transmission)</title>
+<h1>Re: Netperf and Sun Gigabit Ethernet (or other Full-duplex modes of transmission)</h1>
+Rick Jones (<i>raj@cup.hp.com</i>)<br>
+<i>Fri, 19 Jun 1998 10:12:20 -0700</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#47">[ date ]</a><a href="index.html#47">[ thread ]</a><a href="subject.html#47">[ subject ]</a><a href="author.html#47">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0048.html">Gregory P. Smith: "Re: Netperf and Sun Gigabit Ethernet"</a>
+<li> <b>Previous message:</b> <a href="0046.html">Todd Jobson: "Netperf and Sun Gigabit Ethernet (or other Full-duplex modes of transmission)"</a>
+<li> <b>Maybe in reply to:</b> <a href="0046.html">Todd Jobson: "Netperf and Sun Gigabit Ethernet (or other Full-duplex modes of transmission)"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0048.html">Gregory P. Smith: "Re: Netperf and Sun Gigabit Ethernet"</a>
+</ul>
+<!-- body="start" -->
+Todd Jobson wrote:<br>
+<i>&gt; </i><br>
+<i>&gt; Netperf'ers :</i><br>
+<i>&gt; </i><br>
+<i>&gt; I am testing the throughput of a Sun E10000 using their Gigabit Ethernet</i><br>
+<i>&gt; adapters (resold alteon cards) using netperf.</i><br>
+<p>
+Cool - the netperf database at www.netperf.org would love to see some<br>
+numbers. Don't forget to measure TCP_RR too :)<br>
+<p>
+<i>&gt; A couple of questions about how netperf bases it`s throughput #'s (Mbps).</i><br>
+<i>&gt; </i><br>
+<i>&gt;         Assume that for these questions / statements, that I am only using a</i><br>
+<i>&gt;         cross-over cable between 2 NIC's on 2 separate systems.</i><br>
+<i>&gt; </i><br>
+<i>&gt; -       Is the throughput (Mbps) # based strictly on Unidirectional writing</i><br>
+<i>&gt;         of data and timing it's completion, using some statistical passing</i><br>
+<i>&gt;         of results... between client and server ??  Would this be considered</i><br>
+<i>&gt;         half-duplex ??  In either case, if I run netperf on both systems</i><br>
+<i>&gt;         simultaniously (reporting 190 Mbps on both systems, from each netperf),</i><br>
+<i>&gt;         does this mean that I add up the 2 system throughput #'s to get the</i><br>
+<i>&gt;         'FUll DUPLEX' throughput ?? (380 Mbps ??), or does Netperf take into</i><br>
+<i>&gt;         account and use the timing of both the sending and receiving sockets,</i><br>
+<i>&gt;         based on the total # of bytes transmitted and received (handshaking)</i><br>
+<i>&gt;         even in a unidirectional transfer ??</i><br>
+<p>
+Netperf takes a timestamp at the beginning of the test, counts how many<br>
+bytes were sent across the wire (it includes the time to exchange<br>
+shutdowns/FINs between the ends to make sure all the data got across)<br>
+takes a timestamp at the end, and divides. <br>
+<p>
+Each netperf is an independent entity. So, if netperf A sys 100, and<br>
+netperf B says 100, and A and B ran at the same time with minimal skew,<br>
+you can add A and B and say that throughput C was 200.<br>
+<p>
+It is important to remember that there is no explicit synchronization of<br>
+netperf revision two tests. You should increase your run times to a<br>
+couple minutes, and not use the confidence intervals. Some folks have<br>
+reported good results by running three consecutive netperf tests at each<br>
+window and taking the results of the middle test:<br>
+<p>
+$ netperf; netperf; netperf<br>
+<p>
+the idea is that you can be reasonably sure that the middle of the three<br>
+runs would have all the different tests running at the same time - some<br>
+might be on test1 of three, others on 2, maybe a couple others on 3, but<br>
+all streams shoudl be running at the same time. Caveat benchmarkor.<br>
+<p>
+<i>&gt; -       Given that this Sun VGE driver operates only at a FULL duplex mode,</i><br>
+<i>&gt;         does this preclude me to the belief that only having one system</i><br>
+<i>&gt;         transmitting data to another (in a single direction), that this only</i><br>
+<i>&gt;         can be called 'half-duplex', thus not being allowed to consume more</i><br>
+<i>&gt;         than half of the bandwidth ???  I don't believe so, but please correct</i><br>
+<i>&gt;         me if I am wrong.  I understood the dynamics of ethernet throughput to</i><br>
+<i>&gt;         simply allow for a maximum amount of data (bandwidth) to be carried on</i><br>
+<i>&gt;         the media overall (total of both sides  eg. 100Mbps sending, 900 Mbps</i><br>
+<i>&gt;         receiveing ; if true Gbps were achievable).</i><br>
+<i>&gt; </i><br>
+<i>&gt;         This leads me into the question of Collision detection not being</i><br>
+<i>&gt;         a factor (or even possible) when using 'Full Duplex' ethernet .?</i><br>
+<i>&gt;         Does this mean that even though no collisions/errors are reported</i><br>
+<i>&gt;         by the device driver, that collisions could still be occuring ??, or</i><br>
+<i>&gt;         does this mean that collisions are physically impossible, given that</i><br>
+<i>&gt;         two separate 'channels' are multiplexed over the media ???  Is this</i><br>
+<i>&gt;         one of the reasons that 'Full Duplex' ethernet is usually (if not</i><br>
+<i>&gt;         always) wired so that a switch is the connecting device between nodes,</i><br>
+<i>&gt;         rather than allowing several nodes to transmit simultaniously without</i><br>
+<i>&gt;         collision detection ??  Please enlighten me on all of the nitty-gritty</i><br>
+<i>&gt;         details, as I have not yet received any 'good' explanations as of yet.</i><br>
+<p>
+I am reasonably certain that when an interface is runn in full-cuplex<br>
+mode, the collision detection does not come into play - a strict purist<br>
+would then argue that it isn't Ethernet :)<br>
+<p>
+<i>&gt;         For the Sun folks, what are the 10 or 15 'vge' driver parameters exactly</i><br>
+<i>&gt;         used for ???  Is there an internal doc or docs that describe various</i><br>
+<i>&gt;         tested configurations ???  I've been told to do different things by</i><br>
+<i>&gt;         both support and the configuration manuals...</i><br>
+<i>&gt; </i><br>
+<i>&gt;         Please respond as soon as possible, since the customer(s) at lucent</i><br>
+<i>&gt;         are becoming VERY uneasy after spending sooo... much money, not to</i><br>
+<i>&gt;         get the expected bandwith from Gigabit Ethernet (unless the tools are</i><br>
+<i>&gt;         deceiving us) ??</i><br>
+<p>
+What is the expected bandwidth from Gigabit Ethernet? That may sound<br>
+like a silly question, but it is valid - Just as 100BaseT did before it,<br>
+Gigabit Ethernet does *nothing* to make data transfer any easier on the<br>
+hosts - the MTU is still the same paltry 1500 bytes, which means a given<br>
+quantity of data takes just as many packets and essentially just as many<br>
+CPU cycles as it did before.<br>
+<p>
+So, if your system was nearly CPU bound (check all the CPUs in an MP,<br>
+not just the aggregate utilization...) at 100BaseT, there will be very<br>
+little gain, if any from GigE.<br>
+<p>
+If people really want to see bandwith increase with CPU reduction, they<br>
+should be clamoring for FibreChannel networking - that supports up to a<br>
+60K MTU or more, which would make a very serious dent in CPU utilization<br>
+for something like a netperf TCP_STREAM test and those apps which<br>
+behaved similarly.<br>
+<p>
+<p>
+happy benchmarking,<br>
+<p>
+rick jones<br>
+<p>
+<i>&gt; Thanks,</i><br>
+<i>&gt; </i><br>
+<i>&gt; Todd Jobson</i><br>
+<i>&gt; Technical Manager</i><br>
+<i>&gt; Sun Professional Services</i><br>
+<i>&gt; todd.jobson@east.sun.com</i><br>
+<i>&gt; tjobson@aluxpo.micro.lucent.com</i><br>
+<p>
+<pre>
+-- 
+these opinions are mine, all mine; HP might not want them anyway... :)
+feel free to email, or post, but please do not do both...
+my email address is raj in the cup.hp.com domain...
+</pre>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0048.html">Gregory P. Smith: "Re: Netperf and Sun Gigabit Ethernet"</a>
+<li> <b>Previous message:</b> <a href="0046.html">Todd Jobson: "Netperf and Sun Gigabit Ethernet (or other Full-duplex modes of transmission)"</a>
+<li> <b>Maybe in reply to:</b> <a href="0046.html">Todd Jobson: "Netperf and Sun Gigabit Ethernet (or other Full-duplex modes of transmission)"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0048.html">Gregory P. Smith: "Re: Netperf and Sun Gigabit Ethernet"</a>
+</ul>

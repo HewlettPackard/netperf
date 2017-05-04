@@ -1,0 +1,66 @@
+<!-- received="Wed Aug 12 18:59:20 1998 PDT" -->
+<!-- sent="Thu, 13 Aug 1998 10:07:28 +0800 (SGT)" -->
+<!-- name="Roland Yeo" -->
+<!-- email="roland@cir.nus.edu.sg" -->
+<!-- subject="how are confidence intervals calculated?" -->
+<!-- id="Pine.BSF.4.02.9808131002590.753-100000@huiching.singaren.net.sg" -->
+<!-- inreplyto="" -->
+<title>Archive of the netperf-talk mailing list: how are confidence intervals calculated?</title>
+<h1>how are confidence intervals calculated?</h1>
+Roland Yeo (<i>roland@cir.nus.edu.sg</i>)<br>
+<i>Thu, 13 Aug 1998 10:07:28 +0800 (SGT)</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#75">[ date ]</a><a href="index.html#75">[ thread ]</a><a href="subject.html#75">[ subject ]</a><a href="author.html#75">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0076.html">Rick Jones: "Re: how are confidence intervals calculated?"</a>
+<li> <b>Previous message:</b> <a href="0074.html">Rick Jones: "Re: Problem in compiling netperf"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0076.html">Rick Jones: "Re: how are confidence intervals calculated?"</a>
+</ul>
+<!-- body="start" -->
+hi,<br>
+<p>
+does anyone know how are "confidence intervals" calculated in Netperf?<br>
+<p>
+we frequently get messages like the following during TCP and UDP stream<br>
+tests:<br>
+<p>
+TCP STREAM TEST to 137.132.12.226 : +/-2.5% @ 99% conf. : interval<br>
+!!! WARNING<br>
+!!! Desired confidence was not achieved within the specified iterations.<br>
+!!! This implies that there was variability in the test environment that<br>
+!!! must be investigated before going further.<br>
+!!! Confidence intervals: Throughput      : 39.7%<br>
+!!!                       Local CPU util  :  0.0%<br>
+!!!                       Remote CPU util :  0.0%<br>
+<p>
+Recv   Send    Send                          <br>
+Socket Socket  Message  Elapsed              <br>
+Size   Size    Size     Time     Throughput  <br>
+bytes  bytes   bytes    secs.    10^6bits/sec  <br>
+<p>
+ 57344  57344  32768    60.05      58.08   <br>
+<p>
+<p>
+we would like to understand the calculations that go on in the background.<br>
+<p>
+thanks for your advise.<br>
+<p>
+regards,<br>
+roland<br>
+<p>
+<pre>
+--
+Roland Yeo &lt;roland@cir.nus.edu.sg&gt; 
+SingAREN, Centre for Internet Research, National University of Singapore
+</pre>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0076.html">Rick Jones: "Re: how are confidence intervals calculated?"</a>
+<li> <b>Previous message:</b> <a href="0074.html">Rick Jones: "Re: Problem in compiling netperf"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0076.html">Rick Jones: "Re: how are confidence intervals calculated?"</a>
+</ul>

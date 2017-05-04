@@ -1,0 +1,203 @@
+<!-- received="Fri Jul 30 05:46:38 1999 PDT" -->
+<!-- sent="Fri, 30 Jul 1999 14:41:00 +0100" -->
+<!-- name="hsalfeld@estec.esa.nl" -->
+<!-- email="hsalfeld@estec.esa.nl" -->
+<!-- subject="Bug in -s -S params?" -->
+<!-- id="412567BE.004B0D3C.00@estecmail1.estec.esa.nl" -->
+<!-- inreplyto="" -->
+<title>Archive of the netperf-talk mailing list: Bug in -s -S params?</title>
+<h1>Bug in -s -S params?</h1>
+<i>hsalfeld@estec.esa.nl</i><br>
+<i>Fri, 30 Jul 1999 14:41:00 +0100</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#214">[ date ]</a><a href="index.html#214">[ thread ]</a><a href="subject.html#214">[ subject ]</a><a href="author.html#214">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0215.html">Bruce Barnett: "Re: Bug in -s -S params?"</a>
+<li> <b>Previous message:</b> <a href="0213.html">MOREAU Luc: "Netperf as coninuous performance reporting tool ?"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0215.html">Bruce Barnett: "Re: Bug in -s -S params?"</a>
+</ul>
+<!-- body="start" -->
+--0__=1MHbEI7HAU1mbXzqqqnBHsgS8TEBkSWdN5ivCdjFv5NvvNJG9188pIli<br>
+Content-type: text/plain; charset=us-ascii<br>
+Content-Disposition: inline<br>
+<p>
+Hi Netperf community...,<br>
+<p>
+I am currently experimenting with a satellite loopback scenario and using a<br>
+combination of NETPERF and TCPDUMP to evaluate the performance like the<br>
+throughput.<br>
+<p>
+As being one of the key parameters in "Long Fat Networks" like satellite<br>
+links, I play with the Netperf parameters -s and -S simultanously to change<br>
+the RECV/SEND Socket sizes from 2048 to 65536 Bytes in steps of 2kB. I was<br>
+wondering why the throughput was always decreasing when going higher than<br>
+63488 Bytes for the -s and -S params.... (thus when reaching -s 65536 -S<br>
+65536).<br>
+<p>
+I looked onto the traces of TCPDUMP to observe the Window size ("number of<br>
+bytes of receive buffer space available"), and I found some inconsistency:<br>
+the TCPDUMP Window size is not the same like I set with the -s -S params.! In<br>
+the following table (sorry, a bit long, but at least a detailed one!) one can<br>
+see the relationship between the NETPERF's -s -S parameters and the Window<br>
+size as detected by TCPDUMP:<br>
+<p>
+(See attached file: table.gif)<br>
+<p>
+So what does that mean? Just a misunderstanding on my side of the NETPERF's<br>
+Recv/Send _socket_ size parameters -s and -S, or of TCPDUMP's available<br>
+_buffer space_ output? Is the _Socket_ size (-s -S params) the same like the<br>
+_Window_ size?<br>
+<p>
+Or is NETPERF simply not doing what it should do, namely to set the Window<br>
+size?<br>
+<p>
+Sorry for any confusion, but maybe somebody knows an answer to this<br>
+phenomenon (if it's one). Any help is appreciated :)<br>
+<p>
+Regards,<br>
+Heico<br>
+---------------------------------------------------------------------<br>
+Heico Salfeld<br>
+ phone: +31-71-565-3136                 <a href="mailto:hsalfeld@estec.esa.nl">mailto:hsalfeld@estec.esa.nl</a><br>
+   fax: +31-71-565-4596                      <a href="http://www.estec.esa.nl">http://www.estec.esa.nl</a><br>
+---------------------------------------------------------------------<br>
+                              ESA - ESTEC<br>
+european space agency - european space research and technology centre<br>
+ payload systems division - communication systems section  (tos-etc)<br>
+ Keplerlaan 1 - Postbox 299 - 2200 AG Noordwijk zh - The Netherlands<br>
+---------------------------------------------------------------------<br>
+<p>
+--0__=1MHbEI7HAU1mbXzqqqnBHsgS8TEBkSWdN5ivCdjFv5NvvNJG9188pIli<br>
+Content-type: image/gif; <br>
+	name="table.gif"<br>
+Content-Disposition: attachment; filename="table.gif"<br>
+Content-Description: Compuserve GIF<br>
+Content-Transfer-Encoding: base64<br>
+<p>
+R0lGODlhwAFCAvcAAAAAAAAAQAAAgAAA/wAgAAAgQAAggAAg/wBAAABAQABAgABA/wBgAABgQABg<br>
+gABg/wCAAACAQACAgACA/wCgAACgQACggACg/wDAAADAQADAgADA/wD/AAD/QAD/gAD//yAAACAA<br>
+QCAAgCAA/yAgACAgQCAggCAg/yBAACBAQCBAgCBA/yBgACBgQCBggCBg/yCAACCAQCCAgCCA/yCg<br>
+ACCgQCCggCCg/yDAACDAQCDAgCDA/yD/ACD/QCD/gCD//0AAAEAAQEAAgEAA/0AgAEAgQEAggEAg<br>
+/0BAAEBAQEBAgEBA/0BgAEBgQEBggEBg/0CAAECAQECAgECA/0CgAECgQECggECg/0DAAEDAQEDA<br>
+gEDA/0D/AED/QED/gED//2AAAGAAQGAAgGAA/2AgAGAgQGAggGAg/2BAAGBAQGBAgGBA/2BgAGBg<br>
+QGBggGBg/2CAAGCAQGCAgGCA/2CgAGCgQGCggGCg/2DAAGDAQGDAgGDA/2D/AGD/QGD/gGD//4AA<br>
+AIAAQIAAgIAA/4AgAIAgQIAggIAg/4BAAIBAQIBAgIBA/4BgAIBgQIBggIBg/4CAAICAQICAgICA<br>
+/4CgAICgQICggICg/4DAAIDAQIDAgIDA/4D/AID/QID/gID//6AAAKAAQKAAgKAA/6AgAKAgQKAg<br>
+gKAg/6BAAKBAQKBAgKBA/6BgAKBgQKBggKBg/6CAAKCAQKCAgKCA/6CgAKCgQKCggKCg/6DAAKDA<br>
+QKDAgKDA/6D/AKD/QKD/gKD//8AAAMAAQMAAgMAA/8AgAMAgQMAggMAg/8BAAMBAQMBAgMBA/8Bg<br>
+AMBgQMBggMBg/8CAAMCAQMCAgMCA/8CgAMCgQMCggMCg/8DAAMDAQMDAgMDA/8D/AMD/QMD/gMD/<br>
+//8AAP8AQP8AgP8A//8gAP8gQP8ggP8g//9AAP9AQP9AgP9A//9gAP9gQP9ggP9g//+AAP+AQP+A<br>
+gP+A//+gAP+gQP+ggP+g///AAP/AQP/AgP/A////AP//QP//gP///ywAAAAAwAFCAgAI/gD/CRxI<br>
+sKDBgwgTKlzIsKHDhxAjSpxIsaLFixgzatzIsaPHjyBDihxJsqTJkyhTqlzJsqXLlzBjypxJs6bN<br>
+mzhz6typEUBBnwIBCB1KlOjAokD/IfWJlGDTjEV5wlzqVOjPqEGNHv251SDQp13DBh3LMGlMswqt<br>
+KkUb8mtCtmzLmk0al6xTrkoPoqXrca/Us17F+s0bdvDaq3YTzyWcuCzNungZo4QMVyLTwm8D35Us<br>
+ljHkiob/tgztGe9gw2qPut2MmS/Ezyph25X9kbLm16Ubs+68OvLs16kRymY6N/XlrHzVBh8qmvRu<br>
+wqcjH8/bu3FyzNSLezaOfevX4Gun/scl3toqc+TevXKfvZzs+bHrwzuGrhorZ87fo6LWmln3Vcqr<br>
+uRbfd1m511lOzvFm3YLwpYefdLlBF2CBubmGX28WxleVgRxGSCCEFWInnmocWihch7b999549t3X<br>
+H3B6HVjdZhn6t1OCyK1oGojH5ffeXdd1JaCQrVF3W41Anojib0zCFiSPINIXoZJG2nhfXeMp+JZx<br>
+4MkXY5Ra7XUekl5KhaOLD6ZJ34QLjbhYiEs2OF1h/PmFJZFxhqeccDoWt56PIubopINoXknlbm9G<br>
+9JlzQ3YI55RW1kSaic/NOCSbaZX2ZqNSalola1km+WWnGMo46pNIjthkpL5p6JuN/qEq9hClr8LF<br>
+5p5ClprnjUc+JxiowDr6IoOc6sokmIFSqSuZM7qXqIREfggnrbXWV+dtKjKHGnDD8Qekdpb22N2P<br>
+vKqHY4voBdtpppUeWyd41Pr534HWVoWrZDrqNaeY04qXb5misURbwAQXbPDBCI80cMIMN+zwww4v<br>
+DPHEFFds8cUYZ6zxxhx37PHHIIcs8sgkl2zyySinLBNYF/ko8auCKmqRfS9TyPLMNQua85fo4tYu<br>
+jQ3tbK+rDinXM0Vd3nQmbkuz+3PRUFcLmpbYBo00zBPNWWibreLr89S+fn2uzDw1bbWaZD999nxq<br>
+W0Y11k6nzerZZh/6G7VxZw13/tRoh503TqH9OGay+iYHbtX2zushl2Prmd+pO+aYbn30rq3Ycvdy<br>
+aq53h0OY6mEk0jXg29+umDSlbhotJt6SIuupu/DmWiKL297tLr3kRqeb6Nc26CGebqtbKrOxOzt7<br>
+r6neumx3lCPKPHth4sns3Ge1qLnvLo7+6KLTi3r7llrSirqDxlaWtfXAE8oi4cZ6v++qeV6mNWKy<br>
+Hvu8W8WaWjZv0XPFusvw21r8FBezuVWHd10an+8A2DwBvmh191Jff7CSv8A8iVQBvM78NGOinilQ<br>
+VdYjmtKcBzNVpcl8GJQamXalP+A9q1fAwpSSdvYsFEqQWDCM1+viVEEjzU93/kv74KNmaCYSpnBK<br>
+ukuh+CL3u/K1cFdLZFAGCSe3RDmxfi6c4qhwyMNf+QeIUbqfF7sntMm0CnNWzFbiYHc6b+Uucw0E<br>
+3dAEFKbTWat4oHsj67iGKDSqq4CTyxC5SFc+09XOXNyhmR111sfJBVJlkPQb4mYVyYPRpoxlrKTF<br>
+Bia0TGpyJZecmU6WQspSmvKUqEylKlfJyla68pWwjKUsZ0nLWtrylrjMpS4H+cle+vKXwAymMIdJ<br>
+zGIa85jIpNi7FqmnZH5ymbHyljMf470LYXGaKFvMCyPoSWyK5H0b8po3KwlOEolznDYpZ5VeiM6T<br>
+qVNclWunS965naTJk2T0/kTgPal5Thl2c58MO6D0JAnQk3RwoPEs6MYOWiKCKlRhJGwKOx+60Ijq<br>
+x6EUrU3XmOjAjEIscBzEqEc38hRpQu+fI70RBXmpz5S69KUwjalMZ0rTmtr0pjjNqU53ytOe+vSn<br>
+QA2qUEPWUskZdagBK2ozj4rUWQnUaxNtqtKeqk2RStVmQCPUVf+yyKomdKsLzCr2wMqrUHmVeleF<br>
+J4rkZ0+yAkZe9TqnWyNnRfPIEaVz7ckXZRVVt/ozRn3NKyj3ClWrIlWiYVOnYOfpQb4aNq310xxe<br>
+FwuVyFZzsjlVquB4Sdl5xvWoJu2saEdL2tKa9rSoTa1qV8va1rr2tZ2V/uad9gZbjJR0s4zDbE3r<br>
+qi/61fabltWqbmeapfWF87dt4dllRZui5Q4XuWgSaGC3ShxGFRa6Gl3jddF6WIZmsaPYlRtHFZvX<br>
+GjKxWeFt2QSXG1sjOq66nE1v8IgoXOa611fPrS1ItwvepsrWbv2VLx+HRmCmCvjACE6wghfM4AY7<br>
++MEQjrCEJ0zhCs/kvwVeqoUL57KihnauvP3VdCW8TRE/VqibkqsNN3xNSMlVsOb14okZHOPdzTio<br>
+GGbPJDec4+w8lbI1Rk/dIpzG45IXxPdNMov72bURSzXIYVzyGLF1ZL+6d4VSnnKTbwzUHpfpZkvu<br>
+nYo+m+Uym/nMaE6z/prXzOY2u/nNrvWTnI8UXyJXDZpkJquGfpxHLqcXXuY9a4B5asLshdPJCn4f<br>
+OwWd35F6N4YtprANJ/1isD66SJWeMKUNyWc9yzhZiF7wpC9Y5Sd/WpydljSVnevnzH5aznb9qoMp<br>
+Xd9Q/9S7KbJ1gmk91lL7N8M3U6qFV4xnA8P52MhOtrKXzexmO/vZ0I62tKfdRzR6uM4QnjPWhG1p<br>
+hjI600R+dAJTberZ+o+9Fd7gDs2p656am9WybvC7H0RuyG4xV7mV8uruvK5GezRWYv3UoBE87xSD<br>
+29TbNnG8aWw3g7eb0AlXOHcT3fA7+vqwid3ywkV9arO2GqcIVN2Y/jit7wzjLs/UTrnKV87ylrv8<br>
+5TCPuczlCfBia5jHW7T5h59sK4kL3N+nHbfPL47jK81b4Cz+YRR7DeNz3xvpYXa6oepbXqk7cnDY<br>
+frCdOCfdj9/U4Igjz8R3LdZEotvK6cPvwbNddniP3d0WfzrR5R13/s696DBk+sMFHE23DxziVCa5<br>
+sVUd+HwPfuaIT7ziF8/4xjv+8ZCPvOTjbHKbb5zjjCyg5fXs7bO3Nds11/jbdVroE9UQ6KbdYGDv<br>
+3mVZl1PdJF51pvZOeq4T0I1/P/CoWbp2jFPI0A4vudqSmPvaR/rnwko3bYs8+p1eWu9Hi/1Xxd30<br>
+4DLd69hddMB7/j9UbYN2kKgPemJHXsfPT/786E+/+tfP/va7//009T6oBJ/0ytN/5/69NDe5T+PO<br>
+1xr7xIVEvqV2wyaAdsd/eKdihkZbWqdlegeA8WdyP8dMBfhZomNUtOdqWIReQ8ZwG2hX31Z1G0hY<br>
+zad7p/aAl+dT3tZYJWiCx6doEBiAkUZVZuZ//YaArYdy9dRhUUdmuMVt8BeEQjiERFiERniESJiE<br>
+Shhuhicd9JduuTNm32d+CYh8h3Z20qdjQ4eDRbdNXZeCFGeFKNiCtRdojgWGZPdqB7hY+RRXGShf<br>
+NRZr1yeCRfaFZBhekwKCWGhpMvZXb5h9O4Z8f7hbFmUUIViB/nsDg2iogSdoh8UHiDmXPqxHaCvF<br>
+TJtHYuijXRqGf0vYiZ74iaAYiqI4iqToZpZXiUDIhJp1f1mXg3MIUoMIWyH4bbFoUyi0KFyIeRnH<br>
+ayK4fRYUg7+1YmN1fHxoGqEFKFnGO4pTXcRob39EfOGXek+XHVSHZIn4jD04SYp4h4S4fGqIcwAm<br>
+iMD4UsIIds04axtFi+OYUhKlSCIncjyGisD2hKVYj/Z4j/iYj/q4j/zYj6RoUrD2XocHegk0j01Y<br>
+jJcjSfWGjoJxUIfYi3JUKOiVjXeldrXYjZ/SXNG4WqhikesYU6iSY8yYjMLFexcpg0eERHvEdlA0<br>
+XtWXfPZz/pKvBXZx+JHsOEcep2R2VnfMl4vO90DbJ5OspZFBaZMZFWzAhkjx2GPlR34b6Y9QGZVS<br>
+OZVUWZVWeZVQ8YSX+JSx5ZTvuB9U6IpW+JBhGYZSVCkLCVkAl3NcSVoJwi8+qYILCJRtOVoTtXVx<br>
+CXcj6WOQU5f2dXKiIpQwJS2ECSXCR4INtYjGh2pXxo3Q9ZZ0ZZT/FlHPGH0sCZhxJ5iOlo6+qJh4<br>
+qI3r5Zm7JY9uiC5+CWIUNI0nhZWs2Zqu+ZqwGZuyOZu0GUyn6JXIOGxayYplKZdUV2J5CYnXp46i<br>
+6WrmCJold5dr2HTH6TenyYaZto2PaHzXEoWqqWnbAVh7/liMm4JlxfmZQhZS1Yh2jPk8jvmYFXeG<br>
+5ylTMdac0/lnw2KG34mS1rcu6xmMYQSLkvlQt2Vt/MOJolaJODmFz1mbBnqgCJqgCrqgDJpaOkea<br>
+Nydp9IgvE4pwcyiJwYme47lnGVqGBGh1BQqRtqOd82mLL3YnmtlaxGZ6+0lRg0M64ymha4miLTqZ<br>
+UIahh2lj4nmfAXijBkiRa/mjVdeT35iNBaeT3YduK1qilJd295WiR6mV2ZKbUPiVTtiUDZqlWrql<br>
+XNqlXvqlYLp+D4qlA6l1u+mUOvhrMXqDUCqN1aifTBqBJaSjPCqLeaee7wly/EaneSqcTvqQ3Taj<br>
+tlem/mYKV47jhjV6lFLze5OoixgKqOQ5dXgaota4i9uJkEt6oeBoqWuqpjAJp3WqWrPod5SKTE1J<br>
+NJeIiQc5pqUapq76qrAaq7I6q7Q6GeAngfInoyGHcqnoewn5gSd4mfapYmlpoRUZLXEKnry4f9CJ<br>
+PTWJZqoHaR1qi+2Rq4bTqmn1jn14g83aPiHWp+hpjreSqC7aksyDrdS1o1JSrL9WUkbUpqKqrvAl<br>
+h+A6mE/zrKHqoOwFnPCqUACJqxKoaWd6i61YqwZ7sAibsAq7sAzbsL10mweZr6KKmxZYoZ46lp6H<br>
+rklKNcQpsS4VrVo1gPWHjbyIZKFHoySphiVLXXvy/oPwUa1hhkfZOZL9qqh/8i0IdZi2wladyofi<br>
+Wp4a64y4CKme9rPaZJnSNyhE66sYG6NBW4XNIlnTGn8Dy6tJ9y+amKoOu7Vc27Ve+7Vgi5UQGzgF<br>
+m2gVem29CXe/OX/B2oBO64hPW0zglGJHp3xeSKIee5M/Wzlxm6TyCaLl1YQXyLdXiyGC1rPpWldH<br>
+1rcbqy1/eo7llnFPRJEBFJNAFp1tQ7kSImZTy577+jaMK5alZz+dy55nSmcAGqCMM0MQGrau+7qw<br>
+G7uyO7vtt4qCW7YeeHP/SqjdVZ/SGboqSIMNCbndJ7zDWLr6FaQUSrxd6LuSWq8zOZfSWrMFpVak<br>
+/sJW7MpwNQezyGuv3CofYieGhCeMiUm9+/RXv4i4DHkm45qs7HhRJ7e0s0Yzswe/eTuZ5cmm5Fpa<br>
+S3dC+1u9PuifvOu2YLG7EUq7CJzACrzADNzADvyJtou2wHtrAXy7aXtrxiuO7quiGfy7MJaTYwi9<br>
+MwnCGny//LmAHSvCKorCpDqk2jWLuEt2hrpU8tu4yvV/GxyvLIzDJgzAOxzCE0ydNwzEfsWCKRzE<br>
+IGfELVx9RnupSRtwHvySbsSbSAx4ukvFD5zFWrzFXNzFXny5gARNVLqp7ijBbNi/lvK/zIXGy1nE<br>
+T5TGNbiSP6TGNDes/NXD+jqR1cS8rcdAUBU9/jFMcJtrT9jLx77ZwX+cw/r6vbKjqfZGwpVhvu0l<br>
+vQIoye0EZqnWqHDIgtekyWrbxOrLkkRaw546xRZcxT9JoPA4wF/cyq78yrAcy7I8y49smgGLyotp<br>
+wJsYyO5GbOKGy0ncyQ5JxzS3aa8GzF/3Y4XmyR4quUyGzITYacOsyDYacc8cddymbZZ8ycTof9As<br>
+g9K8hWgXVd48suE8qUXcP5DDdbyMh/arJqTsq0QJo8p3ouLci811wN+MkbqstbT8zwAd0AI90AQ9<br>
+SlZ7R6xMd0xlwKmLYnzWHkgKes7LbsR8ycq8dvtsuvVJP9vMzecsQBltrxkcmBU9TmqFR0cT/tLk<br>
+eL0v61UdbdLQA8+Z+8Theazo62mU/G4qvdI/vK6GTIm6HF3U7KBKzM70utMj0z6Wq8L4+TvhU9Lo<br>
+pIyFx4NGCmgFmdAFndVavdVc3dVe/dUlkYkVG7ECi6YIvcsXbMXHdYAvXakj6DxtjU2RnBnx7Kh3<br>
++rxI7TH5DLhxjZD09aFM/W9etsS6alaAzKx+Tc7oXM9SdLShfLF999huayVR/JJ47cRZOLSYDbVt<br>
+U9dpmHxHjJoy25+9WqhUjdalDdaqvdqs3dquDbaty9Dt/GdMicVunb/L270r3Fvo3NfOhIuB99Mu<br>
+qB6NqNs3+Tev49vOKHXap9zHFELm5i9p/r3JgiOkjgzZYZezgY1awddi2buxw+coef2x5rrUli3M<br>
+hgjVzJma56reyXSIuebey31I9uncz03FKD3b7nzVGNi6r/3fAB7gAj7gBL61qGjGWE1wp4q6qY1i<br>
+2c3D283dgbh/9m1M5Ot3I6uQcBupBnTHiBhP1svMyeyVLFoge1nYgOSsL4rH9wSpyhi+433Cbyre<br>
+xg2Se5q+LM6/ObTY531wIs53HPTOP46RYlg7FQ7e4kvjR05MrKo6AauqQIjgBT7lVF7lVn7l/2iI<br>
+ZfzgumnWV9rgVZifax2RhNdxG87hzjnm0w2HG0XRku2b10lqES5+bb5Om91lg13dhwvl/sIW4jWO<br>
+v6QbmTAprK+n5PIt1wmFKXqMnXXI43TINe3Y0HTXnen95moL2pkb4zLuyGfOeSIU1HMedGc71pqO<br>
+5aZ+6qie6qq+6sgV27bd5atMoGl6sbhd2WXuvJ4N5y9YaaXuww4IdUsuTCub5KHulrK358Fum+rs<br>
+R9nJgKqbOS1Fs4du4TRCr/jWN1m4uWwq583qzG3L2I9650yLmIGe4eFu6WptQme1kpOdkVuY7Mq+<br>
+ugZZd1Uq1aQ+66ye7/q+7/ze77oKNwS75rR9yrEu6Zfe7CKL2Ni5pp2erjiu5t8tyH/T8Ms9py49<br>
+7eN+47kOcdYJb/Aul7xXbRFPiR0H/j8f38uEBNcYz+RPavIr7+DFfc8Oj97aIuQf3r9tPN9p7pLg<br>
+zoGiV+zV2/FzmuC6R7G7Y7H+nvRKv/RM3/ROb5ejLutLuXsB3+sZA6gU/vKcbU7EKtyL2XAUv5O8<br>
+Hdx/rqhx4+cnr9Z7jGlp/0wAE4VSrmp6riyMnK0t5Idaj+faDWp5D0zal5jX3e4yFFxtr0l/j1jo<br>
+DuRGfXqVnuPczPCOnu37NcRAD1CpGvf//uX5LfBP3/me//mgH/pyzWm7itqFG8FnbfDpTu4br/jD<br>
+WZRD7a/TqNnQKq9nafUXQ75Km2bmg+x9/0s0K8ZrdOJVeiokXvYuyu3Nze7tXsni/q7ruv/wuC/7<br>
+RZr4Xx/9gKuzdR74SD63hL3wmA7h079JVSv1sJ55pk/0or/+7N/+7v/+8B8xRn+o+nz6U31GnG+i<br>
+oFvn+d/qjQQQ//4BECiQoMGDAwsqXNjQ4UOIESVOpFjR4kWMGTUmfMiRI0ODCwF81FjS5EmUKVWu<br>
+ZHnRI8mQChN6bFnT5k2cJ2HG5FmQZsidOYUOJVrUqE+kO3+CZHrU6VOoIgeObPhy5MyrUoNG5drV<br>
+a86sSatSldpz61e0aV3ORFoWaNmDZ9XOpVu3akylbpfa5duXKduIBH/G9VvYMFrCTdvy3HvYMdfB<br>
+EwVrvUr28WXMNgVXhrm0cWbQOWDhOqTZWG5o1KlNL/7L+nRq2Bkrs/YZdqpl2rF1q7btuvff37uF<br>
+Dyde3Phx5MmVL2fe3Plz6MIDAgA7<br>
+<p>
+--0__=1MHbEI7HAU1mbXzqqqnBHsgS8TEBkSWdN5ivCdjFv5NvvNJG9188pIli--<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0215.html">Bruce Barnett: "Re: Bug in -s -S params?"</a>
+<li> <b>Previous message:</b> <a href="0213.html">MOREAU Luc: "Netperf as coninuous performance reporting tool ?"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0215.html">Bruce Barnett: "Re: Bug in -s -S params?"</a>
+</ul>

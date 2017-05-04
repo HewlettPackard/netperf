@@ -1,0 +1,69 @@
+<!-- received="Mon Jul  6 10:49:15 1998 PDT" -->
+<!-- sent="Mon, 06 Jul 1998 10:59:00 -0700" -->
+<!-- name="Rick Jones" -->
+<!-- email="raj@cup.hp.com" -->
+<!-- subject="Re: Throughput deadlock" -->
+<!-- id="35A11064.41EA212A@cup.hp.com" -->
+<!-- inreplyto="Throughput deadlock" -->
+<title>Archive of the netperf-talk mailing list: Re: Throughput deadlock</title>
+<h1>Re: Throughput deadlock</h1>
+Rick Jones (<i>raj@cup.hp.com</i>)<br>
+<i>Mon, 06 Jul 1998 10:59:00 -0700</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#64">[ date ]</a><a href="index.html#64">[ thread ]</a><a href="subject.html#64">[ subject ]</a><a href="author.html#64">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0065.html">Rick Jones: "status of www.netperf.org"</a>
+<li> <b>Previous message:</b> <a href="0063.html">sang33@hotmail.com: "IMPORTANT!!! FINANCIAL &amp; MANAGEMENT SEMINAR - Coming Soon on 28th JULY, 98"</a>
+<li> <b>Maybe in reply to:</b> <a href="0061.html">Edwin Law: "Throughput deadlock"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+The parameters you described seem to work fine for me on HP-UX 10.20.<br>
+10.20 is also "sort of" BSD and does not have TCP_NODELAY as a default -<br>
+nor does Solaris to the best of my knowledge.<br>
+<p>
+# ./netperf -H hpntc11b -- -m 1024 -S 4096 -s 4096<br>
+TCP STREAM TEST to hpntc11b<br>
+Recv   Send    Send                          <br>
+Socket Socket  Message  Elapsed              <br>
+Size   Size    Size     Time     Throughput  <br>
+bytes  bytes   bytes    secs.    10^6bits/sec  <br>
+<p>
+  4096   4096   1024    10.00       8.49   <br>
+<p>
+rick jones<br>
+<p>
+Edwin Law wrote:<br>
+<i>&gt; </i><br>
+<i>&gt; Hi,</i><br>
+<i>&gt;     Has anyone tried using a send size of 1 KB and socket size of 4KB in</i><br>
+<i>&gt; an Netperf TCP_STREAM test? I got an exceptionally low throughput of</i><br>
+<i>&gt; 0.04Mbps.  I believe it is caused by the so-called "throughput deadlock"</i><br>
+<i>&gt; problem, since 4KB &lt; 3MSS and that turning on the TCP_NODELAY can</i><br>
+<i>&gt; eliminate this anomaly. Can anyone confirm this?</i><br>
+<i>&gt; </i><br>
+<i>&gt;     How can sending more data (&gt;1MSS) help solving the problem?</i><br>
+<i>&gt; </i><br>
+<i>&gt;     Lastly, can anyone explain to me why this happens on IRIX (which is</i><br>
+<i>&gt; "sort of" BSD-based), but not on the STREAMS-based Solaris?  Does Solaris</i><br>
+<i>&gt; has TCP_NODELAY set as default?</i><br>
+<i>&gt; </i><br>
+<i>&gt; Thanks in advance,</i><br>
+<i>&gt; Edwin.</i><br>
+<p>
+<pre>
+-- 
+these opinions are mine, all mine; HP might not want them anyway... :)
+feel free to email, or post, but please do not do both...
+my email address is raj in the cup.hp.com domain...
+</pre>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0065.html">Rick Jones: "status of www.netperf.org"</a>
+<li> <b>Previous message:</b> <a href="0063.html">sang33@hotmail.com: "IMPORTANT!!! FINANCIAL &amp; MANAGEMENT SEMINAR - Coming Soon on 28th JULY, 98"</a>
+<li> <b>Maybe in reply to:</b> <a href="0061.html">Edwin Law: "Throughput deadlock"</a>
+<!-- nextthread="start" -->
+</ul>

@@ -1,0 +1,108 @@
+<!-- received="Fri Mar 27 05:51:24 1998 PST" -->
+<!-- sent="Fri, 27 Mar 1998 13:11:39 +0000" -->
+<!-- name="Alain Kaminski" -->
+<!-- email="Alain.Kaminski@bbl.be" -->
+<!-- subject="Re: Asymmetric TCP/ATM throughputs between client and server" -->
+<!-- id="199803271400.GAA01376@onet2.cup.hp.com" -->
+<!-- inreplyto="Asymmetric TCP/ATM throughputs between client and server" -->
+<title>Archive of the netperf-talk mailing list: Re: Asymmetric TCP/ATM throughputs between client and server</title>
+<h1>Re: Asymmetric TCP/ATM throughputs between client and server</h1>
+Alain Kaminski (<i>Alain.Kaminski@bbl.be</i>)<br>
+<i>Fri, 27 Mar 1998 13:11:39 +0000</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#27">[ date ]</a><a href="index.html#27">[ thread ]</a><a href="subject.html#27">[ subject ]</a><a href="author.html#27">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0028.html">Edwin Law: "Re: Asymmetric TCP/ATM throughputs between client and server"</a>
+<li> <b>Previous message:</b> <a href="0026.html">Ian Heavens: "apologies"</a>
+<li> <b>Maybe in reply to:</b> <a href="0020.html">Edwin Law: "Asymmetric TCP/ATM throughputs between client and server"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+At 04:47 27/03/98 -0500, you wrote:<br>
+<i>&gt;Hi,</i><br>
+<i>&gt;    I wonder if anyone has encountered a similar problem before. I have</i><br>
+<i>&gt;obtained different throughput readings when transferring data between a</i><br>
+<i>&gt;client and a server from both directions. I am talking about a different</i><br>
+<i>&gt;of about 50 times in magnitude. This happens when I use the TCP/IP over</i><br>
+<i>&gt;ATM and the default ATM MTU of 9188 on two Sun's running Solaris.  When I</i><br>
+<i>&gt;set the ATM MTU to 65535, the problem goes away. </i><br>
+<i>&gt;</i><br>
+<i>&gt;    I suspect there is some kind of deadlock and time out ocurring.  Some</i><br>
+<i>&gt;papers discuss a throughput deadlock situation which could happen in</i><br>
+<i>&gt;TCP/IP over ATM environments. I'm not sure if this is the case because it</i><br>
+<i>&gt;cannot explain why it occurs in one direction only. </i><br>
+<i>&gt;</i><br>
+<i>&gt;    To help understanding the problem more, I measured the time taken for</i><br>
+<i>&gt;each individual read or write call in both directions. 10 chunks of 8KB</i><br>
+<i>&gt;data were sent in each case. </i><br>
+<i>&gt;</i><br>
+<i>&gt;Client -&gt; Server</i><br>
+<i>&gt;----------------</i><br>
+<i>&gt;        (server read)   (client write)</i><br>
+<i>&gt;1       0.000867        0.000739</i><br>
+<i>&gt;2       0.000634        0.000471</i><br>
+<i>&gt;3       0.000759        0.000387</i><br>
+<i>&gt;4       0.002860        0.001939</i><br>
+<i>&gt;5       0.000863        0.000356</i><br>
+<i>&gt;6       0.000697        0.003460</i><br>
+<i>&gt;7       0.001868        0.000968</i><br>
+<i>&gt;8       0.000612        0.000403</i><br>
+<i>&gt;9       0.001159        0.002203</i><br>
+<i>&gt;10      0.000922        0.000489</i><br>
+<i>&gt;                ----------------</i><br>
+<i>&gt;                Total:  0.011424 second</i><br>
+<i>&gt;</i><br>
+<i>&gt;Server -&gt; Client</i><br>
+<i>&gt;----------------</i><br>
+<i>&gt;        (server write)  (client read)</i><br>
+<i>&gt;1       0.000707        0.052361</i><br>
+<i>&gt;2       0.000948        0.043168</i><br>
+<i>&gt;3       0.000406        0.050055</i><br>
+<i>&gt;4       0.092609        0.050401</i><br>
+<i>&gt;5       0.000859        0.049735</i><br>
+<i>&gt;6       0.099258        0.049865</i><br>
+<i>&gt;7       0.000422        0.049974</i><br>
+<i>&gt;8       0.099437        0.050011</i><br>
+<i>&gt;9       0.000362        0.049966</i><br>
+<i>&gt;10      0.099599        0.050677</i><br>
+<i>&gt;                ----------------</i><br>
+<i>&gt;                Total:  0.496438 second</i><br>
+<i>&gt;</i><br>
+<i>&gt;As far as I know, the throughput deadlock is a result of the presence of</i><br>
+<i>&gt;the delay acknowledgement at 200ms time intervals, which does not seem to</i><br>
+<i>&gt;relate to my case. I hope someone may know something about this. </i><br>
+<i>&gt;</i><br>
+<i>&gt;Thanks in advance,</i><br>
+<i>&gt;Edwin.</i><br>
+<i>&gt;</i><br>
+<i>&gt;</i><br>
+<i>&gt;</i><br>
+<p>
+Hi Edwin,<br>
+<p>
+Can you also tell us more about the ATM traffic class and parameter values<br>
+you are currently using during your test for both directions.<br>
+<p>
+I've been doing ATM measurements myself with NTs and I never measured such <br>
+unbalanced performances.<br>
+<p>
+Alain.<br>
+<p>
+_______________________________________<br>
+Alain KAMINSKI - Bank Brussels Lambert<br>
+ASO-TEL/NCS (Telelift 23)<br>
+60 Cours Saint Michel<br>
+1040 Brussels<br>
+BELGIUM<br>
+Phone (direct) : + 32 2 738 29 99<br>
+E-mail : alain.kaminski@bbl.be<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0028.html">Edwin Law: "Re: Asymmetric TCP/ATM throughputs between client and server"</a>
+<li> <b>Previous message:</b> <a href="0026.html">Ian Heavens: "apologies"</a>
+<li> <b>Maybe in reply to:</b> <a href="0020.html">Edwin Law: "Asymmetric TCP/ATM throughputs between client and server"</a>
+<!-- nextthread="start" -->
+</ul>

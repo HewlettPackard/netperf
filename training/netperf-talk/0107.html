@@ -1,0 +1,144 @@
+<!-- received="Fri Oct 30 05:20:23 1998 PST" -->
+<!-- sent="Fri, 30 Oct 1998 08:12:41 -0500" -->
+<!-- name="Kevin M. Joyce" -->
+<!-- email="joycek@rl.af.mil" -->
+<!-- subject="Re: udp sockets !!" -->
+<!-- id="3639BB49.97BAB36C@rl.af.mil" -->
+<!-- inreplyto="udp sockets !!" -->
+<title>Archive of the netperf-talk mailing list: Re: udp sockets !!</title>
+<h1>Re: udp sockets !!</h1>
+Kevin M. Joyce (<i>joycek@rl.af.mil</i>)<br>
+<i>Fri, 30 Oct 1998 08:12:41 -0500</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#107">[ date ]</a><a href="index.html#107">[ thread ]</a><a href="subject.html#107">[ subject ]</a><a href="author.html#107">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0108.html">Andrew W. Flury: "netperf security problem"</a>
+<li> <b>Previous message:</b> <a href="0106.html">Bob Felderman: "Re:  udp sockets !!"</a>
+<li> <b>Maybe in reply to:</b> <a href="0105.html">Martin Koyabe: "udp sockets !!"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+This is a multi-part message in MIME format.<br>
+--------------51A53E8C8F84F9E4D6356DC6<br>
+Content-Type: text/plain; charset=us-ascii<br>
+Content-Transfer-Encoding: 7bit<br>
+<p>
+Bob,<br>
+	These settings will change TCP.  Martin was looking for increasing the<br>
+socket rate for UDP.<br>
+<p>
+Bob Felderman wrote:<br>
+<i>&gt; </i><br>
+<i>&gt; =&gt; From: Martin Koyabe &lt;koyabe@erg.abdn.ac.uk&gt;</i><br>
+<i>&gt; =&gt; Does someone out there know how I can increase the socket rate in =</i><br>
+<i>&gt; =&gt; Solaris 2.X ? I will really appreciate !! I have a tool that sends UPD =</i><br>
+<i>&gt; =&gt; packets from one machine to another and I am benchmarking the throughput =</i><br>
+<i>&gt; =&gt; gain over a 100Mbps FastEthernet link via 100Mbps Cisco-Switch !!</i><br>
+<i>&gt; </i><br>
+<i>&gt; #! /bin/sh</i><br>
+<i>&gt; </i><br>
+<i>&gt; # winsize 64 k  (Make sure to include a space betw. 64 and k.)</i><br>
+<i>&gt; # This changes the TCP window size to 64 KB from the default of 8K.</i><br>
+<i>&gt; </i><br>
+<i>&gt; usage()</i><br>
+<i>&gt; {</i><br>
+<i>&gt;         echo usage: winsize [size [k]]</i><br>
+<i>&gt;         exit</i><br>
+<i>&gt; }</i><br>
+<i>&gt; </i><br>
+<i>&gt; display()</i><br>
+<i>&gt; {</i><br>
+<i>&gt;         /usr/ucb/echo -n "tcp_cwnd_max = "</i><br>
+<i>&gt;         /usr/sbin/ndd /dev/tcp tcp_cwnd_max</i><br>
+<i>&gt;         /usr/ucb/echo -n "tcp_xmit_hiwat = "</i><br>
+<i>&gt;         /usr/sbin/ndd /dev/tcp tcp_xmit_hiwat</i><br>
+<i>&gt;         /usr/ucb/echo -n "tcp_recv_hiwat = "</i><br>
+<i>&gt;         /usr/sbin/ndd /dev/tcp tcp_recv_hiwat</i><br>
+<i>&gt; </i><br>
+<i>&gt;         echo " "</i><br>
+<i>&gt;         /usr/ucb/echo -n "udp_recv_hiwat = "</i><br>
+<i>&gt;         /usr/sbin/ndd /dev/udp udp_recv_hiwat</i><br>
+<i>&gt;         /usr/ucb/echo -n "udp_max_buf = "</i><br>
+<i>&gt;         /usr/sbin/ndd /dev/udp udp_max_buf</i><br>
+<i>&gt; }</i><br>
+<i>&gt; </i><br>
+<i>&gt; modify()</i><br>
+<i>&gt; {</i><br>
+<i>&gt;         if [ $tcp_win_size -lt 32768 ] ; then</i><br>
+<i>&gt;                 tcp_cwnd_max=32768</i><br>
+<i>&gt;         elif [ $tcp_win_size -gt 65535 ] ; then</i><br>
+<i>&gt;                 tcp_cwnd_max=`expr $tcp_win_size - 1`</i><br>
+<i>&gt;         else</i><br>
+<i>&gt;                 tcp_cwnd_max=`expr $tcp_win_size`</i><br>
+<i>&gt;         fi</i><br>
+<i>&gt;         /usr/sbin/ndd -set /dev/tcp tcp_cwnd_max $tcp_cwnd_max</i><br>
+<i>&gt;         /usr/sbin/ndd -set /dev/tcp tcp_xmit_hiwat $tcp_win_size</i><br>
+<i>&gt;         /usr/sbin/ndd -set /dev/tcp tcp_recv_hiwat $tcp_win_size</i><br>
+<i>&gt; </i><br>
+<i>&gt;         /usr/sbin/ndd -set /dev/udp udp_recv_hiwat $tcp_win_size</i><br>
+<i>&gt;         /usr/sbin/ndd -set /dev/udp udp_max_buf 1048576</i><br>
+<i>&gt; }</i><br>
+<i>&gt; </i><br>
+<i>&gt; case $# in</i><br>
+<i>&gt; 0)</i><br>
+<i>&gt;         display;</i><br>
+<i>&gt;         ;;</i><br>
+<i>&gt; 1)</i><br>
+<i>&gt;         tcp_win_size=$1</i><br>
+<i>&gt;         modify</i><br>
+<i>&gt;         display</i><br>
+<i>&gt;         ;;</i><br>
+<i>&gt; 2)</i><br>
+<i>&gt;         if [ $2 != 'k' -a $2 != 'K' ]; then</i><br>
+<i>&gt;                 usage;</i><br>
+<i>&gt;         fi</i><br>
+<i>&gt;         tcp_win_size=`expr $1 \* 1024`</i><br>
+<i>&gt;         modify</i><br>
+<i>&gt;         display</i><br>
+<i>&gt;         ;;</i><br>
+<i>&gt; *)</i><br>
+<i>&gt;         usage</i><br>
+<i>&gt;         ;;</i><br>
+<i>&gt; esac</i><br>
+<p>
+<pre>
+-- 
+Kevin M. Joyce
+Network Analyst 
+Rome Research Corporation
+<p>
+Email:  joycek@rl.af.mil
+Phone:  (315) 330-7928
+--------------51A53E8C8F84F9E4D6356DC6
+Content-Type: text/x-vcard; charset=us-ascii; name="vcard.vcf"
+Content-Transfer-Encoding: 7bit
+Content-Description: Card for Kevin  M. Joyce
+Content-Disposition: attachment; filename="vcard.vcf"
+<p>
+begin:          vcard
+fn:             Kevin  M. Joyce
+n:              M. Joyce;Kevin 
+org:            Rome Research Corporation
+adr:            Rome Research Corporation  Room 4003;;525 Brooks Road;Rome;NY;13441;USA
+email;internet: joycek@rl.af.mil
+title:          Network Analyst
+tel;work:       (315) 330-7928
+tel;fax:        (315) 339-0238
+x-mozilla-cpt:  ;0
+x-mozilla-html: FALSE
+version:        2.1
+end:            vcard
+<p>
+<p>
+--------------51A53E8C8F84F9E4D6356DC6--
+</pre>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0108.html">Andrew W. Flury: "netperf security problem"</a>
+<li> <b>Previous message:</b> <a href="0106.html">Bob Felderman: "Re:  udp sockets !!"</a>
+<li> <b>Maybe in reply to:</b> <a href="0105.html">Martin Koyabe: "udp sockets !!"</a>
+<!-- nextthread="start" -->
+</ul>

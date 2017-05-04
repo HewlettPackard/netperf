@@ -1,0 +1,82 @@
+<!-- received="Fri Jan 15 12:01:36 1999 PST" -->
+<!-- sent="Fri, 15 Jan 1999 15:07:35 -0800" -->
+<!-- name="Joe Riolo" -->
+<!-- email="rioloj@synrome.com" -->
+<!-- subject="Re: [Fwd: FORE ATM Testing help]" -->
+<!-- id="3.0.5.32.19990115150735.009ef7b0@synrome.com" -->
+<!-- inreplyto="19990115143136.A16824@waterfall.eng.fore.com" -->
+<title>Archive of the netperf-talk mailing list: Re: [Fwd: FORE ATM Testing help]</title>
+<h1>Re: [Fwd: FORE ATM Testing help]</h1>
+Joe Riolo (<i>rioloj@synrome.com</i>)<br>
+<i>Fri, 15 Jan 1999 15:07:35 -0800</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#133">[ date ]</a><a href="index.html#133">[ thread ]</a><a href="subject.html#133">[ subject ]</a><a href="author.html#133">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0134.html">Rick Jones: "[Fwd: FORE ATM Testing help]"</a>
+<li> <b>Previous message:</b> <a href="0132.html">Todd J. Derr: "Re: [Fwd: FORE ATM Testing help]"</a>
+<li> <b>In reply to:</b> <a href="0132.html">Todd J. Derr: "Re: [Fwd: FORE ATM Testing help]"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+Thank you Todd and Steve,<br>
+<p>
+	The problem was that I wasn't identifying the ATM card /dev/fa0.  Thanks<br>
+again and Happy New Year.<br>
+<p>
+Joe :-)<br>
+<p>
+At 02:31 PM 1/15/99 -0500, Todd J. Derr wrote:<br>
+<i>&gt;On Fri, Jan 15, 1999 at 09:47:57AM -0800, Rick Jones wrote:</i><br>
+<i>&gt;&gt; Anyone have a few cycles to help this person?</i><br>
+<i>&gt;</i><br>
+<i>&gt;sure, I'm still alive... just quiet :)</i><br>
+<i>&gt;</i><br>
+<i>&gt;&gt; 	netperf -t FORE_RR -H cedar</i><br>
+<i>&gt;&gt; 	send_fore_stream: could not resolve the namecedar</i><br>
+<i>&gt;&gt; </i><br>
+<i>&gt;&gt; Do you have any explanation for this?  Thanks.</i><br>
+<i>&gt;</i><br>
+<i>&gt;My best guess is that either:</i><br>
+<i>&gt;</i><br>
+<i>&gt;1. The SPANS (FORE-IP, i.e. 'fa0') interfaces are not configured up</i><br>
+<i>&gt;or</i><br>
+<i>&gt;2. The hostname 'cedar' does not correspond to the SPANS interface on the</i><br>
+<i>&gt;   server host.</i><br>
+<i>&gt;(...or 3. They don't have physical connectivity, I think this might cause</i><br>
+<i>&gt; the host name resolution to fail.  But I'll assume it's not this.)</i><br>
+<i>&gt;</i><br>
+<i>&gt;#1 should be easy enough to remedy, if you're using this for test purposes</i><br>
+<i>&gt;just do something like 'ifconfig fa0 up 10.0.0.x' on each machine (giving</i><br>
+each<br>
+<i>&gt;a unique IP, of course).</i><br>
+<i>&gt;</i><br>
+<i>&gt;if it's #2, just give the IP address of the SPANS interface instead of</i><br>
+'cedar'.<br>
+<i>&gt;</i><br>
+<i>&gt;To make sure it's not #3, try to pig between the hosts over ATM.</i><br>
+<i>&gt;</i><br>
+<i>&gt;Feel free to write me if you need more assistance.</i><br>
+<i>&gt;</i><br>
+<i>&gt;todd j. derr</i><br>
+<i>&gt;fsi</i><br>
+<i>&gt;</i><br>
+<i>&gt;PS: I'm not speaking officiailly for FORE...  but to my knowledge the FORE</i><br>
+<i>&gt;(SPANS) API has been deprecated in favor of the (X/Open standard) XTI API....</i><br>
+<i>&gt;Which netperf does not currently support AFAIK :(</i><br>
+<i>&gt;</i><br>
+<p>
+Joe Riolo<br>
+Lead Systems Analyst<br>
+Synectics Corporation<br>
+Phone: (315)337-3510<br>
+Fax: (315)336-6514<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0134.html">Rick Jones: "[Fwd: FORE ATM Testing help]"</a>
+<li> <b>Previous message:</b> <a href="0132.html">Todd J. Derr: "Re: [Fwd: FORE ATM Testing help]"</a>
+<li> <b>In reply to:</b> <a href="0132.html">Todd J. Derr: "Re: [Fwd: FORE ATM Testing help]"</a>
+<!-- nextthread="start" -->
+</ul>

@@ -1,0 +1,67 @@
+<!-- received="Fri Jan 15 11:35:08 1999 PST" -->
+<!-- sent="Fri, 15 Jan 1999 14:31:37 -0500" -->
+<!-- name="Todd J. Derr" -->
+<!-- email="tjd@fore.com" -->
+<!-- subject="Re: [Fwd: FORE ATM Testing help]" -->
+<!-- id="19990115143136.A16824@waterfall.eng.fore.com" -->
+<!-- inreplyto="369F7F4D.2B8847F5@cup.hp.com" -->
+<title>Archive of the netperf-talk mailing list: Re: [Fwd: FORE ATM Testing help]</title>
+<h1>Re: [Fwd: FORE ATM Testing help]</h1>
+Todd J. Derr (<i>tjd@fore.com</i>)<br>
+<i>Fri, 15 Jan 1999 14:31:37 -0500</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#132">[ date ]</a><a href="index.html#132">[ thread ]</a><a href="subject.html#132">[ subject ]</a><a href="author.html#132">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0133.html">Joe Riolo: "Re: [Fwd: FORE ATM Testing help]"</a>
+<li> <b>Previous message:</b> <a href="0131.html">Rick Jones: "[Fwd: FORE ATM Testing help]"</a>
+<li> <b>In reply to:</b> <a href="0131.html">Rick Jones: "[Fwd: FORE ATM Testing help]"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0133.html">Joe Riolo: "Re: [Fwd: FORE ATM Testing help]"</a>
+</ul>
+<!-- body="start" -->
+On Fri, Jan 15, 1999 at 09:47:57AM -0800, Rick Jones wrote:<br>
+<i>&gt; Anyone have a few cycles to help this person?</i><br>
+<p>
+sure, I'm still alive... just quiet :)<br>
+<p>
+<i>&gt; 	netperf -t FORE_RR -H cedar</i><br>
+<i>&gt; 	send_fore_stream: could not resolve the namecedar</i><br>
+<i>&gt; </i><br>
+<i>&gt; Do you have any explanation for this?  Thanks.</i><br>
+<p>
+My best guess is that either:<br>
+<p>
+1. The SPANS (FORE-IP, i.e. 'fa0') interfaces are not configured up<br>
+or<br>
+2. The hostname 'cedar' does not correspond to the SPANS interface on the<br>
+   server host.<br>
+(...or 3. They don't have physical connectivity, I think this might cause<br>
+ the host name resolution to fail.  But I'll assume it's not this.)<br>
+<p>
+#1 should be easy enough to remedy, if you're using this for test purposes<br>
+just do something like 'ifconfig fa0 up 10.0.0.x' on each machine (giving each<br>
+a unique IP, of course).<br>
+<p>
+if it's #2, just give the IP address of the SPANS interface instead of 'cedar'.<br>
+<p>
+To make sure it's not #3, try to pig between the hosts over ATM.<br>
+<p>
+Feel free to write me if you need more assistance.<br>
+<p>
+todd j. derr<br>
+fsi<br>
+<p>
+PS: I'm not speaking officiailly for FORE...  but to my knowledge the FORE<br>
+(SPANS) API has been deprecated in favor of the (X/Open standard) XTI API....<br>
+Which netperf does not currently support AFAIK :(<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0133.html">Joe Riolo: "Re: [Fwd: FORE ATM Testing help]"</a>
+<li> <b>Previous message:</b> <a href="0131.html">Rick Jones: "[Fwd: FORE ATM Testing help]"</a>
+<li> <b>In reply to:</b> <a href="0131.html">Rick Jones: "[Fwd: FORE ATM Testing help]"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0133.html">Joe Riolo: "Re: [Fwd: FORE ATM Testing help]"</a>
+</ul>

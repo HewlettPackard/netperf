@@ -1,0 +1,105 @@
+<!-- received="Thu Oct 29 14:21:55 1998 PST" -->
+<!-- sent="Thu, 29 Oct 98 14:21:51 PST" -->
+<!-- name="Bob Felderman" -->
+<!-- email="feldy@myri.com" -->
+<!-- subject="Re:  udp sockets !!" -->
+<!-- id="9810292221.AA02735@myri.com" -->
+<!-- inreplyto="udp sockets !!" -->
+<title>Archive of the netperf-talk mailing list: Re:  udp sockets !!</title>
+<h1>Re:  udp sockets !!</h1>
+Bob Felderman (<i>feldy@myri.com</i>)<br>
+<i>Thu, 29 Oct 98 14:21:51 PST</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#106">[ date ]</a><a href="index.html#106">[ thread ]</a><a href="subject.html#106">[ subject ]</a><a href="author.html#106">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0107.html">Kevin M. Joyce: "Re: udp sockets !!"</a>
+<li> <b>Previous message:</b> <a href="0105.html">Martin Koyabe: "udp sockets !!"</a>
+<li> <b>Maybe in reply to:</b> <a href="0105.html">Martin Koyabe: "udp sockets !!"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0107.html">Kevin M. Joyce: "Re: udp sockets !!"</a>
+</ul>
+<!-- body="start" -->
+=&gt; From: Martin Koyabe &lt;koyabe@erg.abdn.ac.uk&gt;<br>
+=&gt; Does someone out there know how I can increase the socket rate in =<br>
+=&gt; Solaris 2.X ? I will really appreciate !! I have a tool that sends UPD =<br>
+=&gt; packets from one machine to another and I am benchmarking the throughput =<br>
+=&gt; gain over a 100Mbps FastEthernet link via 100Mbps Cisco-Switch !!<br>
+<p>
+<p>
+<p>
+#! /bin/sh<br>
+<p>
+# winsize 64 k  (Make sure to include a space betw. 64 and k.)<br>
+# This changes the TCP window size to 64 KB from the default of 8K.  <br>
+<p>
+usage()<br>
+{<br>
+	echo usage: winsize [size [k]]<br>
+	exit<br>
+}<br>
+<p>
+display()<br>
+{<br>
+	/usr/ucb/echo -n "tcp_cwnd_max = "<br>
+	/usr/sbin/ndd /dev/tcp tcp_cwnd_max<br>
+	/usr/ucb/echo -n "tcp_xmit_hiwat = "<br>
+	/usr/sbin/ndd /dev/tcp tcp_xmit_hiwat<br>
+	/usr/ucb/echo -n "tcp_recv_hiwat = "<br>
+	/usr/sbin/ndd /dev/tcp tcp_recv_hiwat<br>
+<p>
+	echo " "<br>
+	/usr/ucb/echo -n "udp_recv_hiwat = "<br>
+	/usr/sbin/ndd /dev/udp udp_recv_hiwat<br>
+	/usr/ucb/echo -n "udp_max_buf = "<br>
+	/usr/sbin/ndd /dev/udp udp_max_buf<br>
+}<br>
+<p>
+modify()<br>
+{<br>
+	if [ $tcp_win_size -lt 32768 ] ; then<br>
+		tcp_cwnd_max=32768<br>
+	elif [ $tcp_win_size -gt 65535 ] ; then<br>
+		tcp_cwnd_max=`expr $tcp_win_size - 1`<br>
+	else<br>
+		tcp_cwnd_max=`expr $tcp_win_size`<br>
+	fi<br>
+	/usr/sbin/ndd -set /dev/tcp tcp_cwnd_max $tcp_cwnd_max<br>
+	/usr/sbin/ndd -set /dev/tcp tcp_xmit_hiwat $tcp_win_size<br>
+	/usr/sbin/ndd -set /dev/tcp tcp_recv_hiwat $tcp_win_size <br>
+<p>
+	/usr/sbin/ndd -set /dev/udp udp_recv_hiwat $tcp_win_size <br>
+	/usr/sbin/ndd -set /dev/udp udp_max_buf 1048576<br>
+}<br>
+<p>
+case $# in<br>
+0)<br>
+	display;<br>
+	;;<br>
+1)<br>
+	tcp_win_size=$1<br>
+	modify<br>
+	display<br>
+	;;<br>
+2)<br>
+	if [ $2 != 'k' -a $2 != 'K' ]; then<br>
+		usage;<br>
+	fi<br>
+	tcp_win_size=`expr $1 \* 1024`<br>
+	modify<br>
+	display<br>
+	;;<br>
+*)<br>
+	usage<br>
+	;;<br>
+esac<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0107.html">Kevin M. Joyce: "Re: udp sockets !!"</a>
+<li> <b>Previous message:</b> <a href="0105.html">Martin Koyabe: "udp sockets !!"</a>
+<li> <b>Maybe in reply to:</b> <a href="0105.html">Martin Koyabe: "udp sockets !!"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0107.html">Kevin M. Joyce: "Re: udp sockets !!"</a>
+</ul>

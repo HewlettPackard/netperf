@@ -1,0 +1,110 @@
+<!-- received="Tue Jan 19 10:13:23 1999 PST" -->
+<!-- sent="Tue, 19 Jan 1999 10:17:22 -0800" -->
+<!-- name="Rick Jones" -->
+<!-- email="raj@cup.hp.com" -->
+<!-- subject="[Fwd: FORE ATM Testing help]" -->
+<!-- id="36A4CC32.5FFF853D@cup.hp.com" -->
+<!-- inreplyto="" -->
+<title>Archive of the netperf-talk mailing list: [Fwd: FORE ATM Testing help]</title>
+<h1>[Fwd: FORE ATM Testing help]</h1>
+Rick Jones (<i>raj@cup.hp.com</i>)<br>
+<i>Tue, 19 Jan 1999 10:17:22 -0800</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#134">[ date ]</a><a href="index.html#134">[ thread ]</a><a href="subject.html#134">[ subject ]</a><a href="author.html#134">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0135.html">PierLuigi DeSimone: "-s and -m options"</a>
+<li> <b>Previous message:</b> <a href="0133.html">Joe Riolo: "Re: [Fwd: FORE ATM Testing help]"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+This is a multi-part message in MIME format.<br>
+--------------427D055D51A1ED37960DA798<br>
+Content-Type: text/plain; charset=us-ascii<br>
+Content-Transfer-Encoding: 7bit<br>
+<p>
+Here is another question from netperf-feedback I've not the knowledge to<br>
+answer.<br>
+<p>
+rick jones<br>
+<pre>
+-- 
+these opinions are mine, all mine; HP might not want them anyway... :)
+feel free to email, or post, but please do not do both...
+my email address is raj in the cup.hp.com domain...
+--------------427D055D51A1ED37960DA798
+Content-Type: message/rfc822
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+<p>
+Received: from hpisrdq.cup.hp.com (hpisrdq.cup.hp.com [15.13.106.115]) by loiter.cup.hp.com with SMTP (8.8.6/8.7.3 TIS Messaging 5.0) id GAA18829 for &lt;raj@loiter.cup.hp.com&gt;; Tue, 19 Jan 1999 06:51:05 -0800 (PST)
+Received: from onet2.cup.hp.com by hpisrdq.cup.hp.com with SMTP
+	(1.38.193.4/15.5+IOS 3.20+cup+OMrelay) id AA15160; Tue, 19 Jan 1999 06:47:02 -0800
+Received: from robinton.synrome.com (mail.synrome.com [208.131.215.132])
+	by onet2.cup.hp.com (Postfix) with SMTP for &lt;netperf-feedback@netperf.cup.hp.com&gt;
+	id 695E990A9; Tue, 19 Jan 1999 06:50:59 -0800 (PST)
+Received: from FNOR (FNOR [192.168.102.57]) by robinton.synrome.com (NTMail 3.03.0017/1.agwc) with ESMTP id ka191188 for &lt;netperf-feedback@netperf.cup.hp.com&gt;; Tue, 19 Jan 1999 09:45:44 -0500
+Message-Id: &lt;3.0.5.32.19990119095323.009c0430@synrome.com&gt;
+X-Sender: rioloj@synrome.com
+X-Mailer: QUALCOMM Windows Eudora Pro Version 3.0.5 (32)
+Date: Tue, 19 Jan 1999 09:53:23 -0800
+To: netperf-feedback@hpisrdq.cup.hp.com
+From: Joe Riolo &lt;rioloj@synrome.com&gt;
+Subject: RE: FORE ATM Testing help
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+<p>
+Hi,
+<p>
+	I have progressed a little farther.  This is the problem I am having now:
+<p>
+server starts ok:
+<p>
+ 	cedar-atm% netserver -p 12865
+	Starting netserver at port 12865
+<p>
+netperf:
+<p>
+	micmac% netperf -t FORE_STREAM -d /dev/fa0 -H cedar-atm
+	Pogram name: netperf
+	Local send alignment: 8
+	Local recv alignment: 8
+	Remote send alignment: 8
+	Remote recv alignment: 8
+	Report local CPU 0
+	Report remote CPU 0
+	Verbosity: 1
+	Debug: 1
+	Port: 12865
+	Test name: FORE_STREAM
+	Test bytes: 0 Test time: 10 Test trans: 0
+	Host name: localhost
+<p>
+	installing catcher for all signals
+	remotehost is localhost and port 12865
+	establish_control: connect completes
+	recv_response: received a 256 byte response
+	establish_control: check for connectivity ok
+	send_fore_stream: could not resolve the namelocalhost
+<p>
+Does anyone have a clue what I am doing wrong?  Thanks.
+<p>
+Joe :-)
+<p>
+Joe Riolo
+Lead Systems Analyst
+Synectics Corporation
+Phone: (315)337-3510
+Fax: (315)336-6514
+<p>
+<p>
+--------------427D055D51A1ED37960DA798--
+</pre>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0135.html">PierLuigi DeSimone: "-s and -m options"</a>
+<li> <b>Previous message:</b> <a href="0133.html">Joe Riolo: "Re: [Fwd: FORE ATM Testing help]"</a>
+<!-- nextthread="start" -->
+</ul>

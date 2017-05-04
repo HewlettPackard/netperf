@@ -1,0 +1,77 @@
+<!-- received="Fri Nov  5 13:21:07 1999 PST" -->
+<!-- sent="Fri, 5 Nov 1999 21:16:38 +0000 (GMT)" -->
+<!-- name="Colin Johnston" -->
+<!-- email="colinj@uk.psi.com" -->
+<!-- subject="Re: Hubs killing performance" -->
+<!-- id="Pine.GSO.4.05.9911052115230.8464-100000@staff.uk.psi.com" -->
+<!-- inreplyto="199911052056.PAA28479@grymoire.crd.ge.com" -->
+<title>Archive of the netperf-talk mailing list: Re: Hubs killing performance</title>
+<h1>Re: Hubs killing performance</h1>
+Colin Johnston (<i>colinj@uk.psi.com</i>)<br>
+<i>Fri, 5 Nov 1999 21:16:38 +0000 (GMT)</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#254">[ date ]</a><a href="index.html#254">[ thread ]</a><a href="subject.html#254">[ subject ]</a><a href="author.html#254">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0255.html">sthaug@nethelp.no: "Re: Hubs killing performance"</a>
+<li> <b>Previous message:</b> <a href="0253.html">Krasinski, Linda M: "RE: Hubs killing performance"</a>
+<li> <b>In reply to:</b> <a href="0252.html">spamhater03@birch.crd.ge.com: "Hubs killing performance"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0255.html">sthaug@nethelp.no: "Re: Hubs killing performance"</a>
+</ul>
+<!-- body="start" -->
+set the sparc and the NT box to not use auto detect as this<br>
+will help matters if auto negotiation is not working correctly<br>
+<p>
+Colin Johnston<br>
+SA<br>
+PSINET UK<br>
+<p>
+<p>
+<p>
+On Fri, 5 Nov 1999 spamhater03@birch.crd.ge.com wrote:<br>
+<p>
+<i>&gt; I have a Windows NT client talking to a Solaris server.</i><br>
+<i>&gt; The CLient has a 10 MB/s card, the server has a 10/100 MB card.</i><br>
+<i>&gt; Using the  TCP_TCP_STREAM benchmark, we got two different results:</i><br>
+<i>&gt; </i><br>
+<i>&gt; Using a cross-over cable (no hub) we got a value of 8.77</i><br>
+<i>&gt; </i><br>
+<i>&gt; </i><br>
+<i>&gt; C:\netperf&gt;netperf -Hdemo -l60 -v2 </i><br>
+<i>&gt; TCP STREAM TEST to demo</i><br>
+<i>&gt; Recv   Send    Send                          </i><br>
+<i>&gt; Socket Socket  Message  Elapsed              </i><br>
+<i>&gt; Size   Size    Size     Time     Throughput  </i><br>
+<i>&gt; bytes  bytes   bytes    secs.    10^6bits/sec  </i><br>
+<i>&gt; </i><br>
+<i>&gt;  16384   8192   8192    60.00       8.77   </i><br>
+<i>&gt; </i><br>
+<i>&gt; </i><br>
+<i>&gt; </i><br>
+<i>&gt; Adding a NDC SOHO 10/100 mb autosensing hub, the performance is now:</i><br>
+<i>&gt; C:\netperf&gt;netperf -Hdemo -l60 -v2</i><br>
+<i>&gt; TCP STREAM TEST to demo</i><br>
+<i>&gt; Recv   Send    Send                          </i><br>
+<i>&gt; Socket Socket  Message  Elapsed              </i><br>
+<i>&gt; Size   Size    Size     Time     Throughput  </i><br>
+<i>&gt; bytes  bytes   bytes    secs.    10^6bits/sec  </i><br>
+<i>&gt; </i><br>
+<i>&gt;  16384   8192   8192    61.00       1.80   </i><br>
+<i>&gt; </i><br>
+<i>&gt; </i><br>
+<i>&gt; </i><br>
+<i>&gt; Why would a hub degrade the performance so much?</i><br>
+<i>&gt; Is it the auto-sensing?</i><br>
+<i>&gt; This is a simple hub with one switch (uplink on/off).</i><br>
+<i>&gt; </i><br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0255.html">sthaug@nethelp.no: "Re: Hubs killing performance"</a>
+<li> <b>Previous message:</b> <a href="0253.html">Krasinski, Linda M: "RE: Hubs killing performance"</a>
+<li> <b>In reply to:</b> <a href="0252.html">spamhater03@birch.crd.ge.com: "Hubs killing performance"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0255.html">sthaug@nethelp.no: "Re: Hubs killing performance"</a>
+</ul>

@@ -1,0 +1,61 @@
+<!-- received="Fri Jan 22 09:16:34 1999 PST" -->
+<!-- sent="Fri, 22 Jan 1999 09:13:32 -0800" -->
+<!-- name="Gregory P. Smith" -->
+<!-- email="greg@nas.nasa.gov" -->
+<!-- subject="Re: -s and -m options" -->
+<!-- id="199901221713.JAA14621@ryouko.nas.nasa.gov" -->
+<!-- inreplyto="990122130730.ZM16972@naglfar" -->
+<title>Archive of the netperf-talk mailing list: Re: -s and -m options</title>
+<h1>Re: -s and -m options</h1>
+Gregory P. Smith (<i>greg@nas.nasa.gov</i>)<br>
+<i>Fri, 22 Jan 1999 09:13:32 -0800</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#137">[ date ]</a><a href="index.html#137">[ thread ]</a><a href="subject.html#137">[ subject ]</a><a href="author.html#137">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0138.html">Rick Jones: "Re: -m -s option"</a>
+<li> <b>Previous message:</b> <a href="0136.html">PierLuigi DeSimone: "-m -s option"</a>
+<li> <b>In reply to:</b> <a href="0135.html">PierLuigi DeSimone: "-s and -m options"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+<i>&gt; Hi,</i><br>
+<i>&gt; </i><br>
+<i>&gt; it is clear to me what -m and -M mean. But I am confused about -s and -S. Whe</i><br>
+<i>&gt; re</i><br>
+<i>&gt; is the system default socket size defined? (I run Netperf on IRIX).</i><br>
+<i>&gt; How do the m-options affect the performances ?</i><br>
+<p>
+The system socket buffer size is the kernel data buffer that data gets<br>
+copied out of the application into and queued up to be put on the<br>
+wire.  The default on most systems is around 64k (Irix in particular<br>
+defaults to that).  netperf in verbose mode will print what size the<br>
+system is using if you don't specify one yourself with -s.  For high<br>
+performance networks with large packet sizes (ie: HIPPI) it is very<br>
+important to increase the socket buffer size so that the kernel has<br>
+enough data to keep sending packets within a reasonable TCP window.<br>
+<p>
+As for the netperf command line, it's not obvious. :)  Try this:<br>
+<p>
+netperf -h<br>
+<p>
+and<br>
+<p>
+netperf -- -h<br>
+<p>
+All parameters specific to a particular test type come after the --<br>
+parameter.  So when you do a -- -h it shows you the help for test<br>
+specific parameters which includes the m, M, s &amp; S options...<br>
+<p>
+it is ugly, but it works once you know about it...<br>
+<p>
+Greg<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0138.html">Rick Jones: "Re: -m -s option"</a>
+<li> <b>Previous message:</b> <a href="0136.html">PierLuigi DeSimone: "-m -s option"</a>
+<li> <b>In reply to:</b> <a href="0135.html">PierLuigi DeSimone: "-s and -m options"</a>
+<!-- nextthread="start" -->
+</ul>

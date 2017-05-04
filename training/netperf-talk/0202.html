@@ -1,0 +1,44 @@
+<!-- received="Thu Jul 15 11:13:00 1999 PDT" -->
+<!-- sent="Thu, 15 Jul 1999 10:49:28 -0700 (PDT)" -->
+<!-- name="Sam Riesland" -->
+<!-- email="riesland@astro.washington.edu" -->
+<!-- subject="TCP_RR test weirdness" -->
+<!-- id="Pine.LNX.4.04.9907151036400.17769-100000@leavitt.astro.washington.edu" -->
+<!-- inreplyto="" -->
+<title>Archive of the netperf-talk mailing list: TCP_RR test weirdness</title>
+<h1>TCP_RR test weirdness</h1>
+Sam Riesland (<i>riesland@astro.washington.edu</i>)<br>
+<i>Thu, 15 Jul 1999 10:49:28 -0700 (PDT)</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#202">[ date ]</a><a href="index.html#202">[ thread ]</a><a href="subject.html#202">[ subject ]</a><a href="author.html#202">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0203.html">Rick Jones: "Re: TCP_RR test weirdness"</a>
+<li> <b>Previous message:</b> <a href="0201.html">Rick Jones: "baa baa blacksheep..."</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0203.html">Rick Jones: "Re: TCP_RR test weirdness"</a>
+</ul>
+<!-- body="start" -->
+I am running netperf with the following command line... where $RR_SIZE is<br>
+the size of the packets I'm sending and receiving.<br>
+<p>
+/netperf -l 5 -H astrolab3 -i 10,3 -I 99 -d -t TCP_RR -- -r $RR_SIZE<br>
+<p>
+And for some reason when I set $RR_SIZE (the send,recieve packet size) to<br>
+between "1449,1449" and "2171,2171" the Transfer Rate drops way down to<br>
+about 99 bytes per second from somewhere in the thousands.  Also the same<br>
+thing occurs between 4345 and 5067...  and then again between 7241 and<br>
+7963.  So every 2174 bytes there is a 722 byte block in which the Transfer<br>
+Rate drops down to around 99 bytes.  I can get rid of this problem by<br>
+using the -D switch (TCP_NODELAY set)... but this behavior seems a bit<br>
+strange. Is this a netperf problem? Has anyone else run into anything<br>
+similar?<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0203.html">Rick Jones: "Re: TCP_RR test weirdness"</a>
+<li> <b>Previous message:</b> <a href="0201.html">Rick Jones: "baa baa blacksheep..."</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0203.html">Rick Jones: "Re: TCP_RR test weirdness"</a>
+</ul>

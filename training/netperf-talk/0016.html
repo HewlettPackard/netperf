@@ -1,0 +1,55 @@
+<!-- received="Fri Mar 20 11:26:29 1998 PST" -->
+<!-- sent="Fri, 20 Mar 1998 11:35:09 -0800" -->
+<!-- name="Rick Jones" -->
+<!-- email="raj@cup.hp.com" -->
+<!-- subject="Re: VxWorks version of Netperf" -->
+<!-- id="3512C4ED.F4B80657@cup.hp.com" -->
+<!-- inreplyto="VxWorks version of Netperf" -->
+<title>Archive of the netperf-talk mailing list: Re: VxWorks version of Netperf</title>
+<h1>Re: VxWorks version of Netperf</h1>
+Rick Jones (<i>raj@cup.hp.com</i>)<br>
+<i>Fri, 20 Mar 1998 11:35:09 -0800</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#16">[ date ]</a><a href="index.html#16">[ thread ]</a><a href="subject.html#16">[ subject ]</a><a href="author.html#16">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0017.html">Rick Jones: "[Fwd: VxWorks port for netperf]"</a>
+<li> <b>Previous message:</b> <a href="0015.html">Bob Felderman: "Re: VxWorks version of Netperf"</a>
+<li> <b>Maybe in reply to:</b> <a href="0012.html">James K. Yun: "VxWorks version of Netperf"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0019.html">Tom Pavel: "Re: VxWorks version of Netperf"</a>
+</ul>
+<!-- body="start" -->
+<i>&gt; Yes and no. We looked at it and gave up after a while.</i><br>
+<i>&gt; Certainly it has sockets, but the forking that is done</i><br>
+<i>&gt; by the netserver is not easily supported. You could write</i><br>
+<i>&gt; a netserver that just handles connections on a fixed socket.</i><br>
+<p>
+Indeed, the NT port of 2.1 does not fork the netserver, and I have made<br>
+that an option for all in netperf3 - of course, netperf3 now has the<br>
+netperf side forking...part of the aggregate test support.<br>
+<p>
+One could look at the netserver3 source to model a change to the netperf<br>
+2.1 netserver to always run tests in the forground - the result though<br>
+is that you can only have one netperf test at a time unless you start<br>
+multiple netservers on multiple ports<br>
+<p>
+Tom Pavel did a port - I've not integrated it into mainline yet, but I<br>
+will forward what he sent to me under separate cover.<br>
+<p>
+rick jones<br>
+<pre>
+-- 
+these opinions are mine, all mine; HP might not want them anyway... :)
+feel free to email, or post, but please do not do both...
+</pre>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0017.html">Rick Jones: "[Fwd: VxWorks port for netperf]"</a>
+<li> <b>Previous message:</b> <a href="0015.html">Bob Felderman: "Re: VxWorks version of Netperf"</a>
+<li> <b>Maybe in reply to:</b> <a href="0012.html">James K. Yun: "VxWorks version of Netperf"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0019.html">Tom Pavel: "Re: VxWorks version of Netperf"</a>
+</ul>

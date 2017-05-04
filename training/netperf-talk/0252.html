@@ -1,0 +1,63 @@
+<!-- received="Fri Nov  5 12:53:55 1999 PST" -->
+<!-- sent="Fri, 5 Nov 1999 15:56:53 -0500 (EST)" -->
+<!-- name="spamhater03@birch.crd.ge.com" -->
+<!-- email="spamhater03@birch.crd.ge.com" -->
+<!-- subject="Hubs killing performance" -->
+<!-- id="199911052056.PAA28479@grymoire.crd.ge.com" -->
+<!-- inreplyto="" -->
+<title>Archive of the netperf-talk mailing list: Hubs killing performance</title>
+<h1>Hubs killing performance</h1>
+<i>spamhater03@birch.crd.ge.com</i><br>
+<i>Fri, 5 Nov 1999 15:56:53 -0500 (EST)</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#252">[ date ]</a><a href="index.html#252">[ thread ]</a><a href="subject.html#252">[ subject ]</a><a href="author.html#252">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0253.html">Krasinski, Linda M: "RE: Hubs killing performance"</a>
+<li> <b>Previous message:</b> <a href="0251.html">Ivy Wan: "Ent.Explorer"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0254.html">Colin Johnston: "Re: Hubs killing performance"</a>
+</ul>
+<!-- body="start" -->
+I have a Windows NT client talking to a Solaris server.<br>
+The CLient has a 10 MB/s card, the server has a 10/100 MB card.<br>
+Using the  TCP_TCP_STREAM benchmark, we got two different results:<br>
+<p>
+Using a cross-over cable (no hub) we got a value of 8.77<br>
+<p>
+<p>
+C:\netperf&gt;netperf -Hdemo -l60 -v2 <br>
+TCP STREAM TEST to demo<br>
+Recv   Send    Send                          <br>
+Socket Socket  Message  Elapsed              <br>
+Size   Size    Size     Time     Throughput  <br>
+bytes  bytes   bytes    secs.    10^6bits/sec  <br>
+<p>
+ 16384   8192   8192    60.00       8.77   <br>
+<p>
+<p>
+<p>
+Adding a NDC SOHO 10/100 mb autosensing hub, the performance is now:<br>
+C:\netperf&gt;netperf -Hdemo -l60 -v2<br>
+TCP STREAM TEST to demo<br>
+Recv   Send    Send                          <br>
+Socket Socket  Message  Elapsed              <br>
+Size   Size    Size     Time     Throughput  <br>
+bytes  bytes   bytes    secs.    10^6bits/sec  <br>
+<p>
+ 16384   8192   8192    61.00       1.80   <br>
+<p>
+<p>
+<p>
+Why would a hub degrade the performance so much?<br>
+Is it the auto-sensing?<br>
+This is a simple hub with one switch (uplink on/off).<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0253.html">Krasinski, Linda M: "RE: Hubs killing performance"</a>
+<li> <b>Previous message:</b> <a href="0251.html">Ivy Wan: "Ent.Explorer"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0254.html">Colin Johnston: "Re: Hubs killing performance"</a>
+</ul>

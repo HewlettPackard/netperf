@@ -1,0 +1,64 @@
+<!-- received="Mon Apr 12 12:16:47 1999 PDT" -->
+<!-- sent="Mon, 12 Apr 1999 14:13:56 -0500" -->
+<!-- name="Roelof JT Jonkman" -->
+<!-- email="rjonkman@ittc.ukans.edu" -->
+<!-- subject="Re: bifurcated results from netperf" -->
+<!-- id="199904121913.OAA18536@stephens.ittc.ukans.edu" -->
+<!-- inreplyto="371238BF.9B3105D8@cup.hp.com" -->
+<title>Archive of the netperf-talk mailing list: Re: bifurcated results from netperf</title>
+<h1>Re: bifurcated results from netperf</h1>
+Roelof JT Jonkman (<i>rjonkman@ittc.ukans.edu</i>)<br>
+<i>Mon, 12 Apr 1999 14:13:56 -0500</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#159">[ date ]</a><a href="index.html#159">[ thread ]</a><a href="subject.html#159">[ subject ]</a><a href="author.html#159">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0160.html">sthaug@nethelp.no: "Re: bifurcated results from netperf"</a>
+<li> <b>Previous message:</b> <a href="0158.html">Rick Jones: "Re: bifurcated results from netperf"</a>
+<li> <b>In reply to:</b> <a href="0158.html">Rick Jones: "Re: bifurcated results from netperf"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0160.html">sthaug@nethelp.no: "Re: bifurcated results from netperf"</a>
+</ul>
+<!-- body="start" -->
+Greg,<br>
+<p>
+Couple of things to check:<br>
+<p>
+- Half vs. Full duplex on the links, depending on how and what you hook up<br>
+  to the nway negotiation is sometimes flakey.<br>
+- Size of the writes/reads, mtu's, any mismatches. (Smaller reads and writes<br>
+  perform better by any chance?) (This may indicate an anomaly in the <br>
+  queue'ing, larger packets require more buffer space, if large packets <br>
+  consistenly get nailed, that may explain the problem, there is some setsockopt<br>
+  that allows you to set the tcp segment size below the if mtu. TCPMAXSEG<br>
+  something. ;-)<br>
+- Is the behaviour directional, ie does it exhibit the exact same erraticness<br>
+  from a to b as it does from b to a. (Propably not.)<br>
+- Another one to try is to use UDP, and with a little help of app layer <br>
+  sequence numbers you can see if there is some periodic phenomenon that drops<br>
+  packets.<br>
+- Tweaking the kernel options for the routing stuff may make a big difference.<br>
+  I've dealt with some of the linux drivers that did not correctly did the<br>
+  negotiation, downloading the new driver from <br>
+  <a href="http://cesdis1.gsfc.nasa.gov/linux/drivers/">http://cesdis1.gsfc.nasa.gov/linux/drivers/</a> usually fixed that.<br>
+  (Or forcing the settings on boot.)<br>
+<p>
+Not to helpfull, but that is sort of the stuff I would go after.<br>
+(well first do what Rick said though, netstat.)<br>
+<p>
+To get my idea of your config straight: <br>
+<p>
+Two machines running netperf, interconnected with another dual interface <br>
+machine?<br>
+<p>
+roel<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0160.html">sthaug@nethelp.no: "Re: bifurcated results from netperf"</a>
+<li> <b>Previous message:</b> <a href="0158.html">Rick Jones: "Re: bifurcated results from netperf"</a>
+<li> <b>In reply to:</b> <a href="0158.html">Rick Jones: "Re: bifurcated results from netperf"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0160.html">sthaug@nethelp.no: "Re: bifurcated results from netperf"</a>
+</ul>

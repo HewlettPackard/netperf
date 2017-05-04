@@ -1,0 +1,61 @@
+<!-- received="Tue Oct 13 10:49:31 1998 PDT" -->
+<!-- sent="Tue, 13 Oct 1998 10:50:20 -0700" -->
+<!-- name="Rick Jones" -->
+<!-- email="raj@cup.hp.com" -->
+<!-- subject="Re: Netperf 2.1" -->
+<!-- id="362392DC.AF421B9@cup.hp.com" -->
+<!-- inreplyto="Netperf 2.1" -->
+<title>Archive of the netperf-talk mailing list: Re: Netperf 2.1</title>
+<h1>Re: Netperf 2.1</h1>
+Rick Jones (<i>raj@cup.hp.com</i>)<br>
+<i>Tue, 13 Oct 1998 10:50:20 -0700</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#95">[ date ]</a><a href="index.html#95">[ thread ]</a><a href="subject.html#95">[ subject ]</a><a href="author.html#95">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0096.html">Martin Koyabe: "RE: Ideas !!"</a>
+<li> <b>Previous message:</b> <a href="0094.html">Gregory P. Smith: "Re: Netperf 2.1"</a>
+<li> <b>Maybe in reply to:</b> <a href="0093.html">Martin Koyabe: "Netperf 2.1"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+Gregory P. Smith wrote:<br>
+<i>&gt; </i><br>
+<i>&gt; Using netperf's "wonderful" command line syntax try:</i><br>
+<i>&gt; </i><br>
+<i>&gt; netperf [global options] -- -M 262144 -m 262144 -s 262144 -S 262144</i><br>
+<i>&gt; </i><br>
+<i>&gt; etc..</i><br>
+<i>&gt; </i><br>
+<i>&gt; Options after the "--" are test specific.  You can run netperf -- -h</i><br>
+<i>&gt; to get a list.  Don't worry, its not obvious. :)</i><br>
+<p>
+Yep, I got kind of stuck for letters as I added more and more test<br>
+suites to netperf, so I had to go with two different getopt() passes.<br>
+And of course, updates to the manual that I'm sure everyone reads :) <br>
+<p>
+BTW, you can say -s 256K and that will expand internally to 262144.<br>
+Also, if you specify -S and -S, the defaults for -m and -M will key off<br>
+of that. So, the command line above can be written as:<br>
+<p>
+netperf &lt;globals&gt; -- -s 256K -S 256K<br>
+<p>
+rick<br>
+<p>
+Anyone trying the experimental netperf3 stuff? I'd really like to get<br>
+some feedback on that.<br>
+<pre>
+-- 
+these opinions are mine, all mine; HP might not want them anyway... :)
+feel free to email, or post, but please do not do both...
+my email address is raj in the cup.hp.com domain...
+</pre>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0096.html">Martin Koyabe: "RE: Ideas !!"</a>
+<li> <b>Previous message:</b> <a href="0094.html">Gregory P. Smith: "Re: Netperf 2.1"</a>
+<li> <b>Maybe in reply to:</b> <a href="0093.html">Martin Koyabe: "Netperf 2.1"</a>
+<!-- nextthread="start" -->
+</ul>

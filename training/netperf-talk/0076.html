@@ -1,0 +1,50 @@
+<!-- received="Wed Aug 12 20:25:53 1998 PDT" -->
+<!-- sent="Wed, 12 Aug 1998 20:36:51 PDT" -->
+<!-- name="Rick Jones" -->
+<!-- email="raj@cup.hp.com" -->
+<!-- subject="Re: how are confidence intervals calculated?" -->
+<!-- id="199808130336.UAA09282@loiter.cup.hp.com" -->
+<!-- inreplyto="Pine.BSF.4.02.9808131002590.753-100000@huiching.singaren.net.sg" -->
+<title>Archive of the netperf-talk mailing list: Re: how are confidence intervals calculated?</title>
+<h1>Re: how are confidence intervals calculated?</h1>
+Rick Jones (<i>raj@cup.hp.com</i>)<br>
+<i>Wed, 12 Aug 1998 20:36:51 PDT</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#76">[ date ]</a><a href="index.html#76">[ thread ]</a><a href="subject.html#76">[ subject ]</a><a href="author.html#76">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0077.html">Juan Leon: "Choosing interface for netserver"</a>
+<li> <b>Previous message:</b> <a href="0075.html">Roland Yeo: "how are confidence intervals calculated?"</a>
+<li> <b>In reply to:</b> <a href="0075.html">Roland Yeo: "how are confidence intervals calculated?"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+<i>&gt; we frequently get messages like the following during TCP and UDP stream</i><br>
+<i>&gt; tests:</i><br>
+<i>&gt; </i><br>
+<i>&gt; TCP STREAM TEST to 137.132.12.226 : +/-2.5% @ 99% conf. : interval</i><br>
+<i>&gt; !!! WARNING</i><br>
+<i>&gt; !!! Desired confidence was not achieved within the specified iterations.</i><br>
+<i>&gt; !!! This implies that there was variability in the test environment that</i><br>
+<i>&gt; !!! must be investigated before going further.</i><br>
+<i>&gt; !!! Confidence intervals: Throughput      : 39.7%</i><br>
+<p>
+I don't fully understand the statistics myself, some folks at IBM did<br>
+the code, but in essence, it means that netperf was not confident (99%<br>
+probability) that the average throughput was closer than +/- 20% in<br>
+this instance.<br>
+<p>
+Common causes of this are other things happening on the system(s),<br>
+other things happening on the network(s), bugs resulting in lost<br>
+packets, and so on.<br>
+<p>
+rick jones<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0077.html">Juan Leon: "Choosing interface for netserver"</a>
+<li> <b>Previous message:</b> <a href="0075.html">Roland Yeo: "how are confidence intervals calculated?"</a>
+<li> <b>In reply to:</b> <a href="0075.html">Roland Yeo: "how are confidence intervals calculated?"</a>
+<!-- nextthread="start" -->
+</ul>

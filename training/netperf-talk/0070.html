@@ -1,0 +1,66 @@
+<!-- received="Fri Jul 31 05:40:34 1998 PDT" -->
+<!-- sent="Fri, 31 Jul 1998 08:43:43 -0400 (EDT)" -->
+<!-- name="todd j. derr" -->
+<!-- email="tjd@fore.com" -->
+<!-- subject="Re: send sizes in stream_tests" -->
+<!-- id="199807311243.IAA13189@waterfall.fore.com" -->
+<!-- inreplyto="msg283533.thr-4eb954.5b8dcc@bill.cms.shu.ac.uk" -->
+<title>Archive of the netperf-talk mailing list: Re: send sizes in stream_tests</title>
+<h1>Re: send sizes in stream_tests</h1>
+todd j. derr (<i>tjd@fore.com</i>)<br>
+<i>Fri, 31 Jul 1998 08:43:43 -0400 (EDT)</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#70">[ date ]</a><a href="index.html#70">[ thread ]</a><a href="subject.html#70">[ subject ]</a><a href="author.html#70">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0071.html">Rick Jones: "Re: send sizes in stream_tests"</a>
+<li> <b>Previous message:</b> <a href="0069.html">Colin Simpson: "send sizes in stream_tests"</a>
+<li> <b>In reply to:</b> <a href="0069.html">Colin Simpson: "send sizes in stream_tests"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0071.html">Rick Jones: "Re: send sizes in stream_tests"</a>
+</ul>
+<!-- body="start" -->
+The send size is at the application layer.<br>
+<p>
+In the case of UDP_STREAM, this does map easily to packet size by adding<br>
+the encapsulation - just remember to consider IP fragmentation, which will<br>
+happen if your data size is &gt; 1472 bytes in the case of ethernet.<br>
+<p>
+For TCP_STREAM, there is no direct correlation between the send size and<br>
+the frame size - the TCP layer treats the data as a stream, boundaries<br>
+between calls to write(), etc. are _not_ preserved.  The frame size depends<br>
+on a number of factors, and in general is not predictable.  Your best bet<br>
+here is to use 'snoop' or 'tcpdump' or some other traffic analyzer to look<br>
+at the frames that are sent.<br>
+<p>
+todd.<br>
+<p>
+<p>
+<p>
+<i>&gt; About the send sends in XXX_STREAM_TEST's could anyone tell what layer</i><br>
+<i>&gt; of the seven layer model the send size refers to as I need translate</i><br>
+<i>&gt; send size in acutal frame sizes to comply with RFC 1944 to measure</i><br>
+<i>&gt; thurput,</i><br>
+<i>&gt; </i><br>
+<i>&gt; : e.g a 4kb stream. Is that 4kb being send from the application layer,</i><br>
+<i>&gt; which means by the time it reachs the physical layer the actual size</i><br>
+<i>&gt; send is increased due to encapsulation by the lower levels.</i><br>
+<i>&gt; </i><br>
+<i>&gt; or is the send size at the physical layer which in the case 4kb</i><br>
+<i>&gt; includes higher level encapsulation (heads and the like).</i><br>
+<p>
+<p>
+<pre>
+-- 
+todd j. derr      fore systems, inc.      tjd@fore.com      (724) 742-7365
+</pre>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0071.html">Rick Jones: "Re: send sizes in stream_tests"</a>
+<li> <b>Previous message:</b> <a href="0069.html">Colin Simpson: "send sizes in stream_tests"</a>
+<li> <b>In reply to:</b> <a href="0069.html">Colin Simpson: "send sizes in stream_tests"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0071.html">Rick Jones: "Re: send sizes in stream_tests"</a>
+</ul>

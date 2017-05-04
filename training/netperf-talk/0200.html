@@ -1,0 +1,77 @@
+<!-- received="Thu Jul 15 10:30:43 1999 PDT" -->
+<!-- sent="Thu, 15 Jul 1999 10:33:34 -0700" -->
+<!-- name="Rick Jones" -->
+<!-- email="raj@cup.hp.com" -->
+<!-- subject="Re: Question about the -s Parameter" -->
+<!-- id="378E1B6E.87EB6CF7@cup.hp.com" -->
+<!-- inreplyto="Question about the -s Parameter" -->
+<title>Archive of the netperf-talk mailing list: Re: Question about the -s Parameter</title>
+<h1>Re: Question about the -s Parameter</h1>
+Rick Jones (<i>raj@cup.hp.com</i>)<br>
+<i>Thu, 15 Jul 1999 10:33:34 -0700</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#200">[ date ]</a><a href="index.html#200">[ thread ]</a><a href="subject.html#200">[ subject ]</a><a href="author.html#200">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0201.html">Rick Jones: "baa baa blacksheep..."</a>
+<li> <b>Previous message:</b> <a href="0199.html">Heico Salfeld: "Question about the -s Parameter"</a>
+<li> <b>Maybe in reply to:</b> <a href="0199.html">Heico Salfeld: "Question about the -s Parameter"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+[asking for return receipt when sending to a mailing list seems triffle<br>
+strange... :) ]<br>
+<p>
+Heico Salfeld wrote:<br>
+<i>&gt; </i><br>
+<i>&gt; Hi there!</i><br>
+<i>&gt; </i><br>
+<i>&gt; I have a question about the -s option. In the manual of revision 2.1 it</i><br>
+<i>&gt; says that this will set the local send and receive buffer sizes to the</i><br>
+<i>&gt; value specified. The -S option will do the same for the remote system.</i><br>
+<i>&gt; </i><br>
+<i>&gt; What kind of buffer is actually meant...:</i><br>
+<i>&gt; 1) Is this just a buffer of the system's input and output functions?</i><br>
+<i>&gt; 2) Or does this parameter set the maximum window size of TCP, and can</i><br>
+<i>&gt; reach up to the max. CWND of 64 kBytes which is defined in the OS?</i><br>
+<p>
+I guess it depends on the transport implementation. The -S and -s<br>
+options specify the values passed in setsockopt(SO_SNDBUF|SO_RCVBUF)<br>
+calls. On BSDish stacks, the SO_RCVBUF setting, controls the TCP window.<br>
+<p>
+SO_SNDBUF tends to control how much the sender can have outstanding at<br>
+one time. <br>
+<p>
+CWND can be more than 64KB if the window is more - though there are some<br>
+stacks which place a configurable limit on cwnd.<br>
+<p>
+The maximum data outstanding at any one time on a TCP connection will<br>
+(more or less) be the minimum of the sender's SO_SNDBUF, the receiver's<br>
+window/SORCVBUF and the senders cwnd.<br>
+<p>
+<i>&gt; In both cases: is it correct that it is counted in bytes?</i><br>
+<p>
+Yes.<br>
+<p>
+<i>&gt; BTW: I am sending TCP over a satellite link with a RTT of 560 msec. Any</i><br>
+<i>&gt; suggestions with which params it's mostly worth to play around?</i><br>
+<p>
+The -s and -S are good ones.<br>
+<p>
+rick jones<br>
+<p>
+<pre>
+-- 
+these opinions are mine, all mine; HP might not want them anyway... :)
+feel free to email, or post, but please do not do both...
+my email address is raj in the cup.hp.com domain...
+</pre>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0201.html">Rick Jones: "baa baa blacksheep..."</a>
+<li> <b>Previous message:</b> <a href="0199.html">Heico Salfeld: "Question about the -s Parameter"</a>
+<li> <b>Maybe in reply to:</b> <a href="0199.html">Heico Salfeld: "Question about the -s Parameter"</a>
+<!-- nextthread="start" -->
+</ul>

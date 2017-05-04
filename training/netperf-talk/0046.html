@@ -1,0 +1,91 @@
+<!-- received="Fri Jun 19 02:27:21 1998 PDT" -->
+<!-- sent="Fri, 19 Jun 1998 05:28:13 -0400" -->
+<!-- name="Todd Jobson" -->
+<!-- email="tjobson@alux4.micro.lucent.com" -->
+<!-- subject="Netperf and Sun Gigabit Ethernet (or other Full-duplex modes of transmission)" -->
+<!-- id="9806190928.AA15212@megpsrv" -->
+<!-- inreplyto="" -->
+<title>Archive of the netperf-talk mailing list: Netperf and Sun Gigabit Ethernet (or other Full-duplex modes of transmission)</title>
+<h1>Netperf and Sun Gigabit Ethernet (or other Full-duplex modes of transmission)</h1>
+Todd Jobson (<i>tjobson@alux4.micro.lucent.com</i>)<br>
+<i>Fri, 19 Jun 1998 05:28:13 -0400</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#46">[ date ]</a><a href="index.html#46">[ thread ]</a><a href="subject.html#46">[ subject ]</a><a href="author.html#46">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0047.html">Rick Jones: "Re: Netperf and Sun Gigabit Ethernet (or other Full-duplex modes of transmission)"</a>
+<li> <b>Previous message:</b> <a href="0045.html">Derek Casanares: "RE: Running Netperf Under NT and Ultra II"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0047.html">Rick Jones: "Re: Netperf and Sun Gigabit Ethernet (or other Full-duplex modes of transmission)"</a>
+</ul>
+<!-- body="start" -->
+Netperf'ers :<br>
+<p>
+I am testing the throughput of a Sun E10000 using their Gigabit Ethernet <br>
+adapters (resold alteon cards) using netperf.  <br>
+<p>
+A couple of questions about how netperf bases it`s throughput #'s (Mbps).<br>
+<p>
+	Assume that for these questions / statements, that I am only using a<br>
+	cross-over cable between 2 NIC's on 2 separate systems.<br>
+<p>
+-	Is the throughput (Mbps) # based strictly on Unidirectional writing <br>
+	of data and timing it's completion, using some statistical passing<br>
+	of results... between client and server ??  Would this be considered<br>
+	half-duplex ??  In either case, if I run netperf on both systems<br>
+	simultaniously (reporting 190 Mbps on both systems, from each netperf),<br>
+	does this mean that I add up the 2 system throughput #'s to get the<br>
+	'FUll DUPLEX' throughput ?? (380 Mbps ??), or does Netperf take into<br>
+	account and use the timing of both the sending and receiving sockets, <br>
+	based on the total # of bytes transmitted and received (handshaking) <br>
+	even in a unidirectional transfer ??<br>
+<p>
+-	Given that this Sun VGE driver operates only at a FULL duplex mode,<br>
+	does this preclude me to the belief that only having one system <br>
+	transmitting data to another (in a single direction), that this only <br>
+	can be called 'half-duplex', thus not being allowed to consume more <br>
+	than half of the bandwidth ???  I don't believe so, but please correct <br>
+	me if I am wrong.  I understood the dynamics of ethernet throughput to <br>
+	simply allow for a maximum amount of data (bandwidth) to be carried on <br>
+	the media overall (total of both sides  eg. 100Mbps sending, 900 Mbps <br>
+	receiveing ; if true Gbps were achievable).<br>
+<p>
+	This leads me into the question of Collision detection not being<br>
+	a factor (or even possible) when using 'Full Duplex' ethernet .?<br>
+	Does this mean that even though no collisions/errors are reported<br>
+	by the device driver, that collisions could still be occuring ??, or<br>
+	does this mean that collisions are physically impossible, given that<br>
+	two separate 'channels' are multiplexed over the media ???  Is this<br>
+	one of the reasons that 'Full Duplex' ethernet is usually (if not<br>
+	always) wired so that a switch is the connecting device between nodes,<br>
+	rather than allowing several nodes to transmit simultaniously without<br>
+	collision detection ??  Please enlighten me on all of the nitty-gritty<br>
+	details, as I have not yet received any 'good' explanations as of yet.<br>
+<p>
+	For the Sun folks, what are the 10 or 15 'vge' driver parameters exactly<br>
+	used for ???  Is there an internal doc or docs that describe various<br>
+	tested configurations ???  I've been told to do different things by<br>
+	both support and the configuration manuals...<br>
+<p>
+	Please respond as soon as possible, since the customer(s) at lucent<br>
+	are becoming VERY uneasy after spending sooo... much money, not to <br>
+	get the expected bandwith from Gigabit Ethernet (unless the tools are<br>
+	deceiving us) ??<br>
+<p>
+<p>
+Thanks,<br>
+<p>
+Todd Jobson<br>
+Technical Manager<br>
+Sun Professional Services<br>
+todd.jobson@east.sun.com<br>
+tjobson@aluxpo.micro.lucent.com<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0047.html">Rick Jones: "Re: Netperf and Sun Gigabit Ethernet (or other Full-duplex modes of transmission)"</a>
+<li> <b>Previous message:</b> <a href="0045.html">Derek Casanares: "RE: Running Netperf Under NT and Ultra II"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0047.html">Rick Jones: "Re: Netperf and Sun Gigabit Ethernet (or other Full-duplex modes of transmission)"</a>
+</ul>

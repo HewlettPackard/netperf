@@ -1,0 +1,88 @@
+<!-- received="Tue Aug 10 15:52:46 1999 PDT" -->
+<!-- sent="Wed, 11 Aug 1999 08:50:59 +1000 (EST)" -->
+<!-- name="Vivek Mittal" -->
+<!-- email="vivek@yoyo.cc.monash.edu.au" -->
+<!-- subject="RE: Linux compiling problems" -->
+<!-- id="Pine.OSF.4.00.9908110849430.8581-100000@yoyo.cc.monash.edu.au" -->
+<!-- inreplyto="09238112A143D311ACDF00609748B226213975@tceis3.indy.tce.com" -->
+<title>Archive of the netperf-talk mailing list: RE: Linux compiling problems</title>
+<h1>RE: Linux compiling problems</h1>
+Vivek Mittal (<i>vivek@yoyo.cc.monash.edu.au</i>)<br>
+<i>Wed, 11 Aug 1999 08:50:59 +1000 (EST)</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#221">[ date ]</a><a href="index.html#221">[ thread ]</a><a href="subject.html#221">[ subject ]</a><a href="author.html#221">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0222.html">Vivek Mittal: "Linux compiling problem"</a>
+<li> <b>Previous message:</b> <a href="0220.html">Jackson Robert: "RE: Linux compiling problems"</a>
+<li> <b>In reply to:</b> <a href="0220.html">Jackson Robert: "RE: Linux compiling problems"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+I am running Redhat 5.2.  The error comes in with the -DHISTOGRAM option.<br>
+I remember compiling it fine when that option wasn't selected.<br>
+<p>
+Vivek<br>
+<p>
+On Tue, 10 Aug 1999, Jackson Robert (R&amp;D) wrote:<br>
+<p>
+<i>&gt; Which version of Linux are you running?  I was able to compile it fine on</i><br>
+<i>&gt; Redhat 5.2 and Redhat 6.0, using gcc as the compiler.  No other changes</i><br>
+<i>&gt; where made to the makefile.  If I get a chance today I will attempt a</i><br>
+<i>&gt; compile using the options you denoted (-O -D$(LOG_FILE) -DUSE_LOOPER</i><br>
+<i>&gt; -DHISTOGRAM).</i><br>
+<i>&gt; </i><br>
+<i>&gt; Rob</i><br>
+<i>&gt; </i><br>
+<i>&gt; -----Original Message-----</i><br>
+<i>&gt; From: Vivek Mittal [<a href="mailto:vivek@yoyo.cc.monash.edu.au">mailto:vivek@yoyo.cc.monash.edu.au</a>]</i><br>
+<i>&gt; Sent: Monday, August 09, 1999 7:43 PM</i><br>
+<i>&gt; To: netperf-talk@hpisrdq.cup.hp.com</i><br>
+<i>&gt; Subject: Linux compiling problems</i><br>
+<i>&gt; </i><br>
+<i>&gt; </i><br>
+<i>&gt; Hi,</i><br>
+<i>&gt; </i><br>
+<i>&gt; I've having trouble compiling Netperf under Linux.  I've compiled the same</i><br>
+<i>&gt; under Solaris using the flags  -O -D$(LOG_FILE) -DUSE_LOOPER -DHISTOGRAM</i><br>
+<i>&gt; with no problems.  But when I try it under Linux, I get the following</i><br>
+<i>&gt; errors.</i><br>
+<i>&gt; </i><br>
+<i>&gt; cc -O -DDEBUG_LOG_FILE="\"/tmp/netperf.debug\"" -DUSE_LOOPER -DHISTOGRAM</i><br>
+<i>&gt; -c nettest_bsd.c -o nettest_bsd.o</i><br>
+<i>&gt; nettest_bsd.c:109: storage size of `time_one' isn't known</i><br>
+<i>&gt; nettest_bsd.c:110: storage size of `time_two' isn't known</i><br>
+<i>&gt; make: *** [nettest_bsd.o] Error 1</i><br>
+<i>&gt; </i><br>
+<i>&gt; On our machine cc is just a link to gcc, so checking the netperf archive I</i><br>
+<i>&gt; changed -O to -O3 and added -ansi.  Now I get the following errors.</i><br>
+<i>&gt; </i><br>
+<i>&gt; cc -O3 -ansi -DDEBUG_LOG_FILE="\"/tmp/netperf.debug\"" -DUSE_LOOPER</i><br>
+<i>&gt; -DHISTOGRAM   -c netsh.c -o netsh.o</i><br>
+<i>&gt; In file included from netsh.c:14:</i><br>
+<i>&gt; /usr/include/sys/ipc.h:29: warning: #warning "Files using this header must</i><br>
+<i>&gt; be compiled with _SVID_SOURCE or _XOPEN_SOURCE"</i><br>
+<i>&gt; In file included from netsh.c:14:</i><br>
+<i>&gt; /usr/include/sys/ipc.h:35: parse error before `ftok'</i><br>
+<i>&gt; /usr/include/sys/ipc.h:35: warning: data definition has no type or storage</i><br>
+<i>&gt; class</i><br>
+<i>&gt; make: *** [netsh.o] Error 1</i><br>
+<i>&gt; </i><br>
+<i>&gt; Can some one help?</i><br>
+<i>&gt; </i><br>
+<i>&gt; Thanks in advance.</i><br>
+<i>&gt; </i><br>
+<i>&gt; Vivek</i><br>
+<i>&gt; PS I have sent a request to be added to the list but maynot have been</i><br>
+<i>&gt; added at the time of this posting, so please send a copy to</i><br>
+<i>&gt; vivek@yoyo.cc.monash.edu.au</i><br>
+<i>&gt; </i><br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0222.html">Vivek Mittal: "Linux compiling problem"</a>
+<li> <b>Previous message:</b> <a href="0220.html">Jackson Robert: "RE: Linux compiling problems"</a>
+<li> <b>In reply to:</b> <a href="0220.html">Jackson Robert: "RE: Linux compiling problems"</a>
+<!-- nextthread="start" -->
+</ul>

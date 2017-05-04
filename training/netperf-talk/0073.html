@@ -1,0 +1,54 @@
+<!-- received="Tue Aug 11 09:11:57 1998 PDT" -->
+<!-- sent="Tue, 11 Aug 1998 09:15:52 -0700" -->
+<!-- name="Gregory P. Smith" -->
+<!-- email="greg@nas.nasa.gov" -->
+<!-- subject="Re: Problem in compiling netperf" -->
+<!-- id="199808111615.JAA09889@ryouko.nas.nasa.gov" -->
+<!-- inreplyto="001301bdc4fd$9bd305f0$472011ac@jcc_ntlt01.rlmsystems.com.au" -->
+<title>Archive of the netperf-talk mailing list: Re: Problem in compiling netperf</title>
+<h1>Re: Problem in compiling netperf</h1>
+Gregory P. Smith (<i>greg@nas.nasa.gov</i>)<br>
+<i>Tue, 11 Aug 1998 09:15:52 -0700</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#73">[ date ]</a><a href="index.html#73">[ thread ]</a><a href="subject.html#73">[ subject ]</a><a href="author.html#73">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0074.html">Rick Jones: "Re: Problem in compiling netperf"</a>
+<li> <b>Previous message:</b> <a href="0072.html">Hung Tran: "Problem in compiling netperf"</a>
+<li> <b>In reply to:</b> <a href="0072.html">Hung Tran: "Problem in compiling netperf"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0074.html">Rick Jones: "Re: Problem in compiling netperf"</a>
+</ul>
+<!-- body="start" -->
+Actually, yes.  It's not a problem, it just depends on what protocols<br>
+you have set to compile into netperf.  These files aren't being used<br>
+(Most people are just using nettest_bsd.c for normal BSD IPv4 tests)<br>
+and everything in them gets #ifdef'd out.  Not the best make system<br>
+but nothing to worry about. :)<br>
+<p>
+-G<br>
+<p>
+<i>&gt; nettest_dlpi.c    line 3744</i><br>
+<i>&gt; nettest_unix.c    line 3543</i><br>
+<i>&gt; nettest_fore.c    line 3103</i><br>
+<i>&gt; nettest_hippi.c    line 1987</i><br>
+<i>&gt; nettest_xti.c        line 6034</i><br>
+<i>&gt; nettest_ipv6.c    line 7638</i><br>
+<i>&gt; </i><br>
+<i>&gt; The error text reads the same for all files: "Source file does not contain</i><br>
+<i>&gt; any declarations." The pointer for each error looks like this:</i><br>
+<i>&gt; </i><br>
+<i>&gt; #endif /* DO_DLPI */</i><br>
+<i>&gt; ------------------------------^</i><br>
+<i>&gt; </i><br>
+<i>&gt; Has anyone encountered this problem before? Any help is greatly appreciated.</i><br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0074.html">Rick Jones: "Re: Problem in compiling netperf"</a>
+<li> <b>Previous message:</b> <a href="0072.html">Hung Tran: "Problem in compiling netperf"</a>
+<li> <b>In reply to:</b> <a href="0072.html">Hung Tran: "Problem in compiling netperf"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0074.html">Rick Jones: "Re: Problem in compiling netperf"</a>
+</ul>

@@ -1,0 +1,75 @@
+<!-- received="Tue Aug 17 11:56:35 1999 PDT" -->
+<!-- sent="Tue, 17 Aug 1999 13:43:41 -0500" -->
+<!-- name="Akasit Sriprathum" -->
+<!-- email="akasit@tr.labrats.com" -->
+<!-- subject="(no subject)" -->
+<!-- id="000001bee8e1$b29a60e0$f51291d0@tr1.labrats.com" -->
+<!-- inreplyto="" -->
+<title>Archive of the netperf-talk mailing list: (no subject)</title>
+<h1>(no subject)</h1>
+Akasit Sriprathum (<i>akasit@tr.labrats.com</i>)<br>
+<i>Tue, 17 Aug 1999 13:43:41 -0500</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#225">[ date ]</a><a href="index.html#225">[ thread ]</a><a href="subject.html#225">[ subject ]</a><a href="author.html#225">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0226.html">Rick Jones: "(no subject)"</a>
+<li> <b>Previous message:</b> <a href="0224.html">Akasit Sriprathum: "(no subject)"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+HI<br>
+<p>
+I have a question about netperf.<br>
+I am working on the TCP over ATM perfrmance measurement.<br>
+First I try to run netperf with direct connection OC-3 between two BSD<br>
+machine.<br>
+<p>
+I wrote my own script to run netperf with TCP_TREAM with various window size<br>
+and segment size.automatically.<br>
+The following is my script.<br>
+<p>
+#!/usr/local/bin/tcsh<br>
+<p>
+set send_buffer=(8192 24576 40960 52224)<br>
+set message_size=(128 256 1024 2048 4362 8704 17408 28112 34818 43620 82224)<br>
+set i = 1<br>
+foreach buffer ($send_buffer)<br>
+  set j = 1<br>
+  foreach segment ($message_size)<br>
+     set window = $send_buffer[$i]<br>
+     set segment = $message_size[$j]<br>
+     if ($i =~ 1 &amp;&amp; $j =~ 1) then<br>
+        echo The window size is $window.   The segment size is $segment.<br>
+        /usr/local/netperf/netperf -t TCP_STREAM -H 10.100.100.101 -l<br>
+30 -- -S $window -s $window -m $segment  &gt; nong<br>
+     else<br>
+       echo The window size is $window. The segment size is $segment.<br>
+       /usr/local/netperf/netperf -t TCP_STREAM -H 10.100.100.101 -l<br>
+30 -- -S $window -s $window -m $segment &gt;&gt; nong<br>
+     endif<br>
+     @ j=$j + 1<br>
+  end<br>
+  @ i=$i + 1i<br>
+end<br>
+<p>
+when I run the script, sometime I got a message "fragmentation fault (core<br>
+dumped)".  I don't know how to solve this problem.  If anyone has any idea,<br>
+please let me know<br>
+<p>
+Also the result is quite weird.  I attach the result with this message (I<br>
+ran the same eight tests .<br>
+<p>
+Another question, how can I obtain TCP latency?  Please give me the detail<br>
+because I am quite new for netperf.<br>
+<p>
+Thank you<br>
+Akasit<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0226.html">Rick Jones: "(no subject)"</a>
+<li> <b>Previous message:</b> <a href="0224.html">Akasit Sriprathum: "(no subject)"</a>
+<!-- nextthread="start" -->
+</ul>

@@ -1,0 +1,60 @@
+<!-- received="Tue Oct 13 12:22:26 1998 PDT" -->
+<!-- sent="Tue, 13 Oct 1998 20:18:10 +0100" -->
+<!-- name="Martin Koyabe" -->
+<!-- email="koyabe@erg.abdn.ac.uk" -->
+<!-- subject="RE: Ideas !!" -->
+<!-- id="01BDF6E6.99753BF0@VURT" -->
+<!-- inreplyto="" -->
+<title>Archive of the netperf-talk mailing list: RE: Ideas !!</title>
+<h1>RE: Ideas !!</h1>
+Martin Koyabe (<i>koyabe@erg.abdn.ac.uk</i>)<br>
+<i>Tue, 13 Oct 1998 20:18:10 +0100</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#96">[ date ]</a><a href="index.html#96">[ thread ]</a><a href="subject.html#96">[ subject ]</a><a href="author.html#96">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0097.html">Martin Koyabe: "RE: Netperf 2.1"</a>
+<li> <b>Previous message:</b> <a href="0095.html">Rick Jones: "Re: Netperf 2.1"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+Rick,<br>
+<p>
+Thanks for getting back to me. I have been running several tests on two =<br>
+Sparc machines both running on 100Mb link via switch (100Mb CISCO). From =<br>
+both ends I ran netserver then the netperf commands as shown below. Why =<br>
+am I getting a different throughput link on both cases ? I deally I =<br>
+though they should be the same !! I have been trying to check whether =<br>
+the problem could be one of full- or half- duplex link setting, but with =<br>
+no much success.<br>
+<p>
+Anyone with ideas, I'll appreciate !! The outputs are show below.<br>
+<p>
+Martin.<br>
+<p>
+<i>&gt; netperf -p 5400 -H 139.133.204.104 -t UDP_STREAM -- -m 1472=20</i><br>
+UDP UNIDIRECTIONAL SEND TEST to 139.133.204.104 : interval<br>
+Socket  Message  Elapsed      Messages               =20<br>
+Size    Size     Time         Okay Errors   Throughput<br>
+bytes   bytes    secs            #      #   10^6bits/sec<br>
+<p>
+  8192    1472   10.00       79891      0      94.11<br>
+  8192              10.00         102                 0.12<br>
+<p>
+<p>
+<i>&gt; netperf -p 5400 -t UDP_STREAM -H 139.133.204.110  -- -m 1472</i><br>
+UDP UNIDIRECTIONAL SEND TEST to 139.133.204.110 : interval<br>
+Socket  Message  Elapsed      Messages               =20<br>
+Size    Size     Time         Okay Errors   Throughput<br>
+bytes   bytes    secs            #      #   10^6bits/sec<br>
+<p>
+  8192    1472   10.00       27576      0      32.49<br>
+  8192              10.00       27369             32.24<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0097.html">Martin Koyabe: "RE: Netperf 2.1"</a>
+<li> <b>Previous message:</b> <a href="0095.html">Rick Jones: "Re: Netperf 2.1"</a>
+<!-- nextthread="start" -->
+</ul>

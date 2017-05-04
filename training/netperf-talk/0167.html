@@ -1,0 +1,172 @@
+<!-- received="Thu Apr 29 03:52:52 1999 PDT" -->
+<!-- sent="Thu, 29 Apr 1999 12:46:42 +0200" -->
+<!-- name="Michael Eklund" -->
+<!-- email="Michael.Eklund@era.ericsson.se" -->
+<!-- subject="Compile problems on Solaris" -->
+<!-- id="37283892.6E2F04DD@era.ericsson.se" -->
+<!-- inreplyto="" -->
+<title>Archive of the netperf-talk mailing list: Compile problems on Solaris</title>
+<h1>Compile problems on Solaris</h1>
+Michael Eklund (<i>Michael.Eklund@era.ericsson.se</i>)<br>
+<i>Thu, 29 Apr 1999 12:46:42 +0200</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#167">[ date ]</a><a href="index.html#167">[ thread ]</a><a href="subject.html#167">[ subject ]</a><a href="author.html#167">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0168.html">Bruce Barnett: "Re: Compile problems on Solaris"</a>
+<li> <b>Previous message:</b> <a href="0166.html">Gregory P. Smith: "Re: bifurcated results from netperf"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0168.html">Bruce Barnett: "Re: Compile problems on Solaris"</a>
+</ul>
+<!-- body="start" -->
+--------------88F61CFDFAE35006C4A89967<br>
+Content-Type: text/plain; charset=us-ascii<br>
+Content-Transfer-Encoding: 7bit<br>
+<p>
+Hello,<br>
+<p>
+I have problems to compile netperf-2.1 on my Sun Solaris workstation.<br>
+The compilation stops when the compiler is compiling netLib.c.<br>
+I receives the error messages:<br>
+<p>
+netlib.c: In function `install_signal_catchers':<br>
+netlib.c:646: storage size of `action' isn't known<br>
+netlib.c:652: warning: implicit declaration of function `sigemptyset'<br>
+netlib.c:662: `NSIG' undeclared (first use this function)<br>
+netlib.c:662: (Each undeclared identifier is reported only once<br>
+netlib.c:662: for each function it appears in.)<br>
+netlib.c:664: warning: implicit declaration of function `sigaction'<br>
+netlib.c:646: warning: unused variable `action'<br>
+netlib.c: In function `start_timer':<br>
+netlib.c:726: storage size of `action' isn't known<br>
+netlib.c:735: warning: implicit declaration of function `sigaddset'<br>
+netlib.c:726: warning: unused variable `action'<br>
+netlib.c: In function `netlib_init':<br>
+netlib.c:862: warning: unsigned int format, pointer arg (arg 3)<br>
+netlib.c:865: warning: unsigned int format, pointer arg (arg 3)<br>
+netlib.c: In function `send_request':<br>
+netlib.c:1274: warning: unsigned int format, pointer arg (arg 4)<br>
+netlib.c: In function `send_response':<br>
+netlib.c:1332: warning: unsigned int format, pointer arg (arg 4)<br>
+netlib.c: In function `cpu_start':<br>
+netlib.c:2080: warning: unused variable `i'<br>
+netlib.c: In function `cpu_stop':<br>
+netlib.c:2191: warning: unused variable `i'<br>
+netlib.c: In function `calc_cpu_util':<br>
+netlib.c:2362: warning: unused variable `i'<br>
+netlib.c:2351: warning: unused variable `actual_rate'<br>
+*** Error code 1<br>
+make: Fatal error: Command failed for target `netlib.o'<br>
+<p>
+In the makefile I have changed the following:<br>
+<p>
+#CC = cc -O<br>
+CC = gcc<br>
+<p>
+#CFLAGS = -D$(LOG_FILE) -DUSE_LOOPER<br>
+CFLAGS  = -ansi -Wall -Dsun -D__STDC__=0 -DINTERVALS<br>
+<p>
+#LIBS= -lm<br>
+LIBS = -L/usr/ucblib -lucb -lsocket -lnsl -lelf<br>
+<p>
+<p>
+Do you have any idea what the problem might be ?<br>
+<p>
+/ / Michael<br>
+<p>
+<p>
+<p>
+<p>
+<p>
+<pre>
+--
+Michael Eklund, KI/ERA/RB/G       Phone: +46 8 75 730 66
+Wideband Radio Network Systems    Fax: +46 8 40 437 00
+Ericsson Radio Systems AB         MEMO: ERI.ERA.ERAMMED
+S-164 80 Stockholm, SWEDEN        <a href="mailto:Michael.Eklund@era.ericsson.se">mailto:Michael.Eklund@era.ericsson.se</a>
+<p>
+<p>
+<p>
+--------------88F61CFDFAE35006C4A89967
+Content-Type: text/html; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+<p>
+<HTML>
+Hello,
+
+<P>I have problems to compile netperf-2.1 on my Sun Solaris workstation.
+<BR>The compilation stops when the compiler is compiling netLib.c.
+<BR>I receives the error messages:
+
+<P>netlib.c: In function `install_signal_catchers':
+<BR>netlib.c:646: storage size of `action' isn't known
+<BR>netlib.c:652: warning: implicit declaration of function `sigemptyset'
+<BR>netlib.c:662: `NSIG' undeclared (first use this function)
+<BR>netlib.c:662: (Each undeclared identifier is reported only once
+<BR>netlib.c:662: for each function it appears in.)
+<BR>netlib.c:664: warning: implicit declaration of function `sigaction'
+<BR>netlib.c:646: warning: unused variable `action'
+<BR>netlib.c: In function `start_timer':
+<BR>netlib.c:726: storage size of `action' isn't known
+<BR>netlib.c:735: warning: implicit declaration of function `sigaddset'
+<BR>netlib.c:726: warning: unused variable `action'
+<BR>netlib.c: In function `netlib_init':
+<BR>netlib.c:862: warning: unsigned int format, pointer arg (arg 3)
+<BR>netlib.c:865: warning: unsigned int format, pointer arg (arg 3)
+<BR>netlib.c: In function `send_request':
+<BR>netlib.c:1274: warning: unsigned int format, pointer arg (arg 4)
+<BR>netlib.c: In function `send_response':
+<BR>netlib.c:1332: warning: unsigned int format, pointer arg (arg 4)
+<BR>netlib.c: In function `cpu_start':
+<BR>netlib.c:2080: warning: unused variable `i'
+<BR>netlib.c: In function `cpu_stop':
+<BR>netlib.c:2191: warning: unused variable `i'
+<BR>netlib.c: In function `calc_cpu_util':
+<BR>netlib.c:2362: warning: unused variable `i'
+<BR>netlib.c:2351: warning: unused variable `actual_rate'
+<BR>*** Error code 1
+<BR>make: Fatal error: Command failed for target `netlib.o'
+
+<P>In the makefile I have changed the following:
+
+<P>#CC = cc -O
+<BR>CC = gcc
+
+<P>#CFLAGS = -D$(LOG_FILE) -DUSE_LOOPER
+<BR>CFLAGS&nbsp; = -ansi -Wall -Dsun -D__STDC__=0 -DINTERVALS
+
+<P>#LIBS= -lm
+<BR>LIBS = -L/usr/ucblib -lucb -lsocket -lnsl -lelf
+<BR>&nbsp;
+
+<P>Do you have any idea what the problem might be ?
+
+<P>/ / Michael
+<BR>&nbsp;
+<BR>&nbsp;
+<BR>&nbsp;
+<BR>&nbsp;
+<PRE></PRE>
+
+<PRE></PRE>
+
+<PRE></PRE>
+
+<PRE>--&nbsp;
+Michael Eklund, KI/ERA/RB/G&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Phone: +46 8 75 730 66
+Wideband Radio Network Systems&nbsp;&nbsp;&nbsp; Fax: +46 8 40 437 00
+Ericsson Radio Systems AB&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MEMO: ERI.ERA.ERAMMED
+S-164 80 Stockholm, SWEDEN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="mailto:Michael.Eklund@era.ericsson.se">mailto:Michael.Eklund@era.ericsson.se</A></PRE>
+&nbsp;</HTML>
+
+--------------88F61CFDFAE35006C4A89967--
+</pre>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0168.html">Bruce Barnett: "Re: Compile problems on Solaris"</a>
+<li> <b>Previous message:</b> <a href="0166.html">Gregory P. Smith: "Re: bifurcated results from netperf"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0168.html">Bruce Barnett: "Re: Compile problems on Solaris"</a>
+</ul>

@@ -1,0 +1,80 @@
+<!-- received="Mon Apr 12 11:17:44 1999 PDT" -->
+<!-- sent="Mon, 12 Apr 1999 11:17:35 -0700" -->
+<!-- name="Rick Jones" -->
+<!-- email="raj@cup.hp.com" -->
+<!-- subject="Re: bifurcated results from netperf" -->
+<!-- id="371238BF.9B3105D8@cup.hp.com" -->
+<!-- inreplyto="bifurcated results from netperf" -->
+<title>Archive of the netperf-talk mailing list: Re: bifurcated results from netperf</title>
+<h1>Re: bifurcated results from netperf</h1>
+Rick Jones (<i>raj@cup.hp.com</i>)<br>
+<i>Mon, 12 Apr 1999 11:17:35 -0700</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#158">[ date ]</a><a href="index.html#158">[ thread ]</a><a href="subject.html#158">[ subject ]</a><a href="author.html#158">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0159.html">Roelof JT Jonkman: "Re: bifurcated results from netperf"</a>
+<li> <b>Previous message:</b> <a href="0157.html">Greg Tillman: "bifurcated results from netperf"</a>
+<li> <b>Maybe in reply to:</b> <a href="0157.html">Greg Tillman: "bifurcated results from netperf"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0159.html">Roelof JT Jonkman: "Re: bifurcated results from netperf"</a>
+</ul>
+<!-- body="start" -->
+My favorite candidate for performance evil is lost packets. Check the<br>
+netstat stats when the test runs poorly and compare with when it runs<br>
+well.<br>
+<p>
+rick jones<br>
+<p>
+Greg Tillman wrote:<br>
+<i>&gt; </i><br>
+<i>&gt; Ok, I know i'm out of my field here, but i'd appreciate any help.  I'm</i><br>
+<i>&gt; using netperf to test the performance between a pair of Intel's</i><br>
+<i>&gt; EtherExpress Pro/100 100Mbs cards, each on a Linux box (RedHat 5.2, kernel</i><br>
+<i>&gt; 2.0.36).  I'm just running a basic</i><br>
+<i>&gt; </i><br>
+<i>&gt;         netperf -l 30 -H boxb</i><br>
+<i>&gt; </i><br>
+<i>&gt; The results from a series of 30-second tests seem to be bifurcated,</i><br>
+<i>&gt; clustering around either 12 or 80 Mbs, which are obviously way different</i><br>
+<i>&gt; numbers:</i><br>
+<i>&gt; </i><br>
+<i>&gt; 11,82,12,12,83,13,11,14,12,83,83,60,83,12,83,44,83,83,83,14</i><br>
+<i>&gt; </i><br>
+<i>&gt; Ok, i thought, that will smooth out if we up it to 60 seconds.  But, as</i><br>
+<i>&gt; they say, "NOT":</i><br>
+<i>&gt; </i><br>
+<i>&gt; 83,13,13,83,83,83,15,12,12,13,83,13,83,13,83,12,82,83,14,83</i><br>
+<i>&gt; </i><br>
+<i>&gt; Even at 30 minutes, it is by no means nice and smooth and repeatable,</i><br>
+<i>&gt; although it's not as bad as the shorter tests.  But if anyone can give me a</i><br>
+<i>&gt; hint what's going on here, I'd appreciate it.  One box has 2 network cards,</i><br>
+<i>&gt; because I wanted to test it as a router (once I had some baseline numbers</i><br>
+<i>&gt; to compare the router performance to :-(  But anyway, I don't see why two</i><br>
+<i>&gt; cards in a box should matter.  I've cut down on the number of other</i><br>
+<i>&gt; processes running on each box to the bare minimum.  Each box has 32MB of</i><br>
+<i>&gt; memory, which should be plenty to prevent any kind of swapping.  I've</i><br>
+<i>&gt; toggled the '-- -D' option, to no effect.  Debug output doesn't give me any</i><br>
+<i>&gt; insight.</i><br>
+<i>&gt; </i><br>
+<i>&gt; Thanks for any help.</i><br>
+<i>&gt; </i><br>
+<i>&gt; - greg tillman</i><br>
+<i>&gt; university of maine at farmington</i><br>
+<p>
+<pre>
+-- 
+these opinions are mine, all mine; HP might not want them anyway... :)
+feel free to email, or post, but please do not do both...
+my email address is raj in the cup.hp.com domain...
+</pre>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0159.html">Roelof JT Jonkman: "Re: bifurcated results from netperf"</a>
+<li> <b>Previous message:</b> <a href="0157.html">Greg Tillman: "bifurcated results from netperf"</a>
+<li> <b>Maybe in reply to:</b> <a href="0157.html">Greg Tillman: "bifurcated results from netperf"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0159.html">Roelof JT Jonkman: "Re: bifurcated results from netperf"</a>
+</ul>

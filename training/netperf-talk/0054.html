@@ -1,0 +1,61 @@
+<!-- received="Wed Jun 24 06:38:55 1998 PDT" -->
+<!-- sent="Wed, 24 Jun 1998 09:45:44 -0400" -->
+<!-- name="Juan Leon" -->
+<!-- email="leonj@psc.edu" -->
+<!-- subject="Re: WIndows NT" -->
+<!-- id="27681.898695944@coyote.psc.edu" -->
+<!-- inreplyto="3590E36E.5E775885@lmco.com" -->
+<title>Archive of the netperf-talk mailing list: Re: WIndows NT</title>
+<h1>Re: WIndows NT</h1>
+Juan Leon (<i>leonj@psc.edu</i>)<br>
+<i>Wed, 24 Jun 1998 09:45:44 -0400</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#54">[ date ]</a><a href="index.html#54">[ thread ]</a><a href="subject.html#54">[ subject ]</a><a href="author.html#54">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0055.html">Guy McIlroy: "Re: WIndows NT"</a>
+<li> <b>Previous message:</b> <a href="0053.html">Jeffrey B. Ostermiller: "WIndows NT"</a>
+<li> <b>In reply to:</b> <a href="0053.html">Jeffrey B. Ostermiller: "WIndows NT"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0055.html">Guy McIlroy: "Re: WIndows NT"</a>
+</ul>
+<!-- body="start" -->
+<i>&gt; </i><br>
+<i>&gt; I am trying to port the scripts from Unix to Windows NT to rerun the</i><br>
+<i>&gt; experiments several times with different message and buffer sizes. One</i><br>
+<i>&gt; of my simple problems is that NETSERVER quites after everytime. Is there</i><br>
+<i>&gt; anyway to keep it running over and over again?</i><br>
+<i>&gt; Jeff</i><br>
+<i>&gt; Jeff Ostermiller</i><br>
+<i>&gt; Lockheed Martin GES</i><br>
+<i>&gt; <a href="mailto:jeffrey.b.ostermiller@lmco.com">mailto:jeffrey.b.ostermiller@lmco.com</a></i><br>
+<i>&gt; (609)-722-2960</i><br>
+<i>&gt; </i><br>
+<p>
+ On NT, I use Perl en lieu of the shell to write scripts.  The script for<br>
+running netserver is simply:<br>
+<p>
+ while (1) {<br>
+   netserver &lt;args&gt;<br>
+ }<br>
+<p>
+ and I introduce a sleep(3) before I start each netperf client to<br>
+"make sure" the netserver has had time to restart.<br>
+<p>
+ Perl for Win32 is available in many places, notably from some Microsoft<br>
+Resource Kit and from ActiveWare (www.activeware.com.)  There are also<br>
+commercially unencumbered ports.<br>
+<p>
+Juan<br>
+<p>
+   <br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0055.html">Guy McIlroy: "Re: WIndows NT"</a>
+<li> <b>Previous message:</b> <a href="0053.html">Jeffrey B. Ostermiller: "WIndows NT"</a>
+<li> <b>In reply to:</b> <a href="0053.html">Jeffrey B. Ostermiller: "WIndows NT"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0055.html">Guy McIlroy: "Re: WIndows NT"</a>
+</ul>

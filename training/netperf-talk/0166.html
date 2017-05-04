@@ -1,0 +1,44 @@
+<!-- received="Fri Apr 16 11:07:25 1999 PDT" -->
+<!-- sent="Fri, 16 Apr 1999 10:59:44 -0700" -->
+<!-- name="Gregory P. Smith" -->
+<!-- email="greg@nas.nasa.gov" -->
+<!-- subject="Re: bifurcated results from netperf" -->
+<!-- id="199904161759.KAA27294@ryouko.nas.nasa.gov" -->
+<!-- inreplyto="E2521628FB27D111BAF60000C09247D602A7FF72@MV_EXCHANGE_1" -->
+<title>Archive of the netperf-talk mailing list: Re: bifurcated results from netperf</title>
+<h1>Re: bifurcated results from netperf</h1>
+Gregory P. Smith (<i>greg@nas.nasa.gov</i>)<br>
+<i>Fri, 16 Apr 1999 10:59:44 -0700</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#166">[ date ]</a><a href="index.html#166">[ thread ]</a><a href="subject.html#166">[ subject ]</a><a href="author.html#166">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0167.html">Michael Eklund: "Compile problems on Solaris"</a>
+<li> <b>Previous message:</b> <a href="0165.html">Krasinski, Linda M: "RE: bifurcated results from netperf"</a>
+<li> <b>In reply to:</b> <a href="0165.html">Krasinski, Linda M: "RE: bifurcated results from netperf"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+If you force -either end- of a 100baseT connection to full duplex you<br>
+MUST force the other end as well.  Auto negotiation -only- works when<br>
+both ends are auto negotiating or one end is set to half duplex.<br>
+(because auto-negotiation falls back to the lowest common denominator<br>
+of half duplex if it couldn't negotiate).<br>
+<p>
+Greg<br>
+<p>
+<i>&gt; A few weeks ago I investigated a similar situation.  Sometimes I got 96Mbs</i><br>
+<i>&gt; and sometimes as low as 1Mbs.</i><br>
+<i>&gt; My problem was Half vs Full duplex (or shall I say Full vs Auto NIC</i><br>
+<i>&gt; settings).  The switch was (sometimes) changing to half duplex when the NIC</i><br>
+<i>&gt; was set to Full.  When the NIC was set to AUTO, I always stayed at Full and</i><br>
+<i>&gt; the flaky performance problem never occurred.</i><br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0167.html">Michael Eklund: "Compile problems on Solaris"</a>
+<li> <b>Previous message:</b> <a href="0165.html">Krasinski, Linda M: "RE: bifurcated results from netperf"</a>
+<li> <b>In reply to:</b> <a href="0165.html">Krasinski, Linda M: "RE: bifurcated results from netperf"</a>
+<!-- nextthread="start" -->
+</ul>

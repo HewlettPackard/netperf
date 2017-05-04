@@ -1,0 +1,65 @@
+<HTML>
+<HEAD>
+<TITLE>About The netperf-talk mailing list and archive</TITLE>
+</HEAD>
+<BODY>
+<H2>
+<P>
+The netperf-talk mailing list and archive are places where users of
+netperf can turn for expertise and experience in the care, feeding and
+running of the netperf benchmark.
+</P>
+</H2>
+
+<A HREF="/netperf/NetperfDisclaim.html">
+<IMG SRC="/netperf/images/caution.gif" ALT="CAUTION!"></A>
+
+In providing the resources of this list and archive, Hewlett-Packard
+is merely trying to help the network benchmarking community. It also
+helps keep one of their engineers happy
+
+<IMG SRC="/images/smiley.gif" ALT=":-)">.
+
+Please read the
+
+<A HREF="/netperf/NetperfDisclaim.html">disclaimer</A>.
+
+<P>
+If you would like to subscribe to netperf-talk, you should send mail
+to <a href="mailto:netperf-talk-request@netperf.cup.hp.com">
+netperf-talk-request </a>.  Your subscription reqeust will be
+processed by a real, live human being, so feel free to use "human"
+syntax 
+
+<IMG SRC="/images/smiley.gif" ALT=":-)">.
+</P>
+
+<P>
+If you would like to send a message to thelist, you should send mail to <a
+href="mailto:netperf-talk@netperf.cup.hp.com">
+netperf-talk@netperf.cup.hp.com </a>
+</P>
+
+<H2>
+Please DO NOT send subscription requests to netperf-talk.
+</H2>
+
+<P>
+If you run into any problems with the netperf services provided by
+this server, please try using the 
+<A HREF="/netperf/NetperfFeedback.html">
+Netperf Feedback</A>
+page, or send me email.
+</P>
+<P>
+Happy Benchmarking!
+</P>
+<a href="mailto:raj@cup.hp.com">
+<ADDRESS>
+rick jones &LT
+raj@cup.hp.com
+&GT
+</ADDRESS>
+</a>
+</BODY>
+</HTML>

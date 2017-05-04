@@ -1,0 +1,103 @@
+<!-- received="Thu May 27 13:41:34 1999 PDT" -->
+<!-- sent="Thu, 27 May 1999 16:30:46 -0400 (EDT)" -->
+<!-- name="Bruce Barnett" -->
+<!-- email="barnett@grymoire.crd.ge.com" -->
+<!-- subject="RE: http sniffer" -->
+<!-- id="199905272030.QAA00718@grymoire.crd.ge.com" -->
+<!-- inreplyto="" -->
+<title>Archive of the netperf-talk mailing list: RE: http sniffer</title>
+<h1>RE: http sniffer</h1>
+Bruce Barnett (<i>barnett@grymoire.crd.ge.com</i>)<br>
+<i>Thu, 27 May 1999 16:30:46 -0400 (EDT)</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#187">[ date ]</a><a href="index.html#187">[ thread ]</a><a href="subject.html#187">[ subject ]</a><a href="author.html#187">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0188.html">Rick Jones: "Re: -I option"</a>
+<li> <b>Previous message:</b> <a href="0186.html">Krasinski, Linda M: "RE: http sniffer"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+I wrote:<br>
+<p>
+<i>&gt; It's called WinDump. See</i><br>
+<i>&gt; </i><br>
+<i>&gt; <a href="http://netgroup-serv.polito.it/analyzer/">http://netgroup-serv.polito.it/analyzer/</a></i><br>
+<p>
+"Krasinski, Linda M" &lt;Linda.Krasinski@unisys.com&gt; wrote:<br>
+<p>
+<i>&gt; What does this do that Netmon does not do?</i><br>
+<i>&gt; </i><br>
+<i>&gt; This is an Italian web site and product and the user guide appears to be</i><br>
+<i>&gt; written in Italian.</i><br>
+<p>
+<p>
+TCPDUMP is a standard, public domain network sniffing tool that runs on UNIX.<br>
+Many researchers use it, and have tools to analyze the ASCII data it generates.<br>
+<p>
+I'll try to give a summary of the UNIX version. I haven't been able to <br>
+get WINDUMP to work myself.<br>
+<p>
+TCPDUMP generates (typically) a single line per packet, with all of the<br>
+critical information on that line. Here is the opening portion of an<br>
+rlogin from host rtsg  to host csam.<br>
+<p>
+<p>
+   rtsg.1023 &gt; csam.login: S 768512:768512(0) win 4096 &lt;mss 1024&gt;<br>
+   csam.login &gt; rtsg.1023: S 947648:947648(0) ack 768513 win 4096 &lt;mss 1024&gt;<br>
+   rtsg.1023 &gt; csam.login: . ack 1 win 4096<br>
+   rtsg.1023 &gt; csam.login: P 1:2(1) ack 1 win 4096<br>
+   csam.login &gt; rtsg.1023: . ack 2 win 4096<br>
+   rtsg.1023 &gt; csam.login: P 2:21(19) ack 1 win 4096<br>
+   csam.login &gt; rtsg.1023: P 1:2(1) ack 21 win 4077<br>
+   csam.login &gt; rtsg.1023: P 2:3(1) ack 21 win 4077 urg 1<br>
+   csam.login &gt; rtsg.1023: P 3:4(1) ack 21 win 4077 urg 1<br>
+<p>
+<p>
+I like it because of the terse format, so I can see a lot of<br>
+information in a few lines. This also makes it easy to write parsers<br>
+for it, and data extraction programs.  For instance, I wrote a program<br>
+in PERL that can examine a trace of a TCP-based file transfer, and<br>
+specify what percentage of the time was spent transmitting waiting,<br>
+refilling buffers, timeouts, receive buffer filled, etc. It does this<br>
+by examining the delays between packets of a single session, analyzing<br>
+the advertised buffer space, detecting retransmission, etc.<br>
+<p>
+TCPDUMP has a complete grammar, and allows you to capture data in a<br>
+file, and later extract the headers you are interested in. I've used it<br>
+to collect data from a 25 hour period, and analyzed information from<br>
+847 Mbyte file, containing the headers of 8.6 million packets.<br>
+<p>
+   You can use commands like:<br>
+<p>
+   tcpdump host \( snoopy or host woodstock \) and \(proto tcp and src <br>
+	port 1247 \) or \( proto udp and dst port 444 \)<br>
+<p>
+Here are some other examples:<br>
+<p>
+   tcpdump 'ether[0] &amp; 1 = 0 and ip[16] &gt;= 224'<br>
+<p>
+to print IP broadcast or multicast  packets  that  were  not<br>
+sent via ethernet broadcast or multicast.<br>
+<p>
+or<br>
+   tcpdump 'gateway snup and (port ftp or ftp-data)'<br>
+<p>
+to print all ftp  traffic  through  internet  gateway  snup.<br>
+<p>
+As you can imagine, it is very flexible, and useful in research.<br>
+It does not have any graphic output, but I find it easy to convert the<br>
+data I want into the numbers for the graphs using AWK or PERL.<br>
+ <br>
+<p>
+<p>
+Bruce Barnett<br>
+GE Corporate Research and Development Center<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0188.html">Rick Jones: "Re: -I option"</a>
+<li> <b>Previous message:</b> <a href="0186.html">Krasinski, Linda M: "RE: http sniffer"</a>
+<!-- nextthread="start" -->
+</ul>

@@ -1,0 +1,69 @@
+<!-- received="Mon Apr 12 14:26:59 1999 PDT" -->
+<!-- sent="Mon, 12 Apr 1999 17:24:11 -0400" -->
+<!-- name="Greg Tillman" -->
+<!-- email="GTILLMAN@MAINE.EDU" -->
+<!-- subject="Re: bifurcated results from netperf" -->
+<!-- id="3.0.6.32.19990412172411.007edc90@MAINE.EDU" -->
+<!-- inreplyto="199904121913.OAA18536@stephens.ittc.ukans.edu" -->
+<title>Archive of the netperf-talk mailing list: Re: bifurcated results from netperf</title>
+<h1>Re: bifurcated results from netperf</h1>
+Greg Tillman (<i>GTILLMAN@MAINE.EDU</i>)<br>
+<i>Mon, 12 Apr 1999 17:24:11 -0400</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#161">[ date ]</a><a href="index.html#161">[ thread ]</a><a href="subject.html#161">[ subject ]</a><a href="author.html#161">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0162.html">Rick Jones: "Re: bifurcated results from netperf"</a>
+<li> <b>Previous message:</b> <a href="0160.html">sthaug@nethelp.no: "Re: bifurcated results from netperf"</a>
+<li> <b>In reply to:</b> <a href="0159.html">Roelof JT Jonkman: "Re: bifurcated results from netperf"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0162.html">Rick Jones: "Re: bifurcated results from netperf"</a>
+</ul>
+<!-- body="start" -->
+<i>&gt;Not to helpfull, but that is sort of the stuff I would go after.</i><br>
+<i>&gt;(well first do what Rick said though, netstat.)</i><br>
+<i>&gt;</i><br>
+<i>&gt;To get my idea of your config straight:</i><br>
+<i>&gt;</i><br>
+<i>&gt;Two machines running netperf, interconnected with another dual interface</i><br>
+<i>&gt;machine?</i><br>
+<p>
+<p>
+Sorry, I should have made that clearer.  The setup originally was 3 computers:<br>
+<p>
+                  Router-box<br>
+             ----------------------------------<br>
+boxa ------ |  router-card-a    router-card-b  | ----- boxb<br>
+             ----------------------------------<br>
+<p>
+Where boxa and boxb are each connected to the router box with a crossover<br>
+cable.  It's about as simple as you can get to test a router, but right now<br>
+I'm just running tests between boxa and router-card-a, in hopes  of getting<br>
+a repeatable measure of thruput.  The router box has the second network<br>
+card in and working, but nothing plugged into it.<br>
+<p>
+So routing shouldn't enter into it.  Duplex shouldn't either, really; I<br>
+think the cards are at half duplex by default, but I'll double check<br>
+anyway.  And no packets are being dropped, according to ifconfig.  Also, it<br>
+happens in both directions, and it happens between router-card-b and boxb<br>
+as well, when I plug that in, and for that matter between boxa and boxb, in<br>
+both directions, if I string a crossover cable all the way across.<br>
+<p>
+I am in the process of exploring all suggestions, and thank you all very<br>
+much for the feedback.  Additional ideas are still quite welcome.  I<br>
+confess I was hoping someone would just tell me to tweak a kernel setting,<br>
+but I guess I'll keep plugging away.<br>
+<p>
+Thanks again<br>
+<p>
+- greg tillman<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0162.html">Rick Jones: "Re: bifurcated results from netperf"</a>
+<li> <b>Previous message:</b> <a href="0160.html">sthaug@nethelp.no: "Re: bifurcated results from netperf"</a>
+<li> <b>In reply to:</b> <a href="0159.html">Roelof JT Jonkman: "Re: bifurcated results from netperf"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0162.html">Rick Jones: "Re: bifurcated results from netperf"</a>
+</ul>

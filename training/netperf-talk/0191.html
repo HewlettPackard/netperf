@@ -1,0 +1,95 @@
+<!-- received="Fri Jun  4 11:03:05 1999 PDT" -->
+<!-- sent="Fri, 04 Jun 1999 11:04:42 -0700" -->
+<!-- name="Rick Jones" -->
+<!-- email="raj@cup.hp.com" -->
+<!-- subject="Re: tcp downloads and bandwidth utilization" -->
+<!-- id="3758153A.6CC2EFE9@cup.hp.com" -->
+<!-- inreplyto="tcp downloads and bandwidth utilization" -->
+<title>Archive of the netperf-talk mailing list: Re: tcp downloads and bandwidth utilization</title>
+<h1>Re: tcp downloads and bandwidth utilization</h1>
+Rick Jones (<i>raj@cup.hp.com</i>)<br>
+<i>Fri, 04 Jun 1999 11:04:42 -0700</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#191">[ date ]</a><a href="index.html#191">[ thread ]</a><a href="subject.html#191">[ subject ]</a><a href="author.html#191">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0192.html">Rick Jones: "Re: large buffer pb with netperf ???"</a>
+<li> <b>Previous message:</b> <a href="0190.html">Julien Godard: "large buffer pb with netperf ???"</a>
+<li> <b>Maybe in reply to:</b> <a href="0189.html">Dave Barr: "tcp downloads and bandwidth utilization"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+Dave Barr wrote:<br>
+<i>&gt; </i><br>
+<i>&gt; I am interested in downloading content in the background when a user is</i><br>
+<i>&gt; connected to the internet. The requirement is that the downloading will not</i><br>
+<i>&gt; impair the user's performance, i.e. the application will only download when</i><br>
+<i>&gt; the connection is not being used, the full bandwidth is not being utilised</i><br>
+<i>&gt; etc, etc.</i><br>
+<i>&gt; </i><br>
+<i>&gt; Can anybody tell me how this would be done? I am looking to find out the</i><br>
+<i>&gt; following:</i><br>
+<i>&gt; </i><br>
+<i>&gt; a) At what level do I have to monitor TCP/IP traffic - would this be a</i><br>
+<i>&gt; driver level app, or could it be done at the sockets layer?</i><br>
+<i>&gt; b) How do I monitor performance on the socket, and judge when my application</i><br>
+<i>&gt; can take over?</i><br>
+<p>
+Hmm, I suspect the "proper" mechanism for this would be some sort of<br>
+traffic shaping or bandwidth allocation. Guearantee the download app no<br>
+more than say 5% of the link bandwidth, and guarantee everything else<br>
+95%. Then, whenever everything else needs network resource, it can get<br>
+it, and the download is not _comletely_ starved.<br>
+<p>
+That requires stuff in the "kernel."<br>
+<p>
+If you wanted to go outside the kernel, my first guess is to assume the<br>
+existence of three "processes." One is your download app. One is a<br>
+monitoring app, and the "third" is everything else.<br>
+<p>
+Assuming it was available on your platform, and CPU util is no issue<br>
+your monitoring program sniffs the interface connected to the internet<br>
+(this may not need to be promiscuous mode depending on the platform).<br>
+Each time interval, it counts how many bytes your download took, and how<br>
+many bytes everything else took. Your download app has to cooperate when<br>
+told by the monitor to slow down.<br>
+<p>
+Start the download at say 90% bandwidth, then as your monitor sees<br>
+"other" taking a percent of bandwidth, you take that away from the<br>
+download. If the monitor sees other take less, it then gives it to<br>
+download. You would want some sort of damping on that behaviour. Always<br>
+leave a cushion so there is room for other to try and get bandwidth in<br>
+the first place.<br>
+<p>
+<p>
+If you cannot sniff the interface, your monitor instead makes SNMP<br>
+queries of its MIB for the byte counts. Start with the download at 90%<br>
+or something. If the bandwidth util shows 91%, tell the download to take<br>
+89. Next time it goes to 91, take another percent from download. If the<br>
+byte count goes to your download apps allocation, that implies "other"<br>
+is quiet and you can tell download to take more bandwidth.<br>
+<p>
+<i>&gt; b) is more in the area of this mailing list, i.e. stack performance, but I</i><br>
+<i>&gt; hoped that somebody would have done this type of thing before and could give</i><br>
+<i>&gt; me some pointers.</i><br>
+<p>
+Are you asking how to measure stack performance, or are you looking for<br>
+figures on stack performance?<br>
+<p>
+rick jones<br>
+<p>
+<pre>
+-- 
+these opinions are mine, all mine; HP might not want them anyway... :)
+feel free to email, or post, but please do not do both...
+my email address is raj in the cup.hp.com domain...
+</pre>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0192.html">Rick Jones: "Re: large buffer pb with netperf ???"</a>
+<li> <b>Previous message:</b> <a href="0190.html">Julien Godard: "large buffer pb with netperf ???"</a>
+<li> <b>Maybe in reply to:</b> <a href="0189.html">Dave Barr: "tcp downloads and bandwidth utilization"</a>
+<!-- nextthread="start" -->
+</ul>

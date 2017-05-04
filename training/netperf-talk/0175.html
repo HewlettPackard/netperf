@@ -1,0 +1,93 @@
+<!-- received="Mon May 17 15:24:31 1999 PDT" -->
+<!-- sent="Mon, 17 May 1999 15:25:31 -0700" -->
+<!-- name="Rick Jones" -->
+<!-- email="raj@cup.hp.com" -->
+<!-- subject="Re: HPUX to Linux problems" -->
+<!-- id="3740975B.A84795E5@cup.hp.com" -->
+<!-- inreplyto="HPUX to Linux problems" -->
+<title>Archive of the netperf-talk mailing list: Re: HPUX to Linux problems</title>
+<h1>Re: HPUX to Linux problems</h1>
+Rick Jones (<i>raj@cup.hp.com</i>)<br>
+<i>Mon, 17 May 1999 15:25:31 -0700</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#175">[ date ]</a><a href="index.html#175">[ thread ]</a><a href="subject.html#175">[ subject ]</a><a href="author.html#175">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0176.html">sal gal: "help me!!"</a>
+<li> <b>Previous message:</b> <a href="0174.html">Michael J. Rensing: "Re: HPUX to Linux problems"</a>
+<li> <b>Maybe in reply to:</b> <a href="0172.html">Michael J. Rensing: "HPUX to Linux problems"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+Michael J. Rensing wrote:<br>
+<i>&gt; </i><br>
+<i>&gt; How do I check the duplex settings? (Even on an HP?) Linux is supposed</i><br>
+<i>&gt; to auto-negotiate, but I don't know how to tell what was negotiated.</i><br>
+<i>&gt; Do you know how to specify the connection (no auto-negotiation?) in</i><br>
+<i>&gt; Linux? I'm afraid I'm a novice at this, but I don't know how else to</i><br>
+<i>&gt; get started...</i><br>
+<p>
+Well, the HP is easy, lanadmin when pointed at the right card will tell<br>
+you the duplex setting - in the description at least. You may be able to<br>
+use -x or -X (I forget which is set and which is get) to retrieve the<br>
+settings directly.<br>
+<p>
+<i>&gt; There don't appear to be dropped/retransmitted packets, but the Linux</i><br>
+<p>
+On the recieving end, if the sender's netstat output is, um, sparse, you<br>
+can look for out of order receives.<br>
+<p>
+<i>&gt; box shows many errors on the ethernet port. dmesg give a stream of</i><br>
+<i>&gt; errors:</i><br>
+<i>&gt; eth0: Transmit error, Tx status register 82.</i><br>
+<p>
+Yep, that looks like bogus duplex settings. Try this link:<br>
+<p>
+   The simplest way to force desired mode, assuming you are using the <br>
+   driver as a module is to set the appropriate module options when<br>
+   you load it (or add the options to /etc/conf.modules)<br>
+   <a href="http://cesdis.gsfc.nasa.gov/linux/misc/modules.html">http://cesdis.gsfc.nasa.gov/linux/misc/modules.html</a><br>
+<p>
+rick<br>
+<p>
+<i>&gt; Michael</i><br>
+<i>&gt; ------------------------------------------------------------</i><br>
+<i>&gt; Dr. Michael J. Rensing | <a href="http://wwwhep.phys.uvic.ca/~michael">http://wwwhep.phys.uvic.ca/~michael</a></i><br>
+<i>&gt;                        |             <a href="mailto:mrensing@uvic.ca">mailto:mrensing@uvic.ca</a></i><br>
+<i>&gt; Physics and Astronomy  |                 phone: 250-721-7741</i><br>
+<i>&gt; University of Victoria |                   fax: 250-721-7752</i><br>
+<i>&gt; ------------------------------------------------------------</i><br>
+<i>&gt; </i><br>
+<i>&gt; On Mon, 17 May 1999, Rick Jones wrote:</i><br>
+<i>&gt; </i><br>
+<i>&gt; &gt;make certain that your duplex settings are good - that can be a common</i><br>
+<i>&gt; &gt;cause of sub-megabit per second transfer rates and something I just</i><br>
+<i>&gt; &gt;recently ran into with a linux system - it did not autonegotiate with</i><br>
+<i>&gt; &gt;the switch.</i><br>
+<i>&gt; &gt;</i><br>
+<i>&gt; &gt;i also like to look for lost/retransmitted segments. i'm not sure how</i><br>
+<i>&gt; &gt;well linux's netstat works here, last I looked, its output was rather,</i><br>
+<i>&gt; &gt;um, thin...</i><br>
+<i>&gt; &gt;</i><br>
+<i>&gt; &gt;rick jones</i><br>
+<i>&gt; &gt;--</i><br>
+<i>&gt; &gt;these opinions are mine, all mine; HP might not want them anyway... :)</i><br>
+<i>&gt; &gt;feel free to email, or post, but please do not do both...</i><br>
+<i>&gt; &gt;my email address is raj in the cup.hp.com domain...</i><br>
+<i>&gt; &gt;</i><br>
+<p>
+<pre>
+-- 
+these opinions are mine, all mine; HP might not want them anyway... :)
+feel free to email, or post, but please do not do both...
+my email address is raj in the cup.hp.com domain...
+</pre>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0176.html">sal gal: "help me!!"</a>
+<li> <b>Previous message:</b> <a href="0174.html">Michael J. Rensing: "Re: HPUX to Linux problems"</a>
+<li> <b>Maybe in reply to:</b> <a href="0172.html">Michael J. Rensing: "HPUX to Linux problems"</a>
+<!-- nextthread="start" -->
+</ul>

@@ -1,0 +1,69 @@
+<!-- received="Tue Jun 23 14:21:44 1998 PDT" -->
+<!-- sent="Tue, 23 Jun 1998 14:31:04 -0700" -->
+<!-- name="Rick Jones" -->
+<!-- email="raj@cup.hp.com" -->
+<!-- subject="Re: Different throughputs in two directions" -->
+<!-- id="35901E98.BA3E0AA1@cup.hp.com" -->
+<!-- inreplyto="Different throughputs in two directions" -->
+<title>Archive of the netperf-talk mailing list: Re: Different throughputs in two directions</title>
+<h1>Re: Different throughputs in two directions</h1>
+Rick Jones (<i>raj@cup.hp.com</i>)<br>
+<i>Tue, 23 Jun 1998 14:31:04 -0700</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#52">[ date ]</a><a href="index.html#52">[ thread ]</a><a href="subject.html#52">[ subject ]</a><a href="author.html#52">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0053.html">Jeffrey B. Ostermiller: "WIndows NT"</a>
+<li> <b>Previous message:</b> <a href="0051.html">Edwin Law: "Different throughputs in two directions"</a>
+<li> <b>Maybe in reply to:</b> <a href="0051.html">Edwin Law: "Different throughputs in two directions"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0061.html">Edwin Law: "Throughput deadlock"</a>
+</ul>
+<!-- body="start" -->
+Edwin Law wrote:<br>
+<i>&gt; </i><br>
+<i>&gt; Hi,</i><br>
+<i>&gt;     I wonder if anyone has an explanation why I sometimes get different</i><br>
+<i>&gt; throughputs of data transfer in the two directions? For example, here</i><br>
+<i>&gt; are some average throughputs I got from the FTP program on the Sun's.</i><br>
+<i>&gt; Both the server and client are using the same socket buffer size and</i><br>
+<i>&gt; application data buffer size. No file cache was present. The results are</i><br>
+<i>&gt; significantly different for the smaller files.</i><br>
+<i>&gt; </i><br>
+<i>&gt; File size       (get)           (put)</i><br>
+<i>&gt; 5120            0.763618        2.57051</i><br>
+<i>&gt; 51200           4.10513         3.48977</i><br>
+<i>&gt; 512000          7.06257         7.40242</i><br>
+<i>&gt; 5242880         8.44075         8.52563</i><br>
+<i>&gt; 52428800        8.45311         8.51249</i><br>
+<p>
+There are differences in when the timing starts in FTP get versus put,<br>
+wich means that for small transfers, there can be a big difference in<br>
+the measured times. Also, different systems can have different socket<br>
+buffer sizes, which can affect perforamnce differently depending on<br>
+whether the large socket buffer is the one sending or receiving.<br>
+<p>
+<i>&gt; Should Netperf also include some kind of "server's side" timing, like</i><br>
+<i>&gt; TTCP does?</i><br>
+<p>
+I think the timing should be relative to the system sending the data,<br>
+and it should include the time it takes to ensure that all the data has<br>
+gotten to the other side (hence the waiting for the two shutdwon calls).<br>
+<p>
+rick jones<br>
+<pre>
+-- 
+these opinions are mine, all mine; HP might not want them anyway... :)
+feel free to email, or post, but please do not do both...
+my email address is raj in the cup.hp.com domain...
+</pre>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0053.html">Jeffrey B. Ostermiller: "WIndows NT"</a>
+<li> <b>Previous message:</b> <a href="0051.html">Edwin Law: "Different throughputs in two directions"</a>
+<li> <b>Maybe in reply to:</b> <a href="0051.html">Edwin Law: "Different throughputs in two directions"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0061.html">Edwin Law: "Throughput deadlock"</a>
+</ul>

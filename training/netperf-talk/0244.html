@@ -1,0 +1,154 @@
+<!-- received="Tue Oct 12 09:46:39 1999 PDT" -->
+<!-- sent="Tue, 12 Oct 1999 09:51:12 -0700" -->
+<!-- name="Rick Jones" -->
+<!-- email="raj@cup.hp.com" -->
+<!-- subject="[Fwd: Netperf-NT Workstation]" -->
+<!-- id="38036700.95287323@cup.hp.com" -->
+<!-- inreplyto="" -->
+<title>Archive of the netperf-talk mailing list: [Fwd: Netperf-NT Workstation]</title>
+<h1>[Fwd: Netperf-NT Workstation]</h1>
+Rick Jones (<i>raj@cup.hp.com</i>)<br>
+<i>Tue, 12 Oct 1999 09:51:12 -0700</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#244">[ date ]</a><a href="index.html#244">[ thread ]</a><a href="subject.html#244">[ subject ]</a><a href="author.html#244">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0245.html">Ian Heavens: "netperf on QNX?"</a>
+<li> <b>Previous message:</b> <a href="0243.html">Rick Jones: "Re: Question about TCP_STREAM"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+This is a multi-part message in MIME format.<br>
+--------------4A626787DE90F700D7AD5FA6<br>
+Content-Type: text/plain; charset=us-ascii<br>
+Content-Transfer-Encoding: 7bit<br>
+<p>
+<p>
+I'm afraid I've not the time to work on this right now, but if anyone<br>
+else is interested....<br>
+<p>
+rick<br>
+<p>
+<pre>
+--
+these opinions are mine, all mine; HP might not want them anyway... :)
+feel free to email, or post, but please do not do both...
+my email address is raj in the cup.hp.com domain...
+--------------4A626787DE90F700D7AD5FA6
+Content-Type: message/rfc822
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+<p>
+Received: from onet2.cup.hp.com (onet2.cup.hp.com [15.75.208.47]) by loiter.cup.hp.com with ESMTP (8.8.6/8.7.3 TIS Messaging 5.0) id FAA17378 for &lt;raj@loiter.cup.hp.com&gt;; Mon, 11 Oct 1999 05:28:58 -0700 (PDT)
+Received: from www.eng.uct.ac.za (www.eng.uct.ac.za [137.158.135.175])
+	by onet2.cup.hp.com (Postfix) with ESMTP id 62107B2F
+	for &lt;raj@cup.hp.com&gt;; Mon, 11 Oct 1999 05:28:34 -0700 (PDT)
+Received: from mail.uct.ac.za (satgroup.ee.uct.ac.za [137.158.129.172])
+	by www.eng.uct.ac.za (8.9.3/8.9.2) with ESMTP id OAA66683
+	for &lt;raj@cup.hp.com&gt;; Mon, 11 Oct 1999 14:25:47 +0200 (SAT)
+	(envelope-from tkxsem001@mail.uct.ac.za)
+Message-ID: &lt;3801D6EA.BB8468F4@mail.uct.ac.za&gt;
+Date: Mon, 11 Oct 1999 14:24:10 +0200
+From: Semere Tekie &lt;tkxsem001@mail.uct.ac.za&gt;
+Organization: University of Cape Town
+X-Mailer: Mozilla 4.61 [en] (WinNT; I)
+X-Accept-Language: en
+MIME-Version: 1.0
+To: raj@cup.hp.com
+Subject: Netperf-NT Workstation
+Content-Type: multipart/alternative;
+ boundary="------------C9FF41FB6A039461E5A8373A"
+X-Mozilla-Status2: 00000000
+<p>
+<p>
+--------------C9FF41FB6A039461E5A8373A
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+<p>
+<p>
+Hi Rick,
+<p>
+I'll make this short.....
+I'm running an NT workstation with netperf. I've installed Inetd from
+Ockham technologies. The readme file that comes with Inetd suggests the
+following:
+<p>
+Network aware programs, which do I/O over a windows socket, need to use
+the
+environment variable passed, INETD_SOCK, to obtain the socket handle
+that inetd
+has created for connecting the program to a remote user.
+Inetd sets up this environment variable to the handle of a connected
+socket
+for a program. This socket handle is inherited by a program and is
+already
+accessible. So a network aware program only needs to add code similar to
+the
+following to make the program work:
+<p>
+  sock=atoi(getenv("INETD_SOCK"));
+  recv(sock,...);
+  send(sock,...);
+<p>
+I cann't do this because I got the precompiled exe files. Is there
+another way of solving this problem? I really need netperf to perform
+some tests on a satellite internet network and don't have much time
+left, any help offered would be greately appreciated.
+<p>
+Regards
+<p>
+Semere Tekie
+University of Cape Town
+South Africa
+<p>
+--------------C9FF41FB6A039461E5A8373A
+Content-Type: text/html; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+<p>
+&lt;!doctype html public "-//w3c//dtd html 4.0 transitional//en"&gt;
+<html>
+&nbsp;
+<br>Hi Rick,
+<p>I'll make this short.....
+<br>I'm running an NT workstation with netperf. I've installed Inetd from
+Ockham technologies. The readme file that comes with Inetd suggests the
+following:<br>
+<BR>
+<br><b>Network aware programs, which do I/O over a windows socket, need
+to use the</b>
+<br><b>environment variable passed, INETD_SOCK, to obtain the socket handle
+that inetd</b>
+<br><b>has created for connecting the program to a remote user.</b>
+<br><b>Inetd sets up this environment variable to the handle of a connected
+socket</b>
+<br><b>for a program. This socket handle is inherited by a program and
+is already</b>
+<br><b>accessible. So a network aware program only needs to add code similar
+to the</b>
+<br><b>following to make the program work:</b><b></b>
+<p><b>&nbsp; sock=atoi(getenv("INETD_SOCK"));</b>
+<br><b>&nbsp; recv(sock,...);</b>
+<br><b>&nbsp; send(sock,...);</b><b></b>
+<p>I cann't do this because I got the precompiled exe files. Is there another
+way of solving this problem? I really need netperf to perform some tests
+on a satellite internet network and don't have much time left, any help
+offered would be greately appreciated.
+<p>Regards
+<p>Semere Tekie
+<br>University of Cape Town
+<br>South Africa</html>
+
+--------------C9FF41FB6A039461E5A8373A--
+
+
+
+--------------4A626787DE90F700D7AD5FA6--
+</pre>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0245.html">Ian Heavens: "netperf on QNX?"</a>
+<li> <b>Previous message:</b> <a href="0243.html">Rick Jones: "Re: Question about TCP_STREAM"</a>
+<!-- nextthread="start" -->
+</ul>

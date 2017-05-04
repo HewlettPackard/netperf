@@ -1,0 +1,62 @@
+<!-- received="Tue Nov  2 15:12:30 1999 PST" -->
+<!-- sent="Tue, 02 Nov 1999 15:17:42 -0800" -->
+<!-- name="Rick Jones" -->
+<!-- email="raj@cup.hp.com" -->
+<!-- subject="Re: Send and Recv. socket buffer sizes.." -->
+<!-- id="381F7116.76C8D19C@cup.hp.com" -->
+<!-- inreplyto="Send and Recv. socket buffer sizes.." -->
+<title>Archive of the netperf-talk mailing list: Re: Send and Recv. socket buffer sizes..</title>
+<h1>Re: Send and Recv. socket buffer sizes..</h1>
+Rick Jones (<i>raj@cup.hp.com</i>)<br>
+<i>Tue, 02 Nov 1999 15:17:42 -0800</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#250">[ date ]</a><a href="index.html#250">[ thread ]</a><a href="subject.html#250">[ subject ]</a><a href="author.html#250">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0251.html">Ivy Wan: "Ent.Explorer"</a>
+<li> <b>Previous message:</b> <a href="0249.html">Ganesh Ramasivan: "Send and Recv. socket buffer sizes.."</a>
+<li> <b>Maybe in reply to:</b> <a href="0249.html">Ganesh Ramasivan: "Send and Recv. socket buffer sizes.."</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+Ganesh Ramasivan wrote:<br>
+<i>&gt; </i><br>
+<i>&gt; Hello,</i><br>
+<i>&gt; </i><br>
+<i>&gt; I don't understand why there is a difference between the send and</i><br>
+<i>&gt; receive socket buffer sizes when using netperf.</i><br>
+<i>&gt; </i><br>
+<i>&gt; Recv Socket Size (bytes) Send Socket Size (bytes)</i><br>
+<i>&gt; 16616                                16192</i><br>
+<i>&gt; 33232                                32768</i><br>
+<i>&gt; 65928                                65536</i><br>
+<i>&gt; 131320                              131072</i><br>
+<i>&gt; 262640                              262144</i><br>
+<i>&gt;</i><br>
+<i>&gt; I am using netperf over myrinet which has a MTU of 3752 bytes.</i><br>
+<p>
+I think you will find that the UDP tests may pad the recv socket buffer<br>
+so there is enough space for the addressing information returned through<br>
+recvfrom().<br>
+<p>
+What tests are you running? It would help in the explanation if you<br>
+could include some actual netperf output. Please include the command<br>
+lines so we can see if you are also setting socket buffer sizes<br>
+explicitly, or accepting defaults and such.<br>
+<p>
+rick jones<br>
+<pre>
+-- 
+these opinions are mine, all mine; HP might not want them anyway... :)
+feel free to email, or post, but please do not do both...
+my email address is raj in the cup.hp.com domain...
+</pre>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0251.html">Ivy Wan: "Ent.Explorer"</a>
+<li> <b>Previous message:</b> <a href="0249.html">Ganesh Ramasivan: "Send and Recv. socket buffer sizes.."</a>
+<li> <b>Maybe in reply to:</b> <a href="0249.html">Ganesh Ramasivan: "Send and Recv. socket buffer sizes.."</a>
+<!-- nextthread="start" -->
+</ul>

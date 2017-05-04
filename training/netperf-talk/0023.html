@@ -1,0 +1,54 @@
+<!-- received="Fri Mar 27 05:24:18 1998 PST" -->
+<!-- sent="Fri, 27 Mar 1998 14:31:02 +0100" -->
+<!-- name="sthaug@nethelp.no" -->
+<!-- email="sthaug@nethelp.no" -->
+<!-- subject="Re: Pentium hardware and 100 Mbps Ethernet" -->
+<!-- id="5626.891005462@verdi.nethelp.no" -->
+<!-- inreplyto="Fri, 27 Mar 1998 13:10:07 GMT"" -->
+<title>Archive of the netperf-talk mailing list: Re: Pentium hardware and 100 Mbps Ethernet</title>
+<h1>Re: Pentium hardware and 100 Mbps Ethernet</h1>
+<i>sthaug@nethelp.no</i><br>
+<i>Fri, 27 Mar 1998 14:31:02 +0100</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#23">[ date ]</a><a href="index.html#23">[ thread ]</a><a href="subject.html#23">[ subject ]</a><a href="author.html#23">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0024.html">Ian Heavens: "Pentium and 100 Mb Ethernet"</a>
+<li> <b>Previous message:</b> <a href="0022.html">Kevin M. Joyce: "Re: Asymmetric TCP/ATM throughputs between client and server"</a>
+<li> <b>In reply to:</b> <a href="0021.html">Ian Heavens: "Pentium hardware and 100 Mbps Ethernet"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+<i>&gt; I'm looking for netperf measurements on Pentium hardware and 100 Mbps</i><br>
+<i>&gt; Ethernet, because it should be possible to do some direct comparisons</i><br>
+<i>&gt; of different stacks (e.g. FreeBSD TCP/IP, Linux TCP/IP, QNX TCP/IP),</i><br>
+<i>&gt; but I can't find anything in the database.  I've heard of figures</i><br>
+<i>&gt; floating around (60 Mbps for FreeBSD - we've measured this anyway);</i><br>
+<i>&gt; it would be nice to get some solid results.</i><br>
+<p>
+Browse the results for "Fast Ethernet" network type, and you should<br>
+find at least FreeBSD (I submitted results :-).<br>
+<p>
+The results for FreeBSD-2.2 are essentially:<br>
+<p>
+- A P-133 can *receive* a full 100 Mbps stream, but can't quite send<br>
+it.<br>
+<p>
+- A PPro-200 can send a full 100 Mbps stream and still have ample CPU<br>
+to spare.<br>
+<p>
+Note that the measurements of mine that are in the database are based<br>
+on the defaults, which has with RFC 1323 *and* RFC 1644 options turned<br>
+on. This gives you a payload of 1440 bytes in each Ethernet frame, not<br>
+1460.<br>
+<p>
+Steinar Haug, Nethelp consulting, sthaug@nethelp.no<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0024.html">Ian Heavens: "Pentium and 100 Mb Ethernet"</a>
+<li> <b>Previous message:</b> <a href="0022.html">Kevin M. Joyce: "Re: Asymmetric TCP/ATM throughputs between client and server"</a>
+<li> <b>In reply to:</b> <a href="0021.html">Ian Heavens: "Pentium hardware and 100 Mbps Ethernet"</a>
+<!-- nextthread="start" -->
+</ul>

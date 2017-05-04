@@ -1,0 +1,62 @@
+<!-- received="Mon May 17 14:14:13 1999 PDT" -->
+<!-- sent="Mon, 17 May 1999 14:12:29 -0700 (PDT)" -->
+<!-- name="Michael J. Rensing" -->
+<!-- email="mrmail@pp.phys.uvic.ca" -->
+<!-- subject="HPUX to Linux problems" -->
+<!-- id="Pine.HPX.4.05.9905171353050.354-100000@piranha.phys.uvic.ca" -->
+<!-- inreplyto="37405E0E.4DC445FA@cup.hp.com" -->
+<title>Archive of the netperf-talk mailing list: HPUX to Linux problems</title>
+<h1>HPUX to Linux problems</h1>
+Michael J. Rensing (<i>mrmail@pp.phys.uvic.ca</i>)<br>
+<i>Mon, 17 May 1999 14:12:29 -0700 (PDT)</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#172">[ date ]</a><a href="index.html#172">[ thread ]</a><a href="subject.html#172">[ subject ]</a><a href="author.html#172">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0173.html">Rick Jones: "Re: HPUX to Linux problems"</a>
+<li> <b>Previous message:</b> <a href="0171.html">trinity@hk.net: "JobOK Promotion Information &amp; Press Release"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0173.html">Rick Jones: "Re: HPUX to Linux problems"</a>
+</ul>
+<!-- body="start" -->
+Hi everyone,<br>
+<p>
+I've compiled netperf on a couple of HPUX 10.20 boxes, and on a Linux<br>
+box. I get what look like completely ridiculous numbers for tests to<br>
+the Linux box from the HP box on a 100MB/s switched connection, but<br>
+realistic numbers from the HP to HP tests. I'll try and summarize<br>
+briefly in a table. HP-1 and Linux are connected to a switched network<br>
+at 100MB/s, and HP-2 is connected at 10MB/s.<br>
+<p>
+Client		Server		Connection	Measured<br>
+(netperf)	(netserver)	(theoretical)	10^6bits/sec<br>
+HP-1		HP-2		10^6bits/sec	6.84<br>
+HP-2		HP-1            10^6bits/sec    6.16<br>
+HP-1		Linux		100^6bits/sec	0.19	??????<br>
+Linux		HP-1	        100^6bits/sec   no response in &gt;2min.<br>
+HP-2		Linux		10^6bits/sec	6.20<br>
+Linux 		HP-2		10^6bits/sec    0.41	??????<br>
+<p>
+If I try to run tcp_stream_script from Linux to HP-1, HP-1 doesn't<br>
+finish any of the tests within the confidence intervals in 60 seconds,<br>
+and runs for an excessively long time.<br>
+<p>
+Any ideas?<br>
+<p>
+<p>
+Michael<br>
+------------------------------------------------------------<br>
+Dr. Michael J. Rensing | <a href="http://wwwhep.phys.uvic.ca/~michael">http://wwwhep.phys.uvic.ca/~michael</a><br>
+<i>                       |             <a href="mailto:mrensing@uvic.ca">mailto:mrensing@uvic.ca</a></i><br>
+Physics and Astronomy  |                 phone: 250-721-7741<br>
+University of Victoria |                   fax: 250-721-7752<br>
+------------------------------------------------------------<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0173.html">Rick Jones: "Re: HPUX to Linux problems"</a>
+<li> <b>Previous message:</b> <a href="0171.html">trinity@hk.net: "JobOK Promotion Information &amp; Press Release"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0173.html">Rick Jones: "Re: HPUX to Linux problems"</a>
+</ul>

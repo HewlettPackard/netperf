@@ -1,0 +1,56 @@
+<!-- received="Wed Mar 18 09:54:37 1998 PST" -->
+<!-- sent="Wed, 18 Mar 1998 12:59:57 -0500" -->
+<!-- name="Steven P. Woolet" -->
+<!-- email="woolet@raleigh.ibm.com" -->
+<!-- subject="Utilizations for NT on SMP machine" -->
+<!-- id="35100B9D.5E1EDC2D@raleigh.ibm.com" -->
+<!-- inreplyto="" -->
+<title>Archive of the netperf-talk mailing list: Utilizations for NT on SMP machine</title>
+<h1>Utilizations for NT on SMP machine</h1>
+Steven P. Woolet (<i>woolet@raleigh.ibm.com</i>)<br>
+<i>Wed, 18 Mar 1998 12:59:57 -0500</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#8">[ date ]</a><a href="index.html#8">[ thread ]</a><a href="subject.html#8">[ subject ]</a><a href="author.html#8">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0009.html">Rick Jones: "Re: Utilizations for NT on SMP machine"</a>
+<li> <b>Previous message:</b> <a href="0007.html">Rick Jones: "Re: HELP!!! Which sends and which receives"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0009.html">Rick Jones: "Re: Utilizations for NT on SMP machine"</a>
+</ul>
+<!-- body="start" -->
+I'm running on two dual-processor SMP machines.  I didn't realize that<br>
+there was a parameter to indicate number of processors, so the first set<br>
+of runs assumed the default of 1.  Utilizations for the local machine<br>
+appeared to "bounce" around quite a bit between successive runs, but the<br>
+remote utilization appeared very consistent.<br>
+<p>
+After realizing that I needed to tell netperf that there were 2<br>
+processors, I reran the LOC_CPU and REM_CPU tests using the -n<br>
+parameter.  I typically run these tests 5 times, just to see if<br>
+everything is stable.  The runs on the local machine gave much lower<br>
+numbers than those without the -n parameter and there was quite a bit of<br>
+variation between the runs (the numbers dropped from values in the<br>
+242000 to 243000 range without the -n to values in the 203000 to 205000<br>
+range with the -n parameter).  The remote machine numbers remained at<br>
+the same level as those without the -n parameter and there was very<br>
+little variation between the runs (numbers in the 242000 range with<br>
+variation over all 5 samples of only 30).<br>
+<p>
+This brings up my questions:  Does netserver need to be started with the<br>
+-n parameter to get the remote machine to know that it has<br>
+multiprocessors?  How does the -n parameter to netperf indicate whether<br>
+there are MP's on the local machine versus the remote machine (i.e. what<br>
+if the local machine is a uniprocessor but the remote machine is an<br>
+SMP)?<br>
+<p>
+Steve Woolet<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0009.html">Rick Jones: "Re: Utilizations for NT on SMP machine"</a>
+<li> <b>Previous message:</b> <a href="0007.html">Rick Jones: "Re: HELP!!! Which sends and which receives"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0009.html">Rick Jones: "Re: Utilizations for NT on SMP machine"</a>
+</ul>

@@ -1,0 +1,46 @@
+<!-- received="Fri Mar 20 10:34:06 1998 PST" -->
+<!-- sent="Fri, 20 Mar 98 10:38:40 PST" -->
+<!-- name="Bob Felderman" -->
+<!-- email="feldy@myri.com" -->
+<!-- subject="Re: VxWorks version of Netperf" -->
+<!-- id="9803201838.AA12501@myri.com" -->
+<!-- inreplyto="VxWorks version of Netperf" -->
+<title>Archive of the netperf-talk mailing list: Re: VxWorks version of Netperf</title>
+<h1>Re: VxWorks version of Netperf</h1>
+Bob Felderman (<i>feldy@myri.com</i>)<br>
+<i>Fri, 20 Mar 98 10:38:40 PST</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#15">[ date ]</a><a href="index.html#15">[ thread ]</a><a href="subject.html#15">[ subject ]</a><a href="author.html#15">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0016.html">Rick Jones: "Re: VxWorks version of Netperf"</a>
+<li> <b>Previous message:</b> <a href="0014.html">Guy McIlroy: "Re: VxWorks version of Netperf"</a>
+<li> <b>Maybe in reply to:</b> <a href="0012.html">James K. Yun: "VxWorks version of Netperf"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0016.html">Rick Jones: "Re: VxWorks version of Netperf"</a>
+</ul>
+<!-- body="start" -->
+=&gt; &gt; Also, does anyone have any opinion on whether it would be possible to<br>
+=&gt; &gt; successfully port netperf to VxWorks within a reasonble amount of time<br>
+=&gt; &gt; (i.e., &lt; 1 month)?<br>
+=&gt; <br>
+=&gt; If VxWorks has standard BSD socket calls and doesn't do funky stuff<br>
+=&gt; with data structure padding and alignment (compared to most 32-bit<br>
+=&gt; machines) the current stable netperf (2.1pl3?) should be "easy to<br>
+=&gt; port."<br>
+<p>
+<p>
+Yes and no. We looked at it and gave up after a while.<br>
+Certainly it has sockets, but the forking that is done <br>
+by the netserver is not easily supported. You could write<br>
+a netserver that just handles connections on a fixed socket.<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0016.html">Rick Jones: "Re: VxWorks version of Netperf"</a>
+<li> <b>Previous message:</b> <a href="0014.html">Guy McIlroy: "Re: VxWorks version of Netperf"</a>
+<li> <b>Maybe in reply to:</b> <a href="0012.html">James K. Yun: "VxWorks version of Netperf"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0016.html">Rick Jones: "Re: VxWorks version of Netperf"</a>
+</ul>

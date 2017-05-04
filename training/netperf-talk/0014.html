@@ -1,0 +1,55 @@
+<!-- received="Fri Mar 20 10:34:04 1998 PST" -->
+<!-- sent="Fri, 20 Mar 1998 10:33:00 -0800" -->
+<!-- name="Guy McIlroy" -->
+<!-- email="guy@apple.com" -->
+<!-- subject="Re: VxWorks version of Netperf" -->
+<!-- id="199803201832.KAA18968@scv1.apple.com" -->
+<!-- inreplyto="VxWorks version of Netperf" -->
+<title>Archive of the netperf-talk mailing list: Re: VxWorks version of Netperf</title>
+<h1>Re: VxWorks version of Netperf</h1>
+Guy McIlroy (<i>guy@apple.com</i>)<br>
+<i>Fri, 20 Mar 1998 10:33:00 -0800</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#14">[ date ]</a><a href="index.html#14">[ thread ]</a><a href="subject.html#14">[ subject ]</a><a href="author.html#14">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0015.html">Bob Felderman: "Re: VxWorks version of Netperf"</a>
+<li> <b>Previous message:</b> <a href="0013.html">Gregory P. Smith: "Re: VxWorks version of Netperf"</a>
+<li> <b>Maybe in reply to:</b> <a href="0012.html">James K. Yun: "VxWorks version of Netperf"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0015.html">Bob Felderman: "Re: VxWorks version of Netperf"</a>
+</ul>
+<!-- body="start" -->
+<i>&gt;Has anyone ported or attempted to port Netperf to VxWorks?  If so, I would</i><br>
+<i>&gt;appreciate information as to how successful the port has been.  Even if the</i><br>
+<i>&gt;port has not been successful, I would still like to receive information</i><br>
+<i>&gt;concerning the problems that were encountered during the porting effort.</i><br>
+<i>&gt;</i><br>
+<i>&gt;Also, does anyone have any opinion on whether it would be possible to</i><br>
+<i>&gt;successfully port netperf to VxWorks within a reasonble amount of time</i><br>
+<i>&gt;(i.e., &lt; 1 month)?</i><br>
+<p>
+We (Newton Group) have ported the netperf client to the Newton O/S - a<br>
+small, threaded, resource constrained, system (deceased). Given that the<br>
+Newton o/s dosn't have a file system or any system level (c++) user<br>
+interface APIs and it has a set of entirely unique system and TCP/IP APIs,<br>
+it went quite well - it took about two-three man weeks. I would have thought<br>
+that the client could be ported in less time &amp; less hassle for VxWorks.<br>
+<p>
+We found it very useful in driving through-put issues and assessing<br>
+bottle-necks - we got up to the blistering rate of ~1Mbit/s using 10Mbit<br>
+PCMCIA ethernet!! - mostly limited by bus band-width.<br>
+<p>
+guy =:)<br>
+"It's never too late. When it's over, you get to tell the story" --<br>
+Garrison Keillor <br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0015.html">Bob Felderman: "Re: VxWorks version of Netperf"</a>
+<li> <b>Previous message:</b> <a href="0013.html">Gregory P. Smith: "Re: VxWorks version of Netperf"</a>
+<li> <b>Maybe in reply to:</b> <a href="0012.html">James K. Yun: "VxWorks version of Netperf"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0015.html">Bob Felderman: "Re: VxWorks version of Netperf"</a>
+</ul>

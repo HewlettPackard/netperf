@@ -1,0 +1,96 @@
+<HTML>
+<HEAD>
+<TITLE>
+What's New With Netperf
+</TITLE>
+<P>
+<H1>
+What's New With Netperf
+</H1>  
+<P>
+Checking this area from time to time will tell you what is new with
+the netperf benchmark. Announcements of new versions, and what has
+changed, as well as other interesting netperf news can be found here.
+</HEAD>
+<BODY>
+<hr>
+<P>
+<H2>The latest stable revision of netperf2 is 
+<A HREF="ftp://ftp.netperf.org/netperf/netperf-2.4.1.tar.gz">
+2.4.1
+</A>
+</H2>
+</P>
+
+<H2>
+October 18, 2005
+</H2>
+Netperf.org has moved to a new system.  This has enabled a multitude
+of changes:
+
+A new <A HREF="ftp://ftp.netperf.org/netperf/">FTP download</A> location,
+<A HREF="http://www.netperf.org/svn/netperf2"> subversion</A> repository,
+and a new mailing list
+<A HREF="http://www.netperf.org/pipermail/netperf-talk/">archive</A>.
+
+<H2>
+March 17, 2005 - netperf is now using a configure script, has merged
+IPv4 and IPv6 tests and a host of other changes.  See the release notes
+file for more.
+</H2>
+
+<H2>
+The netperf benchmark includes support for OpenVMS, and support for Linux
+sendfile().
+</H2>
+<P>
+February 14, 2003 - Netperf now includes evolving support for OpenVMS and
+support for the Linux flavor of sendfile().  Additionally, fixes to set 
+SO_REUSEADDR on the netserver listen socket, fixes for IPv6, and other
+sundries are included.
+</P>
+<H2>
+The netperf benchmark includes the TCP_MAERTS test and IPv6
+</H2>
+<P>
+July 11, 2002 - Netperf now includes a TCP_MAERTS test that has data 
+flowing from the netserver to the netperf - this is opposite of the
+classic TCP_STREAM test. In theory, IPv6 support is integrated :) 
+Also -DUSE_KSTAT for Solaris CPU util, and -DUSE_PROC_STAT for Linux.
+</P>
+<H2>
+The netperf-talk mailing list now has an online archive
+</H2>
+<P>
+March 12, 1996 - The netperf-talk mailing list now has an online
+<A HREF="/netperf/training/netperf-talk/index.html">
+archive
+</A>
+of discussions in netperf-talk. This archive will update in
+near real-time. More information can be found in the
+<A HREF="/netperf/training/netperf-talk/netperf-talk-archive.html">
+discription
+</A>
+of the archive.
+
+<H2>Netperf 2.1 is Released</H2>
+<P>
+February 15, 1995 - Thanks to the assistance of many folks on the net,
+revision 2.1 of netperf has released. A copy of the Release_Notes can
+be found in the new netperf-talk
+<A HREF="/netperf/training/netperf-talk/index.html">
+archive
+</A>
+.
+</P>
+<HR>
+
+<hr>
+If you encounter any problems, please feel free to provide 
+<A HREF="mailto:netperf-feedback@netperf.org">feedback</A>.
+<P>
+<A HREF="/netperf/NetperfPage.html">
+<IMG ALIGN="middle" SRC="/netperf/images/back.gif" atl="">Netperf Homepage
+</A>.
+</BODY>
+</HTML>

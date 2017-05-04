@@ -1,0 +1,56 @@
+<!-- received="Thu Jul 15 13:46:32 1999 PDT" -->
+<!-- sent="Thu, 15 Jul 1999 13:49:18 -0700" -->
+<!-- name="Rick Jones" -->
+<!-- email="raj@cup.hp.com" -->
+<!-- subject="Re: TCP window size" -->
+<!-- id="378E494E.7CE8DF8C@cup.hp.com" -->
+<!-- inreplyto="TCP window size" -->
+<title>Archive of the netperf-talk mailing list: Re: TCP window size</title>
+<h1>Re: TCP window size</h1>
+Rick Jones (<i>raj@cup.hp.com</i>)<br>
+<i>Thu, 15 Jul 1999 13:49:18 -0700</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#209">[ date ]</a><a href="index.html#209">[ thread ]</a><a href="subject.html#209">[ subject ]</a><a href="author.html#209">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0210.html">Jose Weyne Nunes Marcelino: "Re: TCP window size"</a>
+<li> <b>Previous message:</b> <a href="0208.html">Jose Weyne Nunes Marcelino: "Re: TCP window size"</a>
+<li> <b>Maybe in reply to:</b> <a href="0204.html">Jose Weyne Nunes Marcelino: "TCP window size"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0210.html">Jose Weyne Nunes Marcelino: "Re: TCP window size"</a>
+</ul>
+<!-- body="start" -->
+Jose Weyne Nunes Marcelino wrote:<br>
+<i>&gt; </i><br>
+<i>&gt; &gt;       Hi, I'm doing tests of performance and the plataform that I use is</i><br>
+<i>&gt; &gt; Solaris 7. The Solaris TCP's driver support window size &gt; 64 kbytes,</i><br>
+<i>&gt; &gt; I set the netperf to buffer size &gt; 64 kbytes but the command snoop show</i><br>
+<i>&gt; &gt; always  window size &gt;= 64 kbytes. Why?</i><br>
+<i>&gt; </i><br>
+<i>&gt; I'm sorry, where is't "window size &gt;= 64 kbytes" indeed is</i><br>
+<i>&gt; "window size &lt;= 64 kbytes".</i><br>
+<p>
+Does Solaris 7 have some sort of ndd variable controlling whether or not<br>
+RFC 1323 is enabled? If not, does changing (with ndd) the settings of<br>
+the tcp_xmit_hiwater_def and tcp_recv_hiwater_def have any impact?<br>
+<p>
+What options other than MAXSEG are negotiated at connection<br>
+establishment?<br>
+<p>
+rick jones<br>
+<pre>
+-- 
+these opinions are mine, all mine; HP might not want them anyway... :)
+feel free to email, or post, but please do not do both...
+my email address is raj in the cup.hp.com domain...
+</pre>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0210.html">Jose Weyne Nunes Marcelino: "Re: TCP window size"</a>
+<li> <b>Previous message:</b> <a href="0208.html">Jose Weyne Nunes Marcelino: "Re: TCP window size"</a>
+<li> <b>Maybe in reply to:</b> <a href="0204.html">Jose Weyne Nunes Marcelino: "TCP window size"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0210.html">Jose Weyne Nunes Marcelino: "Re: TCP window size"</a>
+</ul>

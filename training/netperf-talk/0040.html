@@ -1,0 +1,88 @@
+<!-- received="Mon Jun 15 09:18:31 1998 PDT" -->
+<!-- sent="Mon, 15 Jun 1998 12:20:51 -0400" -->
+<!-- name="Frimmel@larscom.com" -->
+<!-- email="Frimmel@larscom.com" -->
+<!-- subject="RE: Running Netperf Under NT and Ultra II" -->
+<!-- id="c=US%a=_%p=Larscom%l=RTP2-980615162051Z-2075@rtpnts.rtp.larscom.com" -->
+<!-- inreplyto="" -->
+<title>Archive of the netperf-talk mailing list: RE: Running Netperf Under NT and Ultra II</title>
+<h1>RE: Running Netperf Under NT and Ultra II</h1>
+<i>Frimmel@larscom.com</i><br>
+<i>Mon, 15 Jun 1998 12:20:51 -0400</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#40">[ date ]</a><a href="index.html#40">[ thread ]</a><a href="subject.html#40">[ subject ]</a><a href="author.html#40">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0041.html">Rick Jones: "Re: Running Netperf Under NT and Ultra II"</a>
+<li> <b>Previous message:</b> <a href="0039.html">Derek Casanares: "Running Netperf Under NT and Ultra II"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+Derek,<br>
+<p>
+It's been a while, but I ran netperf tests under NT with multiple<br>
+streams by creating a batch job at either end. You have to run a matched<br>
+set of netperf/netserver pairs, each on a different port. The attached<br>
+batch files should give you the idea. The start command with various<br>
+options allow coordinated startup and end of the sessions.<br>
+<p>
+   <br>
+Good luck!<br>
+<p>
+     -jf-<br>
+<p>
+<p>
+<i>&gt;----------</i><br>
+<i>&gt;From: 	Derek Casanares[SMTP:derek@alteon.com]</i><br>
+<i>&gt;Sent: 	Monday, June 15, 1998 11:58 AM</i><br>
+<i>&gt;To: 	netperf-talk@hpisrdq.cup.hp.com</i><br>
+<i>&gt;Subject: 	Running Netperf Under NT and Ultra II</i><br>
+<i>&gt;</i><br>
+<i>&gt;Help!!!</i><br>
+<i>&gt;</i><br>
+<i>&gt;How do you run multiple streams under the Windows NT environment?</i><br>
+<i>&gt;</i><br>
+<i>&gt;How can I increase the throughput numbers with netperf on an Sun Ultra II?</i><br>
+<i>&gt;</i><br>
+<i>&gt;</i><br>
+<i>&gt;	Thanks,</i><br>
+<i>&gt;</i><br>
+<i>&gt;	Derek Casanares -</i><br>
+<i>&gt;Derek Casanares</i><br>
+<i>&gt;Alteon Networks Technical Support</i><br>
+<i>&gt;6351 San Ignacio Ave.</i><br>
+<i>&gt;San Jose, CA. 95119</i><br>
+<i>&gt;email	derek@alteon.com</i><br>
+<i>&gt;phone	(408)360-5584 </i><br>
+<i>&gt;fax	(408)360-5501 </i><br>
+<i>&gt;pager	(888)983-7806</i><br>
+<i>&gt;</i><br>
+<i>&gt;</i><br>
+<i>&gt;</i><br>
+<p>
+begin 600 SERVER.BAT<br>
+&lt;;F5T&lt;V5R=F5R("UP(#$R.#8Y#0IS97)V97(-"N "<br>
+`<br>
+end<br>
+<p>
+begin 600 server2.bat<br>
+=;F5T&lt;V5R=F5R("UP(#$R.#8V#0IS97)V97(R#0H"<br>
+`<br>
+end<br>
+<p>
+begin 600 RUN2.BAT<br>
+M&lt;W1A&lt;G0O8B!N971P97)F("UP(#$R.#8U("U((#$Y,BXQ-3DN.# N,3$@+2T@<br>
+M+7,@)3$@+5,@)3$@/G)U;BXQ#0IS=&amp;%R="]B+W&lt;@;F5T&lt;&amp;5R9B M&lt;" Q,C@V<br>
+M-B M2" Q.3(N,34Y+C@P+C$Q("TM("US("4Q("U3("4Q(#YR=6XN,@T*&lt;&amp;%U<br>
+M&lt;V4@4')E&lt;W,@96YT97(@=&amp;\@=FEE=R!R97-U;'1S#0IT&gt;7!E(')U;BXQ(')U<br>
+);BXR#0H-"@T*<br>
+`<br>
+end<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0041.html">Rick Jones: "Re: Running Netperf Under NT and Ultra II"</a>
+<li> <b>Previous message:</b> <a href="0039.html">Derek Casanares: "Running Netperf Under NT and Ultra II"</a>
+<!-- nextthread="start" -->
+</ul>

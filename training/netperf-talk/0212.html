@@ -1,0 +1,135 @@
+<!-- received="Mon Jul 26 03:42:18 1999 PDT" -->
+<!-- sent="Mon, 26 Jul 1999 12:41:45 +0100" -->
+<!-- name="Federico Pelizza" -->
+<!-- email="Federico.Pelizza@ccrle.nec.de" -->
+<!-- subject="[Fwd: setsockopt() and netperf parameters]" -->
+<!-- id="379C4979.D81F5977@ccrle.nec.de" -->
+<!-- inreplyto="" -->
+<title>Archive of the netperf-talk mailing list: [Fwd: setsockopt() and netperf parameters]</title>
+<h1>[Fwd: setsockopt() and netperf parameters]</h1>
+Federico Pelizza (<i>Federico.Pelizza@ccrle.nec.de</i>)<br>
+<i>Mon, 26 Jul 1999 12:41:45 +0100</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#212">[ date ]</a><a href="index.html#212">[ thread ]</a><a href="subject.html#212">[ subject ]</a><a href="author.html#212">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0213.html">MOREAU Luc: "Netperf as coninuous performance reporting tool ?"</a>
+<li> <b>Previous message:</b> <a href="0211.html">Federico Pelizza: "setsockopt() and netperf parameters"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+This is a multi-part message in MIME format.<br>
+--------------A268BEC8006D9221474D4C73<br>
+Content-Type: text/plain; charset=us-ascii<br>
+Content-Transfer-Encoding: 7bit<br>
+<p>
+Thanks a lot for including me in the list.<br>
+<p>
+I haven't got any message till now from the list, apart from the one<br>
+from raj@... confirming me that I was included.<br>
+I suppose there's not much talk going on at the moment.<br>
+<p>
+I repost my message of friday just to try,<br>
+anyway I hope that anyone has a couple of minutes to give me an answer.<br>
+<p>
+Thanks a lot.<br>
+FEDE<br>
+--------------A268BEC8006D9221474D4C73<br>
+Content-Type: message/rfc822<br>
+Content-Transfer-Encoding: 7bit<br>
+Content-Disposition: inline<br>
+<p>
+X-Mozilla-Status2: 00000000<br>
+Message-ID: &lt;37987225.7DD8025E@ccrle.nec.de&gt;<br>
+Date: Fri, 23 Jul 1999 14:46:13 +0100<br>
+From: Federico Pelizza &lt;Federico.Pelizza@ccrle.nec.de&gt;<br>
+X-Mailer: Mozilla 4.5 [en] (WinNT; I)<br>
+X-Accept-Language: en<br>
+MIME-Version: 1.0<br>
+To: netperf-talk@netperf.cup.hp.com<br>
+Subject: setsockopt() and netperf parameters<br>
+Content-Type: text/plain; charset=us-ascii<br>
+Content-Transfer-Encoding: 7bit<br>
+<p>
+Hallo everybody,<br>
+<p>
+I'm new on the list and new to netperf.<br>
+I asked to subscribe yesterday and I'm not sure that I'm subscribed<br>
+already. I had no confirmation.<br>
+Anyway I'll check it out with this mail.<br>
+So I beg anyone who wanted to answer me, to do it personally as well as<br>
+on the list.<br>
+<p>
+I'm going to do performance tests on CLIP (classical ip) for linux.<br>
+<p>
+I had a good look at netperf and I found out that it chooses the<br>
+dimension<br>
+of the kernel socket buffer exactly like I thought.<br>
+It uses setsockopt(..,SOL_SOCKET,SO_SNDBUF/SO_RCVBUF,...) for this.<br>
+<p>
+I also had a  deep look at the man pages about setsockopt and I've seen<br>
+something interesting about one of the parameter of the function, which<br>
+is<br>
+level.<br>
+level can be equal to SOL_SOCKET as in the example here over, which<br>
+means<br>
+the buffer size that is manipulated is at socket level.<br>
+On my system this size defaults to 0 (zero).<br>
+I did a getsockopt(..,SOL_SOCKET,SO_SNDBUF/SO_RCVBUF,...) in CLIP before<br>
+bind my ATM socket.<br>
+On the other hand level can be equal to various protocols level<br>
+(SOL_ATM,SOL_AAL,SOL_UDP,SOL_TCP,SOL_IPV6,etc...)<br>
+On my system all of these sizes default to 64kb.<br>
+I did a getsockopt(..,SOL_ATM/SOL_TCP/SOL_IPV6,SO_SNDBUF/SO_RCVBUF,...)<br>
+in CLIP before bind my ATM socket.<br>
+<p>
+So my question is: has a socket various send buffers and various receive<br>
+buffers?<br>
+One really for himself (SOL_SOCKET) and furthermore one for every<br>
+protocol accessing it?<br>
+Can anyone explain me the difference between these various values of<br>
+level and their related buffers?<br>
+<p>
+I looked at the old mails archive, to the package documentation and to<br>
+the sources.<br>
+I have figured out that -s and -S cause<br>
+setsockopt(..,SOL_SOCKET,SO_SNDBUF/SO_RCVBUF,...) on the local and<br>
+remote system.<br>
+I also guess that -m and -M set up the MTU (=message size) on the local<br>
+and remote system.<br>
+Can anyone confirm or correct these assumptions of mine?<br>
+<p>
+Thanks a lot.<br>
+Ciao da FEDE<br>
+<p>
+<pre>
+-- 
+----------------------------
+Federico Pelizza
+<p>
+homepage:
+<a href="http://cclinf30.polito.it/~s76927">http://cclinf30.polito.it/~s76927</a>
+<p>
+Work:
+NEC Europe ltd. - Adenauerplatz 6 -
+69115 Heidelberg - Germany
+tel. +49-(0)6221-9051133
+fax  +49-(0)6221-9051155
+<p>
+Home:
+Rohrbacherstrasse 126 -
+69126 Heidelberg - Germany
+<p>
+Mobile phone: +49-(0)177-4714687
+--------------------------------
+<p>
+--------------A268BEC8006D9221474D4C73--
+</pre>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0213.html">MOREAU Luc: "Netperf as coninuous performance reporting tool ?"</a>
+<li> <b>Previous message:</b> <a href="0211.html">Federico Pelizza: "setsockopt() and netperf parameters"</a>
+<!-- nextthread="start" -->
+</ul>

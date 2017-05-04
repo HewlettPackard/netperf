@@ -1,0 +1,56 @@
+<!-- received="Tue Aug 11 00:48:18 1998 PDT" -->
+<!-- sent="Tue, 11 Aug 1998 17:56:55 +1000" -->
+<!-- name="Hung Tran" -->
+<!-- email="hungtran@bigpond.com" -->
+<!-- subject="Problem in compiling netperf" -->
+<!-- id="001301bdc4fd$9bd305f0$472011ac@jcc_ntlt01.rlmsystems.com.au" -->
+<!-- inreplyto="" -->
+<title>Archive of the netperf-talk mailing list: Problem in compiling netperf</title>
+<h1>Problem in compiling netperf</h1>
+Hung Tran (<i>hungtran@bigpond.com</i>)<br>
+<i>Tue, 11 Aug 1998 17:56:55 +1000</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#72">[ date ]</a><a href="index.html#72">[ thread ]</a><a href="subject.html#72">[ subject ]</a><a href="author.html#72">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0073.html">Gregory P. Smith: "Re: Problem in compiling netperf"</a>
+<li> <b>Previous message:</b> <a href="0071.html">Rick Jones: "Re: send sizes in stream_tests"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0073.html">Gregory P. Smith: "Re: Problem in compiling netperf"</a>
+</ul>
+<!-- body="start" -->
+Hello list,<br>
+<p>
+After uncompressing and untarring the source file (netperf-2_1pl3_tar.gz) I<br>
+used the command "make -f makefile" to compile netperf. There were six<br>
+errors relating to the following files:<br>
+<p>
+nettest_dlpi.c    line 3744<br>
+nettest_unix.c    line 3543<br>
+nettest_fore.c    line 3103<br>
+nettest_hippi.c    line 1987<br>
+nettest_xti.c        line 6034<br>
+nettest_ipv6.c    line 7638<br>
+<p>
+The error text reads the same for all files: "Source file does not contain<br>
+any declarations." The pointer for each error looks like this:<br>
+<p>
+#endif /* DO_DLPI */<br>
+------------------------------^<br>
+<p>
+Has anyone encountered this problem before? Any help is greatly appreciated.<br>
+<p>
+Thanks in advance,<br>
+<p>
+Hung Tran<br>
+RLM Systems - Australia<br>
+hungtran@bigpond.com<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0073.html">Gregory P. Smith: "Re: Problem in compiling netperf"</a>
+<li> <b>Previous message:</b> <a href="0071.html">Rick Jones: "Re: send sizes in stream_tests"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0073.html">Gregory P. Smith: "Re: Problem in compiling netperf"</a>
+</ul>

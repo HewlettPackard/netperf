@@ -1,0 +1,51 @@
+<!-- received="Mon Oct 26 12:21:52 1998 PST" -->
+<!-- sent="Mon, 26 Oct 1998 12:14:40 -0800" -->
+<!-- name="Gregory P. Smith" -->
+<!-- email="greg@nas.nasa.gov" -->
+<!-- subject="Re: query !!" -->
+<!-- id="199810262014.MAA15556@ryouko.nas.nasa.gov" -->
+<!-- inreplyto="20431.909327475@verdi.nethelp.no" -->
+<title>Archive of the netperf-talk mailing list: Re: query !!</title>
+<h1>Re: query !!</h1>
+Gregory P. Smith (<i>greg@nas.nasa.gov</i>)<br>
+<i>Mon, 26 Oct 1998 12:14:40 -0800</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#103">[ date ]</a><a href="index.html#103">[ thread ]</a><a href="subject.html#103">[ subject ]</a><a href="author.html#103">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0104.html">sthaug@nethelp.no: "Re: query !!"</a>
+<li> <b>Previous message:</b> <a href="0102.html">sthaug@nethelp.no: "Re: query !!"</a>
+<li> <b>In reply to:</b> <a href="0102.html">sthaug@nethelp.no: "Re: query !!"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0104.html">sthaug@nethelp.no: "Re: query !!"</a>
+</ul>
+<!-- body="start" -->
+<i>&gt; With most packet grabbers, you can't. If you have a kernel with BPF, tcpdump</i><br>
+<i>&gt; will tell you the number of dropped packets when you exit, from the BIOCGSTAT</i><br>
+<i>&gt; S</i><br>
+<i>&gt; ioctl call.</i><br>
+<p>
+Isn't that only the number of packets dropped by the BPF filter due to<br>
+the inability of it to process the packets fast enough?<br>
+<p>
+Side hypothesis: using tcpdump on the same machine that netperf is<br>
+receiving on will cause you to drop more packets on a sufficently fast<br>
+enough link to bog down the machine.<br>
+<p>
+Anyways I was under the impression that he wanted the number of packets<br>
+dropped either before being received by the machine or dropped by the<br>
+machine due to lack of buffer space or ability to process through the<br>
+stack.  The latter can probably be found in a stats counter the OS or<br>
+driver keeps; though I don't know how to get at it on a given OS.<br>
+<p>
+Greg<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0104.html">sthaug@nethelp.no: "Re: query !!"</a>
+<li> <b>Previous message:</b> <a href="0102.html">sthaug@nethelp.no: "Re: query !!"</a>
+<li> <b>In reply to:</b> <a href="0102.html">sthaug@nethelp.no: "Re: query !!"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0104.html">sthaug@nethelp.no: "Re: query !!"</a>
+</ul>

@@ -1,0 +1,63 @@
+<!-- received="Mon Aug  9 17:42:36 1999 PDT" -->
+<!-- sent="Tue, 10 Aug 1999 10:42:41 +1000 (EST)" -->
+<!-- name="Vivek Mittal" -->
+<!-- email="vivek@yoyo.cc.monash.edu.au" -->
+<!-- subject="Linux compiling problems" -->
+<!-- id="Pine.OSF.4.00.9908101034040.19223-100000@yoyo.cc.monash.edu.au" -->
+<!-- inreplyto="" -->
+<title>Archive of the netperf-talk mailing list: Linux compiling problems</title>
+<h1>Linux compiling problems</h1>
+Vivek Mittal (<i>vivek@yoyo.cc.monash.edu.au</i>)<br>
+<i>Tue, 10 Aug 1999 10:42:41 +1000 (EST)</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#219">[ date ]</a><a href="index.html#219">[ thread ]</a><a href="subject.html#219">[ subject ]</a><a href="author.html#219">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0220.html">Jackson Robert: "RE: Linux compiling problems"</a>
+<li> <b>Previous message:</b> <a href="0218.html">ygwl: "(no subject)"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+Hi,<br>
+<p>
+I've having trouble compiling Netperf under Linux.  I've compiled the same<br>
+under Solaris using the flags  -O -D$(LOG_FILE) -DUSE_LOOPER -DHISTOGRAM<br>
+with no problems.  But when I try it under Linux, I get the following<br>
+errors.<br>
+<p>
+cc -O -DDEBUG_LOG_FILE="\"/tmp/netperf.debug\"" -DUSE_LOOPER -DHISTOGRAM<br>
+-c nettest_bsd.c -o nettest_bsd.o<br>
+nettest_bsd.c:109: storage size of `time_one' isn't known<br>
+nettest_bsd.c:110: storage size of `time_two' isn't known<br>
+make: *** [nettest_bsd.o] Error 1<br>
+<p>
+On our machine cc is just a link to gcc, so checking the netperf archive I<br>
+changed -O to -O3 and added -ansi.  Now I get the following errors.<br>
+<p>
+cc -O3 -ansi -DDEBUG_LOG_FILE="\"/tmp/netperf.debug\"" -DUSE_LOOPER<br>
+-DHISTOGRAM   -c netsh.c -o netsh.o<br>
+In file included from netsh.c:14:<br>
+/usr/include/sys/ipc.h:29: warning: #warning "Files using this header must<br>
+be compiled with _SVID_SOURCE or _XOPEN_SOURCE"<br>
+In file included from netsh.c:14:<br>
+/usr/include/sys/ipc.h:35: parse error before `ftok'<br>
+/usr/include/sys/ipc.h:35: warning: data definition has no type or storage<br>
+class<br>
+make: *** [netsh.o] Error 1<br>
+<p>
+Can some one help?<br>
+<p>
+Thanks in advance.<br>
+<p>
+Vivek<br>
+PS I have sent a request to be added to the list but maynot have been<br>
+added at the time of this posting, so please send a copy to<br>
+vivek@yoyo.cc.monash.edu.au<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0220.html">Jackson Robert: "RE: Linux compiling problems"</a>
+<li> <b>Previous message:</b> <a href="0218.html">ygwl: "(no subject)"</a>
+<!-- nextthread="start" -->
+</ul>

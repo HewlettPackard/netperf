@@ -1,0 +1,2226 @@
+<!-- received="Fri Mar 20 11:27:57 1998 PST" -->
+<!-- sent="Fri, 20 Mar 1998 11:36:35 -0800" -->
+<!-- name="Rick Jones" -->
+<!-- email="raj@cup.hp.com" -->
+<!-- subject="[Fwd: VxWorks port for netperf]" -->
+<!-- id="3512C543.E4B8D68B@cup.hp.com" -->
+<!-- inreplyto="" -->
+<title>Archive of the netperf-talk mailing list: [Fwd: VxWorks port for netperf]</title>
+<h1>[Fwd: VxWorks port for netperf]</h1>
+Rick Jones (<i>raj@cup.hp.com</i>)<br>
+<i>Fri, 20 Mar 1998 11:36:35 -0800</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#17">[ date ]</a><a href="index.html#17">[ thread ]</a><a href="subject.html#17">[ subject ]</a><a href="author.html#17">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0018.html">Ian Heavens: "netperf on RTOS"</a>
+<li> <b>Previous message:</b> <a href="0016.html">Rick Jones: "Re: VxWorks version of Netperf"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+This is a multi-part message in MIME format.<br>
+--------------47F009A5D7A2E42DA51911DB<br>
+Content-Type: text/plain; charset=us-ascii<br>
+Content-Transfer-Encoding: 7bit<br>
+<p>
+Here they are. I think I've put 2.1pl4 up on ftp.cup. If I have, if<br>
+someone could merge this in with that, and send it back to me I could<br>
+then ship a pl5 to 2.1. Most of my work these days in on the 3.0 version<br>
+of netperf, so I am not sure I have time to merge.<br>
+<p>
+rick<br>
+<p>
+<pre>
+-- 
+these opinions are mine, all mine; HP might not want them anyway... :)
+feel free to email, or post, but please do not do both...
+--------------47F009A5D7A2E42DA51911DB
+Content-Type: message/rfc822
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+<p>
+Received: from hpda.cup.hp.com (hpda.cup.hp.com [15.14.216.110]) by loiter.cup.hp.com with ESMTP (8.8.6/8.7.3 TIS Messaging 5.0) id TAA27751 for &lt;raj@loiter.cup.hp.com&gt;; Wed, 11 Feb 1998 19:40:31 -0800 (PST)
+Received: from onet2.cup.hp.com (onet2.cup.hp.com [15.255.208.3]) by hpda.cup.hp.com with ESMTP (8.7/8.7) id TAA22433 for &lt;raj@loiter.cup.hp.com&gt;; Wed, 11 Feb 1998 19:43:51 -0800 (PST)
+Received: from serv05.slac.stanford.edu (SERV05.SLAC.Stanford.EDU [134.79.16.135])
+	by onet2.cup.hp.com (8.8.6/8.8.6) with ESMTP id TAA22898
+	for &lt;raj@cup.hp.com&gt;; Wed, 11 Feb 1998 19:40:27 -0800 (PST)
+Received: from mailbox.SLAC.Stanford.EDU (root@[134.79.18.29])
+ by SERV05.SLAC.STANFORD.EDU (PMDF V5.1-10 #23033)
+ with ESMTP id &lt;01ITGR8469LC000EOP@SERV05.SLAC.STANFORD.EDU&gt; for
+ raj@cup.hp.com; Wed, 11 Feb 1998 19:37:37 PST
+Received: from mach1.slac.stanford.edu
+ (MACH1.SLAC.Stanford.EDU [134.79.128.63]) by mailbox.SLAC.Stanford.EDU
+ (8.8.5/8.6.11) with ESMTP id TAA25071 for &lt;raj@cup.hp.com&gt;; Wed,
+ 11 Feb 1998 19:37:34 -0800 (PST)
+Date: Wed, 11 Feb 1998 19:37:39 -0800
+From: Tom Pavel &lt;pavel@SLAC.Stanford.EDU&gt;
+Subject: Re: VxWorks port for netperf
+In-reply-to: "Your message of Tue, 10 Feb 1998 18:29:14 PST."
+ &lt;34E10CFA.BA785344@cup.hp.com&gt;
+To: Rick Jones &lt;raj@cup.hp.com&gt;
+Reply-to: pavel@SLAC.Stanford.EDU
+Message-id: &lt;199802120337.TAA25071@mailbox.SLAC.Stanford.EDU&gt;
+X-Organization: Stanford Linear Accelerator Center
+X-Envelope-to: raj@cup.hp.com
+MIME-version: 1.0
+X-Mailer: exmh version 1.6.9 8/22/96
+Content-type: multipart/mixed ; boundary="==_Exmh_-17838386040"
+<p>
+This is a multipart MIME message.
+<p>
+--==_Exmh_-17838386040
+Content-Type: text/plain
+<p>
+<p>
+Rick,
+<p>
+Here are my patches for VxWorks, taken against 2.1pl3.  Actually, not
+all of the patches are strictly for VxWorks; I have also thrown in
+some fixes for various little odds and ends.  I hope everything will
+be obvious from the comments, however.  If not, please let me know...
+I hope these patches are not too hard for you to merge into your
+sources.
+<p>
+<p>
+&gt; If you have a chance, take a look at the submittal page and let me
+&gt; know if I need to add an OS type or something.
+<p>
+I'm not entirely sure.  I suppose you could add VxWorks to the list of
+OSes.  The HW manufacturer could be quite diverse, as could the NIC
+manufacturer (BTW, what do you do for on-motherboard NICs currently?),
+but I suppose that's where you use "other".  You might add PMC to the
+list of buses (PMC = PCI mezzanine card), although I suppose it's
+functionally the same as selecting PCI there.
+<p>
+So, that brings up another question...  I have a fairly large set of
+TCP runs on 100BT and OC-3 with 3-5 different machine types.  I still
+need to fill in a few holes, but I hope to wrap that up soon.  I could
+contribute this info for your database, but it would probably be too
+tiring to use the web form for all of it.  Do you have any
+suggestions?
+<p>
+<p>
+Tom Pavel
+<p>
+Stanford Linear Accelerator Center
+pavel@slac.stanford.edu                 <a href="http://www.slac.stanford.edu/~pavel/">http://www.slac.stanford.edu/~pavel/</a>
+<p>
+<p>
+<p>
+--==_Exmh_-17838386040
+Content-Type: text/plain
+Content-Description: netperf-diffs
+<p>
+diff -cN netperf-2.1pl3-orig/README.vxworks netperf-2.1pl3/README.vxworks
+*** netperf-2.1pl3-orig/README.vxworks	Wed Dec 31 16:00:00 1969
+--- netperf-2.1pl3/README.vxworks	Wed Feb 11 18:51:35 1998
+***************
+*** 0 ****
+--- 1,63 ----
++ These are some notes on using the VxWorks port of netperf 2.1pl3
++ 
++ Caveats:
++ 
++ I worked on this port because I needed some TCP throughput numbers
++ from a VxWorks PowerPC board.  Therefore, I have focussed primarily on
++ the TCP_STREAM test, and I have not really checked the code for the
++ other tests.  Furthermore, I have only developed for a Motorola
++ MVME2300 CPU board.  Presumably, VxWorks on other architectures would
++ work similarly, but the makefile.vxworks will certainly have to be
++ modified.  I worked with version 5.3.1 of Vxworks (aka Tornado 1.0.1),
++ and I can't really speak for other versions.  Finally, I'm not really
++ an "embedded systems" guy, I'm more of a "Unix/networking" guy, so
++ there may very well be better ways in VxWorks that I'm not aware to do
++ some of the things I needed.
++ 
++ 
++ To get going:
++ 
++ Edit the makefile.vxworks as appropriate for your architecture.  If
++ you're working on PPC604, you shouldn't need to edit.
++ 
++ The makefile should produce netperf.out and netserver.out.  I never
++ needed to run both of these at one time, so I didn't bother splitting
++ out the common object code.
++ 
++ I worked around the argc/argv problem by adding code to netperf to
++ take a single command string and chop it up into an argv array.  Thus,
++ I used a script something like this to do my tests:
++ 
++ 	unld "netperf.out"
++ 	ld &lt; netperf.out
++  
++ 	netperf "-H 134.79.128.64 -- -m    32 -s 8192 -S 8192"
++ 	netperf "-H 134.79.128.64 -- -m    64 -s 8192 -S 8192"
++ 	netperf "-H 134.79.128.64 -- -m   128 -s 8192 -S 8192"
++ 	netperf "-H 134.79.128.64 -- -m   256 -s 8192 -S 8192"
++ 	...
++ 
++ or:
++ 	ld &lt; netserver.o
++ 	sp netserver, "-d -p 12865"
++ 
++ 
++ Finally, I should mention that where traditional unix interfaces were
++ lacking in VxWorks (e.g. alarm() or gettimeofday()), I tried to use
++ the POSIX.1b interfaces, since I'm more familiar with those than any
++ lower-level VxWorks stuff.  Therefore, you will need to compile your
++ VxWorks kernel with things like INCLUDE_POSIX_TIMERS if you are
++ missing the POSIX features.
++ 
++ 
++ 
++ If you discover anything interesting with your benchmarks, I'd like to
++ hear about it.  I've found a few weird things, which I've so far
++ attributed to network driver problems.  It would be useful for me to
++ compare notes with others, though.
++ 
++ 
++ Tom Pavel
++ 
++ Stanford Linear Accelerator Center
++ pavel@slac.stanford.edu                 <a href="http://www.slac.stanford.edu/~pave">http://www.slac.stanford.edu/~pave</a>
+l/
+diff -cN netperf-2.1pl3-orig/makefile.vxworks netperf-2.1pl3/makefile.vxwork
+s
+*** netperf-2.1pl3-orig/makefile.vxworks	Wed Dec 31 16:00:00 1969
+--- netperf-2.1pl3/makefile.vxworks	Wed Feb 11 19:15:25 1998
+***************
+*** 0 ****
+--- 1,272 ----
++ #
++ # @(#)Makefile	2.1pl1	02/28/96
++ #
++ # Makefile to build netperf benchmark tool
++ #
++ # for those folks running csh, this may help with makes
++ #SHELL="/bin/sh"
++ 
++ #what version of netperf is this for?
++ VERSION = 2.1pl3
++ 
++ #
++ # This tells the script where the executables and scripts are supposed
++ # to go. Some people might be used to "/usr/etc/net_perf", but
++ # for the rest of the world, it is probably better to put the binaries
++ # in /usr/local/netperf or /opt/netperf
++ #
++ #NETPERF_HOME = /usr/local/netperf
++ NETPERF_HOME = /opt/netperf
++ 
++ # The compiler on your system might be somewhere else, and/or have
++ # a different name.
++ #
++ # /bin/cc              - the location on HP-UX 9.X and previous
++ # /usr/bin/cc          - the location on HP-UX 10.0 and some other
++ #                        platforms (IRIX, OSF/1)
++ # /opt/SUNWspro/bin/cc - the unbundled C compiler under Solaris
++ # cc                   - if your paths are set, this may be all you 
++ #                        need
++ # 
++ # one most systems, netperf spends very little time in user code, and
++ # most of its time in the kernel, so I *suspect* that different
++ # optimization levels won't make very much of a difference. however,
++ # might as well compile -O... If you are using the HP-UX unbundled
++ # compiler, this will generate a warning about an unsupported option.
++ # You may safely ignore that warning.
++ #
++ 
++ # For VxWorks.  You may need to change, depending on target architecture:
++ CC      = ccppc
++ LD      = ldppc
++ 
++ 
++ # Adding flags to CFLAGS enables some non-mainline features. For
++ # more information, please consult the source code.
++ # -Ae         - enable ANSI C on HP-UX with namespace extensions. ANSI
++ #               compilation is required for -DHISTOGRAM
++ # -DDIRTY     - include code to dirty buffers before calls to send
++ # -DHISTOGRAM - include code to keep a histogram of r/r times or
++ #               time spent in send()
++ # -DINTERVALS - include code to allow pacing of sends in a UDP or TCP 
++ #               test. this may have unexpected results on non-HP-UX
++ #               systems as I have not learned how to emulate the
++ #               functionality found within the __hpux defines in
++ #               the catcher() routine of netlib.c
++ # -DDO_DLPI   - include code to test the DLPI interface (may also 
++ #               require changes to LIBS. see below)
++ # -DDO_UNIX   - include code to test Unix Domain sockets
++ # -DDO_FORE   - include code to test the Fore ATM API (requires 
++ #               -DFORE_KLUDGE and -I/usr/fore/include).  Also, add
++ #               -DFORE_FT400 if you're running FT 4.0.0 or above.
++ # -DDO_HIPPI  - include code to test the HP HiPPI LLA interface. if 
++ #               you just want vanilla HP LLA, then also add
++ #               -DBUTNOTHIPPI
++ # -D$(LOG_FILE) Specifies where netserver should put its debug output 
++ #               when debug is enabled
++ # -DUSE_LOOPER- use looper or soaker processes to measure CPU
++ #               utilization. these will be forked-off at the
++ #               beginning. if you are running this way, it is
++ #               important to see how much impact these have on the
++ #               measurement. A loopback test on uniprocessor should be
++ #               able to consume ~100% of the CPU, and the difference
++ #               between throughput with USE_LOOPER CPU and without
++ #               should be small for a real network. if it is not, then
++ #               some work proably needs to be done on reducing the
++ #               priority of the looper processes.
++ # -DUSE_PSTAT - If used on HP-UX 10.0 and later, this will make CPU
++ #               utilization measurements with some information
++ #               returned byt he 10.X pstat() call. This is very
++ #               accurate, and should have no impact on the
++ #               measurement. Astute observers will notice that the
++ #               LOC_CPU and REM_CPU rates with this method look
++ #               remarkably close to the clockrate of the machine :)
++ # -DDO_IPV6   - Include tests which use a sockets interface to IPV6.
++ #               The control connection remains IPV4
++ # -U__hpux    - Use this when compiling _on_ HP-UX *for* an HP-RT system
++ 
++ # None of the above flags are supported for VxWorks...
++ 
++ 
++ # VxWorks specific flags:
++ CPU = 604
++ 
++ # Modify this to whatever is appropriate for your setup:
++ LOG_FILE=DEBUG_LOG_FILE="\"/log/netperf.debug\""
++ 
++ CINCLUDES = -nostdinc -I${WIND_BASE}/target/h -I${WIND_BASE}/target/config
++ CARCHFLAGS = -mcpu=$(CPU) -DCPU=PPC$(CPU) -D_GNU_TOOL -fno-builtin
++ CFLAGS = -g -D$(LOG_FILE) $(CINCLUDES) $(CARCHFLAGS) -DVXWORKS
++ 
++ LDFLAGS = -r -X
++ 
++ 
++ # Some platforms, and some options, require additional libraries.
++ # you can add to the "LIBS =" line to accomplish this. if you find
++ # that additional libs are required for your platform, please let
++ # me know. rick jones &lt;raj@cup.hp.com&gt;
++ # -lstr                 - required for -DDO_DLPI on HP-UX 9.X
++ # -lsocket -lnsl -lelf  - required for Solaris 2.3 (2.4?)
++ # -L/usr/fore/lib -latm - required on all platforms for the Fore
++ #                         ATM API tests
++ # -lelf                 - on IRIX 5.2 to resolve nlist. with 2.0PL1
++ #                         and later, this should not be needed since
++ #                         netperf no longer uses nlist()
++ # -lsys5                - on Digital Unix (OSF) this helps insure that
++ #                         netserver processes are reaped?
++ # -lm                   - required for ALL platforms
++ # -lxti                 - required for -DDO_XTI on HP_UX 10.X
++ 
++ LIBS= 
++ 
++ # ---------------------------------------------------------------
++ # it should not be the case that anything below this line needs to
++ # be changed. if it does, please let me know.
++ # rick jones &lt;raj@cup.hp.com&gt;
++ 
++ 
++ SHAR_SOURCE_FILES = netlib.c netlib.h netperf.c netserver.c \
++ 		    netsh.c netsh.h \
++ 		    nettest_bsd.c nettest_bsd.h \
++ 		    nettest_dlpi.c nettest_dlpi.h \
++ 		    nettest_unix.c nettest_unix.h \
++ 		    nettest_fore.c nettest_fore.h \
++ 		    nettest_hippi.c nettest_hippi.h \
++                     nettest_xti.c nettest_xti.h \
++                     nettest_ipv6.c nettest_ipv6.h \
++                     hist.h \
++ 		    makefile makefile.win32
++ 
++ ZIP_SOURCE_FILES  = netlib.c netlib.h netperf.c netserver.c \
++ 		    netsh.c netsh.h \
++ 		    nettest_bsd.c nettest_bsd.h \
++                     hist.h \
++ 		    makefile.win32
++ 
++ SHAR_EXE_FILES    = ACKNWLDGMNTS COPYRIGHT README Release_Notes \
++                     netperf.ps \
++ 		    netperf.man netserver.man
++ 
++ SHAR_SCRIPT_FILES = tcp_stream_script udp_stream_script \
++                     tcp_rr_script udp_rr_script tcp_range_script \
++                     snapshot_script arr_script
++ 
++ NETSERVER_OBJS	  = netserver.o nettest_bsd.o nettest_dlpi.o \
++                     nettest_unix.o netlib.o netsh.o nettest_fore.o \
++ 		    nettest_hippi.o nettest_xti.o nettest_ipv6.o
++ 
++ NETPERF_OBJS	  = netperf.o netsh.o netlib.o nettest_bsd.o \
++                     nettest_dlpi.o nettest_unix.o nettest_fore.o \
++ 		    nettest_hippi.o nettest_xti.o nettest_ipv6.o
++ 
++ NETPERF_SCRIPTS   = tcp_range_script tcp_stream_script tcp_rr_script \
++                     udp_stream_script udp_rr_script \
++                     snapshot_script
++ 
++ SCAF_FILES	  = spiff spiff.1 scaf_script scafsnapshot_script \
++ 		    baselines/*
++ 
++ all: netperf.out netserver.out
++ 
++ netperf.out:	$(NETPERF_OBJS)
++ 		$(LD) -o $@ $(LDFLAGS) $(NETPERF_OBJS) $(LIBS)
++ 
++ netserver.out:	$(NETSERVER_OBJS)
++ 		$(LD) -o $@ $(LDFLAGS) $(NETSERVER_OBJS) $(LIBS)
++ 
++ netperf.o:	netperf.c netsh.h makefile
++ 
++ netsh.o:	netsh.c netsh.h nettest_bsd.h netlib.h makefile
++ 
++ netlib.o:	netlib.c netlib.h netsh.h makefile
++ 
++ nettest_bsd.o:	nettest_bsd.c nettest_bsd.h netlib.h netsh.h makefile
++ 
++ nettest_dlpi.o:	nettest_dlpi.c nettest_dlpi.h netlib.h netsh.h makefile
++ 
++ nettest_unix.o:	nettest_unix.c nettest_unix.h netlib.h netsh.h makefile
++ 
++ nettest_fore.o: nettest_fore.c nettest_fore.h netlib.h netsh.h makefile
++ 
++ nettest_hippi.o: nettest_hippi.c nettest_hippi.h netlib.h netsh.h makefile
++ 
++ nettest_xti.o:   nettest_xti.c nettest_xti.h netlib.h netsh.h makefile
++ 
++ nettest_ipv6.o:  nettest_ipv6.c nettest_ipv6.h netlib.h netsh.h makefile
++ 
++ netserver.o:	netserver.c nettest_bsd.h netlib.h makefile
++ 
++ install:	netperf netserver
++ 		chmod -w *.[ch]
++ 		chmod +x $(NETPERF_SCRIPTS)
++ 		cp netperf $(NETPERF_HOME)
++ 		cp netserver $(NETPERF_HOME)
++ 		cp $(NETPERF_SCRIPTS) $(NETPERF_HOME)
++ clean:
++ 	rm -f *.o netperf.out netserver.out core
++ 
++ extraclean:
++ 	rm -f *.o netperf netserver core netperf.tar.gz netperf.shar \
++ 	netperf_src.shar
++ 
++ deinstall:
++ 	echo do this to deinstall rm -rf $(NETPERF_HOME)/*
++ 
++ netperf_src.shar: $(SHAR_SOURCE_FILES)
++ 	shar -bcCsZ $(SHAR_SOURCE_FILES) &gt; netperf_src.shar
++ 
++ shar:		netperf.shar
++ netperf.shar:	netperf-$(VERSION).shar
++ 
++ netperf-$(VERSION).shar: ${SHAR_EXE_FILES} ${SHAR_SCRIPT_FILES} \
++                         ${SHAR_SOURCE_FILES}
++ 	rm -rf netperf-${VERSION} netperf-${VERSION}.shar
++ 	mkdir netperf-${VERSION}
++ 	cp ${SHAR_EXE_FILES} ${SHAR_SCRIPT_FILES} ${SHAR_SOURCE_FILES} \
++ 		netperf-${VERSION}
++ 	shar -cCsZv netperf-${VERSION} &gt; netperf-${VERSION}.shar 
++      
++ netperf.zip:    $(ZIP_SOURCE_FILES) $(SHAR_EXE_FILES)
++ 	zip netperf.zip $(ZIP_SOURCE_FILES) $(SHAR_EXE_FILES)
++ 
++ tar:		netperf.tar.gz
++ netperf.tar:	netperf-$(VERSION).tar
++ netperf.tar.gz:	netperf-$(VERSION).tar.gz
++ 
++ netperf-$(VERSION).tar: ${SHAR_EXE_FILES} ${SHAR_SCRIPT_FILES} \
++                         ${SHAR_SOURCE_FILES}
++ 	rm -rf netperf-${VERSION} netperf-${VERSION}.tar
++ 	mkdir netperf-${VERSION}
++ 	cp ${SHAR_EXE_FILES} ${SHAR_SCRIPT_FILES} ${SHAR_SOURCE_FILES} \
++ 		netperf-${VERSION}
++ 	tar -cf netperf-${VERSION}.tar netperf-${VERSION} 
++ 
++ netperf-$(VERSION).tar.gz: netperf-$(VERSION).tar
++ 	rm -f netperf-${VERSION}.tar.gz
++ 	gzip -9f netperf-${VERSION}.tar
++ 
++ netperf-scaf.tar:	$(SHAR_EXE_FILES) \
++ 			$(SHAR_SCRIPT_FILES) \
++ 			$(SCAF_FILES)
++ 	tar -cf netperf-scaf.tar \
++ 		$(SHAR_EXE_FILES) \
++ 		$(SHAR_SCRIPT_FILES) $(SCAF_FILES)
++ 	compress netperf-scaf.tar
++ 
++ netperf-scaf.shar:	$(SHAR_EXE_FILES) \
++ 			$(SHAR_SCRIPT_FILES) \
++ 			$(SCAF_FILES)
++ 	shar -bcCsZ $(SHAR_EXE_FILES) \
++ 		$(SHAR_SCRIPT_FILES) $(SCAF_FILES) &gt; netperf-scaf.shar
++ 
++ #netperf.shar:	$(SHAR_SOURCE_FILES) $(SHAR_EXE_FILES) $(SHAR_SCRIPT_FILES)
++ #	shar -bcCsZ $(SHAR_SOURCE_FILES) $(SHAR_EXE_FILES) \
++ #		$(SHAR_SCRIPT_FILES) &gt; netperf.shar
++ 
++ #netperf.tar:	$(SHAR_EXE_FILES) \
++ #		$(SHAR_SCRIPT_FILES) $(SHAR_SOURCE_FILES)
++ #	tar -cf netperf.tar $(SHAR_EXE_FILES) \
++ #		$(SHAR_SCRIPT_FILES) $(SHAR_SOURCE_FILES)
++ #	gzip netperf.tar
++ 
++ 
+diff -cN netperf-2.1pl3-orig/netlib.c netperf-2.1pl3/netlib.c
+*** netperf-2.1pl3-orig/netlib.c	Wed Feb 11 10:27:00 1998
+--- netperf-2.1pl3/netlib.c	Wed Feb 11 19:13:00 1998
+***************
+*** 63,69 ****
+  #include &lt;string.h&gt;
+  
+  
+! #ifndef WIN32
+   /* at some point, I would like to get rid of all these "sys/" */
+   /* includes where appropriate. if you have a system that requires */
+   /* them, speak now, or your system may not comile later revisions of */
+--- 63,69 ----
+  #include &lt;string.h&gt;
+  
+  
+! #if !defined(WIN32) &amp;&amp; !defined(VXWORKS)
+   /* at some point, I would like to get rid of all these "sys/" */
+   /* includes where appropriate. if you have a system that requires */
+   /* them, speak now, or your system may not comile later revisions of */
+***************
+*** 84,89 ****
+--- 84,101 ----
+  #include &lt;sys/mman.h&gt;
+  #endif /* USE_LOOPER */
+  
++ #elif defined(VXWORKS)
++ 
++ #include &lt;vxWorks.h&gt;
++ #include &lt;unistd.h&gt;
++ #include &lt;time.h&gt;
++ #include &lt;sys/times.h&gt;		/* should be &lt;sys/time.h&gt;, but WRS botched.. */
++ #include &lt;sys/socket.h&gt;
++ #include &lt;netinet/in.h&gt;
++ #include &lt;hostLib.h&gt;		/* for hostGetByName() */
++ #include &lt;sys/utsname.h&gt;	/* currently empty file. */
++ #include &lt;version.h&gt;		/* kluge with: &lt;version.h&gt; */
++ 
+  #else /* WIN32 */
+  
+  #ifdef NT_SDK
+***************
+*** 241,251 ****
+  SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION sysperf_start;    /* robin */
+  SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION sysperf_end;      /* robin */
+  #endif /* NT_SDK */
+  #else
+  struct	tms		times_data1, 
+                          times_data2;
+  #endif /* WIN32 */
+! #endif
+  
+  struct	timeval		time1, time2;
+  struct	timezone	tz;
+--- 253,267 ----
+  SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION sysperf_start;    /* robin */
+  SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION sysperf_end;      /* robin */
+  #endif /* NT_SDK */
++ #else  /* WIN32 */
++ #ifdef VXWORKS
++ /* put VxWorks specific timing stuff in here... */
+  #else
+  struct	tms		times_data1, 
+                          times_data2;
++ #endif /* VXWORKS */
+  #endif /* WIN32 */
+! #endif /* USE_PSTAT */
+  
+  struct	timeval		time1, time2;
+  struct	timezone	tz;
+***************
+*** 264,271 ****
+--- 280,290 ----
+  
+  int	server_sock;
+  
++ /* This would appear to be unitialized.  I'm not sure if that matters.
++    (pavel 4-Feb-1998) */
+  int	tcp_proto_num;
+  
++ 
+   /* in the past, I was overlaying a structure on an array of ints. now */
+   /* I am going to have a "real" structure, and point an array of ints */
+   /* at it. the real structure will be forced to the same alignment as */
+***************
+*** 290,312 ****
+  
+  int	times_up;
+  
+- #ifdef WIN32
+-  /* we use a getopt implementation from net.sources */
+- /*
+-  * get option letter from argument vector
+-  */
+- int
+- 	opterr = 1,		/* should error messages be printed? */
+- 	optind = 1,		/* index into parent argv vector */
+- 	optopt;			/* character checked for validity */
+- char
+- 	*optarg;		/* argument associated with option */
+- 
+- #define EMSG	""
+- 
+- char *progname;			/* may also be defined elsewhere */
+- 
+- #endif /* WIN32 */
+  
+  static int measuring_cpu;
+  
+--- 309,314 ----
+***************
+*** 336,342 ****
+  
+  
+  
+! #ifdef WIN32
+  static void
+  error(char *pch)
+  {
+--- 338,371 ----
+  
+  
+  
+! #if defined(WIN32) || defined(VXWORKS)
+!  /* we use a getopt implementation from net.sources */
+! /*
+!  * get option letter from argument vector
+!  */
+! int
+! 	opterr = 1,		/* should error messages be printed? */
+! 	optind = 1,		/* index into parent argv vector */
+! 	optopt;			/* character checked for validity */
+! char
+! 	*optarg;		/* argument associated with option */
+! 
+! #define EMSG	""
+! static char *place = EMSG;	/* option letter processing */
+! 
+! char *progname;			/* may also be defined elsewhere */
+! 
+! void
+! init_getopt()
+! {
+!     /* needed for VxWorks: "main()" might be called multiple times without
+!        reloading...  */
+!     opterr = 1;
+!     optind = 1;
+!     place = EMSG;
+! }
+! 
+! 
+  static void
+  error(char *pch)
+  {
+***************
+*** 350,356 ****
+  int
+  getopt(int argc, char **argv, char *ostr)
+  {
+-   static char *place = EMSG;	/* option letter processing */
+    register char *oli;			/* option letter list index */
+    
+    if (!*place) {
+--- 379,384 ----
+***************
+*** 397,406 ****
+    }
+    return optopt;			/* return option letter */
+  }
+! #endif /* WIN32 */
+  
+  
+  
+  
+  double
+  ntohd(net_double)
+--- 425,527 ----
+    }
+    return optopt;			/* return option letter */
+  }
+! #endif /* WIN32 || VXWORKS */
+! 
+! #ifdef VXWORKS
+! /* Helper routine to parse the arguments passed into netperf() by the
+!    interactive shell and turn the single string argument into an argv[].
+!    Major kluge..... */
+! 
+! int 
+! parseArgs (char* line, int* argc, char** argv)
+! {
+!     int count = 1;
+!     char* p = NULL;
+!   
+!     if (line == NULL) {
+! 	fprintf (stderr, "parseArgs(): no argument specified\n");
+! 	return 0;
+!     }
+!  
+!     while ((p = strchr(line, ' ')) != NULL) {
+! 	/* deal with multiple spaces: */
+! 	if (*line != ' ') {
+! 	    *p = '\0';
+! 	    argv[count++] = line;
+! 	}
+! 	line = ++p;
+!     }
+!     argv[count++] = line;
+!   
+!     *argc = count;
+!     return count;
+! }
+! #endif /* VXWORKS */
+! 
+  
+  
+  
++ /* I've encapsulated this recurring theme into a single routine
++    (pavel 11-Feb-1998).  Here are the original comments:  */
++ 
++ /* it would seem that while HP-UX will allow an IP address (as a */
++ /* string) in a call to gethostbyname, other, less enlightened */
++ /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
++ /* order changed to check for IP address first. raj 7/96 */
++ 
++ int     
++ hostname_to_saddr(remote_host, saddr)
++      char* remote_host;
++      struct sockaddr_in	*saddr;
++ {
++   unsigned int addr;
++   struct hostent *hp;
++ 
++   if ((addr = inet_addr(remote_host)) == -1) {
++     /* it was not an IP address, try it as a name */
++ #ifndef VXWORKS   
++     if ((hp = gethostbyname(remote_host)) == NULL) {
++       /* we have no idea what it is */
++       fprintf(where,
++ 	      "establish_control: could not resolve the destination %s\n",
++ 	      remote_host);
++       fflush(where);
++       return(0);
++     }
++     else {
++       /* it was a valid remote_host */
++       bcopy(hp-&gt;h_addr,
++ 	    (char *)&amp;saddr-&gt;sin_addr,
++ 	    hp-&gt;h_length);
++       saddr-&gt;sin_family = hp-&gt;h_addrtype;
++     }
++ #else /* VXWORKS */
++     /* It turns out that VxWorks has no gethostbyname() routines, 
+presumably
++        since DNS resolving doesn't mesh with Real-Time...  What they 
+provide
++        instead is a lookup into their equiv of /etc/hosts.  So, we may as
++        well try to use that.  */
++     if ((addr =  hostGetByName (remote_host)) == NULL) {
++         /* we have no idea what it is */
++         fprintf(where,
++                 "establish_control: could not resolve the destination 
+%s\n",
++                 remote_host);
++         fflush(where);
++ 	return(0);
++     } else {
++         /* it was a valid IP address */
++         saddr-&gt;sin_addr.s_addr = addr;
++         saddr-&gt;sin_family = AF_INET;
++     }
++ #endif /* VXWORKS */
++   }
++   else {
++     /* it was a valid IP address */
++     saddr-&gt;sin_addr.s_addr = addr;
++     saddr-&gt;sin_family = AF_INET;
++   }    
++   return 1;
++ }
++ 
+  
+  double
+  ntohd(net_double)
+***************
+*** 556,561 ****
+--- 677,693 ----
+  }
+  #endif /* WIN32 */
+  
++ #ifdef VXWORKS
++ void
++ gettimeofday( struct timeval *tv , struct timezone *not_used )
++ {
++     struct timespec tp;
++     clock_gettime (CLOCK_REALTIME, &amp;tp);
++ 
++     tv-&gt;tv_sec = tp.tv_sec;
++     tv-&gt;tv_usec = tp.tv_nsec / 1000;
++ }
++ #endif /* VXWORKS */
+       
+  
+  /************************************************************************/
+***************
+*** 673,681 ****
+--- 805,822 ----
+    action.sa_flags = 0;
+  #endif /* SA_INTERRUPT */
+  
++ /* The NSIGS below is a portability hazard.  POSIX does not specify 
+NSIGS, so
++    implementations are free not to define it.  Most seem to have it (for
++    backward compat), although Solaris, for example, advises that "for 
+binary
++    compatibility, one should use _sys_nsig instead". Insert just a minimal
++    kluge for VxWorks (pavel 7-Jan-1998) */
++ #ifdef VXWORKS
++ #define NSIG _NSIGS
++ #endif
+  
+    for (i = 1; i &lt;= NSIG; i++) {
+      if (i != SIGALRM) {
++       /* Is this right?  What happened to i here? (pavel 11-Feb-1998) */
+        if (sigaction(SIGALRM,&amp;action,NULL) != 0) {
+  	fprintf(where,
+  		"Could not install signal catcher for sig %d, errno %d\n",
+***************
+*** 716,721 ****
+--- 857,896 ----
+  
+  #endif /* WIN32 */
+  
++ #ifdef VXWORKS
++ static timer_t alarm_timer = 0;
++ 
++ void
++ reset_alarm()
++ {
++     if (alarm_timer != 0) {
++ 	timer_delete(alarm_timer);
++     }
++     alarm_timer = 0;
++ }
++ 
++ unsigned int
++ alarm (unsigned sec)
++ {
++     struct itimerspec ts;
++ 
++     if (alarm_timer == 0) {
++ 	if (timer_create (CLOCK_REALTIME, NULL, &amp;alarm_timer) &lt; 0) {
++ 	    fprintf (where, "timer_create() failed with errno %d", errno);
++ 	}
++     }
++     ts.it_value.tv_sec = sec;
++     ts.it_value.tv_nsec = 0 ;
++     ts.it_interval.tv_sec = 0;
++     ts.it_interval.tv_nsec = 0;
++     if (timer_settime (alarm_timer, 0, &amp;ts, NULL) &lt; 0) {
++ 	fprintf (where, "alarm() : timer_settime() failed with errno %d",
++ 		 errno);
++     }
++     return 0;			/* kluge */
++ }
++ #endif /* VXWORKS */
++ 
+  void
+  start_timer(time)
+       int time;
+***************
+*** 1246,1251 ****
+--- 1421,1428 ----
+    /* we now assume that the socket has come ready for reading */
+    recv(netlib_control, buf, buflen,0);
+  
++   /* I think we still need a close here (???) - pavel 5-Feb-1998 */
++   close (netlib_control);
+  }
+  
+  
+***************
+*** 1377,1383 ****
+   /*									*/
+   /***********************************************************************/
+  
+! void
+  recv_request()
+  {
+  int 	tot_bytes_recvd,
+--- 1554,1560 ----
+   /*									*/
+   /***********************************************************************/
+  
+! int
+  recv_request()
+  {
+  int 	tot_bytes_recvd,
+***************
+*** 1431,1438 ****
+      fflush(where);
+    }
+  
+!   shutdown_control();
+!   exit(0);
+  }
+  
+  if (tot_bytes_recvd &lt; buflen) {
+--- 1608,1627 ----
+      fflush(where);
+    }
+  
+!   /* I think this is wrong.  You want to shut server_sock not 
+netlib_control,
+!      as shutdown_control() does. (pavel 5-Feb-1998) */
+!   /* shutdown_control(); */
+! 
+!   /* Rather than exitting, lets make recv_request() return 0.  We can then
+!      handle this in process_requests() and continue looping, or else exit 
+the
+!      forked process if we're in Unix. (pavel 5-Feb-1998)*/
+!   return 0;
+! 
+! #if 0
+!   /* XXX - Need to think carefully about exitting.  Should close
+!      server_control and server_sock first. (pavel 5-Feb-1998) */
+!   exit(0);	       	
+! #endif
+  }
+  
+  if (tot_bytes_recvd &lt; buflen) {
+***************
+*** 1449,1454 ****
+--- 1638,1644 ----
+  if (debug &gt; 1) {
+    dump_request();
+  }
++ return 1; 
+  }
+  
+   /***********************************************************************/
+***************
+*** 1887,1920 ****
+  	sizeof(server));
+    server.sin_port = htons(port);
+  
+!   /* it would seem that while HP-UX will allow an IP address (as a */
+!   /* string) in a call to gethostbyname, other, less enlightened */
+!   /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
+!   /* order changed to check for IP address first. raj 7/96 */
+! 
+!   if ((addr = inet_addr(hostname)) == -1) {
+!     /* it was not an IP address, try it as a name */
+!     if ((hp = gethostbyname(hostname)) == NULL) {
+!       /* we have no idea what it is */
+!       fprintf(where,
+! 	      "establish_control: could not resolve the destination %s\n",
+! 	      hostname);
+!       fflush(where);
+        exit(1);
+-     }
+-     else {
+-       /* it was a valid hostname */
+-       bcopy(hp-&gt;h_addr,
+- 	    (char *)&amp;server.sin_addr,
+- 	    hp-&gt;h_length);
+-       server.sin_family = hp-&gt;h_addrtype;
+-     }
+-   }
+-   else {
+-     /* it was a valid IP address */
+-     server.sin_addr.s_addr = addr;
+-     server.sin_family = AF_INET;
+-   }    
+  
+    if (debug &gt; 1) {
+      fprintf(where,"resolved the destination... \n");
+--- 2077,2084 ----
+  	sizeof(server));
+    server.sin_port = htons(port);
+  
+!   if (hostname_to_saddr(hostname, &amp;server) == 0) 
+        exit(1);
+  
+    if (debug &gt; 1) {
+      fprintf(where,"resolved the destination... \n");
+***************
+*** 1999,2004 ****
+--- 2163,2170 ----
+  SYSTEM_INFO		system_info ;
+  char			system_name[MAX_COMPUTERNAME_LENGTH+1] ;
+  int			name_len = MAX_COMPUTERNAME_LENGTH + 1 ;
++ #elif defined(VXWORKS)
++ char			system_name[128];
+  #else
+  struct	utsname		system_name;
+  #endif /* WIN32 */
+***************
+*** 2008,2021 ****
+  if ( !GetComputerName(system_name , &amp;name_len) )
+  	strcpy(system_name , "no_name") ;
+  #else
+  if (uname(&amp;system_name) &lt;0) {
+  	perror("identify_local: uname");
+  	exit(1);
+  }
+  #endif /* WIN32 */
+  
+  sprintf(id_string,
+! #ifdef WIN32
+  	"%-15s%-15s%d.%d%-15s",
+  	"Windows NT",
+  	system_name ,
+--- 2174,2191 ----
+  if ( !GetComputerName(system_name , &amp;name_len) )
+  	strcpy(system_name , "no_name") ;
+  #else
++ #ifdef VXWORKS
++ /* XXXX - fill in something here to get nodename, release level... */
++ #else
+  if (uname(&amp;system_name) &lt;0) {
+  	perror("identify_local: uname");
+  	exit(1);
+  }
++ #endif /* VXWORKS */
+  #endif /* WIN32 */
+  
+  sprintf(id_string,
+! #if defined(WIN32)
+  	"%-15s%-15s%d.%d%-15s",
+  	"Windows NT",
+  	system_name ,
+***************
+*** 2023,2028 ****
+--- 2193,2204 ----
+  	GetVersion() &amp; 0xFF00 ,
+  	system_info.dwProcessorType ) ;
+  	
++ #elif defined(VXWORKS)
++ 	"%-15s%-15s%-15s%-15s",
++         "VxWorks",
++ 	"unknown nodename",
++ 	vxWorksVersion,
++         "unknown CPU type");
+  #else
+  	"%-15s%-15s%-15s%-15s%-15s",
+  	system_name.sysname,
+***************
+*** 2200,2207 ****
+--- 2376,2389 ----
+                                                                  /* robin 
+*/
+  #endif /* NT_SDK */
+  #else
++ #ifdef VXWORKS
++     /* For the moment, punt on this.  I'm sure there must be some sort of
++        resource measurement API in VxWorks, but I don't yet know what it
++        is...  (pavel 7-Jan-1998) */
++ #else
+      cpu_method = TIMES;
+      times(&amp;times_data1);
++ #endif /* VXWORKS */
+  #endif /* WIN32 */
+  #endif /* USE_PSTAT */
+  #endif /* USE_LOOPER */
+***************
+*** 2316,2323 ****
+--- 2498,2510 ----
+         }                                                        /* robin 
+*/
+                                                                  /* robin 
+*/
+  #endif /* NT_SDK */
++ #ifdef VXWORKS
++     /* For the moment, punt on this.  I'm sure there must be some sort of
++        resource measurement API in VxWorks, but I don't yet know what it
++        is...  (pavel 7-Jan-1998) */
+  #else
+    times(&amp;times_data2);
++ #endif /* VXWORKS */
+  #endif /* WIN32 */
+  #endif /* USE_PSTAT */
+  #endif /* USE_LOOPER */
+***************
+*** 2601,2606 ****
+--- 2788,2797 ----
+    }                                                             /* robin 
+*/
+                                                                  /* robin 
+*/
+  #endif /* NT_SDK */
++ #ifdef VXWORKS
++     /* For the moment, punt on this.  I'm sure there must be some sort of
++        resource measurement API in VxWorks, but I don't yet know what it
++        is...  (pavel 7-Jan-1998) */
+  #else
+    /* we had no kernel idle counter, so use what we can */
+    ticks_sec = sysconf(_SC_CLK_TCK);
+***************
+*** 2619,2624 ****
+--- 2810,2816 ----
+  				 (double) ticks_sec /
+  				 (double) lib_elapsed) *
+  				(double) 100.0);
++ #endif /* VXWORKS */
+  #endif /* WIN32 */
+  #endif /* USE_PSTAT */
+  #endif /* USE_LOOPER */
+***************
+*** 2792,2798 ****
+--- 2984,2995 ----
+      fprintf(where,
+  	    "Looper child %d is born, pid %d\n",
+  	    child_index,
++ #ifdef VXWORKS
++ 	    999);
++     /* Is it worth calling taskIdCurrent() here? (pavel 11-Feb-1998) */
++ #else
+  	    getpid());
++ #endif
+      fflush(where);
+    }
+    
+***************
+*** 2910,2921 ****
+      exit(1);
+    }
+    
+    if (chmod("/tmp/netperf_cpu",0644) == -1) {
+      fprintf(where,"create_looper: chmod; errno %d\n",errno);
+      fflush(where);
+      exit(1);
+    }
+!   
+    /* with the file descriptor in place, lets be sure that the file is */
+    /* large enough. */
+    
+--- 3107,3120 ----
+      exit(1);
+    }
+    
++ #ifndef VXWORKS
+    if (chmod("/tmp/netperf_cpu",0644) == -1) {
+      fprintf(where,"create_looper: chmod; errno %d\n",errno);
+      fflush(where);
+      exit(1);
+    }
+! #endif /* VXWORKS */
+! 
+    /* with the file descriptor in place, lets be sure that the file is */
+    /* large enough. */
+    
+***************
+*** 3099,3104 ****
+--- 3298,3318 ----
+    }	
+  }
+  
++ #ifdef VXWORKS
++ /* supply a sleep routine for VxWorks */
++ int
++ sleep (secs)
++ unsigned secs;
++ {
++     struct timespec rqst;
++     rqst.tv_sec = secs;
++     rqst.tv_nsec = 0;
++ 
++     nanosleep (&amp;rqst, NULL);
++     return 0;
++ }
++ #endif /* VXWORKS */
++ 
+  int
+  msec_sleep( msecs )
+       int msecs;
+diff -cN netperf-2.1pl3-orig/netlib.h netperf-2.1pl3/netlib.h
+*** netperf-2.1pl3-orig/netlib.h	Wed Feb 11 10:27:00 1998
+--- netperf-2.1pl3/netlib.h	Wed Feb 11 15:01:00 1998
+***************
+*** 202,212 ****
+  #define BADCH ('?')
+  
+  #ifndef NETLIB
+! #ifdef WIN32
+  #ifndef _GETOPT_
+  #define _GETOPT_
+  
+  int getopt(int argc, char **argv, char *optstring);
+  
+  extern char *optarg;		/* returned arg to go with this option */
+  extern int optind;		/* index to next argv element to process */
+--- 202,214 ----
+  #define BADCH ('?')
+  
+  #ifndef NETLIB
+! 
+! #if defined(WIN32) || defined(VXWORKS)
+  #ifndef _GETOPT_
+  #define _GETOPT_
+  
+  int getopt(int argc, char **argv, char *optstring);
++ void init_getopt();
+  
+  extern char *optarg;		/* returned arg to go with this option */
+  extern int optind;		/* index to next argv element to process */
+***************
+*** 214,220 ****
+--- 216,229 ----
+  extern int optopt;		/* */
+  
+  #endif /* _GETOPT_ */
++ #endif /* WIN32 || VXWORKS*/
+  
++ #ifdef VXWORKS
++ /* Used to turn a single string argument into argv[].  Major kluge.... */
++ int parseArgs (char* line, int* argc, char** argv);
++ #endif
++ 
++ #ifdef WIN32
+  extern  int     win_kludge_socket;
+  #endif /* WIN32 */
+  
+***************
+*** 239,245 ****
+  extern  void    send_request();
+  extern  void    recv_response();
+  extern  void    send_response();
+! extern  void    recv_request();
+  extern  void    dump_request();
+  extern  void    start_timer();
+  extern  void    stop_timer();
+--- 248,254 ----
+  extern  void    send_request();
+  extern  void    recv_response();
+  extern  void    send_response();
+! extern  int     recv_request();
+  extern  void    dump_request();
+  extern  void    start_timer();
+  extern  void    stop_timer();
+***************
+*** 250,255 ****
+--- 259,266 ----
+  extern  void    display_confidence();
+  extern  char   *format_units();
+  
++ extern  int     hostname_to_saddr(); /* wrap up gethostbyname() etc. */
++ 
+  extern  double  ntohd();
+  extern  double  htond();
+  extern  void    libmain();
+***************
+*** 277,282 ****
+--- 288,299 ----
+  #ifdef hpux
+  #define HAVE_BCOPY
+  #define HAVE_BZERO
++ #endif
++ 
++ #ifdef VXWORKS
++ #define HAVE_BCOPY
++ #define HAVE_BZERO
++ #define HAVE_MIN
+  #endif
+  
+  #ifndef HAVE_BCOPY
+diff -cN netperf-2.1pl3-orig/netperf.c netperf-2.1pl3/netperf.c
+*** netperf-2.1pl3-orig/netperf.c	Wed Feb 11 10:27:00 1998
+--- netperf-2.1pl3/netperf.c	Wed Feb 11 14:09:27 1998
+***************
+*** 79,90 ****
+--- 79,118 ----
+   /* routines can be found in the file netsh.c */
+  
+  
++ #ifdef VXWORKS
++ /* VxWorks uses a single address space for all tasks and dynamically loads
++  * object modules.  Hence, we don't want a main(), but instead a 
+netperf()...
++  */
++ int
++ netperf(line)
++ char* line;
++ {
++     int	 argc;
++     char *argv[100];
++     extern int optind;
++ 
++     argv[0] = "netperf";
++     parseArgs (line, &amp;argc, argv);
++     init_getopt();		/* klugey, but needed.  (We may call
++ 				   netperf()/getopt() multiple times before
++ 				   rebooting/reloading...  */
++ 
++     /* Because VxWorks tasks run in the same address space, we can't 
+count on
++        the static variables being init-ed to 0 automatically... */
++     zero_static_vars();
++     /* Similarly, we should reset the posix timer variable, since we may 
+not
++        be in the same task that initially created it. */
++     reset_alarm();
++ 
++ #else  /* VXWORKS */
++ 
+  int
+  main(argc,argv)
+  int	argc;
+  char	*argv[];
+  
+  {
++ #endif /* VXWORKS */
+  
+  #ifdef WIN32
+  	WSADATA	wsa_data ;
+diff -cN netperf-2.1pl3-orig/netserver.c netperf-2.1pl3/netserver.c
+*** netperf-2.1pl3-orig/netserver.c	Wed Feb 11 10:27:00 1998
+--- netperf-2.1pl3/netserver.c	Wed Feb 11 19:04:23 1998
+***************
+*** 43,49 ****
+   
+  */
+  char	netserver_id[]="\
+! @(#)netserver.c (c) Copyright 1993, 1994 Hewlett-Packard Co. Version 
+2.1pl1";
+  
+   /***********************************************************************/
+   /*									*/
+--- 43,49 ----
+   
+  */
+  char	netserver_id[]="\
+! @(#)netserver.c (c) Copyright 1993, 1994 Hewlett-Packard Co. Version 
+2.1pl3";
+  
+   /***********************************************************************/
+   /*									*/
+***************
+*** 67,80 ****
+  #include &lt;stdio.h&gt;
+  #include &lt;errno.h&gt;
+  #include &lt;signal.h&gt;
+! #ifndef WIN32
+  #include &lt;sys/ipc.h&gt;
+! #endif /* WIN32 */
+  #include &lt;fcntl.h&gt;
+! #ifdef WIN32
+  #include &lt;time.h&gt;
+  #include &lt;windows.h&gt;
+  #include &lt;winsock.h&gt;
+  #else
+  #include &lt;sys/time.h&gt;
+  #include &lt;sys/ioctl.h&gt;
+--- 67,85 ----
+  #include &lt;stdio.h&gt;
+  #include &lt;errno.h&gt;
+  #include &lt;signal.h&gt;
+! #if !defined(WIN32) &amp;&amp; !defined(VXWORKS)
+  #include &lt;sys/ipc.h&gt;
+! #endif /* WIN32 || VXWORKS */
+  #include &lt;fcntl.h&gt;
+! #if defined(WIN32)
+  #include &lt;time.h&gt;
+  #include &lt;windows.h&gt;
+  #include &lt;winsock.h&gt;
++ #elif defined(VXWORKS)
++ #include &lt;sys/times.h&gt;
++ #include &lt;sys/socket.h&gt;
++ #include &lt;netinet/in.h&gt;
++ #include &lt;unistd.h&gt;
+  #else
+  #include &lt;sys/time.h&gt;
+  #include &lt;sys/ioctl.h&gt;
+***************
+*** 86,92 ****
+  #ifndef DONT_WAIT
+  #include &lt;sys/wait.h&gt;
+  #endif /* DONT_WAIT */
+! #endif /* WIN32 */
+  #include &lt;string.h&gt;
+  #include &lt;stdlib.h&gt;
+  
+--- 91,97 ----
+  #ifndef DONT_WAIT
+  #include &lt;sys/wait.h&gt;
+  #endif /* DONT_WAIT */
+! #endif /* WIN32 || VXWORKS */
+  #include &lt;string.h&gt;
+  #include &lt;stdlib.h&gt;
+  
+***************
+*** 133,139 ****
+    
+    
+    while (1) {
+!     recv_request();
+      if (debug)
+        dump_request();
+      
+--- 138,147 ----
+    
+    
+    while (1) {
+! 
+!     if (recv_request() == 0)
+! 	return;
+! 
+      if (debug)
+        dump_request();
+      
+***************
+*** 397,403 ****
+      setpgrp();
+      */
+  
+! #ifndef WIN32
+    switch (fork())
+      {
+      case -1:  	
+--- 405,411 ----
+      setpgrp();
+      */
+  
+! #if !defined(WIN32) &amp;&amp; !defined(VXWORKS)
+    switch (fork())
+      {
+      case -1:  	
+***************
+*** 422,428 ****
+  
+        signal(SIGCLD, SIG_IGN);
+        
+! #endif /* WIN32 */
+  
+        for (;;)
+  	{
+--- 430,436 ----
+  
+        signal(SIGCLD, SIG_IGN);
+        
+! #endif /* WIN32 || VXWORKS*/
+  
+        for (;;)
+  	{
+***************
+*** 434,446 ****
+  	      printf("server_control: accept failed\n");
+  	      exit(1);
+  	    }
+! #ifdef WIN32
+  	/*
+  	 * Since we cannot fork this process , we cant fire any threads
+  	 * as they all share the same global data . So we better allow
+  	 * one request at at time 
+  	 */
+  	    process_requests() ;
+  	}
+  #else
+  
+--- 442,455 ----
+  	      printf("server_control: accept failed\n");
+  	      exit(1);
+  	    }
+! #if defined(WIN32) || defined(VXWORKS)
+  	/*
+  	 * Since we cannot fork this process , we cant fire any threads
+  	 * as they all share the same global data . So we better allow
+  	 * one request at at time 
+  	 */
+  	    process_requests() ;
++ 	    close (server_sock); /* pavel 5-Feb-1998 */
+  	}
+  #else
+  
+***************
+*** 478,487 ****
+        exit (0);
+        
+      }
+! #endif /* WIN32 */  
+  }
+  
+  
+  int
+  main(argc, argv)
+  int argc;
+--- 487,529 ----
+        exit (0);
+        
+      }
+! #endif /* WIN32 || VXWORKS*/
+  }
+  
+  
++ #ifdef VXWORKS
++ /* VxWorks uses a single address space for all tasks and dynamically loads
++    object modules.  Hence, we don't want a main(), but instead a 
+netperf()...
++  */
++ int
++ netserver(line)
++ char* line;
++ {
++     int	 argc;
++     char *argv[100];
++     extern int optind;
++ 
++     int	c;
++ 
++     struct sockaddr name;
++     int namelen = sizeof(name);
++ 
++     argv[0] = "netserver";
++     parseArgs (line, &amp;argc, argv);
++     init_getopt();		/* klugey, but needed.  (We may call
++ 				   netperf()/getopt() multiple times before
++ 				   rebooting/reloading...  */
++ 
++     /* Because VxWorks tasks run in the same address space, we can't 
+count on
++        the static variables being init-ed to 0 automatically... */
++     zero_static_vars();
++ 
++     /* Similarly, we should reset the posix timer variable, since we may 
+not
++        be in the same task that initially created it. */
++     reset_alarm();
++ 
++ #else  /* VXWORKS */
++ 
+  int
+  main(argc, argv)
+  int argc;
+***************
+*** 492,498 ****
+  
+    struct sockaddr name;
+    int namelen = sizeof(name);
+!   
+  
+  #ifdef WIN32
+  	WSADATA	wsa_data ;
+--- 534,541 ----
+  
+    struct sockaddr name;
+    int namelen = sizeof(name);
+! 
+! #endif /* VXWORKS */
+  
+  #ifdef WIN32
+  	WSADATA	wsa_data ;
+***************
+*** 547,553 ****
+--- 590,598 ----
+      exit(1);
+    }
+    
++ #ifndef VXWORKS
+    chmod(DEBUG_LOG_FILE,0644);
++ #endif
+    
+    /* if we were given a port number, then we should open a */
+    /* socket and hang listens off of it. otherwise, we should go */
+diff -cN netperf-2.1pl3-orig/netsh.c netperf-2.1pl3/netsh.c
+*** netperf-2.1pl3-orig/netsh.c	Wed Feb 11 10:27:00 1998
+--- netperf-2.1pl3/netsh.c	Wed Feb 11 14:55:24 1998
+***************
+*** 9,18 ****
+  /****************************************************************/
+  
+  #include &lt;sys/types.h&gt;
+! #ifndef WIN32
+! #include &lt;unistd.h&gt;
+  #include &lt;sys/ipc.h&gt;
+! #endif /* WIN32 */
+  #include &lt;fcntl.h&gt;
+  #include &lt;errno.h&gt;
+  #include &lt;signal.h&gt;
+--- 9,19 ----
+  /****************************************************************/
+  
+  #include &lt;sys/types.h&gt;
+! #if !defined(WIN32) &amp;&amp; !defined(VXWORKS)
+! #include &lt;unistd.h&gt;  /* VXW has this, but I don't think it's needed below 
+*/
+  #include &lt;sys/ipc.h&gt;
+! #endif /* WIN32 || VXWORKS*/
+! 
+  #include &lt;fcntl.h&gt;
+  #include &lt;errno.h&gt;
+  #include &lt;signal.h&gt;
+***************
+*** 271,276 ****
+--- 272,288 ----
+    remote_recv_align	= 8;	/* alignment for remote receives*/
+    remote_send_align	= 8;	/* alignment for remote sends	*/
+    
++   /* the corresponding offsets for the tests				*/
++   local_recv_offset = 0;
++   local_send_offset = 0;
++   remote_recv_offset = 0;
++   remote_send_offset = 0;
++ 
++   /* The formatting units for measurements */
++   libfmt = 'm';
++   /* The number of CPUs present */
++   shell_num_cpus=1;
++ 
+  #ifdef INTERVALS
+    /* rate controlling stuff */
+    interval_usecs  = 0;
+diff -cN netperf-2.1pl3-orig/netsh.h netperf-2.1pl3/netsh.h
+*** netperf-2.1pl3-orig/netsh.h	Wed Feb 11 10:27:00 1998
+--- netperf-2.1pl3/netsh.h	Wed Feb 11 10:29:53 1998
+***************
+*** 27,34 ****
+  #define 	REM_RECV_ALIGN	4	/* alignment for remote receive	*/
+  #define 	REM_SEND_ALIGN	4	/* alignment for remote sends	*/
+  
+! /* misc defines for the hell of it					*/
+  #define 	MAXLONG  	4294967295L
+  
+  #ifndef NETSH
+  /* stuff to say where this test is going                                */
+--- 27,36 ----
+  #define 	REM_RECV_ALIGN	4	/* alignment for remote receive	*/
+  #define 	REM_SEND_ALIGN	4	/* alignment for remote sends	*/
+  
+! /* misc defines for the hell of it		*/
+! #ifndef MAXLONG			/* Linux already defines this */
+  #define 	MAXLONG  	4294967295L
++ #endif
+  
+  #ifndef NETSH
+  /* stuff to say where this test is going                                */
+diff -cN netperf-2.1pl3-orig/nettest_bsd.c netperf-2.1pl3/nettest_bsd.c
+*** netperf-2.1pl3-orig/nettest_bsd.c	Wed Feb 11 10:27:00 1998
+--- netperf-2.1pl3/nettest_bsd.c	Wed Feb 11 19:05:19 1998
+***************
+*** 49,67 ****
+  #include &lt;stdlib.h&gt;
+  #endif /* NOSTDLIBH */
+  
+! #ifndef WIN32
+  #include &lt;sys/ipc.h&gt;
+  #include &lt;unistd.h&gt;
+  #include &lt;sys/socket.h&gt;
+  #include &lt;netinet/in.h&gt;
+  #include &lt;netinet/tcp.h&gt;
+  #include &lt;netdb.h&gt;
+! #else /* WIN32 */
+  #include &lt;process.h&gt;
+  #include &lt;windows.h&gt;
+  #include &lt;winsock.h&gt;
+  #define close(x)	closesocket(x)
+! #endif /* WIN32 */
+  
+  #include "netlib.h"
+  #include "netsh.h"
+--- 49,72 ----
+  #include &lt;stdlib.h&gt;
+  #endif /* NOSTDLIBH */
+  
+! #if !defined(WIN32) &amp;&amp; !defined(VXWORKS)
+  #include &lt;sys/ipc.h&gt;
+  #include &lt;unistd.h&gt;
+  #include &lt;sys/socket.h&gt;
+  #include &lt;netinet/in.h&gt;
+  #include &lt;netinet/tcp.h&gt;
+  #include &lt;netdb.h&gt;
+! #elif defined(VXWORKS)
+! #include &lt;unistd.h&gt;
+! #include &lt;sys/socket.h&gt;
+! #include &lt;netinet/in.h&gt;
+! #include &lt;netinet/tcp.h&gt;
+! #else /* WIN32 || VXWORKS */
+  #include &lt;process.h&gt;
+  #include &lt;windows.h&gt;
+  #include &lt;winsock.h&gt;
+  #define close(x)	closesocket(x)
+! #endif /* WIN32 || VXWORKS */
+  
+  #include "netlib.h"
+  #include "netsh.h"
+***************
+*** 112,117 ****
+--- 117,149 ----
+  #endif /* HISTOGRAM */
+  
+  
++ #ifdef VXWORKS
++   /* Because VxWorks tasks run in the same address space, we can't count 
+on
++      the static variables being init-ed to 0 automatically... */
++ void zero_static_vars()
++ {
++     rss_size = 0;
++     rsr_size = 0;
++     lss_size = 0;	
++     lsr_size = 0;	
++     req_size = 1;
++     rsp_size = 1;
++     send_size = 0;	
++     recv_size = 0;	
++ 		
++     loc_nodelay = 0;	
++     rem_nodelay = 0;
++     loc_sndavoid = 0;	
++     loc_rcvavoid = 0;	
++     rem_sndavoid = 0;	
++     rem_rcvavoid = 0;	
++ 
++     send_width = 0;
++     recv_width = 0;
++ }
++ #endif /* VXWORKS */
++ 
++ 
+  char sockets_usage[] = "\n\
+  Usage: netperf [global options] -- [test options] \n\
+  \n\
+***************
+*** 153,159 ****
+  
+    sock_opt_len = sizeof(int);
+    if (getsockopt(socket,
+! 		 getprotobyname("tcp")-&gt;p_proto,	
+  		 TCP_MAXSEG,
+  		 (char *)mss,
+  		 &amp;sock_opt_len) &lt; 0) {
+--- 185,195 ----
+  
+    sock_opt_len = sizeof(int);
+    if (getsockopt(socket,
+! #ifdef VXWORKS
+! 		 IPPROTO_TCP,
+! #else
+! 		 getprotobyname("tcp")-&gt;p_proto,
+! #endif
+  		 TCP_MAXSEG,
+  		 (char *)mss,
+  		 &amp;sock_opt_len) &lt; 0) {
+***************
+*** 350,356 ****
+--- 386,396 ----
+    if (loc_nodelay) {
+      one = 1;
+      if(setsockopt(temp_socket,
++ #ifdef VXWORKS
++ 		  IPPROTO_TCP,
++ #else
+  		  getprotobyname("tcp")-&gt;p_proto,
++ #endif
+  		  TCP_NODELAY,
+  		  (char *)&amp;one,
+  		  sizeof(one)) &lt; 0) {
+***************
+*** 483,489 ****
+--- 523,533 ----
+    if (loc_nodelay) {
+      one = 1;
+      if(setsockopt(temp_socket,
++ #ifdef VXWORKS
++ 		  IPPROTO_TCP,
++ #else
+  		  getprotobyname("tcp")-&gt;p_proto,
++ #endif
+  		  TCP_NODELAY,
+  		  (char *)&amp;one,
+  		  sizeof(one)) &lt; 0) {
+***************
+*** 628,661 ****
+    bzero((char *)&amp;server,
+  	sizeof(server));
+    
+!   /* it would seem that while HP-UX will allow an IP address (as a */
+!   /* string) in a call to gethostbyname, other, less enlightened */
+!   /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
+!   /* order changed to check for IP address first. raj 7/96 */
+! 
+!   if ((addr = inet_addr(remote_host)) == -1) {
+!     /* it was not an IP address, try it as a name */
+!     if ((hp = gethostbyname(remote_host)) == NULL) {
+!       /* we have no idea what it is */
+!       fprintf(where,
+! 	      "establish_control: could not resolve the destination %s\n",
+! 	      remote_host);
+!       fflush(where);
+        exit(1);
+-     }
+-     else {
+-       /* it was a valid remote_host */
+-       bcopy(hp-&gt;h_addr,
+- 	    (char *)&amp;server.sin_addr,
+- 	    hp-&gt;h_length);
+-       server.sin_family = hp-&gt;h_addrtype;
+-     }
+-   }
+-   else {
+-     /* it was a valid IP address */
+-     server.sin_addr.s_addr = addr;
+-     server.sin_family = AF_INET;
+-   }    
+    
+    
+    if ( print_headers ) {
+--- 672,679 ----
+    bzero((char *)&amp;server,
+  	sizeof(server));
+    
+!   if (hostname_to_saddr(remote_host, &amp;server) == 0) 
+        exit(1);
+    
+    
+    if ( print_headers ) {
+***************
+*** 906,912 ****
+      /* get the signal set for the call to sigsuspend */
+      if (sigprocmask(SIG_BLOCK, (sigset_t *)NULL, &amp;signal_set) != 0) {
+        fprintf(where,
+! 	      "send_udp_stream: unable to get sigmask errno %d\n",
+  	      errno);
+        fflush(where);
+        exit(1);
+--- 924,930 ----
+      /* get the signal set for the call to sigsuspend */
+      if (sigprocmask(SIG_BLOCK, (sigset_t *)NULL, &amp;signal_set) != 0) {
+        fprintf(where,
+! 	      "send_tcp_stream: unable to get sigmask errno %d\n",
+  	      errno);
+        fflush(where);
+        exit(1);
+***************
+*** 992,998 ****
+  	}
+  	if (sigsuspend(&amp;signal_set) == EFAULT) {
+  	  fprintf(where,
+! 		  "send_udp_stream: fault with sigsuspend.\n");
+  	  fflush(where);
+  	  exit(1);
+  	}
+--- 1010,1016 ----
+  	}
+  	if (sigsuspend(&amp;signal_set) == EFAULT) {
+  	  fprintf(where,
+! 		  "send_tcp_stream: fault with sigsuspend.\n");
+  	  fflush(where);
+  	  exit(1);
+  	}
+***************
+*** 1498,1504 ****
+    tcp_stream_response-&gt;receive_size = recv_size;
+  
+    send_response();
+!   
+    addrlen = sizeof(peeraddr_in);
+    
+    if ((s_data=accept(s_listen,
+--- 1516,1527 ----
+    tcp_stream_response-&gt;receive_size = recv_size;
+  
+    send_response();
+!   /* Because send_response() will htonl() all the bits in the
+!      netperf_response struct, we actually need to set this field
+!      again... (pavel 11-Feb-1998)  */
+!   netperf_response.content.response_type = TCP_STREAM_RESPONSE;
+! 
+! 
+    addrlen = sizeof(peeraddr_in);
+    
+    if ((s_data=accept(s_listen,
+***************
+*** 1733,1766 ****
+    bzero((char *)&amp;server,
+  	sizeof(server));
+    
+!   /* it would seem that while HP-UX will allow an IP address (as a */
+!   /* string) in a call to gethostbyname, other, less enlightened */
+!   /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
+!   /* order changed to check for IP address first. raj 7/96 */
+! 
+!   if ((addr = inet_addr(remote_host)) == -1) {
+!     /* it was not an IP address, try it as a name */
+!     if ((hp = gethostbyname(remote_host)) == NULL) {
+!       /* we have no idea what it is */
+!       fprintf(where,
+! 	      "establish_control: could not resolve the destination %s\n",
+! 	      remote_host);
+!       fflush(where);
+        exit(1);
+-     }
+-     else {
+-       /* it was a valid remote_host */
+-       bcopy(hp-&gt;h_addr,
+- 	    (char *)&amp;server.sin_addr,
+- 	    hp-&gt;h_length);
+-       server.sin_family = hp-&gt;h_addrtype;
+-     }
+-   }
+-   else {
+-     /* it was a valid IP address */
+-     server.sin_addr.s_addr = addr;
+-     server.sin_family = AF_INET;
+-   }    
+    
+    if ( print_headers ) {
+      fprintf(where,"TCP REQUEST/RESPONSE TEST");
+--- 1756,1763 ----
+    bzero((char *)&amp;server,
+  	sizeof(server));
+    
+!   if (hostname_to_saddr(remote_host, &amp;server) == 0) 
+        exit(1);
+    
+    if ( print_headers ) {
+      fprintf(where,"TCP REQUEST/RESPONSE TEST");
+***************
+*** 2436,2469 ****
+    bzero((char *)&amp;server,
+  	sizeof(server));
+    
+!   /* it would seem that while HP-UX will allow an IP address (as a */
+!   /* string) in a call to gethostbyname, other, less enlightened */
+!   /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
+!   /* order changed to check for IP address first. raj 7/96 */
+! 
+!   if ((addr = inet_addr(remote_host)) == -1) {
+!     /* it was not an IP address, try it as a name */
+!     if ((hp = gethostbyname(remote_host)) == NULL) {
+!       /* we have no idea what it is */
+!       fprintf(where,
+! 	      "establish_control: could not resolve the destination %s\n",
+! 	      remote_host);
+!       fflush(where);
+        exit(1);
+-     }
+-     else {
+-       /* it was a valid remote_host */
+-       bcopy(hp-&gt;h_addr,
+- 	    (char *)&amp;server.sin_addr,
+- 	    hp-&gt;h_length);
+-       server.sin_family = hp-&gt;h_addrtype;
+-     }
+-   }
+-   else {
+-     /* it was a valid IP address */
+-     server.sin_addr.s_addr = addr;
+-     server.sin_family = AF_INET;
+-   }    
+  
+    
+    if ( print_headers ) {
+--- 2433,2440 ----
+    bzero((char *)&amp;server,
+  	sizeof(server));
+    
+!   if (hostname_to_saddr(remote_host, &amp;server) == 0) 
+        exit(1);
+  
+    
+    if ( print_headers ) {
+***************
+*** 3360,3393 ****
+    bzero((char *)&amp;server,
+  	sizeof(server));
+    
+!   /* it would seem that while HP-UX will allow an IP address (as a */
+!   /* string) in a call to gethostbyname, other, less enlightened */
+!   /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
+!   /* order changed to check for IP address first. raj 7/96 */
+! 
+!   if ((addr = inet_addr(remote_host)) == -1) {
+!     /* it was not an IP address, try it as a name */
+!     if ((hp = gethostbyname(remote_host)) == NULL) {
+!       /* we have no idea what it is */
+!       fprintf(where,
+! 	      "establish_control: could not resolve the destination %s\n",
+! 	      remote_host);
+!       fflush(where);
+        exit(1);
+-     }
+-     else {
+-       /* it was a valid remote_host */
+-       bcopy(hp-&gt;h_addr,
+- 	    (char *)&amp;server.sin_addr,
+- 	    hp-&gt;h_length);
+-       server.sin_family = hp-&gt;h_addrtype;
+-     }
+-   }
+-   else {
+-     /* it was a valid IP address */
+-     server.sin_addr.s_addr = addr;
+-     server.sin_family = AF_INET;
+-   }    
+    
+    if ( print_headers ) {
+      fprintf(where,"UDP REQUEST/RESPONSE TEST");
+--- 3331,3338 ----
+    bzero((char *)&amp;server,
+  	sizeof(server));
+    
+!   if (hostname_to_saddr(remote_host, &amp;server) == 0) 
+        exit(1);
+    
+    if ( print_headers ) {
+      fprintf(where,"UDP REQUEST/RESPONSE TEST");
+***************
+*** 4813,4846 ****
+  	sizeof(struct sockaddr_in));
+    myaddr-&gt;sin_family = AF_INET;
+  
+!   /* it would seem that while HP-UX will allow an IP address (as a */
+!   /* string) in a call to gethostbyname, other, less enlightened */
+!   /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
+!   /* order changed to check for IP address first. raj 7/96 */
+! 
+!   if ((addr = inet_addr(remote_host)) == -1) {
+!     /* it was not an IP address, try it as a name */
+!     if ((hp = gethostbyname(remote_host)) == NULL) {
+!       /* we have no idea what it is */
+!       fprintf(where,
+! 	      "establish_control: could not resolve the destination %s\n",
+! 	      remote_host);
+!       fflush(where);
+        exit(1);
+-     }
+-     else {
+-       /* it was a valid remote_host */
+-       bcopy(hp-&gt;h_addr,
+- 	    (char *)&amp;server.sin_addr,
+- 	    hp-&gt;h_length);
+-       server.sin_family = hp-&gt;h_addrtype;
+-     }
+-   }
+-   else {
+-     /* it was a valid IP address */
+-     server.sin_addr.s_addr = addr;
+-     server.sin_family = AF_INET;
+-   }    
+    
+    
+    if ( print_headers ) {
+--- 4758,4765 ----
+  	sizeof(struct sockaddr_in));
+    myaddr-&gt;sin_family = AF_INET;
+  
+!   if (hostname_to_saddr(remote_host, &amp;server) == 0) 
+        exit(1);
+    
+    
+    if ( print_headers ) {
+***************
+*** 4983,4989 ****
+--- 4902,4910 ----
+    
+    /* pick a nice random spot between client_port_min and */
+    /* client_port_max for our initial port number */
++ #ifndef VXWORKS
+    srand(getpid());
++ #endif
+    if (client_port_max - client_port_min) {
+      myport = client_port_min + 
+        (rand() % (client_port_max - client_port_min));
+***************
+*** 5932,5965 ****
+  	sizeof(struct sockaddr_in));
+    myaddr-&gt;sin_family = AF_INET;
+  
+!   /* it would seem that while HP-UX will allow an IP address (as a */
+!   /* string) in a call to gethostbyname, other, less enlightened */
+!   /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
+!   /* order changed to check for IP address first. raj 7/96 */
+! 
+!   if ((addr = inet_addr(remote_host)) == -1) {
+!     /* it was not an IP address, try it as a name */
+!     if ((hp = gethostbyname(remote_host)) == NULL) {
+!       /* we have no idea what it is */
+!       fprintf(where,
+! 	      "establish_control: could not resolve the destination %s\n",
+! 	      remote_host);
+!       fflush(where);
+        exit(1);
+-     }
+-     else {
+-       /* it was a valid remote_host */
+-       bcopy(hp-&gt;h_addr,
+- 	    (char *)&amp;server.sin_addr,
+- 	    hp-&gt;h_length);
+-       server.sin_family = hp-&gt;h_addrtype;
+-     }
+-   }
+-   else {
+-     /* it was a valid IP address */
+-     server.sin_addr.s_addr = addr;
+-     server.sin_family = AF_INET;
+-   }    
+    
+    if ( print_headers ) {
+      fprintf(where,"TCP Transactional/Request/Response TEST");
+--- 5853,5860 ----
+  	sizeof(struct sockaddr_in));
+    myaddr-&gt;sin_family = AF_INET;
+  
+!   if (hostname_to_saddr(remote_host, &amp;server) == 0) 
+        exit(1);
+    
+    if ( print_headers ) {
+      fprintf(where,"TCP Transactional/Request/Response TEST");
+***************
+*** 6103,6109 ****
+--- 5998,6006 ----
+    /* client_port_max for our initial port number. if they are the */
+    /* same, then just set to _min */
+    if (client_port_max - client_port_min) {
++ #ifndef VXWORKS
+      srand(getpid());
++ #endif
+      myport = client_port_min + 
+        (rand() % (client_port_max - client_port_min));
+    }
+***************
+*** 7021,7054 ****
+    bzero((char *)&amp;server,
+  	sizeof(server));
+    
+!   /* it would seem that while HP-UX will allow an IP address (as a */
+!   /* string) in a call to gethostbyname, other, less enlightened */
+!   /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
+!   /* order changed to check for IP address first. raj 7/96 */
+! 
+!   if ((addr = inet_addr(remote_host)) == -1) {
+!     /* it was not an IP address, try it as a name */
+!     if ((hp = gethostbyname(remote_host)) == NULL) {
+!       /* we have no idea what it is */
+!       fprintf(where,
+! 	      "establish_control: could not resolve the destination %s\n",
+! 	      remote_host);
+!       fflush(where);
+        exit(1);
+-     }
+-     else {
+-       /* it was a valid remote_host */
+-       bcopy(hp-&gt;h_addr,
+- 	    (char *)&amp;server.sin_addr,
+- 	    hp-&gt;h_length);
+-       server.sin_family = hp-&gt;h_addrtype;
+-     }
+-   }
+-   else {
+-     /* it was a valid IP address */
+-     server.sin_addr.s_addr = addr;
+-     server.sin_family = AF_INET;
+-   }    
+    
+    if ( print_headers ) {
+      fprintf(where,"TCP Non-Blocking REQUEST/RESPONSE TEST");
+--- 6918,6925 ----
+    bzero((char *)&amp;server,
+  	sizeof(server));
+    
+!   if (hostname_to_saddr(remote_host, &amp;server) == 0) 
+        exit(1);
+    
+    if ( print_headers ) {
+      fprintf(where,"TCP Non-Blocking REQUEST/RESPONSE TEST");
+***************
+*** 8116,8149 ****
+  	sizeof(struct sockaddr_in));
+    myaddr-&gt;sin_family = AF_INET;
+  
+!   /* it would seem that while HP-UX will allow an IP address (as a */
+!   /* string) in a call to gethostbyname, other, less enlightened */
+!   /* systems do not. fix from awjacks@ca.sandia.gov raj 10/95 */  
+!   /* order changed to check for IP address first. raj 7/96 */
+! 
+!   if ((addr = inet_addr(remote_host)) == -1) {
+!     /* it was not an IP address, try it as a name */
+!     if ((hp = gethostbyname(remote_host)) == NULL) {
+!       /* we have no idea what it is */
+!       fprintf(where,
+! 	      "establish_control: could not resolve the destination %s\n",
+! 	      remote_host);
+!       fflush(where);
+        exit(1);
+-     }
+-     else {
+-       /* it was a valid remote_host */
+-       bcopy(hp-&gt;h_addr,
+- 	    (char *)&amp;server.sin_addr,
+- 	    hp-&gt;h_length);
+-       server.sin_family = hp-&gt;h_addrtype;
+-     }
+-   }
+-   else {
+-     /* it was a valid IP address */
+-     server.sin_addr.s_addr = addr;
+-     server.sin_family = AF_INET;
+-   }    
+    
+    
+    if ( print_headers ) {
+--- 7987,7994 ----
+  	sizeof(struct sockaddr_in));
+    myaddr-&gt;sin_family = AF_INET;
+  
+!   if (hostname_to_saddr(remote_host, &amp;server) == 0) 
+        exit(1);
+    
+    
+    if ( print_headers ) {
+***************
+*** 8274,8280 ****
+    
+    /* pick a nice random spot between client_port_min and */
+    /* client_port_max for our initial port number */
+!   srand(getpid());
+    if (client_port_max - client_port_min) {
+      myport = client_port_min + 
+        (rand() % (client_port_max - client_port_min));
+--- 8119,8127 ----
+    
+    /* pick a nice random spot between client_port_min and */
+    /* client_port_max for our initial port number */
+! #ifndef VXWORKS
+!     srand(getpid());
+! #endif
+    if (client_port_max - client_port_min) {
+      myport = client_port_min + 
+        (rand() % (client_port_max - client_port_min));
+diff -cN netperf-2.1pl3-orig/nettest_xti.c netperf-2.1pl3/nettest_xti.c
+*** netperf-2.1pl3-orig/nettest_xti.c	Wed Feb 11 10:27:02 1998
+--- netperf-2.1pl3/nettest_xti.c	Wed Feb 11 14:31:42 1998
+***************
+*** 1,7 ****
+  #ifdef DO_XTI
+  #ifndef lint
+  char	nettest_xti_id[]="\
+! @(#)nettest_xti.c (c) Copyright 1995 Hewlett-Packard Co. Version 2.1pl1";
+  #else
+  #define DIRTY
+  #define HISTOGRAM
+--- 1,7 ----
+  #ifdef DO_XTI
+  #ifndef lint
+  char	nettest_xti_id[]="\
+! @(#)nettest_xti.c (c) Copyright 1995 Hewlett-Packard Co. Version 2.1pl3";
+  #else
+  #define DIRTY
+  #define HISTOGRAM
+<p>
+--==_Exmh_-17838386040--
+<p>
+<p>
+<p>
+<p>
+--------------47F009A5D7A2E42DA51911DB--
+</pre>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0018.html">Ian Heavens: "netperf on RTOS"</a>
+<li> <b>Previous message:</b> <a href="0016.html">Rick Jones: "Re: VxWorks version of Netperf"</a>
+<!-- nextthread="start" -->
+</ul>

@@ -1,0 +1,47 @@
+<HTML>
+<HEAD>
+<TITLE>Guidelines for Submitting Results to the Netperf Database</TITLE>
+<H1>Guidelines for Submitting Results to the Netperf Database</H1>
+
+<H2>
+<img src="http://www.cup.hp.com/images/cauticon.pm" alt="!">
+This page is in BETA status only. As I find more things that could be
+potential problems with numbers, I will be adding to this page.
+</H2>
+</HEAD>
+<BODY>
+<P>The utility and accuracy of the netperf database is left entirely
+to its users. It is critical that <EM>you</EM> make sure that the
+methodologies you follow are apropriate, and that the numbers you
+submit are complete and accurate.
+
+<P>To that end, here are some important considerations:
+<UL>
+<LI> All tests should be of at least 60 seconds duration.
+<LI> The <EM>entire</EM> output of netperf should be included.
+<LI> The <EM>entire</EM> netperf command line should be included.
+<LI> The system models should be specified completely.
+<LI> The results submitted should be repeatable.
+<LI> The submitter's name and email address should be included.
+<LI> The comments area should be used to explain those aspects of the
+test not covered by the rest of the submittal form.
+<LI> All of the independent/concurrent tests of an aggregate result
+should run for the same length of time, and report similar results. An
+aggregate result should be reported under the test type of "Other" and
+be fully explaied in the comments section.
+<LI> The measurement of MP systems is somewhat problematic. It is
+unlikely that a single instance of netperf would be sufficient to
+utilize the total resources of an MP system. However, it is still
+interesting to see what effect MP has on a single-connection speed
+metric. Beyond that, MP systems may be measured with aggregate test
+methods. 
+</UL>
+<P>
+If you have ideas on guidelines for netperf numbers, please provide
+use with 
+<A HREF="mailto:netperf-feedback@netperf.org">feedback</A>.
+<P>
+Go to the 
+<A HREF="/opennet/NetperfPage.html">Netperf Homepage</A>.
+</BODY>
+</HTML>

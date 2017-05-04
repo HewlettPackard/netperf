@@ -1,0 +1,401 @@
+<HTML>
+<HEAD>
+<TITLE>
+Known Names for the Netperf Database
+</TITLE>
+</HEAD>
+<BODY>
+<H1>
+Known Names for the Netperf Database
+</H1>
+
+<H2>
+<IMG SRC="http:/images/cauticon.pm" ALT="CAUTION!">
+The names presented on this page are provided for solely for the
+purpose of making submittals and retrievals of the netperf database
+easier and less error-prone. In providing this information,
+Hewlett-Packard makes NO endorsement of any kind. Please be certain
+you have read the
+<A HREF="/netperf/NetperfDisclaim.html">disclaimer</A>
+before going any further.
+</H2>
+
+This page contains guidelines and lists of identifiers for the various
+fields in the submittal and retrieval forms. You can use this first
+list to go straight to the identifier list that interests you.
+
+<UL>
+  <LI> <A HREF="#model">Model Names</A>
+  <LI> <A HREF="#sysvend">System Vendors</A>
+  <LI> <A HREF="#release">Release Numbers</A>
+  <LI> <A HREF="#os">Operating Systems</A>
+  <LI> <A HREF="#tranvend">Transport Vendors</A>
+  <LI> <A HREF="#iobus">I/O Buses</A>
+  <LI> <A HREF="#cardvend">Interface Card Vendors</A>
+  <LI> <A HREF="#nettype">Network Types</A>
+  <LI> <A HREF="#testtype">Test Types</A>
+</UL>
+<HR>
+<HR>
+<H2>
+<A NAME="model"><HR>Model Names</A>
+</H2>
+<P>
+Model names are free-form keywords. They should closely follow the
+common name for that model and be sufficiently detailed to
+differentiate one model from another. For example, at the time of
+this writing, there were six different models of HP 9000/715 so
+stating simply "715" would be too vague. Each differed in clock-rate,
+so the model names for them would be 715/33, 715/50, and so on. The
+model name does not need to include an indication of vendor.
+</P>
+<H2>
+<HR>
+<A NAME="sysvend">System Vendors</A>
+</H2>
+<P>
+To insure that your submittal is more easily retrieved by others, it
+is suggested that you use the following identifiers to represent the
+various system vendors. If you wish to submit numbers for a system
+from a vendor not on this list, please feel free to do so, using a
+value of "Other" and place the vendor name in the "Comments" section
+of the submittal form. At the same time, please use the 
+<A HREF="mailto:netperf-feedback@netperf.org">feedback</A>
+page so the maintainers of the database can update this list.
+</P>
+<P>
+When retrieving numbers, you may also use "Other" or you may try what
+you think the vendor's name might be.
+</P>
+
+<DL>
+  <DT> Compaq
+  <DD> Compaq Computer Corporation
+  <DT> Dell
+  <DD> Dell Computer Corporation
+  <DT> DEC
+  <DD> Digital Equipment Corporation
+  <DT> HP
+  <DD> Hewlett-Packard Corporation
+  <DT> IBM
+  <DD> International Business Machines
+  <DT> RNS
+  <DD> Rockwell Network Systems
+  <DT> SGI
+  <DD> Silicon Graphics Incorporated
+  <DT> Sun
+  <DD> Sun Microsystems Incorporated
+</DL>
+
+<HR>
+<HR>
+<H2>
+<A NAME="release">Release Numbers</A>
+</H2>
+A release numbers are free-form keywords. They should be sufficiently
+detailed to allow others to order the software if they wish to
+reproduce your results. For Unix operating systems, the output of
+"uname -r" is often a good choice (though perhaps not for Solaris).
+Your mileage will vary for other software - such as transport or
+driver software. 
+<HR>
+<H2>
+<A NAME="os">Operating Systems</A>
+</H2>
+<P>
+To insure that your submittal is more easily retrieved by others, it
+is suggested that you use the following identifiers to represent the
+various operating systems. If you wish to submit numbers for a system
+running an OS not on this list, please feel free to do so, using an
+identifier of "Other" and include the real name in the Comments
+section. At the same time,please use the  
+<A HREF="mailto:netperf-feedback@netperf.org">feedback</A>
+page so the maintainers of the database can update this list.
+</P>
+<P> 
+When retrieving numbers, you may also use "Other" or you may try what
+you think the OS name might be.
+</P>
+<UL>
+  <LI> AIX
+  <LI> BSD
+  <LI> FreeBSD
+  <LI> HP-RT
+  <LI> HP-UX
+  <LI> IRIX
+  <LI> Linux
+  <LI> MPE/iX
+  <LI> MS-DOS
+  <LI> NetBSD
+  <LI> NT
+  <LI> OSF
+  <LI> SCO
+  <LI> Solaris
+  <LI> SunOS
+  <LI> Unixware
+  <LI> Windows
+</UL>
+
+<HR>
+<H2>
+<A NAME="tranvend">Transport Software Vendors</A>
+</H2>
+<P>
+The following are the currently known Transport Vendors. Please use
+these names when accessing the database. If the transport software
+came with the operating system, use the term "Bundled." If the
+transport software came from a vendor not on this list, use the term
+"Other" and list the name of the transport provider in the Comments
+section. Please use the 
+<A HREF="mailto:netperf-feedback@netperf.org">feedback</A>
+page to let the maintainers know to update this list.
+</P>
+<DL>
+  <DT> Bundled
+  <DD> The transport software came bundled with the system. This is
+       often the case with Unix systems, but not so with PC's.
+  <DT> B&W
+  <DD> Beame & Whiteside
+  <DT> FTP
+  <DD> FTP Software Inc.
+  <DT> NetManage
+  <DD> NetManage
+  <DT> SunConnect
+  <DD> SunConnect
+</DL>
+<HR>
+<H2>
+<A NAME="cardvend">Interface Card Vendors</A>
+</H2>
+<P>
+To insure that your submittal is more easily retrieved by others, it
+is suggested that you use the following identifiers to represent the
+various network interface vendors. If you wish to submit numbers for a
+card from a vendor not on this list, please feel free to do so,
+using an identifier of "Other" and include the real name in the
+Comments section. At the same time, please use the  
+<A HREF="mailto:netperf-feedback@netperf.org">feedback</A>
+page so the maintainers of the database can update this list.
+</P>
+<P> 
+When retrieving numbers, you may also use "Other" or you may try what
+you think the card vendor's name might be.
+</P>
+
+<DL>
+  <DT> Ancor
+  <DD> Ancor Communications Inc.
+  <DT> Cicso
+  <DD> Cisco Systems Inc.
+  <DT> DEC 
+  <DD> Digital Equipemnt Corporation
+  <DT> Efficient
+  <DD> Efficient Networks Inc.
+  <DT> Fore
+  <DD> Fore Systems Inc.
+  <DT> Genroco
+  <DD> GENROCO In.
+  <DT> HP
+  <DD> Hewlett-Packard Company
+  <DT> IBM
+  <DD> International Business Machines
+  <DT> Interphase 
+  <DD> Interphase Corpration
+  <DT> Myricom
+  <DT> NPI
+  <DD> Network Peripherals Inc.
+  <DT> RNS
+  <DD> Rockwell Network Systems
+  <DT> SGI
+  <DD> Silicon Graphics Inc.
+  <DT> Sun 
+  <DD> Sun Microsystems Inc.
+  <DT> Synoptics
+</DL>
+
+<HR>
+<H2>
+<A NAME="iobus">I/O Buses</A>
+</H2>
+<P>
+To insure that your submittal is more easily retrieved by others, it
+is suggested that you use the following identifiers to represent the
+various I/O busses. If you wish to submit numbers for an I/O bus not
+on this list, please feel free to do so, using an identifier of
+"Other" and include the real name in the Comments section. At the same
+time, please use the
+<A HREF="mailto:netperf-feedback@netperf.org">feedback</A>
+page so the maintainers of the database can update this list.
+</P>
+<P> 
+When retrieving numbers, you may also use "Other" or you may try what
+you think the bus name might be.
+</P>
+
+<UL>
+  <LI> Core      
+  <LI> EISA
+  <LI> GIO
+  <LI> GSC/GSC+
+  <LI> HIO
+  <LI> ISA
+  <LI> MCA
+  <LI> NIO
+  <LI> PCI
+  <LI> SBUS
+  <LI> TURBOchannel
+  <LI> VESA
+  <LI> VME
+  <LI> XIO
+</UL>
+
+<HR>
+<H2>
+<A NAME="nettype">Network Types</A>
+</H2>
+<P>
+To insure that your submittal is more easily retrieved by others, it
+is suggested that you use the following identifiers to represent the
+various network types. If you wish to submit numbers for a network
+type not on this list, please feel free to do so, using an identifier
+of "Other" and include the real name in the Comments section. At the
+same time, please use the 
+<A HREF="mailto:netperf-feedback@netperf.org">feedback</A>
+page so the maintainers of the database can update this list.
+</P>
+<P> 
+When retrieving numbers, you may also use "Other" or you may try what
+you think the network name might be.
+</P>
+<P>
+<strong>Please</strong> use the comments section to describe any
+<strong>switches</strong>, <strong>routers</strong>, or 
+other interesting interconnect devices between the system running
+netperf and the system running netserver. If the systems were
+connected <strong>back-to-back</strong> then please indicate so in the
+comments. 
+</P>
+<DL>
+  <DT> ATM
+  <DD> Asynchronous Transfer Mode running at an unknown rate or
+       different rates at either end.
+  <DT> ATM-25
+  <DD> Asynchronous Transfer Mode running at ~25 Mbit/s. (Was ATM)
+  <DT> ATM-51
+  <DD> Asynchronous Transfer Mode running at ~51 Mbit/s. (Was ATM)
+  <DT> ATM-100
+  <DD> Asynchronous Transfer Mode running at ~100 Mbit/s (TAXI). (Was ATM)
+  <DT> ATM-155
+  <DD> Asynchronous Transfer Mode running at ~155 Mbit/s (SONET). (Was ATM)
+  <DT> ATM-622
+  <DD> Asynchronous Transfer Mode running at ~622 Mbit/s. (Was ATM)
+  <DT> Ethernet
+  <DD> "Classic" 10 Mbit/s Ethernet. Includes 10BaseT, 10Base2 and
+       10BaseF. If full-duplex please indicate so in
+       the Comments section of the submittal form.
+  <DT> 100VG
+  <DD> 100 Mbit/s 100VG-AnyLAN (a.k.a. IEEE 802.12) Please specify
+       either Ethernet or TokenRing (802.5) framing in the Comments
+       section. If full-duplex indicate so in
+       the Comments section of the submittal form.
+  <DT> GigabitEthernet
+  <DD> 1000 Mbit/s Ethernet.
+  <DT> FastEthernet
+  <DD> 100 Mbit/s Ethernet using CSMA/CD (100BaseT, 100BaseX, etc). If
+       full-duplex please indicate so in the Comments
+       section of the submittal form. 
+  <DT> FDDI
+  <DD> FDDI (or CDDI) running over Fiber, UTP Copper or STP (Was
+       FDDI/CDDI). Please state if the connection was dual-attach, or
+       single-attach, and the type of concentrator used (if any). 
+  <DT> FC
+  <DD> Fibre Channel running at an unknown rate, or at different rates
+       at either end.
+  <DT> FC-266
+  <DD> Fibre Channel running at ~266 Mbit/s (25 MB/s). Also known as
+       "quarter-speed." (Was FibreChannel) 
+  <DT> FC-531
+  <DD> Fibre Channel running at ~531 Mbit/s (50 MB/s). Also known as
+       "half-speed." (Was FibreChannel) 
+  <DT> FC-1062
+  <DD> Fibre Channel running at ~1062 Mbit/s (100 MB/s). Also known as
+       "full-speed." (Was FibreChannel) 
+  <DT> HiPPI
+  <DD> Hi Performance Parallel Interface
+  <DT> Loopback
+  <DT> Myrinet
+  <DT> SLIP/PPP
+  <DD> Serial Line IP or Point-to-Point Protocol. Specify the
+       uncompressed and compressed speed of the modems being used in
+       the Comments section. This includes CSLIP
+  <DT> 802.5-4
+  <DD> 802.5 Token Ring (IBM Token Ring) running at ~4 Mbit/s
+  <DT> 802.5-16
+  <DD> 802.5 Token Ring (IBM Token Ring) running at `16 Mbit/s
+</DL>
+<HR>
+<HR>
+<H2>
+<A NAME="testtype">Test Types</A>
+</H2>
+<P>
+To insure that your submittal is more easily retrieved by others, it
+is suggested that you use the following identifiers to represent the
+various test types. If you wish to submit numbers for a test
+type not on this list, please feel free to do so, using an identifier
+of "Other" and an explanation in the Comments section. At the same
+time, please use the 
+<A HREF="mailto:netperf-feedback@netperf.org">feedback</A>
+page so the maintainers of the database can update this list.
+</P>
+<DL>
+  <DT> TCP_STREAM
+  <DD> A TCP_STREAM test is a unidirecitonal data transfer test using
+       the Transmission Control Protocol and the Berkeley Sockets API. 
+  <DT> TCP_RR
+  <DD> A TCP_RR test is a synchronous request/response test which can
+       be used to measure end-to-end round trip latency using the BSD API.
+  <DT> UDP_STREAM
+  <DD> A UDP_STREAM test is a unidirecitonal data transfer test using
+       the User Datagram Protocol and the BSD API. 
+  <DT> UDP_RR
+  <DD> A UDP_RR test is a synchronous request/response test which can
+       be used to measure end-to-end round trip latency using the BSD
+       API. 
+  <DT> DLCO_STREAM
+  <DD> A DLCO_STREAM test is a unidirecitonal data transfer test using
+       the DLPI Connection Oriented API (802.2 Type 2). It is
+       analagous to a TCP_STREAM test.
+  <DT> DLCO_RR
+  <DT> DLCL_STREAM
+  <DD> A DLCL_STREAM test is a unidirecitonal data transfer test using
+       the DLPI ConnectionLess API (802.2 Type 1). It is analgous to a
+       UDP_STREAM test.
+  <DT> DLCL_RR
+  <DT> STREAM_STREAM
+  <DD> A STREAM_STREAM test is a unidirecitonal data transfer test using
+       the Unix Domain Sockets API and stream semantics.
+  <DT> STREAM_RR
+  <DT> DG_STREAM
+  <DD> A DG_STREAM test is a unidirecitonal data transfer test using
+       the Unic Domain Sockets API and datagram semantics.
+  <DT> DG_RR
+  <DT> FORE_STREAM
+  <DD> A FORE_STREAM test is a unidirecitonal data transfer test using
+       the Fore ATM API. It is analagous to a UDP_STREAM test.
+  <DT> FORE_RR
+  <DT> HIPPI_STREAM
+  <DD> A HIPPI_STREAM test is a unidirecitonal data transfer test using
+       the HP HiPPI LLA API
+  <DT> HIPPI_RR
+  <DT> Other
+</DL>
+<P>
+If you have ideas on how to improve this page, please feel free to
+provide your
+<A HREF="mailto:netperf-feedback@netperf.org">feedback</A>.
+<P>
+<A HREF="/netperf/NetperfPage.html">
+<IMG ALIGN="middle" SRC="/netperf/images/back.gif" alt="">Netperf Homepage</A>.
+</BODY>
+</HTML>

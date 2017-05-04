@@ -1,0 +1,57 @@
+<!-- received="Wed Nov 18 14:04:56 1998 PST" -->
+<!-- sent="Wed, 18 Nov 1998 13:57:54 -0800" -->
+<!-- name="Andrew W. Flury" -->
+<!-- email="aflury@nas.nasa.gov" -->
+<!-- subject="netperf security problem" -->
+<!-- id="9811181357.ZM3652@madrugada.nas.nasa.gov" -->
+<!-- inreplyto="" -->
+<title>Archive of the netperf-talk mailing list: netperf security problem</title>
+<h1>netperf security problem</h1>
+Andrew W. Flury (<i>aflury@nas.nasa.gov</i>)<br>
+<i>Wed, 18 Nov 1998 13:57:54 -0800</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#108">[ date ]</a><a href="index.html#108">[ thread ]</a><a href="subject.html#108">[ subject ]</a><a href="author.html#108">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0109.html">Andrew W. Flury: "netperf security problem"</a>
+<li> <b>Previous message:</b> <a href="0107.html">Kevin M. Joyce: "Re: udp sockets !!"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+In netperf-2.1pl3, netserver will follow symlinks when it creates its debug log<br>
+file (/tmp/netperf.debug by default).  If somebody created a symlink from<br>
+/tmp/netperf.debug to some file you have write access to, the file will be<br>
+truncated.  That's probably not a good thing. :)  BTW, why is the unlink()<br>
+commented out?  That wouldn've at least solved the problem if you were running<br>
+netserver as root (although that's not a great idea either) ;)  Anyway,<br>
+something along these lines should fix it..<br>
+<p>
+<p>
+--- netserver.c Wed Apr  9 11:02:13 1997<br>
++++ netserver.c Wed Nov 18 13:34:28 1998<br>
+@@ -540,8 +540,11 @@<br>
+     }<br>
+   }<br>
+<p>
+-/*  unlink(DEBUG_LOG_FILE); */<br>
+-<br>
++  if (remove(DEBUG_LOG_FILE) &lt; 0) {<br>
++    perror("netserver: debug file");<br>
++    exit(1);<br>
++  }<br>
++<br>
+   if ((where = fopen(DEBUG_LOG_FILE, "w")) == NULL) {<br>
+     perror("netserver: debug file");<br>
+     exit(1);<br>
+<p>
+<pre>
+-- 
+</pre>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0109.html">Andrew W. Flury: "netperf security problem"</a>
+<li> <b>Previous message:</b> <a href="0107.html">Kevin M. Joyce: "Re: udp sockets !!"</a>
+<!-- nextthread="start" -->
+</ul>

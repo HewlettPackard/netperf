@@ -1,0 +1,64 @@
+<!-- received="Tue Oct 13 12:32:30 1998 PDT" -->
+<!-- sent="Tue, 13 Oct 1998 12:33:22 -0700" -->
+<!-- name="Rick Jones" -->
+<!-- email="raj@cup.hp.com" -->
+<!-- subject="Re: Ideas !!" -->
+<!-- id="3623AB02.EB48E12B@cup.hp.com" -->
+<!-- inreplyto="Ideas !!" -->
+<title>Archive of the netperf-talk mailing list: Re: Ideas !!</title>
+<h1>Re: Ideas !!</h1>
+Rick Jones (<i>raj@cup.hp.com</i>)<br>
+<i>Tue, 13 Oct 1998 12:33:22 -0700</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#98">[ date ]</a><a href="index.html#98">[ thread ]</a><a href="subject.html#98">[ subject ]</a><a href="author.html#98">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0099.html">eqkkhc@ercu.unukm.kmps.com: "FREE 20 PICTURES A DAY !"</a>
+<li> <b>Previous message:</b> <a href="0097.html">Martin Koyabe: "RE: Netperf 2.1"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+Martin<br>
+<p>
+Please, please, please :) start doing word-wrap at 72 columns.<br>
+<p>
+<i>&gt; Anyone with ideas, I'll appreciate !! The outputs are show below.</i><br>
+<i>&gt; </i><br>
+<i>&gt; Martin.</i><br>
+<i>&gt; </i><br>
+<i>&gt; &gt; netperf -p 5400 -H 139.133.204.104 -t UDP_STREAM -- -m 1472</i><br>
+<i>&gt; UDP UNIDIRECTIONAL SEND TEST to 139.133.204.104 : interval</i><br>
+<i>&gt; Socket  Message  Elapsed      Messages</i><br>
+<i>&gt; Size    Size     Time         Okay Errors   Throughput</i><br>
+<i>&gt; bytes   bytes    secs            #      #   10^6bits/sec</i><br>
+<i>&gt; </i><br>
+<i>&gt;   8192    1472   10.00       79891      0      94.11</i><br>
+<i>&gt;   8192              10.00         102                 0.12</i><br>
+<p>
+There is a very little bit about this in the manual, upon which I will<br>
+expand here.<br>
+<p>
+UDP is an unreliable protocol, and the netperf UDP_STREAM test does not<br>
+attempt to add any reliability. The test is also very dependent on<br>
+outbound transmit queue overflows being reported with an ENOBUFs - on<br>
+systems where this does not happen, it is possible for netperf to report<br>
+greater than link rate sending numbers.<br>
+<p>
+It is probable that packets were lost somewhere - check the netstat<br>
+stats on both ends  - look for driver and UDP socket overflow stats.<br>
+<p>
+rick<br>
+<pre>
+-- 
+these opinions are mine, all mine; HP might not want them anyway... :)
+feel free to email, or post, but please do not do both...
+my email address is raj in the cup.hp.com domain...
+</pre>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0099.html">eqkkhc@ercu.unukm.kmps.com: "FREE 20 PICTURES A DAY !"</a>
+<li> <b>Previous message:</b> <a href="0097.html">Martin Koyabe: "RE: Netperf 2.1"</a>
+<!-- nextthread="start" -->
+</ul>

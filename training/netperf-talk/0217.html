@@ -1,0 +1,64 @@
+<!-- received="Wed Aug  4 00:05:17 1999 PDT" -->
+<!-- sent="Wed, 04 Aug 1999 00:06:28 -0700" -->
+<!-- name="Tom Pavel" -->
+<!-- email="pavel@slac.stanford.edu" -->
+<!-- subject="Re: Porting Netperf to VxWorks" -->
+<!-- id="0FFX00HJ9IETF0@mailbox.slac.stanford.edu" -->
+<!-- inreplyto="Tue, 03 Aug 1999 12:56:20 EDT" -->
+<title>Archive of the netperf-talk mailing list: Re: Porting Netperf to VxWorks</title>
+<h1>Re: Porting Netperf to VxWorks</h1>
+Tom Pavel (<i>pavel@slac.stanford.edu</i>)<br>
+<i>Wed, 04 Aug 1999 00:06:28 -0700</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#217">[ date ]</a><a href="index.html#217">[ thread ]</a><a href="subject.html#217">[ subject ]</a><a href="author.html#217">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0218.html">ygwl: "(no subject)"</a>
+<li> <b>Previous message:</b> <a href="0216.html">Bubeck, Leslie: "Porting Netperf to VxWorks"</a>
+<li> <b>In reply to:</b> <a href="0216.html">Bubeck, Leslie: "Porting Netperf to VxWorks"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+<i>&gt;&gt;&gt;&gt;&gt; On Tue, 3 Aug 1999, "Bubeck, Leslie" &lt;leslie.bubeck@lmco.com&gt; writes:</i><br>
+<p>
+<i>&gt; Does anyone know if Netperf has been ported to VxWorks??  I have just been</i><br>
+<i>&gt; tasked with this and I'd hate to reinvent the wheel if it has already been</i><br>
+<i>&gt; done.</i><br>
+<p>
+<p>
+I did some work on porting version 2.1pl3 to VxWorks Tornado on<br>
+PowerPC.  Unfortunately, netperf had moved on from pl3,  Rick was busy<br>
+working on v3, and I got busy on other projects, so these patches<br>
+never got integrated into production netperf.<br>
+<p>
+I think my diffs would serve you well as a starting point.  It<br>
+probably shouldn't be much work to move them forward to the latest 2.1<br>
+pl.   You can get them from the mailing list archives or from<br>
+<a href="ftp://ftp.slac.stanford.edu/users/pavel/netperf-vxw.diffs">ftp://ftp.slac.stanford.edu/users/pavel/netperf-vxw.diffs</a><br>
+<p>
+Caveats are that I concentrated on the TCP_STREAM test, and there are<br>
+some unsolved problems with the UDP tests.  [One of them is that<br>
+VxWorks does not allow IOs to be interrupted by signals (even though<br>
+they define a SA_INTERRUPT), so one needs to make the IO loop always<br>
+do select() and then recv().]  Also, being new to VxWorks, I tended to<br>
+solve my problems with the optional POSIX features (that are not<br>
+always included into VxWorks kernels).  For wider applicability, one<br>
+might want to use native VxWorks timers, etc.<br>
+<p>
+Ok.  Hope this info is helpful to you.  Feel free to contact me if I<br>
+can answer questions.<br>
+<p>
+<p>
+Tom Pavel<br>
+<p>
+Stanford Linear Accelerator Center<br>
+pavel@slac.stanford.edu                 <a href="http://www.slac.stanford.edu/~pavel/">http://www.slac.stanford.edu/~pavel/</a><br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0218.html">ygwl: "(no subject)"</a>
+<li> <b>Previous message:</b> <a href="0216.html">Bubeck, Leslie: "Porting Netperf to VxWorks"</a>
+<li> <b>In reply to:</b> <a href="0216.html">Bubeck, Leslie: "Porting Netperf to VxWorks"</a>
+<!-- nextthread="start" -->
+</ul>

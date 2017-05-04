@@ -1,0 +1,187 @@
+<!-- received="Mon Mar 30 08:44:30 1998 PST" -->
+<!-- sent="Mon, 30 Mar 1998 11:46:40 -0500 (EST)" -->
+<!-- name="Edwin Law" -->
+<!-- email="e-law@cs.yorku.ca" -->
+<!-- subject="Re: Asymmetric TCP/ATM throughputs between client and server" -->
+<!-- id="Pine.GSO.3.96.980330113145.28712C-200000@tiger" -->
+<!-- inreplyto="351BA636.9D2D3D85@cassi.ndf.rl.af.mil" -->
+<title>Archive of the netperf-talk mailing list: Re: Asymmetric TCP/ATM throughputs between client and server</title>
+<h1>Re: Asymmetric TCP/ATM throughputs between client and server</h1>
+Edwin Law (<i>e-law@cs.yorku.ca</i>)<br>
+<i>Mon, 30 Mar 1998 11:46:40 -0500 (EST)</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#28">[ date ]</a><a href="index.html#28">[ thread ]</a><a href="subject.html#28">[ subject ]</a><a href="author.html#28">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0029.html">Martin Borriss: "Re: Asymmetric TCP/ATM throughputs between client and server"</a>
+<li> <b>Previous message:</b> <a href="0027.html">Alain Kaminski: "Re: Asymmetric TCP/ATM throughputs between client and server"</a>
+<li> <b>In reply to:</b> <a href="0022.html">Kevin M. Joyce: "Re: Asymmetric TCP/ATM throughputs between client and server"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0029.html">Martin Borriss: "Re: Asymmetric TCP/ATM throughputs between client and server"</a>
+<li> <b>Next in thread:</b> <a href="0027.html">Alain Kaminski: "Re: Asymmetric TCP/ATM throughputs between client and server"</a>
+</ul>
+<!-- body="start" -->
+  This message is in MIME format.  The first part should be readable text,<br>
+  while the remaining parts are likely unreadable without MIME-aware tools.<br>
+  Send mail to mime@docserver.cac.washington.edu for more info.<br>
+<p>
+---559023410-851401618-891276400=:28712<br>
+Content-Type: TEXT/PLAIN; charset=US-ASCII<br>
+<p>
+I am not sure if it is appropriate here, but I have attached here the<br>
+small program I used for me tests, in case it is due to a bug in the<br>
+program (which is quite probable).  The switch driver I am using is 4.1.0.<br>
+The Sun's are running Solaris 2.5.1. The Qos parameters are stated in the<br>
+program.<br>
+<p>
+Thanks,<br>
+Edwin.<br>
+<p>
+On Fri, 27 Mar 1998, Kevin M. Joyce wrote:<br>
+<p>
+<i>&gt; We're running similar tests here and didn't see the same results.  We</i><br>
+<i>&gt; get consistent throughput readings from both sides.  </i><br>
+<i>&gt; </i><br>
+<i>&gt; Edwin Law wrote:</i><br>
+<i>&gt; &gt; </i><br>
+<i>&gt; &gt; Hi,</i><br>
+<i>&gt; &gt;     I wonder if anyone has encountered a similar problem before. I have</i><br>
+<i>&gt; &gt; obtained different throughput readings when transferring data between a</i><br>
+<i>&gt; &gt; client and a server from both directions. I am talking about a different</i><br>
+<i>&gt; &gt; of about 50 times in magnitude. This happens when I use the TCP/IP over</i><br>
+<i>&gt; &gt; ATM and the default ATM MTU of 9188 on two Sun's running Solaris.  When I</i><br>
+<i>&gt; &gt; set the ATM MTU to 65535, the problem goes away.</i><br>
+<i>&gt; &gt; </i><br>
+<p>
+---559023410-851401618-891276400=:28712<br>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; name="deadlock.c"<br>
+Content-Transfer-Encoding: BASE64<br>
+Content-ID: &lt;Pine.GSO.3.96.980330114640.28712D@tiger&gt;<br>
+Content-Description: deadlock.c<br>
+<p>
+I2luY2x1ZGUgPHN0ZGlvLmg+DQojaW5jbHVkZSA8ZmNudGwuaD4NCiNpbmNs<br>
+dWRlIDxzeXMvdHlwZXMuaD4NCiNpbmNsdWRlIDxzeXMvc29ja2V0Lmg+DQoj<br>
+aW5jbHVkZSA8bmV0ZGIuaD4NCiNpbmNsdWRlIDxuZXRpbmV0L2luLmg+DQoj<br>
+aW5jbHVkZSA8bmV0aW5ldC90Y3AuaD4NCiNpbmNsdWRlIDxzeXMvdGltZS5o<br>
+Pg0KDQojZGVmaW5lIE1BWF9CVUZfU0laRSA2NTUzNg0KDQpzdHJ1Y3QgdGlt<br>
+ZXZhbCBzdGFydCwgZmluaXNoOw0KDQp2b2lkIHN0YXJ0X3RpbWVyKCkgew0K<br>
+ICAgIGdldHRpbWVvZmRheSgmc3RhcnQsIChzdHJ1Y3QgdGltZXpvbmUqKTAp<br>
+Ow0KfQ0KDQpkb3VibGUgc3RvcF90aW1lcigpIHsNCiAgICBsb25nIHRpbWU7<br>
+DQogDQogICAgZ2V0dGltZW9mZGF5KCZmaW5pc2gsIChzdHJ1Y3QgdGltZXpv<br>
+bmUqKTApOw0KICAgIHRpbWUgPSAoZmluaXNoLnR2X3NlYyAtIHN0YXJ0LnR2<br>
+X3NlYykgKiAxMDAwMDAwICsgDQogICAgICAgICAgICBmaW5pc2gudHZfdXNl<br>
+YyAtIHN0YXJ0LnR2X3VzZWM7DQogICAgcmV0dXJuIChkb3VibGUpIHRpbWUg<br>
+LyAxMDAwMDAwOw0KfQ0KDQp2b2lkIHNlcnZlcihpbnQgcG9ydCkgew0KICAg<br>
+IGludCBtYWluZmQsIGZkLCBsZW4sIGJ1Zl9zaXplLCBzaXplLCBuLCB0b3Rh<br>
+bDsNCiAgICBjaGFyIGJ1ZltNQVhfQlVGX1NJWkVdOw0KICAgIGRvdWJsZSB0<br>
+aW1lOw0KICAgIHN0cnVjdCBzb2NrYWRkcl9pbiBzZXJ2ZXIsIGNsaWVudDsN<br>
+Cg0KLyogU29ja2V0IHNlcnZlciBzZXQgdXAgLS0tLS0tLS0tLS0tLS0tLS0t<br>
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0gKi8NCiAgICBp<br>
+ZigobWFpbmZkID0gc29ja2V0KEFGX0lORVQsIFNPQ0tfU1RSRUFNLCAwKSkg<br>
+PT0gLTEpIHsNCiAgICAgICAgcGVycm9yKCJzb2NrZXQiKTsNCiAgICAgICAg<br>
+ZXhpdCgxKTsNCiAgICB9DQogICAgc2VydmVyLnNpbl9mYW1pbHkgPSBBRl9J<br>
+TkVUOw0KICAgIHNlcnZlci5zaW5fYWRkci5zX2FkZHIgPSBJTkFERFJfQU5Z<br>
+Ow0KICAgIHNlcnZlci5zaW5fcG9ydCA9IGh0b25zKHBvcnQpOw0KICAgIGlm<br>
+KGJpbmQobWFpbmZkLCAoc3RydWN0IHNvY2thZGRyICopJnNlcnZlciwgc2l6<br>
+ZW9mKHNlcnZlcikpID09IC0xKSB7DQogICAgICAgIHBlcnJvcigiYmluZCIp<br>
+Ow0KICAgICAgICBleGl0KDEpOw0KICAgIH0NCi8qIC4uLg0KICAgIHNldHNv<br>
+Y2tvcHQobWFpbmZkLCBnZXRwcm90b2J5bmFtZSgidGNwIiktPnBfcHJvdG8s<br>
+IFRDUF9OT0RFTEFZLA0KICAgICAgICAgICAgICAoY2hhciAqKSZvbmUsIHNp<br>
+emVvZihvbmUpKTsNCi4uLiAqLw0KICAgIGxpc3RlbihtYWluZmQsIDEpOw0K<br>
+ICAgIGZwcmludGYoc3RkZXJyLCAiXG5TZXJ2ZXIgaXMgbGlzdGVuaW5nIGZy<br>
+b20gcG9ydCAlZCAuLi5cbiIsIHBvcnQpOw0KLyogLS0tLS0tLS0tLS0tLS0t<br>
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t<br>
+LS0tLS0tLS0tLS0tLS0qLw0KICAgIHdoaWxlKDEpIHsNCiAgICAgICAgbGVu<br>
+ID0gc2l6ZW9mKGNsaWVudCk7DQogICAgICAgIGlmKChmZCA9IGFjY2VwdCht<br>
+YWluZmQsIChzdHJ1Y3Qgc29ja2FkZHIgKikmY2xpZW50LCAmbGVuKSkgPT0g<br>
+LTEpIHsNCiAgICAgICAgICAgIHBlcnJvcigiYWNjZXB0Iik7DQogICAgICAg<br>
+ICAgICBleGl0KDEpOw0KICAgICAgICB9DQogICAgICAgIHJlYWQoZmQsICZi<br>
+dWZfc2l6ZSwgc2l6ZW9mKGludCkpOyAvKiByZWFkIGJ1ZmZlciBzaXplICov<br>
+DQogICAgICAgIHJlYWQoZmQsICZzaXplLCBzaXplb2YoaW50KSk7IC8qIHJl<br>
+YWQgZGF0YSBzaXplICovDQogICAgICAgIGZwcmludGYoc3RkZXJyLCAiRGF0<br>
+YSBidWZmZXIgc2l6ZSBvZiAlZCBieXRlcyAuLi4gIiwgYnVmX3NpemUpOw0K<br>
+ICAgICAgICB0b3RhbCA9IDA7DQogICAgICAgIHN0YXJ0X3RpbWVyKCk7DQog<br>
+ICAgICAgIGlmKHNpemUgPD0gMCkgeyAvKiBmcm9tIHNlcnZlciB0byBjbGll<br>
+bnQgKi8NCiAgICAgICAgICAgIHNpemUgPSAtc2l6ZTsgDQogICAgICAgICAg<br>
+ICB3aGlsZSh0b3RhbCA8IHNpemUpIHsNCiAgICAgICAgICAgICAgICBuID0g<br>
+KHRvdGFsICsgYnVmX3NpemUgPiBzaXplKSA/IHNpemUgLSB0b3RhbCA6IGJ1<br>
+Zl9zaXplOw0KICAgICAgICAgICAgICAgIGlmKHdyaXRlKGZkLCBidWYsIG4p<br>
+ICE9IG4pIHsNCiAgICAgICAgICAgICAgICAgICAgcGVycm9yKCJ3cml0ZSIp<br>
+Ow0KICAgICAgICAgICAgICAgICAgICBleGl0KDEpOyAgIA0KICAgICAgICAg<br>
+ICAgICAgIH0gICANCiAgICAgICAgICAgICAgICB0b3RhbCArPSBuOw0KICAg<br>
+ICAgICAgICAgIH0NCiAgICAgICAgICAgICB0aW1lID0gc3RvcF90aW1lcigp<br>
+Ow0KICAgICAgICAgICAgIGZwcmludGYoc3RkZXJyLCAic2VudCIpOw0KICAg<br>
+ICAgICB9DQogICAgICAgIGVsc2UgeyAvKiBmcm9tIGNsaWVudCB0byBzZXJ2<br>
+ZXIgKi8NCiAgICAgICAgICAgIHdoaWxlKChuID0gcmVhZChmZCwgYnVmLCBi<br>
+dWZfc2l6ZSkpID4gMCkNCiAgICAgICAgICAgICAgICB0b3RhbCArPSBuOw0K<br>
+ICAgICAgICAgICAgdGltZSA9IHN0b3BfdGltZXIoKTsNCiAgICAgICAgICAg<br>
+IGZwcmludGYoc3RkZXJyLCAicmVjZWl2ZWQiKTsNCiAgICAgICAgfQ0KICAg<br>
+ICAgICBmcHJpbnRmKHN0ZGVyciwgIiAlZCBieXRlcyBpbiAlLjZmIHNlY29u<br>
+ZHNcbiIsIHRvdGFsLCB0aW1lKTsNCiAgICAgICAgY2xvc2UoZmQpOw0KICAg<br>
+IH0gICAgDQp9DQoNCnZvaWQgY2xpZW50KGNoYXIgKnNlcnZlcm5hbWUsIGlu<br>
+dCBwb3J0LCBpbnQgYnVmX3NpemUsIGludCBzaXplKSB7DQogICAgaW50IGZk<br>
+LCBuLCB0b3RhbDsNCiAgICBjaGFyIGJ1ZltNQVhfQlVGX1NJWkVdOw0KICAg<br>
+IGRvdWJsZSB0aW1lOw0KICAgIHN0cnVjdCBzb2NrYWRkcl9pbiBzZXJ2ZXI7<br>
+DQogICAgc3RydWN0IGhvc3RlbnQgKmhvc3Q7DQoNCi8qIFNvY2tldCBjbGll<br>
+bnQgc2V0IHVwIC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t<br>
+LS0tLS0tLS0tLS0tLS0tLS0tICovDQogICAgaWYoKGZkID0gc29ja2V0KEFG<br>
+X0lORVQsIFNPQ0tfU1RSRUFNLCBJUFBST1RPX1RDUCkpID09IC0xKSB7DQog<br>
+ICAgICAgIHBlcnJvcigic29ja2V0Iik7DQogICAgICAgIGV4aXQoMSk7ICAN<br>
+CiAgICB9DQogICAgaWYoKGhvc3QgPSBnZXRob3N0YnluYW1lKHNlcnZlcm5h<br>
+bWUpKSA9PSBOVUxMKSB7DQogICAgICAgIHBlcnJvcigiZ2V0aG9zdGJ5bmFt<br>
+ZSIpOw0KICAgICAgICBleGl0KDEpOyAgDQogICAgfQ0KICAgIHNlcnZlci5z<br>
+aW5fZmFtaWx5ID0gQUZfSU5FVDsNCiAgICBzZXJ2ZXIuc2luX2FkZHIuc19h<br>
+ZGRyID0gSU5BRERSX0FOWTsNCiAgICBzZXJ2ZXIuc2luX3BvcnQgPSBodG9u<br>
+cyhwb3J0KTsNCiAgICBtZW1jcHkoKGNoYXIgKikmc2VydmVyLnNpbl9hZGRy<br>
+LCBob3N0LT5oX2FkZHIsIGhvc3QtPmhfbGVuZ3RoKTsNCiAgICBpZihjb25u<br>
+ZWN0KGZkLCAoc3RydWN0IHNvY2thZGRyICopJnNlcnZlciwgc2l6ZW9mKHNl<br>
+cnZlcikpKSB7DQogICAgICAgIHBlcnJvcigiY29ubmVjdCIpOw0KICAgICAg<br>
+ICBleGl0KDEpOw0KICAgIH0NCiAgICBmcHJpbnRmKHN0ZGVyciwgIlxuQ29u<br>
+bmVjdGVkIHRvICVzKCVkKVxuIiwgc2VydmVybmFtZSwgcG9ydCk7DQovKiAt<br>
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t<br>
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLSovDQogICAgaWYod3JpdGUo<br>
+ZmQsICZidWZfc2l6ZSwgc2l6ZW9mKGludCkpICE9IHNpemVvZihpbnQpKSB7<br>
+DQogICAgICAgIHBlcnJvcigid3JpdGUiKTsNCiAgICAgICAgZXhpdCgxKTsg<br>
+IA0KICAgIH0NCiAgICBpZih3cml0ZShmZCwgJnNpemUsIHNpemVvZihpbnQp<br>
+KSAhPSBzaXplb2YoaW50KSkgew0KICAgICAgICBwZXJyb3IoIndyaXRlIik7<br>
+DQogICAgICAgIGV4aXQoMSk7DQogICAgfQ0KICAgIHRvdGFsID0gMDsNCiAg<br>
+ICBzdGFydF90aW1lcigpOw0KICAgIGlmKHNpemUgPD0gMCkgeyAvKiBmcm9t<br>
+IHNlcnZlciB0byBjbGllbnQgKi8NCiAgICAgICAgc2l6ZSA9IC1zaXplOw0K<br>
+ICAgICAgICB3aGlsZSgobiA9IHJlYWQoZmQsIGJ1ZiwgYnVmX3NpemUpKSA+<br>
+IDApDQogICAgICAgICAgICB0b3RhbCArPSBuOw0KICAgICAgICB0aW1lID0g<br>
+c3RvcF90aW1lcigpOw0KICAgICAgICBmcHJpbnRmKHN0ZGVyciwgIlJlY2Vp<br>
+dmVkIik7IA0KICAgIH0NCiAgICBlbHNlIHsgLyogZnJvbSBjbGllbnQgdG8g<br>
+c2VydmVyICovDQogICAgICAgIHdoaWxlKHRvdGFsIDwgc2l6ZSkgew0KICAg<br>
+ICAgICAgICAgbiA9ICh0b3RhbCArIGJ1Zl9zaXplID4gc2l6ZSkgPyBzaXpl<br>
+IC0gdG90YWwgOiBidWZfc2l6ZTsNCiAgICAgICAgICAgIGlmKHdyaXRlKGZk<br>
+LCBidWYsIG4pICE9IG4pIHsNCiAgICAgICAgICAgICAgICBwZXJyb3IoIndy<br>
+aXRlIik7DQogICAgICAgICAgICAgICAgZXhpdCgxKTsNCiAgICAgICAgICAg<br>
+IH0NCiAgICAgICAgICAgIHRvdGFsICs9IG47DQogICAgICAgIH0NCiAgICAg<br>
+ICAgdGltZSA9IHN0b3BfdGltZXIoKTsNCiAgICAgICAgZnByaW50ZihzdGRl<br>
+cnIsICJTZW50Iik7IA0KICAgIH0NCiAgICBjbG9zZShmZCk7DQogICAgZnBy<br>
+aW50ZihzdGRlcnIsICIgJWQgYnl0ZXMgaW4gJS42ZiBzZWNvbmRzXG4iLCB0<br>
+b3RhbCwgdGltZSk7DQogICAgZnByaW50ZihzdGRlcnIsICIoYnVmZmVyIHNp<br>
+emU9JWQgYnl0ZXMsIHRocm91Z2hwdXQ9JS42ZiBNYnBzKVxuIiwNCiAgICAg<br>
+ICAgICAgYnVmX3NpemUsIHRvdGFsKjgvdGltZS8xMDQ4NTc2KTsNCn0NCg0K<br>
+bWFpbihpbnQgYXJnYywgY2hhciAqYXJndltdKQ0Kew0KICAgIHN3aXRjaChh<br>
+cmdjKSB7DQogICAgICAgIGNhc2UgMjogc2VydmVyKGF0b2koYXJndlsxXSkp<br>
+Ow0KICAgICAgICAgICAgICAgIGJyZWFrOw0KICAgICAgICBjYXNlIDU6IGNs<br>
+aWVudChhcmd2WzFdLCBhdG9pKGFyZ3ZbMl0pLCBhdG9pKGFyZ3ZbM10pLCBh<br>
+dG9pKGFyZ3ZbNF0pKTsNCiAgICAgICAgICAgICAgICBicmVhazsNCiAgICAg<br>
+ICAgZGVmYXVsdDogZnByaW50ZihzdGRlcnIsICJVc2FnZTogJXMgPHBvcnQ+<br>
+XG4iLCBhcmd2WzBdKTsNCiAgICAgICAgICAgICAgICAgZnByaW50ZihzdGRl<br>
+cnIsICJVc2FnZTogJXMgPHNlcnZlcj4gPHBvcnQ+IDxidWZmZXI+IDxkYXRh<br>
+IHNpemU+XG4iLA0KICAgICAgICAgICAgICAgICAgICAgICAgIGFyZ3ZbMF0p<br>
+Ow0KICAgICAgICAgICAgICAgICBleGl0KDEpOw0KICAgIH0NCn0NCg==<br>
+---559023410-851401618-891276400=:28712--<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0029.html">Martin Borriss: "Re: Asymmetric TCP/ATM throughputs between client and server"</a>
+<li> <b>Previous message:</b> <a href="0027.html">Alain Kaminski: "Re: Asymmetric TCP/ATM throughputs between client and server"</a>
+<li> <b>In reply to:</b> <a href="0022.html">Kevin M. Joyce: "Re: Asymmetric TCP/ATM throughputs between client and server"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0029.html">Martin Borriss: "Re: Asymmetric TCP/ATM throughputs between client and server"</a>
+<li> <b>Next in thread:</b> <a href="0027.html">Alain Kaminski: "Re: Asymmetric TCP/ATM throughputs between client and server"</a>
+</ul>

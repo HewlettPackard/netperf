@@ -1,0 +1,90 @@
+<!-- received="Fri Apr 16 10:42:03 1999 PDT" -->
+<!-- sent="Fri, 16 Apr 1999 13:39:01 -0400" -->
+<!-- name="Krasinski, Linda M" -->
+<!-- email="Linda.Krasinski@unisys.com" -->
+<!-- subject="RE: bifurcated results from netperf" -->
+<!-- id="E2521628FB27D111BAF60000C09247D602A7FF72@MV_EXCHANGE_1" -->
+<!-- inreplyto="" -->
+<title>Archive of the netperf-talk mailing list: RE: bifurcated results from netperf</title>
+<h1>RE: bifurcated results from netperf</h1>
+Krasinski, Linda M (<i>Linda.Krasinski@unisys.com</i>)<br>
+<i>Fri, 16 Apr 1999 13:39:01 -0400</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#165">[ date ]</a><a href="index.html#165">[ thread ]</a><a href="subject.html#165">[ subject ]</a><a href="author.html#165">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0166.html">Gregory P. Smith: "Re: bifurcated results from netperf"</a>
+<li> <b>Previous message:</b> <a href="0164.html">Rick Jones: "Re: netperf netserver under inetd on Windows NT"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0166.html">Gregory P. Smith: "Re: bifurcated results from netperf"</a>
+</ul>
+<!-- body="start" -->
+A few weeks ago I investigated a similar situation.  Sometimes I got 96Mbs<br>
+and sometimes as low as 1Mbs.<br>
+My problem was Half vs Full duplex (or shall I say Full vs Auto NIC<br>
+settings).  The switch was (sometimes) changing to half duplex when the NIC<br>
+was set to Full.  When the NIC was set to AUTO, I always stayed at Full and<br>
+the flaky performance problem never occurred.  Pulling a NIC plug out and in<br>
+again seemed to cause "noise" which confused my switch and caused it to<br>
+change to Half duplex.  Sometimes an (experimental) NIC was causing the<br>
+noise without the need to pull &amp; plug.  If I restarted the systems involved,<br>
+without touching any plugs, I usually got a good result.  (This was my<br>
+observations and conclusion.)<br>
+<p>
+Good Luck!<br>
+<p>
+-----Original Message-----<br>
+From: Greg Tillman [<a href="mailto:GTILLMAN@MAINE.EDU">mailto:GTILLMAN@MAINE.EDU</a>]<br>
+Sent: Monday, April 12, 1999 2:24 PM<br>
+To: Roelof JT Jonkman; netperf-talk@hpisrdq.cup.hp.com<br>
+Subject: Re: bifurcated results from netperf<br>
+<p>
+<p>
+<p>
+<i>&gt;Not to helpfull, but that is sort of the stuff I would go after.</i><br>
+<i>&gt;(well first do what Rick said though, netstat.)</i><br>
+<i>&gt;</i><br>
+<i>&gt;To get my idea of your config straight:</i><br>
+<i>&gt;</i><br>
+<i>&gt;Two machines running netperf, interconnected with another dual interface</i><br>
+<i>&gt;machine?</i><br>
+<p>
+<p>
+Sorry, I should have made that clearer.  The setup originally was 3<br>
+computers:<br>
+<p>
+                  Router-box<br>
+             ----------------------------------<br>
+boxa ------ |  router-card-a    router-card-b  | ----- boxb<br>
+             ----------------------------------<br>
+<p>
+Where boxa and boxb are each connected to the router box with a crossover<br>
+cable.  It's about as simple as you can get to test a router, but right now<br>
+I'm just running tests between boxa and router-card-a, in hopes  of getting<br>
+a repeatable measure of thruput.  The router box has the second network<br>
+card in and working, but nothing plugged into it.<br>
+<p>
+So routing shouldn't enter into it.  Duplex shouldn't either, really; I<br>
+think the cards are at half duplex by default, but I'll double check<br>
+anyway.  And no packets are being dropped, according to ifconfig.  Also, it<br>
+happens in both directions, and it happens between router-card-b and boxb<br>
+as well, when I plug that in, and for that matter between boxa and boxb, in<br>
+both directions, if I string a crossover cable all the way across.<br>
+<p>
+I am in the process of exploring all suggestions, and thank you all very<br>
+much for the feedback.  Additional ideas are still quite welcome.  I<br>
+confess I was hoping someone would just tell me to tweak a kernel setting,<br>
+but I guess I'll keep plugging away.<br>
+<p>
+Thanks again<br>
+<p>
+- greg tillman<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0166.html">Gregory P. Smith: "Re: bifurcated results from netperf"</a>
+<li> <b>Previous message:</b> <a href="0164.html">Rick Jones: "Re: netperf netserver under inetd on Windows NT"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0166.html">Gregory P. Smith: "Re: bifurcated results from netperf"</a>
+</ul>

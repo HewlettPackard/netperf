@@ -1,0 +1,77 @@
+<!-- received="Wed Mar 25 18:26:21 1998 PST" -->
+<!-- sent="Wed, 25 Mar 1998 18:32:58 -0800" -->
+<!-- name="Tom Pavel" -->
+<!-- email="pavel@slac.stanford.edu" -->
+<!-- subject="Re: VxWorks version of Netperf" -->
+<!-- id="199803260232.SAA04933@mailbox.SLAC.Stanford.EDU" -->
+<!-- inreplyto="Fri, 20 Mar 1998 13:00:32 EST" -->
+<title>Archive of the netperf-talk mailing list: Re: VxWorks version of Netperf</title>
+<h1>Re: VxWorks version of Netperf</h1>
+Tom Pavel (<i>pavel@slac.stanford.edu</i>)<br>
+<i>Wed, 25 Mar 1998 18:32:58 -0800</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#19">[ date ]</a><a href="index.html#19">[ thread ]</a><a href="subject.html#19">[ subject ]</a><a href="author.html#19">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0020.html">Edwin Law: "Asymmetric TCP/ATM throughputs between client and server"</a>
+<li> <b>Previous message:</b> <a href="0018.html">Ian Heavens: "netperf on RTOS"</a>
+<li> <b>In reply to:</b> <a href="0012.html">James K. Yun: "VxWorks version of Netperf"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+<i>&gt;&gt;&gt;&gt;&gt; On Fri, 20 Mar 1998, "James K. Yun" &lt;jyun@motown.lmco.com&gt; writes:</i><br>
+<p>
+<i>&gt; Has anyone ported or attempted to port Netperf to VxWorks?  If so, I would</i><br>
+<i>&gt; appreciate information as to how successful the port has been.  Even if the</i><br>
+<i>&gt; port has not been successful, I would still like to receive information</i><br>
+<i>&gt; concerning the problems that were encountered during the porting effort.</i><br>
+<i>&gt; </i><br>
+<i>&gt; Also, does anyone have any opinion on whether it would be possible to</i><br>
+<i>&gt; successfully port netperf to VxWorks within a reasonble amount of time</i><br>
+<i>&gt; (i.e., &lt; 1 month)?</i><br>
+<p>
+<p>
+I felt that I should speak up on this a little.  I did the work on the<br>
+VxWorks port that Rick recently posted to the mailing list.  My<br>
+interest was primarily in the TCP_STREAM test (i.e. TCP throughput),<br>
+and that part of netperf should work reasonably well under VxWorks<br>
+(with the caveat that I only tested it on one particular CPU board and<br>
+ethernet driver).  <br>
+<p>
+All told, that work took me about 3 days once I figured out the<br>
+VxWorks environment sufficiently well (just to set the scale of the<br>
+porting effort).  I did not try to do the CPU utilization portion, and<br>
+I didn't get around to prettying up some of the host info reporting.<br>
+The netserver side doesn't spawn any new tasks, so it can only handle<br>
+one sender at a time.<br>
+<p>
+The main substantive problem remaining, and this affects the<br>
+UDP_STREAM test in particular, is interruptible system calls and alarm<br>
+timers.  It turns out that despite having an SA_INTERRUPT defined in<br>
+&lt;signal.h&gt;, VxWorks does not provide any mechanism to interrupt read()<br>
+or recv() calls.  I put in a call on this to Wind River, and what they<br>
+suggested to me was to use select() instead.  This makes for some ugly<br>
+coding, but I suppose it's probably workable (presumably select()<br>
+would not add much overhead on VxWorks since it's not trapping into<br>
+the kernel like a Unix system call).<br>
+<p>
+I have since gotten sucked off onto some other projects here, so I<br>
+don't currently have much time to spend on fixing up VxWorks netperf.<br>
+However, I would certainly be willing to advise anyone who wants to<br>
+work on this (please feel free to contact me).  I hope someone can<br>
+manage to do the merge and get Rick a 2.1pl5 ...<br>
+<p>
+<p>
+Tom Pavel<br>
+<p>
+Stanford Linear Accelerator Center<br>
+pavel@slac.stanford.edu                 <a href="http://www.slac.stanford.edu/~pavel/">http://www.slac.stanford.edu/~pavel/</a><br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0020.html">Edwin Law: "Asymmetric TCP/ATM throughputs between client and server"</a>
+<li> <b>Previous message:</b> <a href="0018.html">Ian Heavens: "netperf on RTOS"</a>
+<li> <b>In reply to:</b> <a href="0012.html">James K. Yun: "VxWorks version of Netperf"</a>
+<!-- nextthread="start" -->
+</ul>

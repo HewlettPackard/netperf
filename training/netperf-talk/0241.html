@@ -1,0 +1,84 @@
+<!-- received="Wed Oct  6 13:06:34 1999 PDT" -->
+<!-- sent="Wed, 06 Oct 1999 22:03:35 +0200" -->
+<!-- name="R in 't Velt" -->
+<!-- email="intVelt@fel.tno.nl" -->
+<!-- subject="UDP_STREAM, TCP_RR, TCP_CRR problems" -->
+<!-- id="37FBAB17.810689B@fel.tno.nl" -->
+<!-- inreplyto="" -->
+<title>Archive of the netperf-talk mailing list: UDP_STREAM, TCP_RR, TCP_CRR problems</title>
+<h1>UDP_STREAM, TCP_RR, TCP_CRR problems</h1>
+R in 't Velt (<i>intVelt@fel.tno.nl</i>)<br>
+<i>Wed, 06 Oct 1999 22:03:35 +0200</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#241">[ date ]</a><a href="index.html#241">[ thread ]</a><a href="subject.html#241">[ subject ]</a><a href="author.html#241">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0242.html">Tatsuhiko Terai: "Question about TCP_STREAM"</a>
+<li> <b>Previous message:</b> <a href="0240.html">Edmond Momartin: "Netperf, inetd for Win NT"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+This is a multi-part message in MIME format.<br>
+--------------DF7F1ABCC6195A3551D72D0A<br>
+Content-Type: text/plain; charset=us-ascii<br>
+Content-Transfer-Encoding: 7bit<br>
+<p>
+Hi Benchmarkers,<br>
+<p>
+I am new to netperf, so please bear with me.<br>
+<p>
+I am trying to run netperf-2_1pl1 and netserver-2_1pl1 (binaries for<br>
+Win32) between two Windows 95 PC's, equipped with ForeRunner PCA-200E<br>
+ATM adapters. (The PC's are connected via an ATM switch). For TCP_STREAM<br>
+tests, everything works 'as advertised'. However:<br>
+<p>
+- when I try UDP_STREAM, netperf prints the following message on the<br>
+line following the banner:<br>
+'send_udp_stream: error on remote: Unknown error'<br>
+<p>
+(Since I have an HP Internet Advisor monitoring the link between one of<br>
+the PC's and the ATM switch, I can observe that data is actually being<br>
+sent at the expected rate).<br>
+<p>
+- when I try TCP_RR, netperf prints after the banner:<br>
+'netperf: remote error 10038Unknown error'<br>
+<p>
+- when I try TCP_CRR, I get:<br>
+'netperf: receive_response: no response received. errno 0 counter 0'<br>
+<p>
+Any clues as to what is going wrong? Are these all symptoms of the same<br>
+problem?<br>
+<p>
+Any and all help appreciated...<br>
+<p>
+Ronald in 't Velt<br>
+--------------DF7F1ABCC6195A3551D72D0A<br>
+Content-Type: text/x-vcard; charset=us-ascii; name="vcard.vcf"<br>
+Content-Transfer-Encoding: 7bit<br>
+Content-Description: Card for Ronald in 't Velt<br>
+Content-Disposition: attachment; filename="vcard.vcf"<br>
+<p>
+begin:          vcard<br>
+fn:             Ronald in 't Velt<br>
+n:              in 't Velt;Ronald<br>
+org:            TNO-FEL<br>
+adr:            Oude Waalsdorperweg 63;;P.O. Box 96864;The Hague;;2509 JG;The Netherlands<br>
+email;internet: intVelt@fel.tno.nl<br>
+title:          R&amp;D engineer<br>
+tel;work:       +31 70 3740322<br>
+tel;fax:        +31 70 3740651<br>
+x-mozilla-cpt:  ;0<br>
+x-mozilla-html: FALSE<br>
+version:        2.1<br>
+end:            vcard<br>
+<p>
+<p>
+--------------DF7F1ABCC6195A3551D72D0A--<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0242.html">Tatsuhiko Terai: "Question about TCP_STREAM"</a>
+<li> <b>Previous message:</b> <a href="0240.html">Edmond Momartin: "Netperf, inetd for Win NT"</a>
+<!-- nextthread="start" -->
+</ul>

@@ -1,0 +1,62 @@
+<!-- received="Fri Jul 30 07:10:48 1999 PDT" -->
+<!-- sent="Fri, 30 Jul 1999 10:12:36 -0400 (EDT)" -->
+<!-- name="Bruce Barnett" -->
+<!-- email="barnett@birch.crd.ge.com" -->
+<!-- subject="Re: Bug in -s -S params?" -->
+<!-- id="199907301412.KAA20783@grymoire.crd.ge.com" -->
+<!-- inreplyto="Bug in -s -S params?" -->
+<title>Archive of the netperf-talk mailing list: Re: Bug in -s -S params?</title>
+<h1>Re: Bug in -s -S params?</h1>
+Bruce Barnett (<i>barnett@birch.crd.ge.com</i>)<br>
+<i>Fri, 30 Jul 1999 10:12:36 -0400 (EDT)</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#215">[ date ]</a><a href="index.html#215">[ thread ]</a><a href="subject.html#215">[ subject ]</a><a href="author.html#215">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0216.html">Bubeck, Leslie: "Porting Netperf to VxWorks"</a>
+<li> <b>Previous message:</b> <a href="0214.html">hsalfeld@estec.esa.nl: "Bug in -s -S params?"</a>
+<li> <b>Maybe in reply to:</b> <a href="0214.html">hsalfeld@estec.esa.nl: "Bug in -s -S params?"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+<i>&gt; I looked onto the traces of TCPDUMP to observe the Window size ("number of</i><br>
+<i>&gt; bytes of receive buffer space available"), and I found some inconsistency:</i><br>
+<i>&gt; the TCPDUMP Window size is not the same like I set with the -s -S params.! In</i><br>
+<i>&gt; the following table (sorry, a bit long, but at least a detailed one!) one can</i><br>
+<i>&gt; see the relationship between the NETPERF's -s -S parameters and the Window</i><br>
+<i>&gt; size as detected by TCPDUMP:</i><br>
+<p>
+The specifications of the TCP header only allow 16 bits for the window<br>
+size.  That means the maximum value the window can contain is 65535.<br>
+TCPDUMP will never show a value larger than that in this field.<br>
+<p>
+The Window Scale Option (RFC 1323) is used to overcome this 16-bit<br>
+limitation.  When the two systems are connecting (i.e. when each one<br>
+sends the other a "SYN" packet) there is also a window scale parameter<br>
+passed in the TCP OPTIONS field. If the other system understands the<br>
+convention, it too will reply with the WS option, indicating that (1) It undewrstands the option, and (2) the factor to scale all window values it sends.<br>
+Let me explain how this works.<br>
+<p>
+<p>
+You didn't include the TCPDUMP values, so I can't tell you what is<br>
+really happening, but I suspect there was a "WS 1" as an option during<br>
+the SYN packet on both sides during the negotiation. Provide the first<br>
+three lines of the TCPDUMP trace and I can confirm this.<br>
+<p>
+<p>
+If true (WS=1), then all values in the WINDOW SIZE field are shifted to the<br>
+left one bit. Therefore the value 32850 is really 32850&lt;&lt;1 or 65700<br>
+(you asked for 65536).  34310 with WS=1 is 68620 (you asked for<br>
+67584).<br>
+<p>
+As you can see, the Window Scale option causes some lose of precision<br>
+in the lower bits, caused by round-up error.<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0216.html">Bubeck, Leslie: "Porting Netperf to VxWorks"</a>
+<li> <b>Previous message:</b> <a href="0214.html">hsalfeld@estec.esa.nl: "Bug in -s -S params?"</a>
+<li> <b>Maybe in reply to:</b> <a href="0214.html">hsalfeld@estec.esa.nl: "Bug in -s -S params?"</a>
+<!-- nextthread="start" -->
+</ul>

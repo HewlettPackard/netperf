@@ -1,0 +1,73 @@
+<!-- received="Fri Nov  5 13:08:45 1999 PST" -->
+<!-- sent="Fri, 5 Nov 1999 16:12:13 -0500 " -->
+<!-- name="Krasinski, Linda M" -->
+<!-- email="Linda.Krasinski@unisys.com" -->
+<!-- subject="RE: Hubs killing performance" -->
+<!-- id="E2521628FB27D111BAF60000C09247D6036E95F8@mv_exchange_1.mv.unisys.com" -->
+<!-- inreplyto="" -->
+<title>Archive of the netperf-talk mailing list: RE: Hubs killing performance</title>
+<h1>RE: Hubs killing performance</h1>
+Krasinski, Linda M (<i>Linda.Krasinski@unisys.com</i>)<br>
+<i>Fri, 5 Nov 1999 16:12:13 -0500 </i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#253">[ date ]</a><a href="index.html#253">[ thread ]</a><a href="subject.html#253">[ subject ]</a><a href="author.html#253">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0254.html">Colin Johnston: "Re: Hubs killing performance"</a>
+<li> <b>Previous message:</b> <a href="0252.html">spamhater03@birch.crd.ge.com: "Hubs killing performance"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+Check the NIC settings - make sure they are set to auto.<br>
+Also try restarting the systems after they are plugged into the Hub.  I<br>
+found that just by unplugging and then replugging into the Hub, I'm switched<br>
+to half duplex - a restart puts them back to full.<br>
+<p>
+-----Original Message-----<br>
+From: spamhater03@birch.crd.ge.com [<a href="mailto:spamhater03@birch.crd.ge.com">mailto:spamhater03@birch.crd.ge.com</a>]<br>
+Sent: Friday, November 05, 1999 12:57 PM<br>
+To: netperf-talk@hpisrdq.cup.hp.com<br>
+Subject: Hubs killing performance<br>
+<p>
+<p>
+I have a Windows NT client talking to a Solaris server.<br>
+The CLient has a 10 MB/s card, the server has a 10/100 MB card.<br>
+Using the  TCP_TCP_STREAM benchmark, we got two different results:<br>
+<p>
+Using a cross-over cable (no hub) we got a value of 8.77<br>
+<p>
+<p>
+C:\netperf&gt;netperf -Hdemo -l60 -v2 <br>
+TCP STREAM TEST to demo<br>
+Recv   Send    Send                          <br>
+Socket Socket  Message  Elapsed              <br>
+Size   Size    Size     Time     Throughput  <br>
+bytes  bytes   bytes    secs.    10^6bits/sec  <br>
+<p>
+ 16384   8192   8192    60.00       8.77   <br>
+<p>
+<p>
+<p>
+Adding a NDC SOHO 10/100 mb autosensing hub, the performance is now:<br>
+C:\netperf&gt;netperf -Hdemo -l60 -v2<br>
+TCP STREAM TEST to demo<br>
+Recv   Send    Send                          <br>
+Socket Socket  Message  Elapsed              <br>
+Size   Size    Size     Time     Throughput  <br>
+bytes  bytes   bytes    secs.    10^6bits/sec  <br>
+<p>
+ 16384   8192   8192    61.00       1.80   <br>
+<p>
+<p>
+<p>
+Why would a hub degrade the performance so much?<br>
+Is it the auto-sensing?<br>
+This is a simple hub with one switch (uplink on/off).<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0254.html">Colin Johnston: "Re: Hubs killing performance"</a>
+<li> <b>Previous message:</b> <a href="0252.html">spamhater03@birch.crd.ge.com: "Hubs killing performance"</a>
+<!-- nextthread="start" -->
+</ul>

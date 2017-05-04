@@ -1,0 +1,66 @@
+<!-- received="Mon Jun 15 11:43:09 1998 PDT" -->
+<!-- sent="Mon, 15 Jun 1998 11:52:14 -0700" -->
+<!-- name="Rick Jones" -->
+<!-- email="raj@cup.hp.com" -->
+<!-- subject="Re: Running Netperf Under NT and Ultra II" -->
+<!-- id="35856D5E.78DC6DF9@cup.hp.com" -->
+<!-- inreplyto="Running Netperf Under NT and Ultra II" -->
+<title>Archive of the netperf-talk mailing list: Re: Running Netperf Under NT and Ultra II</title>
+<h1>Re: Running Netperf Under NT and Ultra II</h1>
+Rick Jones (<i>raj@cup.hp.com</i>)<br>
+<i>Mon, 15 Jun 1998 11:52:14 -0700</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#41">[ date ]</a><a href="index.html#41">[ thread ]</a><a href="subject.html#41">[ subject ]</a><a href="author.html#41">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0042.html">Frimmel@larscom.com: "RE: Running Netperf Under NT and Ultra II"</a>
+<li> <b>Previous message:</b> <a href="0040.html">Frimmel@larscom.com: "RE: Running Netperf Under NT and Ultra II"</a>
+<li> <b>Maybe in reply to:</b> <a href="0039.html">Derek Casanares: "Running Netperf Under NT and Ultra II"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0043.html">Rick Jones: "Re: Running Netperf Under NT and Ultra II"</a>
+</ul>
+<!-- body="start" -->
+Derek Casanares wrote:<br>
+<i>&gt; </i><br>
+<i>&gt; Help!!!</i><br>
+<i>&gt; </i><br>
+<i>&gt; How do you run multiple streams under the Windows NT environment?</i><br>
+<p>
+I think that someone else has already posted their batch scripts for<br>
+netperf 2.1. If anyone is feeling interested/bored/whatever, the<br>
+experimental netperf3 bits on ftp.cup could use an NT port. That code<br>
+should evolve into a "one invokation can provide multiple streams" test.<br>
+<p>
+Of course, in theory, unless a single CPU in an MP system saturates, one<br>
+should be able to get maximum throughput through a single link with a<br>
+singe TCP connection with a sufficiently large window.<br>
+<p>
+However, since there is an interest in multiple NICs, I've started down<br>
+the netperf3 path.<br>
+<p>
+<i>&gt; How can I increase the throughput numbers with netperf on an Sun Ultra II?</i><br>
+<p>
+Shorten the driver/firmware pathtlength?-)<br>
+<p>
+Seriously, you will need to examine network stats (I always look for<br>
+retrans - during a netperf run under laboratory conditions there should<br>
+be none). You will also want to see what your CPU's are doing - both in<br>
+the host, and if used, on the NIC or in the I/O subsystem. <br>
+<p>
+rick jones<br>
+<pre>
+-- 
+these opinions are mine, all mine; HP might not want them anyway... :)
+feel free to email, or post, but please do not do both...
+my email address is raj in the cup.hp.com domain...
+</pre>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0042.html">Frimmel@larscom.com: "RE: Running Netperf Under NT and Ultra II"</a>
+<li> <b>Previous message:</b> <a href="0040.html">Frimmel@larscom.com: "RE: Running Netperf Under NT and Ultra II"</a>
+<li> <b>Maybe in reply to:</b> <a href="0039.html">Derek Casanares: "Running Netperf Under NT and Ultra II"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0043.html">Rick Jones: "Re: Running Netperf Under NT and Ultra II"</a>
+</ul>

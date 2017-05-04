@@ -1,0 +1,45 @@
+:q<HEAD>
+<TITLE>Netperf Training</TITLE>
+
+<H1>
+<IMG SRC="http://www.hp.com/Graphics/Reference.gif">
+The Care, Feeding and Use of Netperf
+</H1>
+</HEAD>
+<BODY>
+
+<P>
+There is a 
+<a href="/netperf/training/netperf-talk/netperf-talk-archive.html">
+mailing list </a> for discussion of netperf with an <a
+href="/netperf/training/netperf-talk/index.html"> archive </a> of
+previous discussions.
+</P>
+<P>
+If you would like to browse the netperf manual in 
+<A HREF="/netperf/training/Netperf.html">html</A> be advised that it
+is about 67KB in length. 
+</P>
+
+You can also look at a copy of the 
+<A HREF="/netperf/training/netperf.ps">manual</A>
+in Postscript (2.75 MB), or the 
+<A HREF="/netperf/training/netperf.man">netperf manpage</A>
+in text, or the
+<A HREF="/netperf/training/netserver.man">netserver manpage</A>
+also in text. At the moment, this page is under construction,
+so please bear with us.
+<P>
+
+The maintainers of this service are very anxious to find better ways
+to convert Interleaf documents to HTML. This conversion should include
+text, graphics, tables, and charts. They are especially interested in
+ways to use CyberLeaf to break-up a single Interleaf document into
+multiple pages.  If you have any advice on these matters, please use
+the
+<A HREF="mailto:netperf-feedback@netperf.org">feedback</A>
+form to communicate it to us. Thanks muchly.
+<P>
+<A HREF="/netperf/NetperfPage.html">
+<IMG ALIGN="middle" SRC="/netperf/images/back.gif">Netperf Homepage</A>.
+</BODY>

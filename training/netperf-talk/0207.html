@@ -1,0 +1,68 @@
+<!-- received="Thu Jul 15 13:14:30 1999 PDT" -->
+<!-- sent="Thu, 15 Jul 1999 16:15:08 -0400 (EDT)" -->
+<!-- name="Bruce Barnett" -->
+<!-- email="barnett@birch.crd.ge.com" -->
+<!-- subject="Re: TCP window size" -->
+<!-- id="199907152015.QAA12799@grymoire.crd.ge.com" -->
+<!-- inreplyto="TCP window size" -->
+<title>Archive of the netperf-talk mailing list: Re: TCP window size</title>
+<h1>Re: TCP window size</h1>
+Bruce Barnett (<i>barnett@birch.crd.ge.com</i>)<br>
+<i>Thu, 15 Jul 1999 16:15:08 -0400 (EDT)</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#207">[ date ]</a><a href="index.html#207">[ thread ]</a><a href="subject.html#207">[ subject ]</a><a href="author.html#207">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0208.html">Jose Weyne Nunes Marcelino: "Re: TCP window size"</a>
+<li> <b>Previous message:</b> <a href="0206.html">Jose Weyne Nunes Marcelino: "Re: TCP window size"</a>
+<li> <b>Maybe in reply to:</b> <a href="0204.html">Jose Weyne Nunes Marcelino: "TCP window size"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0209.html">Rick Jones: "Re: TCP window size"</a>
+</ul>
+<!-- body="start" -->
+<i>&gt;         Hi, I'm doing tests of performance and the plataform that I use is</i><br>
+<i>&gt; Solaris 7. The Solaris TCP's driver support window size &gt; 64 kbytes,</i><br>
+<i>&gt; I set the netperf to buffer size &gt; 64 kbytes but the command snoop show</i><br>
+<i>&gt; always  window size &gt;= 64 kbytes. Why?</i><br>
+<p>
+<p>
+I used the Sun TCP Special in a 2.5.1 system, with tcpdump, but I can guess<br>
+what you are seeing. You specified a large window, but snoop doesn't show it.<br>
+<p>
+Summary - that's right. But it still works. Let me explain.<br>
+<p>
+If you are using the RFC1323 extensions (which seems likely, as without<br>
+it, you cannot get a window &gt; 64K), then snoop/tcpdump will not show<br>
+show you the large windows on each packet.<br>
+<p>
+The Window Scale option is negotiated at the beginning of the session.<br>
+If the other side doesn't understand, it will not use the option.<br>
+<p>
+Perhaps a system could use the Window Scale option in each packet, but <br>
+the older version I saw only used it once in the beginning.<br>
+<p>
+Instead, it shows you the window scaling factor during the session<br>
+start, (i.e. the packet with the S bit) which specifies how many bits<br>
+to the left you have top shift the window parameter to get the real<br>
+window. <br>
+<p>
+<p>
+In tcpdump, you will see a WS 3<br>
+<p>
+Then in the packet, if you get a window of 2000, you multiple it by 8, to get <br>
+16000.<br>
+<p>
+If you see a window of 32000, with a Window Scale factor of 3, your REAL<br>
+window would be 256000.<br>
+<p>
+At least - that is how I remember it.<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0208.html">Jose Weyne Nunes Marcelino: "Re: TCP window size"</a>
+<li> <b>Previous message:</b> <a href="0206.html">Jose Weyne Nunes Marcelino: "Re: TCP window size"</a>
+<li> <b>Maybe in reply to:</b> <a href="0204.html">Jose Weyne Nunes Marcelino: "TCP window size"</a>
+<!-- nextthread="start" -->
+<li> <b>Next in thread:</b> <a href="0209.html">Rick Jones: "Re: TCP window size"</a>
+</ul>

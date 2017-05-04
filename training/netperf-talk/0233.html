@@ -1,0 +1,49 @@
+<!-- received="Thu Aug 26 11:00:56 1999 PDT" -->
+<!-- sent="Thu, 26 Aug 1999 11:04:11 -0700" -->
+<!-- name="Rick Jones" -->
+<!-- email="raj@cup.hp.com" -->
+<!-- subject="Re: ATM over Satellite Experiment" -->
+<!-- id="37C5819B.4BCED716@cup.hp.com" -->
+<!-- inreplyto="ATM over Satellite Experiment" -->
+<title>Archive of the netperf-talk mailing list: Re: ATM over Satellite Experiment</title>
+<h1>Re: ATM over Satellite Experiment</h1>
+Rick Jones (<i>raj@cup.hp.com</i>)<br>
+<i>Thu, 26 Aug 1999 11:04:11 -0700</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#233">[ date ]</a><a href="index.html#233">[ thread ]</a><a href="subject.html#233">[ subject ]</a><a href="author.html#233">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0234.html">Rick Jones: "Netperf Web and Download unavailable."</a>
+<li> <b>Previous message:</b> <a href="0232.html">hsalfeld@estec.esa.nl: "ATM over Satellite Experiment"</a>
+<li> <b>Maybe in reply to:</b> <a href="0232.html">hsalfeld@estec.esa.nl: "ATM over Satellite Experiment"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+Perhaps there is some correlation to the MTU being used and how many<br>
+segments can be sent into the window, interacting with SWS stuff. That<br>
+the LAME stuff was smoother could be the use of a smaller MTU - 1500<br>
+bytes right?<br>
+<p>
+Of course, the "right" way to do this is to take packet traces :) It<br>
+might also help explain the jaggies for the larger than CIP MTUs -<br>
+perhaps the chance that a given segment is corrupted is increased -<br>
+seeing rtx's in the trace would show that - it could also be infered<br>
+from netstat statistics on the sender and receiver. (retrans and<br>
+checksum failures).<br>
+<p>
+rick jones<br>
+<pre>
+-- 
+these opinions are mine, all mine; HP might not want them anyway... :)
+feel free to email, or post, but please do not do both...
+my email address is raj in the cup.hp.com domain...
+</pre>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0234.html">Rick Jones: "Netperf Web and Download unavailable."</a>
+<li> <b>Previous message:</b> <a href="0232.html">hsalfeld@estec.esa.nl: "ATM over Satellite Experiment"</a>
+<li> <b>Maybe in reply to:</b> <a href="0232.html">hsalfeld@estec.esa.nl: "ATM over Satellite Experiment"</a>
+<!-- nextthread="start" -->
+</ul>

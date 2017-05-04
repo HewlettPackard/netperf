@@ -1,0 +1,57 @@
+<!-- received="Mon Apr 20 10:48:43 1998 PDT" -->
+<!-- sent="Mon, 20 Apr 1998 10:32:25 -0700" -->
+<!-- name="Gregory P. Smith" -->
+<!-- email="greg@nas.nasa.gov" -->
+<!-- subject="Re: netperf on cray T3E" -->
+<!-- id="199804201732.KAA01902@ryouko.nas.nasa.gov" -->
+<!-- inreplyto="199804201249.OAA28396@navajo.imag.fr" -->
+<title>Archive of the netperf-talk mailing list: Re: netperf on cray T3E</title>
+<h1>Re: netperf on cray T3E</h1>
+Gregory P. Smith (<i>greg@nas.nasa.gov</i>)<br>
+<i>Mon, 20 Apr 1998 10:32:25 -0700</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#32">[ date ]</a><a href="index.html#32">[ thread ]</a><a href="subject.html#32">[ subject ]</a><a href="author.html#32">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0033.html">Joao G Reis: "Problems in measuring the throughput of an ADSL link"</a>
+<li> <b>Previous message:</b> <a href="0031.html">Philippe Augerat: "netperf on cray T3E"</a>
+<li> <b>In reply to:</b> <a href="0031.html">Philippe Augerat: "netperf on cray T3E"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+<i>&gt; I compiled netperf on a T3E but got troubles while executing.</i><br>
+<i>&gt; It seems there are trouble with memory adress and translation.</i><br>
+<i>&gt; </i><br>
+<i>&gt; Has somebody already made a netperf port on this system ?</i><br>
+<i>&gt; </i><br>
+<i>&gt; Philippe Augerat</i><br>
+<p>
+Using netperf 2.1pl3 Cray-Cray works fine (on our C90s and J3 here).<br>
+However, you won't be able to use it with any other system type.  The<br>
+problem is that netperf 2.1 is written to pass raw structures across<br>
+the network; Crays have very loose structure alignment compared to<br>
+"normal" 32-bit machines.<br>
+<p>
+We are working on a port here to have netperf v2.1 use an ascii based<br>
+control connection so it'll work on non 32-bit architectures but it is<br>
+not a high priority task.  You might also want to look at the<br>
+in-progress netperf v3 sources that Rick has sent mail to this list<br>
+about:<br>
+<p>
+<i>&gt; on ftp.cup.hp.com under</i><br>
+<i>&gt; dist/networking/benchmarks/netperf/experimental/.</i><br>
+<p>
+v3 uses a more architecture independent control channel.  I haven't<br>
+tried it, but the code was heading in the right direction last time I<br>
+looked.<br>
+<p>
+Greg<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0033.html">Joao G Reis: "Problems in measuring the throughput of an ADSL link"</a>
+<li> <b>Previous message:</b> <a href="0031.html">Philippe Augerat: "netperf on cray T3E"</a>
+<li> <b>In reply to:</b> <a href="0031.html">Philippe Augerat: "netperf on cray T3E"</a>
+<!-- nextthread="start" -->
+</ul>

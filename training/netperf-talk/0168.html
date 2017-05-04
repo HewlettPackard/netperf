@@ -1,0 +1,40 @@
+<!-- received="Thu Apr 29 06:31:07 1999 PDT" -->
+<!-- sent="Thu, 29 Apr 1999 09:23:00 -0400 (EDT)" -->
+<!-- name="Bruce Barnett" -->
+<!-- email="barnett@grymoire.crd.ge.com" -->
+<!-- subject="Re: Compile problems on Solaris" -->
+<!-- id="199904291323.JAA11625@grymoire.crd.ge.com" -->
+<!-- inreplyto="Compile problems on Solaris" -->
+<title>Archive of the netperf-talk mailing list: Re: Compile problems on Solaris</title>
+<h1>Re: Compile problems on Solaris</h1>
+Bruce Barnett (<i>barnett@grymoire.crd.ge.com</i>)<br>
+<i>Thu, 29 Apr 1999 09:23:00 -0400 (EDT)</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#168">[ date ]</a><a href="index.html#168">[ thread ]</a><a href="subject.html#168">[ subject ]</a><a href="author.html#168">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0169.html">Michael Eklund: "Netperf for NT4.0"</a>
+<li> <b>Previous message:</b> <a href="0167.html">Michael Eklund: "Compile problems on Solaris"</a>
+<li> <b>Maybe in reply to:</b> <a href="0167.html">Michael Eklund: "Compile problems on Solaris"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+I compiled netperf-2.1pl3 on my Solaris 2.6 system, using GCC, and the<br>
+only warning I got was:<br>
+<p>
+gcc -O -DDEBUG_LOG_FILE="\"/tmp/netperf.debug\"" -DUSE_LOOPER -DDO_DLPI  -c  netlib.c<br>
+netlib.c: In function `calibrate_looper':<br>
+netlib.c:1688: warning: decimal constant is so large that it is unsigned<br>
+netlib.c: In function `calc_cpu_util':<br>
+netlib.c:2431: warning: decimal constant is so large that it is unsigned<br>
+<p>
+everything else was fine. Try patch level 3.<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0169.html">Michael Eklund: "Netperf for NT4.0"</a>
+<li> <b>Previous message:</b> <a href="0167.html">Michael Eklund: "Compile problems on Solaris"</a>
+<li> <b>Maybe in reply to:</b> <a href="0167.html">Michael Eklund: "Compile problems on Solaris"</a>
+<!-- nextthread="start" -->
+</ul>

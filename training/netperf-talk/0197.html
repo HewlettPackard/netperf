@@ -1,0 +1,57 @@
+<!-- received="Sat Jul 10 08:07:32 1999 PDT" -->
+<!-- sent="Sat, 10 Jul 1999 8:10:18 PDT" -->
+<!-- name="Rick Jones" -->
+<!-- email="raj@cup.hp.com" -->
+<!-- subject="Re: How can i measure How long does it take to send packet of certain size?" -->
+<!-- id="199907101510.IAA10968@loiter.cup.hp.com" -->
+<!-- inreplyto="000801bec970$45f99fe0$c408efd0@lepue.giganet.com" -->
+<title>Archive of the netperf-talk mailing list: Re: How can i measure How long does it take to send packet of certain size?</title>
+<h1>Re: How can i measure How long does it take to send packet of certain size?</h1>
+Rick Jones (<i>raj@cup.hp.com</i>)<br>
+<i>Sat, 10 Jul 1999 8:10:18 PDT</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#197">[ date ]</a><a href="index.html#197">[ thread ]</a><a href="subject.html#197">[ subject ]</a><a href="author.html#197">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0198.html">Rick Jones: "www.netperf.org offline July 14th, 1999"</a>
+<li> <b>Previous message:</b> <a href="0196.html">Munir Gandevia: "How can i measure How long does it take to send packet of certain size?"</a>
+<li> <b>In reply to:</b> <a href="0196.html">Munir Gandevia: "How can i measure How long does it take to send packet of certain size?"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+<i>&gt; </i><br>
+<i>&gt; I am trying to find out how long does it take to send packet by using</i><br>
+<i>&gt; follwing command line .</i><br>
+<i>&gt; cliensite&gt; netperf -c -l -1024 -t TCP_STREAM -H &lt;IP ADDRESS&gt; -P 10021 -- -s</i><br>
+<i>&gt; 1028 -S 1028</i><br>
+<i>&gt; </i><br>
+<i>&gt; I am suppose to ge time it take to send packet to remote host, I am</i><br>
+<i>&gt; not getting any info about time. If you any thing about thsi please</i><br>
+<i>&gt; reply me . I would appriciate your help.</i><br>
+<p>
+What "time" are you looking to find? Wall-clock time, or CPU time?<br>
+None of the netperf tests are set-up to (directly) measure the<br>
+unidirectional time it takes to send a packet from netperf to<br>
+netserver.  That would require smarts that netperf just does not<br>
+have. (and perhaps some rather well-synchronized clocks as well...)<br>
+<p>
+One can make a decent first-order approximation of the wall-clock time<br>
+by using the netperf TCP_RR test. Take the transactoin rate, invert<br>
+it, and then divide by two. This assumes symmetry which may not be<br>
+there in anything other than a simple topology, but it would be a<br>
+start.<br>
+<p>
+If you meant CPU time, then you want to enable CPU utilizatoin<br>
+measurements, and then start doing some arithmatic with the serice<br>
+demands.<br>
+<p>
+rick jones<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0198.html">Rick Jones: "www.netperf.org offline July 14th, 1999"</a>
+<li> <b>Previous message:</b> <a href="0196.html">Munir Gandevia: "How can i measure How long does it take to send packet of certain size?"</a>
+<li> <b>In reply to:</b> <a href="0196.html">Munir Gandevia: "How can i measure How long does it take to send packet of certain size?"</a>
+<!-- nextthread="start" -->
+</ul>

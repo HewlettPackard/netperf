@@ -1,0 +1,73 @@
+<!-- received="Tue Jun  8 10:37:10 1999 PDT" -->
+<!-- sent="Tue, 8 Jun 1999 13:26:33 -0400 (EDT)" -->
+<!-- name="David Anders Winarsky" -->
+<!-- email="daw7@duke.edu" -->
+<!-- subject="compiling on irix 6.4 problem" -->
+<!-- id="Pine.SOL.3.91.990608132213.5047B-100000@teer11.acpub.duke.edu" -->
+<!-- inreplyto="" -->
+<title>Archive of the netperf-talk mailing list: compiling on irix 6.4 problem</title>
+<h1>compiling on irix 6.4 problem</h1>
+David Anders Winarsky (<i>daw7@duke.edu</i>)<br>
+<i>Tue, 8 Jun 1999 13:26:33 -0400 (EDT)</i>
+<p>
+<ul>
+<li> <b>Messages sorted by:</b> <a href="date.html#193">[ date ]</a><a href="index.html#193">[ thread ]</a><a href="subject.html#193">[ subject ]</a><a href="author.html#193">[ author ]</a>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0194.html">Nicolas Ponson: "Infos....please.."</a>
+<li> <b>Previous message:</b> <a href="0192.html">Rick Jones: "Re: large buffer pb with netperf ???"</a>
+<!-- nextthread="start" -->
+</ul>
+<!-- body="start" -->
+I'm trying to compile netperf on an SGI Octane running irix 6.4 and this is<br>
+what I am getting <br>
+<p>
+bach|/opt/netperf/src/netperf-2.1pl3# make<br>
+        cc -O -DDEBUG_LOG_FILE="\"/tmp/netperf.debug\"" -DUSE_LOOPER -c<br>
+netperf.  c Unmatched "  *** Error code 1 (bu21)<br>
+<p>
+I tried changing around and even getting rid of the quotes, but then I <br>
+get this type of error:<br>
+<p>
+bach|/opt/netperf/src/netperf-2.1pl3# make<br>
+        cc -O -DDEBUG_LOG_FILE=/tmp/netperf.debug -DUSE_LOOPER -c netperf.c<br>
+        cc -O -DDEBUG_LOG_FILE=/tmp/netperf.debug -DUSE_LOOPER -c netsh.c<br>
+        cc -O -DDEBUG_LOG_FILE=/tmp/netperf.debug -DUSE_LOOPER -c netlib.c<br>
+        cc -O -DDEBUG_LOG_FILE=/tmp/netperf.debug -DUSE_LOOPER -c<br>
+nettest_bsd.c<br>
+        cc -O -DDEBUG_LOG_FILE=/tmp/netperf.debug -DUSE_LOOPER -c<br>
+nettest_dlpi.c<br>
+        cc -O -DDEBUG_LOG_FILE=/tmp/netperf.debug -DUSE_LOOPER -c<br>
+nettest_unix.c<br>
+        cc -O -DDEBUG_LOG_FILE=/tmp/netperf.debug -DUSE_LOOPER -c<br>
+nettest_fore.c<br>
+        cc -O -DDEBUG_LOG_FILE=/tmp/netperf.debug -DUSE_LOOPER -c<br>
+nettest_hippi.c<br>
+        cc -O -DDEBUG_LOG_FILE=/tmp/netperf.debug -DUSE_LOOPER -c<br>
+nettest_xti.c<br>
+        cc -O -DDEBUG_LOG_FILE=/tmp/netperf.debug -DUSE_LOOPER -c<br>
+nettest_ipv6.c<br>
+        cc -o netperf netperf.o netsh.o netlib.o nettest_bsd.o nettest_dlpi.o<br>
+nettest_unix.o nettest_fore.o nettest_hippi.o nettest_xti.o nettest_ipv6.o<br>
+-lm ld32: WARNING 16: test_name used in netsh.o and netperf.o has different<br>
+sizes.  See explanation in the gp_overflow(5) manpage.  ld32: WARNING 16:<br>
+test_name used in nettest_bsd.o and netsh.o has different sizes.  See<br>
+explanation in the gp_overflow(5) manpage.  ld32: WARNING 84:<br>
+/usr/lib32/mips4/libm.so is not used for resolving any symbol. <br>
+        cc -O -DDEBUG_LOG_FILE=/tmp/netperf.debug -DUSE_LOOPER -c netserver.c<br>
+"netserver.c", line 475: warning(1110): statement is unreachable<br>
+        break; /*case 0*/ "netserver.c", line 545: error(1029): expected an<br>
+expression ^<br>
+    if ((where = fopen(DEBUG_LOG_FILE, "w")) == NULL) { "netserver.c", line<br>
+550: error(1029): expected an expression ^<br>
+    chmod(DEBUG_LOG_FILE,0644);  2 errors detected in the compilation of<br>
+"netserver.c".  ^ *** Error code 2 (bu21)<br>
+<p>
+Thanks for any assistance, Dave<br>
+<!-- body="end" -->
+<p>
+<ul>
+<!-- next="start" -->
+<li> <b>Next message:</b> <a href="0194.html">Nicolas Ponson: "Infos....please.."</a>
+<li> <b>Previous message:</b> <a href="0192.html">Rick Jones: "Re: large buffer pb with netperf ???"</a>
+<!-- nextthread="start" -->
+</ul>

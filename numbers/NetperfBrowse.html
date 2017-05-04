@@ -1,0 +1,229 @@
+<HTML>
+<HEAD>
+<TITLE>Browse the Results in the <!--#include file="which_server.html"--> Netperf Database</TITLE>
+</HEAD>
+<BODY>
+<H1>
+<IMG SRC="http:/netperf/images/binoculars_large.gif" ALT="SEARCH!">
+Browse the Results in the <!--#include file="which_server.html"--> Netperf Database</H1>
+<H2>
+Be sure you have read the 
+<A HREF="/netperf/NetperfDisclaim.html">Disclaimer</A> on the netperf
+services provided by this server before you continue.
+</H2>
+If you do not know exactly what you are looking for in the database
+this page will allow you to browse the results from a particular
+vendor, or for a particular test type. There is nothing special about
+this page - it performs queries of the database just like 
+<A HREF="/netperf/numbers/NetperfRetrieve.html">Search the Netperf
+Database</A>.  The only difference is that it hides all the
+nitty-gritty details of database field names and SQL syntax.
+
+<HR>
+<FORM METHOD="POST" ACTION="/cgi-bin/netperf_retrieve">
+<INPUT NAME="username" TYPE="hidden" SIZE=8 VALUE="browser">
+<INPUT NAME="fullname" TYPE="hidden" SIZE=8 VALUE="browser">
+<INPUT NAME="query" TYPE="hidden" VALUE="submittal_id = *">
+Give me the <STRONG>entire</STRONG> database, sorted by vendor and
+model, with summary output
+<INPUT NAME="display" TYPE="hidden" VALUE="summary">
+<INPUT NAME="sort" 
+ TYPE="hidden" 
+ VALUE="sysvend_netperf, model_netperf, testtype, nettype, throughput
+        DESC NUM"> 
+<INPUT TYPE="submit" VALUE="Browse"> 
+</FORM>
+<HR>
+<FORM METHOD="POST" ACTION="/cgi-bin/netperf_retrieve">
+<INPUT NAME="username" TYPE="hidden" SIZE=8 VALUE="browser">
+<INPUT NAME="fullname" TYPE="hidden" SIZE=8 VALUE="browser">
+Select results where
+(<SELECT NAME="query">
+  <OPTION
+   VALUE="(sysvend_netperf = Compaq) or (sysvend_netserver = Compaq)"> Compaq
+  <OPTION
+   VALUE="(sysvend_netperf = Dell) or (sysvend_netserver = Dell)"> Dell
+  <OPTION
+   VALUE="(sysvend_netperf = DEC) or (sysvend_netserver = DEC)"> DEC
+  <OPTION selected 
+   VALUE="(sysvend_netperf = HP) or (sysvend_netserver = HP)"> HP
+  <OPTION
+   VALUE="(sysvend_netperf = IBM) or (sysvend_netserver = IBM)"> IBM
+  <OPTION
+   VALUE="(sysvend_netperf = SGI) or (sysvend_netserver = SGI)"> SGI
+  <OPTION
+   VALUE="(sysvend_netperf = Sun) or (sysvend_netserver = Sun)"> Sun
+  <OPTION
+   VALUE="(sysvend_netperf = Other) or (sysvend_netserver = Other)"> Other
+</SELECT>)
+was the <STRONG>system vendor</STRONG>.
+<BR>
+Display
+<INPUT NAME="display" TYPE="radio" VALUE="shortsummary" > brief
+<INPUT NAME="display" TYPE="radio" VALUE="summary" > more
+<INPUT NAME="display" TYPE="radio" VALUE="all" CHECKED> full
+output
+<BR>
+Sort by
+<INPUT NAME="sort" TYPE="radio" VALUE="model_netperf, nettype, testtype" CHECKED> system model
+<INPUT NAME="sort" TYPE="radio" VALUE="nettype, testtype, model_netperf"> network type
+<INPUT NAME="sort" TYPE="radio" VALUE="testtype, throughput DESC NUM, model_netperf"> performance
+<INPUT TYPE="submit" VALUE="Browse">
+<HR>
+</FORM>
+<FORM METHOD="POST" ACTION="http:/cgi-bin/netperf_retrieve">
+<INPUT NAME="username" TYPE="hidden" SIZE=8 VALUE="browser">
+<INPUT NAME="fullname" TYPE="hidden" SIZE=8 VALUE="browser">
+Select results where
+(<SELECT NAME="query">
+  <OPTION
+   VALUE="(cardvend_netperf = 3Com) or (cardvend_netserver = 3Com)"> 3Com
+  <OPTION
+   VALUE="(cardvend_netperf = Adaptec) or (cardvend_netserver = Adaptec)"> Adaptec
+  <OPTION
+   VALUE="(cardvend_netperf = Ancor) or (cardvend_netserver = Ancor)"> Ancor
+  <OPTION
+   VALUE="(cardvend_netperf = Cisco) or (cardvend_netserver = Cisco)"> Cisco
+  <OPTION
+   VALUE="(cardvend_netperf = DEC) or (cardvend_netserver = DEC)"> DEC
+  <OPTION
+   VALUE="(cardvend_netperf = Dolphin) or (cardvend_netserver = Dolphin)"> Dolphin
+  <OPTION
+   VALUE="(cardvend_netperf = Efficient) or (cardvend_netserver = Efficient)"> Efficient
+  <OPTION
+   VALUE="(cardvend_netperf = Fore) or (cardvend_netserver = Fore)"> Fore
+  <OPTION selected 
+   VALUE="(cardvend_netperf = HP) or (cardvend_netserver = HP)"> HP
+  <OPTION
+   VALUE="(cardvend_netperf = IBM) or (cardvend_netserver = IBM)"> IBM
+  <OPTION
+   VALUE="(cardvend_netperf = Interphase) or (cardvend_netserver = Interphase)"> Interphase
+  <OPTION
+   VALUE="(cardvend_netperf = Myricom) or (cardvend_netserver = Myricom)"> Myricom
+  <OPTION
+   VALUE="(cardvend_netperf = NPI) or (cardvend_netserver = NPI)"> NPI
+  <OPTION
+   VALUE="(cardvend_netperf = RNS) or (cardvend_netserver = RNS)"> RNS
+  <OPTION
+   VALUE="(cardvend_netperf = SGI) or (cardvend_netserver = SGI)"> SGI
+  <OPTION
+   VALUE="(cardvend_netperf = SMC) or (cardvend_netserver = SMC)"> SMC
+  <OPTION
+   VALUE="(cardvend_netperf = Sun) or (cardvend_netserver = Sun)"> Sun
+  <OPTION
+   VALUE="(cardvend_netperf = Synoptics) or (cardvend_netserver = Synoptics)"> Synoptics
+  <OPTION
+   VALUE="(cardvend_netperf = Zeitnet) or (cardvend_netserver = Zeitnet)"> Zeitnet
+  <OPTION
+   VALUE="(cardvend_netperf = Other) or (cardvend_netserver = Other)"> Other
+</SELECT>)
+was the <STRONG>card vendor</STRONG>. 
+<BR>
+Display 
+<INPUT NAME="display" TYPE="radio" VALUE="shortsummary" > brief
+<INPUT NAME="display" TYPE="radio" VALUE="summary" > more
+<INPUT NAME="display" TYPE="radio" VALUE="all" CHECKED> full
+output
+<BR>
+Sort by
+<INPUT NAME="sort" 
+ TYPE="radio" 
+ VALUE="testtype, throughput DESC NUM, model_netperf" CHECKED> performance
+<INPUT NAME="sort" 
+ TYPE="radio" 
+ VALUE="nettype, testtype, throughput DESC NUM"> network type
+<INPUT NAME="sort" 
+ TYPE="radio" 
+ VALUE="sysvend_netperf, nettype, testtype"> system vendor
+<INPUT TYPE="submit" VALUE="Browse">
+<HR>
+</FORM>
+<FORM METHOD="POST" ACTION="http:/cgi-bin/netperf_retrieve">
+<INPUT NAME="username" TYPE="hidden" SIZE=8 VALUE="browser">
+<INPUT NAME="fullname" TYPE="hidden" SIZE=8 VALUE="browser">
+Select results where
+(<SELECT NAME="query">
+  <OPTION selected 
+   VALUE="(nettype = Ethernet)"> Ethernet
+  <OPTION
+   VALUE="(nettype = *FDDI*)"> FDDI/CDDI
+  <OPTION
+   VALUE="(nettype = 100VG)"> 100VG-Anylan
+  <OPTION
+   VALUE="(nettype = FastEthernet)"> FastEthernet
+  <OPTION
+   VALUE="(nettype = 802.5-16)"> 802.5(16Mb)
+  <OPTION
+   VALUE="(nettype = FibreChannel) or (nettype = FC*)"> FibreChannel
+  <OPTION
+   VALUE="(nettype = HiPPI)"> HiPPI
+  <OPTION
+   VALUE="(nettype = ATM*)"> ATM
+  <OPTION
+   VALUE="(nettype = Loopback)"> Loopback
+  <OPTION
+   VALUE="(nettype = SLIP/PPP)"> SLIP/PPP
+  <OPTION
+   VALUE="(nettype = Myrinet)"> Myrinet
+  <OPTION
+   VALUE="(nettype = Other)"> Other
+</SELECT>)
+was the <STRONG>network type</STRONG>.
+<BR>
+Display 
+<INPUT NAME="display" TYPE="radio" VALUE="shortsummary" > brief
+<INPUT NAME="display" TYPE="radio" VALUE="summary" > more
+<INPUT NAME="display" TYPE="radio" VALUE="all" CHECKED> full
+output
+<BR>
+Sort by
+<INPUT NAME="sort" 
+ TYPE="radio" 
+ VALUE="testtype, throughput DESC NUM" CHECKED> performance
+<INPUT NAME="sort" 
+ TYPE="radio" VALUE="sysvend_netperf, model_netperf"> system vendor
+<INPUT NAME="sort" 
+ TYPE="radio" 
+ VALUE="cardvend_netperf, model_netperf"> card vendor
+<INPUT TYPE="submit" VALUE="Browse">
+<HR>
+</FORM>
+<FORM METHOD="POST" ACTION="http:/cgi-bin/netperf_retrieve">
+<INPUT NAME="username" TYPE="hidden" SIZE=8 VALUE="browser">
+<INPUT NAME="fullname" TYPE="hidden" SIZE=8 VALUE="browser">
+Select results for
+(<SELECT NAME="query">
+  <OPTION selected 
+   VALUE="(testtype = *STREAM*)"> Unidirectional Throughput
+  <OPTION
+   VALUE="(testtype = *RR*)"> Request/Reponse Latency
+</SELECT>)
+.
+<BR>
+Display 
+<INPUT NAME="display" TYPE="radio" VALUE="shortsummary" > brief
+<INPUT NAME="display" TYPE="radio" VALUE="summary" > more
+<INPUT NAME="display" TYPE="radio" VALUE="all" CHECKED> full
+output
+<BR>
+Sort by
+<INPUT NAME="sort" 
+ TYPE="radio" 
+ VALUE="throughput DESC NUM" CHECKED> performance
+<INPUT NAME="sort" 
+ TYPE="radio" 
+ VALUE="sysvend_netperf, model_netperf"> system vendor
+<INPUT NAME="sort" 
+ TYPE="radio" 
+ VALUE="testtype, throughput DESC NUM, model_netperf"> testtype
+<INPUT TYPE="submit" VALUE="Browse">
+<HR>
+</FORM>
+<P>
+<A HREF="/netperf/NetperfPage.html">
+<IMG ALIGN="middle" SRC="/netperf/images/back.gif" alt="">Netperf Homepage</A>.
+</BODY>
+</HTML>
+
+
+
