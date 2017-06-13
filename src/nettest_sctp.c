@@ -3938,7 +3938,7 @@ Send   Recv    Send   Recv\n\
       for (j = 0; j < num_associations; j++) {
 	  for (i = 0; i < first_burst_size; i++) {
 	    if((len=sctp_sendmsg(send_socket[j],
-			 send_ring->buffer_ptr, send_size,
+			 send_ring->buffer_ptr, req_size,
 			 remote_res->ai_addr,
 			 remote_res->ai_addrlen,
 			 0, 0, 0, 0, 0)) != req_size) {
@@ -3970,7 +3970,7 @@ Send   Recv    Send   Recv\n\
 #endif /* WANT_HISTOGRAM */
 	
 	while ((len=sctp_sendmsg(send_socket[j],
-				 send_ring->buffer_ptr, send_size,
+				 send_ring->buffer_ptr, req_size,
 				 remote_res->ai_addr,
 				 remote_res->ai_addrlen,
 				 0, 0, 0, 0, 0)) != req_size) {
