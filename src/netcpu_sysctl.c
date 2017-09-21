@@ -8,6 +8,14 @@ char   netcpu_sysctl_id[]="\
 #include <stdio.h>
 #include <unistd.h>
 
+#if HAVE_STRING_H
+# include <string.h>
+#endif
+
+#if HAVE_STDLIB_H
+# include <stdlib.h>
+#endif
+
 #if HAVE_INTTYPES_H
 # include <inttypes.h>
 #else
