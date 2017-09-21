@@ -1204,25 +1204,6 @@ recv_sctp_stream( void )
     fflush(where);
   }
   
-  /* now get the port number assigned by the system  */
-  addrlen = sizeof(myaddr_in);
-  if (getsockname(s_listen, 
-		  (struct sockaddr *)&myaddr_in,
-		  &addrlen) == -1){
-    netperf_response.content.serv_errno = errno;
-    close(s_listen);
-    send_response();
-    
-    exit(1);
-  }
-  
-  /* Now myaddr_in contains the port and the internet address this is */
-  /* returned to the sender also implicitly telling the sender that the */
-  /* socket buffer sizing has been done. */
-  
-  sctp_stream_response->data_port_number = (int) ntohs(myaddr_in.sin_port);
-  netperf_response.content.serv_errno   = 0;
-  
   /* But wait, there's more. If the initiator wanted cpu measurements, */
   /* then we must call the calibrate routine, which will return the max */
   /* rate back to the initiator. If the CPU was not to be measured, or */
@@ -1256,7 +1237,26 @@ recv_sctp_stream( void )
     
     exit(1);
   }
-  
+
+  /* now get the port number assigned by the system  */
+  addrlen = sizeof(myaddr_in);
+  if (getsockname(s_listen,
+		  (struct sockaddr *)&myaddr_in,
+		  &addrlen) == -1){
+    netperf_response.content.serv_errno = errno;
+    close(s_listen);
+    send_response();
+
+    exit(1);
+  }
+
+  /* Now myaddr_in contains the port and the internet address this is */
+  /* returned to the sender also implicitly telling the sender that the */
+  /* socket buffer sizing has been done. */
+
+  sctp_stream_response->data_port_number = (int) ntohs(myaddr_in.sin_port);
+  netperf_response.content.serv_errno   = 0;
+
   send_response();
   
   addrlen = sizeof(peeraddr);
@@ -3938,7 +3938,7 @@ Send   Recv    Send   Recv\n\
       for (j = 0; j < num_associations; j++) {
 	  for (i = 0; i < first_burst_size; i++) {
 	    if((len=sctp_sendmsg(send_socket[j],
-			 send_ring->buffer_ptr, send_size,
+			 send_ring->buffer_ptr, req_size,
 			 remote_res->ai_addr,
 			 remote_res->ai_addrlen,
 			 0, 0, 0, 0, 0)) != req_size) {
@@ -3970,7 +3970,7 @@ Send   Recv    Send   Recv\n\
 #endif /* WANT_HISTOGRAM */
 	
 	while ((len=sctp_sendmsg(send_socket[j],
-				 send_ring->buffer_ptr, send_size,
+				 send_ring->buffer_ptr, req_size,
 				 remote_res->ai_addr,
 				 remote_res->ai_addrlen,
 				 0, 0, 0, 0, 0)) != req_size) {
