@@ -1,0 +1,16 @@
+*.in
+/aclocal.m4
+/autom4te.cache/
+/compile
+/configure
+Makefile
+*.o
+/config.h
+/config.log
+/config.status
+/netperf.spec
+.deps/
+/src/netperf_version.h
+/stamp-h1
+/src/netperf
+/src/netserver
