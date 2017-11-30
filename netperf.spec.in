@@ -7,7 +7,7 @@ Group:         System Environment/Base
 License:       Unknown
 URL:           http://www.netperf.org/
 Packager:      Martin A. Brown
-Source:        ftp://ftp.netperf.org/netperf/%{name}-%{version}.tar.bz2
+Source:        https://github.com/HewlettPackard/%{name}/archive/master.tar.gz
 BuildRoot:     %{_tmppath}/%{name}-%{version}-%{release}-root
 
 BuildRequires: texinfo, texinfo-tex
@@ -26,11 +26,12 @@ maintained by Rick Jones of HP.
 
 
 %prep
-%setup -q
+%setup -q -n %{name}-master
 
 %build
 # gcc 4.4 users may want to disable the strict aliasing warnings
 # CFLAGS="$RPM_OPT_FLAGS -Wno-strict-aliasing"
+./autogen.sh
 %configure
 make  %{_smp_mflags}
 
