@@ -162,11 +162,14 @@ char	netserver_id[]="\
 
 #ifndef DEBUG_LOG_FILE_DIR
 #if defined(WIN32)
-#define DEBUG_LOG_FILE_DIR ""
+#define   DEBUG_LOG_FILE_DIR ""
+#define   NETPERF_NULL       "nul"
 #elif defined(ANDROID)
-#define DEBUG_LOG_FILE_DIR "/data/local/tmp/"
+#define   DEBUG_LOG_FILE_DIR "/data/local/tmp/"
+#define   NETPERF_NULL       "/dev/null"
 #else
-#define DEBUG_LOG_FILE_DIR "/tmp/"
+#define   DEBUG_LOG_FILE_DIR "/tmp/"
+#define   NETPERF_NULL       "/dev/null"
 #endif
 #endif /* DEBUG_LOG_FILE_DIR */
 
@@ -245,12 +248,6 @@ unlink_empty_debug_file() {
 void
 open_debug_file()
 {
-#if !defined WIN32
-#define NETPERF_NULL "/dev/null"
-#else
-#define NETPERF_NULL "nul"
-#endif
-
   FILE *rd_null_fp;
 
   if (where != NULL) fflush(where);
