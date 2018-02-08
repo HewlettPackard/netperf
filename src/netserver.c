@@ -170,7 +170,8 @@ char	netserver_id[]="\
 #define   NETPERF_NULL       "/dev/null"
 #define   FILE_SEP       "/"
 #else
-#define   DEBUG_LOG_FILE_DIR "/tmp/"
+/* comply with FHS: http://www.pathname.com/fhs/pub/fhs-2.3.html */
+#define   DEBUG_LOG_FILE_DIR "/var/log/"
 #define   NETPERF_NULL       "/dev/null"
 #define   FILE_SEP       "/"
 #endif
