@@ -254,20 +254,23 @@ open_debug_file()
   FILE *rd_null_fp;
 
   if (where != NULL) fflush(where);
-
-  snprintf(FileName,
-	   sizeof(FileName),
+  if (suppress_debug) {
+    FileName = NETPERF_NULL;
+    where = fopen(Filename, "w");
+  } else {
+    snprintf(FileName, sizeof(FileName),
 #if defined(WIN32)
-	   "%s\\%s_%d",
-	   getenv("TEMP"),
+	     "%s\\%s_XXXXXX", getenv("TEMP"),
 #else
-	   "%s_%d",
+	     "%s_XXXXXX",
 #endif
-	   DEBUG_LOG_FILE,
-	   getpid());
-  if ((where = fopen((suppress_debug) ? NETPERF_NULL : FileName,
-		     "w")) == NULL) {
-    perror("netserver: debug file");
+	     DEBUG_LOG_FILE);
+    where = mkstemp(FileName);
+  }
+
+  if (where == NULL) {
+    fprintf(stderr, "netserver: %s debug file : %s",
+	    FileName, strerror(errno));
     exit(1);
   }
 
