@@ -162,19 +162,22 @@ char	netserver_id[]="\
 
 #ifndef DEBUG_LOG_FILE_DIR
 #if defined(WIN32)
-#define   DEBUG_LOG_FILE_DIR ""
+#define   DEBUG_LOG_FILE_DIR getenv("TEMP")
 #define   NETPERF_NULL       "nul"
+#define   FILE_SEP       "\\"
 #elif defined(ANDROID)
 #define   DEBUG_LOG_FILE_DIR "/data/local/tmp/"
 #define   NETPERF_NULL       "/dev/null"
+#define   FILE_SEP       "/"
 #else
 #define   DEBUG_LOG_FILE_DIR "/tmp/"
 #define   NETPERF_NULL       "/dev/null"
+#define   FILE_SEP       "/"
 #endif
 #endif /* DEBUG_LOG_FILE_DIR */
 
 #ifndef DEBUG_LOG_FILE
-#define DEBUG_LOG_FILE DEBUG_LOG_FILE_DIR"netserver.debug"
+#define DEBUG_LOG_FILE "netserver.debug_XXXXXX"
 #endif
 
 #if !defined(PATH_MAX)
@@ -255,13 +258,8 @@ open_debug_file()
     FileName = NETPERF_NULL;
     where = fopen(Filename, "w");
   } else {
-    snprintf(FileName, sizeof(FileName),
-#if defined(WIN32)
-	     "%s\\%s_XXXXXX", getenv("TEMP"),
-#else
-	     "%s_XXXXXX",
-#endif
-	     DEBUG_LOG_FILE);
+    snprintf(FileName, sizeof(FileName), "%s" FILE_SEP "%s",
+             DEBUG_LOG_FILE_DIR, DEBUG_LOG_FILE);
     where = mkstemp(FileName);
   }
 
