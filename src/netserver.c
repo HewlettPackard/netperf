@@ -162,16 +162,23 @@ char	netserver_id[]="\
 
 #ifndef DEBUG_LOG_FILE_DIR
 #if defined(WIN32)
-#define DEBUG_LOG_FILE_DIR ""
+#define   DEBUG_LOG_FILE_DIR getenv("TEMP")
+#define   NETPERF_NULL       "nul"
+#define   FILE_SEP       "\\"
 #elif defined(ANDROID)
-#define DEBUG_LOG_FILE_DIR "/data/local/tmp/"
+#define   DEBUG_LOG_FILE_DIR "/data/local/tmp/"
+#define   NETPERF_NULL       "/dev/null"
+#define   FILE_SEP       "/"
 #else
-#define DEBUG_LOG_FILE_DIR "/tmp/"
+/* comply with FHS: http://www.pathname.com/fhs/pub/fhs-2.3.html */
+#define   DEBUG_LOG_FILE_DIR "/var/log/"
+#define   NETPERF_NULL       "/dev/null"
+#define   FILE_SEP       "/"
 #endif
 #endif /* DEBUG_LOG_FILE_DIR */
 
 #ifndef DEBUG_LOG_FILE
-#define DEBUG_LOG_FILE DEBUG_LOG_FILE_DIR"netserver.debug"
+#define DEBUG_LOG_FILE "netserver.debug_XXXXXX"
 #endif
 
 #if !defined(PATH_MAX)
@@ -245,29 +252,21 @@ unlink_empty_debug_file() {
 void
 open_debug_file()
 {
-#if !defined WIN32
-#define NETPERF_NULL "/dev/null"
-#else
-#define NETPERF_NULL "nul"
-#endif
-
   FILE *rd_null_fp;
 
   if (where != NULL) fflush(where);
+  if (suppress_debug) {
+    FileName = NETPERF_NULL;
+    where = fopen(Filename, "w");
+  } else {
+    snprintf(FileName, sizeof(FileName), "%s" FILE_SEP "%s",
+             DEBUG_LOG_FILE_DIR, DEBUG_LOG_FILE);
+    where = mkstemp(FileName);
+  }
 
-  snprintf(FileName,
-	   sizeof(FileName),
-#if defined(WIN32)
-	   "%s\\%s_%d",
-	   getenv("TEMP"),
-#else
-	   "%s_%d",
-#endif
-	   DEBUG_LOG_FILE,
-	   getpid());
-  if ((where = fopen((suppress_debug) ? NETPERF_NULL : FileName,
-		     "w")) == NULL) {
-    perror("netserver: debug file");
+  if (where == NULL) {
+    fprintf(stderr, "netserver: %s debug file : %s",
+	    FileName, strerror(errno));
     exit(1);
   }
 
