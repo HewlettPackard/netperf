@@ -256,8 +256,8 @@ open_debug_file()
 
   if (where != NULL) fflush(where);
   if (suppress_debug) {
-    FileName = NETPERF_NULL;
-    where = fopen(Filename, "w");
+    strncpy(FileName, NETPERF_NULL, sizeof(FileName));
+    where = fopen(FileName, "w");
   } else {
     snprintf(FileName, sizeof(FileName), "%s" FILE_SEP "%s",
              DEBUG_LOG_FILE_DIR, DEBUG_LOG_FILE);
