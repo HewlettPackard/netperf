@@ -2270,7 +2270,7 @@ shutdown_control()
   2004/12/13 */
 
 void
-bind_to_specific_processor(int processor_affinity, int use_cpu_map)
+bind_to_specific_processor(int use_cpu_affinity, int use_cpu_map)
 {
 
   int mapped_affinity;
@@ -2281,10 +2281,10 @@ bind_to_specific_processor(int processor_affinity, int use_cpu_map)
      a suitable CPU id even when the space is not contiguous and
      starting from zero */
   if (use_cpu_map) {
-    mapped_affinity = lib_cpu_map[processor_affinity];
+    mapped_affinity = lib_cpu_map[use_cpu_affinity];
   }
   else {
-    mapped_affinity = processor_affinity;
+    mapped_affinity = use_cpu_affinity;
   }
 
 #ifdef HAVE_MPCTL
@@ -2377,7 +2377,7 @@ bind_to_specific_processor(int processor_affinity, int use_cpu_map)
     if ((mapped_affinity < 0) ||
 	(mapped_affinity > MAXIMUM_PROCESSORS)) {
       fprintf(where,
-	      "Invalid processor_affinity specified: %d\n", mapped_affinity);      fflush(where);
+	      "Invalid use_cpu_affinity specified: %d\n", mapped_affinity);      fflush(where);
       return;
     }
 
