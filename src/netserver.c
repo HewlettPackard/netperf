@@ -204,7 +204,7 @@ int      daemon_parent = 0;
 int      not_inetd;
 int      want_daemonize;
 int      spawn_on_accept;
-int      suppress_debug = 0;
+int      suppress_debug = 1;
 
 extern	char	*optarg;
 extern	int	optind, opterr;
