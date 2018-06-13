@@ -259,9 +259,15 @@ open_debug_file()
     strncpy(FileName, NETPERF_NULL, sizeof(FileName));
     where = fopen(FileName, "w");
   } else {
+    int fd;
     snprintf(FileName, sizeof(FileName), "%s" FILE_SEP "%s",
              DEBUG_LOG_FILE_DIR, DEBUG_LOG_FILE);
-    where = mkstemp(FileName);
+    fd = mkstemp(FileName);
+    if (fd < 0) {
+      fprintf(stderr, "netserver: creating debug file %s: %s\n", FileName, strerror(errno));
+      exit(1);
+    }
+    where = fdopen(fd, "w");
   }
 
   if (where == NULL) {
