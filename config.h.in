@@ -172,9 +172,6 @@
 /* Define to 1 if you have the <signal.h> header file. */
 #undef HAVE_SIGNAL_H
 
-/* Define if struct sockaddr has the sa_len member */
-#undef HAVE_SOCKADDR_SA_LEN
-
 /* Define to 1 if you have the `socket' function. */
 #undef HAVE_SOCKET
 
@@ -300,9 +297,6 @@
 
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
-
-/* Define as the return type of signal handlers (`int' or `void'). */
-#undef RETSIGTYPE
 
 /* Define to the type of arg 1 for `select'. */
 #undef SELECT_TYPE_ARG1
