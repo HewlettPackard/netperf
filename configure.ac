@@ -16,8 +16,7 @@ CXXFLAGS="${CXXFLAGS:=}"
 AC_CANONICAL_TARGET
 AC_CONFIG_SRCDIR([src/hist.h])
 AM_INIT_AUTOMAKE([dist-zip])
-AM_CONFIG_HEADER(config.h)
-# AC_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS([config.h])
 
 AC_CONFIG_LIBOBJ_DIR(src/missing)
 
@@ -69,7 +68,6 @@ AC_DECL_H_ERRNO
 AC_STRUCT_SOCKADDR_STORAGE
 AC_HEADER_TIME
 AC_HEADER_STDBOOL
-AC_CHECK_SA_LEN(ac_cv_sockaddr_has_sa_len)
 
 # Checks for library functions.
 # AC_FUNC_ERROR_AT_LINE
