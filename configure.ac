@@ -15,8 +15,10 @@ CXXFLAGS="${CXXFLAGS:=}"
 # use the target version rather than host - one day we may want cross-compile
 AC_CANONICAL_TARGET
 AC_CONFIG_SRCDIR([src/hist.h])
-AM_INIT_AUTOMAKE([dist-zip])
 AC_CONFIG_HEADERS([config.h])
+
+AM_INIT_AUTOMAKE([dist-zip])
+AM_PROG_AR
 
 AC_CONFIG_LIBOBJ_DIR(src/missing)
 
