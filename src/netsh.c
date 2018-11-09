@@ -277,7 +277,7 @@ Global options:\n\
     -r                Allow confidence to be hit on result only\n\
     -s seconds        Wait seconds between test setup and test start\n\
     -S                Set SO_KEEPALIVE on the data connection\n\
-    -t testname       Specify test to perform\n\
+    -t testname       Specify test to perform, 'help' to list supported\n\
     -T lcpu,rcpu      Request netperf/netserver be bound to local/remote cpu\n\
     -v verbosity      Specify the verbosity level\n\
     -W send,recv      Set the number of send,recv buffers\n\
@@ -299,6 +299,68 @@ comma.\n\
 will only set the first parms and will leave the second at the default\n\
 value. To set the second value it must be preceded with a comma or be a\n\
 comma-separated pair. This is to retain previous netperf behaviour.\n";
+
+char *netperf_tests[] = {
+  "TCP_STREAM",
+  "TCP_MAERTS",
+  "TCP_MSS",
+#ifdef HAVE_ICSC_EXS
+  "EXS_TCP_STREAM",
+#endif /* HAVE_ICSC_EXS */
+#ifdef HAVE_SENDFILE
+  "TCP_SENDFILE",
+#endif /* HAVE_SENDFILE */
+  "TCP_RR",
+  "TCP_CRR",
+  "TCP_CC",
+#ifdef DO_1644
+  "TCP_TRR",
+#endif /* DO_1644 */
+#ifdef DO_NBRR
+  "TCP_NBRR",
+#endif /* DO_NBRR */
+  "UDP_STREAM",
+  "UDP_RR",
+  "LOC_CPU",
+  "REM_CPU",
+#ifdef WANT_DLPI
+  "DLCO_RR",
+  "DLCL_RR",
+  "DLCO_STREAM",
+  "DLCL_STREAM",
+#endif /* WANT_DLPI */
+#ifdef WANT_UNIX
+  "STREAM_RR",
+  "DG_RR",
+  "STREAM_STREAM",
+  "DG_STREAM",
+#endif /* WANT_UNIX */
+#ifdef WANT_XTI
+  "XTI_TCP_STREAM",
+  "XTI_TCP_RR",
+  "XTI_UDP_STREAM",
+  "XTI_UDP_RR",
+#endif /* WANT_XTI */
+#ifdef WANT_SCTP
+  "SCTP_STREAM",
+  "SCTP_RR",
+  "SCTP_STREAM_MANY",
+  "SCTP_RR_MANY",
+#endif /* WANT_SCTP */
+#ifdef DO_DNS
+  "DNS_RR",
+#endif /* DO_DNS */
+#ifdef WANT_SDP
+  "SDP_STREAM",
+  "SDP_MAERTS",
+  "SDP_RR",
+#endif /* WANT_SDP */
+#ifdef WANT_OMNI
+  "OMNI",
+  "UUID",
+#endif /* WANT_OMNI */
+  NULL
+};
 
 
 /* This routine will return the two arguments to the calling routine.
@@ -556,6 +618,15 @@ void
 print_netperf_usage()
 {
   fprintf(stderr, "%s%s", netperf_usage1, netperf_usage2);
+}
+
+void
+print_netperf_tests()
+{
+  char **t;
+
+  for (t = netperf_tests; *t; ++t)
+    fprintf(stderr, "%s\n", *t);
 }
 
 /* convert the specified string to upper case if we know how */
@@ -842,6 +913,10 @@ scan_cmd_line(int argc, char *argv[])
 	 to worry about compares on things like substrings */
       strncpy(test_name,optarg,sizeof(test_name)-1);
       convert_to_upper(test_name);
+      if (strcasecmp(test_name, "HELP") == 0) {
+        print_netperf_tests();
+        exit(1);
+      }
       break;
     case 'T':
       /* We want to set the processor on which netserver or netperf
