@@ -405,6 +405,7 @@ TCP/UDP BSD Sockets Test Options:\n\
     -N                Use the connected socket for UDP remotely\n\
     -p min[,max]      Set the min/max port numbers for TCP_CRR, TCP_TRR\n\
     -P local[,remote] Set the local/remote port for the data socket\n\
+    -q rate           Transmit pacing rate\n\
     -r req,[rsp]      Set request/response sizes (TCP_RR, UDP_RR)\n\
     -s send[,recv]    Set local socket send/recv buffer sizes\n\
     -S send[,recv]    Set remote socket send/recv buffer sizes\n\
@@ -13153,7 +13154,7 @@ scan_sockets_args(int argc, char *argv[])
 
 {
 
-#define SOCKETS_ARGS "aAb:CDnNhH:L:m:M:p:P:r:R:s:S:T:Vw:W:z46"
+#define SOCKETS_ARGS "aAb:CDnNhH:L:m:M:p:P:q:r:R:s:S:T:Vw:W:z46"
 
   extern char	*optarg;	  /* pointer to option string	*/
 
@@ -13332,6 +13333,10 @@ scan_sockets_args(int argc, char *argv[])
 	strncpy(local_data_port,arg1,sizeof(local_data_port));
       if (arg2[0])
 	strncpy(remote_data_port,arg2,sizeof(remote_data_port));
+      break;
+    case 'q':
+      /* set the local socket pacing rate */
+      pacing_rate = convert(optarg);
       break;
     case 't':
       /* set the test name */
