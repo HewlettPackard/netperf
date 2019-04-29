@@ -7108,6 +7108,7 @@ OMNI and Migrated BSD Sockets Test Options:\n\
                       Use filename of '?' to get the list of choices\n\
     -p min[,max]      Set the min/max port numbers for TCP_CRR, TCP_TRR\n\
     -P local[,remote] Set the local/remote port for the data socket\n\
+    -q rate           Transmit pacing rate\n\
     -r req,[rsp]      Set request/response sizes (TCP_RR, UDP_RR)\n\
     -R 0/1            Allow routing of traffic on data connection.\n\
                       Default: 0 (off) for UDP_STREAM, 1 (on) otherwise\n\
@@ -7478,7 +7479,7 @@ scan_omni_args(int argc, char *argv[])
       break;
     case 'q':
       /* set the local socket pacing rate */
-      pacing_rate = atoi(optarg);
+      pacing_rate = convert(optarg);
       break;
     case 'r':
       /* set the request/response sizes. setting request/response
