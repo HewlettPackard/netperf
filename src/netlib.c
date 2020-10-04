@@ -4376,14 +4376,32 @@ HIST_report(HIST h){
 
 /* search buckets for each unit */
 int
-HIST_search_bucket(int *unit, int num, int *last, int *current, double scale){
+HIST_search_bucket(int *unit,
+	int num,
+	int *last,
+	int *current,
+	double scale,
+	int * out_is_result_valid
+){
   int base = HIST_NUM_OF_BUCKET / 10;
   int i;
   for (i = 0; i < HIST_NUM_OF_BUCKET; i++){
     *last = *current;
     *current += unit[i];
-    if (*current >= num)
+    if (*current >= num){
+		/*
+		If e.g. 50% of the messages were faster than 1 us and you are looking
+		for P50_LATENCY, the first call with h->unit_usec will return 0, which
+		will be a valid result. If it is not recognized as such, another call
+		for h->ten_usec will be made. If (unit[i] == 0) at that point, then you
+		divide by zero because (*current >= num) is true and (*current == *last)
+		is also true. You get +/-inf, cast that to an int, which is undefined,
+		and return it. If (unit[i] > 0) then you carry on calculating some wrong
+		value, because you now include h->ten_usec[0], when you shouldn't.
+		*/
+      *out_is_result_valid = 1;
       return (int)((i + (double)(num - *last)/(*current - *last)) * scale/base);
+	}
   }
   return 0;
 }
@@ -4395,49 +4413,58 @@ HIST_get_percentile(HIST h, const double percentile){
   int num = (int) win_kludge;
   int last = 0;
   int current = 0;
-  int result;
+  int result = 0;
+  int is_result_valid = 0;
 
   if (!num)
     return 0;
 
   /* search in unit usec range */
-  result = HIST_search_bucket(h->unit_usec, num, &last, &current, 1e0);
-  if (result)
+  result = HIST_search_bucket(h->unit_usec, num, &last, &current, 1e0,
+	&is_result_valid);
+  if (is_result_valid)
     return result;
 
   /* search in ten usec range */
-  result = HIST_search_bucket(h->ten_usec, num, &last, &current, 1e1);
-  if (result)
+  result = HIST_search_bucket(h->ten_usec, num, &last, &current, 1e1,
+	&is_result_valid);
+  if (is_result_valid)
     return result;
 
   /* search in ten hundred usec range */
-  result = HIST_search_bucket(h->hundred_usec, num, &last, &current, 1e2);
-  if (result)
+  result = HIST_search_bucket(h->hundred_usec, num, &last, &current, 1e2,
+	&is_result_valid);
+  if (is_result_valid)
     return result;
 
   /* search in unic msec range */
-  result = HIST_search_bucket(h->unit_msec, num, &last, &current, 1e3);
-  if (result)
+  result = HIST_search_bucket(h->unit_msec, num, &last, &current, 1e3,
+	&is_result_valid);
+  if (is_result_valid)
     return result;
 
   /* search in ten msec range */
-  result = HIST_search_bucket(h->ten_msec, num, &last, &current, 1e4);
-  if (result)
+  result = HIST_search_bucket(h->ten_msec, num, &last, &current, 1e4,
+	&is_result_valid);
+  if (is_result_valid)
     return result;
 
   /* search in hundred msec range */
-  result = HIST_search_bucket(h->hundred_msec, num, &last, &current, 1e5);
-  if (result)
+  result = HIST_search_bucket(h->hundred_msec, num, &last, &current, 1e5,
+	&is_result_valid);
+  if (is_result_valid)
     return result;
 
   /* search in unit sec range */
-  result = HIST_search_bucket(h->unit_sec, num, &last, &current, 1e6);
-  if (result)
+  result = HIST_search_bucket(h->unit_sec, num, &last, &current, 1e6,
+	&is_result_valid);
+  if (is_result_valid)
     return result;
 
   /* search in ten sec range */
-  result = HIST_search_bucket(h->ten_sec, num, &last, &current, 1e7);
-  if (result)
+  result = HIST_search_bucket(h->ten_sec, num, &last, &current, 1e7,
+	&is_result_valid);
+  if (is_result_valid)
     return result;
 
   return (int)(1e8);
