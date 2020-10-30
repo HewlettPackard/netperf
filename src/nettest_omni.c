@@ -485,14 +485,6 @@ static int client_port_max = 65535;
 
  /* different options for the sockets				*/
 
-int
-  loc_nodelay,		/* don't/do use NODELAY	locally		*/
-  rem_nodelay,		/* don't/do use NODELAY remotely	*/
-  loc_sndavoid,		/* avoid send copies locally		*/
-  loc_rcvavoid,		/* avoid recv copies locally		*/
-  rem_sndavoid,		/* avoid send copies remotely		*/
-  rem_rcvavoid; 	/* avoid recv_copies remotely		*/
-
 extern int
   loc_tcpcork,
   rem_tcpcork,
@@ -3662,7 +3654,7 @@ static void
 get_transport_cong_control(SOCKET socket, int protocol, char cong_control[], int len)
 {
 #ifdef TCP_CONGESTION
-  int my_len = len;
+  socklen_t my_len = len;
   if (protocol != IPPROTO_TCP) {
     strncpy(cong_control,"TCP Only",len);
   }
@@ -3893,7 +3885,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 
   struct sockaddr_storage remote_addr;
   struct sockaddr_storage my_addr;
-  int                     remote_addr_len = sizeof(remote_addr);
+  unsigned int            remote_addr_len = sizeof(remote_addr);
   netperf_socklen_t       my_addr_len = sizeof(my_addr);
 
   SOCKET	data_socket;
@@ -4182,11 +4174,11 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
       ret = get_sockaddr_family_addr_port(&my_addr,
 					  nf_to_af(omni_request->ipfamily),
 					  omni_request->netperf_ip,
-					  &(omni_request->netperf_port));
+					  (int *)&(omni_request->netperf_port));
       ret = get_sockaddr_family_addr_port((struct sockaddr_storage *)remote_res->ai_addr,
 					  nf_to_af(omni_request->ipfamily),
 					  omni_request->netserver_ip,
-					  &(omni_request->data_port));
+					  (int *)&(omni_request->data_port));
       /* if the user didn't explicitly set the remote data address we
 	 don't want to pass along the one we picked implicitly, or a
 	 netserver sitting behind a (BLETCH) NAT will be asked to try
