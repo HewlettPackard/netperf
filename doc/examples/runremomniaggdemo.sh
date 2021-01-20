@@ -83,7 +83,7 @@ function run_cmd {
 	id=`printf "%.5d" $i`
 	RUN="$NETPERF -H $TARGET $NETPERF_CMD 2>&1 > netperf_${TEST}_${id}_${SOURCE}_to_${TARGET}.out & exit"
 	ssh -f ${SSH_OPTS} ubuntu@$SOURCE "$RUN" 2>&1 >> starting.log
-	
+
 	i=`expr $i + 1`
 
 	if [ $i  -eq $PAUSE_AT ] && [ $i -ne $MAX_INSTANCES ]

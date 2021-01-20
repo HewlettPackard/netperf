@@ -3034,7 +3034,7 @@ Size (bytes)\n\
     }
 
     stop_timer();
-	
+
 #if defined(WANT_INTERVALS)
 #ifdef WIN32
     stop_itimer();

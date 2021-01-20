@@ -117,7 +117,7 @@ extern int first_burst_size;
 /* these variables are specific to SCTP tests. declare */
 /* them static to make them global only to this file. */
 
-static int	
+static int
   msg_count = 0,	/* number of messages to transmit on association */
   non_block = 0,	/* default to blocking sockets */
   num_associations = 1; /* number of associations on the endpoint */
@@ -872,7 +872,7 @@ Size (bytes)\n\
       /* there was no idle counter in the kernel(s). We need to make */
       /* a note of this for the user's benefit...*/
       if (local_cpu_usage) {
-	
+
 	local_cpu_utilization	= calc_cpu_util(0.0);
 	local_service_demand	= calc_service_demand(bytes_sent,
 						      0.0,
@@ -885,7 +885,7 @@ Size (bytes)\n\
       }
 
       if (remote_cpu_usage) {
-	
+
 	remote_cpu_utilization	= sctp_stream_result->cpu_util;
 	remote_service_demand	= calc_service_demand(bytes_sent,
 						      0.0,
@@ -1754,7 +1754,7 @@ Size (bytes)\n\
 	  perror("netperf: send_sctp_stream_1toMany: sctp stream data socket");
 	  exit(1);
 	}
-	
+
 	if (debug) {
 	  fprintf(where,"send_sctp_stream_1toMany: send_socket obtained...\n");
 	}
@@ -2030,7 +2030,7 @@ Size (bytes)\n\
       /* there was no idle counter in the kernel(s). We need to make */
       /* a note of this for the user's benefit...*/
       if (local_cpu_usage) {
-	
+
 	local_cpu_utilization	= calc_cpu_util(0.0);
 	local_service_demand	= calc_service_demand(bytes_sent,
 						      0.0,
@@ -2043,7 +2043,7 @@ Size (bytes)\n\
       }
 
       if (remote_cpu_usage) {
-	
+
 	remote_cpu_utilization	= sctp_stream_result->cpu_util;
 	remote_service_demand	= calc_service_demand(bytes_sent,
 						      0.0,
@@ -3533,7 +3533,7 @@ recv_sctp_rr( void )
       if (debug) {
 	fprintf(where,"yo55\n");
 	fflush(where);
-      }						
+      }
       break;
     }
 
@@ -3565,7 +3565,7 @@ recv_sctp_rr( void )
       if (debug) {
 	fprintf(where,"yo6\n");
 	fflush(where);
-      }						
+      }
       break;
     }
 
@@ -3885,7 +3885,7 @@ Send   Recv    Send   Recv\n\
 		  remote_res->ai_addr,
 		  remote_res->ai_addrlen) < 0){
 	perror("netperf: data socket connect failed");
-	
+
 	exit(1);
       }
 
@@ -3991,7 +3991,7 @@ Send   Recv    Send   Recv\n\
 	/* after the receive raj 8/94 */
 	HIST_timestamp_start(time_hist);
 #endif /* WANT_HISTOGRAM */
-	
+
 	while ((len=sctp_sendmsg(send_socket[j],
 				 send_ring->buffer_ptr, req_size,
 				 remote_res->ai_addr,
@@ -4015,10 +4015,10 @@ Send   Recv    Send   Recv\n\
 	  /* another call to break. */
 	  break;
 	}
-	
+
 	/* setup for the next time */
 	send_ring = send_ring->next;
-	
+
 	rsp_bytes_left = rsp_size;
 	temp_message_ptr  = recv_ring->buffer_ptr;
 	while (!(msg_flags & MSG_EOR)) {
@@ -4039,24 +4039,24 @@ Send   Recv    Send   Recv\n\
 	  }
 	  rsp_bytes_left -= rsp_bytes_recvd;
 	  temp_message_ptr  += rsp_bytes_recvd;
-	}	
+	}
 	recv_ring = recv_ring->next;
-	
+
 	if (timed_out) {
 	  /* we may have been in a nested while loop - we need */
 	  /* another call to break. */
 	  break;
 	}
-	
+
 #ifdef WANT_HISTOGRAM
 	HIST_timestamp_stop_add(time_hist);
 #endif /* WANT_HISTOGRAM */
-	
+
 	nummessages++;
 	if (trans_remaining) {
 	  trans_remaining--;
 	}
-	
+
 	if (debug > 3) {
 	  if ((nummessages % 100) == 0) {
 	    fprintf(where,
@@ -4583,7 +4583,7 @@ recv_sctp_rr_1toMany( void )
       if (debug) {
 	fprintf(where,"yo5\n");
 	fflush(where);
-      }						
+      }
       break;
     }
 
@@ -4610,7 +4610,7 @@ recv_sctp_rr_1toMany( void )
       if (debug) {
 	fprintf(where,"yo6\n");
 	fflush(where);
-      }						
+      }
       /* we hit the end of the test based on time - lets */
       /* bail out of here now... */
       break;
@@ -4692,7 +4692,7 @@ scan_sctp_args( int argc, char *argv[] )
 
   int		c;
 
-  char	
+  char
     arg1[BUFSIZ],  /* argument holders		*/
     arg2[BUFSIZ];
 
@@ -4713,7 +4713,7 @@ scan_sctp_args( int argc, char *argv[] )
 
   while ((c= getopt(argc, argv, SOCKETS_ARGS)) != EOF) {
     switch (c) {
-    case '?':	
+    case '?':
     case '4':
       remote_data_family = AF_INET;
       local_data_family = AF_INET;
@@ -4773,7 +4773,7 @@ scan_sctp_args( int argc, char *argv[] )
       break_args(optarg,arg1,arg2);
       if (arg1[0])
 	strncpy(local_data_port,arg1,sizeof(local_data_port));
-      if (arg2[0])	
+      if (arg2[0])
 	strncpy(remote_data_port,arg2,sizeof(remote_data_port));
       break;
     case 's':
@@ -4797,7 +4797,7 @@ scan_sctp_args( int argc, char *argv[] )
       break_args(optarg,arg1,arg2);
       if (arg1[0])
 	req_size = convert(arg1);
-      if (arg2[0])	
+      if (arg2[0])
 	rsp_size = convert(arg2);
       break;
     case 'm':

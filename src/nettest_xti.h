@@ -68,7 +68,7 @@ struct	xti_tcp_stream_response_struct {
 
 struct xti_tcp_stream_results_struct {
   double         bytes_received;
-  unsigned int	 recv_calls;	
+  unsigned int	 recv_calls;
   float	         elapsed_time;	/* how long the test ran */
   float	         cpu_util;	/* -1 if not measured */
   float	         serv_dem;	/* -1 if not measured */

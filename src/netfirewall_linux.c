@@ -76,7 +76,7 @@ enable_port(int port, int protocol) {
 
   if ((port < 0) || (port > 65535))
     return;
-		
+
   /* one of these days we will have to learn the proper way to see if
      a port is already open under Linux... */
   sprintf(command,

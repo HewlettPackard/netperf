@@ -592,7 +592,7 @@ getnameinfo(sa, salen, node, nodelen, serv, servlen, flags)
 	    }
 	    strcpy(node, ntoa_address);
 	}
-		
+
     }
 
   end:

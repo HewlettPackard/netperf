@@ -1163,7 +1163,7 @@ emulate_alarm( int seconds )
 	   It is rather kludgy, but should be sufficient to
 	   get this puppy shipped.  The concept can be
 	   attributed/blamed :) on Robin raj 1/96 */
-	
+
 	if (win_kludge_socket != INVALID_SOCKET) {
 	  HandlesClosedFlags |= 1;
 	  closesocket(win_kludge_socket);
@@ -1294,7 +1294,7 @@ start_itimer(unsigned int interval_len_msec )
     LARGE_INTEGER liDueTime;
 	TIMECAPS ptc;
 	MMRESULT mmr;
-	
+
 	/* make sure timer resolution is at least as small as interval length */
 	timerRes=interval_len_msec;
 	mmr=timeGetDevCaps(&ptc, sizeof (ptc));

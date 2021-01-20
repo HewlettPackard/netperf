@@ -568,7 +568,7 @@ ILDingbats 0[
 		{puterrchar}
 		{
 			/charbbox charinfo 1 4 getinterval def
-			wx 0 charbbox aload pop setcachedevice	
+			wx 0 charbbox aload pop setcachedevice
 			charinfo 5 get charinfo 6 get true
 			fontdict/imagemaskmatrix get
 			dup 5 charinfo 8 get put
@@ -619,7 +619,7 @@ ILDingbats 0[
 	/NoVMHead vmstatus exch sub exch pop dup
 	 VMHEAD 2 idiv lt{QUIT}if
 	 VMHEAD lt{true}{false}ifelse def
-	/nbytes hsize 15 add 16 idiv 2 mul height mul def	
+	/nbytes hsize 15 add 16 idiv 2 mul height mul def
 	NoVMHead not{/glyph nbytes sdf}if
 	currentfile NoVMHead {trashheap 0 nbytes getinterval}{glyph}ifelse
 	readhexstring 2 npop
@@ -669,7 +669,7 @@ ILDingbats 0[
 	patstr stringwidth pop
 	/paty exch def/patx paty def
 	% setup region
-	eoclip	
+	eoclip
 	pathbbox
 	/ry exch floor def
 	/rx exch floor def
