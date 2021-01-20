@@ -1,23 +1,23 @@
 #!/usr/bin/python
 #  Copyright 2021 Hewlett Packard Enterprise Development LP
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a 
-# copy of this software and associated documentation files (the "Software"), 
-# to deal in the Software without restriction, including without limitation 
-# the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-# and/or sell copies of the Software, and to permit persons to whom the 
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
 # Software is furnished to do so, subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in 
+#
+# The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-# 
-# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
-# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
+#
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
@@ -201,7 +201,7 @@ def process_result(basename, raw_results, end_time, ksink):
                 have_result = True
             else:
                 have_result = False
-               
+  
         if first_result and have_result:
             # we could use the overal start time, but using the first
             # timestamp for this instance may save us some space in
@@ -216,11 +216,11 @@ def process_result(basename, raw_results, end_time, ksink):
                      max_interval)
             first_timestamp = interim_end
             first_result = False
-             
+
         if int(math.ceil(interim_interval)) > max_interval:
             max_interval = int(math.ceil(interim_interval))
             update_heartbeat(basename,max_interval)
-       
+
         # perhaps one of these days, once we know that the rrdtool
         # bits can handle it, we will build a big list of results and
         # feed them en mass. until then we will dribble them one at a
@@ -440,7 +440,7 @@ def setup_parser() :
                         help="Generate graphs of individual tests")
     parser.add_argument("-I", "--intervals", action='store_true',
                         default=False,
-                        help="Emit the results for all intervals, not just peak")   
+                        help="Emit the results for all intervals, not just peak")
     parser.add_argument("-a", "--annotation",default=None,
                         help="Annotation to add to chart titles")
     parser.add_argument("-t", "--title", default=None,
@@ -490,7 +490,7 @@ if __name__ == '__main__':
         graph_individual(prefix, min_timestamp, end_time, vrules,
                          major_interval=min_graph_interval,
                          annotation=args.annotation,override=args.title)
-   
+
     units, multiplier, direction = units_et_al_by_prefix(prefix)
     print "Average of peak interval is %.3f %s from %d to %d" % (results_list[0][0] * float(multiplier), units, peak_start, peak_end)
     print "Minimum of peak interval is %.3f %s from %d to %d" % (peak_minimum * float(multiplier), units, peak_start, peak_end)

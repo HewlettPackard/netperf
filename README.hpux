@@ -15,7 +15,7 @@ where interrupt cycles go missing.  SOOO, since there is an accurate
 way to know what the total number of cycles should have been over the
 interval, and we know (ass-u-me) that the idle cycle counter is good
 (since the pstat mechanism has tested that one OK), we will take the
-ratio of idle to total cycles to compute CPU util. 
+ratio of idle to total cycles to compute CPU util.
 
 We will still calculate fractions for user, kernel and interrupt, and
 report them in debug (-d) output, but with a warning for interrupt

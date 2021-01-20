@@ -2,24 +2,24 @@
 /*
 
 #  Copyright 2021 Hewlett Packard Enterprise Development LP
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a 
-# copy of this software and associated documentation files (the "Software"), 
-# to deal in the Software without restriction, including without limitation 
-# the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-# and/or sell copies of the Software, and to permit persons to whom the 
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
 # Software is furnished to do so, subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in 
+#
+# The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-# 
-# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
-# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
+#
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
@@ -785,14 +785,14 @@ LPFN_WSARECVMSG GetWSARecvMsgFunctionPointer()
 
     sock = socket(AF_INET6,SOCK_DGRAM,0);
 
-    rc= WSAIoctl(sock, 
-                 SIO_GET_EXTENSION_FUNCTION_POINTER, 
-                 &guidWSARecvMsg, 
-                 sizeof(guidWSARecvMsg), 
-                 &lpfnWSARecvMsg, 
-                 sizeof(lpfnWSARecvMsg), 
-                 &dwBytes, 
-                 NULL, 
+    rc= WSAIoctl(sock,
+                 SIO_GET_EXTENSION_FUNCTION_POINTER,
+                 &guidWSARecvMsg,
+                 sizeof(guidWSARecvMsg),
+                 &lpfnWSARecvMsg,
+                 sizeof(lpfnWSARecvMsg),
+                 &dwBytes,
+                 NULL,
                  NULL
                  );
 
@@ -3142,7 +3142,7 @@ recv_data_no_copy(SOCKET data_socket, struct ring_elt *recv_ring, uint32_t bytes
 	      strerror(errno));
       return -4;
     }
-  }   
+  }
 
   /* receive data off the data_socket, ass-u-me-ing a blocking socket
      all the way!-) 2008-01-08 */
@@ -3170,8 +3170,8 @@ recv_data_no_copy(SOCKET data_socket, struct ring_elt *recv_ring, uint32_t bytes
 			 NULL,
 			 bytes_left,
 			 my_flags);
-   
-   
+
+
     if (bytes_recvd > 0) {
       /* per Eric Dumazet, we should just let this second splice call
 	 move as many bytes as it can and not worry about how much.
@@ -3263,7 +3263,7 @@ int recv_pktinfo(SOCKET data_socket, char *message_ptr, int bytes_to_recv,  int 
      worse-off than we were before. we are going to ignore IPv6 for
      the time being */
   setsockopt(data_socket, IPPROTO_IP, IP_PKTINFO, (char *)&onoff, sizeof(onoff));
- 
+
 #ifndef WIN32
   ret = recvmsg(data_socket, &my_header, 0);
 #else
@@ -3571,7 +3571,7 @@ dump_tcp_info(struct tcp_info *tcp_info)
 	  tcp_info->tcpi_snd_cwnd,
 	  tcp_info->tcpi_reordering,
 	  tcp_info->tcpi_total_retrans);
- 
+
   return;
 }
 
@@ -3729,7 +3729,7 @@ omni_create_data_socket(struct addrinfo *res)
 	(receive_timeout != -1)) {
       set_receive_timeout(temp_socket, receive_timeout);
     }
-     
+
     if (socket_debug) {
       int one = 1;
       setsockopt(temp_socket,
@@ -3802,7 +3802,7 @@ static void
 enable_enobufs(int s)
 {
   int on = 1;
- 
+
   /* Per Brian Ginsbach, the likes of SLES12 do not have "ip" listed
      in /etc/protocols and other distros may not have the correct
      value.  At his suggestion, we'll just go with IPPROTO_IP.  And
@@ -5707,7 +5707,7 @@ recv_omni()
        try to send something. */
     if ((omni_request->direction & NETPERF_XMIT) &&
 	((!times_up) || (units_remaining > 0))) {
-     
+
       /* there used to be some code here looking sched_yield() until
 	 there was no more queued, unsent data on the socket but
 	 frankly, I've no idea what that was all about so I have
@@ -5726,7 +5726,7 @@ recv_omni()
         }
         connected = 1;
       }
-     
+
       ret = send_data(data_socket,
 		      send_ring,
 		      bytes_to_send,

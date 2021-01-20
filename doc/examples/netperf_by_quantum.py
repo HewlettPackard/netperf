@@ -1,24 +1,24 @@
 #!/usr/bin/python -u
 
 #  Copyright 2021 Hewlett Packard Enterprise Development LP
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a 
-# copy of this software and associated documentation files (the "Software"), 
-# to deal in the Software without restriction, including without limitation 
-# the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-# and/or sell copies of the Software, and to permit persons to whom the 
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
 # Software is furnished to do so, subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in 
+#
+# The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-# 
-# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
-# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
+#
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
@@ -331,8 +331,8 @@ class TestNetperf() :
             if vm.id == lonely_uuid :
                 return i
 
-       
-           
+
+
     def print_ip_pool(self) :
         """
         Display the current contents of the IP pool
@@ -441,7 +441,7 @@ class TestNetperf() :
         body = { "subnet_id" : subnet['id'] }
         logging.debug('remove_gateway_router body=%s', body)
         self.qc.remove_interface_router(router['id'], body = body)
-       
+
     def delete_router(self, router):
         self.qc.delete_router(router['id'])
 
@@ -564,7 +564,7 @@ class TestNetperf() :
                                         protocol = 'udp',
                                         min_port = 1,
                                         max_port = 65535)
-       
+
         self.create_security_group_rule(self.security_group,
                                         protocol = 'icmp')
 
@@ -618,7 +618,7 @@ class TestNetperf() :
             self.fail(kwargs.get('failure'))
 
         return kwargs.get('default', '')
-       
+
     def setup_parser(self) :
         parser = argparse.ArgumentParser()
         parser.add_argument("-f", "--flavor",
@@ -686,7 +686,7 @@ class TestNetperf() :
             self.flavor_id = int(flav)
         except:
             self.flavor_name = flav
-                   
+      
     def get_collectd_sock(self) :
         self.collectd_socket = None
         if self.args.collectdsockname :
@@ -980,7 +980,7 @@ class TestNetperf() :
             else:
                 transport.connect(username=self.args.instanceuser,
                                   password=self.adminPasses[self.vm_pool[sut_index].id])
-               
+  
             sftp = paramiko.SFTPClient.from_transport(transport)
             for file in sftp.listdir():
                 # one of these days I should read-up on how to make
@@ -1275,7 +1275,7 @@ class TestNetperf() :
 
         if (self.ip_pool != []) :
             self.deallocate_ip_pool()
-                         
+            
         self.clean_up_instances()
 
         if self.security_group :
@@ -1302,7 +1302,7 @@ class TestNetperf() :
                 except Exception as e:
                     logging.warning("Unable to delete the test network on try %d. (%s)", retries, str(e))
                     sleep(1)
-           
+
 if __name__ == '__main__' :
     print "Hello World! Let us run some netperf shall we?"
 

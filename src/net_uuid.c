@@ -21,24 +21,24 @@
 */
 /*
 #  Copyright 2021 Hewlett Packard Enterprise Development LP
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a 
-# copy of this software and associated documentation files (the "Software"), 
-# to deal in the Software without restriction, including without limitation 
-# the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-# and/or sell copies of the Software, and to permit persons to whom the 
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
 # Software is furnished to do so, subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in 
+#
+# The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-# 
-# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
-# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
+#
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
@@ -256,7 +256,7 @@ void snpuid(char *str, size_t size, netperf_uuid_t u) {
     tmp += 2;
   }
   *tmp = 0;
- 
+
 }
 
 /* get-current_time -- get time as 60-bit 100ns ticks since UUID epoch.
@@ -340,14 +340,14 @@ int uuid_create(netperf_uuid_t *uuid)
   uuid_time_t timestamp;
   uint16_t clockseq;
   uuid_node_t node;
- 
+
   /* get time, node ID, saved state from non-volatile storage */
   get_current_time(&timestamp);
   get_ieee_node_identifier(&node);
- 
+
   /* for us clockseq is always to be random as we have no state */
   clockseq = true_random();
- 
+
   /* stuff fields into the UUID */
   format_uuid_v1(uuid, clockseq, timestamp, node);
   return 1;
@@ -358,7 +358,7 @@ void get_uuid_string(char *uuid_str, size_t size) {
 
   uuid_create(&u);
   snpuid(uuid_str,size,u);
- 
+
   return;
 }
 

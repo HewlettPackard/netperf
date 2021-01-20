@@ -6,30 +6,30 @@
 
 @copying
 This is Rick Jones' feeble attempt at a Texinfo-based manual for the
-netperf benchmark. 
+netperf benchmark.
 
 Copyright @copyright{} 2005-2015 Hewlett-Packard Company
-Copyright 2021 Hewlett Packard Enterprise Development LP 
+Copyright 2021 Hewlett Packard Enterprise Development LP
 @quotation
- 
-Permission is hereby granted, free of charge, to any person obtaining a  
-copy of this software and associated documentation files (the "Software"),  
-to deal in the Software without restriction, including without limitation  
-the rights to use, copy, modify, merge, publish, distribute, sublicense,  
-and/or sell copies of the Software, and to permit persons to whom the  
-Software is furnished to do so, subject to the following conditions: 
- 
-The above copyright notice and this permission notice shall be included in  
-all copies or substantial portions of the Software. 
- 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR  
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,  
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
- 
-IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,  
-DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR  
-OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE  
-USE OR OTHER DEALINGS IN THE SOFTWARE. 
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 Permission is granted to copy, distribute and/or modify this document
 per the terms of the netperf source license, a copy of which can be
@@ -61,19 +61,19 @@ found in the file @file{COPYING} of the basic netperf distribution.
 * Introduction::                An introduction to netperf - what it
 is and what it is not.
 * Installing Netperf::          How to go about installing netperf.
-* The Design of Netperf::       
-* Global Command-line Options::  
-* Using Netperf to Measure Bulk Data Transfer::  
-* Using Netperf to Measure Request/Response ::  
-* Using Netperf to Measure Aggregate Performance::  
-* Using Netperf to Measure Bidirectional Transfer::  
-* The Omni Tests::              
-* Other Netperf Tests::         
-* Address Resolution::          
-* Enhancing Netperf::           
-* Netperf4::                    
-* Concept Index::               
-* Option Index::                
+* The Design of Netperf::
+* Global Command-line Options::
+* Using Netperf to Measure Bulk Data Transfer::
+* Using Netperf to Measure Request/Response ::
+* Using Netperf to Measure Aggregate Performance::
+* Using Netperf to Measure Bidirectional Transfer::
+* The Omni Tests:: 
+* Other Netperf Tests::
+* Address Resolution::
+* Enhancing Netperf::
+* Netperf4::       
+* Concept Index::  
+* Option Index::   
 @end menu
 
 @node Introduction, Installing Netperf, Top, Top
@@ -97,7 +97,7 @@ TCP and UDP unidirectional transfer and request/response over IPv4
 using the XTI interface.
 @item
 Link-level unidirectional transfer and request/response using the DLPI
-interface. 
+interface.
 @item
 Unix domain sockets
 @item
@@ -149,7 +149,7 @@ must first subscribe by sending email to
 
 
 @menu
-* Conventions::                 
+* Conventions::    
 @end menu
 
 @node Conventions,  , Introduction, Introduction
@@ -248,28 +248,28 @@ and Rudoff and/or Stallings would be good starting points. There are
 likely other excellent sources out there as well.
 
 @menu
-* Getting Netperf Bits::        
-* Installing Netperf Bits::     
-* Verifying Installation::      
+* Getting Netperf Bits::
+* Installing Netperf Bits::
+* Verifying Installation::
 @end menu
 
 @node Getting Netperf Bits, Installing Netperf Bits, Installing Netperf, Installing Netperf
 @section Getting Netperf Bits
 
-Gzipped tar files of netperf sources can be retrieved via 
+Gzipped tar files of netperf sources can be retrieved via
 @uref{ftp://ftp.netperf.org/netperf,anonymous FTP}
 for ``released'' versions of the bits.  Pre-release versions of the
 bits can be retrieved via anonymous FTP from the
 @uref{ftp://ftp.netperf.org/netperf/experimental,experimental} subdirectory.
 
 For convenience and ease of remembering, a link to the download site
-is provided via the 
+is provided via the
 @uref{http://www.netperf.org/, NetperfPage}
 
 The bits corresponding to each discrete release of netperf are
 @uref{http://www.netperf.org/svn/netperf2/tags,tagged} for retrieval
 via subversion.  For example, there is a tag for the first version
-corresponding to this version of the manual - 
+corresponding to this version of the manual -
 @uref{http://www.netperf.org/svn/netperf2/tags/netperf-2.7.0,netperf
 2.7.0}.  Those wishing to be on the bleeding edge of netperf
 development can use subversion to grab the
@@ -307,7 +307,7 @@ make install
 @end example
 
 Most of the ``usual'' configure script options should be present
-dealing with where to install binaries and whatnot.  
+dealing with where to install binaries and whatnot.
 @example
 ./configure --help
 @end example
@@ -382,11 +382,11 @@ netperf -t TCP_RR -H lag -v 2
 TCP REQUEST/RESPONSE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to lag.hpl.hp.com (15.4.89.214) port 0 AF_INET : histogram
 Local /Remote
 Socket Size   Request  Resp.   Elapsed  Trans.
-Send   Recv   Size     Size    Time     Rate         
-bytes  Bytes  bytes    bytes   secs.    per sec   
+Send   Recv   Size     Size    Time     Rate
+bytes  Bytes  bytes    bytes   secs.    per sec
 
-16384  87380  1        1       10.00    3538.82   
-32768  32768 
+16384  87380  1        1       10.00    3538.82
+32768  32768
 Alignment      Offset
 Local  Remote  Local  Remote
 Send   Recv    Send   Recv
@@ -424,12 +424,12 @@ Interim result:   20.66 MBytes/s over 1.36 seconds ending at 1308789769.922
 Interim result:   22.74 MBytes/s over 1.36 seconds ending at 1308789771.285
 Interim result:   23.07 MBytes/s over 1.36 seconds ending at 1308789772.647
 Interim result:   23.77 MBytes/s over 1.37 seconds ending at 1308789774.016
-Recv   Send    Send                          
-Socket Socket  Message  Elapsed              
-Size   Size    Size     Time     Throughput  
-bytes  bytes   bytes    secs.    MBytes/sec  
+Recv   Send    Send             
+Socket Socket  Message  Elapsed 
+Size   Size    Size     Time     Throughput
+bytes  bytes   bytes    secs.    MBytes/sec
 
- 87380  16384  16384    10.06      17.81   
+ 87380  16384  16384    10.06      17.81
 @end example
 
 Notice how the units of the interim result track that requested by the
@@ -487,12 +487,12 @@ should result in output similar to the following:
 @example
 $ netperf
 TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain (127.0.0.1) port 0 AF_INET
-Recv   Send    Send                          
-Socket Socket  Message  Elapsed              
-Size   Size    Size     Time     Throughput  
-bytes  bytes   bytes    secs.    10^6bits/sec  
+Recv   Send    Send             
+Socket Socket  Message  Elapsed 
+Size   Size    Size     Time     Throughput
+bytes  bytes   bytes    secs.    10^6bits/sec
 
- 87380  16384  16384    10.00    2997.84   
+ 87380  16384  16384    10.00    2997.84
 @end example
 
 
@@ -529,7 +529,7 @@ a test is in progress.  Generally speaking this will have no effect on
 the results.
 
 @menu
-* CPU Utilization::             
+* CPU Utilization::
 @end menu
 
 @node CPU Utilization,  , The Design of Netperf, The Design of Netperf
@@ -551,7 +551,7 @@ and work performed.  For a _STREAM test it is the microseconds of CPU
 time consumed to transfer on KB (K == 1024) of data.  For a _RR test
 it is the microseconds of CPU time consumed processing a single
 transaction.   For both CPU utilization and service demand, lower is
-better. 
+better.
 
 Service demand can be particularly useful when trying to gauge the
 effect of a performance change.  It is essentially a measure of
@@ -689,7 +689,7 @@ with other mechanisms.  However, platform tools such as top, vmstat or
 mpstat are often based on the same mechanisms used by netperf.
 
 @menu
-* CPU Utilization in a Virtual Guest::  
+* CPU Utilization in a Virtual Guest::
 @end menu
 
 @node CPU Utilization in a Virtual Guest,  , CPU Utilization, CPU Utilization
@@ -729,8 +729,8 @@ netserver when invoked with the @option{-h} global command-line
 option.
 
 @menu
-* Command-line Options Syntax::  
-* Global Options::              
+* Command-line Options Syntax::
+* Global Options:: 
 @end menu
 
 @node Command-line Options Syntax, Global Options, Global Command-line Options, Global Command-line Options
@@ -858,7 +858,7 @@ file, the file is not fully transferred to the remote system as the
 receiving end of the test will not write the contents of what it
 receives to a file.  This can be used to pre-fill the send buffers
 with data having different compressibility and so is useful when
-measuring performance over mechanisms which perform compression. 
+measuring performance over mechanisms which perform compression.
 
 While previously required for a TCP_SENDFILE test, later versions of
 netperf removed that restriction, creating a temporary file as
@@ -889,7 +889,7 @@ that only IPv6 addresses be used for the control connection.
 @end example
 will set the name of the remote system to ``lag'' and leave the
 address family to AF_UNSPEC which means selection of IPv4 vs IPv6 is
-left to the system's address resolution.  
+left to the system's address resolution.
 
 A value of ``inet'' can be used in place of ``4'' to request IPv4 only
 addressing.  Similarly, a value of ``inet6'' can be used in place of
@@ -941,12 +941,12 @@ TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to tardy.cup.hp.com (15.24
 !!!                       Local CPU util  :  0.0%
 !!!                       Remote CPU util :  0.0%
 
-Recv   Send    Send                          
-Socket Socket  Message  Elapsed              
-Size   Size    Size     Time     Throughput  
-bytes  bytes   bytes    secs.    10^6bits/sec  
+Recv   Send    Send             
+Socket Socket  Message  Elapsed 
+Size   Size    Size     Time     Throughput
+bytes  bytes   bytes    secs.    10^6bits/sec
 
- 32768  16384  16384    10.01      40.23   
+ 32768  16384  16384    10.01      40.23
 @end example
 
 In the example above we see that netperf did not meet the desired
@@ -1092,7 +1092,7 @@ line or internal defaults.  If not otherwise specified by
 test-specific command line options, the data connection for a
 ``STREAM'' or ``SENDFILE'' test will be to the ``discard'' port, an
 ``RR'' test will be to the ``echo'' port, and a ``MEARTS'' test will
-be to the chargen port.  
+be to the chargen port.
 
 The response size of an ``RR'' test will be silently set to be the
 same as the request size.  Otherwise the test would hang if the
@@ -1332,8 +1332,8 @@ network. The classic netperf convention for a bulk data transfer test
 name is to tack a ``_STREAM'' suffix to a test name.
 
 @menu
-* Issues in Bulk Transfer::     
-* Options common to TCP UDP and SCTP tests::  
+* Issues in Bulk Transfer::
+* Options common to TCP UDP and SCTP tests::
 @end menu
 
 @node Issues in Bulk Transfer, Options common to TCP UDP and SCTP tests, Using Netperf to Measure Bulk Data Transfer, Using Netperf to Measure Bulk Data Transfer
@@ -1341,7 +1341,7 @@ name is to tack a ``_STREAM'' suffix to a test name.
 @section Issues in Bulk Transfer
 
 There are any number of things which can affect the performance of a
-bulk transfer test.  
+bulk transfer test.
 
 Certainly, absent compression, bulk-transfer tests can be limited by
 the speed of the slowest link in the path from the source to the
@@ -1353,7 +1353,7 @@ CPU utilization can also affect the results of a bulk-transfer test.
 If the networking stack requires a certain number of instructions or
 CPU cycles per KB of data transferred, and the CPU is limited in the
 number of instructions or cycles it can provide, then the transfer can
-be described as being @dfn{CPU-bound}.  
+be described as being @dfn{CPU-bound}.
 
 A bulk-transfer test can be CPU bound even when netperf reports less
 than 100% CPU utilization.  This can happen on an MP system where one
@@ -1414,7 +1414,7 @@ beforeafter before after > delta
 @end example
 and then one can look at the statistics in @file{delta}.  Beforeafter
 is distributed in source form so one can compile it on the platform(s)
-of interest. 
+of interest.
 
 If running a version 2.5.0 or later ``omni'' test under Linux one can
 include either or both of:
@@ -1523,7 +1523,7 @@ respectively. For example:
 @code{-s 128K}
 @end example
 Will request the local send and receive socket buffer sizes to be
-128KB or 131072 bytes. 
+128KB or 131072 bytes.
 
 While the historic expectation is that setting the socket buffer size
 has a direct effect on say the TCP window, today that may not hold
@@ -1549,7 +1549,7 @@ respectively.  For example:
 @code{-S 128K}
 @end example
 Will request the remote send and receive socket buffer sizes to be
-128KB or 131072 bytes. 
+128KB or 131072 bytes.
 
 While the historic expectation is that setting the socket buffer size
 has a direct effect on say the TCP window, today that may not hold
@@ -1578,17 +1578,17 @@ addresses for the local and remote ends of the data connection.
 
 
 @menu
-* TCP_STREAM::                  
-* TCP_MAERTS::                  
-* TCP_SENDFILE::                
-* UDP_STREAM::                  
-* XTI_TCP_STREAM::              
-* XTI_UDP_STREAM::              
-* SCTP_STREAM::                 
-* DLCO_STREAM::                 
-* DLCL_STREAM::                 
-* STREAM_STREAM::               
-* DG_STREAM::                   
+* TCP_STREAM::     
+* TCP_MAERTS::     
+* TCP_SENDFILE::   
+* UDP_STREAM::     
+* XTI_TCP_STREAM:: 
+* XTI_UDP_STREAM:: 
+* SCTP_STREAM::    
+* DLCO_STREAM::    
+* DLCL_STREAM::    
+* STREAM_STREAM::  
+* DG_STREAM::      
 @end menu
 
 @node TCP_STREAM, TCP_MAERTS, Options common to TCP UDP and SCTP tests, Options common to TCP UDP and SCTP tests
@@ -1652,12 +1652,12 @@ system:
 @example
 $ netperf -H lag
 TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to lag.hpl.hp.com (15.4.89.214) port 0 AF_INET
-Recv   Send    Send                          
-Socket Socket  Message  Elapsed              
-Size   Size    Size     Time     Throughput  
-bytes  bytes   bytes    secs.    10^6bits/sec  
+Recv   Send    Send             
+Socket Socket  Message  Elapsed 
+Size   Size    Size     Time     Throughput
+bytes  bytes   bytes    secs.    10^6bits/sec
 
- 32768  16384  16384    10.00      80.42   
+ 32768  16384  16384    10.00      80.42
 @end example
 
 We see that the default receive socket buffer size for the receiver
@@ -1688,12 +1688,12 @@ larger socket buffers with @option{-s} and @option{-S} options:
 @example
 $ netperf -H lag -t TCP_MAERTS -- -s 128K -S 128K
 TCP MAERTS TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to lag.hpl.hp.com (15.4.89.214) port 0 AF_INET
-Recv   Send    Send                          
-Socket Socket  Message  Elapsed              
-Size   Size    Size     Time     Throughput  
-bytes  bytes   bytes    secs.    10^6bits/sec  
+Recv   Send    Send             
+Socket Socket  Message  Elapsed 
+Size   Size    Size     Time     Throughput
+bytes  bytes   bytes    secs.    10^6bits/sec
 
-221184 131072 131072    10.03      81.14   
+221184 131072 131072    10.03      81.14
 @end example
 
 Where we see that Linux, unlike HP-UX, may not return the same value
@@ -1746,12 +1746,12 @@ we see what happens when the file is too small.  Here:
 @example
 $ netperf -H lag -F /boot/vmlinuz-2.6.8-1-686 -t TCP_SENDFILE -- -s 128K -S 128K
 TCP SENDFILE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to lag.hpl.hp.com (15.4.89.214) port 0 AF_INET
-Recv   Send    Send                          
-Socket Socket  Message  Elapsed              
-Size   Size    Size     Time     Throughput  
-bytes  bytes   bytes    secs.    10^6bits/sec  
+Recv   Send    Send             
+Socket Socket  Message  Elapsed 
+Size   Size    Size     Time     Throughput
+bytes  bytes   bytes    secs.    10^6bits/sec
 
-131072 221184 221184    10.02      81.83   
+131072 221184 221184    10.02      81.83
 @end example
 
 we resolve that issue by selecting a larger file.
@@ -1785,7 +1785,7 @@ by a 10 Gigabit Ethernet link:
 @example
 $ netperf -t UDP_STREAM -H 192.168.2.125 -- -m 32768
 UDP UNIDIRECTIONAL SEND TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to 192.168.2.125 (192.168.2.125) port 0 AF_INET
-Socket  Message  Elapsed      Messages                
+Socket  Message  Elapsed      Messages   
 Size    Size     Time         Okay Errors   Throughput
 bytes   bytes    secs            #      #   10^6bits/sec
 
@@ -1817,7 +1817,7 @@ fit into the socket buffer.
 @example
 $ netperf -t UDP_STREAM -H 192.168.2.125 -- -m 65000 -S 32768
 UDP UNIDIRECTIONAL SEND TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to 192.168.2.125 (192.168.2.125) port 0 AF_INET
-Socket  Message  Elapsed      Messages                
+Socket  Message  Elapsed      Messages   
 Size    Size     Time         Okay Errors   Throughput
 bytes   bytes    secs            #      #   10^6bits/sec
 
@@ -1898,7 +1898,7 @@ This option is used to specify the local and/or remote DLPI PPA(s).
 The PPA is used to identify the interface over which traffic is to be
 sent/received. The syntax of a @dfn{ppaspec} is otherwise the same as
 a @dfn{sizespec}.
-@item -s sap 
+@item -s sap
 This option specifies the 802.2 SAP for the test.  A SAP is somewhat
 like either the port field of a TCP or UDP header or the protocol
 field of an IP header.  The specified SAP should not conflict with any
@@ -1960,7 +1960,7 @@ In this way, it may also be considered similar to certain flavors of
 SCTP test which can also preserve message boundaries.
 
 All the options of a @ref{STREAM_STREAM} test are applicable to a DG_STREAM
-test. 
+test.
 
 The DG_STREAM test is only present if netperf was configured with
 @code{--enable-unixdomain=yes}. The remote netserver must have also been
@@ -1968,7 +1968,7 @@ configured with @code{--enable-unixdomain=yes}.
 
 
 @node Using Netperf to Measure Request/Response , Using Netperf to Measure Aggregate Performance, Using Netperf to Measure Bulk Data Transfer, Top
-@chapter Using Netperf to Measure Request/Response 
+@chapter Using Netperf to Measure Request/Response
 
 Request/response performance is often overlooked, yet it is just as
 important as bulk-transfer performance.  While things like larger
@@ -2004,8 +2004,8 @@ transactions per second to bits or bytes per second with the global
 @option{-f} option.
 
 @menu
-* Issues in Request/Response::  
-* Options Common to TCP UDP and SCTP _RR tests::  
+* Issues in Request/Response::
+* Options Common to TCP UDP and SCTP _RR tests::
 @end menu
 
 @node Issues in Request/Response, Options Common to TCP UDP and SCTP _RR tests, Using Netperf to Measure Request/Response , Using Netperf to Measure Request/Response
@@ -2170,17 +2170,17 @@ addresses for the local and remote ends of the data connection.
 @end table
 
 @menu
-* TCP_RR::                      
-* TCP_CC::                      
-* TCP_CRR::                     
-* UDP_RR::                      
-* XTI_TCP_RR::                  
-* XTI_TCP_CC::                  
-* XTI_TCP_CRR::                 
-* XTI_UDP_RR::                  
-* DLCL_RR::                     
-* DLCO_RR::                     
-* SCTP_RR::                     
+* TCP_RR::         
+* TCP_CC::         
+* TCP_CRR::        
+* UDP_RR::         
+* XTI_TCP_RR::     
+* XTI_TCP_CC::     
+* XTI_TCP_CRR::    
+* XTI_UDP_RR::     
+* DLCL_RR::        
+* DLCO_RR::        
+* SCTP_RR::        
 @end menu
 
 @node TCP_RR, TCP_CC, Options Common to TCP UDP and SCTP _RR tests, Options Common to TCP UDP and SCTP _RR tests
@@ -2224,11 +2224,11 @@ netperf -t TCP_RR -H 192.168.2.125
 TCP REQUEST/RESPONSE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to 192.168.2.125 (192.168.2.125) port 0 AF_INET
 Local /Remote
 Socket Size   Request  Resp.   Elapsed  Trans.
-Send   Recv   Size     Size    Time     Rate         
-bytes  Bytes  bytes    bytes   secs.    per sec   
+Send   Recv   Size     Size    Time     Rate
+bytes  Bytes  bytes    bytes   secs.    per sec
 
-16384  87380  1        1       10.00    29150.15   
-16384  87380 
+16384  87380  1        1       10.00    29150.15
+16384  87380
 @end example
 
 In this example the request and response sizes were one byte, the
@@ -2348,7 +2348,7 @@ Send   Recv   Size    Size   Time    Rate     local  remote local   remote
 bytes  bytes  bytes   bytes  secs.   per sec  % I    % I    us/Tr   us/Tr
 
 65535  65535  1       1      10.01   15262.48   13.90  16.11  18.221  21.116
-65535  65535 
+65535  65535
 @end example
 
 This example includes the @option{-c} and @option{-C} options to
@@ -2443,9 +2443,9 @@ netperf with @code{--enable-burst} and is applicable to the TCP_RR
 test. The third is a variation on the first.
 
 @menu
-* Running Concurrent Netperf Tests::  
-* Using --enable-burst::        
-* Using --enable-demo::         
+* Running Concurrent Netperf Tests::
+* Using --enable-burst::
+* Using --enable-demo::
 @end menu
 
 @node  Running Concurrent Netperf Tests, Using --enable-burst, Using Netperf to Measure Aggregate Performance, Using Netperf to Measure Aggregate Performance
@@ -2477,9 +2477,9 @@ option and will omit the test banners (option @option{-P}) for
 brevity.  The output looks something like this:
 
 @example
- 87380  16384  16384    10.03     235.15   
- 87380  16384  16384    10.03     235.09   
- 87380  16384  16384    10.03     235.38   
+ 87380  16384  16384    10.03     235.15
+ 87380  16384  16384    10.03     235.09
+ 87380  16384  16384    10.03     235.38
  87380  16384  16384    10.03     233.96
 @end example
 
@@ -2510,9 +2510,9 @@ do
 netperf -t TCP_STREAM -H tardy.cup.hp.com -i 10 -P 0 -c -C &
 done
 
-87380  16384  16384    10.03       235.47   3.67     5.09     10.226  14.180 
-87380  16384  16384    10.03       234.73   3.67     5.09     10.260  14.225 
-87380  16384  16384    10.03       234.64   3.67     5.10     10.263  14.231 
+87380  16384  16384    10.03       235.47   3.67     5.09     10.226  14.180
+87380  16384  16384    10.03       234.73   3.67     5.09     10.260  14.225
+87380  16384  16384    10.03       234.64   3.67     5.10     10.263  14.231
 87380  16384  16384    10.03       234.87   3.67     5.09     10.253  14.215
 @end example
 
@@ -2561,7 +2561,7 @@ for aggregate tests.  Even if you see the Netperf Contributing Editor
 acting to the contrary!-)
 
 @menu
-* Issues in Running Concurrent Tests::  
+* Issues in Running Concurrent Tests::
 @end menu
 
 @node Issues in Running Concurrent Tests,  , Running Concurrent Netperf Tests, Running Concurrent Netperf Tests
@@ -2636,7 +2636,7 @@ serviced by a single process:
 
 @example
 for b in 0 1 2 4 8 16 32
-do 
+do
  netperf -v 0 -t TCP_RR -B "-b $b" -H hpcpc108 -P 0 -- -b $b
 done
 
@@ -2761,7 +2761,7 @@ exchange of a request and a response, so we multiply that by 2 to
 arrive at 24501360.
 
 The sum of the ethtool stats is 24503094 packets which matches what
-netperf was reporting very well. 
+netperf was reporting very well.
 
 Had the request or response size differed, we would need to know how
 it compared with the @dfn{MSS} for the connection.
@@ -2827,12 +2827,12 @@ Interim result: 25523.49 10^6bits/s over 1.25 seconds ending at 1327962082.155
 Interim result: 25053.57 10^6bits/s over 1.27 seconds ending at 1327962083.429
 Interim result: 25349.64 10^6bits/s over 1.25 seconds ending at 1327962084.679
 Interim result: 25292.84 10^6bits/s over 1.25 seconds ending at 1327962085.932
-Recv   Send    Send                          
-Socket Socket  Message  Elapsed              
-Size   Size    Size     Time     Throughput  
-bytes  bytes   bytes    secs.    10^6bits/sec  
+Recv   Send    Send             
+Socket Socket  Message  Elapsed 
+Size   Size    Size     Time     Throughput
+bytes  bytes   bytes    secs.    10^6bits/sec
 
- 87380  16384  16384    10.00    25375.66   
+ 87380  16384  16384    10.00    25375.66
 @end example
 The units of the ``Interim result'' lines will follow the units
 selected via the global @code{-f} option.  If the test-specific
@@ -2865,7 +2865,7 @@ then start terminating the netperfs by sending them a SIGALRM signal
 via the likes of the @code{kill} or @code{pkill} command.  The
 netperfs will terminate and emit the rest of the ``usual'' output, and
 you can then bring the files to a central location for post
-processing to find the aggregate performance over the ``test interval.''  
+processing to find the aggregate performance over the ``test interval.''
 
 This method has the advantage that it does not require advance
 knowledge of how long it takes to get netperf tests started and/or
@@ -2902,12 +2902,12 @@ Interim result:   55.52 10^6bits/s over 2.72 seconds ending at 1327963891.538
 Interim result:   70.94 10^6bits/s over 2.11 seconds ending at 1327963893.650
 Interim result:   80.66 10^6bits/s over 2.13 seconds ending at 1327963895.777
 Interim result:   86.42 10^6bits/s over 2.12 seconds ending at 1327963897.901
-Recv   Send    Send                          
-Socket Socket  Message  Elapsed              
-Size   Size    Size     Time     Throughput  
-bytes  bytes   bytes    secs.    10^6bits/sec  
+Recv   Send    Send             
+Socket Socket  Message  Elapsed 
+Size   Size    Size     Time     Throughput
+bytes  bytes   bytes    secs.    10^6bits/sec
 
- 87380  16384  16384    20.34      68.87   
+ 87380  16384  16384    20.34      68.87
 @end example
 So long as your post-processing mechanism can account for that, there
 should be no problem.  As time passes there may be changes to try to
@@ -2935,9 +2935,9 @@ and one process on each end.  They may behave differently, especially
 on an MP system.
 
 @menu
-* Bidirectional Transfer with Concurrent Tests::  
-* Bidirectional Transfer with TCP_RR::  
-* Implications of Concurrent Tests vs Burst Request/Response::  
+* Bidirectional Transfer with Concurrent Tests::
+* Bidirectional Transfer with TCP_RR::
+* Implications of Concurrent Tests vs Burst Request/Response::
 @end menu
 
 @node  Bidirectional Transfer with Concurrent Tests, Bidirectional Transfer with TCP_RR, Using Netperf to Measure Bidirectional Transfer, Using Netperf to Measure Bidirectional Transfer
@@ -3017,11 +3017,11 @@ So, putting it all together one can do something like:
 netperf -f m -t TCP_RR -H 192.168.1.3 -v 2 -- -b 6 -r 32K -S 256K -S 256K
 MIGRATED TCP REQUEST/RESPONSE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to 192.168.1.3 (192.168.1.3) port 0 AF_INET : interval : first burst 6
 Local /Remote
-Socket Size   Request  Resp.   Elapsed  
-Send   Recv   Size     Size    Time     Throughput 
-bytes  Bytes  bytes    bytes   secs.    10^6bits/sec   
+Socket Size   Request  Resp.   Elapsed
+Send   Recv   Size     Size    Time     Throughput
+bytes  Bytes  bytes    bytes   secs.    10^6bits/sec
 
-16384  87380  32768    32768   10.00    1821.30   
+16384  87380  32768    32768   10.00    1821.30
 524288 524288
 Alignment      Offset         RoundTrip  Trans    Throughput
 Local  Remote  Local  Remote  Latency    Rate     10^6bits/s
@@ -3044,7 +3044,7 @@ Fortunately, this is easily accomplished by setting a ``large enough''
 socket buffer size with the test-specific @option{-s} and @option{-S}
 options.  Presently this must be performed by the user.  Future
 versions of netperf might attempt to do this automagically, but there
-are some issues to be worked-out. 
+are some issues to be worked-out.
 
 @node Implications of Concurrent Tests vs Burst Request/Response,  , Bidirectional Transfer with TCP_RR, Using Netperf to Measure Bidirectional Transfer
 @section Implications of Concurrent Tests vs Burst Request/Response
@@ -3103,9 +3103,9 @@ and remake netperf.  Remaking netserver is optional because even in
 (eg @file{src/nettest_bsd.c}) tests.
 
 @menu
-* Native Omni Tests::           
-* Migrated Tests::              
-* Omni Output Selection::       
+* Native Omni Tests::
+* Migrated Tests:: 
+* Omni Output Selection::
 @end menu
 
 @node Native Omni Tests, Migrated Tests, The Omni Tests, The Omni Tests
@@ -3131,7 +3131,7 @@ process.  As of version 2.5.0 one can use the following in a
 case-insensitive manner:
 
 @table @code
-@item send, stream, transmit, xmit or 2 
+@item send, stream, transmit, xmit or 2
 Any of which will cause netperf to send to the netserver.
 @item recv, receive, maerts or 4
 Any of which will cause netserver to send to netperf.
@@ -3185,10 +3185,10 @@ look quite similar to classic netperf output:
 @example
 $ netperf -t omni -- -d rr -O "THROUGHPUT,THROUGHPUT_UNITS"
 OMNI TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain (127.0.0.1) port 0 AF_INET : demo
-Throughput Throughput 
-           Units      
-                      
-                      
+Throughput Throughput
+           Units
+         
+         
 60492.57   Trans/s
 @end example
 
@@ -3280,12 +3280,12 @@ the beginning as in:
 @example
 $ netperf
 MIGRATED TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain (127.0.0.1) port 0 AF_INET : demo
-Recv   Send    Send                          
-Socket Socket  Message  Elapsed              
-Size   Size    Size     Time     Throughput  
-bytes  bytes   bytes    secs.    10^6bits/sec  
+Recv   Send    Send             
+Socket Socket  Message  Elapsed 
+Size   Size    Size     Time     Throughput
+bytes  bytes   bytes    secs.    10^6bits/sec
 
- 87380  16384  16384    10.00    27175.27   
+ 87380  16384  16384    10.00    27175.27
 @end example
 
 The tests migrated in version 2.5.0 are:
@@ -3319,11 +3319,11 @@ $ netperf -t tcp_rr
 MIGRATED TCP REQUEST/RESPONSE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost.localdomain (127.0.0.1) port 0 AF_INET : demo
 Local /Remote
 Socket Size   Request  Resp.   Elapsed  Trans.
-Send   Recv   Size     Size    Time     Rate         
-bytes  Bytes  bytes    bytes   secs.    per sec   
+Send   Recv   Size     Size    Time     Rate
+bytes  Bytes  bytes    bytes   secs.    per sec
 
-16384  87380  1        1       10.00    59421.52   
-16384  87380 
+16384  87380  1        1       10.00    59421.52
+16384  87380
 @end example
 
 @node Omni Output Selection,  , Migrated Tests, The Omni Tests
@@ -3383,7 +3383,7 @@ assume the output specification is a filename and attempt to open and
 parse the file.
 
 @menu
-* Omni Output Selectors::       
+* Omni Output Selectors::
 @end menu
 
 @node Omni Output Selectors,  , Omni Output Selection, Omni Output Selection
@@ -3523,7 +3523,7 @@ utilization. Units: single character denoting method.
 This will display the service demand, or units of CPU consumed per
 unit of work, as measured by netperf. Units: microseconds of CPU
 consumed per either KB (K==1024) of data transferred or request/response
-transaction. 
+transaction.
 @item REMOTE_CPU_UTIL
 This will display the overall CPU utilization during the test as
 measured by netserver. Units 0 to 100 percent.
@@ -3658,7 +3658,7 @@ The number of CPUs (cores, threads) detected by netperf. Units: CPU count.
 The utilization of the CPU most heavily utilized during the test, as
 measured by netperf. This can be used to see if any one CPU of a
 multi-CPU system was saturated even though the overall CPU utilization
-as reported by @code{LOCAL_CPU_UTIL} was low. Units: 0 to 100% 
+as reported by @code{LOCAL_CPU_UTIL} was low. Units: 0 to 100%
 @item LOCAL_CPU_PEAK_ID
 The id of the CPU most heavily utilized during the test as determined
 by netperf. Units: CPU ID.
@@ -3990,8 +3990,8 @@ include CPU rate calibration (present) and host identification (future
 enhancement).
 
 @menu
-* CPU rate calibration::        
-* UUID Generation::             
+* CPU rate calibration::
+* UUID Generation::
 @end menu
 
 @node CPU rate calibration, UUID Generation, Other Netperf Tests, Other Netperf Tests
@@ -4165,7 +4165,7 @@ mailing list and/or peruse the
 @unnumbered Option Index
 
 @printindex vr
-@bye                                      
+@bye                         
 
 @c  LocalWords:  texinfo setfilename settitle titlepage vskip pt filll ifnottex
 @c  LocalWords:  insertcopying cindex dfn uref printindex cp

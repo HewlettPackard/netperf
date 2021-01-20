@@ -1,24 +1,24 @@
 /*
    Copyright (C) 2007 Hewlett-Packard Company
 #  Copyright 2021 Hewlett Packard Enterprise Development LP
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a 
-# copy of this software and associated documentation files (the "Software"), 
-# to deal in the Software without restriction, including without limitation 
-# the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-# and/or sell copies of the Software, and to permit persons to whom the 
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
 # Software is furnished to do so, subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in 
+#
+# The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-# 
-# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
-# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
+#
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
@@ -51,7 +51,7 @@ struct	sdp_stream_request_struct {
 			/* receives? */
   int	so_sndavoid;    /* do we want the remote to avoid send copies? */
   int   dirty_count;    /* how many integers in the receive buffer */
-			/* should be made dirty before calling recv? */ 
+			/* should be made dirty before calling recv? */
   int   clean_count;    /* how many integers should be read from the */
 			/* recv buffer before calling recv? */
   int   port;		/* the to port to which recv side should bind
@@ -149,7 +149,7 @@ struct	sdp_maerts_request_struct {
 			/* receives? */
   int	so_sndavoid;    /* do we want the remote to avoid send copies? */
   int   dirty_count;    /* how many integers in the send buffer */
-			/* should be made dirty before calling recv? */ 
+			/* should be made dirty before calling recv? */
   int   clean_count;    /* how many integers should be read from the */
 			/* recv buffer before calling recv? */
   int   port;           /* the port to which the recv side should bind

@@ -19,7 +19,7 @@ UWGLIBC_DEST_DIR = /usr/lib/vmware/lib
 # userworld include paths
 #
 GCC_INCLUDES   = -isystem $(UWGCC_ROOT)/lib/gcc-lib/i686-linux/3.3.3/include
-GLIBC_INCLUDES = -isystem $(BORA_ROOT)/glibc-2.2.5-44/usr/include 
+GLIBC_INCLUDES = -isystem $(BORA_ROOT)/glibc-2.2.5-44/usr/include
 
 #
 # userworld compiler environment

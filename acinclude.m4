@@ -3,15 +3,15 @@ dnl This comes from libcurl's acinclude.m4.  it is not clear if this
 dnl is original libcurl code, or other code, so we include the libcurl
 dnl copyright here
 dnl
-dnl 
+dnl
 dnl Copyright (c) 1996 - 2005, Daniel Stenberg, <daniel@haxx.se>.
-dnl 
+dnl
 dnl All rights reserved.
-dnl 
+dnl
 dnl Permission to use, copy, modify, and distribute this software for any purpose
 dnl with or without fee is hereby granted, provided that the above copyright
 dnl notice and this permission notice appear in all copies.
-dnl 
+dnl
 dnl THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 dnl IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 dnl FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT OF THIRD PARTY RIGHTS. IN
@@ -19,7 +19,7 @@ dnl NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 dnl DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 dnl OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 dnl OR OTHER DEALINGS IN THE SOFTWARE.
-dnl 
+dnl
 dnl Except as contained in this notice, the name of a copyright holder shall not
 dnl be used in advertising or otherwise to promote the sale, use or other dealings
 dnl in this Software without prior written authorization of the copyright holder.
@@ -29,16 +29,16 @@ dnl POSIX 1g it is a type of its own, but some platforms use different
 dnl types for the argument to getsockopt, getpeername, etc.  So we
 dnl have to test to find something that will work.
 
-dnl Remove the AC_CHECK_TYPE - on HP-UX it would find a socklen_t, but the 
-dnl function prototypes for getsockopt et al will not actually use 
+dnl Remove the AC_CHECK_TYPE - on HP-UX it would find a socklen_t, but the
+dnl function prototypes for getsockopt et al will not actually use
 dnl socklen_t args unless _XOPEN_SOURCE_EXTENDED is defined. so, the
 dnl AC_CHECK_TYPE will find a socklen_t and think all is happiness and
 dnl joy when you will really get warnings about mismatch types - type
 dnl mismatches that would be possibly Bad (tm) in a 64-bit compile.
-dnl raj 2005-05-11 this change may be redistributed at will 
+dnl raj 2005-05-11 this change may be redistributed at will
 
 dnl also, added "extern" to the "int getpeername" in an attempt to resolve
-dnl an issue with this code under Solaris 2.9.  this too may be 
+dnl an issue with this code under Solaris 2.9.  this too may be
 dnl redistributed at will
 
 
@@ -97,7 +97,7 @@ dnl *    documentation and/or other materials provided with the distribution.
 dnl * 3. Neither the name of the project nor the names of its contributors
 dnl *    may be used to endorse or promote products derived from this software
 dnl *    without specific prior written permission.
-dnl * 
+dnl *
 dnl * THIS SOFTWARE IS PROVIDED BY THE PROJECT AND CONTRIBUTORS ``AS IS'' AND
 dnl * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 dnl * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -111,7 +111,7 @@ dnl * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 dnl * THE POSSIBILITY OF SUCH DAMAGE.
 dnl *
 
-dnl * 
+dnl *
 dnl * Check for h_errno.
 dnl *
 AC_DEFUN([AC_DECL_H_ERRNO],
@@ -139,7 +139,7 @@ dnl *    documentation and/or other materials provided with the distribution.
 dnl * 3. Neither the name of the project nor the names of its contributors
 dnl *    may be used to endorse or promote products derived from this software
 dnl *    without specific prior written permission.
-dnl * 
+dnl *
 dnl * THIS SOFTWARE IS PROVIDED BY THE PROJECT AND CONTRIBUTORS ``AS IS'' AND
 dnl * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 dnl * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -153,7 +153,7 @@ dnl * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 dnl * THE POSSIBILITY OF SUCH DAMAGE.
 dnl *
 
-dnl * 
+dnl *
 dnl * Check for struct sockaddr_in6
 dnl *
 AC_DEFUN([AC_STRUCT_SOCKADDR_IN6],
@@ -169,9 +169,9 @@ if test "$ac_cv_struct_sockaddr_in6" = yes; then
 [Define to 1 if <netinet/in.h> defines `struct sockaddr_in6'])
 fi])
 
-dnl * 
+dnl *
 dnl * Check for struct sockaddr_storage
-dnl * 
+dnl *
 AC_DEFUN([AC_STRUCT_SOCKADDR_STORAGE],
 [AC_CACHE_CHECK(for struct sockaddr_storage, ac_cv_struct_sockaddr_storage,
 [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
@@ -199,7 +199,7 @@ dnl *    documentation and/or other materials provided with the distribution.
 dnl * 3. Neither the name of the project nor the names of its contributors
 dnl *    may be used to endorse or promote products derived from this software
 dnl *    without specific prior written permission.
-dnl * 
+dnl *
 dnl * THIS SOFTWARE IS PROVIDED BY THE PROJECT AND CONTRIBUTORS ``AS IS'' AND
 dnl * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 dnl * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -213,9 +213,9 @@ dnl * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 dnl * THE POSSIBILITY OF SUCH DAMAGE.
 dnl *
 
-dnl * 
+dnl *
 dnl * Check for socklen_t.
-dnl * 
+dnl *
 AC_DEFUN([AC_TYPE_SOCKLEN_T],
 [AC_CACHE_CHECK([for socklen_t], ac_cv_type_socklen_t,
 [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
@@ -228,9 +228,9 @@ if test "$ac_cv_type_socklen_t" != yes; then
 [Define to `int' if <sys/types.h> or <sys/socket.h> does not define.])
 fi])
 
-dnl * 
+dnl *
 dnl * Check for in_port_t.
-dnl * 
+dnl *
 AC_DEFUN([AC_TYPE_IN_PORT_T],
 [AC_CACHE_CHECK([for in_port_t], ac_cv_type_in_port_t,
 [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
@@ -287,9 +287,9 @@ if <sys/types.h>, <sys/socket.h> or <netinet/in.h> does not define
 `in_port_t'.])
 fi])
 
-dnl * 
+dnl *
 dnl * Check for sa_family_t.
-dnl * 
+dnl *
 AC_DEFUN([AC_TYPE_SA_FAMILY_T],
 [AC_CACHE_CHECK([for sa_family_t], ac_cv_type_sa_family_t,
 [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[

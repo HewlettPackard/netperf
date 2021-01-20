@@ -1112,7 +1112,7 @@ where each line of input produces a line of output.}
   % of subentries (or empty, for subsubsections).  #3 is the node
   % text, which might be empty if this toc entry had no
   % corresponding node.  #4 is the page number.
-  % 
+  %
   \def\dopdfoutline#1#2#3#4{%
     % Generate a link to the node text if that exists; else, use the
     % page number.  We could generate a destination for the section
@@ -1157,7 +1157,7 @@ where each line of input produces a line of output.}
       % Read toc second time, this time actually producing the outlines.
       % The `-' means take the \expnumber as the absolute number of
       % subentries, which we calculated on our first read of the .toc above.
-      % 
+      %
       % We use the node names as the destinations.
       \def\numchapentry##1##2##3##4{%
         \dopdfoutline{##1}{count-\expnumber{chap##2}}{##3}{##4}}%
@@ -2668,7 +2668,7 @@ width0pt\relax} \fi
 }
 
 % We have to swallow the remaining "\ST@P".
-% 
+%
 \def\doignoretextzzz#1{%
   \ifnum\doignorecount = 0	% We have just found the outermost @end.
     \let\next\enddoignore
@@ -3622,7 +3622,7 @@ width0pt\relax} \fi
 % We do the following ugly conditional instead of the above simple
 % construct for the sake of pdftex, which needs the actual
 % letter in the expansion, not just typeset.
-% 
+%
 \def\appendixletter{%
   \ifnum\appendixno=`A A%
   \else\ifnum\appendixno=`B B%
@@ -3960,10 +3960,10 @@ width0pt\relax} \fi
 \global\let\centerchapmacro=\centerchfplain}
 
 % Normal chapter opening.
-% 
+%
 % #1 is the text, #2 is the section type (Ynumbered, Ynothing,
 % Yappendix, Yomitfromtoc), #3 the chapter number.
-% 
+%
 % To test against our argument.
 \def\Ynothingkeyword{Ynothing}
 \def\Yomitfromtockeyword{Yomitfromtoc}
@@ -4044,7 +4044,7 @@ width0pt\relax} \fi
 
 % I don't think this chapter style is supported any more, so I'm not
 % updating it with the new noderef stuff.  We'll see.  --karl, 11aug03.
-% 
+%
 \def\unnchfopen #1{%
 \chapoddpage {\chapfonts \vbox{\hyphenpenalty=10000\tolerance=5000
                        \parindent=0pt\raggedright
@@ -4069,7 +4069,7 @@ width0pt\relax} \fi
 
 % Section titles.  These macros combine the section number parts and
 % call the generic \sectionheading to do the printing.
-% 
+%
 \newskip\secheadingskip
 \def\secheadingbreak{\dobreak \secheadingskip{-1000}}
 
@@ -4083,11 +4083,11 @@ width0pt\relax} \fi
 
 
 % Print any size, any type, section title.
-% 
+%
 % #1 is the text, #2 is the section level (sec/subsec/subsubsec), #3 is
 % the section type for xrefs (Ynumbered, Ynothing, Yappendix), #4 is the
 % section number.
-% 
+%
 \def\sectionheading#1#2#3#4{%
   {%
     % Switch to the right set of fonts.
@@ -4160,14 +4160,14 @@ width0pt\relax} \fi
 \newwrite\tocfile
 
 % Write an entry to the toc file, opening it if necessary.
-% Called from @chapter, etc.  
-% 
+% Called from @chapter, etc.
+%
 % Example usage: \writetocentry{sec}{Section Name}{\the\chapno.\the\secno}
 % We append the current node name (if any) and page number as additional
 % arguments for the \{chap,sec,...}entry macros which will eventually
 % read this.  The node name is used in the pdf outlines as the
 % destination to jump to.
-% 
+%
 % We open the .toc file for writing here instead of at @setfilename (or
 % any other fixed time) so that @contents can be anywhere in the document.
 % But if #1 is `omit', then we don't do anything.  This is used for the
@@ -4296,7 +4296,7 @@ width0pt\relax} \fi
   % But use \hss just in case.
   % (This space doesn't include the extra space that gets added after
   % the label; that gets put in by \shortchapentry above.)
-  % 
+  %
   % We'd like to right-justify chapter numbers, but that looks strange
   % with appendix letters.  And right-justifying numbers and
   % left-justifying letters looks strange when there is less than 10
@@ -4321,7 +4321,7 @@ width0pt\relax} \fi
 
 % Appendices, in the main contents.
 % Need the word Appendix, and a fixed-size box.
-% 
+%
 \def\appendixbox#1{%
   % We use M since it's probably the widest letter.
   \setbox0 = \hbox{\putwordAppendix{} M}%
@@ -5847,7 +5847,7 @@ width0pt\relax} \fi
 
 % Write a cross-reference definition for the current node.  #1 is the
 % type (Ynumbered, Yappendix, Ynothing).
-% 
+%
 \def\donoderef#1{%
   \ifx\lastnode\empty\else
     \expandafter\expandafter\expandafter\setref{\lastnode}{#1}%
@@ -5867,7 +5867,7 @@ width0pt\relax} \fi
 % anchor), namely NAME-title (the corresponding @chapter/etc. name),
 % NAME-pg (the page number), and NAME-snt (section number and type).
 % Called from \foonoderef.
-% 
+%
 % We have to set dummies so commands such as @code in a section title
 % aren't expanded.  It would be nicer not to expand the titles in the
 % first place, but that is hard to do.

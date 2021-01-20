@@ -1,24 +1,24 @@
 #!/usr/bin/python -u
 
 #  Copyright 2021 Hewlett Packard Enterprise Development LP
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a 
-# copy of this software and associated documentation files (the "Software"), 
-# to deal in the Software without restriction, including without limitation 
-# the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-# and/or sell copies of the Software, and to permit persons to whom the 
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
 # Software is furnished to do so, subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in 
+#
+# The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-# 
-# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
-# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
+#
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
@@ -83,7 +83,7 @@ def launch_rr(destination=None,
     instance = 0
     output_file = open('netperf_rr_%.5d.out' % instance, 'w')
     error_file = open('netperf_rr_%.5d.err' % instance, 'w')
-   
+
     rrs.append((launch_netperf(output_file,
                                error_file,
                                destination=destination,
@@ -92,7 +92,7 @@ def launch_rr(destination=None,
                                test="%s_rr" % args.rr_protocol,
                                test_specific=args.rr_arguments),False))
 
-   
+
     return rrs
 
 def launch_streams(count,
@@ -173,7 +173,7 @@ def parse_direction(directions):
         chunks = 5
     elif do_stream or do_maerts:
         chunks = 3
-       
+
     return (chunks, do_stream, do_maerts)
 
 def open_rrd(basename,start_time,end_time,max_interval):
@@ -288,7 +288,7 @@ def process_result(basename, raw_results, end_time, ksink):
                 have_result = True
             else:
                 have_result = False
-               
+ 
         if first_result and have_result:
             # we could use the overal start time, but using the first
             # timestamp for this instance may save us some space in
@@ -304,7 +304,7 @@ def process_result(basename, raw_results, end_time, ksink):
             first_timestamp = interim_end
             first_result = False
 #            print "First entry for %s is %f at time %f" % (basename, interim_result,interim_end)
-           
+
         # perhaps one of these days, once we know that the rrdtool
         # bits can handle it, we will build a big list of results and
         # feed them en mass. until then we will dribble them one at a
@@ -313,7 +313,7 @@ def process_result(basename, raw_results, end_time, ksink):
             if int(math.ceil(interim_interval)) > max_interval:
                 max_interval = int(math.ceil(interim_interval))
                 update_heartbeat(basename,max_interval)
-       
+
             update_rrd(basename,convert_units(interim_result,interim_units),interim_end)
             have_result = False
 
@@ -503,7 +503,7 @@ if netperf_streams:
     if do_maerts:
         print "Sleeping for %d" % chunk_time
         time.sleep(chunk_time)
-       
+
 if netperf_maerts:
     terminate_netperfs(netperf_maerts)
     times['maerts_stop']=int(time.time())
@@ -592,4 +592,4 @@ rrdtool.graph('bloat2.svg', '--imgformat', 'SVG',
               stream_specs,
               maerts_specs,
               right_axis)
-             
+
