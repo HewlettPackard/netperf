@@ -1,25 +1,25 @@
 /*
 #  Copyright (C) 1993-2003 Hewlett-Packard Company
-#  Copyright 2021 Hewlett Packard Enterprise Development LP 
-#  
-# Permission is hereby granted, free of charge, to any person obtaining a  
-# copy of this software and associated documentation files (the "Software"),  
-# to deal in the Software without restriction, including without limitation  
-# the rights to use, copy, modify, merge, publish, distribute, sublicense,  
-# and/or sell copies of the Software, and to permit persons to whom the  
-# Software is furnished to do so, subject to the following conditions: 
-#  
-# The above copyright notice and this permission notice shall be included in  
-# all copies or substantial portions of the Software. 
-#  
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR  
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,  
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
-#  
-# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,  
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR  
-# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE  
-# USE OR OTHER DEALINGS IN THE SOFTWARE. 
+#  Copyright 2021 Hewlett Packard Enterprise Development LP
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a 
+# copy of this software and associated documentation files (the "Software"), 
+# to deal in the Software without restriction, including without limitation 
+# the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+# and/or sell copies of the Software, and to permit persons to whom the 
+# Software is furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in 
+# all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# 
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
+# USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
 
@@ -30,25 +30,25 @@
 struct	sctp_stream_request_struct {
   int	send_buf_size;
   int	recv_buf_size;	/* how big does the client want it - the */
-			/* receive socket buffer that is */ 
+			/* receive socket buffer that is */
   int	receive_size;   /* how many bytes do we want to receive at one */
-			/* time? */ 
+			/* time? */
   int	recv_alignment; /* what is the alignment of the receive */
-			/* buffer? */ 
-  int	recv_offset;    /* and at what offset from that alignment? */ 
+			/* buffer? */
+  int	recv_offset;    /* and at what offset from that alignment? */
   int	no_delay;       /* do we disable the nagle algorithm for send */
-			/* coalescing? */ 
+			/* coalescing? */
   int	measure_cpu;	/* does the client want server cpu utilization */
-			/* measured? */ 
-  float	cpu_rate;	/* do we know how fast the cpu is already? */ 
+			/* measured? */
+  float	cpu_rate;	/* do we know how fast the cpu is already? */
   int	test_length;	/* how long is the test?		*/
   int	so_rcvavoid;    /* do we want the remote to avoid copies on */
-			/* receives? */ 
+			/* receives? */
   int	so_sndavoid;    /* do we want the remote to avoid send copies? */
   int   dirty_count;    /* how many integers in the receive buffer */
-			/* should be made dirty before calling recv? */  
+			/* should be made dirty before calling recv? */ 
   int   clean_count;    /* how many integers should be read from the */
-			/* recv buffer before calling recv? */ 
+			/* recv buffer before calling recv? */
   int   port;		/* the to port to which recv side should bind
 			   to allow netperf to run through firewalls */
   int   ipfamily;	/* address family of ipaddress */
@@ -64,7 +64,7 @@ struct	sctp_stream_response_struct {
   int	send_buf_size;
   int	data_port_number;	/* connect to me here	*/
   float	cpu_rate;		/* could we measure	*/
-  int	so_rcvavoid;	/* could the remote avoid receive copies? */ 
+  int	so_rcvavoid;	/* could the remote avoid receive copies? */
   int	so_sndavoid;	/* could the remote avoid send copies? */
   int   non_blocking;   /* run the test in non-blocking mode */
 };
@@ -93,7 +93,7 @@ struct	sctp_rr_request_struct {
   float	cpu_rate;	/* do we know how fast the cpu is?	*/
   int	test_length;	/* how long is the test?		*/
   int	so_rcvavoid;    /* do we want the remote to avoid receive */
-			/* copies? */ 
+			/* copies? */
   int	so_sndavoid;    /* do we want the remote to avoid send copies? */
   int   port;		/* the to port to which recv side should bind
 			   to allow netperf to run through firewalls */

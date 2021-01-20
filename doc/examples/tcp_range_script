@@ -1,24 +1,24 @@
 #!/bin/sh
-#  Copyright 2021 Hewlett Packard Enterprise Development LP 
-#  
-# Permission is hereby granted, free of charge, to any person obtaining a  
-# copy of this software and associated documentation files (the "Software"),  
-# to deal in the Software without restriction, including without limitation  
-# the rights to use, copy, modify, merge, publish, distribute, sublicense,  
-# and/or sell copies of the Software, and to permit persons to whom the  
-# Software is furnished to do so, subject to the following conditions: 
-#  
-# The above copyright notice and this permission notice shall be included in  
-# all copies or substantial portions of the Software. 
-#  
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR  
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,  
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
-#  
-# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,  
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR  
-# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE  
-# USE OR OTHER DEALINGS IN THE SOFTWARE. 
+#  Copyright 2021 Hewlett Packard Enterprise Development LP
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a 
+# copy of this software and associated documentation files (the "Software"), 
+# to deal in the Software without restriction, including without limitation 
+# the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+# and/or sell copies of the Software, and to permit persons to whom the 
+# Software is furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in 
+# all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# 
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
+# USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #
 # stream_range
@@ -61,19 +61,19 @@ fi
 #PORT="-p some_other_portnum"
 PORT=""
 
-# where is netperf, and are there any "constant" options such as 
+# where is netperf, and are there any "constant" options such as
 # the netserver port number
 #NETHOME=/usr/etc/net_perf
 NETHOME="."
 NETPERF=$NETHOME/netperf $PORT
 
-# How accurate we want the estimate of performance: 
+# How accurate we want the estimate of performance:
 #      maximum and minimum test iterations (-i)
 #      confidence level (99 or 95) and interval (percent)
 STATS_STUFF="-i 10,2 -I 99,3"
 
 #
-# some stuff for the arithmetic 
+# some stuff for the arithmetic
 #
 # we start at start, and then multiply by MULT and add ADD. by changing
 # these numbers, we can double each time, or increase by a fixed
@@ -116,7 +116,7 @@ while [ $MESSAGE -le $END ]; do
   echo Testing with the following command line:
   echo  $NETPERF -l $TIME -H $REM_HOST -t TCP_STREAM\
         $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF --\
-        -m $MESSAGE $SOCKET_SIZE 
+        -m $MESSAGE $SOCKET_SIZE
   echo
   $NETPERF -l $TIME -H $REM_HOST -t TCP_STREAM\
   $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF --\

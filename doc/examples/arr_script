@@ -1,23 +1,23 @@
-#  Copyright 2021 Hewlett Packard Enterprise Development LP 
-#  
-# Permission is hereby granted, free of charge, to any person obtaining a  
-# copy of this software and associated documentation files (the "Software"),  
-# to deal in the Software without restriction, including without limitation  
-# the rights to use, copy, modify, merge, publish, distribute, sublicense,  
-# and/or sell copies of the Software, and to permit persons to whom the  
-# Software is furnished to do so, subject to the following conditions: 
-#  
-# The above copyright notice and this permission notice shall be included in  
-# all copies or substantial portions of the Software. 
-#  
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR  
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,  
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
-#  
-# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,  
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR  
-# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE  
-# USE OR OTHER DEALINGS IN THE SOFTWARE. 
+#  Copyright 2021 Hewlett Packard Enterprise Development LP
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a 
+# copy of this software and associated documentation files (the "Software"), 
+# to deal in the Software without restriction, including without limitation 
+# the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+# and/or sell copies of the Software, and to permit persons to whom the 
+# Software is furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in 
+# all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# 
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
+# USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 # this is retained mostly for historical purposes and may not be
@@ -52,7 +52,7 @@ set_default_parms() {
   then
     NPROC_LIST="1"
   fi
-  
+ 
   if [ "X$REM_HOST_LIST" = "X" ]
   then
     REM_HOST_LIST="127.0.0.1"
@@ -90,7 +90,7 @@ $*
 
         +|-tcp		: Run/Don't run TCP tests.
         +|-udp		: Run/Don't run UDP tests.
-        +|-lla 		: Run/Don't run LLA tests; this option also requires 
+        +|-lla 		: Run/Don't run LLA tests; this option also requires
 			  the user to specify a list of network device files
         	    	  using the -d option described below.
 
@@ -115,7 +115,7 @@ $*
 
         scale_script -n 4 -lla -d /dev/lan0,/dev/lan0 /dev/lan1,/dev/lan0 \\
           LGs37U1 LGs37U2
-        
+       
 @EOF
 }
 
@@ -127,7 +127,7 @@ check_usage() {
   fi
 
   if [ $LLA -eq 1 ]
-  then  
+  then 
     NDEV=`echo $DEVFILELIST | awk '{printf "%d",NF}'`
     if [ $NDEV -ne $NHOSTS ]
     then
@@ -138,7 +138,7 @@ check_usage() {
 
   for HOST in $REM_HOST_LIST
   do
-    if [ `/etc/ping $HOST 100 1 | awk '/transmitted/{print $4}'`0 -ne 10 ] 
+    if [ `/etc/ping $HOST 100 1 | awk '/transmitted/{print $4}'`0 -ne 10 ]
     then
       usage $0: ERROR: Cannot ping host: $HOST
       exit
@@ -293,7 +293,7 @@ tcp_test() {
     echo
 }
 
-udp_test() {  
+udp_test() { 
     #Run the UDP RR tests
     TEST="UDP_RR"
     SEND_SIZE=""
@@ -303,7 +303,7 @@ udp_test() {
     echo
 }
 
-lla_test() {  
+lla_test() { 
     #Run the UDP RR tests
     TEST="HIPPI_RR"
     SEND_SIZE=""
@@ -319,7 +319,7 @@ do_req_procs() {
   then
     TESTNAME="TCP"
     display_headstone
-    for PROCS in $NPROC_LIST  
+    for PROCS in $NPROC_LIST 
       do
         #Determine number of procs per host
         PROCS_PER_HOST=`echo $PROCS $REM_HOST_LIST | awk '{printf "%d",($1+NF-2)/(NF-1)}'`
@@ -332,7 +332,7 @@ do_req_procs() {
   then
     TESTNAME="UDP"
     display_headstone
-    for PROCS in $NPROC_LIST  
+    for PROCS in $NPROC_LIST 
       do
         #Determine number of procs per host
         PROCS_PER_HOST=`echo $PROCS $REM_HOST_LIST | awk '{printf "%d",($1+NF-2)/(NF-1)}'`
@@ -345,7 +345,7 @@ do_req_procs() {
   then
     TESTNAME="LLA"
     display_headstone
-    for PROCS in $NPROC_LIST  
+    for PROCS in $NPROC_LIST 
       do
         #Determine number of procs per host
         PROCS_PER_HOST=`echo $PROCS $REM_HOST_LIST | awk '{printf "%d",($1+NF-2)/(NF-1)}'`

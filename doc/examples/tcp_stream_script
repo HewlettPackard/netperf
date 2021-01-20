@@ -1,29 +1,29 @@
 #!/bin/sh
 #
-#  Copyright 2021 Hewlett Packard Enterprise Development LP 
-#  
-# Permission is hereby granted, free of charge, to any person obtaining a  
-# copy of this software and associated documentation files (the "Software"),  
-# to deal in the Software without restriction, including without limitation  
-# the rights to use, copy, modify, merge, publish, distribute, sublicense,  
-# and/or sell copies of the Software, and to permit persons to whom the  
-# Software is furnished to do so, subject to the following conditions: 
-#  
-# The above copyright notice and this permission notice shall be included in  
-# all copies or substantial portions of the Software. 
-#  
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR  
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,  
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
-#  
-# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,  
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR  
-# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE  
-# USE OR OTHER DEALINGS IN THE SOFTWARE. 
-#
-# This is an example script for using netperf. Feel free to modify it 
-# as necessary, but I would suggest that you copy this one first.
+#  Copyright 2021 Hewlett Packard Enterprise Development LP
 # 
+# Permission is hereby granted, free of charge, to any person obtaining a 
+# copy of this software and associated documentation files (the "Software"), 
+# to deal in the Software without restriction, including without limitation 
+# the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+# and/or sell copies of the Software, and to permit persons to whom the 
+# Software is furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in 
+# all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# 
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
+# USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+# This is an example script for using netperf. Feel free to modify it
+# as necessary, but I would suggest that you copy this one first.
+#
 # This version has been modified to take advantage of the confidence
 # interval support in revision 2.0 of netperf. it has also been altered
 # to make submitting its resutls to the netperf database easier
@@ -56,7 +56,7 @@ PORT=""
 # The test length in seconds
 TEST_TIME=60
 
-# How accurate we want the estimate of performance: 
+# How accurate we want the estimate of performance:
 #      maximum and minimum test iterations (-i)
 #      confidence level (99 or 95) and interval (percent)
 STATS_STUFF="-i 10,2 -I 99,5"
@@ -105,7 +105,7 @@ for SOCKET_SIZE in $SOCKET_SIZES
     echo
     echo ------------------------------------
     echo
-    # we echo the command line for cut and paste 
+    # we echo the command line for cut and paste
     echo $NETHOME/netperf $PORT -l $TEST_TIME -H $REM_HOST -t TCP_STREAM\
          $LOC_CPU $LOC_RATE $REM_CPU $REM_RATE $STATS_STUFF --\
          -m $SEND_SIZE -s $SOCKET_SIZE -S $SOCKET_SIZE

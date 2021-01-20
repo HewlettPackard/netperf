@@ -1,24 +1,24 @@
 #!/usr/bin/python
-#  Copyright 2021 Hewlett Packard Enterprise Development LP 
-#  
-# Permission is hereby granted, free of charge, to any person obtaining a  
-# copy of this software and associated documentation files (the "Software"),  
-# to deal in the Software without restriction, including without limitation  
-# the rights to use, copy, modify, merge, publish, distribute, sublicense,  
-# and/or sell copies of the Software, and to permit persons to whom the  
-# Software is furnished to do so, subject to the following conditions: 
-#  
-# The above copyright notice and this permission notice shall be included in  
-# all copies or substantial portions of the Software. 
-#  
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR  
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,  
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
-#  
-# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,  
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR  
-# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE  
-# USE OR OTHER DEALINGS IN THE SOFTWARE. 
+#  Copyright 2021 Hewlett Packard Enterprise Development LP
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a 
+# copy of this software and associated documentation files (the "Software"), 
+# to deal in the Software without restriction, including without limitation 
+# the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+# and/or sell copies of the Software, and to permit persons to whom the 
+# Software is furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in 
+# all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# 
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
+# USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 import sys
@@ -52,7 +52,7 @@ def process_line(d, line, fields, result):
                 d[key].append(float(line[result]))
             else:
                 # we want a list rather than a vividict at the end
-                d[key] = [float(line[result])] 
+                d[key] = [float(line[result])]
         else:
             # recurse with the next Vividict based on the current
             # field selection and the next bit of fields on which to
@@ -148,7 +148,7 @@ def setup_parser() :
     parser.add_argument("-s", "--strip",default='"',
                         help="Character to strip from each line prior to processing. Default '\"'.")
     parser.add_argument('filename',nargs='?')
-          
+         
     return parser
 
 if __name__ == '__main__':

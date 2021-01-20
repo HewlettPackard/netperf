@@ -1,23 +1,23 @@
-#  Copyright 2021 Hewlett Packard Enterprise Development LP 
-#  
-# Permission is hereby granted, free of charge, to any person obtaining a  
-# copy of this software and associated documentation files (the "Software"),  
-# to deal in the Software without restriction, including without limitation  
-# the rights to use, copy, modify, merge, publish, distribute, sublicense,  
-# and/or sell copies of the Software, and to permit persons to whom the  
-# Software is furnished to do so, subject to the following conditions: 
-#  
-# The above copyright notice and this permission notice shall be included in  
-# all copies or substantial portions of the Software. 
-#  
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR  
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,  
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
-#  
-# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,  
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR  
-# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE  
-# USE OR OTHER DEALINGS IN THE SOFTWARE. 
+#  Copyright 2021 Hewlett Packard Enterprise Development LP
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a 
+# copy of this software and associated documentation files (the "Software"), 
+# to deal in the Software without restriction, including without limitation 
+# the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+# and/or sell copies of the Software, and to permit persons to whom the 
+# Software is furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in 
+# all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# 
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
+# USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #set -x
 # edit and add to this array as necessary
@@ -55,7 +55,7 @@ length=30
 confidence="-i 30,30"
 
 # the different number of concurrent sessions to be run
-# if you do not start with one concurrent session the 
+# if you do not start with one concurrent session the
 # test headers may not be where one wants them and you
 # may need to edit the output to hoist the test header
 # up above the first result
@@ -69,7 +69,7 @@ socket_sizes=" -s 1M -S 1M"
 #burst_sizes="0 1 4 16 64 256 1024"
 burst_sizes="0 1 4 16"
 
-# this ensures the test header of at least one instance 
+# this ensures the test header of at least one instance
 # is displayed
 HDR="-P 1"
 
@@ -104,10 +104,10 @@ echo four dl585 G5 clients rh5.2, each with two AD386A
   if [ $DO_STREAM -eq 1 ]; then
   echo TCP_STREAM
   for i in $concurrent_sessions; do
-    j=0; 
+    j=0;
     NETUUID=`netperf -t uuid`;
     echo $i concurrent streams id $NETUUID;
-    while [ $j -lt $i ]; do 
+    while [ $j -lt $i ]; do
       client=`expr $j % $num_cli` ;
       netperf $HDR -t omni -c -C -H ${remote_hosts[$client]} -l $length $confidence -- $CSV -H ${remote_hosts[$client]} $socket_sizes -m 64K -u $NETUUID & HDR="-P 0";
       j=`expr $j + 1`;

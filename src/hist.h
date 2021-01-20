@@ -1,24 +1,24 @@
 /*
-#  Copyright 2021 Hewlett Packard Enterprise Development LP 
-#  
-# Permission is hereby granted, free of charge, to any person obtaining a  
-# copy of this software and associated documentation files (the "Software"),  
-# to deal in the Software without restriction, including without limitation  
-# the rights to use, copy, modify, merge, publish, distribute, sublicense,  
-# and/or sell copies of the Software, and to permit persons to whom the  
-# Software is furnished to do so, subject to the following conditions: 
-#  
-# The above copyright notice and this permission notice shall be included in  
-# all copies or substantial portions of the Software. 
-#  
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR  
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,  
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
-#  
-# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,  
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR  
-# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE  
-# USE OR OTHER DEALINGS IN THE SOFTWARE. 
+#  Copyright 2021 Hewlett Packard Enterprise Development LP
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a 
+# copy of this software and associated documentation files (the "Software"), 
+# to deal in the Software without restriction, including without limitation 
+# the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+# and/or sell copies of the Software, and to permit persons to whom the 
+# Software is furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in 
+# all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# 
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
+# USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
 
@@ -39,8 +39,8 @@
 /* hist.h
 
    Given a time difference in microseconds, increment one of 61
-   different buckets: 
-   
+   different buckets:
+  
    0 - 9 in increments of 1 usec
    0 - 9 in increments of 10 usecs
    0 - 9 in increments of 100 usecs
@@ -50,12 +50,12 @@
    0 - 9 in increments of 1 sec
    0 - 9 in increments of 10 sec
    > 100 secs
-   
+  
    This will allow any time to be recorded to within an accuracy of
    10%, and provides a compact representation for capturing the
    distribution of a large number of time differences (e.g.
    request-response latencies).
-   
+  
    Colin Low  10/6/93
    Rick Jones 2004-06-15 - extend to 1 and 10 usec
 */
@@ -65,7 +65,7 @@
 #if defined(HAVE_GET_HRT)
 #include "hrt.h"
 #endif
-   
+  
 #ifndef HIST_NUM_OF_BUCKET
 #define HIST_NUM_OF_BUCKET 100
 #endif
@@ -107,20 +107,20 @@ struct histogram_struct {
 
 typedef struct histogram_struct *HIST;
 
-/* 
+/*
    HIST_new - return a new, cleared histogram data type
 */
 
-HIST HIST_new(void); 
+HIST HIST_new(void);
 
-/* 
+/*
    HIST_new_n - return a new, cleard histogram data type able to track
    at least max_outstanding timestamps
 */
 
 HIST HIST_new_n(int max_outstanding);
 
-/* 
+/*
    HIST_clear - reset a histogram by clearing all totals to zero
 */
 
@@ -129,21 +129,21 @@ void HIST_clear(HIST h);
 
 /*
    HIST_purge - forget about any remaining outstanding timestamps
-   being tracked 
+   being tracked
 */
 
 void HIST_purge(HIST h);
 
 /*
    HIST_add - add a time difference to a histogram. Time should be in
-   microseconds. 
+   microseconds.
 */
 
 void HIST_add(register HIST h, int time_delta);
 
-/* 
+/*
   HIST_report - create an ASCII report on the contents of a histogram.
-  Currently printsto standard out 
+  Currently printsto standard out
 */
 
 void HIST_report(HIST h);
@@ -168,7 +168,7 @@ void HIST_timestamp(struct timeval *timestamp);
 
 void HIST_timestamp_start(HIST h);
 
-/* 
+/*
   HIST_timestamp_stop_add - complete the oldest outstanding timestamp
   and add it to the histogram
 */

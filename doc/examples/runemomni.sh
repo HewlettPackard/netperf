@@ -1,23 +1,23 @@
-#  Copyright 2021 Hewlett Packard Enterprise Development LP 
-#  
-# Permission is hereby granted, free of charge, to any person obtaining a  
-# copy of this software and associated documentation files (the "Software"),  
-# to deal in the Software without restriction, including without limitation  
-# the rights to use, copy, modify, merge, publish, distribute, sublicense,  
-# and/or sell copies of the Software, and to permit persons to whom the  
-# Software is furnished to do so, subject to the following conditions: 
-#  
-# The above copyright notice and this permission notice shall be included in  
-# all copies or substantial portions of the Software. 
-#  
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR  
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,  
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
-#  
-# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,  
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR  
-# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE  
-# USE OR OTHER DEALINGS IN THE SOFTWARE. 
+#  Copyright 2021 Hewlett Packard Enterprise Development LP
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a 
+# copy of this software and associated documentation files (the "Software"), 
+# to deal in the Software without restriction, including without limitation 
+# the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+# and/or sell copies of the Software, and to permit persons to whom the 
+# Software is furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in 
+# all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# 
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
+# USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 # a script to run a set of single-instance netperf tests
 # between two machines
@@ -93,15 +93,15 @@ do
   then
     echo TCP_STREAM to $data autotuning
     for i in $netperf_CPUs
-    do 
-      if [ $FULL_MATRIX -eq 1 ] 
+    do
+      if [ $FULL_MATRIX -eq 1 ]
       then
         set=$netserver_CPUs
       else
         set=$i
       fi
       for j in $set
-      do 
+      do
         netperf $HDR -T $i,$j -t omni -c -C -H $control_host -l $length $confidence -- $CSV -H $data -m 64K;HDR="-P 0";
       done
     done
@@ -113,7 +113,7 @@ do
     HDR="-P 1"
     for i in $netperf_CPUs
     do
-      if [ $FULL_MATRIX -eq 1 ] 
+      if [ $FULL_MATRIX -eq 1 ]
       then
         set=$netserver_CPUs
       else
@@ -132,7 +132,7 @@ do
     HDR="-P 1"
     for i in $netperf_CPUs
     do
-      if [ $FULL_MATRIX -eq 1 ] 
+      if [ $FULL_MATRIX -eq 1 ]
       then
         set=$netserver_CPUs
       else
@@ -151,7 +151,7 @@ do
     HDR="-P 1"
     for i in $netperf_CPUs
     do
-      if [ $FULL_MATRIX -eq 1 ] 
+      if [ $FULL_MATRIX -eq 1 ]
       then
         set=$netserver_CPUs
       else
@@ -163,7 +163,7 @@ do
       done
     done
   fi
-  
+ 
   if [ $DO_TCP_BIDIR_REQ -eq 1 ]
   then
     echo bidir TCP_RR MEGABITS to $data altering req/rsp size and burst
