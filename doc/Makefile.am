@@ -4,7 +4,7 @@
 
 SUBDIRS = examples
 
-EXTRA_DIST = netperf.man netserver.man netperf_old.ps netperf.texi 
+EXTRA_DIST = netperf.man netserver.man netperf_old.ps netperf.texi
 man1_MANS = netperf.man netserver.man
 info_TEXINFOS = netperf.texi
 CLEANFILES = netperf.txt netperf.xml netperf.html

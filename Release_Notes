@@ -206,7 +206,7 @@ These are the Release Notes for Revision 2.5.0 of netperf:
    UDP_STREAM test when the socket buffer size is larger than the
    TX queue.  Provided by Andrew Gallatin.
 
-*) Fix the configure script to know it does not have to look for an 
+*) Fix the configure script to know it does not have to look for an
    SCTP library on FreeBSD 8.X
 
 *) The BSD and "omni" tests now have a test-specific -R option which
@@ -248,7 +248,7 @@ Things changed in this release:
    to name that person when told it is OK :)
 
 *) Fixes from Adam Bidema for launching netserver children when the
-   path to netserver.exe is very long.  
+   path to netserver.exe is very long.
 
 *) For the first time, netperf2 has a dependency, albeit optional, on
    another non-base-os bit of code - libsmbios under Linux.  It will
@@ -454,7 +454,7 @@ Things changed in this release:
 
 *) The nettest_ipv6.* files are no longer included in the source
    tar/zip file. IPv6 functionality has been subsumed into the
-   nettest_bsd.* files for some time now. 
+   nettest_bsd.* files for some time now.
 
 *) Use a higher resolution "time" source for HISTOGRAM support under
    Windows, courtesy of Spencer Frink. Prior to this it had no better
@@ -467,7 +467,7 @@ Things changed in this release:
 *) A bug fix for buffer filling from a file to properly advance the
    buffer pointer when the file is smaller than the send buffer.
 
-*) Enable certain UDP tests which previously used unconnected sockets 
+*) Enable certain UDP tests which previously used unconnected sockets
    to use connected sockets.  Courtesy of Shilpi Agarwal.
 
 *) The OSX CPU utilization code actually gets put into the tarball in
@@ -515,7 +515,7 @@ Things changed in this release:
    setups the mapping only knows about retrieving actual CPU ids under
    HP-UX.
 
-*) The netcpu_sysctl method becomes calibration-free, courtesy of 
+*) The netcpu_sysctl method becomes calibration-free, courtesy of
    Andrew Gallatin
 
 These are the Release Notes for Revision 2.4.1 of netperf:
@@ -539,7 +539,7 @@ Things changed in this release:
    expense of an EXTREME increase in CPU utilization.  (To the extent
    I'm considering disabling measurement of local CPU utilization when
    that mode is enabled, and bursts have been requested - your
-   feedback on that topic would be most appreciated) 
+   feedback on that topic would be most appreciated)
 
    If only --enable-intervals is used with configure, the old set the
    interval timer and wait method is still used.
@@ -697,7 +697,7 @@ Things changed in this release:
 *) Netperf now uses getaddrinfo() to resolve hostnames and IP
    addresses. A replacement getaddrinfo() is provided for those
    platforms where the configure script cannot tell that getaddrinfo
-   is present.   
+   is present.
 
    There are cases where a host's getaddrinfo call may return results
    that ignore the hints for protocol.  Netperf catches these and
@@ -796,7 +796,7 @@ Things changed in this release:
 *) DLPI tests are compiled-in with --enable-dlpi=yes at configure
    time.
 
-*) XTI tests are compiled-in with --enable-xti=yes at configure time. 
+*) XTI tests are compiled-in with --enable-xti=yes at configure time.
 
 Things not changed in this release:
 
@@ -866,17 +866,17 @@ Things changed in this release
    TEN_USEC row and renames TENTH_MSEC to HUNDRED_USEC.  If you want
    the old behaviour add -DOLD_HISTOGRAM to CFLAGS.
 
-*) Add missing '!' in the recv_udp*_stream so we recognize the end of 
+*) Add missing '!' in the recv_udp*_stream so we recognize the end of
    a timed test correctly.
 
 *) Replace "||" with "&&" to fix an infinite loop in
-   recv_tcp_conn_rr() most likely introduced in 2.2pl5. 
+   recv_tcp_conn_rr() most likely introduced in 2.2pl5.
 
 *) Code has been added to kludge around the bug in Linux getsockopt()
    where it almost always returns twice the value for which one
    asks unlike virtually every other stack on the face of the
    planet. This was doing some unpleasant things to tests in which
-   confidence intervals were requested. 
+   confidence intervals were requested.
 
 Things not changed in this release
 
@@ -974,11 +974,11 @@ Things changed in this release
    initial prototype.
 
 *) The Fore ATM API and HiPPI tests have been dropped from the
-   distribution. 
+   distribution.
 
 Things I would have liked to have changed, but did not have time for:
 
-*) Conversion of the source and makefile to use the GNU configure/autoconf 
+*) Conversion of the source and makefile to use the GNU configure/autoconf
    utility to make it easier for folks to build by not having to edit
    makefiles... You will notice that I have started to switch from
    "DO_MUMBLE" to "HAVE_MUMBLE"
@@ -1016,7 +1016,7 @@ These are the Release Notes for the 2.1 revision of netperf:
 Things Changed in this release:
 
 *) The XTI (Version 2 of the spec) tests are now documented in the
-   manual. 
+   manual.
 
 *) The TCP_CRR (Connect Request/Response) test is now documented in
    the manual, including a description of how it mimics the behaviour
@@ -1024,7 +1024,7 @@ Things Changed in this release:
 
 *) Support for for Windows NT 3.51 OS in the BSD Sockets tests (ok, so
    they are really Winsock in that case :). Other test suites may be
-   ported as required/desired/appropriate. 
+   ported as required/desired/appropriate.
 
 *) Tests for TCP and UDP, using the IPv6 extensions to BSD sockets are
    included in this release. They are included by adding -DUSE_IPv6 to

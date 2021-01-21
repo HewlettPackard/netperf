@@ -1,5 +1,27 @@
+#  Copyright 2021 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+#
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+# USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
 # set -x
-# this is a quick and dirty migration of runemomniagg2.sh to the 
+# this is a quick and dirty migration of runemomniagg2.sh to the
 # --enable-demo mode of aggregate testing
 
 function kill_netperfs {
@@ -61,7 +83,7 @@ function run_cmd {
 	id=`printf "%.5d" $i`
 	RUN="$NETPERF -H $TARGET $NETPERF_CMD 2>&1 > netperf_${TEST}_${id}_${SOURCE}_to_${TARGET}.out & exit"
 	ssh -f ${SSH_OPTS} ubuntu@$SOURCE "$RUN" 2>&1 >> starting.log
-	
+
 	i=`expr $i + 1`
 
 	if [ $i  -eq $PAUSE_AT ] && [ $i -ne $MAX_INSTANCES ]
@@ -75,7 +97,7 @@ function run_cmd {
 	    PAUSE_AT=`expr $PAUSE_AT \* 2`
 	    NOW=`date +%s.%N`
 	    echo "Resuming at $NOW for $TEST" | tee -a $TESTLOG
-	fi    
+	fi
     done
 
     NOW=`date +%s.%N`
@@ -91,7 +113,7 @@ function run_cmd {
     NOW=`date +%s.%N`
     echo "Netperfs stopping $NOW for $TEST" | tee -a $TESTLOG
     kill_netperfs
-    
+
     NOW=`date +%s.%N`
     echo "Netperfs stopped $NOW for $TEST" | tee -a $TESTLOG
 
@@ -179,7 +201,7 @@ then
     MAX_INSTANCES=$NUM_NETPERFS
 fi
 
-# allow the netperf binary to be used to be overridden 
+# allow the netperf binary to be used to be overridden
 NETPERF=${NETPERF:="netperf"}
 
 # we assume that netservers are already running on all the load generators
@@ -275,7 +297,7 @@ if [ $DO_RR -eq 1 ]; then
 fi
 
 # OK now we retrieve all the results.  we could I suppose do this after
-# each test in turn, but it will probably be a little faster overall to 
+# each test in turn, but it will probably be a little faster overall to
 # do it this way
 
 retrieve_results

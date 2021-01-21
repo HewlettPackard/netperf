@@ -12,7 +12,7 @@ dnl *    documentation and/or other materials provided with the distribution.
 dnl * 3. Neither the name of the project nor the names of its contributors
 dnl *    may be used to endorse or promote products derived from this software
 dnl *    without specific prior written permission.
-dnl * 
+dnl *
 dnl * THIS SOFTWARE IS PROVIDED BY THE PROJECT AND CONTRIBUTORS ``AS IS'' AND
 dnl * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 dnl * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -26,9 +26,9 @@ dnl * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 dnl * THE POSSIBILITY OF SUCH DAMAGE.
 dnl *
 
-dnl * 
+dnl *
 dnl * Check for struct in6_addr
-dnl * 
+dnl *
 AC_DEFUN([AC_STRUCT_IN6_ADDR],
 [AC_CACHE_CHECK(for struct in6_addr, ac_cv_struct_in6_addr,
 [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
@@ -42,7 +42,7 @@ if test "$ac_cv_struct_in6_addr" = yes; then
 [Define to 1 if <netinet/in.h> defines `struct in6_addr'])
 fi])
 
-dnl * 
+dnl *
 dnl * Check for in6addr_any.
 dnl *
 AC_DEFUN([AC_DECL_IN6ADDR_ANY],

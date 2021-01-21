@@ -3,7 +3,7 @@ selectors for the "omni" test of netperf2.  These are the identifiers
 one should use in the file passed to either the -o or -O test-specific
 options.
 
-Output Name: OUTPUT_NONE 
+Output Name: OUTPUT_NONE
 Description: Generates no actual output.  Results in a "blank" entry
              in CSV output.
 
@@ -40,7 +40,7 @@ Description: The source name/IP for the data "connection."
 Output Name: SOURCE_FAMILY
 Description: The source address family for the data "connection."
              Values include "inet" for IPv4 (AF_INET) and "inet6" for
-             IPv6 (AF_INET6). 
+             IPv6 (AF_INET6).
 
 Output Name: DEST_PORT
 Description: The destination (netserver side) port for the data
@@ -116,7 +116,7 @@ Output Name: RT_LATENCY
 Description: The average round-trip latency in microseconds per
              transaction for an "RR" or "CC" style test. When the
              "BURST_SIZE" is <=0 this is simply the inverse of
-             TRANSACTION_RATE. 
+             TRANSACTION_RATE.
 
 Output Name: BURST_SIZE
 Description: The number of additional transactions to have in flight
@@ -142,12 +142,12 @@ Description: The size in bytes of each response sent over the data
 Output Name: LSS_SIZE_REQ
 Description: The requested size in bytes for the data "connection's"
              local (netperf side) socket send buffer (SO_SNDBUF) or -1
-             if system defaults were accepted. 
+             if system defaults were accepted.
 
 Output Name: LSS_SIZE
 Description: The actual size in bytes for the data "connection's"
              local (netperf side) socket send buffer (SO_SNDBUF)
-             after the socket was created. 
+             after the socket was created.
 
 Output Name: LSS_SIZE_END
 Description: The size in bytes for the data "connection's" local
@@ -156,7 +156,7 @@ Description: The size in bytes for the data "connection's" local
 
 Output Name: LSR_SIZE_REQ
 Description: As with LSS_SIZE_REQ but for SO_RCVBUF.
-             
+
 Output Name: LSR_SIZE
 Description: As with LSS_SIZE but for SO_RCVBUF.
 
@@ -165,7 +165,7 @@ Description: As with LSR_SIZE_END but for SO_RCVBUF.
 
 Output Name: LOCAL_SEND_SIZE
 Description: The size in bytes of the buffers passed in the "send"
-             calls made at the local (netperf) end. 
+             calls made at the local (netperf) end.
 
 Output Name: LOCAL_RECV_SIZE
 Description: The size in bytes of the buffers passed in the "recv"
@@ -196,15 +196,15 @@ Description: The average number of bytes sent in each "send" call made
 Output Name: LOCAL_BYTES_SENT
 Description: The number of bytes sent by netperf during the test or
              the last iteration run when confidence intervals are
-             requested. 
+             requested.
 
 Output Name: LOCAL_BYTES_RECVD
 Description: The number of bytes received by netperf during the test
              or the last iteration run when confidence intervals are
-             requested. 
+             requested.
 
 Output Name: LOCAL_BYTES_XFERD
-Description: The sum of LOCAL_BYTES_SENT and LOCAL_BYTES_RECVD. 
+Description: The sum of LOCAL_BYTES_SENT and LOCAL_BYTES_RECVD.
 
 Output Name: LOCAL_SEND_OFFSET
 Description: The offset in bytes from the alignement of the buffers
@@ -219,7 +219,7 @@ Description: The offset in bytes from the alignment of the buffers
 Output Name: LOCAL_SEND_ALIGN
 Description: The alignment of the buffers passed in the "send" calls
              made by netperf. Controlled via the global -a option.
-             
+
 Output Name: LOCAL_RECV_ALIGN
 Description: The alignement of the buffers passed in the "recv" calls
              made by netperf. Controlled via the global -a option.
@@ -238,7 +238,7 @@ Description: The number of buffers netperf cycles through in "recv"
 
 Output Name: LOCAL_SEND_DIRTY_COUNT
 Description: The number of bytes netperf writes to in the buffer
-             before passing it to a "send" call.  
+             before passing it to a "send" call.
 
 Output Name: LOCAL_RECV_DIRTY_COUNT
 Output Name: LOCAL_RECV_CLEAN_COUNT
@@ -276,7 +276,7 @@ Description: The CPU fraction spent servicing softirqs (0 to 100%
 
 Output Name: LOCAL_CPU_BIND
 Description: The CPU to which netperf has been bound via the global -T
-             option. 
+             option.
 
 Output Name: LOCAL_SD
 Description: The "service demand" or quantity of CPU consumed per unit
@@ -295,7 +295,7 @@ Description: The number of (logical) CPUs believed to have been acitve
 Output Name: LOCAL_CPU_PEAK_UTIL
 Descprition: The CPU utilization (0 to 100%) of the most heavily
              utilized "CPU" on the local (netperf) system during the
-             test. 
+             test.
 
 Output Name: LOCAL_CPU_PEAK_ID
 Description: The identifier (number) of the most heavily utilized
@@ -303,7 +303,7 @@ Description: The identifier (number) of the most heavily utilized
 
 Output Name: REMOTE_CPU_UTIL
 Description: As with LOCAL_CPU_UTIL but for the remote (netserver)
-             system. 
+             system.
 
 Output Name: REMOTE_CPU_PERCENT_USER
 Description: As with LOCAL_CPU_PERCENT_USER but for the remote
@@ -327,26 +327,26 @@ Description: As with LOCAL_CPU_PERCENT_SWINTR but for the remote
 
 Output Name: REMOTE_CPU_BIND
 Description: As with LOCAL_CPU_BIND but for the remote (netserver)
-             system. 
+             system.
 
 Output Name: REMOTE_SD
 Descritpion: As with LOCAL_SD but for the remote (netserver) system.
 
 Output Name: REMOTE_CPU_METHOD
 Description: As with LOCAL_CPU_METHOD but for the remote (netserver)
-             system. 
+             system.
 
 Output Name: REMOTE_CPU_COUNT
 Description: As with LOCAL_CPU_COUNT but for the remote (netserver)
-             system. 
+             system.
 
 Output Name: REMOTE_CPU_PEAK_UTIL
 Description: As with LOCAL_CPU_PEAK_UTIL but for the remote
-             (netserver) system. 
+             (netserver) system.
 
 Output Name: REMOTE_CPU_PEAK_ID
 Description: As with LOCAL_CPU_PEAK_ID but for the remote (netserver)
-             system. 
+             system.
 
 Output Name: SD_UNITS
 Description: The units for the reported values of LOCAL_SD and

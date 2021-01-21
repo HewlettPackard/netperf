@@ -22,21 +22,21 @@ netserver accordingly.  The version that ships is setup for where Rick
 Jones did his initial porting work and most likely is not apropriate
 for you :)
 
-   $  define sys$output sys$sysroot:[netperf]hello_service.log 
-   $  define sys$error  sys$sysroot:[netperf]hello_service.log 
-   $  run sys$sysroot:[netperf]netserver.exe 
+   $  define sys$output sys$sysroot:[netperf]hello_service.log
+   $  define sys$error  sys$sysroot:[netperf]hello_service.log
+   $  run sys$sysroot:[netperf]netserver.exe
 
 Then it will be necessary to "define" netperf (netserver) as an
 auxilliary service. This will need to be customized as apropriate for
 your system
 
-   $ tcpip set service netserver - 
-   _$ /port=12865 - 
-   _$ /protocol=tcp - 
-   _$ /user=system - 
+   $ tcpip set service netserver -
+   _$ /port=12865 -
+   _$ /protocol=tcp -
+   _$ /user=system -
    _$ /limit=48 -
-   _$ /process_name=netserver - 
-   _$ /file=sys$sysroot:[netperf]netserver_run.com 
+   _$ /process_name=netserver -
+   _$ /file=sys$sysroot:[netperf]netserver_run.com
 
 And then it is necessary to enable the service:
 

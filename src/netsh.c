@@ -1,5 +1,28 @@
 #include "netperf_version.h"
 
+/*
+#  Copyright 2021 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+#
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+# USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
+
 char	netsh_id[]="\
 @(#)netsh.c (c) Copyright 1993-2012 Hewlett-Packard Company. Version 2.6.0";
 
@@ -912,7 +935,7 @@ scan_cmd_line(int argc, char *argv[])
 	 checking malloc(). we will though make certain we only
 	 allocated it once in the event that someone puts -Z on the
 	 command line more than once */
-      if (passphrase == NULL) 
+      if (passphrase == NULL)
 	passphrase = malloc(sizeof(netperf_request.content.test_specific_data));
       strncpy(passphrase,
 	      optarg,

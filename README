@@ -1,4 +1,5 @@
 
+
 BE SURE TO READ THE MANUAL. EVEN THOUGH IT MAY BE OUTDATED.
 
 This is a brief readme file for the netperf TCP/UDP/sockets/etc
@@ -10,19 +11,9 @@ ftp://ftp.cup.hp.com/dist/networking/benchmarks/netperf/ .
 
 BE SURE TO READ THE MANUAL. EVEN THOUGH IT MAY BE OUTDATED.
 
-There is a COPYRIGHT file included.  It is called COPYING because that
-is what autosomethingorother wanted. It is based on what the HP Legal
-Eagles gave me. I am not sure if the legalese is clear, but the intent
-is to say "Here is a benchmark. Use it in good health. Pass it along,
-port it, enhance it. You didn't pay for this tool, so don't expect it
-to be perfect ;-)" The rest of it is there to keep the layers happy...  
+This version of netperf has been opensourced by Hewlett Packard Enterprise
+using the MIT license.
 
-While the copyright is pretty much in spirit an "open source" one, it
-is not in letter - I never took the time to try to get it approved.
-If you feel strongly about the license of the code you use and want
-something under the GPL, consider netperf4:
-
-http://www.netperf.org/svn/netperf4/trunk
 
 Feel free to report netperf results in public forums, but please be
 excruciatingly complete in your description of the test envorinment.
@@ -43,7 +34,9 @@ If you run into severe difficulties, or are just feeling chatty,
 please feel free to drop some email to me - Rick Jones
 <rick.jones2@hp.com>. Be sure to include a meaningful subject lines.
 
-happy benchmarking, 
+happy benchmarking,
 rick jones
 
 BE SURE TO READ THE MANUAL. EVEN THOUGH IT MAY BE OUTDATED.
+
+Licenses updated.

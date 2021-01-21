@@ -1,24 +1,24 @@
 This file is here for people to list their contributions to the
 netperf benchmark. When you enhance or fix something, put your name
 and a description of the what/where/whey/why/how here. If you like,
-feel free to include an email address. 
+feel free to include an email address.
 
 I would like to apologize in advance to anyone I've forgotten to
 include.
 
 Rick Jones <raj@cup.hp.com>
 Responsible for initial packaging and release of netperf and
-"editorial" continuity for subsequent releases. 
+"editorial" continuity for subsequent releases.
 
 Karen Choy
-Code to allow netserver to run as a standalone daemon. 
+Code to allow netserver to run as a standalone daemon.
 
 Dave Shield <daves@csc.liv.ac.uk>
 Wrote the first revision of the netperf and netserver manpages.
 
 Sarr Blumson <sarr@citi.umich.edu>
 Fixes for AIX 3.1 and 3.2. Also fixes for Solaris 2.1 without
-realizing it ;-) 
+realizing it ;-)
 
 Jeff Smits <jgs@usl.com>
 Fixes for TCP_RR and UDP_RR on sytems with an htonl that is not a no-op.
@@ -28,7 +28,7 @@ Example code for DLPI tests.
 
 Several Folks
 Code to tell SunOS 4 to *not* restart system calls on receipt of a
-signal. 
+signal.
 
 Fore Systems Inc.
 Manpages for the FORE API and question answering
@@ -52,7 +52,7 @@ His prompting finally got me off my whatever to put the confidence
 interval stuff from the guys at IBM into netperf
 
 Peter Skopp pds@cs.columbia.edu
-Fixes to make netperf more secure.	
+Fixes to make netperf more secure.
 
 Tom Wilson <tcwilson@newbridge.com>
 A fix to send_udp_rr to correct bogus throughput values.
@@ -81,7 +81,7 @@ Changes to make netperf more profiling friendly
 Kris Corwin
 discovery of a debug statement outside of if (debug) that may have
 been the cause of all the nasty connection refused errors in random
-UDP_RR tests... 
+UDP_RR tests...
 
 Charles Harris
 Initial prototype of the TCP_SENDFILE test support
@@ -101,7 +101,7 @@ initial mods for sendfile() under Linux
 Fabrice Bacchella
 for pointing-out that Solaris 9 has a copy of Linux sendfile()
 
-Andrew Gallatin 
+Andrew Gallatin
 for assistance with the FreeBSD sysctl() stuff, and later making it
 calibration-free
 fixes to configure to recognize Solaris 11
@@ -113,7 +113,7 @@ Mark Cooper
 pointing-out the need for -lresolv when compiling -DDO_DNS on RedHat
 7.1
 
-Carl Mascott 
+Carl Mascott
 finding some cut-and-paste erors in create_data_socket error logging
 
 Fabrice Bacchella
@@ -151,7 +151,7 @@ Access to AIX for initial porting of netperf 2.4.0
 James Carlson
 Assistance finding the right magic to compile SCTP on Solaris 10.
 
-Gavin 
+Gavin
 Pointers on Solaris 10 Microstate accounting.
 
 Brent Draney
@@ -228,7 +228,7 @@ Fixes for *BSD CPU util.
 
 Adam Bidema
 Fixes for launching netserver children when the path to netserver.exe
-is very long. 
+is very long.
 
 Gisle Vanem
 MingW cnd MSDOS (djgpp) cleanups.

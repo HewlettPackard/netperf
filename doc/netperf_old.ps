@@ -109,7 +109,7 @@ userdict /Ileaf_6.0.0 400 dict dup begin put
 /lline 0 def
 /logme{
 	(\tInterleaf::pl2ps 5.6.0\n)print
-	lline length dup dup 
+	lline length dup dup
 	5 gt {5 sub}{pop 0}ifelse
 	exch 1 sub -1 3 -1 roll{(\tInterleaf::)print lline exch get print(\n)print}for
 	flush
@@ -127,7 +127,7 @@ userdict /Ileaf_6.0.0 400 dict dup begin put
 		(Interleaf:: pl2ps Version ) dup msg show
 		3 {mesg cvs dup msg show (.) dup msg show} repeat
 		showpage
-		quit 
+		quit
 	} {3 npop} ifelse
 }bdf
 %
@@ -303,7 +303,7 @@ userdict /Ileaf_6.0.0 400 dict dup begin put
  16#7e 16#fc 16#7f 16#fe 16#ff 16#a0 16#90 16#88
  16#84 16#82 16#81 16#50 16#48 16#44 16#42 16#41
  16#28 16#24 16#22 16#21 16#14 16#12 16#11 16#0a
- 16#09 16#05 16#00 16#00 16#00 16#00 16#00 16#00 
+ 16#09 16#05 16#00 16#00 16#00 16#00 16#00 16#00
 ]def
 /rn{
 	cf read pop 32 sub 6 bitshift cf read pop 32 sub or
@@ -568,7 +568,7 @@ ILDingbats 0[
 		{puterrchar}
 		{
 			/charbbox charinfo 1 4 getinterval def
-			wx 0 charbbox aload pop setcachedevice	
+			wx 0 charbbox aload pop setcachedevice
 			charinfo 5 get charinfo 6 get true
 			fontdict/imagemaskmatrix get
 			dup 5 charinfo 8 get put
@@ -619,7 +619,7 @@ ILDingbats 0[
 	/NoVMHead vmstatus exch sub exch pop dup
 	 VMHEAD 2 idiv lt{QUIT}if
 	 VMHEAD lt{true}{false}ifelse def
-	/nbytes hsize 15 add 16 idiv 2 mul height mul def	
+	/nbytes hsize 15 add 16 idiv 2 mul height mul def
 	NoVMHead not{/glyph nbytes sdf}if
 	currentfile NoVMHead {trashheap 0 nbytes getinterval}{glyph}ifelse
 	readhexstring 2 npop
@@ -650,7 +650,7 @@ ILDingbats 0[
 	/patstr 1 sdf
 /patternFill{
 	/scfrq xdf/scang xdf/scproc xdf
-	gsave 
+	gsave
  	scfrq -1 ne scang -1 ne or /scproc load length 0 ne or{
 		scfrq scang /scproc load screenSet
  	}if
@@ -669,7 +669,7 @@ ILDingbats 0[
 	patstr stringwidth pop
 	/paty exch def/patx paty def
 	% setup region
-	eoclip	
+	eoclip
 	pathbbox
 	/ry exch floor def
 	/rx exch floor def
@@ -743,7 +743,7 @@ ILDingbats 0[
 	/cn cn 1 add def
 }
 ]def
-/cutmarks{	%stack: pglen pgwid cmtype => ---  
+/cutmarks{	%stack: pglen pgwid cmtype => ---
 	0 SSG [] 0 setdash
 	/cm xdf/pgwid xdf/pglen xdf
 	/pw DPIx 80 div def/pw2 pw 2 div def
@@ -809,7 +809,7 @@ ILDingbats 0[
 	stopped cleartomark CD exch sub dup
 	0 gt {{end} repeat} {pop} ifelse
 }bdf
-end 
+end
 %%EndProlog
 %%BeginSetup
 Ileaf_6.0.0 /initialize get exec

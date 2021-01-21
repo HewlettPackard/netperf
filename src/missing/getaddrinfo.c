@@ -30,7 +30,7 @@
  * This program provides getaddrinfo() and getnameinfo() described in
  * RFC2133, 2553 and 3493.  These functions are mainly used for IPv6
  * application to resolve hostname or address.
- * 
+ *
  * This program is designed to be working on traditional IPv4 systems
  * which don't have those functions.  Therefore, this implementation
  * supports IPv4 only.
@@ -39,20 +39,20 @@
  * and traditional IPv4 systems.  Use genuine getaddrinfo() and getnameinfo()
  * provided by system if the system supports IPv6.  Otherwise, use this
  * implementation.
- * 
+ *
  * This program is intended to be used in combination with GNU Autoconf.
- * 
+ *
  * This program also provides freeaddrinfo() and gai_strerror().
  *
  * To use this program in your application, insert the following lines to
  * C source files after including `sys/types.h', `sys/socket.h' and
  * `netdb.h'.  `getaddrinfo.h' defines `struct addrinfo' and AI_, NI_,
  * EAI_ macros.
- * 
+ *
  *    #ifndef HAVE_GETADDRINFO
  *    #include "getaddrinfo.h"
  *    #endif
- * 
+ *
  * Restriction:
  *   getaddrinfo() and getnameinfo() of this program are NOT thread
  *   safe, unless the cpp macro ENABLE_PTHREAD is defined.
@@ -92,7 +92,7 @@
 #else
 #include <sys/socket.h>
 #endif
- 
+
 
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -172,7 +172,7 @@ static char *eai_errlist[] = {
     N_("Non-recoverable failure in name resolution"),
 
     /* EAI_FAMILY */
-    N_("ai_family not supported"),                      
+    N_("ai_family not supported"),         
 
     /* EAI_MEMORY */
     N_("Memory allocation failure"),
@@ -571,7 +571,7 @@ getnameinfo(sa, salen, node, nodelen, serv, servlen, flags)
 	if (flags & NI_NUMERICHOST)
 	    hostent = NULL;
 	else {
-	    hostent = gethostbyaddr((char *)&sa_in->sin_addr, 
+	    hostent = gethostbyaddr((char *)&sa_in->sin_addr,
 		sizeof(struct in_addr), AF_INET);
 	}
 	if (hostent != NULL) {
@@ -592,7 +592,7 @@ getnameinfo(sa, salen, node, nodelen, serv, servlen, flags)
 	    }
 	    strcpy(node, ntoa_address);
 	}
-		
+
     }
 
   end:

@@ -1,3 +1,30 @@
+
+/*
+
+#  Copyright 2021 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+#
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+# USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+*/
+
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -736,10 +763,10 @@ struct in_pktinfo in_pktinfo;
 typedef
 INT
 (PASCAL FAR * LPFN_WSARECVMSG) (
-    __in SOCKET s, 
-    __inout LPWSAMSG lpMsg, 
-    __out_opt LPDWORD lpdwNumberOfBytesRecvd, 
-    __inout_opt LPWSAOVERLAPPED lpOverlapped, 
+    __in SOCKET s,
+    __inout LPWSAMSG lpMsg,
+    __out_opt LPDWORD lpdwNumberOfBytesRecvd,
+    __inout_opt LPWSAOVERLAPPED lpOverlapped,
     __in_opt LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
     );
 
@@ -749,27 +776,27 @@ INT
 LPFN_WSARECVMSG pWSARecvMsg = NULL;
 
 LPFN_WSARECVMSG GetWSARecvMsgFunctionPointer()
-{ 
-    LPFN_WSARECVMSG     lpfnWSARecvMsg = NULL; 
-    GUID                guidWSARecvMsg = WSAID_WSARECVMSG; 
-    SOCKET              sock = INVALID_SOCKET; 
-    DWORD               dwBytes = 0; 
+{
+    LPFN_WSARECVMSG     lpfnWSARecvMsg = NULL;
+    GUID                guidWSARecvMsg = WSAID_WSARECVMSG;
+    SOCKET              sock = INVALID_SOCKET;
+    DWORD               dwBytes = 0;
 	int rc;
 
-    sock = socket(AF_INET6,SOCK_DGRAM,0); 
+    sock = socket(AF_INET6,SOCK_DGRAM,0);
 
-    rc= WSAIoctl(sock,  
-                 SIO_GET_EXTENSION_FUNCTION_POINTER,  
-                 &guidWSARecvMsg,  
-                 sizeof(guidWSARecvMsg),  
-                 &lpfnWSARecvMsg,  
-                 sizeof(lpfnWSARecvMsg),  
-                 &dwBytes,  
-                 NULL,  
-                 NULL 
+    rc= WSAIoctl(sock,
+                 SIO_GET_EXTENSION_FUNCTION_POINTER,
+                 &guidWSARecvMsg,
+                 sizeof(guidWSARecvMsg),
+                 &lpfnWSARecvMsg,
+                 sizeof(lpfnWSARecvMsg),
+                 &dwBytes,
+                 NULL,
+                 NULL
                  );
 
-    closesocket(sock); 
+    closesocket(sock);
 
 	if (rc == SOCKET_ERROR) {
         //print an error message, such as "WSAIoctl SIO_GET_EXTENSION_FUNCTION_POINTER failed for WSARecvMsg"
@@ -777,8 +804,8 @@ LPFN_WSARECVMSG GetWSARecvMsgFunctionPointer()
     }
 
 
-    return lpfnWSARecvMsg; 
-} 
+    return lpfnWSARecvMsg;
+}
 
 #endif /* WIN32 */
 #endif /* IP_PKTINFO */
@@ -3049,7 +3076,7 @@ send_data(SOCKET data_socket, struct ring_elt *send_ring, uint32_t bytes_to_send
        the caller figure it out :) we won't actually check to see if
        this is UDP - it is the author's experience in many, Many, MANY
        years that the only time an ENOBUFS has been returned in a
-       netperf test has been with UDP.  famous last words :) 
+       netperf test has been with UDP.  famous last words :)
 
        And so, many years later, we learn that with virtio one can
        also get ENOMEM.  So much for famous last words - Thanks Paolo
@@ -3115,7 +3142,7 @@ recv_data_no_copy(SOCKET data_socket, struct ring_elt *recv_ring, uint32_t bytes
 	      strerror(errno));
       return -4;
     }
-  }    
+  }
 
   /* receive data off the data_socket, ass-u-me-ing a blocking socket
      all the way!-) 2008-01-08 */
@@ -3143,8 +3170,8 @@ recv_data_no_copy(SOCKET data_socket, struct ring_elt *recv_ring, uint32_t bytes
 			 NULL,
 			 bytes_left,
 			 my_flags);
-    
-    
+
+
     if (bytes_recvd > 0) {
       /* per Eric Dumazet, we should just let this second splice call
 	 move as many bytes as it can and not worry about how much.
@@ -3236,7 +3263,7 @@ int recv_pktinfo(SOCKET data_socket, char *message_ptr, int bytes_to_recv,  int 
      worse-off than we were before. we are going to ignore IPv6 for
      the time being */
   setsockopt(data_socket, IPPROTO_IP, IP_PKTINFO, (char *)&onoff, sizeof(onoff));
-  
+
 #ifndef WIN32
   ret = recvmsg(data_socket, &my_header, 0);
 #else
@@ -3544,7 +3571,7 @@ dump_tcp_info(struct tcp_info *tcp_info)
 	  tcp_info->tcpi_snd_cwnd,
 	  tcp_info->tcpi_reordering,
 	  tcp_info->tcpi_total_retrans);
-  
+
   return;
 }
 
@@ -3662,7 +3689,7 @@ set_transport_cong_control(SOCKET socket, int protocol, char cong_control[], int
 }
 
 static void
-set_receive_timeout(SOCKET sock, int timeout) 
+set_receive_timeout(SOCKET sock, int timeout)
 {
 #ifdef SO_RCVTIMEO
 #ifndef WIN32
@@ -3702,10 +3729,10 @@ omni_create_data_socket(struct addrinfo *res)
 	(receive_timeout != -1)) {
       set_receive_timeout(temp_socket, receive_timeout);
     }
-      
+
     if (socket_debug) {
       int one = 1;
-      setsockopt(temp_socket, 
+      setsockopt(temp_socket,
 		 SOL_SOCKET,
 		 SO_DEBUG,
 		 (char *)&one,
@@ -3775,7 +3802,7 @@ static void
 enable_enobufs(int s)
 {
   int on = 1;
-  
+
   /* Per Brian Ginsbach, the likes of SLES12 do not have "ip" listed
      in /etc/protocols and other distros may not have the correct
      value.  At his suggestion, we'll just go with IPPROTO_IP.  And
@@ -4261,7 +4288,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	 padding */
       times_up = 0;
       units_remaining = 0;
-      if ((!no_control) && 
+      if ((!no_control) &&
 	  (NETPERF_RECV_ONLY(direction)) &&
 	  ((test_trans == 0) && (test_bytes == 0)))
 	    pad_time = 0;
@@ -4574,7 +4601,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
 	  /* "start over" on a demo interval. we will forget about
 	  everything that happened in the demo interval up to the
 	  timeout and begin fresh. */
-	  demo_reset(); 
+	  demo_reset();
 #endif /* WANT_DEMO */
 
 	  continue;
@@ -5526,7 +5553,7 @@ recv_omni()
 	test_time=omni_request->test_length;
     /* if we are the sender and only sending, then we don't need/want
        the padding, otherwise, we need the padding */
-    if (!(NETPERF_XMIT_ONLY(omni_request->direction)) && 
+    if (!(NETPERF_XMIT_ONLY(omni_request->direction)) &&
 	(omni_request->test_length > 0))
       pad_time = PAD_TIME;
     start_timer(omni_request->test_length + pad_time);
@@ -5680,7 +5707,7 @@ recv_omni()
        try to send something. */
     if ((omni_request->direction & NETPERF_XMIT) &&
 	((!times_up) || (units_remaining > 0))) {
-      
+
       /* there used to be some code here looking sched_yield() until
 	 there was no more queued, unsent data on the socket but
 	 frankly, I've no idea what that was all about so I have
@@ -5699,7 +5726,7 @@ recv_omni()
         }
         connected = 1;
       }
-      
+
       ret = send_data(data_socket,
 		      send_ring,
 		      bytes_to_send,

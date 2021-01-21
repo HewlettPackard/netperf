@@ -22,7 +22,7 @@ Sockets, tests for IPv6 may be conditionally compiled-in.
 .TP
 .B \-4
 Use AF_INET (aka IPv4) addressing for the control and possibly data
-connections. 
+connections.
 .TP
 .B \-6
 Use AF_INET6 (aka IPv6) addressing for the control and possibly data
@@ -103,7 +103,7 @@ the control connection to the remote netserver.
 .TP
 .B \-n numcpus
 Specify the number of CPU's in the system on those systems for which
-netperf has no way to find the number of CPU's programatically. 
+netperf has no way to find the number of CPU's programatically.
 .TP
 .B \-N
 This option will tell netperf to not establish a control connection to
@@ -127,7 +127,7 @@ specified port, rather than using a "netperf" entry in
 specified the control connection will be established from that local
 port number.  Specifying a single port number with no comma will
 specify only the remote netserver port number and will leave local
-port number selection to the stack.  
+port number selection to the stack.
 .TP
 .B \-P 0|1
 Show (1) or suppress (0) the test banner.
@@ -190,7 +190,7 @@ Display the netperf version and exit.
 Display a usage string based on the test name set with -t, and exit.
 
 Please consult the netperf manual
-.I 
+.I
 Care and Feeding of Netperf 2.5.X
 (doc/netperf.[pdf|html|txt]) for more information. Or you can join and
 send email to netperf-talk@netperf.org.
@@ -210,7 +210,7 @@ comma or be a comma-separated pair. This is to retain previous netperf
 behaviour.
 
 
-.SH BUGS 
+.SH BUGS
 There are bound to be bugs. If you think you have found a bug, please
 mention it in netperf-talk@netperf.org.  List membership is required
 to send email to the list.  See

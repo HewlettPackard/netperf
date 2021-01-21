@@ -1,5 +1,28 @@
+/*
+#  Copyright 2021 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+#
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+# USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
+
 char    netlib_id[]="\
-@(#)netlib.c (c) Copyright 1993-2012 Hewlett-Packard Company. Version 2.6.0";
+@(#)netlib.c (c) Copyright 1993-2012 Hewlett-Packard Company, 2021 Hewlett Packard Enterprise Development LP. Version 2.6.0";
 
 
 /****************************************************************/
@@ -839,7 +862,7 @@ int netperf_sendfile(SOCKET send_socket, struct ring_elt *send_ring) {
 		   send_ring->length,
 		   send_ring->hdtrl,
 		   send_ring->flags);
-#endif 
+#endif
 
       /* for OSX and FreeBSD, a non-zero ret means something failed.
 	 I would hope that the length fields are set to -1 or the
@@ -1140,7 +1163,7 @@ emulate_alarm( int seconds )
 	   It is rather kludgy, but should be sufficient to
 	   get this puppy shipped.  The concept can be
 	   attributed/blamed :) on Robin raj 1/96 */
-	
+
 	if (win_kludge_socket != INVALID_SOCKET) {
 	  HandlesClosedFlags |= 1;
 	  closesocket(win_kludge_socket);
@@ -1271,7 +1294,7 @@ start_itimer(unsigned int interval_len_msec )
     LARGE_INTEGER liDueTime;
 	TIMECAPS ptc;
 	MMRESULT mmr;
-	
+
 	/* make sure timer resolution is at least as small as interval length */
 	timerRes=interval_len_msec;
 	mmr=timeGetDevCaps(&ptc, sizeof (ptc));
@@ -1282,7 +1305,7 @@ start_itimer(unsigned int interval_len_msec )
 		fflush(where);
 	  }
 	}
-	/* timeBeginPeriod() affects a global Windows setting. 
+	/* timeBeginPeriod() affects a global Windows setting.
 	Windows uses the lowest value (that is, highest resolution) requested by any process. */
 	mmr=timeBeginPeriod(timerRes);
 	/* Create a waitable timer. */
@@ -1293,7 +1316,7 @@ start_itimer(unsigned int interval_len_msec )
         fflush(where);
 		exit(1);
     }
- 	/*The time after which the state of the timer is to be set to signaled the first time, 
+ 	/*The time after which the state of the timer is to be set to signaled the first time,
 	in 100 nanosecond intervals.  Negative values indicate relative time. */
     liDueTime.QuadPart=-10000LL*interval_len_msec;
    /* Set the timer to wait for interval_len_msec and periodically signal every interval_len_msec */
@@ -2409,7 +2432,7 @@ bind_to_specific_processor(int use_cpu_affinity, int use_cpu_map)
 #include <sys/param.h>
   /* FreeBSD introduced cpuset_setaffinity() in version 7.1 */
 #if (__FreeBSD_version > 701000)
-#include <sys/cpuset.h>  
+#include <sys/cpuset.h>
 
   cpuset_t mask;
 
@@ -2420,7 +2443,7 @@ bind_to_specific_processor(int use_cpu_affinity, int use_cpu_map)
 	perror("cpuset_setaffinity failed");
 	fflush(stderr);
   }
-#endif /* __FreeBSD_version */    
+#endif /* __FreeBSD_version */
 #else
   if (debug) {
     fprintf(where,
@@ -4016,7 +4039,7 @@ void demo_interval_display(double actual_interval)
 {
   static int count = 0;
   struct timeval now;
-  
+
   gettimeofday(&now,NULL);
   switch (netperf_output_mode) {
   case HUMAN:
@@ -4122,7 +4145,7 @@ void demo_interval_tick(uint32_t units)
     temp_demo_ptr = demo_one_ptr;
     demo_one_ptr = demo_two_ptr;
     demo_two_ptr = temp_demo_ptr;
-    
+
   }
 }
 

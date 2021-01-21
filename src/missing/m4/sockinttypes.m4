@@ -12,7 +12,7 @@ dnl *    documentation and/or other materials provided with the distribution.
 dnl * 3. Neither the name of the project nor the names of its contributors
 dnl *    may be used to endorse or promote products derived from this software
 dnl *    without specific prior written permission.
-dnl * 
+dnl *
 dnl * THIS SOFTWARE IS PROVIDED BY THE PROJECT AND CONTRIBUTORS ``AS IS'' AND
 dnl * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 dnl * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -26,9 +26,9 @@ dnl * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 dnl * THE POSSIBILITY OF SUCH DAMAGE.
 dnl *
 
-dnl * 
+dnl *
 dnl * Check for socklen_t.
-dnl * 
+dnl *
 AC_DEFUN([AC_TYPE_SOCKLEN_T],
 [AC_CACHE_CHECK([for socklen_t], ac_cv_type_socklen_t,
 [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
@@ -41,9 +41,9 @@ if test "$ac_cv_type_socklen_t" != yes; then
 [Define to `int' if <sys/types.h> or <sys/socket.h> does not define.])
 fi])
 
-dnl * 
+dnl *
 dnl * Check for in_port_t.
-dnl * 
+dnl *
 AC_DEFUN([AC_TYPE_IN_PORT_T],
 [AC_CACHE_CHECK([for in_port_t], ac_cv_type_in_port_t,
 [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
@@ -100,9 +100,9 @@ if <sys/types.h>, <sys/socket.h> or <netinet/in.h> does not define
 `in_port_t'.])
 fi])
 
-dnl * 
+dnl *
 dnl * Check for sa_family_t.
-dnl * 
+dnl *
 AC_DEFUN([AC_TYPE_SA_FAMILY_T],
 [AC_CACHE_CHECK([for sa_family_t], ac_cv_type_sa_family_t,
 [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[

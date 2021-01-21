@@ -1,5 +1,27 @@
 #!/usr/bin/python -u
 
+#  Copyright 2021 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+#
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+# USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
 import os
 import subprocess
 import re
@@ -45,7 +67,7 @@ class TestNetperf() :
         """
         do a task in the shell. by default it must succeed
         """
-        p=subprocess.Popen(command, 
+        p=subprocess.Popen(command,
                            shell=True,
                            stdout=subprocess.PIPE,
                            stderr=subprocess.STDOUT)
@@ -62,7 +84,7 @@ class TestNetperf() :
 
     # we will need to handle IDs that are UUIDs at some point
     def find_suitable_images(self) :
-        """ 
+        """
         Try to find a suitable image to use for the testing
         """
         image_regex = None
@@ -92,7 +114,7 @@ class TestNetperf() :
         Keep checking the status of the server pool until it is gone or
         our patience has run-out.  Alas, novaclient.v1_1 is not sophisticated
         enough to return "ENOEND" or somesuch as a status when the specified
-        server is well and truly gone.  So we get status until there is an 
+        server is well and truly gone.  So we get status until there is an
         exception raise, which we interpret as "server gone"
         """
         waiting_started = time()
@@ -102,7 +124,7 @@ class TestNetperf() :
         while ((len(self.vm_pool) > 0) and
                ((now - waiting_started) < time_limit)) :
             waiter = self.vm_pool.pop()
-            try: 
+            try:
                 waiter = self.os.servers.get(waiter.id)
 
                 if (re.search(r"ERROR",waiter.status)) :
@@ -187,7 +209,7 @@ class TestNetperf() :
 
     def allocate_server_pool(self, count, flavor, image) :
         """
-        Allocate the number of requested servers of the specified 
+        Allocate the number of requested servers of the specified
         flavor and image, and with the specified key name
         """
 
@@ -226,7 +248,7 @@ class TestNetperf() :
     def await_server_pool_ready(self, time_limit) :
         """
         Wait until all the servers in the server pool are in an "ACTIVE" state.
-        If they happen to come-up in an "ERROR" state we are toast.  If it 
+        If they happen to come-up in an "ERROR" state we are toast.  If it
         takes too long for them to transition to the "ACTIVE" state we are
         similarly toast
         """
@@ -354,7 +376,7 @@ class TestNetperf() :
                                             ip_protocol = 'udp',
                                             from_port = 1,
                                             to_port = 65535)
-        
+
         self.os.security_group_rules.create(parent_group_id = self.security_group.id,
                                             ip_protocol = 'icmp',
                                             from_port = -1,
@@ -368,7 +390,7 @@ class TestNetperf() :
 
         pid = self.do_in_shell("echo $$")
 
-        self.uniquekeyname = re.sub(r"\n", "", "net" + str(pid) + 
+        self.uniquekeyname = re.sub(r"\n", "", "net" + str(pid) +
                                     "perf" + str(self.start))
         self.uniquekeyname = re.sub(r"\.", "dot", self.uniquekeyname)
 
@@ -412,7 +434,7 @@ class TestNetperf() :
             self.fail(kwargs.get('failure'))
 
         return kwargs.get('default', '')
-        
+
     def setup_parser(self) :
         parser = argparse.ArgumentParser()
         parser.add_argument("-f", "--flavor",
@@ -469,7 +491,7 @@ class TestNetperf() :
             self.flavor_id = int(flav)
         except:
             self.flavor_name = flav
-                    
+      
     def get_collectd_sock(self) :
         self.collectd_socket = None
         if self.args.collectdsockname :
@@ -712,7 +734,7 @@ class TestNetperf() :
             else:
                 transport.connect(username=self.args.instanceuser,
                                   password=self.adminPasses[self.vm_pool[0].id])
-                
+  
             sftp = paramiko.SFTPClient.from_transport(transport)
             for file in sftp.listdir():
                 # one of these days I should read-up on how to make
@@ -966,7 +988,7 @@ class TestNetperf() :
 
         if (self.ip_pool != []) :
             self.deallocate_ip_pool()
-                          
+            
         self.clean_up_instances()
 
         if self.security_group :

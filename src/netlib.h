@@ -1,5 +1,26 @@
 /*
-        Copyright (C) 1993-2012 Hewlett-Packard Company
+#  Copyright (C) 1993-2012 Hewlett-Packard Company
+#  Copyright 2021 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+#
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+# USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 */
 
 #ifdef HAVE_CONFIG_H
@@ -310,7 +331,7 @@ struct ring_elt {
      using a union but it isn't really all that much extra space */
   struct iovec *hdtrl;            /* a pointer to a header/trailer
 				     that we do not initially use and
-				     so should be set to NULL when the 
+				     so should be set to NULL when the
 				     ring is setup. */
   off_t offset;                   /* the offset from the beginning of
 				     the file for this send */
@@ -319,8 +340,8 @@ struct ring_elt {
 				     send_size variable but I decided
 				     to include it anyway */
   int fildes;                     /* the file descriptor of the source
-				     file */ 
-  int flags;                      /* the flags to pass to sendfile() - 
+				     file */
+  int flags;                      /* the flags to pass to sendfile() -
 				     presently unused and should be
 				     set to zero when the ring is
 				     setup. */
@@ -541,16 +562,16 @@ extern void   demo_stream_interval(uint32_t units);
 extern void   demo_interval_tick(uint32_t units);
 extern void   demo_interval_final();
 #endif
-#endif 
-  
+#endif
+
 extern  void    netlib_init();
 extern  int     netlib_get_page_size();
 extern  void    install_signal_catchers();
-extern  struct addrinfo *resolve_host(char hostname[], 
-				      char port[], 
+extern  struct addrinfo *resolve_host(char hostname[],
+				      char port[],
 				      int af);
-extern  void    establish_control(char hostname[], 
-				  char port[], 
+extern  void    establish_control(char hostname[],
+				  char port[],
 				  int af,
 				  char local_hostname[],
 				  char local_port[],
