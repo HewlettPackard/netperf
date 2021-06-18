@@ -4688,7 +4688,7 @@ Size (bytes)\n\
 
       /* you can look at netlib.h for a description of the fields we
 	 are passing to sendfile(). 08/2000 */
-      if (netperf_sendfile(send_socket, send_ring) != send_size) {
+      if (len = netperf_sendfile(send_socket, send_ring) != send_size) {
 	/* the test was interrupted, must be the end of test. the
 	   send_tcp_stream code has some WIN32 ifdefs that we do not
 	   need here. */
