@@ -92,6 +92,7 @@ const char * iptos2str(int iptos);
 
 #ifndef IPTOS_DSCP_CS0
 # define	IPTOS_DSCP_CS0		0x00
+# define        IPTOS_DSCP_LE           0x01
 # define	IPTOS_DSCP_CS1		0x20
 # define	IPTOS_DSCP_CS2		0x40
 # define	IPTOS_DSCP_CS3		0x60
@@ -121,6 +122,7 @@ static const struct {
 	{ "af42", IPTOS_DSCP_AF42 },
 	{ "af43", IPTOS_DSCP_AF43 },
 	{ "cs0", IPTOS_DSCP_CS0 },
+        {  "LE", IPTOS_DSCP_LE  },                     }
 	{ "cs1", IPTOS_DSCP_CS1 },
 	{ "cs2", IPTOS_DSCP_CS2 },
 	{ "cs3", IPTOS_DSCP_CS3 },
