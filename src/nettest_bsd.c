@@ -1025,14 +1025,14 @@ extract_inet_address_and_port(struct addrinfo *res, void *addr, int len, int *po
   case AF_INET: {
     struct sockaddr_in *foo = (struct sockaddr_in *)res->ai_addr;
     *port = foo->sin_port;
-    memcpy(addr,&(foo->sin_addr),min(len,sizeof(foo->sin_addr)));
+    memcpy(addr,&(foo->sin_addr),min((unsigned long)len,sizeof(foo->sin_addr)));
     break;
   }
 #if defined(AF_INET6)
   case AF_INET6: {
     struct sockaddr_in6 *foo = (struct sockaddr_in6 *)res->ai_addr;
     *port = foo->sin6_port;
-    memcpy(addr,&(foo->sin6_addr),min(len,sizeof(foo->sin6_addr)));
+    memcpy(addr,&(foo->sin6_addr),min((unsigned long)len,sizeof(foo->sin6_addr)));
     break;
   }
 #endif
@@ -1138,7 +1138,7 @@ get_sockaddr_family_addr_port(struct sockaddr_storage *sockaddr, int family, voi
   }
 #ifdef AF_INET6
   case AF_INET6: {
-    int i;
+    unsigned int i;
     struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)sockaddr;
     *port = ntohs(sin6->sin6_port);
     ret = 1;
@@ -4320,7 +4320,7 @@ Size (bytes)\n\
 
   struct ring_elt *send_ring;
 
-  int len;
+  int len = 0;
   unsigned int nummessages = 0;
   SOCKET send_socket;
   int bytes_remaining;
@@ -4342,13 +4342,6 @@ Size (bytes)\n\
   struct  addrinfo *local_res;
   struct	sockaddr_in	server;
 
-#if defined(__linux) || defined(__sun)
-  off_t     scratch_offset;   /* the linux sendfile() call will update
-				 the offset variable, which is
-				 something we do _not_ want to happen
-				 to the value in the send_ring! so, we
-				 have to use a scratch variable. */
-#endif /* __linux  || defined(__sun) */
 #if defined (USE_OSX)
    off_t    scratch_len;  /* Darwin 9.x need a value-result parameter  */
 #endif

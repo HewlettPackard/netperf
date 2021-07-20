@@ -127,7 +127,7 @@ main(int argc, char *argv[])
       netperf_request.content.request_type = PASSPHRASE;
       strncpy((char *)netperf_request.content.test_specific_data,
 	      passphrase,
-	      sizeof(netperf_request.content.test_specific_data));
+	      sizeof(netperf_request.content.test_specific_data) - 1);
       send_request_n(0);
     }
   }

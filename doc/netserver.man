@@ -36,6 +36,12 @@ connections.
 Use AF_INET6 (aka IPv6) addressing for the control and possibly data
 connections.
 .TP
+.B \-D
+Do not fork into the background (aka daemonize), keep netserver
+running in the foreground. Useful for tracking when netserver
+crashes or is forced to exit. Also useful to run as part of
+init scripts or systemctl that will keep a netserver running.
+.TP
 .B \-d
 Increase the quantity of debugging output displayed during
 a test (possibly at the expense of performance).

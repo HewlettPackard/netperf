@@ -14,3 +14,6 @@ Makefile
 /stamp-h1
 /src/netperf
 /src/netserver
+*~
+.*.swp
+netperf-*.tar*
