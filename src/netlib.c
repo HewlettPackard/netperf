@@ -618,6 +618,11 @@ inet_nton(int af, const void *src, char *dst, int cnt)
       memcpy(dst,src,4);
       return 4;
     }
+    else {
+      Set_errno(ENOSPC);
+      return(-1);
+    }
+    break;
 #endif
   default:
     Set_errno(EAFNOSUPPORT);
@@ -748,7 +753,7 @@ random_ip_address(struct addrinfo *res, int mask_len)
   switch(res->ai_family) {
   case AF_INET: {
     struct sockaddr_in *foo = (struct sockaddr_in *)res->ai_addr;
-    unsigned int addr = ntohl(foo->sin_addr.s_addr);
+    unsigned int addr;
     unsigned int mask = ((unsigned int)1 << (32 - mask_len)) - 1;
 
     if ((mask_len < 0) || (mask_len > 32)) {
@@ -771,7 +776,7 @@ random_ip_address(struct addrinfo *res, int mask_len)
 
     unsigned int i, len;
     unsigned int *addr = (unsigned int *)&(foo->sin6_addr.s6_addr);
-    unsigned int mask;
+    unsigned long long mask;
 
     if ((mask_len < 0) || (mask_len > 128)) {
       fprintf(where,
@@ -785,7 +790,7 @@ random_ip_address(struct addrinfo *res, int mask_len)
       len = mask_len - i * 32;
       len = ((len < 32) ? len : 32);
       len = ((len > 0) ? len : 0);
-      mask = ((unsigned int)1 << (32 - len)) - 1;
+      mask = ((unsigned long long)1 << (32 - len)) - 1;
       addr[i] = (addr[i] & ~mask) | (rand32() & mask);
       addr[i] = htonl(addr[i]);
      }
@@ -1850,9 +1855,8 @@ allocate_exs_buffer_ring (int width, int buffer_size, int alignment, int offset,
    instead.  raj 2007-08-09 */
 
 struct ring_elt *
-alloc_sendfile_buf_ring(int width,
+alloc_sendfile_buf_ring(unsigned int width,
                         int buffer_size,
-                        int alignment,
                         int offset)
 
 {
@@ -1861,7 +1865,7 @@ alloc_sendfile_buf_ring(int width,
   struct ring_elt *temp_link  = NULL;
   struct ring_elt *prev_link;
 
-  int i;
+  unsigned int i;
   int fildes;
   struct stat statbuf;
 
@@ -1884,7 +1888,7 @@ alloc_sendfile_buf_ring(int width,
       fildes = mkstemp(temp_file);
       /* no need to call open because mkstemp did it */
 	if (-1 != fildes) {
-	  int count;
+	  unsigned int count;
 	  int *int_ptr;
 
 	  /* we initialize the random number generator in
@@ -1907,14 +1911,17 @@ alloc_sendfile_buf_ring(int width,
 	      int_ptr++;
 	    }
 	    if (write(fildes,temp_buffer,buffer_size+sizeof(int)) !=
-		buffer_size + sizeof(int)) {
+		(ssize_t)(buffer_size + sizeof(int))) {
 	      perror("allocate_sendfile_buf_ring: incomplete write");
+	      free(temp_buffer);
 	      exit(-1);
 	    }
 	  }
+	  free(temp_buffer);
       }
       else {
 	perror("alloc_sendfile_buf_ring: could not allocate temp name");
+	free(temp_buffer);
 	exit(-1);
       }
     }
@@ -1991,7 +1998,8 @@ alloc_sendfile_buf_ring(int width,
     prev_link = temp_link;
   }
   /* close the ring */
-  first_link->next = temp_link;
+  if (first_link)
+	first_link->next = temp_link;
 
   return(first_link); /* it's a dummy ring */
 }
@@ -2009,24 +2017,21 @@ alloc_sendfile_buf_ring(int width,
  /*                                                                     */
  /***********************************************************************/
 
-void
-dump_request()
-{
-int counter = 0;
-fprintf(where,"request contents:\n");
-for (counter = 0; counter < ((sizeof(netperf_request)/4)-3); counter += 4) {
-  fprintf(where,"%d:\t%8x %8x %8x %8x \t|%4.4s| |%4.4s| |%4.4s| |%4.4s|\n",
-          counter,
-          request_array[counter],
-          request_array[counter+1],
-          request_array[counter+2],
-          request_array[counter+3],
-          (char *)&request_array[counter],
-          (char *)&request_array[counter+1],
-          (char *)&request_array[counter+2],
-          (char *)&request_array[counter+3]);
-}
-fflush(where);
+void dump_request() {
+  unsigned int counter = 0;
+
+  fprintf(where, "request contents:\n");
+  for (counter = 0; counter < ((sizeof(netperf_request) / 4) - 3);
+       counter += 4) {
+    fprintf(where, "%d:\t%8x %8x %8x %8x \t|%4.4s| |%4.4s| |%4.4s| |%4.4s|\n",
+            counter, request_array[counter], request_array[counter + 1],
+            request_array[counter + 2], request_array[counter + 3],
+            (char *)&request_array[counter],
+            (char *)&request_array[counter + 1],
+            (char *)&request_array[counter + 2],
+            (char *)&request_array[counter + 3]);
+  }
+  fflush(where);
 }
 
 
@@ -2043,7 +2048,7 @@ fflush(where);
 void
 dump_response()
 {
-int counter = 0;
+unsigned int counter = 0;
 
 fprintf(where,"response contents\n");
 for (counter = 0; counter < ((sizeof(netperf_response)/4)-3); counter += 4) {
@@ -2359,7 +2364,7 @@ bind_to_specific_processor(int use_cpu_affinity, int use_cpu_map)
   netperf_cpu_set_t   netperf_cpu_set;
   unsigned int        len = sizeof(netperf_cpu_set);
 
-  if (mapped_affinity < 8*sizeof(netperf_cpu_set)) {
+  if (mapped_affinity < (int)(8*sizeof(netperf_cpu_set))) {
     NETPERF_CPU_ZERO(&netperf_cpu_set);
     NETPERF_CPU_SET(mapped_affinity,&netperf_cpu_set);
 
@@ -2479,7 +2484,7 @@ void
 send_request_n(int n)
 {
 
-  int   counter,count;
+  unsigned int   counter,count;
 
   if (n < 0) count = sizeof(netperf_request)/4;
   else count = 2 + n;
@@ -2579,7 +2584,7 @@ send_request()
 void
 send_response_n(int n)
 {
-  int   counter, count;
+  unsigned int   counter, count;
   int	bytes_sent;
 
   if (n < 0) count = sizeof(netperf_request)/4;
@@ -2698,7 +2703,7 @@ recv_request_timed_n(int n, int seconds)
     bytes_left;
   char    *buf = (char *)&netperf_request;
   int     buflen = sizeof(netperf_request);
-  int     counter,count;
+  unsigned int     counter,count;
 
   fd_set  readfds;
   struct timeval timeout;
@@ -2722,7 +2727,6 @@ recv_request_timed_n(int n, int seconds)
      dribbling data to us piecemeal.  of course, who knows what
      someone with nefarious intent might come-up with. raj 2012-01-23 */
   tot_bytes_recvd = 0;
-  bytes_recvd = 0;     /* nt_lint; bytes_recvd uninitialized if buflen == 0 */
   bytes_left      = buflen;
   timeout.tv_sec = seconds;
   timeout.tv_usec = 0;
@@ -2854,7 +2858,7 @@ recv_response_timed_n(int addl_time, int n)
           bytes_left;
   char    *buf = (char *)&netperf_response;
   int     buflen = sizeof(netperf_response);
-  int     counter,count;
+  unsigned int     counter,count;
 
   /* stuff for select, use fd_set for better compliance */
   fd_set  readfds;
@@ -3945,18 +3949,14 @@ calibrate_remote_cpu()
 int
 msec_sleep( int msecs )
 {
-  int           rval ;
+  int           rval __attribute__((unused));
 
   struct timeval timeout;
 
   timeout.tv_sec = msecs / 1000;
   timeout.tv_usec = (msecs - (msecs/1000) *1000) * 1000;
-  if ((rval = select(0,
-             0,
-             0,
-             0,
-             &timeout))) {
-    if ( SOCKET_EINTR(rval) ) {
+  if ((rval = select(0, 0, 0, 0, &timeout))) {
+    if ( SOCKET_EINTR() ) {
       return(1);
     }
     perror("msec_sleep: select");
@@ -4345,7 +4345,7 @@ HIST_add(register HIST h, int time_delta){
 }
 
 void
-output_row(FILE *fd, char *title, int *row){
+output_row(FILE *fd __attribute((unused)), char *title, int *row){
   register int i;
   register int j;
   register int base =  HIST_NUM_OF_BUCKET / 10;
