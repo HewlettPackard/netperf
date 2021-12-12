@@ -169,7 +169,7 @@ fi
 
 # we assume that netservers are already running on all the load generators
 
-DURATION=120
+DURATION=60
 # do not have a uuidgen? then use the one in netperf
 MY_UUID=`uuidgen`
 # with top-of-trunk we could make this 0 and run forever
@@ -178,16 +178,16 @@ MY_UUID=`uuidgen`
 LENGTH="-l 7200"
 OUTPUT="-o all"
 
-DO_STREAM=1;
-DO_MAERTS=1;
+DO_STREAM=0;
+DO_MAERTS=0;
 # NOTE!  The Bidir test depends on being able to set a socket buffer
 # size greater than 13 * 64KB or 832 KB or there is a risk of the test
 # hanging.  If you are running linux, make certain that
 # net.core.[r|w]mem_max are sufficiently large
-DO_BIDIR=1;
+DO_BIDIR=0;
 DO_RRAGG=1;
-DO_RR=1;
-DO_ANCILLARY=1;
+DO_RR=0;
+DO_ANCILLARY=0;
 
 # UDP_RR for TPC/PPS using single-byte transactions. we do not use
 # TCP_RR any longer because any packet losses or other matters
