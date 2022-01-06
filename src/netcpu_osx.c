@@ -71,7 +71,7 @@ char   netcpu_sysctl_id[]="\
    SnowLeopard (10.6) happy, we hope it does not anger previous
    versions */
 #include <mach/mach_host.h>
-/* #include <mach/mach_port.h> */
+#include <mach/mach_port.h>
 
 #include "netsh.h"
 #include "netlib.h"
