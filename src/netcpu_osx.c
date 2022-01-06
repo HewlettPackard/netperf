@@ -71,7 +71,7 @@ char   netcpu_sysctl_id[]="\
    SnowLeopard (10.6) happy, we hope it does not anger previous
    versions */
 #include <mach/mach_host.h>
-/* #include <mach/mach_port.h> */
+#include <mach/mach_port.h>
 
 #include "netsh.h"
 #include "netlib.h"
@@ -93,7 +93,7 @@ cpu_util_init(void)
 void
 cpu_util_terminate(void)
 {
-  mach_port_deallocate(lib_host_port);
+  mach_port_deallocate(mach_task_self(), lib_host_port);
   return;
 }
 
