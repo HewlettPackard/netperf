@@ -93,7 +93,7 @@ cpu_util_init(void)
 void
 cpu_util_terminate(void)
 {
-  mach_port_deallocate(lib_host_port);
+  mach_port_deallocate(mach_task_self(), lib_host_port);
   return;
 }
 
