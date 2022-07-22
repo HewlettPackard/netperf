@@ -80,6 +80,9 @@ typedef ULONG (__stdcall *NT_QUERY_SYSTEM_INFORMATION)(
 NT_QUERY_SYSTEM_INFORMATION NtQuerySystemInformation = NULL;
 
 
+typedef BOOL(WINAPI *GET_LOGICAL_PROCESSOR_INFORMATION)(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION, PDWORD);
+GET_LOGICAL_PROCESSOR_INFORMATION GetLogicalProcessorInformationCall = NULL;
+
 static LARGE_INTEGER TickHz = {{0,0}};
 
 _inline LARGE_INTEGER ReadPerformanceCounter(VOID)
@@ -166,9 +169,6 @@ PerfObj *InitPerfCntrs()
   PerfObj *NewPerfCntrs;
   DWORD NTVersion;
   DWORD status;
-  SYSTEM_INFO SystemInfo;
-
-  GetSystemInfo(&SystemInfo);
 
   NewPerfCntrs = (PerfObj *)GlobalAlloc(GPTR, sizeof(PerfObj));
   assert(NewPerfCntrs != NULL);
@@ -197,6 +197,10 @@ PerfObj *InitPerfCntrs()
       exit(1);
     }
 
+  GetLogicalProcessorInformationCall = 
+	  (GET_LOGICAL_PROCESSOR_INFORMATION)GetProcAddress(GetModuleHandle("ntdll.dll"),
+	  "GetLogicalProcessorInformation");
+
   // setup to measure timestamps with the high resolution timers.
   if (QueryPerformanceFrequency(&TickHz) == FALSE)
     {
@@ -208,6 +212,88 @@ PerfObj *InitPerfCntrs()
 
   return(NewPerfCntrs);
 }  /* InitPerfCntrs */
+
+/*
+ Helper function to count set bits in the processor mask
+ Code stolen from 
+ https://docs.microsoft.com/en-us/windows/win32/api/sysinfoapi/nf-sysinfoapi-getlogicalprocessorinformation
+*/
+DWORD CountSetBits(ULONG_PTR bitMask)
+{
+	DWORD LSHIFT = sizeof(ULONG_PTR) * 8 - 1;
+	DWORD bitSetCount = 0;
+	ULONG_PTR bitTest = (ULONG_PTR)1 << LSHIFT;
+	DWORD i;
+
+	for (i = 0; i <= LSHIFT; ++i)
+	{
+		bitSetCount += ((bitMask & bitTest) ? 1 : 0);
+		bitTest /= 2;
+	}
+
+	return bitSetCount;
+}
+
+DWORD GetCpuCount()
+{
+	PSYSTEM_LOGICAL_PROCESSOR_INFORMATION logicalProcInfoBuffer = NULL;
+	PSYSTEM_LOGICAL_PROCESSOR_INFORMATION ptr = NULL;
+	DWORD logicalProcessorCount = 0;
+	DWORD bufferLen = 0;
+	DWORD processorInfoCount = 0;
+	DWORD i = 0;
+
+	// Get size of logicalProcInfoBuffer for data
+	BOOL result = GetLogicalProcessorInformationCall(logicalProcInfoBuffer, &bufferLen);
+	if (!result)
+	{
+		DWORD lastError = GetLastError();
+		if (lastError != ERROR_INSUFFICIENT_BUFFER)
+		{
+			fprintf(stderr, "GetLogicalProcessorInformationCall failed, status: %lX\n", 
+				lastError);
+			exit(1);
+		}
+	}
+
+	logicalProcInfoBuffer = (PSYSTEM_LOGICAL_PROCESSOR_INFORMATION)GlobalAlloc(GPTR,
+		bufferLen);
+
+	if (!logicalProcInfoBuffer)
+	{
+		fprintf(stderr, "GlobalAlloc failed, status: %lX\n", GetLastError());
+		exit(1);
+	}
+
+	result = GetLogicalProcessorInformationCall(logicalProcInfoBuffer, &bufferLen);
+	if (!result)
+	{
+		fprintf(stderr, "GetLogicalProcessorInformation failed, status: %lX\n", GetLastError());
+		GlobalFree(logicalProcInfoBuffer);
+		exit(1);
+	}
+
+	ptr = logicalProcInfoBuffer;
+
+	processorInfoCount = bufferLen / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION);
+
+	for (i = 0; i < processorInfoCount; i++)
+	{
+		switch (ptr->Relationship)
+		{
+		case RelationProcessorCore:
+			logicalProcessorCount += CountSetBits(ptr->ProcessorMask);
+			break;
+		}
+		++ptr;
+	}
+
+	if (logicalProcInfoBuffer)
+	{
+		GlobalFree(logicalProcInfoBuffer);
+	}
+	return logicalProcessorCount;
+}
 
 /*
   RestartPerfCntrs() -
@@ -223,13 +309,24 @@ PerfObj *InitPerfCntrs()
 void RestartPerfCntrs(PerfObj *PerfCntrs)
 {
   DWORD returnLength = 0;  //Lint
-  DWORD returnNumCPUs;  //Lint
-  DWORD i;
+  DWORD returnNumCPUs = 0;  //Lint
+  DWORD i = 0;
 
   DWORD status;
   SYSTEM_INFO SystemInfo;
+  DWORD numberOfProcessors = 0;
 
-  GetSystemInfo(&SystemInfo);
+  // Is there a new function to get information about CPUs count?
+  if (GetLogicalProcessorInformationCall)
+  {	  
+	  numberOfProcessors = GetCpuCount();
+  }
+  else
+  {
+	  // Use the legacy way
+	  GetSystemInfo(&SystemInfo);
+	  numberOfProcessors = SystemInfo.dwNumberOfProcessors;
+  }
 
   // Move previous data from EndInfo to StartInfo.
   CopyMemory((PCHAR)&PerfCntrs->StartInfo[0],
@@ -259,11 +356,11 @@ void RestartPerfCntrs(PerfObj *PerfCntrs)
     }
   returnNumCPUs = returnLength / sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION);
 
-  if (returnNumCPUs != (int)SystemInfo.dwNumberOfProcessors)
+  if (returnNumCPUs != (int)numberOfProcessors)
     {
       fprintf(stderr, "NtQuery didn't return expected amount of data\n");
       fprintf(stderr, "Expected data for %i CPUs, returned %lu\n",
-	      (int)SystemInfo.dwNumberOfProcessors, returnNumCPUs);
+	      (int)numberOfProcessors, returnNumCPUs);
       exit(1);
     }
 
@@ -309,9 +406,18 @@ double ReportPerfCntrs(PerfObj *PerfCntrs)
   LARGE_INTEGER   TotalCPUTime[MAXCPUS +1];
 
   SYSTEM_INFO SystemInfo;
+  DWORD numberOfProcessors = 0;
 
-  GetSystemInfo(&SystemInfo);
-
+  if (GetLogicalProcessorInformationCall)
+  {
+	  numberOfProcessors = GetCpuCount();
+  }
+  else
+  {
+	  GetSystemInfo(&SystemInfo);
+	  numberOfProcessors = SystemInfo.dwNumberOfProcessors;
+  }
+  
   for (i=0; i <= MAXCPUS; i++)
     {
       DeltaInfo[i].IdleTime.QuadPart    = PerfCntrs->EndInfo[i].IdleTime.QuadPart -
@@ -354,9 +460,9 @@ double ReportPerfCntrs(PerfObj *PerfCntrs)
   if (verbosity > 1)
     {
       fprintf(where, "%% CPU    _Total");
-      if ((int)SystemInfo.dwNumberOfProcessors > 1)
+      if ((int)numberOfProcessors > 1)
 	{
-	  for (i=0; i < (int)SystemInfo.dwNumberOfProcessors; i++)
+	  for (i=0; i < (int)numberOfProcessors; i++)
 	    {
 	      fprintf(where, "\t CPU %i", i);
 	    }
@@ -364,9 +470,9 @@ double ReportPerfCntrs(PerfObj *PerfCntrs)
       fprintf(where, "\n");
 
       fprintf(where, "Busy      %5.2f", tot_CPU_Util);
-      if ((int)SystemInfo.dwNumberOfProcessors > 1)
+      if ((int)numberOfProcessors > 1)
 	{
-	  for (i=0; i < (int)SystemInfo.dwNumberOfProcessors; i++)
+	  for (i=0; i < (int)numberOfProcessors; i++)
 	    {
 	      fprintf(where, "\t %5.2f",
 		      100.0*(1.0 - (double)DeltaInfo[i].IdleTime.QuadPart/(double)TotalCPUTime[i].QuadPart));  //Lint
@@ -377,9 +483,9 @@ double ReportPerfCntrs(PerfObj *PerfCntrs)
       fprintf(where, "Kernel    %5.2f",
 	      100.0*(double)DeltaInfo[MAXCPUS].KernelTime.QuadPart/(double)TotalCPUTime[MAXCPUS].QuadPart);  //Lint
 
-      if ((int)SystemInfo.dwNumberOfProcessors > 1)
+      if ((int)numberOfProcessors > 1)
 	{
-	  for (i=0; i < (int)SystemInfo.dwNumberOfProcessors; i++)
+	  for (i=0; i < (int)numberOfProcessors; i++)
 	    {
 	      fprintf(where, "\t %5.2f",
 		      100.0*(double)DeltaInfo[i].KernelTime.QuadPart/(double)TotalCPUTime[i].QuadPart);  //Lint
@@ -390,9 +496,9 @@ double ReportPerfCntrs(PerfObj *PerfCntrs)
       fprintf(where, "User      %5.2f",
 	      100.0*(double)DeltaInfo[MAXCPUS].UserTime.QuadPart/(double)TotalCPUTime[MAXCPUS].QuadPart);
 
-      if ((int)SystemInfo.dwNumberOfProcessors > 1)
+      if ((int)numberOfProcessors > 1)
 	{
-	  for (i=0; i < (int)SystemInfo.dwNumberOfProcessors; i++)
+	  for (i=0; i < (int)numberOfProcessors; i++)
 	    {
 	      fprintf(where, "\t %5.2f",
 		      100.0*(double)DeltaInfo[i].UserTime.QuadPart/TotalCPUTime[i].QuadPart);  //Lint
@@ -403,9 +509,9 @@ double ReportPerfCntrs(PerfObj *PerfCntrs)
       fprintf(where, "Dpc       %5.2f",
 	      100.0*(double)DeltaInfo[MAXCPUS].DpcTime.QuadPart/(double)TotalCPUTime[MAXCPUS].QuadPart);  //Lint
 
-      if ((int)SystemInfo.dwNumberOfProcessors > 1)
+      if ((int)numberOfProcessors > 1)
 	{
-	  for (i=0; i < (int)SystemInfo.dwNumberOfProcessors; i++)
+	  for (i=0; i < (int)numberOfProcessors; i++)
 	    {
 	      fprintf(where, "\t %5.2f",
 		      100.0*(double)DeltaInfo[i].DpcTime.QuadPart/(double)TotalCPUTime[i].QuadPart);  //Lint
@@ -416,9 +522,9 @@ double ReportPerfCntrs(PerfObj *PerfCntrs)
       fprintf(where, "Interrupt %5.2f",
 	      100.0*(double)DeltaInfo[MAXCPUS].InterruptTime.QuadPart/(double)TotalCPUTime[MAXCPUS].QuadPart);  //Lint
 
-      if ((int)SystemInfo.dwNumberOfProcessors > 1)
+      if ((int)numberOfProcessors > 1)
 	{
-	  for (i=0; i < (int)SystemInfo.dwNumberOfProcessors; i++)
+	  for (i=0; i < (int)numberOfProcessors; i++)
 	    {
 	      fprintf(where, "\t %5.2f",
 		      100.0*(double)DeltaInfo[i].InterruptTime.QuadPart/TotalCPUTime[i].QuadPart);  //Lint
@@ -429,9 +535,9 @@ double ReportPerfCntrs(PerfObj *PerfCntrs)
       fprintf(where, "Interrupt/Sec. %5.1f",
 	      (double)DeltaInfo[MAXCPUS].InterruptCount*1000.0/duration);
 
-      if ((int)SystemInfo.dwNumberOfProcessors > 1)
+      if ((int)numberOfProcessors > 1)
 	{
-	  for (i=0; i < (int)SystemInfo.dwNumberOfProcessors; i++)
+	  for (i=0; i < (int)numberOfProcessors; i++)
 	    {
 	      fprintf(where, "\t %5.1f",
 		      (double)DeltaInfo[i].InterruptCount*1000.0/duration);

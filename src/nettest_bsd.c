@@ -1552,7 +1552,7 @@ create_data_socket(struct addrinfo *res)
 
   if (pacing_rate > 0) {
     if (setsockopt(temp_socket, SOL_SOCKET, SO_MAX_PACING_RATE,
-		   &pacing_rate,
+		   (const void*)&pacing_rate,
 		   sizeof(pacing_rate)) < 0) {
       fprintf(where, "netperf: setsockopt: SO_MAX_PACING_RATE: errno %d\n",
 	      errno);

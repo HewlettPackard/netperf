@@ -43,7 +43,7 @@
                                         /* can tests send...            */
 #define         MAXTIMES        4       /* how many times may we loop   */
                                         /* to calibrate                 */
-#define         MAXCPUS         256     /* how many CPU's can we track */
+#define         MAXCPUS         1024     /* how many CPU's can we track */
 #define         MAXMESSAGESIZE  65536
 #define         MAXALIGNMENT    16384
 #define         MAXOFFSET        4096
