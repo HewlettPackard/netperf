@@ -573,7 +573,7 @@ Size (bytes)\n\
     sctp_stream_request->dirty_count    =       rem_dirty_count;
     sctp_stream_request->clean_count    =       rem_clean_count;
 #endif /* DIRTY */
-    sctp_stream_request->port		=	htonl(atoi(remote_data_port));
+    sctp_stream_request->port		=	atoi(remote_data_port);
     sctp_stream_request->ipfamily	=	af_to_nf(remote_res->ai_family);
     sctp_stream_request->non_blocking   =	non_block;
 
