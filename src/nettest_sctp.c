@@ -259,7 +259,7 @@ sctp_process_event( int socket, void *buf )
 	    fflush(where);
 	}
 	sac = &snp->sn_assoc_change;
-	switch (sac->sac_type) {
+	switch (sac->sac_state) {
 	    case SCTP_COMM_UP:
 		if (debug) {
 		    fprintf(where, "  SCTP_COMM_UP\n");
@@ -292,6 +292,7 @@ sctp_process_event( int socket, void *buf )
 		return SCTP_CLOSE;
 		break;
 	}
+	break;
 
     case SCTP_SEND_FAILED:
 	if (debug) {
