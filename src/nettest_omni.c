@@ -485,15 +485,13 @@ static int client_port_max = 65535;
 
  /* different options for the sockets				*/
 
-int
+extern int
   loc_nodelay,		/* don't/do use NODELAY	locally		*/
   rem_nodelay,		/* don't/do use NODELAY remotely	*/
   loc_sndavoid,		/* avoid send copies locally		*/
   loc_rcvavoid,		/* avoid recv copies locally		*/
   rem_sndavoid,		/* avoid send copies remotely		*/
-  rem_rcvavoid; 	/* avoid recv_copies remotely		*/
-
-extern int
+  rem_rcvavoid, 	/* avoid recv_copies remotely		*/
   loc_tcpcork,
   rem_tcpcork,
   local_connected,
