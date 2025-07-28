@@ -1,25 +1,4 @@
-#!/usr/bin/python
-#  Copyright 2021 Hewlett Packard Enterprise Development LP
-#
-# Permission is hereby granted, free of charge, to any person obtaining a
-# copy of this software and associated documentation files (the "Software"),
-# to deal in the Software without restriction, including without limitation
-# the rights to use, copy, modify, merge, publish, distribute, sublicense,
-# and/or sell copies of the Software, and to permit persons to whom the
-# Software is furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-#
-# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-# USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+#!/usr/bin/python3
 
 # This is a re-writing of post_proc.sh into Python.  Feel free to
 # provide feedback on how to make it better - either better
@@ -113,7 +92,7 @@ def find_vrules(source):
     return vrules,float(start_time),float(end_time),interval_times
 
 def open_rrd(basename,start_time,end_time,max_interval):
-#    print "Opening %s.rrd with start time %d and end time %d" % (basename,int(start_time),int(end_time))
+#    print("Opening %s.rrd with start time %d and end time %d" % (basename,int(start_time),int(end_time)))
 
     data_sources = [ 'DS:mbps:GAUGE:%d:U:U' % max_interval ]
     rra = [ 'RRA:AVERAGE:0.5:1:%d' % ((int(end_time) - int(start_time)) + 1) ]
@@ -126,7 +105,7 @@ def open_rrd(basename,start_time,end_time,max_interval):
     return basename + ".rrd"
 
 def update_heartbeat(basename,heartbeat):
-#    print "Updating heartbeat with %d" % heartbeat
+#    print("Updating heartbeat with %d" % heartbeat)
     rrdtool.tune(basename + ".rrd",
                  '--heartbeat', 'mbps:%d' % heartbeat)
 
@@ -140,13 +119,13 @@ def add_to_ksink(basename,start_time,end_time,ksink):
                                                        'AVERAGE',
                                                        '--start', str(int(start_time)),
                                                        '--end', str(int(end_time)))
-#    print "First %d last %d step %d results %d" % (first, last, step, len(results))
+#    print("First %d last %d step %d results %d" % (first, last, step, len(results)))
     for key,result in enumerate(results,first):
         if result[0] and key in ksink:
             ksink[key] += float(result[0])
         else:
             if result[0]:
-                print "Key %d not in ksink" % key
+                print("Key %d not in ksink" % key)
 
 def process_result(basename, raw_results, end_time, ksink):
     first_result = True
@@ -161,7 +140,7 @@ def process_result(basename, raw_results, end_time, ksink):
 
 
     for raw_result in raw_results:
-#        print "Checking result %s" % raw_result
+#        print("Checking result %s" % raw_result)
         if "Interim result:" in raw_result:
             # human format
             fields = raw_result.split()
@@ -201,7 +180,7 @@ def process_result(basename, raw_results, end_time, ksink):
                 have_result = True
             else:
                 have_result = False
-  
+                
         if first_result and have_result:
             # we could use the overal start time, but using the first
             # timestamp for this instance may save us some space in
@@ -209,47 +188,47 @@ def process_result(basename, raw_results, end_time, ksink):
             # interim_interval from that timestamp to give us some
             # wriggle-room - particularly if the interval happens to
             # end precisely on a step boundary...
-#            print "First entry for %s is %f at time %f" % (basename, interim_result,interim_end)
+#            print("First entry for %s is %f at time %f" % (basename, interim_result,interim_end))
             open_rrd(basename,
                      interim_end-interim_interval,
                      end_time,
                      max_interval)
             first_timestamp = interim_end
             first_result = False
-
+              
         if int(math.ceil(interim_interval)) > max_interval:
             max_interval = int(math.ceil(interim_interval))
             update_heartbeat(basename,max_interval)
-
+        
         # perhaps one of these days, once we know that the rrdtool
         # bits can handle it, we will build a big list of results and
         # feed them en mass. until then we will dribble them one at a
         # time
         if have_result:
-            #print "updating rrd with %s at %s" % (interim_result, interim_end)
+            #print("updating rrd with %s at %s" % (interim_result, interim_end))
             try:
                 update_rrd(basename,interim_result,interim_end)
             except Exception as e:
-                print "Update to %s with %s at %s failed with %s" % (basename,interim_result,interim_end,e)
+                print("Update to %s with %s at %s failed with %s" % (basename,interim_result,interim_end,e))
             have_result = False
             had_results = True
 
     if had_results:
         last_timestamp = interim_end
- #       print "First timestamp for this instance %f last %f" % (first_timestamp,last_timestamp)
+ #       print("First timestamp for this instance %f last %f" % (first_timestamp,last_timestamp))
         return first_timestamp, last_timestamp
     else:
         return 0, 0
 
 def process_result_files(prefix,start_time,end_time,ksink):
-    print "Prefix is %s" % prefix
+    print("Prefix is %s" % prefix)
     min_timestamp = 9999999999.9
     results_list = glob.glob(prefix+"*.out")
 
     for result_file in results_list:
         basename = result_file.replace(".out","")
         raw_results = open(result_file,"r")
-#        print "Processing file %s" % basename
+#        print("Processing file %s" % basename)
         first_timestamp, last_timestamp = process_result(basename,
                                                          raw_results,
                                                          end_time,
@@ -261,27 +240,27 @@ def process_result_files(prefix,start_time,end_time,ksink):
             # OK, now we get the massaged results
             add_to_ksink(basename,first_timestamp,last_timestamp,ksink)
 
-#    print "For %s min_timestamp is %s" % (prefix, min_timestamp)
+#    print("For %s min_timestamp is %s" % (prefix, min_timestamp))
     return min_timestamp
 
 def generate_overall(prefix,start_time,end_time,ksink):
     overall = prefix + "_overall"
     open_rrd(overall,start_time-1,end_time,1)
 
-#    print "Starting time %s ending time %s" % (start_time,end_time)
+#    print("Starting time %s ending time %s" % (start_time,end_time))
     # one cannot rely on the enumeration of a dictionary being in key
     # order and I do not know how to sort one, so we will simply walk
     # the possible keys based on the start_time and end_time and if we
     # find that key in the kitchen sink, we will use the value to
     # update the overall rrd.
     prevkey = -1
-    for key in xrange(int(start_time),int(end_time)+1):
+    for key in range(int(start_time),int(end_time)+1):
         if key in ksink:
             try:
                 update_rrd(overall,ksink[key],key)
                 prevkey = key
             except Exception as e:
-                print "Update to %s failed for %d, previous %d %s" % (overall, key, prevkey, e)
+                print("Update to %s failed for %d, previous %d %s" % (overall, key, prevkey, e))
 
 def overall_min_max_avg(prefix,start_time,end_time,intervals):
 
@@ -327,13 +306,13 @@ def overall_min_max_avg(prefix,start_time,end_time,intervals):
                                'PRINT:avg:"%6.2lf"',
                                'PRINT:min:"%6.2lf"',
                                'PRINT:max:"%6.2lf"')[2]
-#        print "from %d to %d iavg, imin, imax are %s" % (start,end,result)
+#        print("from %d to %d iavg, imin, imax are %s" % (start,end,result))
         iavg = float(result[0].strip('"'))
         imin = float(result[1].strip('"'))
         imax = float(result[2].strip('"'))
         results_list.append((iavg, imin, imax, start, end))
 
-        for time in xrange(start,end+1):
+        for time in range(start,end+1):
             rrdtool.update(prefix + "_intervals.rrd",
                            '%d:%f:%f:%f' % (time, iavg, imin, imax))
         if iavg > max_average:
@@ -372,8 +351,8 @@ def graph_overall(prefix,start_time,end_time,vrules,peak_interval_id=None,peak_a
 
     units, multiplier, direction = units_et_al_by_prefix(prefix)
 
-#    print units,multiplier,direction
-#    print "Vrules",vrules
+#    print(units,multiplier,direction)
+#    print("Vrules",vrules)
 
     interval_specs = []
     if peak_interval_id:
@@ -440,7 +419,7 @@ def setup_parser() :
                         help="Generate graphs of individual tests")
     parser.add_argument("-I", "--intervals", action='store_true',
                         default=False,
-                        help="Emit the results for all intervals, not just peak")
+                        help="Emit the results for all intervals, not just peak")    
     parser.add_argument("-a", "--annotation",default=None,
                         help="Annotation to add to chart titles")
     parser.add_argument("-t", "--title", default=None,
@@ -458,23 +437,23 @@ if __name__ == '__main__':
     prefix = filename.replace(".log","")
     source = open(filename,"r")
     vrules,start_time,end_time,intervals = find_vrules(source)
-    #print vrules
+    #print(vrules)
 
     # at one point for some reason I thought one could not add to a
     # dict on the fly, which of course I now know is silly, but for
     # the time being I will preallocate the entire dict in one fell
     # swoop until I can modify add_to_ksink() accordingly
     length = int(end_time + 1) - int(start_time)
-    ksink=dict(zip(xrange(int(start_time),
+    ksink=dict(zip(range(int(start_time),
                           int(end_time)+1),
                    [0.0] * length))
 
     min_timestamp = process_result_files(prefix,start_time,end_time,ksink)
     if min_timestamp == 9999999999.9:
-        print "There were no valid results for this prefix!"
+        print("There were no valid results for this prefix!")
         exit()
 
-#    print "Min timestamp for %s is %s start time is %s end_time is %s" % (prefix,min_timestamp,start_time,end_time)
+#    print("Min timestamp for %s is %s start time is %s end_time is %s" % (prefix,min_timestamp,start_time,end_time))
     generate_overall(prefix,min_timestamp-2,end_time,ksink)
     peak_interval_id, min_graph_interval, results_list = overall_min_max_avg(prefix,min_timestamp,end_time,intervals)
     peak_average = results_list[0][0]
@@ -490,14 +469,14 @@ if __name__ == '__main__':
         graph_individual(prefix, min_timestamp, end_time, vrules,
                          major_interval=min_graph_interval,
                          annotation=args.annotation,override=args.title)
-
+    
     units, multiplier, direction = units_et_al_by_prefix(prefix)
-    print "Average of peak interval is %.3f %s from %d to %d" % (results_list[0][0] * float(multiplier), units, peak_start, peak_end)
-    print "Minimum of peak interval is %.3f %s from %d to %d" % (peak_minimum * float(multiplier), units, peak_start, peak_end)
-    print "Maximum of peak interval is %.3f %s from %d to %d" % (peak_maximum * float(multiplier), units, peak_start, peak_end)
+    print("Average of peak interval is %.3f %s from %d to %d" % (results_list[0][0] * float(multiplier), units, peak_start, peak_end))
+    print("Minimum of peak interval is %.3f %s from %d to %d" % (peak_minimum * float(multiplier), units, peak_start, peak_end))
+    print("Maximum of peak interval is %.3f %s from %d to %d" % (peak_maximum * float(multiplier), units, peak_start, peak_end))
 
     if args.intervals:
         for id, interval in enumerate(results_list[1:]):
-            print "Average of interval %d is %.3f %s from %d to %d" % (id, interval[0] * float(multiplier), units, interval[3], interval[4])
-            print "Minimum of interval %d is %.3f %s from %d to %d" % (id, interval[1] * float(multiplier), units, interval[3], interval[4])
-            print "Maximum of interval %d is %.3f %s from %d to %d" % (id, interval[2] * float(multiplier), units, interval[3], interval[4])
+            print("Average of interval %d is %.3f %s from %d to %d" % (id, interval[0] * float(multiplier), units, interval[3], interval[4]))
+            print("Minimum of interval %d is %.3f %s from %d to %d" % (id, interval[1] * float(multiplier), units, interval[3], interval[4]))
+            print("Maximum of interval %d is %.3f %s from %d to %d" % (id, interval[2] * float(multiplier), units, interval[3], interval[4]))

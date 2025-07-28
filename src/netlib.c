@@ -4009,16 +4009,6 @@ void demo_first_timestamp() {
   HIST_timestamp(demo_one_ptr);
 }
 
-void demo_reset() {
-  if (debug) {
-    fprintf(where,
-	    "Resetting interim results\n");
-    fflush(where);
-  }
-  units_this_tick = 0;
-  demo_first_timestamp();
-}
-
 /* for a _STREAM test, "a" should be lss_size and "b" should be
    rsr_size. for a _MAERTS test, "a" should be lsr_size and "b" should
    be rss_size. raj 2005-04-06 */
@@ -4147,6 +4137,26 @@ void demo_interval_tick(uint32_t units)
     demo_two_ptr = temp_demo_ptr;
 
   }
+}
+
+/* called when we have a recv timeout on a socket for a UDP_RR test.  until we
+   decide otherwise, we'll force an interval display whenever this happens, and
+   will not attempt to compensate for the time spent sitting there waiting for
+   the timeout. */
+void demo_reset() {
+  double actual_interval = 0.0;
+  if (debug) {
+    fprintf(where,
+	    "Resetting interim results\n");
+    fflush(where);
+  }
+  HIST_timestamp(demo_two_ptr);
+  actual_interval = delta_micro(demo_one_ptr,demo_two_ptr);
+  demo_interval_display(actual_interval);
+  units_this_tick = 0;
+  temp_demo_ptr = demo_one_ptr;
+  demo_one_ptr = demo_two_ptr;
+  demo_two_ptr = temp_demo_ptr;
 }
 
 void demo_interval_final() {
