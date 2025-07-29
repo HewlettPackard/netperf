@@ -491,9 +491,7 @@ extern int
   loc_sndavoid,		/* avoid send copies locally		*/
   loc_rcvavoid,		/* avoid recv copies locally		*/
   rem_sndavoid,		/* avoid send copies remotely		*/
-  rem_rcvavoid; 	/* avoid recv_copies remotely		*/
-
-extern int
+  rem_rcvavoid, 	/* avoid recv_copies remotely		*/
   loc_tcpcork,
   rem_tcpcork,
   local_connected,
