@@ -1,5 +1,5 @@
 #! /bin/sh
 
-aclocal -I src/missing/m4 \
+aclocal \
 && automake  --add-missing \
 && autoconf && autoheader
