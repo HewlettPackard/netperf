@@ -564,6 +564,7 @@ extern void   demo_interval_final();
 #endif
 #endif
 
+#include "hist.h"
 extern  void    netlib_init();
 extern  int     netlib_get_page_size();
 extern  void    install_signal_catchers();
@@ -646,9 +647,9 @@ extern char     *find_interface_slot(char *interface_name);
 extern void     find_interface_ids(char *interface_name, int *vendor, int *device, int *sub_vend, int *sub_dev);
 extern void     find_driver_info(char *ifname, char *driver, char *version, char *firmware, char *bus, int len);
 extern void     find_system_info(char **system_model, char **cpu_model, int *cpu_frequency);
-extern int      HIST_get_percentile();
-extern void     HIST_get_stats();
-extern void     HIST_purge();
+extern int      HIST_get_percentile(HIST h, const double percentile);
+extern void     HIST_get_stats(HIST h, int *min, int *max, double *mean, double *stddev);
+extern void     HIST_purge(HIST h);
 extern void     find_security_info(int *enabled, int *type, char **specific);
 extern void     demo_first_timestamp();
 extern void     demo_reset();
@@ -676,7 +677,7 @@ extern  void    catcher(int, siginfo_t *,void *);
 #else
 extern  void    catcher(int);
 #endif /* __hpux */
-extern  struct ring_elt *allocate_buffer_ring();
+extern  struct ring_elt *allocate_buffer_ring(int recv_width, int recv_size, int local_recv_align, int local_recv_offset);
 extern void access_buffer(char *buffer_ptr,
 			  int length,
 			  int dirty_count,
@@ -687,7 +688,7 @@ extern  struct ring_elt *allocate_exs_buffer_ring();
 #endif /* HAVE_ICSC_EXS */
 
 #ifdef HAVE_SENDFILE
-extern  struct ring_elt *alloc_sendfile_buf_ring();
+extern  struct ring_elt *alloc_sendfile_buf_ring(int send_width, int send_size, int local_send_align, int local_send_offset);
 extern  int netperf_sendfile(SOCKET send_socket, struct ring_elt *send_ring);
 #endif /* HAVE_SENDFILE */
 
