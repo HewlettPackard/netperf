@@ -32,9 +32,9 @@ some point `config.cache' contains results you don't want to keep, you
 may remove or edit it.
 
    The file `configure.ac' (or `configure.in') is used to create
-`configure' by a program called `autoconf'.  You only need
-`configure.ac' if you want to change it or regenerate `configure' using
-a newer version of `autoconf'.
+`configure' by a program called `autoconf'. To create `configure', run
+`autogen.sh'. You only need `configure.ac' if you want to change it or
+regenerate `configure' using a newer version of `autoconf'.
 
 The simplest way to compile this package is:
 
