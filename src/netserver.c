@@ -779,8 +779,8 @@ process_requests()
 		 "%c%s%c%s%c%s%c%s",
 		 ',',
 		 "Deprecated",
-		 ','
-,		 "Deprecated",
+		 ',',
+		 "Deprecated",
 		 ',',
 		 "Deprecated",
 		 ',',
