@@ -445,7 +445,7 @@ int         receive_timeout = -1;
 /* min and max "latency" */
 int         min_latency = -1, max_latency = -1;
 /* the percentiles */
-int         p50_latency = -1, p90_latency = -1, p99_latency = -1;
+int         p50_latency = -1, p90_latency = -1, p99_latency = -1, p99_9_latency = -1;
 /* mean and stddev - while the mean is reduntant with the *_RR test we
    keep it because it won't be for other tests */
 double      mean_latency = -1.0, stddev_latency = -1.0;
@@ -678,6 +678,7 @@ enum netperf_output_name {
   P50_LATENCY,
   P90_LATENCY,
   P99_LATENCY,
+  P99_9_LATENCY,
   MEAN_LATENCY,
   STDDEV_LATENCY,
   LOCAL_SOCKET_PRIO,
@@ -1390,6 +1391,8 @@ netperf_output_enum_to_str(enum netperf_output_name output_name)
     return "P90_LATENCY";
   case P99_LATENCY:
     return "P99_LATENCY";
+  case P99_9_LATENCY:
+    return "P99_9_LATENCY";
   case MEAN_LATENCY:
     return "MEAN_LATENCY";
   case STDDEV_LATENCY:
@@ -2455,6 +2458,9 @@ print_omni_init_list() {
 
   set_output_elt(P99_LATENCY, "99th", "Percentile", "Latency", "Microseconds",
 		 "%d", &p99_latency, 0, OMNI_WANT_STATS, NETPERF_TYPE_INT32);
+
+  set_output_elt(P99_9_LATENCY, "99.9th", "Percentile", "Latency", "Microseconds",
+		 "%d", &p99_9_latency, 0, OMNI_WANT_STATS, NETPERF_TYPE_INT32);
 
   set_output_elt(MEAN_LATENCY, "Mean", "Latency", "Microseconds", "", "%.2f",
 		 &mean_latency, 0, OMNI_WANT_STATS, NETPERF_TYPE_DOUBLE);
@@ -5063,6 +5069,7 @@ send_omni_inner(char remote_host[], unsigned int legacy_caller, char header_str[
     p50_latency = HIST_get_percentile(time_hist, 0.50);
     p90_latency = HIST_get_percentile(time_hist, 0.90);
     p99_latency = HIST_get_percentile(time_hist, 0.99);
+    p99_9_latency = HIST_get_percentile(time_hist, 0.999);
 
   }
 
