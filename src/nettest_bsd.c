@@ -286,7 +286,7 @@ static HIST time_hist;
 #endif /* WANT_HISTOGRAM */
 
 #ifdef WANT_INTERVALS
-int interval_count;
+static int interval_count;
 #ifndef WANT_SPIN
 #ifdef WIN32
 #define INTERVALS_INIT() \
@@ -299,7 +299,7 @@ int interval_count;
     } \
     interval_count = interval_burst;
 #else
-sigset_t signal_set;
+static sigset_t signal_set;
 #define INTERVALS_INIT() \
     if (interval_burst) { \
       /* zero means that we never pause, so we never should need the \

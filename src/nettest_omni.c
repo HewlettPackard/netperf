@@ -188,7 +188,7 @@ static HIST time_hist;
 
 
 #ifdef WANT_INTERVALS
-int interval_count;
+static int interval_count;
 unsigned int interval_wait_microseconds;
 
 /* hoist the timestamps up here so we can use them to factor-out the
@@ -230,7 +230,7 @@ static struct timeval *temp_intvl_ptr = &intvl_one;
     interval_count = interval_burst; \
     interval_wait_microseconds = 0;
 #else
-sigset_t signal_set;
+static sigset_t signal_set;
 #define INTERVALS_INIT() \
     if (interval_burst) { \
       /* zero means that we never pause, so we never should need the \
